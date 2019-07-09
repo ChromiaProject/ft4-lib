@@ -1,0 +1,11 @@
+namespace ft3 {
+
+include "account/auth_basic";
+include "core";
+include "crosschain/structures";
+include "crosschain/blockchain";
+include "crosschain/transfer";
+include "dev_op";
+include "crosschain/dev";
+
+}

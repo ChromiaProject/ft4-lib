@@ -1,0 +1,59 @@
+//namespace ft3 {
+
+enum auth_type {
+  single_sig,
+  multi_sig
+}
+
+record single_sig_args {
+       flags: set<text>;
+       pubkey;
+}
+
+record multi_sig_args {
+       flags: set<text>;
+       signatures_required: integer;
+       pubkeys: list<pubkey>;
+}
+
+function check_auth_args (a_t: auth_type, args: byte_array, required_flags: list<text>): boolean {
+    when (a_t) {
+        auth_type.single_sig -> {
+            val ss_args = single_sig_args.from_bytes(args);
+            return
+                ss_args.flags.contains_all(required_flags)
+                and 
+                is_signer(ss_args.pubkey);
+        }
+        auth_type.multi_sig -> {
+            val multi_sign_args = multi_sig_args.from_bytes(args);
+            if (not (multi_sign_args.flags.contains_all(required_flags))) return false;
+            var num_sign = multi_sign_args.signatures_required;
+             for(s in multi_sign_args.pubkeys) {
+               if(is_signer(s)) {
+                 num_sign -= 1;
+                 if(num_sign < 1) {return true;}
+               }
+             }
+        }
+    }
+    return false;
+}
+
+
+function require_auth (account, descriptor_id: byte_array, required_flags: list<text>) {
+   val account_auth_descriptor = account_auth_descriptor @ {
+     account,
+     .descriptor_id == descriptor_id
+   };
+   require(
+      check_auth_args(
+       account_auth_descriptor.auth_type,
+       account_auth_descriptor.args,
+       required_flags
+       )
+   );  
+}
+
+
+//}
