@@ -20,7 +20,7 @@ class account_auth_descriptor {
      descriptor_id: byte_array;
      key account, descriptor_id;
      index descriptor_id;
-     auth_type;
+     auth_type: text;
      args: byte_array;
 }
 

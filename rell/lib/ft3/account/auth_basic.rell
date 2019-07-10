@@ -24,7 +24,7 @@ function check_single_sig_auth(args: byte_array, required_flags: list<text>): bo
           is_signer(ss_args.pubkey); 
 }
 
-function check_multi_sig_args(args: byte_array, required_flags: list<text>): boolean {
+function check_multi_sig_auth(args: byte_array, required_flags: list<text>): boolean {
    val multi_sign_args = multi_sig_args.from_bytes(args);
    if (not (multi_sign_args.flags.contains_all(required_flags))) return false;
    var num_sign = multi_sign_args.signatures_required;

@@ -38,10 +38,10 @@ operation apply_xfer (
 ) {
       require(init_tx.tx.hash() == init_tx_rid);
       verify_transaction_proof( init_tx );
-      create xc_applied_transfers (init_tx_rid);
+      create applied_transfers (init_tx_rid);
 
       require(init_tx.tx.body.operations[0].name == "ft3.xc.init_xfer");
-      val init_args = xc_init_args.from_gtv(
+      val init_args = init_xfer_args.from_gtv(
          init_tx.tx.body.operations[0].args.to_full().to_gtv()
       );
       val my_blockchain_rid = chain_context.blockchain_rid;
