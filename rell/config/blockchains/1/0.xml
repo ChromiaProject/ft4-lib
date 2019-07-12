@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<dict>
+    <entry key="blockstrategy">
+        <dict>
+            <entry key="blockdelay">
+                <int>750</int>
+            </entry>
+            <entry key="maxblocktime">
+                <int>15000</int>
+            </entry>
+            <entry key="maxblocktransactions">
+                <int>500</int>
+            </entry>
+            <entry key="name">
+                <string>net.postchain.base.BaseBlockBuildingStrategy</string>
+            </entry>
+        </dict>
+    </entry>
+    <entry key="configurationfactory">
+        <string>net.postchain.gtx.GTXBlockchainConfigurationFactory</string>
+    </entry>
+    <entry key="gtx">
+        <dict>
+            <entry key="modules">
+                <array>
+                    <string>net.postchain.rell.module.RellPostchainModuleFactory</string>
+                    <string>net.postchain.gtx.StandardOpsGTXModule</string>
+                </array>
+            </entry>
+            <entry key="rell">
+                <dict>
+                    <entry key="mainFile">
+                        <string>main.rell</string>
+                    </entry>
+                    <entry key="sources_v0.9">
+                        <dict>
+                            <entry key="lib/ft3/account/auth_basic.rell">
+                                <string>//namespace ft3 {
+
+enum auth_type {
+  single_sig,
+  multi_sig
+}
+
+record single_sig_args {
+       flags: set&lt;text&gt;;
+       pubkey;
+}
+
+record multi_sig_args {
+       flags: set&lt;text&gt;;
+       signatures_required: integer;
+       pubkeys: list&lt;pubkey&gt;;
+}
+
+function check_auth_args (a_t: auth_type, args: byte_array, required_flags: list&lt;text&gt;): boolean {
+    when (a_t) {
+        auth_type.single_sig -&gt; {
+            val ss_args = single_sig_args.from_bytes(args);
+            return
+                ss_args.flags.contains_all(required_flags)
+                and 
+                is_signer(ss_args.pubkey);
+        }
+        auth_type.multi_sig -&gt; {
+            val multi_sign_args = multi_sig_args.from_bytes(args);
+            if (not (multi_sign_args.flags.contains_all(required_flags))) return false;
+            var num_sign = multi_sign_args.signatures_required;
+             for(s in multi_sign_args.pubkeys) {
+               if(is_signer(s)) {
+                 num_sign -= 1;
+                 if(num_sign &lt; 1) {return true;}
+               }
+             }
+        }
+    }
+    return false;
+}
+
+
+function require_auth (account, descriptor_id: byte_array, required_flags: list&lt;text&gt;) {
+   val account_auth_descriptor = account_auth_descriptor @ {
+     account,
+     .descriptor_id == descriptor_id
+   };
+   require(
+      check_auth_args(
+       account_auth_descriptor.auth_type,
+       account_auth_descriptor.args,
+       required_flags
+       )
+   );  
+}
+
+
+//}</string>
+                            </entry>
+                            <entry key="lib/ft3/account/main.rell">
+                                <string>// namespace ft3 {
+
+record auth_descriptor {
+    auth_type;
+    args: list&lt;gtv&gt;;
+}
+
+class account {
+    key id: byte_array;      
+}
+
+class account_meta {
+    meta_key: text;
+    value: byte_array;
+    index account, meta_key;
+    index meta_key, value;
+}
+
+class account_auth_descriptor {
+     descriptor_id: byte_array;
+     key account, descriptor_id;
+     index descriptor_id;
+     auth_type;
+     args: byte_array;
+}
+
+function _add_auth_descriptor (account, auth_descriptor) {
+     val descriptor_id = auth_descriptor.hash();
+     create account_auth_descriptor (
+        account, descriptor_id,
+        auth_descriptor.auth_type,
+        args = auth_descriptor.args.to_gtv().to_bytes()
+     );
+}
+
+function create_account_with_auth (auth_descriptor): byte_array {
+     val id = auth_descriptor.hash();
+     val acc = create account (id);
+     _add_auth_descriptor(
+        acc, auth_descriptor
+     );
+     return id;
+}
+
+operation delete_auth_descriptor (account, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
+      require_auth(account, auth_descriptor_id, ["A"]);
+      delete account_auth_descriptor @ {
+         .account == account,
+         .descriptor_id == delete_descriptor_id
+      };
+}
+
+operation add_auth_descriptor (account, existing_id: byte_array, new_desc: auth_descriptor) {
+      require_auth(account, existing_id, ["A"]);
+      _add_auth_descriptor(account, new_desc);
+}
+
+
+// }</string>
+                            </entry>
+                            <entry key="lib/ft3/asset.rell">
+                                <string>//namespace ft3 {
+  class asset {
+    id: byte_array;
+    key id;
+    key name;
+    issuing_chain_rid: byte_array;
+  }
+
+  class balance {
+    key account, asset;
+    mutable amount: integer = 0;
+  }
+
+  function ensure_balance(account, asset): balance {
+    val balance = balance @? {asset, account};
+    if (balance != null) {
+       return balance;
+    }
+    else return create balance(account, asset, amount = 0);
+  }
+
+  function register_asset (name, issuing_chain_rid: byte_array): asset {
+   val id = (name, issuing_chain_rid).hash();
+   return create asset (id, name, issuing_chain_rid);
+  }
+
+// }
+
+</string>
+                            </entry>
+                            <entry key="lib/ft3/ft3_core.rell">
+                                <string>include "account/main";
+include "account/auth_basic";
+include "asset";
+include "history";
+include "transfer";
+</string>
+                            </entry>
+                            <entry key="lib/ft3/history.rell">
+                                <string>//namespace ft3  {
+
+  class payment_history_entry (log) {
+    index account, asset;
+    delta: integer;
+    
+    // helps to locate exact position of payment entry in transaction
+    op_index: integer;
+    is_input: boolean;
+    entry_index: integer;
+  }
+
+  
+
+//}</string>
+                            </entry>
+                            <entry key="lib/ft3/transfer.rell">
+                                <string>//namespace ft3 {
+
+record xfer_input {
+   account_id: byte_array;
+   asset_id: byte_array;
+   auth_descriptor_id: byte_array;
+   amount: integer;
+   extra: map&lt;text, gtv&gt;;
+}
+
+record xfer_output {
+   account_id: byte_array;
+   asset_id: byte_array;
+   amount: integer;
+   extra: map&lt;text, gtv&gt;;
+}
+
+function deduct_balance (account, asset, d_amount: integer) {
+    val b = balance @ { account, asset };
+    require( b.amount &gt;= d_amount, "Balance is too low");
+    update b (amount -= d_amount); 
+}
+
+function consume_input (i: xfer_input, idx: integer, assets: map&lt;asset, integer&gt;): payment_history_entry {
+      val asset = asset @ { .id == i.asset_id };
+      val account = account @ {.id == i.account_id };
+      require_auth( account, i.auth_descriptor_id, ["T"] );
+      require( i.amount &gt;= 0, "Amount should be positive." );
+      
+      deduct_balance(account, asset, i.amount);
+      assets[asset] = i.amount + if (asset in assets) assets[asset] else 0;
+      return create payment_history_entry (
+        account,
+        asset,
+        .delta = i.amount,
+        .op_index = 500, //op_context ???
+        .is_input = true,
+        .entry_index = idx
+      );
+}
+
+function process_transfer_output (o: xfer_output, idx: integer, available_assets: map&lt;asset, integer&gt;) {
+      if (o.extra.contains("reg_auth_desc")) {
+          val auth_desc = auth_descriptor.from_gtv(o.extra["reg_auth_desc"]);
+          require(o.account_id
+           == create_account_with_auth(auth_desc));
+      }
+
+      val target_account = account @ { .id == o.account_id };
+      val asset = asset @ { .id == o.asset_id };
+      require( available_assets[asset] &gt;= o.amount );
+      available_assets[asset] -= o.amount;
+      require(available_assets[asset] &gt;= 0);
+      val balance = ensure_balance(target_account, asset);
+      balance.amount += o.amount;
+
+      create payment_history_entry (
+        .account = target_account,
+        asset,
+        .delta = o.amount,
+
+        .op_index = 500, // something from op_context,
+        .is_input = false,
+        .entry_index = idx
+      );
+}
+
+operation transfer (inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&gt;) {
+   val sum_inputs = map&lt;asset, integer&gt;();
+   var idx = 0;
+   for (i in inputs) {
+      consume_input(i, idx, sum_inputs);
+      idx += 1;
+   }
+
+   idx = 0;
+   for (o in outputs) {
+      process_transfer_output(o, idx, sum_inputs);
+      idx += 1;
+   }
+   
+}
+
+ 
+//}</string>
+                            </entry>
+                            <entry key="main.rell">
+                                <string>include "lib/ft3/ft3_core";</string>
+                            </entry>
+                        </dict>
+                    </entry>
+                </dict>
+            </entry>
+        </dict>
+    </entry>
+    <entry key="signers">
+        <array>
+            <bytea>0350FE40766BC0CE8D08B3F5B810E49A8352FDD458606BD5FAFE5ACDCDC8FF3F57</bytea>
+        </array>
+    </entry>
+</dict>
