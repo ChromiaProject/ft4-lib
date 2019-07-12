@@ -16,21 +16,21 @@ function add_to_blockchain_balance (blockchain_rid: byte_array, asset, amount: i
     }
 }
 
-operation xc_init (source: xfer_input, target: xc_target, hops: list<byte_array>) {
+operation init_xfer (source: xfer_input, target: xc_target, hops: list<byte_array>) {
      consume_input(source, 0, map<asset, integer>());
      val asset = asset @ { .id == source.asset_id };
      add_to_blockchain_balance( hops[0], asset, source.amount );
 }
 
-record xc_init_args {
+record init_xfer_args {
           source: xfer_input;
           target: xc_target;
           hops: list<byte_array>;
 }
 
-class xc_applied_transfers { key tx_rid: byte_array; }
+class applied_transfers { key tx_rid: byte_array; }
 
-operation xc_apply (
+operation apply_xfer (
        init_tx_rid: byte_array,
        init_tx: transaction_proof,
        prev_hop: transaction_proof?,
@@ -38,10 +38,10 @@ operation xc_apply (
 ) {
       require(init_tx.tx.hash() == init_tx_rid);
       verify_transaction_proof( init_tx );
-      create xc_applied_transfers (init_tx_rid);
+      create applied_transfers (init_tx_rid);
 
-      require(init_tx.tx.body.operations[0].name == "xc_init");
-      val init_args = xc_init_args.from_gtv(
+      require(init_tx.tx.body.operations[0].name == "ft3.xc.init_xfer");
+      val init_args = init_xfer_args.from_gtv(
          init_tx.tx.body.operations[0].args.to_full().to_gtv()
       );
       val my_blockchain_rid = chain_context.blockchain_rid;
@@ -58,7 +58,7 @@ operation xc_apply (
          require(prev_hop);
          verify_transaction_proof(prev_hop);
          require(prev_hop.tx.body.blockchain_rid == from_chain_rid);
-         require(prev_hop.tx.body.operations[0].name == "xc_apply");
+         require(prev_hop.tx.body.operations[0].name == "ft3.xc.apply_xfer");
          require(byte_array.from_gtv(prev_hop.tx.body.operations[0].args[0])
               == init_tx_rid);
       } else {

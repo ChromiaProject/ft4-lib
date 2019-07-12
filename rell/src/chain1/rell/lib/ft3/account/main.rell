@@ -1,7 +1,7 @@
 // namespace ft3 {
 
 record auth_descriptor {
-    auth_type;
+    auth_type: text;
     args: list<gtv>;
 }
 
@@ -20,7 +20,7 @@ class account_auth_descriptor {
      descriptor_id: byte_array;
      key account, descriptor_id;
      index descriptor_id;
-     auth_type;
+     auth_type: text;
      args: byte_array;
 }
 
@@ -42,7 +42,8 @@ function create_account_with_auth (auth_descriptor): byte_array {
      return id;
 }
 
-operation delete_auth_descriptor (account, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
+operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
+      val account = account @ { .id == account_id };
       require_auth(account, auth_descriptor_id, ["A"]);
       delete account_auth_descriptor @ {
          .account == account,
@@ -50,8 +51,9 @@ operation delete_auth_descriptor (account, auth_descriptor_id: byte_array, delet
       };
 }
 
-operation add_auth_descriptor (account, existing_id: byte_array, new_desc: auth_descriptor) {
-      require_auth(account, existing_id, ["A"]);
+operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {
+      val account = account @ { .id == account_id };
+      require_auth(account, auth_id, ["A"]);
       _add_auth_descriptor(account, new_desc);
 }
 
