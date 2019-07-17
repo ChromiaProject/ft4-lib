@@ -1,5 +1,5 @@
 let pcl = require('postchain-client');
-
+require('dotenv').config();
 
 const rest = pcl.restClient.createRestClient(process.env.BLOCKCHAIN_REST || "http://localhost:7740/", process.env.CHAIN_ID, 5)
 const gtx = pcl.gtxClient.createClient(

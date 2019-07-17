@@ -37,10 +37,10 @@
                             <entry key="lib/ft3/account/auth_basic.rell">
                                 <string>//namespace ft3 {
 
-enum auth_type {
-  single_sig,
-  multi_sig
-}
+// Auth type:
+
+// "S" - single-sig
+// "M" - multi-sig
 
 record single_sig_args {
        flags: set&lt;text&gt;;
@@ -53,28 +53,33 @@ record multi_sig_args {
        pubkeys: list&lt;pubkey&gt;;
 }
 
-function check_auth_args (a_t: auth_type, args: byte_array, required_flags: list&lt;text&gt;): boolean {
-    when (a_t) {
-        auth_type.single_sig -&gt; {
-            val ss_args = single_sig_args.from_bytes(args);
-            return
-                ss_args.flags.contains_all(required_flags)
-                and 
-                is_signer(ss_args.pubkey);
-        }
-        auth_type.multi_sig -&gt; {
-            val multi_sign_args = multi_sig_args.from_bytes(args);
-            if (not (multi_sign_args.flags.contains_all(required_flags))) return false;
-            var num_sign = multi_sign_args.signatures_required;
-             for(s in multi_sign_args.pubkeys) {
-               if(is_signer(s)) {
-                 num_sign -= 1;
-                 if(num_sign &lt; 1) {return true;}
-               }
-             }
-        }
-    }
-    return false;
+function check_single_sig_auth(args: byte_array, required_flags: list&lt;text&gt;): boolean {
+    val ss_args = single_sig_args.from_bytes(args);
+    return
+          ss_args.flags.contains_all(required_flags)
+            and 
+          is_signer(ss_args.pubkey); 
+}
+
+function check_multi_sig_auth(args: byte_array, required_flags: list&lt;text&gt;): boolean {
+   val multi_sign_args = multi_sig_args.from_bytes(args);
+   if (not (multi_sign_args.flags.contains_all(required_flags))) return false;
+   var num_sign = multi_sign_args.signatures_required;
+   for(s in multi_sign_args.pubkeys) {
+      if(is_signer(s)) {
+          num_sign -= 1;
+          if(num_sign &lt; 1) {return true;}
+      }
+   }
+   return false;
+}
+
+function check_auth_args (a_t: text, args: byte_array, required_flags: list&lt;text&gt;): boolean {
+    return when (a_t) {
+        "S" -&gt; check_single_sig_auth(args, required_flags);
+        "M" -&gt; check_multi_sig_auth(args, required_flags);
+        else -&gt; false;
+    };
 }
 
 
@@ -99,7 +104,7 @@ function require_auth (account, descriptor_id: byte_array, required_flags: list&
                                 <string>// namespace ft3 {
 
 record auth_descriptor {
-    auth_type;
+    auth_type: text;
     args: list&lt;gtv&gt;;
 }
 
@@ -118,7 +123,7 @@ class account_auth_descriptor {
      descriptor_id: byte_array;
      key account, descriptor_id;
      index descriptor_id;
-     auth_type;
+     auth_type: text;
      args: byte_array;
 }
 
@@ -140,7 +145,8 @@ function create_account_with_auth (auth_descriptor): byte_array {
      return id;
 }
 
-operation delete_auth_descriptor (account, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
+operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
+      val account = account @ { .id == account_id };
       require_auth(account, auth_descriptor_id, ["A"]);
       delete account_auth_descriptor @ {
          .account == account,
@@ -148,13 +154,13 @@ operation delete_auth_descriptor (account, auth_descriptor_id: byte_array, delet
       };
 }
 
-operation add_auth_descriptor (account, existing_id: byte_array, new_desc: auth_descriptor) {
-      require_auth(account, existing_id, ["A"]);
+operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {
+      val account = account @ { .id == account_id };
+      require_auth(account, auth_id, ["A"]);
       _add_auth_descriptor(account, new_desc);
 }
 
-
-// }</string>
+</string>
                             </entry>
                             <entry key="lib/ft3/asset.rell">
                                 <string>//namespace ft3 {
@@ -187,13 +193,53 @@ operation add_auth_descriptor (account, existing_id: byte_array, new_desc: auth_
 
 </string>
                             </entry>
-                            <entry key="lib/ft3/ft3_core.rell">
+                            <entry key="lib/ft3/core.rell">
                                 <string>include "account/main";
 include "account/auth_basic";
 include "asset";
 include "history";
-include "transfer";
-</string>
+include "transfer";</string>
+                            </entry>
+                            <entry key="lib/ft3/dev_op.rell">
+                                <string>// namespace ft3 {
+
+object dev_state {
+   mutable allow_dev_ops: boolean = true;   
+}
+
+function require_dev() {
+    require(dev_state.allow_dev_ops);
+}
+
+
+operation dev_register_asset (name, issuing_chain_rid: byte_array, origin_chain_rid: byte_array) {
+    require_dev();
+    register_asset(name, issuing_chain_rid);
+}
+
+operation dev_give_balance (asset_id: byte_array, account_id: byte_array, amount: integer) {
+    require_dev();
+    require(amount &gt;= 0);
+    ensure_balance( account @ { account_id }, asset @ { .id == asset_id } ).amount += amount;
+}
+
+operation dev_register_account (auth_descriptor) {
+    require_dev();
+    create_account_with_auth( auth_descriptor );
+}
+
+operation hello() {
+    print("HELLO");
+}</string>
+                            </entry>
+                            <entry key="lib/ft3/ft3_basic_dev.rell">
+                                <string>namespace ft3 {
+
+include "account/auth_basic";
+include "core";
+include "dev_op";
+
+}</string>
                             </entry>
                             <entry key="lib/ft3/history.rell">
                                 <string>//namespace ft3  {
@@ -300,7 +346,9 @@ operation transfer (inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output
 //}</string>
                             </entry>
                             <entry key="main.rell">
-                                <string>include "lib/ft3/ft3_core";</string>
+                                <string>include "lib/ft3/ft3_basic_dev";
+
+</string>
                             </entry>
                         </dict>
                     </entry>

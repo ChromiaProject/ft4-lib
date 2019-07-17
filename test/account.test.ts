@@ -1,9 +1,14 @@
-import Account from "../client/lib/ft3/account";
+import {
+    Account,
+    AuthDescriptor,
+    AuthType,
+    Flags,
+    SingleSignatureAuth
+} from "../client/lib/ft3/account";
+import * as pcl from "postchain-client";
+import {buffToHex, KeyPair} from "../client/lib/cyptoUtils";
 
 require('dotenv').config();
-
-import * as pcl from "postchain-client";
-import {buffToHex, hexToBuff, KeyPair} from "../client/lib/cyptoUtils";
 
 describe('Test the account', () => {
 
@@ -22,9 +27,12 @@ describe('Test the account', () => {
     });
 
     it("Register account on blockchain", async () => {
-       const account = new Account();
        const user = new KeyPair();
+       const authDescriptor = new AuthDescriptor(AuthType.single_sig, new SingleSignatureAuth(new Flags(true, true), user.pubKey))
+       const account = new Account([authDescriptor]);
+
        const tx = account.register(user.newTx());
+       tx.sign(user.privKey, user.pubKey);
        const sent = tx.postAndWaitConfirmation();
        await expect(sent).resolves.toBe(null);
     });

@@ -1,57 +1,100 @@
-
 enum AuthType {
-    single_sig,
-    multi_sig,
+    single_sig = "S",
+    multi_sig = "M",
 }
 
-enum flags {
-    A = "A",
+enum FlagsType {
+    A = "A", // Change Account settings
+    T = "T" // Transfer balance
+}
+
+type PubKey = Buffer;
+
+class Flags {
+    accountEx: boolean; // account Execution, it can execute create / update/ delete on account operations
+    transactionEx: boolean; // can create transactions
+
+    constructor(accountEx: boolean, transactionEx: boolean) {
+        this.accountEx = accountEx;
+        this.transactionEx = transactionEx;
+    }
+
+    toGTV() {
+        return [this.accountEx? 1: 0, this.transactionEx? 1:0];
+    }
 
 }
 
 class Auth {
-    flags: string[];
-    pubkey: Buffer;
+    flags: Flags;
 
-    constructor(pubkey: Buffer, flags: string[]) {
-        this.pubkey = pubkey;
-        this.flags = this.verifyFlags(flags);
+    constructor(flags: Flags) {
+        this.flags = flags;
     }
 
-    // Checks that the flags are correct (i.e. no wrong flags)
-    // Accepted flags are:
-    verifyFlags()
+    toGTV() {
+        return [this.flags.toGTV()];
+    }
 
 }
 
 class SingleSignatureAuth extends Auth {
+    pubkey: PubKey;
 
+    constructor(flags: Flags, pubkey: PubKey) {
+        super(flags);
+        this.pubkey = pubkey;
+    }
+
+    toGTV(): any[] {
+        return [...super.toGTV(), this.pubkey];
+    }
 }
 
 class AuthDescriptor {
     authType: AuthType;
-    args: any; // gtv
+    auth: SingleSignatureAuth;
+
+    constructor(authType: AuthType, auth: SingleSignatureAuth) {
+        this.authType = authType;
+        this.auth = auth;
+    }
+
+    toGTV() {
+        return [this.authType, this.auth.toGTV()];
+    }
 }
 
 
 class Account {
     id_: Buffer;
-    authDescriptor: AuthDescriptor;
+    authDescriptor: AuthDescriptor[];
 
-    constructor(id?: Buffer, authDescriptor?: AuthDescriptor) {
-        if (id && authDescriptor) {
-            this.id_ = id;
+    constructor(authDescriptor?: AuthDescriptor[]) {
+        if (authDescriptor) {
             this.authDescriptor = authDescriptor;
         }
     }
 
     register(tx: any) {
         if (process.env.DEV) {
-            tx.addOperation('dev_register_account', this.authDescriptor);
+            if (this.authDescriptor.length != 1) throw Error("You can register new account only with 1 descriptor")
+            console.log(this.authDescriptor[0].toGTV());
+            tx.addOperation('ft3.dev_register_account', this.authDescriptor[0].toGTV());
             return tx;
+        } else {
+            throw Error("You have to enable DEV mode")
         }
     }
 }
 
 
-export default Account;
+
+export {
+    Account,
+    AuthDescriptor,
+    AuthType,
+    SingleSignatureAuth,
+    Flags
+}
+

@@ -57,5 +57,3 @@ operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_
       _add_auth_descriptor(account, new_desc);
 }
 
-
-// }
