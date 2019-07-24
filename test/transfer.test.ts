@@ -9,9 +9,8 @@ import {FlagsType} from "../client/lib/ft3/account";
 let asset = null;
 
 describe("Transfer", () => {
-    beforeAll(async (done) => {
+    beforeAll(async () => {
         asset = await Asset.register(generateAssetName(), generateId());
-        done();
     });
 
     it("should succeed when balance is higher than amount to transfer", async () => {
@@ -51,7 +50,7 @@ describe("Transfer", () => {
 
         const promise = account1.transfer(account2.id_, asset.id, 10, [user1], gtx);
         await expect(promise).rejects.toBeInstanceOf(Error);
-    });
+    }, 10000);
 
     it("should fail if auth descriptor doesn't have transfer rights", async () => {
         const user1 = new KeyPair();

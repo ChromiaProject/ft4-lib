@@ -184,7 +184,6 @@ class Account {
     }
 
     async transferInputsToOutputs(inputs, outputs, signers, gtx) {
-
         const tx = gtx.newTransaction(signers.map(({ pubKey }) => pubKey));
         tx.addOperation('ft3.transfer', inputs, outputs);
         signers.forEach(({ privKey, pubKey}) => tx.sign(privKey, pubKey));
@@ -229,6 +228,32 @@ class Account {
             'ft3.get_payment_history',
             { account_id: this.id_.toString('hex') }
         );
+    }
+
+    async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number, signers: KeyPair[], gtx) {
+        const source = [
+            this.id_.toString('hex'),
+            assetId.toString('hex'),
+            this.authDescriptor[0].hash().toString('hex'),
+            amount,
+            []
+        ];
+
+        const target = [
+            destinationAccountId.toString('hex'),
+            []
+        ];
+
+        const hops = [
+            destinationChainId.toString('hex')
+        ];
+
+        const tx = gtx.newTransaction(signers.map(({ pubKey }) => pubKey));
+        tx.addOperation('ft3.xc.init_xfer', source, target, hops);
+        signers.forEach(({ privKey, pubKey}) => tx.sign(privKey, pubKey));
+        await tx.postAndWaitConfirmation();
+
+        await this.syncAssets();
     }
 }
 
