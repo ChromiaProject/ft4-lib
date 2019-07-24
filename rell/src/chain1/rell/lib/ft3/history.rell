@@ -10,6 +10,9 @@
     entry_index: integer;
   }
 
-  
-
+  query get_payment_history(account_id: byte_array) {
+    return payment_history_entry @* { account @ { account_id } } (
+        delta = .delta
+    );
+  }
 //}

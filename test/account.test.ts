@@ -1,12 +1,12 @@
 import {
     Account,
-    AuthDescriptor,
-    AuthType,
-    Flags,
-    SingleSignatureAuth
+    FlagsType,
+    MultiSignatureAuthDescriptor,
+    SingleSignatureAuthDescriptor,
 } from "../client/lib/ft3/account";
 import * as pcl from "postchain-client";
 import {buffToHex, KeyPair} from "../client/lib/cyptoUtils";
+import {gtx} from '../client/blockchain';
 
 require('dotenv').config();
 
@@ -28,12 +28,106 @@ describe('Test the account', () => {
 
     it("Register account on blockchain", async () => {
        const user = new KeyPair();
-       const authDescriptor = new AuthDescriptor(AuthType.single_sig, new SingleSignatureAuth(new Flags(true, true), user.pubKey))
-       const account = new Account([authDescriptor]);
+       const authDescriptor = new SingleSignatureAuthDescriptor(user.pubKey, [FlagsType.Account, FlagsType.Transfer]);
+       const account = await Account.register(authDescriptor, [user], gtx);
+       expect(account).not.toBeNull();
+    });
 
-       const tx = account.register(user.newTx());
-       tx.sign(user.privKey, user.pubKey);
-       const sent = tx.postAndWaitConfirmation();
-       await expect(sent).resolves.toBe(null);
+    it("can add new auth descriptor if has account edit rights", async () => {
+        const user = new KeyPair();
+        const account = await Account.register(
+            new SingleSignatureAuthDescriptor(user.pubKey, [FlagsType.Account, FlagsType.Transfer]),
+            [user],
+            gtx
+        );
+        expect(account).not.toBeNull();
+
+        await account.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(user.pubKey, [FlagsType.Transfer]),
+            [user],
+            gtx
+        );
+        expect(account.authDescriptor.length).toBe(2);
+    });
+
+    it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
+        const user = new KeyPair();
+        const account = await Account.register(
+            new SingleSignatureAuthDescriptor(user.pubKey, [FlagsType.Transfer]),
+            [user],
+            gtx
+        );
+        expect(account).not.toBeNull();
+
+        const promise = account.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(user.pubKey, [FlagsType.Transfer]),
+            [user],
+            gtx
+        );
+        await expect(promise).rejects.toBeInstanceOf(Error);
+        expect(account.authDescriptor.length).toBe(1);
+    });
+
+    it("should create new multisig account", async () => {
+        const user1 = new KeyPair();
+        const user2 = new KeyPair();
+
+        const account = await Account.register(
+            new MultiSignatureAuthDescriptor(
+                [user1.pubKey, user2.pubKey],
+                2,
+                [FlagsType.Account, FlagsType.Transfer]
+            ),
+            [user1, user2],
+            gtx
+        );
+        expect(account).not.toBeNull();
+    });
+
+    it("should update account if 2 signatures provided", async () => {
+        const user1 = new KeyPair();
+        const user2 = new KeyPair();
+
+        const account = await Account.register(
+            new MultiSignatureAuthDescriptor(
+                [user1.pubKey, user2.pubKey],
+                2,
+                [FlagsType.Account, FlagsType.Transfer]
+            ),
+            [user1, user2],
+            gtx
+        );
+        expect(account).not.toBeNull();
+
+        await account.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(user1.pubKey, [FlagsType.Transfer]),
+            [user1, user2],
+            gtx
+        );
+        expect(account.authDescriptor.length).toBe(2);
+    });
+
+    it("should fail if only one signature provided", async () => {
+        const user1 = new KeyPair();
+        const user2 = new KeyPair();
+
+        const account = await Account.register(
+            new MultiSignatureAuthDescriptor(
+                [user1.pubKey, user2.pubKey],
+                2,
+                [FlagsType.Account, FlagsType.Transfer]
+            ),
+            [user1, user2],
+            gtx
+        );
+        expect(account).not.toBeNull();
+
+        const promise = account.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(user1.pubKey, [FlagsType.Transfer]),
+            [user1],
+            gtx
+        );
+        await expect(promise).rejects.toBeInstanceOf(Error);
+        expect(account.authDescriptor.length).toBe(1);
     });
 });

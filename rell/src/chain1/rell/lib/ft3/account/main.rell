@@ -2,6 +2,7 @@
 
 record auth_descriptor {
     auth_type: text;
+    participants: list<byte_array>;
     args: list<gtv>;
 }
 
@@ -24,16 +25,24 @@ class account_auth_descriptor {
      args: byte_array;
 }
 
+class auth_descriptor_participant {
+    key account_auth_descriptor, id: byte_array;
+}
+
 function _add_auth_descriptor (account, auth_descriptor) {
      val descriptor_id = auth_descriptor.hash();
-     create account_auth_descriptor (
+     val account_auth_descriptor = create account_auth_descriptor (
         account, descriptor_id,
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes()
      );
+     for (participant in auth_descriptor.participants) {
+        create auth_descriptor_participant(account_auth_descriptor, id = participant);
+     }
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
+    print(auth_descriptor);
      val id = auth_descriptor.hash();
      val acc = create account (id);
      _add_auth_descriptor(
@@ -52,8 +61,30 @@ operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: by
 }
 
 operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {
+    print("account id", account_id);
+    print(auth_id);
+    print(new_desc);
       val account = account @ { .id == account_id };
       require_auth(account, auth_id, ["A"]);
       _add_auth_descriptor(account, new_desc);
 }
 
+query get_account_auth_descriptors(id: byte_array) {
+    return account_auth_descriptor @* {
+        .account.id == id
+    } (
+        .descriptor_id
+    );
+}
+
+query get_account_by_id(id: byte_array) {
+    return account @? { id } ( .id );
+}
+
+query get_account_by_auth_descriptor(auth_descriptor) {
+    return account @? { .id == auth_descriptor.hash() } ( .id );
+}
+
+query get_accounts_by_participant_id(id: byte_array) {
+    return auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
+}
