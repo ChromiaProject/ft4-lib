@@ -1,7 +1,6 @@
-import { Account, FlagsType } from "../../client/lib/ft3/account";
+import { Account, FlagsType } from "../../client";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/asset";
-import { giveBalance } from "./util";
 import ConnectionClient from "../../client/lib/ft3/connection-client";
 import User from "../../client/lib/ft3/user";
 import TestUser from "./test-user";
@@ -71,7 +70,10 @@ class AccountBuilder {
 
     private async addBalanceIfNeeded(account) {
         if (this.asset && this.balance) {
-            await giveBalance(account.id_, this.asset.id, this.balance);
+            //TODO: move to own function
+            const tx = this.connection.gtx.newTransaction([]);
+            tx.addOperation('ft3.dev_give_balance', this.asset.id.toString('hex'),  account.id_.toString('hex'), this.balance);
+            await tx.postAndWaitConfirmation();
         }
     }
 

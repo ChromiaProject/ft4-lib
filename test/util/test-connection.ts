@@ -1,4 +1,5 @@
 import ConnectionClient from "../../client/lib/ft3/connection-client";
+require('dotenv').config();
 
 class TestConnection extends ConnectionClient {
     constructor() {

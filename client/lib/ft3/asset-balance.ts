@@ -1,5 +1,4 @@
 import Asset from "./asset";
-import {gtx} from "../../blockchain";
 import ConnectionClient from "./connection-client";
 
 class AssetBalance {
@@ -11,8 +10,8 @@ class AssetBalance {
         this.asset = asset;
     }
 
-    static async getByAccountId(id: Buffer): Promise<AssetBalance[]> {
-        const assets = await gtx.query('ft3.get_asset_balances', { account_id: id.toString('hex')});
+    static async getByAccountId(id: Buffer, connection: ConnectionClient): Promise<AssetBalance[]> {
+        const assets = await connection.gtx.query('ft3.get_asset_balances', { account_id: id.toString('hex')});
 
         return assets.map(asset => new AssetBalance(
             asset.amount,

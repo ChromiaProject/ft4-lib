@@ -91,7 +91,7 @@ class Account {
     }
 
     private async syncAssets(): Promise<void> {
-        this.assets = await AssetBalance.getByAccountId(this.id_);
+        this.assets = await AssetBalance.getByAccountId(this.id_, this.connection);
     }
 
     getAssetById(id: Buffer) {

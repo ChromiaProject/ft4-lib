@@ -1,6 +1,5 @@
 import * as pcl from 'postchain-client';
-import {buffToHex, hexToBuff} from "./index";
-import {gtx} from "../../blockchain";
+import {hexToBuff} from "./index";
 
 class KeyPair {
 
@@ -17,14 +16,6 @@ class KeyPair {
             this.privKey = privKey;
         }
     }
-
-    updateKeyPair(privKey: string) {
-
-    }
-
-    newTx = () => {
-        return gtx.newTransaction([this.pubKey]);
-    };
 
     makeKeyPair = () => {
         return pcl.util.makeKeyPair();
