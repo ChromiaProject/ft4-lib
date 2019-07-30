@@ -265,8 +265,6 @@ function blockchain_account_id (blockchain_rid: byte_array): byte_array {
 
 function ensure_blockchain_account (blockchain_rid: byte_array): account {
    val blockchain_account_id = blockchain_account_id(blockchain_rid);
-   print("blockchain_account_id", blockchain_account_id);
-   print("blockchain_rid", blockchain_rid);
    val acc = account @? { .id == blockchain_account_id };
    return if (acc??)  acc
    else create account (id = blockchain_account_id);

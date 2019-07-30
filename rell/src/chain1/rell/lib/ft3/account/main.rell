@@ -61,9 +61,6 @@ operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: by
 }
 
 operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {
-    print("account id", account_id);
-    print(auth_id);
-    print(new_desc);
       val account = account @ { .id == account_id };
       require_auth(account, auth_id, ["A"]);
       _add_auth_descriptor(account, new_desc);

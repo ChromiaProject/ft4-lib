@@ -1,5 +1,6 @@
 import Asset from "./asset";
 import {gtx} from "../../blockchain";
+import ConnectionClient from "./connection-client";
 
 class AssetBalance {
     amount: number;
@@ -19,8 +20,8 @@ class AssetBalance {
         ));
     }
 
-    static async getByAccountAndAssetId(accountId, assetId): Promise<AssetBalance> {
-        const asset = await gtx.query(
+    static async getByAccountAndAssetId(accountId, assetId, connection: ConnectionClient): Promise<AssetBalance> {
+        const asset = await connection.gtx.query(
             'ft3.get_asset_balance',
             {
                 account_id: accountId.toString('hex'),

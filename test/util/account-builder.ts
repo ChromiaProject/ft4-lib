@@ -1,26 +1,32 @@
-import {
-    Account,
-    FlagsType,
-    MultiSignatureAuthDescriptor,
-    SingleSignatureAuthDescriptor
-} from "../../client/lib/ft3/account";
-import {gtx} from "../../client/blockchain";
+import { Account, FlagsType } from "../../client/lib/ft3/account";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/asset";
 import { giveBalance } from "./util";
+import ConnectionClient from "../../client/lib/ft3/connection-client";
+import User from "../../client/lib/ft3/user";
+import TestUser from "./test-user";
+import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
+import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 
 
 class AccountBuilder {
+    private connection: ConnectionClient;
+    private user: User;
     private balance?: number;
     private asset?: Asset;
     private participants = [new KeyPair()];
     private requiredSignaturesCount: number = 1;
     private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
 
+    constructor(connection: ConnectionClient, user: User = TestUser.singleSig()) {
+        this.connection = connection;
+        this.user = user;
+    }
+
     /* Public functions */
 
-    static account(): AccountBuilder {
-        return new AccountBuilder();
+    static account(connection: ConnectionClient, user?: User): AccountBuilder {
+        return new AccountBuilder(connection, user);
     }
 
     withAuthFlags(flags: FlagsType[]): AccountBuilder {
@@ -58,7 +64,8 @@ class AccountBuilder {
         return await Account.register(
             this.getAuthDescriptor(),
             this.participants,
-            gtx
+            this.user,
+            this.connection
         );
     }
 

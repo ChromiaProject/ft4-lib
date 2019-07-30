@@ -1,5 +1,5 @@
 import { gtv } from 'postchain-client';
-import { gtx } from "../../blockchain";
+import ConnectionClient from "./connection-client";
 
 class Asset {
     name: string;
@@ -14,8 +14,8 @@ class Asset {
         return gtv.gtvHash([this.name, this.chainId]);
     }
 
-    static async register(name: string, chainId: Buffer) {
-        const tx = gtx.newTransaction([]);
+    static async register(name: string, chainId: Buffer, connection: ConnectionClient) {
+        const tx = connection.gtx.newTransaction([]);
         tx.addOperation('ft3.dev_register_asset', name, chainId.toString('hex'), chainId.toString('hex'));
         await tx.postAndWaitConfirmation();
         return new Asset(name, chainId);
