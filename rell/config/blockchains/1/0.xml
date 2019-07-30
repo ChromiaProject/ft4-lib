@@ -166,9 +166,6 @@ operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: by
 }
 
 operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {
-    print("account id", account_id);
-    print(auth_id);
-    print(new_desc);
       val account = account @ { .id == account_id };
       require_auth(account, auth_id, ["A"]);
       _add_auth_descriptor(account, new_desc);
@@ -242,9 +239,38 @@ query get_accounts_by_participant_id(id: byte_array) {
         chain_id = .asset.issuing_chain_rid
     );
   }
+
+  query get_asset_by_name(name) {
+    return asset @* { name } (
+        .id,
+        .name,
+        .issuing_chain_rid
+    );
+  }
 // }
 
 </string>
+                            </entry>
+                            <entry key="lib/ft3/blockchain.rell">
+                                <string>object blockchain {
+    mutable name = 'test';
+    mutable website: text = 'test_website';
+    mutable description: text = 'test_description';
+}
+
+operation update_blockchain(name, website: text, description: text) {
+    blockchain.name = name;
+    blockchain.website = website;
+    blockchain.description = description;
+}
+
+query get_blockchain_info() {
+    return (
+        name = blockchain.name,
+        website = blockchain.website,
+        description = blockchain.description
+    );
+}</string>
                             </entry>
                             <entry key="lib/ft3/core.rell">
                                 <string>include "account/main";
@@ -453,6 +479,7 @@ operation dev_register_account (auth_descriptor) {
 include "account/auth_basic";
 include "core";
 include "dev_op";
+include "blockchain";
 
  namespace xc {
     include "crosschain/structures";

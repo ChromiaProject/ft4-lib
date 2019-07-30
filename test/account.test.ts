@@ -1,10 +1,11 @@
-import { Account, FlagsType } from "../client/lib/ft3/account";
+import {Account, FlagsType} from "../client/lib/ft3/account";
 import * as pcl from "postchain-client";
 import {buffToHex, KeyPair} from "../client/lib/cyptoUtils";
 import TestConnection from "./util/test-connection";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
+import AccountBuilder from "./util/account-builder";
 
 require('dotenv').config();
 
@@ -130,5 +131,42 @@ describe('Test the account', () => {
         );
         await expect(promise).rejects.toBeInstanceOf(Error);
         expect(account.authDescriptor.length).toBe(1);
+    });
+
+    it("should be returned when queried by participant id", async () => {
+        const user = TestUser.singleSig();
+
+        await AccountBuilder
+            .account(connection)
+            .withParticipants([user.keyPair])
+            .build();
+
+        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, connection);
+
+        expect(accounts.length).toEqual(1);
+    });
+
+    it("should return two accounts when account is participant of two accounts", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+
+        await AccountBuilder
+            .account(connection)
+            .withParticipants([user1.keyPair])
+            .build();
+
+        const account2 = await AccountBuilder
+            .account(connection, user2)
+            .withParticipants([user2.keyPair])
+            .build();
+
+        await account2.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]),
+            [user2.keyPair]
+        );
+
+        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, connection);
+
+        expect(accounts.length).toEqual(2);
     });
 });

@@ -6,6 +6,7 @@ import User from "../../client/lib/ft3/user";
 import TestUser from "./test-user";
 import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
+import AssetBalance from "../../client/lib/ft3/asset-balance";
 
 
 class AccountBuilder {
@@ -70,10 +71,7 @@ class AccountBuilder {
 
     private async addBalanceIfNeeded(account) {
         if (this.asset && this.balance) {
-            //TODO: move to own function
-            const tx = this.connection.gtx.newTransaction([]);
-            tx.addOperation('ft3.dev_give_balance', this.asset.id.toString('hex'),  account.id_.toString('hex'), this.balance);
-            await tx.postAndWaitConfirmation();
+            await AssetBalance.giveBalance(account.id_, this.asset.id, this.balance, this.connection)
         }
     }
 

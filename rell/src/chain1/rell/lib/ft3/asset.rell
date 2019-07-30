@@ -44,5 +44,13 @@
         chain_id = .asset.issuing_chain_rid
     );
   }
+
+  query get_asset_by_name(name) {
+    return asset @* { name } (
+        .id,
+        .name,
+        .issuing_chain_rid
+    );
+  }
 // }
 

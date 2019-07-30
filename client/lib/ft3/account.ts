@@ -58,8 +58,8 @@ class Account {
         this.connection = connection;
     }
 
-    static getByParticipantId(id: Buffer, gtx) {
-        return gtx.query('ft3.get_accounts_by_participant_id', { id: id.toString('hex') });
+    static async getByParticipantId(id: Buffer, connection: ConnectionClient) {
+        return await connection.gtx.query('ft3.get_accounts_by_participant_id', { id: id.toString('hex') });
     }
 
     static registerOp(authDescriptor: AuthDescriptor): any[] {

@@ -20,6 +20,13 @@ class Asset {
         await tx.postAndWaitConfirmation();
         return new Asset(name, chainId);
     }
+
+    static async getByName(name: string, connection: ConnectionClient): Promise<Asset[]>  {
+        const assets = await connection.gtx.query('ft3.get_asset_by_name', { name });
+        return assets.map(({ name, issuing_chain_rid }) =>
+            new Asset(name, Buffer.from(issuing_chain_rid, 'hex'))
+        );
+    }
 }
 
 export default Asset;
