@@ -175,7 +175,9 @@ query get_account_auth_descriptors(id: byte_array) {
     return account_auth_descriptor @* {
         .account.id == id
     } (
-        .descriptor_id
+        id = .descriptor_id,
+        type = .auth_type,
+        args = .args
     );
 }
 

@@ -169,4 +169,16 @@ describe('Test the account', () => {
 
         expect(accounts.length).toEqual(2);
     });
+
+    it('should return account by id', async () => {
+        const user = TestUser.singleSig();
+
+        const account = await AccountBuilder
+            .account(connection, user)
+            .build();
+
+        const foundAccount = await Account.getById(account.id_, user, connection);
+
+        expect(account).toEqual(foundAccount);
+    });
 });

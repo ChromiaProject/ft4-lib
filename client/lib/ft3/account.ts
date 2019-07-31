@@ -3,6 +3,7 @@ import KeyPair from "../cyptoUtils/keyPair";
 import AssetBalance from './asset-balance';
 import User from "./user";
 import ConnectionClient from "./connection-client";
+import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 
 enum AuthType {
     single_sig = "S",
@@ -76,6 +77,30 @@ class Account {
 
     static async registerWithUser(user: User, connectionClient: ConnectionClient): Promise<Account> {
         return await this.register(user.authDescriptor, [user.keyPair], user, connectionClient)
+    }
+
+    static async getById(id: Buffer, user: User, connection: ConnectionClient): Promise<Account> {
+        const account = await connection.gtx.query(
+            'ft3.get_account_by_id',
+            { id: id.toString('hex')}
+        );
+
+        if (!account) { return null }
+
+        const authDescriptors = await connection.gtx.query(
+            'ft3.get_account_auth_descriptors',
+            { id: id.toString('hex')}
+        );
+
+        const authDescriptorFactory = new AuthDescriptorFactory();
+        const descriptors = authDescriptors.map(authDescriptor =>
+            authDescriptorFactory.create(
+                authDescriptor.type,
+                Buffer.from(authDescriptor.args, 'hex')
+            )
+        );
+
+        return new Account(id, descriptors, user, connection);
     }
 
     addAuthDescriptorOp(authDescriptor: AuthDescriptor): any[] {
