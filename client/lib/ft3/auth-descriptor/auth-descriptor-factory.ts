@@ -2,7 +2,7 @@ import { gtv } from 'postchain-client';
 import {AuthDescriptor} from "../account";
 import SingleSignatureAuthDescriptor from "./signle-signature-auth-descriptor";
 
-class AuthDescriptorFactory {
+export default class AuthDescriptorFactory {
     create(type: string, args: Buffer): AuthDescriptor {
         switch (type) {
             case 'S': return this.createSingleSig(args);
@@ -17,5 +17,3 @@ class AuthDescriptorFactory {
         );
     }
 }
-
-export default AuthDescriptorFactory;

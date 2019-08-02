@@ -1,0 +1,60 @@
+import PaymentHistoryEntry from "./payment-history-entry";
+import PaymentHistoryStore from "./payment-history-store";
+
+export default class PaymentHistoryIterator {
+    readonly accountId: Buffer;
+    readonly pageSize: number;
+    private currentPage: number = -1;
+    private paymentHistoryStore: PaymentHistoryStore;
+
+    constructor(paymentHistoryStore: PaymentHistoryStore, accountId: Buffer, pageSize: number) {
+        this.paymentHistoryStore = paymentHistoryStore;
+        this.accountId = accountId;
+        this.pageSize = pageSize;
+    }
+
+    get pageCount(): number {
+        return Math.ceil(this.paymentHistoryStore.getCount(this.accountId) / this.pageSize);
+    }
+
+    get totalCount(): number {
+        return this.paymentHistoryStore.getCount(this.accountId)
+    }
+
+    get current(): number {
+        return this.currentPage;
+    }
+
+    rewind(): PaymentHistoryEntry[] {
+        const entries = this.paymentHistoryStore.get(this.accountId, 0, this.pageSize);
+        this.currentPage = 0;
+        return entries;
+    }
+
+    prev(): PaymentHistoryEntry[] {
+        if (this.currentPage === 0) { return [] }
+        const page = this.currentPage - 1;
+        const entries = this.paymentHistoryStore.get(this.accountId, page * this.pageSize, this.pageSize);
+        this.currentPage = page;
+        return entries;
+    }
+
+    next(): PaymentHistoryEntry[] {
+        if (!this.hasMore()) { return [] }
+        const page = this.currentPage + 1;
+        const entries = this.paymentHistoryStore.get(this.accountId, page * this.pageSize, this.pageSize);
+        this.currentPage = page;
+        return entries;
+    }
+
+    fastForward(): PaymentHistoryEntry[] {
+        const page = this.pageCount - 1;
+        const entries = this.paymentHistoryStore.get(this.accountId, page * this.pageSize, this.pageSize);
+        this.currentPage = page;
+        return entries;
+    }
+
+    hasMore(): boolean {
+        return this.current < this.pageCount - 1;
+    }
+}

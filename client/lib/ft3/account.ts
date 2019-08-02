@@ -4,6 +4,9 @@ import AssetBalance from './asset-balance';
 import User from "./user";
 import ConnectionClient from "./connection-client";
 import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
+import PaymentHistory from "./payment-history/payment-history";
+import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
+import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
 
 enum AuthType {
     single_sig = "S",
@@ -46,6 +49,8 @@ interface AuthDescriptor extends GtvSerializable {
 
 
 class Account {
+    private paymentHistorySyncManager = new PaymentHistorySyncManager();
+
     id_: Buffer;
     authDescriptor: AuthDescriptor[];
     assets: AssetBalance[] = [];
@@ -100,7 +105,11 @@ class Account {
             )
         );
 
-        return new Account(id, descriptors, user, connection);
+        const acc = new Account(id, descriptors, user, connection);
+
+        await acc.syncAssets();
+
+        return acc;
     }
 
     addAuthDescriptorOp(authDescriptor: AuthDescriptor): any[] {
@@ -167,10 +176,13 @@ class Account {
     }
 
     async getPaymentHistory(): Promise<any[]> {
-        return await this.connection.gtx.query(
-            'ft3.get_payment_history',
-            { account_id: this.id_.toString('hex') }
-        );
+        return await PaymentHistory.getByAccountId(this.id_, -1, this.connection);
+    }
+
+    async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
+        if (pageSize < 1) throw new Error('Page size has to be greater than 1');
+        await this.paymentHistorySyncManager.syncAccount(this.id_, this.connection);
+        return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id_, pageSize);
     }
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number) {

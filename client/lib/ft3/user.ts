@@ -1,7 +1,7 @@
 import { AuthDescriptor } from "./account";
 import KeyPair from "../cyptoUtils/keyPair";
 
-class User {
+export default class User {
     keyPair: KeyPair;
     authDescriptor: AuthDescriptor;
 
@@ -10,5 +10,3 @@ class User {
         this.authDescriptor = authDescriptor;
     }
 }
-
-export default User;

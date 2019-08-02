@@ -1,7 +1,7 @@
 import { gtv } from 'postchain-client';
 import ConnectionClient from "./connection-client";
 
-class Asset {
+export default class Asset {
     name: string;
     chainId: Buffer;
 
@@ -28,5 +28,3 @@ class Asset {
         );
     }
 }
-
-export default Asset;

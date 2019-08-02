@@ -1,7 +1,7 @@
 import { gtv } from 'postchain-client';
 import {AuthDescriptor, AuthType, Flags, FlagsType, PubKey} from "../account";
 
-class MultiSignatureAuthDescriptor implements AuthDescriptor {
+export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
     pubkeys: PubKey[];
     flags: Flags;
     signaturesRequired: number;
@@ -44,5 +44,3 @@ class MultiSignatureAuthDescriptor implements AuthDescriptor {
         ]);
     }
 }
-
-export default MultiSignatureAuthDescriptor;

@@ -1,10 +1,9 @@
 import { gtv } from 'postchain-client';
 import {AuthDescriptor, AuthType, Flags, FlagsType, PubKey} from "../account";
 
-class SingleSignatureAuthDescriptor implements AuthDescriptor {
+export default class SingleSignatureAuthDescriptor implements AuthDescriptor {
     pubkey: PubKey;
     flags: Flags;
-
 
     constructor(pubkey: PubKey, flags: FlagsType[]) {
         this.flags = new Flags(new Set(flags));
@@ -27,5 +26,3 @@ class SingleSignatureAuthDescriptor implements AuthDescriptor {
         return gtv.gtvHash([AuthType.single_sig, [this.pubkey], [this.flags.toGTV(), this.pubkey.toString('hex')]]);
     }
 }
-
-export default SingleSignatureAuthDescriptor;

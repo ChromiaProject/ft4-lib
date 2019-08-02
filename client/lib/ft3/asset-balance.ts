@@ -1,7 +1,7 @@
 import Asset from "./asset";
 import ConnectionClient from "./connection-client";
 
-class AssetBalance {
+export default class AssetBalance {
     amount: number;
     asset: Asset;
 
@@ -41,5 +41,3 @@ class AssetBalance {
         await tx.postAndWaitConfirmation();
     }
 }
-
-export default AssetBalance;

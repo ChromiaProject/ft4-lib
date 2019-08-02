@@ -1,6 +1,6 @@
 import { restClient, gtxClient } from 'postchain-client';
 
-class ConnectionClient {
+export default class ConnectionClient {
     chainURL: string;
     chainId: string;
     gtx;
@@ -16,5 +16,3 @@ class ConnectionClient {
     }
 
 }
-
-export default ConnectionClient;

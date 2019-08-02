@@ -1,20 +1,24 @@
-import ConnectionClient from "./connection-client";
+import BlockchainInfo from "./blockchain-info";
+import ConnectionClient from './connection-client';
+import { Account } from "./account";
+import User from "./user";
 
-class Blockchain {
-    name: string;
-    website: string;
-    description: string;
+export default class Blockchain {
+    readonly info: BlockchainInfo;
+    private readonly connection: ConnectionClient;
 
-    constructor(name: string, website: string, description: string) {
-        this.name = name;
-        this.website = website;
-        this.description = description;
+    constructor(info: BlockchainInfo, connection: ConnectionClient) {
+        this.info = info;
+        this.connection = connection;
     }
 
-    static async getInfo(connection: ConnectionClient)  {
-        const info = await connection.gtx.query('ft3.get_blockchain_info', {});
-        return new Blockchain(info.name, info.website, info.description);
+    static async connect(url, blockchainRID): Promise<Blockchain> {
+        const connection = new ConnectionClient(url, blockchainRID);
+        const info = await BlockchainInfo.getInfo(connection);
+        return new Blockchain(info, connection);
+    }
+
+    async getAccountById(id: Buffer, user: User): Promise<Account> {
+        return await Account.getById(id, user, this.connection);
     }
 }
-
-export default Blockchain;
