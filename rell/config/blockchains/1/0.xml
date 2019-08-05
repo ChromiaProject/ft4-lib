@@ -192,7 +192,10 @@ query get_account_by_auth_descriptor(auth_descriptor) {
 query get_accounts_by_participant_id(id: byte_array) {
     return auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
 }
-</string>
+
+query get_accounts_by_auth_descriptor_id(descriptor_id: byte_array) {
+    return account_auth_descriptor @* { descriptor_id } ( .account.id );
+}</string>
                             </entry>
                             <entry key="lib/ft3/asset.rell">
                                 <string>//namespace ft3 {
@@ -260,6 +263,10 @@ query get_accounts_by_participant_id(id: byte_array) {
     mutable description: text = 'test_description';
 }
 
+class linked_chain {
+    key chain_rid: byte_array;
+}
+
 operation update_blockchain(name, website: text, description: text) {
     blockchain.name = name;
     blockchain.website = website;
@@ -272,6 +279,18 @@ query get_blockchain_info() {
         website = blockchain.website,
         description = blockchain.description
     );
+}
+
+operation link_chain(chain_rid: byte_array) {
+    create linked_chain(chain_rid);
+}
+
+query get_linked_chains() {
+    return linked_chain @* {} ( .chain_rid );
+}
+
+query is_linked_with_chain(chain_rid: byte_array) {
+    return linked_chain @? { chain_rid } != null;
 }</string>
                             </entry>
                             <entry key="lib/ft3/core.rell">

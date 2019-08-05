@@ -4,6 +4,10 @@ object blockchain {
     mutable description: text = 'test_description';
 }
 
+class linked_chain {
+    key chain_rid: byte_array;
+}
+
 operation update_blockchain(name, website: text, description: text) {
     blockchain.name = name;
     blockchain.website = website;
@@ -16,4 +20,16 @@ query get_blockchain_info() {
         website = blockchain.website,
         description = blockchain.description
     );
+}
+
+operation link_chain(chain_rid: byte_array) {
+    create linked_chain(chain_rid);
+}
+
+query get_linked_chains() {
+    return linked_chain @* {} ( .chain_rid );
+}
+
+query is_linked_with_chain(chain_rid: byte_array) {
+    return linked_chain @? { chain_rid } != null;
 }

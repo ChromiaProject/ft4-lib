@@ -6,4 +6,5 @@ export { default as AssetBalance } from './lib/ft3/asset-balance';
 export { default as Asset } from './lib/ft3/asset';
 export { default as BlockchainInfo } from './lib/ft3/blockchain-info';
 export { default as Blockchain } from './lib/ft3/blockchain';
+export { default as DirectoryService } from './lib/ft3/directory-service';
 export * from './lib/ft3/auth-descriptor';

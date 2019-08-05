@@ -64,8 +64,20 @@ class Account {
         this.connection = connection;
     }
 
-    static async getByParticipantId(id: Buffer, connection: ConnectionClient) {
-        return await connection.gtx.query('ft3.get_accounts_by_participant_id', { id: id.toString('hex') });
+    static async getByParticipantId(id: Buffer, user: User, connection: ConnectionClient): Promise<Account []> {
+        const accountIds = await connection.gtx.query(
+            'ft3.get_accounts_by_participant_id',
+            { id: id.toString('hex') }
+        );
+        return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), user, connection);
+    }
+
+    static async getByAuthDescriptorId(id: Buffer, user: User, connection: ConnectionClient): Promise<Account[]> {
+        const accountIds = await connection.gtx.query(
+            'ft3.get_accounts_by_auth_descriptor_id',
+            { descriptor_id: id.toString('hex') }
+        );
+        return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), user, connection);
     }
 
     static registerOp(authDescriptor: AuthDescriptor): any[] {
@@ -82,6 +94,16 @@ class Account {
 
     static async registerWithUser(user: User, connectionClient: ConnectionClient): Promise<Account> {
         return await this.register(user.authDescriptor, [user.keyPair], user, connectionClient)
+    }
+
+    static async getByIds(ids: Buffer[], user: User, connection: ConnectionClient): Promise<Account []> {
+        return new Promise((resolve, reject) => {
+            Promise.all(
+                ids.map(id => this.getById(id, user, connection))
+            ).then((accounts: any[]) => {
+                resolve(accounts);
+            }, reject);
+        });
     }
 
     static async getById(id: Buffer, user: User, connection: ConnectionClient): Promise<Account> {

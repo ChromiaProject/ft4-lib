@@ -141,7 +141,7 @@ describe('Test the account', () => {
             .withParticipants([user.keyPair])
             .build();
 
-        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, connection);
+        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, user, connection);
 
         expect(accounts.length).toEqual(1);
     });
@@ -165,7 +165,7 @@ describe('Test the account', () => {
             [user2.keyPair]
         );
 
-        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, connection);
+        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, user1, connection);
 
         expect(accounts.length).toEqual(2);
     });
