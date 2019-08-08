@@ -51,7 +51,7 @@ interface AuthDescriptor extends GtvSerializable {
 class Account {
     private paymentHistorySyncManager = new PaymentHistorySyncManager();
 
-    id_: Buffer;
+    readonly id_: Buffer;
     authDescriptor: AuthDescriptor[];
     assets: AssetBalance[] = [];
     readonly user: User;
@@ -85,11 +85,16 @@ class Account {
     }
 
     static async register(authDescriptor: AuthDescriptor, signers: KeyPair[], user: User, blockchain: Blockchain) {
-        const tx = blockchain.connection.gtx.newTransaction(signers.map(({ pubKey }) => pubKey));
-        tx.addOperation(...this.registerOp(authDescriptor));
-        signers.forEach(({ privKey, pubKey}) => tx.sign(privKey, pubKey));
-        await tx.postAndWaitConfirmation();
-        return new Account(authDescriptor.hash(), [authDescriptor], user, blockchain);
+        await blockchain
+            .transactionBuilder()
+            .addOperation(...this.registerOp(authDescriptor))
+            .build(user.authDescriptor.signers)
+            .sign(user.keyPair)
+            .post();
+
+        const account = new Account(authDescriptor.hash(), [authDescriptor], user, blockchain);
+        await account.syncAssets();
+        return account
     }
 
     static async getByIds(ids: Buffer[], user: User, blockchain: Blockchain): Promise<Account []> {
@@ -97,14 +102,14 @@ class Account {
     }
 
     static async getById(id: Buffer, user: User, blockchain: Blockchain): Promise<Account> {
-        const account = await blockchain.connection.gtx.query(
+        const account = await blockchain.query(
             'ft3.get_account_by_id',
             { id: id.toString('hex')}
         );
 
         if (!account) { return null }
 
-        const authDescriptors = await blockchain.connection.gtx.query(
+        const authDescriptors = await blockchain.query(
             'ft3.get_account_auth_descriptors',
             { id: id.toString('hex')}
         );
@@ -125,15 +130,25 @@ class Account {
     }
 
     addAuthDescriptorOp(authDescriptor: AuthDescriptor): any[] {
-        return ['ft3.add_auth_descriptor', this.id_.toString('hex'), this.user.authDescriptor.hash().toString('hex'), authDescriptor.toGTV(), ]
+        return [
+            'ft3.add_auth_descriptor',
+            this.id_.toString('hex'),
+            this.user.authDescriptor.hash().toString('hex'),
+            authDescriptor.toGTV()
+        ]
     }
 
     async addAuthDescriptor(authDescriptor: AuthDescriptor, signers: KeyPair[]) {
-        const tx = this.blockchain.connection.gtx.newTransaction(signers.map(({ pubKey }) => pubKey));
-        tx.addOperation(...this.addAuthDescriptorOp(authDescriptor));
-        signers.forEach(({ privKey, pubKey}) => tx.sign(privKey, pubKey));
-        await tx.postAndWaitConfirmation();
+        await this.blockchain.transactionBuilder()
+            .addOperation(...this.addAuthDescriptorOp(authDescriptor))
+            .build(signers.map(({ pubKey }) => pubKey))
+            .sign(signers[0])
+            .post();
         this.authDescriptor.push(authDescriptor);
+    }
+
+    async sync(): Promise<void> {
+        await Promise.all([this.syncAssets()]);
     }
 
     private async syncAssets(): Promise<void> {
@@ -148,10 +163,11 @@ class Account {
     }
 
     async transferInputsToOutputs(inputs, outputs) {
-        const tx = this.blockchain.connection.gtx.newTransaction([this.user.keyPair.pubKey]);
-        tx.addOperation('ft3.transfer', inputs, outputs);
-        tx.sign(this.user.keyPair.privKey, this.user.keyPair.pubKey);
-        await tx.postAndWaitConfirmation();
+        await this.blockchain.transactionBuilder()
+            .addOperation('ft3.transfer', inputs, outputs)
+            .build(this.user.authDescriptor.signers)
+            .sign(this.user.keyPair)
+            .post();
 
         await this.syncAssets();
     }
@@ -193,7 +209,7 @@ class Account {
 
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
         if (pageSize < 1) throw new Error('Page size has to be greater than 1');
-        await this.paymentHistorySyncManager.syncAccount(this.id_, this.blockchain.connection);
+        await this.paymentHistorySyncManager.syncAccount(this.id_, this.blockchain);
         return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id_, pageSize);
     }
 

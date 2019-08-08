@@ -4,26 +4,30 @@ import {Account, AuthDescriptor} from "./account";
 import User from "./user";
 import Asset from "./asset";
 import DirectoryService from "./directory-service";
+import TransactionBuilder from "./transaction-builder";
 
 export default class Blockchain {
     readonly id: Buffer;
+    readonly user: User;
     readonly info: BlockchainInfo;
     readonly connection: ConnectionClient;
     private readonly directoryService: DirectoryService;
 
     constructor(
         id: Buffer,
+        user: User,
         info: BlockchainInfo,
         connection: ConnectionClient,
         directoryService: DirectoryService
     ) {
         this.id = id;
+        this.user = user;
         this.info = info;
         this.connection = connection;
         this.directoryService = directoryService;
     }
 
-    static async connect(blockchainRID: Buffer, directoryService: DirectoryService): Promise<Blockchain> {
+    static async connect(blockchainRID: Buffer, directoryService: DirectoryService, user: User = User.generateSingleSigUser()): Promise<Blockchain> {
         const chainConnectionInfo = await directoryService.getChainConnectionInfo(blockchainRID);
         if (!chainConnectionInfo) {
             throw new Error(`Cannot find details for chain with RID: ${
@@ -36,7 +40,7 @@ export default class Blockchain {
             blockchainRID.toString('hex')
         );
         const info = await BlockchainInfo.getInfo(connection);
-        return new Blockchain(blockchainRID, info, connection, directoryService);
+        return new Blockchain(blockchainRID, user, info, connection, directoryService);
     }
 
     async getAccountById(id: Buffer, user: User): Promise<Account> {
@@ -86,5 +90,9 @@ export default class Blockchain {
 
     async query(name: string, params: any): Promise<any> {
         return await this.connection.query(name, params);
+    }
+
+    transactionBuilder(): TransactionBuilder {
+        return new TransactionBuilder(this);
     }
 }

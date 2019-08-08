@@ -3,6 +3,7 @@ export default class PaymentHistoryEntry {
     readonly delta: number;
     readonly asset: string;
     readonly assetId: Buffer;
+    readonly chainId: Buffer;
     readonly other: any[];
     readonly timestamp: Date;
     readonly transactionId: Buffer;
@@ -13,6 +14,7 @@ export default class PaymentHistoryEntry {
         delta: number,
         asset: string,
         assetId: Buffer,
+        chainId: Buffer,
         other: any[],
         timestamp: Date,
         transactionId: Buffer,
@@ -22,6 +24,7 @@ export default class PaymentHistoryEntry {
         this.delta = delta;
         this.asset = asset;
         this.assetId = assetId;
+        this.chainId = chainId;
         this.other = other;
         this.timestamp = timestamp;
         this.transactionId = transactionId;
@@ -29,13 +32,14 @@ export default class PaymentHistoryEntry {
     }
 
     adaptForSerialization(): {} {
-        const { isInput, delta, asset, assetId, other, timestamp, transactionId, blockHeight } = this;
+        const { isInput, delta, asset, assetId, chainId, other, timestamp, transactionId, blockHeight } = this;
 
         return {
             isInput,
             delta,
             asset,
             assetId: assetId.toString('hex'),
+            chainId: chainId.toString('hex'),
             other,
             timestamp: timestamp.getTime(),
             transactionId: transactionId.toString('hex'),

@@ -80,6 +80,7 @@ export default class PaymentHistoryStoreLocalStorage implements PaymentHistorySt
             entry.delta,
             entry.asset,
             Buffer.from(entry.assetId, 'hex'),
+            Buffer.from(entry.chainId, 'hex'),
             entry.other,
             new Date(entry.timestamp),
             Buffer.from(entry.transactionId, 'hex'),
