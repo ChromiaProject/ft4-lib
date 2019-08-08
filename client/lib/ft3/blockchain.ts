@@ -3,44 +3,60 @@ import ConnectionClient from './connection-client';
 import {Account, AuthDescriptor} from "./account";
 import User from "./user";
 import Asset from "./asset";
+import DirectoryService from "./directory-service";
 
 export default class Blockchain {
+    readonly id: Buffer;
     readonly info: BlockchainInfo;
-    private readonly connection: ConnectionClient;
+    readonly connection: ConnectionClient;
+    private readonly directoryService: DirectoryService;
 
-    constructor(info: BlockchainInfo, connection: ConnectionClient) {
+    constructor(
+        id: Buffer,
+        info: BlockchainInfo,
+        connection: ConnectionClient,
+        directoryService: DirectoryService
+    ) {
+        this.id = id;
         this.info = info;
         this.connection = connection;
+        this.directoryService = directoryService;
     }
 
-    static async connect(url, blockchainRID): Promise<Blockchain> {
-        const connection = new ConnectionClient(url, blockchainRID);
-        return await this.connectWithClient(connection);
-    }
+    static async connect(blockchainRID: Buffer, directoryService: DirectoryService): Promise<Blockchain> {
+        const chainConnectionInfo = await directoryService.getChainConnectionInfo(blockchainRID);
+        if (!chainConnectionInfo) {
+            throw new Error(`Cannot find details for chain with RID: ${
+                blockchainRID.toString('hex')
+            }`)
+        }
 
-    static async connectWithClient(connection: ConnectionClient) {
+        const connection = new ConnectionClient(
+            chainConnectionInfo.url,
+            blockchainRID.toString('hex')
+        );
         const info = await BlockchainInfo.getInfo(connection);
-        return new Blockchain(info, connection);
+        return new Blockchain(blockchainRID, info, connection, directoryService);
     }
 
     async getAccountById(id: Buffer, user: User): Promise<Account> {
-        return await Account.getById(id, user, this.connection);
+        return await Account.getById(id, user, this);
     }
 
     async getAccountsByParticipantId(id: Buffer, user: User): Promise<Account[]> {
-        return await Account.getByParticipantId(id, user, this.connection);
+        return await Account.getByParticipantId(id, user, this);
     }
 
     async getAccountsByAuthDescriptorId(id: Buffer, user: User): Promise<Account[]> {
-        return await Account.getByAuthDescriptorId(id , user, this.connection);
+        return await Account.getByAuthDescriptorId(id , user, this);
     }
 
     async registerAccount(authDesciptor: AuthDescriptor, user): Promise<Account> {
-        return await Account.register(authDesciptor, [user.keyPair], user, this.connection);
+        return await Account.register(authDesciptor, [user.keyPair], user, this);
     }
 
     async getAssetsByName(name): Promise<Asset[]> {
-        return await Asset.getByName(name, this.connection);
+        return await Asset.getByName(name, this);
     }
 
     async linkChain(chainId: Buffer) {
@@ -50,14 +66,25 @@ export default class Blockchain {
     }
 
     async isLinkedWithChain(chainId: Buffer): Promise<boolean> {
-        return await this.connection.gtx.query(
+        return await this.query(
             'ft3.is_linked_with_chain',
             { 'chain_rid': chainId.toString('hex') }
         ) === 1
     }
 
-    async getLinkedChains(): Promise<Buffer[]> {
-        const linkedChains = await this.connection.gtx.query('ft3.get_linked_chains', {});
+    async getLinkedChainsIds(): Promise<Buffer[]> {
+        const linkedChains = await this.query('ft3.get_linked_chains', {});
         return linkedChains.map(chainId => Buffer.from(chainId, 'hex'));
+    }
+
+    async getLinkedChains(): Promise<Blockchain[]> {
+        const chainIds = await this.getLinkedChainsIds();
+        return Promise.all(chainIds.map(chainId => {
+            return Blockchain.connect(chainId, this.directoryService);
+        }));
+    }
+
+    async query(name: string, params: any): Promise<any> {
+        return await this.connection.query(name, params);
     }
 }

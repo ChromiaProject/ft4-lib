@@ -4,13 +4,15 @@ import Blockchain from "../client/lib/ft3/blockchain";
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import {generateId} from "./util/util";
+import BlockchainUtil from "./util/blockchain-util";
+import ConnectionClient from "../client/lib/ft3/connection-client";
 
-const connection = TestConnection.connection();
 let blockchain: Blockchain = null;
+const connection: ConnectionClient = TestConnection.connection();
 
 describe("Blockchain", () => {
     beforeAll(async () => {
-        blockchain = await Blockchain.connectWithClient(connection);
+        blockchain = await BlockchainUtil.getDefaultBlockchain()
     });
 
     it("should provide info", async () => {
@@ -32,7 +34,7 @@ describe("Blockchain", () => {
         const user = TestUser.singleSig();
 
         const account = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .build();
 
@@ -46,7 +48,7 @@ describe("Blockchain", () => {
         const user = TestUser.singleSig();
 
         const account = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .build();
 
@@ -74,7 +76,7 @@ describe("Blockchain", () => {
         await blockchain.linkChain(chainId1);
         await blockchain.linkChain(chainId2);
 
-        const linkedChains = await blockchain.getLinkedChains();
+        const linkedChains = await blockchain.getLinkedChainsIds();
 
         expect(linkedChains).toContainEqual(chainId1);
         expect(linkedChains).toContainEqual(chainId2);

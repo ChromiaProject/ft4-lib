@@ -12,7 +12,7 @@ export default class BlockchainInfo {
     }
 
     static async getInfo(connection: ConnectionClient)  {
-        const info = await connection.gtx.query('ft3.get_blockchain_info', {});
+        const info = await connection.query('ft3.get_blockchain_info', {});
         return new BlockchainInfo(info.name, info.website, info.description);
     }
 }

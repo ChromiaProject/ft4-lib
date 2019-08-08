@@ -15,4 +15,7 @@ export default class ConnectionClient {
         );
     }
 
+    async query(name: string, params: any): Promise<any> {
+        return await this.gtx.query(name, params);
+    }
 }

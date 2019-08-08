@@ -2,15 +2,17 @@ import AccountBuilder from "./util/account-builder";
 import {blockchainAccountId, generateAssetName, generateId} from "./util/util";
 import Asset from "../client/lib/ft3/asset";
 import AssetBalance from "../client/lib/ft3/asset-balance";
-import TestConnection from "./util/test-connection";
 import TestUser from "./util/test-user";
+import BlockchainUtil from "./util/blockchain-util";
+import Blockchain from "../client/lib/ft3/blockchain";
 
-let asset = null;
-let connection = new TestConnection();
+let blockchain: Blockchain = null;
+let asset: Asset = null;
 
 describe("Cross-chain transfer", () => {
     beforeAll(async () => {
-        asset = await Asset.register(generateAssetName(), generateId(), connection);
+        blockchain = await BlockchainUtil.getDefaultBlockchain();
+        asset = await Asset.register(generateAssetName(), generateId(), blockchain);
     });
 
     it("should succeessfully initialize when there's enough balance on the account", async () => {
@@ -19,18 +21,18 @@ describe("Cross-chain transfer", () => {
         const user = TestUser.singleSig();
 
         const account = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 100)
             .build();
 
         await account.xcTransfer(destinationChainId, destinationAccountId, asset.id, 10);
 
-        const accountBalance = await AssetBalance.getByAccountAndAssetId(account.id_, asset.id, connection);
+        const accountBalance = await AssetBalance.getByAccountAndAssetId(account.id_, asset.id, blockchain);
         const chainBalance = await AssetBalance.getByAccountAndAssetId(
             blockchainAccountId(destinationChainId),
             asset.id,
-            connection
+            blockchain
         );
 
         expect(accountBalance.amount).toEqual(90);

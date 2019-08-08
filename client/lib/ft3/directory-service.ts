@@ -1,3 +1,5 @@
+import ChainConnectionInfo from "./chain-connection-info";
+
 export default interface DirectoryService {
-    test()
+    getChainConnectionInfo(id: Buffer): Promise<ChainConnectionInfo>
 }

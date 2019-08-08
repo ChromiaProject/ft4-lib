@@ -7,4 +7,5 @@ export { default as Asset } from './lib/ft3/asset';
 export { default as BlockchainInfo } from './lib/ft3/blockchain-info';
 export { default as Blockchain } from './lib/ft3/blockchain';
 export { default as DirectoryService } from './lib/ft3/directory-service';
+export { default as ChainConnectionInfo } from './lib/ft3/chain-connection-info';
 export * from './lib/ft3/auth-descriptor';

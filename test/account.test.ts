@@ -1,19 +1,20 @@
 import {Account, FlagsType} from "../client/lib/ft3/account";
 import * as pcl from "postchain-client";
 import {buffToHex, KeyPair} from "../client/lib/cyptoUtils";
-import TestConnection from "./util/test-connection";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 import AccountBuilder from "./util/account-builder";
+import BlockchainUtil from "./util/blockchain-util";
+import Blockchain from "../client/lib/ft3/blockchain";
 
 require('dotenv').config();
 
-const connection = new TestConnection();
+let blockchain: Blockchain = null;
 
 describe('Test the account', () => {
-
-    beforeEach(() => {
+    beforeAll(async () => {
+        blockchain = await BlockchainUtil.getDefaultBlockchain();
     });
 
     it('should be in DEV mode', () => {
@@ -30,7 +31,7 @@ describe('Test the account', () => {
     it("Register account on blockchain", async () => {
        const user = TestUser.singleSig();
        const authDescriptor = new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Account, FlagsType.Transfer]);
-       const account = await Account.register(authDescriptor, [user.keyPair], user, connection);
+       const account = await Account.register(authDescriptor, [user.keyPair], user, blockchain);
        expect(account).not.toBeNull();
     });
 
@@ -40,7 +41,7 @@ describe('Test the account', () => {
             new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Account, FlagsType.Transfer]),
             [user.keyPair],
             user,
-            connection
+            blockchain
         );
         expect(account).not.toBeNull();
 
@@ -57,7 +58,7 @@ describe('Test the account', () => {
             new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer]),
             [user.keyPair],
             user,
-            connection
+            blockchain
         );
         expect(account).not.toBeNull();
 
@@ -81,11 +82,12 @@ describe('Test the account', () => {
             ),
             [user1.keyPair, user2.keyPair],
             user1,
-            connection
+            blockchain
         );
         expect(account).not.toBeNull();
     });
 
+    //TODO FIX ME
     it("should update account if 2 signatures provided", async () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
@@ -98,7 +100,7 @@ describe('Test the account', () => {
             ),
             [user1.keyPair, user2.keyPair],
             user1,
-            connection
+            blockchain
         );
         expect(account).not.toBeNull();
 
@@ -121,7 +123,7 @@ describe('Test the account', () => {
             ),
             [user1.keyPair, user2.keyPair],
             user1,
-            connection
+            blockchain
         );
         expect(account).not.toBeNull();
 
@@ -137,11 +139,11 @@ describe('Test the account', () => {
         const user = TestUser.singleSig();
 
         await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .withParticipants([user.keyPair])
             .build();
 
-        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, user, connection);
+        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, user, blockchain);
 
         expect(accounts.length).toEqual(1);
     });
@@ -151,12 +153,12 @@ describe('Test the account', () => {
         const user2 = TestUser.singleSig();
 
         await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .withParticipants([user1.keyPair])
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection, user2)
+            .account(blockchain, user2)
             .withParticipants([user2.keyPair])
             .build();
 
@@ -165,7 +167,7 @@ describe('Test the account', () => {
             [user2.keyPair]
         );
 
-        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, user1, connection);
+        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, user1, blockchain);
 
         expect(accounts.length).toEqual(2);
     });
@@ -174,10 +176,10 @@ describe('Test the account', () => {
         const user = TestUser.singleSig();
 
         const account = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .build();
 
-        const foundAccount = await Account.getById(account.id_, user, connection);
+        const foundAccount = await Account.getById(account.id_, user, blockchain);
 
         expect(account).toEqual(foundAccount);
     });

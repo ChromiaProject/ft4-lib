@@ -5,49 +5,51 @@ import AssetBalance from "../client/lib/ft3/asset-balance";
 import AccountBuilder from "./util/account-builder";
 import { FlagsType } from "../client/lib/ft3/account";
 import TestUser from "./util/test-user";
-import TestConnection from "./util/test-connection";
+import BlockchainUtil from "./util/blockchain-util";
+import Blockchain from "../client/lib/ft3/blockchain";
 
-let asset = null;
-let connection = new TestConnection();
+let blockchain: Blockchain = null;
+let asset: Asset = null;
 
 describe("Transfer", () => {
     beforeAll(async () => {
-        asset = await Asset.register(generateAssetName(), generateId(), connection);
+        blockchain = await BlockchainUtil.getDefaultBlockchain();
+        asset = await Asset.register(generateAssetName(), generateId(), blockchain);
     });
 
     it("should succeed when balance is higher than amount to transfer", async () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .build();
 
         await account1.transfer(account2.id_, asset.id, 10);
 
-        const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id_, asset.id, connection);
-        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(account2.id_, asset.id, connection);
+        const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id_, asset.id, blockchain);
+        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(account2.id_, asset.id, blockchain);
 
         expect(assetBalance1.amount).toEqual(190);
         expect(assetBalance2.amount).toEqual(10);
-    });
+    }, 10000);
 
     it("should fail when balance is lower than amount to transfer", async () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,5)
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .build();
 
         const promise = account1.transfer(account2.id_, asset.id, 10);
@@ -58,14 +60,14 @@ describe("Transfer", () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withAuthFlags([FlagsType.Account])
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .build();
 
         const promise = account1.transfer(account2.id_, asset.id, 10);
@@ -76,21 +78,21 @@ describe("Transfer", () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .withParticipants([new KeyPair(), new KeyPair()])
             .withRequiredSignatures(2)
             .build();
 
         await account1.transfer(account2.id_, asset.id, 10);
 
-        const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id_, asset.id, connection);
-        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(account2.id_, asset.id, connection);
+        const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id_, asset.id, blockchain);
+        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(account2.id_, asset.id, blockchain);
 
         expect(assetBalance1.amount).toEqual(190);
         expect(assetBalance2.amount).toEqual(10);
@@ -100,7 +102,7 @@ describe("Transfer", () => {
         const user = TestUser.singleSig();
 
         const account = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
             .build();
@@ -116,13 +118,13 @@ describe("Transfer", () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .build();
 
         await account1.transfer(account2.id_, asset.id, 10);
@@ -135,13 +137,13 @@ describe("Transfer", () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
-            .account(connection, user)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
             .build();
 
         const account2 = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .build();
 
         await account1.transfer(account2.id_, asset.id, 10);

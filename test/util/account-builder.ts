@@ -1,16 +1,16 @@
 import { Account, FlagsType } from "../../client";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/asset";
-import ConnectionClient from "../../client/lib/ft3/connection-client";
 import User from "../../client/lib/ft3/user";
 import TestUser from "./test-user";
 import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 import AssetBalance from "../../client/lib/ft3/asset-balance";
+import Blockchain from "../../client/lib/ft3/blockchain";
 
 
 class AccountBuilder {
-    private connection: ConnectionClient;
+    private blockchain: Blockchain;
     private user: User;
     private balance?: number;
     private asset?: Asset;
@@ -18,15 +18,15 @@ class AccountBuilder {
     private requiredSignaturesCount: number = 1;
     private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
 
-    constructor(connection: ConnectionClient, user: User = TestUser.singleSig()) {
-        this.connection = connection;
+    constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
+        this.blockchain = blockchain;
         this.user = user;
     }
 
     /* Public functions */
 
-    static account(connection: ConnectionClient, user?: User): AccountBuilder {
-        return new AccountBuilder(connection, user);
+    static account(blockchain: Blockchain, user?: User): AccountBuilder {
+        return new AccountBuilder(blockchain, user);
     }
 
     withAuthFlags(flags: FlagsType[]): AccountBuilder {
@@ -65,13 +65,13 @@ class AccountBuilder {
             this.getAuthDescriptor(),
             this.participants,
             this.user,
-            this.connection
+            this.blockchain
         );
     }
 
     private async addBalanceIfNeeded(account) {
         if (this.asset && this.balance) {
-            await AssetBalance.giveBalance(account.id_, this.asset.id, this.balance, this.connection)
+            await AssetBalance.giveBalance(account.id_, this.asset.id, this.balance, this.blockchain)
         }
     }
 

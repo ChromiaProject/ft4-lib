@@ -1,28 +1,30 @@
 import AccountBuilder from "./util/account-builder";
-import TestConnection from "./util/test-connection";
 import AssetBalance from "../client/lib/ft3/asset-balance";
 import Asset from "../client/lib/ft3/asset";
 import { generateAssetName, generateId } from "./util/util";
+import BlockchainUtil from "./util/blockchain-util";
+import Blockchain from "../client/lib/ft3/blockchain";
 
-const connection = new TestConnection();
-let asset1 = null;
-let asset2 = null;
+let blockchain: Blockchain = null;
+let asset1: Asset = null;
+let asset2: Asset = null;
 
 describe('Asset balance', () => {
     beforeAll(async () => {
-        asset1 = await Asset.register(generateAssetName(), generateId(), connection);
-        asset2 = await Asset.register(generateAssetName(), generateId(), connection);
+        blockchain = await BlockchainUtil.getDefaultBlockchain();
+        asset1 = await Asset.register(generateAssetName(), generateId(), blockchain);
+        asset2 = await Asset.register(generateAssetName(), generateId(), blockchain);
     });
 
     it('should be returned when queried by account id', async () => {
         const account = await AccountBuilder
-            .account(connection)
+            .account(blockchain)
             .build();
 
-        await AssetBalance.giveBalance(account.id_, asset1.id, 10, connection);
-        await AssetBalance.giveBalance(account.id_, asset2.id, 20, connection);
+        await AssetBalance.giveBalance(account.id_, asset1.id, 10, blockchain);
+        await AssetBalance.giveBalance(account.id_, asset2.id, 20, blockchain);
 
-        const assets = await AssetBalance.getByAccountId(account.id_, connection);
+        const assets = await AssetBalance.getByAccountId(account.id_, blockchain);
 
         expect(assets.length).toEqual(2);
     });
