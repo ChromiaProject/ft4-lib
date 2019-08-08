@@ -30,8 +30,13 @@ describe('Test the account', () => {
 
     it("Register account on blockchain", async () => {
        const user = TestUser.singleSig();
-       const authDescriptor = new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Account, FlagsType.Transfer]);
-       const account = await Account.register(authDescriptor, [user.keyPair], user, blockchain);
+       const authDescriptor = new SingleSignatureAuthDescriptor(
+           user.keyPair.pubKey,
+           [FlagsType.Account, FlagsType.Transfer]
+       );
+
+       const account = await Account.register(authDescriptor, blockchain.newSession(user));
+
        expect(account).not.toBeNull();
     });
 
@@ -39,15 +44,12 @@ describe('Test the account', () => {
         const user = TestUser.singleSig();
         const account = await Account.register(
             new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Account, FlagsType.Transfer]),
-            [user.keyPair],
-            user,
-            blockchain
+            blockchain.newSession(user)
         );
         expect(account).not.toBeNull();
 
         await account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer]),
-            [user.keyPair]
+            new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer])
         );
         expect(account.authDescriptor.length).toBe(2);
     });
@@ -56,15 +58,12 @@ describe('Test the account', () => {
         const user = TestUser.singleSig();
         const account = await Account.register(
             new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer]),
-            [user.keyPair],
-            user,
-            blockchain
+            blockchain.newSession(user)
         );
         expect(account).not.toBeNull();
 
         const promise = account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer]),
-            [user.keyPair]
+            new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer])
         );
         await expect(promise).rejects.toBeInstanceOf(Error);
         expect(account.authDescriptor.length).toBe(1);
@@ -80,9 +79,7 @@ describe('Test the account', () => {
                 2,
                 [FlagsType.Account, FlagsType.Transfer]
             ),
-            [user1.keyPair, user2.keyPair],
-            user1,
-            blockchain
+            blockchain.newSession(user1)
         );
         expect(account).not.toBeNull();
     });
@@ -98,15 +95,12 @@ describe('Test the account', () => {
                 2,
                 [FlagsType.Account, FlagsType.Transfer]
             ),
-            [user1.keyPair, user2.keyPair],
-            user1,
-            blockchain
+            blockchain.newSession(user1)
         );
         expect(account).not.toBeNull();
 
         await account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]),
-            [user1.keyPair, user2.keyPair]
+            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
         );
         expect(account.authDescriptor.length).toBe(2);
     });
@@ -121,15 +115,12 @@ describe('Test the account', () => {
                 2,
                 [FlagsType.Account, FlagsType.Transfer]
             ),
-            [user1.keyPair, user2.keyPair],
-            user1,
-            blockchain
+            blockchain.newSession(user1)
         );
         expect(account).not.toBeNull();
 
         const promise = account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]),
-            [user1.keyPair]
+            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
         );
         await expect(promise).rejects.toBeInstanceOf(Error);
         expect(account.authDescriptor.length).toBe(1);
@@ -143,7 +134,7 @@ describe('Test the account', () => {
             .withParticipants([user.keyPair])
             .build();
 
-        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, user, blockchain);
+        const accounts = await Account.getByParticipantId(user.keyPair.pubKey, blockchain.newSession(user));
 
         expect(accounts.length).toEqual(1);
     });
@@ -163,11 +154,10 @@ describe('Test the account', () => {
             .build();
 
         await account2.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]),
-            [user2.keyPair]
+            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
         );
 
-        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, user1, blockchain);
+        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, blockchain.newSession(user1));
 
         expect(accounts.length).toEqual(2);
     });
@@ -179,7 +169,7 @@ describe('Test the account', () => {
             .account(blockchain, user)
             .build();
 
-        const foundAccount = await Account.getById(account.id_, user, blockchain);
+        const foundAccount = await Account.getById(account.id_, blockchain.newSession(user));
 
         expect(account).toEqual(foundAccount);
     });

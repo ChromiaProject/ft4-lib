@@ -5,7 +5,7 @@ require('dotenv').config();
 
 export default class BlockchainUtil {
     static async getDefaultBlockchain(): Promise<Blockchain> {
-        return await Blockchain.connect(
+        return await Blockchain.initialize(
             Buffer.from(process.env.CHAIN_ID, 'hex'),
             DirectoryServiceUtil.getDefaultDirectoryService()
         )

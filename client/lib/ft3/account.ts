@@ -1,12 +1,10 @@
-import {gtv} from 'postchain-client';
-import KeyPair from "../cyptoUtils/keyPair";
+import { gtv } from 'postchain-client';
 import AssetBalance from './asset-balance';
-import User from "./user";
 import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
-import Blockchain from "./blockchain";
+import BlockchainSession from "./blockchain-session";
 
 enum AuthType {
     single_sig = "S",
@@ -54,62 +52,56 @@ class Account {
     readonly id_: Buffer;
     authDescriptor: AuthDescriptor[];
     assets: AssetBalance[] = [];
-    readonly user: User;
-    readonly blockchain: Blockchain;
+    readonly session: BlockchainSession;
 
-    constructor(id: Buffer, authDescriptor: AuthDescriptor[], user: User, blockchain: Blockchain) {
+    constructor(id: Buffer, authDescriptor: AuthDescriptor[], session: BlockchainSession) {
         this.id_ = id;
         this.authDescriptor = authDescriptor;
-        this.user = user;
-        this.blockchain = blockchain;
+        this.session = session;
     }
 
-    static async getByParticipantId(id: Buffer, user: User, blockchain: Blockchain): Promise<Account []> {
-        const accountIds = await blockchain.query(
+    static async getByParticipantId(id: Buffer, session: BlockchainSession): Promise<Account []> {
+        const accountIds = await session.query(
             'ft3.get_accounts_by_participant_id',
             { id: id.toString('hex') }
         );
-        return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), user, blockchain);
+        return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), session);
     }
 
-    static async getByAuthDescriptorId(id: Buffer, user: User, blockchain: Blockchain): Promise<Account[]> {
-        const accountIds = await blockchain.query(
+    static async getByAuthDescriptorId(id: Buffer, session: BlockchainSession): Promise<Account[]> {
+        const accountIds = await session.query(
             'ft3.get_accounts_by_auth_descriptor_id',
             { descriptor_id: id.toString('hex') }
         );
-        return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), user, blockchain);
+        return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), session);
     }
 
-    static registerOp(authDescriptor: AuthDescriptor): any[] {
-        return ['ft3.dev_register_account', authDescriptor.toGTV()];
-    }
-
-    static async register(authDescriptor: AuthDescriptor, signers: KeyPair[], user: User, blockchain: Blockchain) {
-        await blockchain
+    static async register(authDescriptor: AuthDescriptor, session: BlockchainSession) {
+        await session.blockchain
             .transactionBuilder()
             .addOperation(...this.registerOp(authDescriptor))
-            .build(user.authDescriptor.signers)
-            .sign(user.keyPair)
+            .build(session.user.authDescriptor.signers)
+            .sign(session.user.keyPair)
             .post();
 
-        const account = new Account(authDescriptor.hash(), [authDescriptor], user, blockchain);
+        const account = new Account(authDescriptor.hash(), [authDescriptor], session);
         await account.syncAssets();
         return account
     }
 
-    static async getByIds(ids: Buffer[], user: User, blockchain: Blockchain): Promise<Account []> {
-        return Promise.all(ids.map(id => this.getById(id, user, blockchain)));
+    static async getByIds(ids: Buffer[], session: BlockchainSession): Promise<Account []> {
+        return Promise.all(ids.map(id => this.getById(id, session)));
     }
 
-    static async getById(id: Buffer, user: User, blockchain: Blockchain): Promise<Account> {
-        const account = await blockchain.query(
+    static async getById(id: Buffer, session: BlockchainSession): Promise<Account> {
+        const account = await session.query(
             'ft3.get_account_by_id',
             { id: id.toString('hex')}
         );
 
         if (!account) { return null }
 
-        const authDescriptors = await blockchain.query(
+        const authDescriptors = await session.query(
             'ft3.get_account_auth_descriptors',
             { id: id.toString('hex')}
         );
@@ -122,28 +114,20 @@ class Account {
             )
         );
 
-        const acc = new Account(id, descriptors, user, blockchain);
-
+        const acc = new Account(id, descriptors, session);
         await acc.syncAssets();
-
         return acc;
     }
 
-    addAuthDescriptorOp(authDescriptor: AuthDescriptor): any[] {
-        return [
-            'ft3.add_auth_descriptor',
-            this.id_.toString('hex'),
-            this.user.authDescriptor.hash().toString('hex'),
-            authDescriptor.toGTV()
-        ]
-    }
 
-    async addAuthDescriptor(authDescriptor: AuthDescriptor, signers: KeyPair[]) {
-        await this.blockchain.transactionBuilder()
+
+    async addAuthDescriptor(authDescriptor: AuthDescriptor) {
+        await this.session.blockchain.transactionBuilder()
             .addOperation(...this.addAuthDescriptorOp(authDescriptor))
-            .build(signers.map(({ pubKey }) => pubKey))
-            .sign(signers[0])
+            .build(this.session.user.authDescriptor.signers)
+            .sign(this.session.user.keyPair)
             .post();
+
         this.authDescriptor.push(authDescriptor);
     }
 
@@ -152,7 +136,7 @@ class Account {
     }
 
     private async syncAssets(): Promise<void> {
-        this.assets = await AssetBalance.getByAccountId(this.id_, this.blockchain);
+        this.assets = await AssetBalance.getByAccountId(this.id_, this.session.blockchain);
     }
 
     getAssetById(id: Buffer) {
@@ -163,10 +147,10 @@ class Account {
     }
 
     async transferInputsToOutputs(inputs, outputs) {
-        await this.blockchain.transactionBuilder()
+        await this.session.blockchain.transactionBuilder()
             .addOperation('ft3.transfer', inputs, outputs)
-            .build(this.user.authDescriptor.signers)
-            .sign(this.user.keyPair)
+            .build(this.session.user.authDescriptor.signers)
+            .sign(this.session.user.keyPair)
             .post();
 
         await this.syncAssets();
@@ -204,39 +188,57 @@ class Account {
     }
 
     async getPaymentHistory(): Promise<any[]> {
-        return await PaymentHistory.getByAccountId(this.id_, -1, this.blockchain.connection);
+        return await PaymentHistory.getByAccountId(this.id_, -1, this.session.blockchain.connection);
     }
 
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
         if (pageSize < 1) throw new Error('Page size has to be greater than 1');
-        await this.paymentHistorySyncManager.syncAccount(this.id_, this.blockchain);
+        await this.paymentHistorySyncManager.syncAccount(this.id_, this.session.blockchain);
         return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id_, pageSize);
     }
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number) {
+        await this.session.blockchain.transactionBuilder()
+            .addOperation(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
+            .build(this.session.user.authDescriptor.signers)
+            .sign(this.session.user.keyPair)
+            .post();
+
+        await this.syncAssets();
+    }
+
+    /* Operation and query */
+
+    xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): any[] {
         const source = [
             this.id_.toString('hex'),
             assetId.toString('hex'),
-            this.authDescriptor[0].hash().toString('hex'),
+            this.session.user.authDescriptor.hash().toString('hex'),
             amount,
             []
         ];
-
         const target = [
             destinationAccountId.toString('hex'),
             []
         ];
-
         const hops = [
             destinationChainId.toString('hex')
         ];
+        return ['ft3.xc.init_xfer', source, target, hops];
+    }
 
-        const tx = this.blockchain.connection.gtx.newTransaction([this.user.keyPair.pubKey]);
-        tx.addOperation('ft3.xc.init_xfer', source, target, hops);
-        tx.sign(this.user.keyPair.privKey, this.user.keyPair.pubKey);
-        await tx.postAndWaitConfirmation();
+    addAuthDescriptorOp(authDescriptor: AuthDescriptor): any[] {
+        return [
+            'ft3.add_auth_descriptor',
+            this.id_.toString('hex'),
+            this.session.user.authDescriptor.hash().toString('hex'),
+            authDescriptor.toGTV()
+        ]
+    }
 
-        await this.syncAssets();
+
+    static registerOp(authDescriptor: AuthDescriptor): any[] {
+        return ['ft3.dev_register_account', authDescriptor.toGTV()];
     }
 }
 

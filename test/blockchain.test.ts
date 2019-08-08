@@ -23,9 +23,10 @@ describe("Blockchain", () => {
 
     it('should be able to register an account', async () => {
         const user = TestUser.singleSig();
+        const session = blockchain.newSession(user);
 
         const account = await blockchain.registerAccount(user.authDescriptor, user);
-        const foundAccount = await blockchain.getAccountById(account.id_, user);
+        const foundAccount = await session.getAccountById(account.id_);
 
         expect(account).toEqual(foundAccount);
     });

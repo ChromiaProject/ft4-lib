@@ -63,9 +63,7 @@ class AccountBuilder {
     private async registerAccount(): Promise<Account> {
         return await Account.register(
             this.getAuthDescriptor(),
-            this.participants,
-            this.user,
-            this.blockchain
+            this.blockchain.newSession(this.user)
         );
     }
 

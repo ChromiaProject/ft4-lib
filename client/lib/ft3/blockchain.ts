@@ -1,33 +1,31 @@
 import BlockchainInfo from "./blockchain-info";
 import ConnectionClient from './connection-client';
 import {Account, AuthDescriptor} from "./account";
-import User from "./user";
 import Asset from "./asset";
 import DirectoryService from "./directory-service";
 import TransactionBuilder from "./transaction-builder";
+import BlockchainSession from "./blockchain-session";
+import User from "./user";
 
 export default class Blockchain {
     readonly id: Buffer;
-    readonly user: User;
     readonly info: BlockchainInfo;
     readonly connection: ConnectionClient;
     private readonly directoryService: DirectoryService;
 
     constructor(
         id: Buffer,
-        user: User,
         info: BlockchainInfo,
         connection: ConnectionClient,
         directoryService: DirectoryService
     ) {
         this.id = id;
-        this.user = user;
         this.info = info;
         this.connection = connection;
         this.directoryService = directoryService;
     }
 
-    static async connect(blockchainRID: Buffer, directoryService: DirectoryService, user: User = User.generateSingleSigUser()): Promise<Blockchain> {
+    static async initialize(blockchainRID: Buffer, directoryService: DirectoryService): Promise<Blockchain> {
         const chainConnectionInfo = await directoryService.getChainConnectionInfo(blockchainRID);
         if (!chainConnectionInfo) {
             throw new Error(`Cannot find details for chain with RID: ${
@@ -40,23 +38,23 @@ export default class Blockchain {
             blockchainRID.toString('hex')
         );
         const info = await BlockchainInfo.getInfo(connection);
-        return new Blockchain(blockchainRID, user, info, connection, directoryService);
+        return new Blockchain(blockchainRID, info, connection, directoryService);
     }
 
-    async getAccountById(id: Buffer, user: User): Promise<Account> {
-        return await Account.getById(id, user, this);
+    newSession(user: User): BlockchainSession {
+        return new BlockchainSession(user, this);
     }
 
     async getAccountsByParticipantId(id: Buffer, user: User): Promise<Account[]> {
-        return await Account.getByParticipantId(id, user, this);
+        return await Account.getByParticipantId(id, this.newSession(user));
     }
 
     async getAccountsByAuthDescriptorId(id: Buffer, user: User): Promise<Account[]> {
-        return await Account.getByAuthDescriptorId(id , user, this);
+        return await Account.getByAuthDescriptorId(id , this.newSession(user));
     }
 
     async registerAccount(authDesciptor: AuthDescriptor, user): Promise<Account> {
-        return await Account.register(authDesciptor, [user.keyPair], user, this);
+        return await Account.register(authDesciptor, this.newSession(user));
     }
 
     async getAssetsByName(name): Promise<Asset[]> {
@@ -84,7 +82,7 @@ export default class Blockchain {
     async getLinkedChains(): Promise<Blockchain[]> {
         const chainIds = await this.getLinkedChainsIds();
         return Promise.all(chainIds.map(chainId => {
-            return Blockchain.connect(chainId, this.directoryService);
+            return Blockchain.initialize(chainId, this.directoryService);
         }));
     }
 
