@@ -77,13 +77,7 @@ class Account {
     }
 
     static async register(authDescriptor: AuthDescriptor, session: BlockchainSession) {
-        await session.blockchain
-            .transactionBuilder()
-            .addOperation(...this.registerOp(authDescriptor))
-            .build(session.user.authDescriptor.signers)
-            .sign(session.user.keyPair)
-            .post();
-
+        await session.execute(...this.registerOp(authDescriptor));
         const account = new Account(authDescriptor.hash(), [authDescriptor], session);
         await account.syncAssets();
         return account
@@ -119,15 +113,8 @@ class Account {
         return acc;
     }
 
-
-
     async addAuthDescriptor(authDescriptor: AuthDescriptor) {
-        await this.session.blockchain.transactionBuilder()
-            .addOperation(...this.addAuthDescriptorOp(authDescriptor))
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
-            .post();
-
+        await this.session.execute(...this.addAuthDescriptorOp(authDescriptor));
         this.authDescriptor.push(authDescriptor);
     }
 
@@ -198,12 +185,7 @@ class Account {
     }
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number) {
-        await this.session.blockchain.transactionBuilder()
-            .addOperation(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
-            .post();
-
+        await this.session.execute(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount));
         await this.syncAssets();
     }
 
@@ -236,13 +218,10 @@ class Account {
         ]
     }
 
-
     static registerOp(authDescriptor: AuthDescriptor): any[] {
         return ['ft3.dev_register_account', authDescriptor.toGTV()];
     }
 }
-
-
 
 export {
     PubKey,

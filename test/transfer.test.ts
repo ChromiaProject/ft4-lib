@@ -37,7 +37,7 @@ describe("Transfer", () => {
 
         expect(assetBalance1.amount).toEqual(190);
         expect(assetBalance2.amount).toEqual(10);
-    }, 10000);
+    });
 
     it("should fail when balance is lower than amount to transfer", async () => {
         const user = TestUser.singleSig();
@@ -54,7 +54,7 @@ describe("Transfer", () => {
 
         const promise = account1.transfer(account2.id_, asset.id, 10);
         await expect(promise).rejects.toBeInstanceOf(Error);
-    }, 10000);
+    });
 
     it("should fail if auth descriptor doesn't have transfer rights", async () => {
         const user = TestUser.singleSig();
@@ -72,7 +72,7 @@ describe("Transfer", () => {
 
         const promise = account1.transfer(account2.id_, asset.id, 10);
         await expect(promise).rejects.toBeInstanceOf(Error);
-    }, 10000);
+    });
 
     it("should succeed if transferring tokens to a multisig account", async () => {
         const user = TestUser.singleSig();
@@ -96,7 +96,7 @@ describe("Transfer", () => {
 
         expect(assetBalance1.amount).toEqual(190);
         expect(assetBalance2.amount).toEqual(10);
-    }, 10000);
+    });
 
     it("should succeed burning tokens", async () => {
         const user = TestUser.singleSig();
@@ -151,5 +151,5 @@ describe("Transfer", () => {
         const paymentHistory = await account1.getPaymentHistory();
 
         expect(paymentHistory.length).toEqual(2);
-    }, 10000);
+    });
 });
