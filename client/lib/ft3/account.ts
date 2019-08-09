@@ -5,6 +5,7 @@ import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
 import BlockchainSession from "./blockchain-session";
+import Blockchain from "./blockchain";
 
 enum AuthType {
     single_sig = "S",
@@ -58,6 +59,10 @@ class Account {
         this.id_ = id;
         this.authDescriptor = authDescriptor;
         this.session = session;
+    }
+
+    get blockchain(): Blockchain {
+        return this.session.blockchain;
     }
 
     static async getByParticipantId(id: Buffer, session: BlockchainSession): Promise<Account []> {
