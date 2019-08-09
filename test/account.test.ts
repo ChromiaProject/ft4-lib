@@ -173,4 +173,34 @@ describe('Test the account', () => {
 
         expect(account).toEqual(foundAccount);
     });
+
+    it('should have only one auth descriptor after calling deleteAllAuthDescriptorsExclude', async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+        const user3 = TestUser.singleSig();
+
+        const account = await AccountBuilder
+            .account(blockchain, user1)
+            .withParticipants([user1.keyPair])
+            .build();
+
+        const authDescriptor1 = new SingleSignatureAuthDescriptor(
+            user2.keyPair.pubKey,
+            [FlagsType.Transfer, FlagsType.Account]
+        );
+
+        const authDescriptor2 = new SingleSignatureAuthDescriptor(
+            user3.keyPair.pubKey,
+            [FlagsType.Account, FlagsType.Transfer]
+        );
+
+        await account.addAuthDescriptor(authDescriptor1);
+        await account.addAuthDescriptor(authDescriptor2);
+
+        await account.deleteAllAuthDescriptorsExclude(user1.authDescriptor);
+
+        const foundAccount = await blockchain.newSession(user1).getAccountById(account.id_);
+
+        expect(foundAccount.authDescriptor.length).toEqual(1);
+    });
 });

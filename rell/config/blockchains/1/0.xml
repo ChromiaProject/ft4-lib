@@ -165,6 +165,20 @@ operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: by
       };
 }
 
+operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
+    val account = account @ { .id == account_id };
+    require_auth(account, auth_descriptor_id, ["A"]);
+
+    delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
+        ad.account == account and ad.descriptor_id != auth_descriptor_id and adp.account_auth_descriptor == ad
+    };
+
+    delete account_auth_descriptor @* {
+       .account == account,
+       .descriptor_id != auth_descriptor_id
+    };
+}
+
 operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {
       val account = account @ { .id == account_id };
       require_auth(account, auth_id, ["A"]);

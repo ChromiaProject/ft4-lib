@@ -118,6 +118,15 @@ class Account {
         this.authDescriptor.push(authDescriptor);
     }
 
+    async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
+        await this.session.execute(
+            'ft3.delete_all_auth_descriptors_exclude',
+            this.id_.toString('hex'),
+            authDescriptor.hash().toString('hex')
+        );
+        this.authDescriptor = [authDescriptor];
+    }
+
     async sync(): Promise<void> {
         await Promise.all([this.syncAssets()]);
     }
@@ -134,12 +143,7 @@ class Account {
     }
 
     async transferInputsToOutputs(inputs, outputs) {
-        await this.session.blockchain.transactionBuilder()
-            .addOperation('ft3.transfer', inputs, outputs)
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
-            .post();
-
+        await this.session.execute('ft3.transfer', inputs, outputs);
         await this.syncAssets();
     }
 
