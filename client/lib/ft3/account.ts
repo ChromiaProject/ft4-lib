@@ -1,4 +1,4 @@
-import { gtv } from 'postchain-client';
+import { gtv, util } from 'postchain-client';
 import AssetBalance from './asset-balance';
 import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
@@ -82,7 +82,7 @@ class Account {
     }
 
     static async register(authDescriptor: AuthDescriptor, session: BlockchainSession) {
-        await session.execute(...this.registerOp(authDescriptor));
+        await session.call(...this.registerOp(authDescriptor));
         const account = new Account(authDescriptor.hash(), [authDescriptor], session);
         await account.syncAssets();
         return account
@@ -119,12 +119,12 @@ class Account {
     }
 
     async addAuthDescriptor(authDescriptor: AuthDescriptor) {
-        await this.session.execute(...this.addAuthDescriptorOp(authDescriptor));
+        await this.session.call(...this.addAuthDescriptorOp(authDescriptor));
         this.authDescriptor.push(authDescriptor);
     }
 
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.execute(
+        await this.session.call(
             'ft3.delete_all_auth_descriptors_exclude',
             this.id_.toString('hex'),
             authDescriptor.hash().toString('hex')
@@ -148,7 +148,12 @@ class Account {
     }
 
     async transferInputsToOutputs(inputs, outputs) {
-        await this.session.execute('ft3.transfer', inputs, outputs);
+        return await this.blockchain.transactionBuilder()
+            .addOperation('ft3.transfer', inputs, outputs)
+            .addOperation('nop', util.hash256(Math.random().toString()))
+            .build(this.session.user.authDescriptor.signers)
+            .sign(this.session.user.keyPair)
+            .post();
         await this.syncAssets();
     }
 
@@ -194,7 +199,12 @@ class Account {
     }
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number) {
-        await this.session.execute(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount));
+        return await this.blockchain.transactionBuilder()
+            .addOperation(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
+            .addOperation('nop', util.hash256(Math.random().toString()))
+            .build(this.session.user.authDescriptor.signers)
+            .sign(this.session.user.keyPair)
+            .post();
         await this.syncAssets();
     }
 

@@ -90,6 +90,14 @@ export default class Blockchain {
         return await this.connection.query(name, params);
     }
 
+    async call(user: User, ...args: any): Promise<any> {
+        return await this.transactionBuilder()
+            .addOperation(...args)
+            .build(user.authDescriptor.signers)
+            .sign(user.keyPair)
+            .post();
+    }
+
     transactionBuilder(): TransactionBuilder {
         return new TransactionBuilder(this);
     }

@@ -1,7 +1,7 @@
 object blockchain {
-    mutable name = 'test';
-    mutable website: text = 'test_website';
-    mutable description: text = 'test_description';
+    mutable name: text = ft3_config.blockchain_name;
+    mutable website: text = ft3_config.blockchain_website;
+    mutable description: text = ft3_config.blockchain_description;
 }
 
 class linked_chain {

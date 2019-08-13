@@ -34,6 +34,13 @@
                     </entry>
                     <entry key="sources_v0.9">
                         <dict>
+                            <entry key="ft3_config.rell">
+                                <string>object ft3_config {
+    blockchain_name: text = 'ChromaToken';
+    blockchain_website: text = 'https://forum.chroma.dev';
+    blockchain_description: text = 'description';
+}</string>
+                            </entry>
                             <entry key="lib/ft3/account/auth_basic.rell">
                                 <string>//namespace ft3 {
 
@@ -272,9 +279,9 @@ query get_accounts_by_auth_descriptor_id(descriptor_id: byte_array) {
                             </entry>
                             <entry key="lib/ft3/blockchain.rell">
                                 <string>object blockchain {
-    mutable name = 'test';
-    mutable website: text = 'test_website';
-    mutable description: text = 'test_description';
+    mutable name: text = ft3_config.blockchain_name;
+    mutable website: text = ft3_config.blockchain_website;
+    mutable description: text = ft3_config.blockchain_description;
 }
 
 class linked_chain {
@@ -645,7 +652,7 @@ operation transfer (inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output
                             </entry>
                             <entry key="main.rell">
                                 <string>//include "lib/ft3/ft3_basic_dev";
-
+include "ft3_config";
 include "lib/ft3/ft3_xc_basic_dev";
 
 </string>
