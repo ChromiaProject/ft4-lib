@@ -18,8 +18,6 @@ print_usage () {
     echo "-------------------------"
 }
 
-echo "Starting run-node.sh script..."
-
 if [ "$#" -eq 0 ]; then
     echo "Error: Missing node configuration name"
     print_usage
@@ -33,8 +31,13 @@ elif [ "$#" -gt 1 ]; then
 fi
 
 if [ ! -d $INPUT_DIR_ROOT/${1} ] || [ ! -d $INPUT_DIR_ROOT/${1}/blockchains ]; then
-    echo "Cannot find '$1' node configuration"
+    echo "Error: Cannot find '$1' node configuration"
+    print_usage
+
+    exit 3
 fi
+
+echo "Starting run-node.sh script..."
 
 rm -rf $OUTPUT_DIR_ROOT/$1
 mkdir -p $OUTPUT_DIR_ROOT/$1
