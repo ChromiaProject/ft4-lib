@@ -8,7 +8,9 @@
 
 node_modules/
 package-lock.json
-rell/logs
+
+logs/
+postchain/runtime
 
 **.pid
 
