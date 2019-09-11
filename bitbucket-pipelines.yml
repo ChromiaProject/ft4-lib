@@ -20,7 +20,7 @@ pipelines:
           name: Upload artifact to S3
           services:
             - docker
-          scripts:
+          script:
             - pipe: atlassian/aws-code-deploy:0.2.7
               variables:
                 AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
