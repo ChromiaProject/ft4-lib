@@ -13,7 +13,7 @@
 
   function ensure_balance(account, asset): balance {
     val balance = balance @? {asset, account};
-    if (balance??) {
+    if (balance != null) {
        return balance;
     }
     else return create balance(account, asset, amount = 0);
@@ -24,5 +24,33 @@
    return create asset (id, name, issuing_chain_rid);
   }
 
+  query get_asset_balances(account_id: byte_array) {
+    return balance @* { .account.id == account_id } (
+        id = .asset.id,
+        name = .asset.name,
+        amount = .amount,
+        chain_id = .asset.issuing_chain_rid
+    );
+  }
+
+  query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
+    return balance @? {
+        .account.id == account_id,
+        .asset.id == asset_id
+    } (
+        id = .asset.id,
+        name = .asset.name,
+        amount = .amount,
+        chain_id = .asset.issuing_chain_rid
+    );
+  }
+
+  query get_asset_by_name(name) {
+    return asset @* { name } (
+        .id,
+        .name,
+        .issuing_chain_rid
+    );
+  }
 // }
 

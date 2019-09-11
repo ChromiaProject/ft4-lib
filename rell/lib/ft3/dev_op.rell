@@ -24,6 +24,3 @@ operation dev_register_account (auth_descriptor) {
     require_dev();
     create_account_with_auth( auth_descriptor );
 }
-
-
-//}

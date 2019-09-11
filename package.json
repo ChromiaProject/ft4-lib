@@ -1,0 +1,35 @@
+{
+  "name": "ft3-lib",
+  "version": "1.0.0",
+  "description": "FT3 Library is a library for Rell modules (Chromia smart contract language). It can be imported and used as a token provider and manager. It allows several operations, among them: creation of different assets (type of tokens), allocation of tokens, transfer, and cross crosschain transfer. It also have some basic data structure for users (account) that can be used independently from the use of the tokens.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jest",
+    "start": "node index.js",
+    "build": "shx rm -rf dist && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
+  "dependencies": {
+    "dotenv": "^8.0.0",
+    "postchain-client": "^0.7.3",
+    "typescript": "^3.5.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.15",
+    "@types/node": "^12.6.2",
+    "jest": "^24.8.0",
+    "shx": "^0.3.2",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.18.0"
+  }
+}
