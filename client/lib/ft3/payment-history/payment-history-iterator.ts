@@ -22,7 +22,7 @@ export default class PaymentHistoryIterator {
     }
 
     get current(): number {
-        return this.currentPage;
+        return this.pageCount ? this.currentPage : 0;
     }
 
     rewind(): PaymentHistoryEntry[] {
@@ -55,6 +55,6 @@ export default class PaymentHistoryIterator {
     }
 
     hasMore(): boolean {
-        return this.current < this.pageCount - 1;
+        return this.currentPage < this.pageCount - 1;
     }
 }
