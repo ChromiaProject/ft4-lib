@@ -18,38 +18,98 @@ print_usage () {
     echo "-------------------------"
 }
 
+update_api_port () {
+    sed -i '' "s|\(api\.port=\)\(.*\)|\1$1|" $2
+}
+
+update_node_port () {
+    echo "$1"
+    echo "$2"
+    echo "$3"
+    sed -i '' "s|\(node\.$1\.port=\)\(.*\)|\1$2|" $3
+}
+
 if [ "$#" -eq 0 ]; then
     echo "Error: Missing node configuration name"
     print_usage
 
     exit 1
-elif [ "$#" -gt 1 ]; then
-    echo "Error: Invalid number of arguments"
-    print_usage
-
-    exit 2
 fi
 
-if [ ! -d $INPUT_DIR_ROOT/${1} ] || [ ! -d $INPUT_DIR_ROOT/${1}/blockchains ]; then
-    echo "Error: Cannot find '$1' node configuration"
+WIPE_DB=false
+API_PORT=""
+NODE_PORT=""
+SAVE_TO_CONFIG=false
+PROD_NODE=false
+
+CONF="$1"
+shift
+
+
+
+if [ ! -d $INPUT_DIR_ROOT/$CONF ] || [ ! -d $INPUT_DIR_ROOT/$CONF/blockchains ]; then
+    echo "Error: Cannot find '$CONF' node configuration"
     print_usage
 
     exit 3
 fi
 
+while (( "$#" )); do
+    case "$1" in
+        -W|--wipe-db)
+            WIPE_DB=true
+            shift
+            ;;
+        -a|--api-port)
+            API_PORT=$2
+            shift 2
+            ;;
+        -n|--node-port)
+            #NODE_ID=$2
+            NODE_PORT=$3
+            shift 3
+            ;;
+        -s|--save-to-config)
+            SAVE_TO_CONFIG=true
+            shift
+            ;;
+        -p|--prod)
+            PROD_NODE=true
+            shift
+            ;;
+    esac
+done
+
+
 echo "Starting run-node.sh script..."
 
-rm -rf $OUTPUT_DIR_ROOT/$1
-mkdir -p $OUTPUT_DIR_ROOT/$1
+rm -rf $OUTPUT_DIR_ROOT/$CONF
+mkdir -p $OUTPUT_DIR_ROOT/$CONF
 
-cp $INPUT_DIR_ROOT/${1}/$NODE_CONFIG_PROPS $OUTPUT_DIR_ROOT/${1}
-cp $INPUT_DIR_ROOT/${1}/$PRIVATE_PROPS $OUTPUT_DIR_ROOT/${1}
+cp $INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS $OUTPUT_DIR_ROOT/$CONF
+cp $INPUT_DIR_ROOT/$CONF/$PRIVATE_PROPS $OUTPUT_DIR_ROOT/$CONF
+
+if [ ! -z "$API_PORT" ]; then
+    update_api_port "$API_PORT" "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
+
+    if [ "$SAVE_TO_CONFIG" = true ]; then
+        update_api_port "$API_PORT" $INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS
+    fi
+fi
+
+if [ ! -z "$NODE_PORT" ]; then
+    update_node_port 0 "$NODE_PORT" "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
+
+    if [ "$SAVE_TO_CONFIG" = true ]; then
+        update_node_port 0 "$NODE_PORT" $INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS
+    fi
+fi
 
 i=1
 
-for blockchain in $INPUT_DIR_ROOT/${1}/blockchains/* ; do
+for blockchain in $INPUT_DIR_ROOT/$CONF/blockchains/* ; do
     if [ -d $blockchain ] && [ ! -L $blockchain ]; then
-        blockchain_dir=$OUTPUT_DIR_ROOT/${1}/blockchains/$i
+        blockchain_dir=$OUTPUT_DIR_ROOT/$CONF/blockchains/$i
         mkdir -p $blockchain_dir
         cp $blockchain/brid.txt $blockchain_dir
         main_rell=`cat $blockchain/entry-file.txt`
@@ -58,8 +118,14 @@ for blockchain in $INPUT_DIR_ROOT/${1}/blockchains/* ; do
     fi
 done
 
-../lib/postchain.sh wipe-db -nc $OUTPUT_DIR_ROOT/${1}/node-config.properties
-exec ../lib/postchain.sh run-node-auto -d $OUTPUT_DIR_ROOT/${1}
+if [ "$WIPE_DB" = true ]; then
+    echo "Wiping database ..."
+    ../lib/postchain.sh wipe-db -nc "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
+fi
 
 
-#exec postchain-node/postchain.sh run-node -cid 1 -nc config/node-config.properties
+if [ "$PROD_NODE" = true ]; then
+    exec ../lib/postchain.sh run-node -cid 1 -nc "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
+else
+    exec ../lib/postchain.sh run-node-auto -d "$OUTPUT_DIR_ROOT/$CONF"
+fi
