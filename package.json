@@ -10,14 +10,15 @@
   "scripts": {
     "test": "jest",
     "start": "node index.js",
-    "build": "shx rm -rf dist && tsc"
+    "build": "shx rm -rf dist && tsc",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "BSD-2-Clause-FreeBSD",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
     "dotenv": "^8.0.0",
