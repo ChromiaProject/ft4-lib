@@ -79,12 +79,6 @@ descriptions:
               S3_BUCKET: $S3_BUCKET_STAGING
 
 pipelines:
-  branches:
-    development:
-      - step: *build
-      - step: *upload-artifact-to-s3-dev
-      - step: *deploy-with-codedeploy-dev
-
   custom:
     dev-env:
       - step: *build
