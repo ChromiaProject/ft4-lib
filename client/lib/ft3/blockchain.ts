@@ -81,9 +81,19 @@ export default class Blockchain {
 
     async getLinkedChains(): Promise<Blockchain[]> {
         const chainIds = await this.getLinkedChainsIds();
-        return Promise.all(chainIds.map(chainId => {
-            return Blockchain.initialize(chainId, this.directoryService);
-        }));
+        return new Promise<Blockchain[]>(resolve => {
+            Promise.all<Blockchain>(chainIds.map(chainId => new Promise(resolve => {
+                Blockchain.initialize(chainId, this.directoryService)
+                    .then(resolve)
+                    .catch(() => {
+                        console.warn(`Cannot get info for chain with RID: ${chainId.toString('hex')}`)
+                        resolve(null)
+                    })
+            })))
+                .then(chains => {
+                    resolve(chains.filter(chain => chain))
+                })
+        });
     }
 
     async query(name: string, params: any): Promise<any> {
