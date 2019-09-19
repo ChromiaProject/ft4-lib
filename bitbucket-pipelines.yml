@@ -1,47 +1,97 @@
 image: node:10.15.3
 
+descriptions:
+  steps:
+    - step: &build
+        name: Build
+        caches:
+          - node
+        script:
+          - apt-get update
+          - apt-get install -y zip
+          - cp -r postchain app/
+          - cp -r rell app/
+          - cd app && zip -r ../ft3.zip *
+          - cd ..
+        artifacts:
+          - ft3.zip
+
+    - step: &upload-artifact-to-s3-dev
+        name: Upload artifact to S3
+        services:
+          - docker
+        script:
+          - pipe: atlassian/aws-code-deploy:0.2.7
+            variables:
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+              COMMAND: 'upload'
+              APPLICATION_NAME: $APPLICATION_NAME_DEV
+              ZIP_FILE: 'ft3.zip'
+              S3_BUCKET: $S3_BUCKET_DEV
+
+    - step: &deploy-with-codedeploy-dev
+        name: Deploy with CodeDeploy
+        services:
+          - docker
+        script:
+          - pipe: atlassian/aws-code-deploy:0.2.7
+            variables:
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+              COMMAND: 'deploy'
+              APPLICATION_NAME: $APPLICATION_NAME_DEV
+              DEPLOYMENT_GROUP: $DEPLOYMENT_GROUP_DEV
+              WAIT: 'true'
+              S3_BUCKET: $S3_BUCKET_DEV
+              
+    - step: &upload-artifact-to-s3-staging
+        name: Upload artifact to S3
+        services:
+          - docker
+        script:
+          - pipe: atlassian/aws-code-deploy:0.2.7
+            variables:
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+              COMMAND: 'upload'
+              APPLICATION_NAME: $APPLICATION_NAME_STAGING
+              ZIP_FILE: 'ft3.zip'
+              S3_BUCKET: $S3_BUCKET_STAGING
+
+    - step: &deploy-with-codedeploy-staging
+        name: Deploy with CodeDeploy
+        services:
+          - docker
+        script:
+          - pipe: atlassian/aws-code-deploy:0.2.7
+            variables:
+              AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+              AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+              AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+              COMMAND: 'deploy'
+              APPLICATION_NAME: $APPLICATION_NAME_STAGING
+              DEPLOYMENT_GROUP: $DEPLOYMENT_GROUP_STAGING
+              WAIT: 'true'
+              S3_BUCKET: $S3_BUCKET_STAGING
+
 pipelines:
   branches:
     development:
-      - step:
-          name: Build
-          caches:
-            - node
-          script:
-            - apt-get update
-            - apt-get install -y zip
-            - cp -r postchain app/
-            - cp -r rell app/
-            - cd app && zip -r ../ft3.zip *
-            - cd ..
-          artifacts:
-            - ft3.zip
-      - step:
-          name: Upload artifact to S3
-          services:
-            - docker
-          script:
-            - pipe: atlassian/aws-code-deploy:0.2.7
-              variables:
-                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
-                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-                COMMAND: 'upload'
-                APPLICATION_NAME: $APPLICATION_NAME
-                ZIP_FILE: 'ft3.zip'
-                S3_BUCKET: $S3_BUCKET
-      - step:
-          name: Deploy with CodeDeploy
-          services:
-            - docker
-          script:
-            - pipe: atlassian/aws-code-deploy:0.2.7
-              variables:
-                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
-                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-                COMMAND: 'deploy'
-                APPLICATION_NAME: $APPLICATION_NAME
-                DEPLOYMENT_GROUP: $DEPLOYMENT_GROUP
-                WAIT: 'true'
-                S3_BUCKET: $S3_BUCKET
+      - step: *build
+      - step: *upload-artifact-to-s3-dev
+      - step: *deploy-with-codedeploy-dev
+
+  custom:
+    dev-env:
+      - step: *build
+      - step: *upload-artifact-to-s3-dev
+      - step: *deploy-with-codedeploy-dev
+
+    staging-env:
+      - step: *build
+      - step: *upload-artifact-to-s3-staging
+      - step: *deploy-with-codedeploy-staging
