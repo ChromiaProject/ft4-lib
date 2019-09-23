@@ -5,7 +5,11 @@
     "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
-    "lib": ["es2015"]
+    "downlevelIteration": true,
+    "lib": [
+      "es2015",
+      "es2019"
+    ]
   },
   "include": ["./client/**/*"],
   "exclude": [
