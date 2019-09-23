@@ -29,12 +29,52 @@ describe('Payment history', () => {
 
         await account1.transfer(account2.id_, asset.id, 10);
         await account1.transfer(account2.id_, asset.id, 11);
-        const paymentHistory = await account1.getPaymentHistory();
 
-        await account1.getPaymentHistoryIterator(5);
+        const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
+        const paymentHistoryEntries = paymentHistoryIterator.next();
 
+        expect(paymentHistoryIterator.pageCount).toEqual(1);
+        expect(paymentHistoryEntries.length).toEqual(2);
+    });
 
-        expect(paymentHistory.length).toEqual(2);
-    })
+    it("should have one payment history entries if one crosschain transfer is made", async () => {
+        const user = TestUser.singleSig();
 
+        const account1 = await AccountBuilder
+            .account(blockchain, user)
+            .withParticipants([user.keyPair])
+            .withBalance(asset, 200)
+            .build();
+
+        await account1.xcTransfer(generateId(), generateId(), asset.id, 10);
+
+        const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
+        const paymentHistoryEntries = paymentHistoryIterator.next();
+
+        expect(paymentHistoryIterator.pageCount).toEqual(1);
+        expect(paymentHistoryEntries.length).toEqual(1);
+    });
+
+    it("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {
+        const user = TestUser.singleSig();
+
+        const account1 = await AccountBuilder
+            .account(blockchain, user)
+            .withParticipants([user.keyPair])
+            .withBalance(asset, 200)
+            .build();
+
+        const account2 = await AccountBuilder
+            .account(blockchain)
+            .build();
+
+        await account1.transfer(account2.id_, asset.id, 10);
+        await account1.xcTransfer(generateId(), generateId(), asset.id, 10);
+
+        const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
+        const paymentHistoryEntries = paymentHistoryIterator.next();
+
+        expect(paymentHistoryIterator.pageCount).toEqual(1);
+        expect(paymentHistoryEntries.length).toEqual(2);
+    });
 });
