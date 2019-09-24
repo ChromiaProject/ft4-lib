@@ -52,7 +52,8 @@ export default class PaymentHistorySyncManager {
         const paymentHistory = await PaymentHistory.getByAccountId(id, lastBlock, blockchain.connection);
         if (paymentHistory.length === 0) { return }
 
-        const paymentHistoryEntries = this.mapToPaymentHistoryEntries(paymentHistory, blockchain.id, id).reverse();
+        //Add missing sender/receiver info to payment history entries
+        const paymentHistoryEntries = this.mapShortEntriesToLongEntries(paymentHistory, blockchain.id, id);
         this.paymentHistoryStore.save(id, paymentHistoryEntries);
         syncInfo.lastBlock = this.getHighestBlock(paymentHistoryEntries, lastBlock);
         this.storeAccountSyncInfo(id, syncInfo);
@@ -69,18 +70,18 @@ export default class PaymentHistorySyncManager {
         localStorage.setItem(key, JSON.stringify(syncInfo));
     }
 
-    private mapToPaymentHistoryEntries(rawEntries: PaymentHistoryEntryShort[], chainId: Buffer, accountId: Buffer): PaymentHistoryEntry[] {
-        const entriesMap = this.groupRawEntriesByTransactionRID(rawEntries);
+    private mapShortEntriesToLongEntries(entries: PaymentHistoryEntryShort[], chainId: Buffer, accountId: Buffer): PaymentHistoryEntry[] {
+        const entriesMap = this.groupShortEntriesByTransactionRID(entries);
         const paymentHistoryEntries: PaymentHistoryEntry[][] = [];
 
         for (const entries of entriesMap.values()) {
             paymentHistoryEntries.push(this.paymentHistoryEntriesFrom(entries, chainId, accountId));
         }
 
-        return paymentHistoryEntries.flat()
+        return paymentHistoryEntries.flat().reverse()
     }
 
-    private groupRawEntriesByTransactionRID(entries: PaymentHistoryEntryShort[]): Map<string, any[]> {
+    private groupShortEntriesByTransactionRID(entries: PaymentHistoryEntryShort[]): Map<string, any[]> {
         const entriesGroups: Map<string, PaymentHistoryEntryShort[]> = new Map<string, PaymentHistoryEntryShort[]>();
         entries.forEach(entry => {
             if (entriesGroups.has(entry.transactionId)) {
@@ -99,18 +100,22 @@ export default class PaymentHistorySyncManager {
 
         // Get all the payments from the transaction which are related to the current account,
         // and then get all inputs and outputs for which current account is source or destination.
-        const payments = this.getPaymentsForAccountFromRawTransaction(accountId, firstEntry.transactionData, chainId.toString('hex'));
+        const payments = this.getPaymentsForChainAndAccountFromRawTransaction(
+            chainId.toString('hex'),
+            accountId,
+            firstEntry.transactionData
+        );
 
         let inputs = payments
             .map(payment =>
-                payment.inputsWithAccount(accountId.toString('hex'))
+                payment.inputsWithChainAndAccount(chainId.toString('hex'), accountId.toString('hex'))
                     .map(input => new ParamPaymentPair(input, payment))
             )
             .flat();
 
         let outputs = payments
             .map(payment =>
-                payment.outputsWithAccount(accountId.toString('hex'))
+                payment.outputsWithChainAndAccount(chainId.toString('hex'), accountId.toString('hex'))
                     .map(output => new ParamPaymentPair(output, payment))
             )
             .flat();
@@ -137,22 +142,22 @@ export default class PaymentHistorySyncManager {
         // and then get sender/receiver from corresponding transfers.
         for (const entry of entries) {
             if (entry.isInput) {
-                const input = this.matchPaymentHistoryEntryAndTransferParam(entry, inputs, accountId);
+                const input = this.matchPaymentHistoryEntryAndPaymentParam(entry, inputs, accountId);
                 if (!input) { throw new Error('Cannot match payment history entry to any transfer input') }
                 inputs = inputs.filter(i => i !== input);
-                paymentHistoryEntries.push(this.getPaymentHistoryEntry(entry, input.payment, chainId.toString('hex')));
+                paymentHistoryEntries.push(this.getPaymentHistoryEntry(entry, input.payment));
             } else {
-                const output = this.matchPaymentHistoryEntryAndTransferParam(entry, outputs, accountId);
+                const output = this.matchPaymentHistoryEntryAndPaymentParam(entry, outputs, accountId);
                 if (!output) { throw new Error('Cannot match payment history entry to any transfer output') }
                 outputs = outputs.filter(o => o !== output);
-                paymentHistoryEntries.push(this.getPaymentHistoryEntry(entry, output.payment, chainId.toString('hex')));
+                paymentHistoryEntries.push(this.getPaymentHistoryEntry(entry, output.payment));
             }
         }
 
         return paymentHistoryEntries
     }
 
-    private matchPaymentHistoryEntryAndTransferParam(entry: PaymentHistoryEntryShort, params: ParamPaymentPair[], accountId: Buffer): ParamPaymentPair {
+    private matchPaymentHistoryEntryAndPaymentParam(entry: PaymentHistoryEntryShort, params: ParamPaymentPair[], accountId: Buffer): ParamPaymentPair {
         return params.find(param => (
             param.param.isAccountId(accountId.toString('hex')) &&
             param.param.isAssetId(entry.assetId) &&
@@ -161,22 +166,17 @@ export default class PaymentHistorySyncManager {
         ));
     }
 
-    private getPaymentHistoryEntry(
-        entry: PaymentHistoryEntryShort,
-        payment: PaymentOperation,
-        chainIdString: string
-    ): PaymentHistoryEntry {
+    private getPaymentHistoryEntry(entry: PaymentHistoryEntryShort, payment: PaymentOperation): PaymentHistoryEntry {
         const other
             = entry.isInput
-            ? payment.outputsWithAsset(entry.assetId).map(({ accountId }) => ({ accountId }))
-            : payment.inputsWithAsset(entry.assetId).map(({ accountId }) => ({ accountId }));
+            ? payment.outputsWithAsset(entry.assetId).map(({ chainId, accountId }) => ({ chainId, accountId }))
+            : payment.inputsWithAsset(entry.assetId).map(({ chainId, accountId }) => ({ chainId, accountId }));
 
         return new PaymentHistoryEntry(
             entry.isInput,
             entry.delta,
             entry.asset,
             Buffer.from(entry.assetId, 'hex'),
-            Buffer.from(chainIdString, 'hex'),
             other,
             new Date(entry.timestamp),
             Buffer.from(entry.transactionId, 'hex'),
@@ -190,9 +190,16 @@ export default class PaymentHistorySyncManager {
             .reduce((x, y) => Math.max(x, y), lastBlock);
     }
 
-    private getPaymentsForAccountFromRawTransaction(accountId: Buffer, transactionData: Buffer, chainId: string): PaymentOperation[] {
-        return new PaymentOperationExtractor(transactionData, chainId).extract()
-            .filter(transfer => transfer.hasInputOrOutputAccount(accountId.toString('hex')));
+    private getPaymentsForChainAndAccountFromRawTransaction(
+        chainId: string,
+        accountId: Buffer,
+        transactionData: Buffer
+    ): PaymentOperation[] {
+        return new PaymentOperationExtractor(transactionData, chainId)
+            .extract()
+            .filter(transfer =>
+                transfer.hasInputOrOutputWithChainAndAccount(chainId, accountId.toString('hex'))
+            );
     }
 }
 

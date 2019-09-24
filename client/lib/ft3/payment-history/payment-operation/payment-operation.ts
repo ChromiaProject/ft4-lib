@@ -2,6 +2,13 @@ import TransferOperation from "./transfer-operation";
 import XTransferOperation from "./xtransfer-operation";
 import PaymentParam from "./payment-param";
 
+
+// PaymentOperation class is used to represent transfers and cross-chain transfers using one type. Original
+// idea vas to implement PaymentOperation as adapter for for TransferOperation and XTransferOperation, to abstract
+// different types of transfers, but that implementation would be more complex, and at the moment it looks like there
+// is no value add from adding more complexity.
+// When parsing raw transactions, inputs and outputs from transfers and cross-chain transfer will be copied to the
+// PaymentOperation objects.
 export default class PaymentOperation {
     readonly inputs: PaymentParam[];
     readonly outputs: PaymentParam[];
@@ -11,17 +18,17 @@ export default class PaymentOperation {
         this.outputs = outputs;
     }
 
-    hasInputOrOutputAccount(accountId: string): boolean {
-        return this.inputs.some(input => input.isAccountId(accountId)) ||
-            this.outputs.some(output => output.isAccountId(accountId));
+    hasInputOrOutputWithChainAndAccount(chainId: string, accountId: string): boolean {
+        return this.inputs.some(input => input.isChainId(chainId) && input.isAccountId(accountId)) ||
+            this.outputs.some(output => output.isChainId(chainId) && output.isAccountId(accountId));
     }
 
-    inputsWithAccount(accountId: string): PaymentParam[] {
-        return this.inputs.filter(input => input.isAccountId(accountId));
+    inputsWithChainAndAccount(chainId: string, accountId: string): PaymentParam[] {
+        return this.inputs.filter(input => input.isChainId(chainId) && input.isAccountId(accountId));
     }
 
-    outputsWithAccount(accountId: string): PaymentParam[] {
-        return this.outputs.filter(output => output.isAccountId(accountId));
+    outputsWithChainAndAccount(chainId: string, accountId: string): PaymentParam[] {
+        return this.outputs.filter(output => output.isChainId(chainId) && output.isAccountId(accountId));
     }
 
     inputsWithAsset(assetId: string): PaymentParam[] {
