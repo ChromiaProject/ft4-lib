@@ -9,15 +9,22 @@ NODE_CONFIG_PROPS=node-config.properties
 PRIVATE_PROPS=private.properties
 
 print_usage () {
-    echo "Usage: run-node.sh <node_config>"
+    echo "Usage: run-node.sh <node_config> [options]"
+    echo ""
+    echo "Options:"
+    echo "-W, --wipe-db         wipe database"
+    echo "-a, --api-port        api port"
+    echo "-n, --node-port       node port"
+    echo "-s, --save-to-config  if api or node port is specified on command line, they will be saved to node config"
+    echo "-p                    production mode"
+    echo ""
     echo "Available configurations:"
-    echo "-------------------------"
     for blockchain in $INPUT_DIR_ROOT/* ; do
         if [ -d $blockchain ] && [ ! -L $blockchain ]; then
             echo " `basename $blockchain`"
         fi
     done
-    echo "-------------------------"
+    echo ""
 }
 
 update_api_port () {
