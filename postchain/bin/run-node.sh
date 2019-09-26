@@ -1,7 +1,9 @@
 
-INPUT_DIR_ROOT="../config/nodes"
-OUTPUT_DIR_ROOT="../runtime/nodes"
-RELL_CFG="../lib/rellcfg.sh"
+POSTCHAIN_DIR="`( cd \"${BASH_SOURCE%/*}/..\" && pwd )`"
+INPUT_DIR_ROOT="$POSTCHAIN_DIR/config/nodes"
+OUTPUT_DIR_ROOT="$POSTCHAIN_DIR/runtime/nodes"
+RELL_CFG="$POSTCHAIN_DIR/lib/rellcfg.sh"
+POSTCHAIN_SCRIPT="$POSTCHAIN_DIR/lib/postchain.sh"
 
 NODE_CONFIG_PROPS=node-config.properties
 PRIVATE_PROPS=private.properties
@@ -109,11 +111,11 @@ i=1
 
 for blockchain in $INPUT_DIR_ROOT/$CONF/blockchains/* ; do
     if [ -d $blockchain ] && [ ! -L $blockchain ]; then
-        blockchain_dir=$OUTPUT_DIR_ROOT/$CONF/blockchains/$i
-        mkdir -p $blockchain_dir
-        cp $blockchain/brid.txt $blockchain_dir
-        main_rell=`cat $blockchain/entry-file.txt`
-        $RELL_CFG --template $blockchain/config.template.xml "$blockchain/${main_rell}" $blockchain_dir/0.xml
+        BLOCKCHAIN_DIR="$OUTPUT_DIR_ROOT/$CONF/blockchains/$i"
+        mkdir -p "$BLOCKCHAIN_DIR"
+        cp $blockchain/brid.txt "$BLOCKCHAIN_DIR"
+        MAIN_RELL=`cat $blockchain/entry-file.txt`
+        $RELL_CFG --template $blockchain/config.template.xml "${POSTCHAIN_DIR}/${MAIN_RELL}" "$BLOCKCHAIN_DIR/0.xml"
         if [ "$?" -ne 0 ]; then
             echo "Compilation error!!!"
             exit 1
@@ -124,12 +126,12 @@ done
 
 if [ "$WIPE_DB" = true ]; then
     echo "Wiping database ..."
-    ../lib/postchain.sh wipe-db -nc "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
+    "$POSTCHAIN_SCRIPT" wipe-db -nc "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
 fi
 
 
 if [ "$PROD_NODE" = true ]; then
-    exec ../lib/postchain.sh run-node -cid 1 -nc "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
+    exec "$POSTCHAIN_SCRIPT" run-node -cid 1 -nc "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
 else
-    exec ../lib/postchain.sh run-node-auto -d "$OUTPUT_DIR_ROOT/$CONF"
+    exec "$POSTCHAIN_SCRIPT" run-node-auto -d "$OUTPUT_DIR_ROOT/$CONF"
 fi
