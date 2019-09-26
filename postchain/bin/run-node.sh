@@ -114,6 +114,10 @@ for blockchain in $INPUT_DIR_ROOT/$CONF/blockchains/* ; do
         cp $blockchain/brid.txt $blockchain_dir
         main_rell=`cat $blockchain/entry-file.txt`
         $RELL_CFG --template $blockchain/config.template.xml "$blockchain/${main_rell}" $blockchain_dir/0.xml
+        if [ "$?" -ne 0 ]; then
+            echo "Compilation error!!!"
+            exit 1
+        fi
         ((i=i+1))
     fi
 done
