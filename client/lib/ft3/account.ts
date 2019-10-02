@@ -65,7 +65,7 @@ class Account {
         return this.session.blockchain;
     }
 
-    static async getByParticipantId(id: Buffer, session: BlockchainSession): Promise<Account []> {
+    static async getByParticipantId(id: Buffer, session: BlockchainSession): Promise<Account[]> {
         const accountIds = await session.query(
             'ft3.get_accounts_by_participant_id',
             { id: id.toString('hex') }
@@ -81,14 +81,14 @@ class Account {
         return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), session);
     }
 
-    static async register(authDescriptor: AuthDescriptor, session: BlockchainSession) {
+    static async register(authDescriptor: AuthDescriptor, session: BlockchainSession): Promise<Account> {
         await session.call(...this.registerOp(authDescriptor));
         const account = new Account(authDescriptor.hash(), [authDescriptor], session);
         await account.syncAssets();
         return account
     }
 
-    static async getByIds(ids: Buffer[], session: BlockchainSession): Promise<Account []> {
+    static async getByIds(ids: Buffer[], session: BlockchainSession): Promise<Account[]> {
         return Promise.all(ids.map(id => this.getById(id, session)));
     }
 
@@ -118,7 +118,7 @@ class Account {
         return acc;
     }
 
-    async addAuthDescriptor(authDescriptor: AuthDescriptor) {
+    async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
         await this.session.call(...this.addAuthDescriptorOp(authDescriptor));
         this.authDescriptor.push(authDescriptor);
     }
@@ -140,15 +140,15 @@ class Account {
         this.assets = await AssetBalance.getByAccountId(this.id_, this.session.blockchain);
     }
 
-    getAssetById(id: Buffer) {
+    getAssetById(id: Buffer): AssetBalance {
         //TODO: find better way to compare buffers
         return this.assets.find(assetBalance => (
             assetBalance.asset.id.toString('hex') === id.toString('hex'))
         );
     }
 
-    async transferInputsToOutputs(inputs, outputs) {
-        return await this.blockchain.transactionBuilder()
+    async transferInputsToOutputs(inputs, outputs): Promise<void> {
+        await this.blockchain.transactionBuilder()
             .addOperation('ft3.transfer', inputs, outputs)
             .addOperation('nop', util.hash256(Math.random().toString()))
             .build(this.session.user.authDescriptor.signers)
@@ -157,7 +157,7 @@ class Account {
         await this.syncAssets();
     }
 
-    async transfer(accountId: Buffer, assetId: Buffer, amount: number) {
+    async transfer(accountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
         const input = [
             this.id_.toString('hex'),
             assetId.toString('hex'),
@@ -176,7 +176,7 @@ class Account {
         await this.transferInputsToOutputs([input], [output]);
     }
 
-    async burnTokens(assetId, amount) {
+    async burnTokens(assetId, amount): Promise<void> {
         const input = [
             this.id_.toString('hex'),
             assetId.toString('hex'),
@@ -198,8 +198,8 @@ class Account {
         return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id_, pageSize);
     }
 
-    async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number) {
-        return await this.blockchain.transactionBuilder()
+    async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
+        await this.blockchain.transactionBuilder()
             .addOperation(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
             .addOperation('nop', util.hash256(Math.random().toString()))
             .build(this.session.user.authDescriptor.signers)
