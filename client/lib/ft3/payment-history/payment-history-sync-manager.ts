@@ -9,28 +9,6 @@ import PaymentOperationExtractor from "../payment-operation-extractor";
 import PaymentOperation from "./payment-operation/payment-operation";
 import PaymentParam from "./payment-operation/payment-param";
 
-class LocalStorageMock {
-
-    store = {};
-
-    clear() {
-        this.store = {};
-    }
-
-    getItem(key) {
-        return this.store[key] || null;
-    }
-
-    setItem(key, value) {
-        this.store[key] = value.toString();
-    }
-
-    removeItem(key) {
-        delete this.store[key];
-    }
-}
-
-const localStorage = new LocalStorageMock();
 
 class ParamPaymentPair {
     readonly param: PaymentParam;
@@ -46,7 +24,7 @@ export default class PaymentHistorySyncManager {
     readonly paymentHistoryStore: PaymentHistoryStore = new PaymentHistoryStoreLocalStorage();
 
     async syncAccount(id: Buffer, blockchain: Blockchain) {
-        const syncInfo = this.getAccountSyncInfo(id);
+        const syncInfo = this.paymentHistoryStore.getSyncInfo(id);
         const lastBlock = +syncInfo.lastBlock || -1;
 
         const paymentHistory = await PaymentHistory.getByAccountId(id, lastBlock, blockchain.connection);
@@ -56,18 +34,7 @@ export default class PaymentHistorySyncManager {
         const paymentHistoryEntries = this.mapShortEntriesToLongEntries(paymentHistory, blockchain.id, id);
         this.paymentHistoryStore.save(id, paymentHistoryEntries);
         syncInfo.lastBlock = this.getHighestBlock(paymentHistoryEntries, lastBlock);
-        this.storeAccountSyncInfo(id, syncInfo);
-    }
-
-    private getAccountSyncInfo(id: Buffer): any {
-        const key = `FT3_LIB_P_H_S_I_${id.toString('hex').toUpperCase()}`;
-        const value = localStorage.getItem(key);
-        return (value && JSON.parse(value)) || {}
-    }
-
-    private storeAccountSyncInfo(id: Buffer, syncInfo: any) {
-        const key = `FT3_LIB_P_H_S_I_${id.toString('hex').toUpperCase()}`;
-        localStorage.setItem(key, JSON.stringify(syncInfo));
+        this.paymentHistoryStore.saveSyncInfo(id, syncInfo);
     }
 
     private mapShortEntriesToLongEntries(entries: PaymentHistoryEntryShort[], chainId: Buffer, accountId: Buffer): PaymentHistoryEntry[] {

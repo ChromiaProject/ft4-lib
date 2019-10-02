@@ -2,29 +2,6 @@ import PaymentHistoryStore from "./payment-history-store";
 import PaymentHistoryIterator from "./payment-history-iterator";
 import PaymentHistoryEntry from "./payment-history-entry";
 
-class LocalStorageMock {
-
-    store = {};
-
-    clear() {
-        this.store = {};
-    }
-
-    getItem(key) {
-        return this.store[key] || null;
-    }
-
-    setItem(key, value) {
-        this.store[key] = value.toString();
-    }
-
-    removeItem(key) {
-        delete this.store[key];
-    }
-}
-
-const localStorage = new LocalStorageMock();
-
 export default class PaymentHistoryStoreLocalStorage implements PaymentHistoryStore {
 
     private entriesCache: {[key: string]: PaymentHistoryEntry[]} = {};
@@ -48,6 +25,17 @@ export default class PaymentHistoryStoreLocalStorage implements PaymentHistorySt
         const entries = this.getEntriesFor(accounId);
         if (entries.length < start) { return [] }
         return entries.slice(start, Math.min(entries.length, start + pageSize));
+    }
+
+    getSyncInfo(accountId: Buffer): any {
+        const key = `FT3_LIB_P_H_S_I_${accountId.toString('hex').toUpperCase()}`;
+        const value = localStorage.getItem(key);
+        return (value && JSON.parse(value)) || {}
+    }
+
+    saveSyncInfo(accountId: Buffer, syncInfo: any) {
+        const key = `FT3_LIB_P_H_S_I_${accountId.toString('hex').toUpperCase()}`;
+        localStorage.setItem(key, JSON.stringify(syncInfo));
     }
 
     private getEntriesFor(accountId: Buffer): PaymentHistoryEntry[] {
