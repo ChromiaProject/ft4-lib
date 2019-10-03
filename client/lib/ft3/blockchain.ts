@@ -1,6 +1,6 @@
 import BlockchainInfo from "./blockchain-info";
 import ConnectionClient from './connection-client';
-import {Account, AuthDescriptor} from "./account";
+import {Account, AuthDescriptor, GtvSerializable} from "./account";
 import Asset from "./asset";
 import DirectoryService from "./directory-service";
 import TransactionBuilder from "./transaction-builder";
@@ -100,7 +100,7 @@ export default class Blockchain {
         return await this.connection.query(name, params);
     }
 
-    async call(user: User, ...args: any): Promise<any> {
+    async call(user: User, ...args: Array<GtvSerializable>): Promise<any> {
         return await this.transactionBuilder()
             .addOperation(...args)
             .build(user.authDescriptor.signers)

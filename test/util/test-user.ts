@@ -1,7 +1,7 @@
 import { FlagsType } from "../../client/lib/ft3/account";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import User from "../../client/lib/ft3/user";
-import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
+import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 
 class TestUser {

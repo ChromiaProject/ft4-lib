@@ -3,7 +3,7 @@ import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/asset";
 import User from "../../client/lib/ft3/user";
 import TestUser from "./test-user";
-import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
+import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 import AssetBalance from "../../client/lib/ft3/asset-balance";
 import Blockchain from "../../client/lib/ft3/blockchain";

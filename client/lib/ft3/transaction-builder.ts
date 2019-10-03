@@ -1,5 +1,29 @@
 import Blockchain from "./blockchain";
 import Transaction from "./transaction";
+import {GtvSerializable} from "./account";
+
+declare global {
+    interface Array<T> extends GtvSerializable {}
+    interface String extends GtvSerializable {}
+    interface Number extends GtvSerializable {}
+    interface Buffer extends GtvSerializable {}
+}
+
+Buffer.prototype.toGTV = function(): any {
+    return this.toString('hex');
+};
+
+Array.prototype.toGTV = function(): any[] {
+    return this.map(element => element.toGTV());
+};
+
+String.prototype.toGTV = function(): any {
+    return this;
+};
+
+Number.prototype.toGTV = function(): any {
+    return this;
+};
 
 export default class TransactionBuilder {
     private operations: any[] = [];
@@ -9,8 +33,8 @@ export default class TransactionBuilder {
         this.blockchain = blockchain;
     }
 
-    addOperation(...args: any[]): TransactionBuilder {
-        this.operations.push(args);
+    addOperation(...args: Array<GtvSerializable>): TransactionBuilder {
+        this.operations.push(args.toGTV());
         return this;
     }
 
