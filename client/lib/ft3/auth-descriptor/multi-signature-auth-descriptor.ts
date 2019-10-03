@@ -20,6 +20,10 @@ export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
         return this.pubkeys;
     }
 
+    get id(): Buffer {
+        return this.hash()
+    }
+
     toGTV(): any[] {
         return [
             AuthType.multi_sig,

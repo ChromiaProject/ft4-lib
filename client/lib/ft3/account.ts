@@ -20,7 +20,6 @@ enum FlagsType {
 }
 
 interface GtvSerializable {
-    hash(): Buffer;
     toGTV(): any[];
 }
 
@@ -45,7 +44,9 @@ class Flags {
 }
 
 interface AuthDescriptor extends GtvSerializable {
-    signers: PubKey[]
+    id: Buffer;
+    signers: PubKey[];
+    hash(): Buffer;
 }
 
 
@@ -129,7 +130,7 @@ class Account {
         await this.session.call(
             'ft3.delete_all_auth_descriptors_exclude',
             this.id_,
-            authDescriptor.hash()
+            authDescriptor.id
         );
         this.authDescriptor = [authDescriptor];
     }
@@ -216,7 +217,7 @@ class Account {
         const source = [
             this.id_,
             assetId,
-            this.session.user.authDescriptor.hash(),
+            this.session.user.authDescriptor.id,
             amount,
             []
         ];
@@ -234,7 +235,7 @@ class Account {
         return [
             'ft3.add_auth_descriptor',
             this.id_,
-            this.session.user.authDescriptor.hash(),
+            this.session.user.authDescriptor.id,
             authDescriptor
         ]
     }

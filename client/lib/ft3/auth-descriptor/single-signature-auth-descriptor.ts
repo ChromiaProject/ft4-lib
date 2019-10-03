@@ -14,6 +14,10 @@ export default class SingleSignatureAuthDescriptor implements AuthDescriptor {
         return [this.pubkey]
     }
 
+    get id(): Buffer {
+        return this.hash()
+    }
+
     toGTV(): any[] {
         return [
             AuthType.single_sig,
