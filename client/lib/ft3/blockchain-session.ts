@@ -1,6 +1,6 @@
 import Blockchain from "./blockchain";
 import User from "./user";
-import { Account } from "./account";
+import {Account, GtvSerializable} from "./account";
 
 export default class BlockchainSession {
     readonly user: User;
@@ -27,7 +27,7 @@ export default class BlockchainSession {
         return await this.blockchain.query(name, params);
     }
 
-    async call(...args: any): Promise<any> {
+    async call(...args: Array<GtvSerializable>): Promise<any> {
         return await this.blockchain.call(this.user, ...args);
     }
 }

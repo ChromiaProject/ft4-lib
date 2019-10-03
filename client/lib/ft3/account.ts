@@ -38,7 +38,9 @@ class Flags {
     }
 
     toGTV() {
-        return this.flagsOrder.map(flag => this.flags.has(flag) ? flag : null).filter(flag => flag);
+        return this.flagsOrder
+            .map(flag => this.flags.has(flag) ? flag : null)
+            .filter(flag => flag);
     }
 }
 
@@ -126,8 +128,8 @@ class Account {
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
         await this.session.call(
             'ft3.delete_all_auth_descriptors_exclude',
-            this.id_.toString('hex'),
-            authDescriptor.hash().toString('hex')
+            this.id_,
+            authDescriptor.hash()
         );
         this.authDescriptor = [authDescriptor];
     }
@@ -147,7 +149,7 @@ class Account {
         );
     }
 
-    async transferInputsToOutputs(inputs, outputs): Promise<void> {
+    async transferInputsToOutputs(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Promise<void> {
         await this.blockchain.transactionBuilder()
             .addOperation('ft3.transfer', inputs, outputs)
             .addOperation('nop', util.hash256(Math.random().toString()))
@@ -159,16 +161,16 @@ class Account {
 
     async transfer(accountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
         const input = [
-            this.id_.toString('hex'),
-            assetId.toString('hex'),
+            this.id_,
+            assetId,
             this.authDescriptor[0].hash(), //TODO: Replace hash with id
             amount,
             []
         ];
 
         const output = [
-            accountId.toString('hex'),
-            assetId.toString('hex'),
+            accountId,
+            assetId,
             amount,
             []
         ];
@@ -178,8 +180,8 @@ class Account {
 
     async burnTokens(assetId, amount): Promise<void> {
         const input = [
-            this.id_.toString('hex'),
-            assetId.toString('hex'),
+            this.id_,
+            assetId,
             this.authDescriptor[0].hash(), //TODO: Replace hash with id
             amount,
             []
@@ -210,35 +212,35 @@ class Account {
 
     /* Operation and query */
 
-    xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): any[] {
+    xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Array<GtvSerializable> {
         const source = [
-            this.id_.toString('hex'),
-            assetId.toString('hex'),
-            this.session.user.authDescriptor.hash().toString('hex'),
+            this.id_,
+            assetId,
+            this.session.user.authDescriptor.hash(),
             amount,
             []
         ];
         const target = [
-            destinationAccountId.toString('hex'),
+            destinationAccountId,
             []
         ];
         const hops = [
-            destinationChainId.toString('hex')
+            destinationChainId
         ];
         return ['ft3.xc.init_xfer', source, target, hops];
     }
 
-    addAuthDescriptorOp(authDescriptor: AuthDescriptor): any[] {
+    addAuthDescriptorOp(authDescriptor: AuthDescriptor): Array<GtvSerializable> {
         return [
             'ft3.add_auth_descriptor',
-            this.id_.toString('hex'),
-            this.session.user.authDescriptor.hash().toString('hex'),
-            authDescriptor.toGTV()
+            this.id_,
+            this.session.user.authDescriptor.hash(),
+            authDescriptor
         ]
     }
 
-    static registerOp(authDescriptor: AuthDescriptor): any[] {
-        return ['ft3.dev_register_account', authDescriptor.toGTV()];
+    static registerOp(authDescriptor: AuthDescriptor): Array<GtvSerializable> {
+        return ['ft3.dev_register_account', authDescriptor];
     }
 }
 
@@ -248,5 +250,6 @@ export {
     AuthDescriptor,
     AuthType,
     Flags,
-    FlagsType
+    FlagsType,
+    GtvSerializable
 }

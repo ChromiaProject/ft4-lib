@@ -2,7 +2,7 @@ import {Account, FlagsType} from "../client/lib/ft3/account";
 import * as pcl from "postchain-client";
 import {buffToHex, KeyPair} from "../client/lib/cyptoUtils";
 import TestUser from "./util/test-user";
-import SingleSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/signle-signature-auth-descriptor";
+import SingleSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
