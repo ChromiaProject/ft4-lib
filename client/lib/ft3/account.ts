@@ -104,7 +104,7 @@ class Account {
         return session.blockchain.transactionBuilder()
             .add(register(authDescriptor))
             .add(addAuthDescriptor(authDescriptor.id, authDescriptor.id, ssoAuthDescriptor))
-            .build([authDescriptor.signers].flat())
+            .build([authDescriptor.signers /*, ssoAuthDescriptor.signers */].flat())
             .sign(session.user.keyPair)
             .raw()
     }
@@ -172,7 +172,7 @@ class Account {
         const input = [
             this.id_,
             assetId,
-            this.authDescriptor[0].hash(), //TODO: Replace hash with id
+            this.session.user.authDescriptor.id,
             amount,
             []
         ];
@@ -191,7 +191,7 @@ class Account {
         const input = [
             this.id_,
             assetId,
-            this.authDescriptor[0].hash(), //TODO: Replace hash with id
+            this.session.user.authDescriptor.id,
             amount,
             []
         ];
