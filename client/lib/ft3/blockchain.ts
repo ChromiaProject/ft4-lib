@@ -6,6 +6,8 @@ import DirectoryService from "./directory-service";
 import TransactionBuilder from "./transaction-builder";
 import BlockchainSession from "./blockchain-session";
 import User from "./user";
+import { gtx } from 'postchain-client';
+import Operation from "./operation";
 
 export default class Blockchain {
     readonly id: Buffer;
@@ -100,12 +102,22 @@ export default class Blockchain {
         return await this.connection.query(name, params);
     }
 
-    async call(user: User, ...args: Array<GtvSerializable>): Promise<any> {
-        return await this.transactionBuilder()
-            .addOperation(...args)
+    async call(user: User, ...args: Array<GtvSerializable>): Promise<void> {
+        const [name, ...restArgs] = args;
+        return this.callOp(user, new Operation(<string>name, ...restArgs));
+    }
+
+    async callOp(user: User, operation: Operation): Promise<void> {
+        await this.transactionBuilder()
+            .add(operation)
             .build(user.authDescriptor.signers)
             .sign(user.keyPair)
             .post();
+    }
+
+    async postRaw(rawTransaction: Buffer): Promise<void> {
+        const tx = this.connection.gtx.transactionFromRawTransaction(rawTransaction);
+        await tx.postAndWaitConfirmation();
     }
 
     transactionBuilder(): TransactionBuilder {

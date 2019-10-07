@@ -6,6 +6,7 @@ import AccountBuilder from "./util/account-builder";
 import {generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
 import ConnectionClient from "../client/lib/ft3/connection-client";
+import {Account} from "../client";
 
 let blockchain: Blockchain = null;
 const connection: ConnectionClient = TestConnection.connection();
@@ -85,5 +86,24 @@ describe("Blockchain", () => {
 
     it('should return false when isLinkedWithChain is called for unknown chain id', async () => {
         await expect(blockchain.isLinkedWithChain(generateId())).resolves.toEqual(false);
+    });
+
+    it('should successfuly post raw transactions', async () => {
+        const user = TestUser.singleSig();
+        const vault = TestUser.singleSig();
+
+        const session = blockchain.newSession(user);
+
+        const rawTransaction = Account.rawRegisterTransaction(
+            user.authDescriptor,
+            vault.authDescriptor,
+            session
+        );
+
+        await blockchain.postRaw(rawTransaction);
+
+        const account = await session.getAccountById(user.authDescriptor.id);
+
+        expect(account).not.toBeNull()
     });
 });

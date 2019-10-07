@@ -6,6 +6,21 @@ import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
 import BlockchainSession from "./blockchain-session";
 import Blockchain from "./blockchain";
+import {
+    transfer,
+    addAuthDescriptor,
+    register,
+    nop,
+    deleteAllAuthDescriptorsExclude,
+    xcTransfer
+} from "./account-operations";
+import {
+    accountAuthDescriptors,
+    accountById,
+    accountsByAuthDescriptorId,
+    accountsByParticipantId
+} from "./account-queries";
+import Operation from "./operation";
 
 enum AuthType {
     single_sig = "S",
@@ -69,26 +84,29 @@ class Account {
     }
 
     static async getByParticipantId(id: Buffer, session: BlockchainSession): Promise<Account[]> {
-        const accountIds = await session.query(
-            'ft3.get_accounts_by_participant_id',
-            { id: id.toString('hex') }
-        );
+        const accountIds = await session.query(...accountsByParticipantId(id));
         return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), session);
     }
 
     static async getByAuthDescriptorId(id: Buffer, session: BlockchainSession): Promise<Account[]> {
-        const accountIds = await session.query(
-            'ft3.get_accounts_by_auth_descriptor_id',
-            { descriptor_id: id.toString('hex') }
-        );
+        const accountIds = await session.query(...accountsByAuthDescriptorId(id));
         return await this.getByIds(accountIds.map(id => Buffer.from(id, 'hex')), session);
     }
 
     static async register(authDescriptor: AuthDescriptor, session: BlockchainSession): Promise<Account> {
-        await session.call(...this.registerOp(authDescriptor));
+        await session.callOp(register(authDescriptor));
         const account = new Account(authDescriptor.hash(), [authDescriptor], session);
         await account.syncAssets();
         return account
+    }
+
+    static rawRegisterTransaction(authDescriptor: AuthDescriptor, ssoAuthDescriptor: AuthDescriptor, session: BlockchainSession): Buffer {
+        return session.blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .add(addAuthDescriptor(authDescriptor.id, authDescriptor.id, ssoAuthDescriptor))
+            .build([authDescriptor.signers].flat())
+            .sign(session.user.keyPair)
+            .raw()
     }
 
     static async getByIds(ids: Buffer[], session: BlockchainSession): Promise<Account[]> {
@@ -96,17 +114,11 @@ class Account {
     }
 
     static async getById(id: Buffer, session: BlockchainSession): Promise<Account> {
-        const account = await session.query(
-            'ft3.get_account_by_id',
-            { id: id.toString('hex')}
-        );
+        const account = await session.query(...accountById(id));
 
         if (!account) { return null }
 
-        const authDescriptors = await session.query(
-            'ft3.get_account_auth_descriptors',
-            { id: id.toString('hex')}
-        );
+        const authDescriptors = await  session.query(...accountAuthDescriptors(id));
 
         const authDescriptorFactory = new AuthDescriptorFactory();
         const descriptors = authDescriptors.map(authDescriptor =>
@@ -122,16 +134,12 @@ class Account {
     }
 
     async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.call(...this.addAuthDescriptorOp(authDescriptor));
+        await this.session.callOp(addAuthDescriptor(this.id_, this.session.user.authDescriptor.id, authDescriptor));
         this.authDescriptor.push(authDescriptor);
     }
 
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.call(
-            'ft3.delete_all_auth_descriptors_exclude',
-            this.id_,
-            authDescriptor.id
-        );
+        await this.session.callOp(deleteAllAuthDescriptorsExclude(this.id_, authDescriptor.id));
         this.authDescriptor = [authDescriptor];
     }
 
@@ -152,8 +160,8 @@ class Account {
 
     async transferInputsToOutputs(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Promise<void> {
         await this.blockchain.transactionBuilder()
-            .addOperation('ft3.transfer', inputs, outputs)
-            .addOperation('nop', util.hash256(Math.random().toString()))
+            .add(transfer(inputs, outputs))
+            .add(nop())
             .build(this.session.user.authDescriptor.signers)
             .sign(this.session.user.keyPair)
             .post();
@@ -203,8 +211,8 @@ class Account {
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
         await this.blockchain.transactionBuilder()
-            .addOperation(...this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
-            .addOperation('nop', util.hash256(Math.random().toString()))
+            .add(this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
+            .add(nop())
             .build(this.session.user.authDescriptor.signers)
             .sign(this.session.user.keyPair)
             .post();
@@ -213,7 +221,7 @@ class Account {
 
     /* Operation and query */
 
-    xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Array<GtvSerializable> {
+    xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Operation {
         const source = [
             this.id_,
             assetId,
@@ -228,20 +236,8 @@ class Account {
         const hops = [
             destinationChainId
         ];
-        return ['ft3.xc.init_xfer', source, target, hops];
-    }
 
-    addAuthDescriptorOp(authDescriptor: AuthDescriptor): Array<GtvSerializable> {
-        return [
-            'ft3.add_auth_descriptor',
-            this.id_,
-            this.session.user.authDescriptor.id,
-            authDescriptor
-        ]
-    }
-
-    static registerOp(authDescriptor: AuthDescriptor): Array<GtvSerializable> {
-        return ['ft3.dev_register_account', authDescriptor];
+        return xcTransfer(source, target, hops);
     }
 }
 
