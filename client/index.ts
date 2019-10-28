@@ -1,5 +1,6 @@
 export * from './lib/cyptoUtils';
 export * from './lib/ft3/account';
+export * from './lib/ft3/account-operations'
 export { default as User } from './lib/ft3/user';
 export { default as ConnectionClient } from './lib/ft3/connection-client';
 export { default as AssetBalance } from './lib/ft3/asset-balance';
@@ -10,4 +11,5 @@ export { default as BlockchainSession } from './lib/ft3/blockchain-session';
 export { default as DirectoryService } from './lib/ft3/directory-service';
 export { default as DirectoryServiceBase } from './lib/ft3/directory-service-base';
 export { default as ChainConnectionInfo } from './lib/ft3/chain-connection-info';
+export { default as Operation } from './lib/ft3/operation';
 export * from './lib/ft3/auth-descriptor';
