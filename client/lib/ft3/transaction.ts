@@ -18,4 +18,8 @@ export default class Transaction {
     async post() {
         await this.tx.postAndWaitConfirmation();
     }
+
+    raw(): Buffer {
+        return this.tx.encode()
+    }
 }
