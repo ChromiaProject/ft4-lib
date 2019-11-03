@@ -1,4 +1,4 @@
-record xc_target {
+struct xc_target {
     account_id: byte_array;
     extra: map<text, gtv>;
 }
@@ -22,13 +22,13 @@ operation init_xfer (source: xfer_input, target: xc_target, hops: list<byte_arra
      add_to_blockchain_balance( hops[0], asset, source.amount );
 }
 
-record init_xfer_args {
+struct init_xfer_args {
           source: xfer_input;
           target: xc_target;
           hops: list<byte_array>;
 }
 
-class applied_transfers { key tx_rid: byte_array; }
+entity applied_transfers { key tx_rid: byte_array; }
 
 operation apply_xfer (
        init_tx_rid: byte_array,

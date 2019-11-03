@@ -5,12 +5,12 @@
 // "S" - single-sig
 // "M" - multi-sig
 
-record single_sig_args {
+struct single_sig_args {
        flags: set<text>;
        pubkey;
 }
 
-record multi_sig_args {
+struct multi_sig_args {
        flags: set<text>;
        signatures_required: integer;
        pubkeys: list<pubkey>;

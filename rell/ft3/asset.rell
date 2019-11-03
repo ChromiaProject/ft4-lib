@@ -1,12 +1,12 @@
 //namespace ft3 {
-  class asset {
+  entity asset {
     id: byte_array;
     key id;
     key name;
     issuing_chain_rid: byte_array;
   }
 
-  class balance {
+  entity balance {
     key account, asset;
     mutable amount: integer = 0;
   }

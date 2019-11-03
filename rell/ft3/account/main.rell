@@ -1,23 +1,23 @@
 // namespace ft3 {
 
-record auth_descriptor {
+struct auth_descriptor {
     auth_type: text;
     participants: list<byte_array>;
     args: list<gtv>;
 }
 
-class account {
+entity account {
     key id: byte_array;      
 }
 
-class account_meta {
+entity account_meta {
     meta_key: text;
     value: byte_array;
     index account, meta_key;
     index meta_key, value;
 }
 
-class account_auth_descriptor {
+entity account_auth_descriptor {
      descriptor_id: byte_array;
      key account, descriptor_id;
      index descriptor_id;
@@ -25,7 +25,7 @@ class account_auth_descriptor {
      args: byte_array;
 }
 
-class auth_descriptor_participant {
+entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
 }
 

@@ -4,7 +4,7 @@ object blockchain {
     mutable description: text = ft3_config.blockchain_description;
 }
 
-class linked_chain {
+entity linked_chain {
     key chain_rid: byte_array;
 }
 

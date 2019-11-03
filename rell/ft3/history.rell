@@ -1,6 +1,6 @@
 //namespace ft3  {
 
-  class payment_history_entry (log) {
+  entity payment_history_entry (log) {
     index account, asset;
     delta: integer;
     
