@@ -1,7 +1,9 @@
+import ft3_config;
+
 object blockchain {
-    mutable name: text = ft3_config.blockchain_name;
-    mutable website: text = ft3_config.blockchain_website;
-    mutable description: text = ft3_config.blockchain_description;
+    mutable name: text = ft3_config.ft3_config.blockchain_name;
+    mutable website: text = ft3_config.ft3_config.blockchain_website;
+    mutable description: text = ft3_config.ft3_config.blockchain_description;
 }
 
 entity linked_chain {

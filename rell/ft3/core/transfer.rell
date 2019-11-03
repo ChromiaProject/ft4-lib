@@ -1,4 +1,4 @@
-//namespace ft3 {
+import acc: ^.account;
 
 struct xfer_input {
    account_id: byte_array;
@@ -15,18 +15,18 @@ struct xfer_output {
    extra: map<text, gtv>;
 }
 
-function deduct_balance (account, asset, d_amount: integer) {
+function deduct_balance (acc.account, asset, d_amount: integer) {
     val b = balance @ { account, asset };
     require( b.amount >= d_amount, "Balance is too low");
-    update b (amount -= d_amount); 
+    update b (amount -= d_amount);
 }
 
 function consume_input (i: xfer_input, idx: integer, assets: map<asset, integer>): payment_history_entry {
       val asset = asset @ { .id == i.asset_id };
-      val account = account @ {.id == i.account_id };
-      require_auth( account, i.auth_descriptor_id, ["T"] );
+      val account = acc.account @ {.id == i.account_id };
+      acc.require_auth( account, i.auth_descriptor_id, ["T"] );
       require( i.amount >= 0, "Amount should be positive." );
-      
+
       deduct_balance(account, asset, i.amount);
       assets[asset] = i.amount + if (asset in assets) assets[asset] else 0;
       return create payment_history_entry (
@@ -41,12 +41,12 @@ function consume_input (i: xfer_input, idx: integer, assets: map<asset, integer>
 
 function process_transfer_output (o: xfer_output, idx: integer, available_assets: map<asset, integer>): payment_history_entry {
       if (o.extra.contains("reg_auth_desc")) {
-          val auth_desc = auth_descriptor.from_gtv(o.extra["reg_auth_desc"]);
+          val auth_desc = acc.auth_descriptor.from_gtv(o.extra["reg_auth_desc"]);
           require(o.account_id
-           == create_account_with_auth(auth_desc));
+           == acc.create_account_with_auth(auth_desc));
       }
 
-      val target_account = account @ { .id == o.account_id };
+      val target_account = acc.account @ { .id == o.account_id };
       val asset = asset @ { .id == o.asset_id };
       require( available_assets[asset] >= o.amount );
       available_assets[asset] -= o.amount;
@@ -83,6 +83,3 @@ function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
 operation transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
     _transfer(inputs, outputs);
 }
-
- 
-//}

@@ -1,9 +1,11 @@
+import ft3: ^.core;
+
 struct xc_target {
     account_id: byte_array;
     extra: map<text, gtv>;
 }
 
-function add_to_blockchain_balance (blockchain_rid: byte_array, asset, amount: integer) {
+function add_to_blockchain_balance (blockchain_rid: byte_array, ft3.asset, amount: integer) {
     require( chain_context.blockchain_rid != blockchain_rid ); // cannot add to own account
 
     val origin_chain_rid = asset_origin @? { asset } .origin_chain_rid;
@@ -12,18 +14,18 @@ function add_to_blockchain_balance (blockchain_rid: byte_array, asset, amount: i
        // do nothing. in future we might track origin
     } else {
          val bc_acc = ensure_blockchain_account(blockchain_rid);
-         ensure_balance(bc_acc, asset).amount += amount;
+         ft3.ensure_balance(bc_acc, asset).amount += amount;
     }
 }
 
-operation init_xfer (source: xfer_input, target: xc_target, hops: list<byte_array>) {
-     consume_input(source, 0, map<asset, integer>());
-     val asset = asset @ { .id == source.asset_id };
+operation init_xfer (source: ft3.xfer_input, target: xc_target, hops: list<byte_array>) {
+     ft3.consume_input(source, 0, map<ft3.asset, integer>());
+     val asset = ft3.asset @ { .id == source.asset_id };
      add_to_blockchain_balance( hops[0], asset, source.amount );
 }
 
 struct init_xfer_args {
-          source: xfer_input;
+          source: ft3.xfer_input;
           target: xc_target;
           hops: list<byte_array>;
 }
@@ -54,7 +56,7 @@ operation apply_xfer (
 
       if (hop_index > 0) {
          from_chain_rid = init_args.hops[hop_index - 1];
-         
+
          require(prev_hop);
          verify_transaction_proof(prev_hop);
          require(prev_hop.tx.body.blockchain_rid == from_chain_rid);
@@ -65,14 +67,14 @@ operation apply_xfer (
          from_chain_rid = init_tx.tx.body.blockchain_rid;
       }
 
-      val asset = asset @ { .id == source.asset_id };
+      val asset = ft3.asset @ { .id == source.asset_id };
       val origin_chain_rid = asset_origin @ { asset } .origin_chain_rid;
 
       // process "from" side
       if (from_chain_rid == origin_chain_rid) {
          // asset comes from origin -- do nothing
       } else {
-         deduct_balance(
+         ft3.deduct_balance(
              get_blockchain_account( from_chain_rid ),
              asset, source.amount
          );
@@ -85,11 +87,11 @@ operation apply_xfer (
          add_to_blockchain_balance(next_hop, asset, source.amount);
       } else {
          // final hop -- send money to recipient account
-         val available_assets = map<asset, integer>();
+         val available_assets = map<ft3.asset, integer>();
          available_assets[asset] = source.amount;
          val target = init_args.target;
-         process_transfer_output(
-                xfer_output(
+         ft3.process_transfer_output(
+                ft3.xfer_output(
                   account_id = target.account_id,
                   asset_id = source.asset_id,
                   amount = source.amount,
