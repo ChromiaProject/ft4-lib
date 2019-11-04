@@ -7,6 +7,7 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/mult
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/blockchain";
+import { op } from "../client";
 
 require('dotenv').config();
 
@@ -85,7 +86,7 @@ describe('Test the account', () => {
     });
 
     //TODO FIX ME
-    it("should update account if 2 signatures provided", async () => {
+    it.skip("should update account if 2 signatures provided", async () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
 
@@ -203,4 +204,15 @@ describe('Test the account', () => {
 
         expect(foundAccount.authDescriptor.length).toEqual(1);
     });
+
+    it('should be able to register account by directly calling \'register_account\' operation', async () => {
+        const user = TestUser.singleSig();
+
+        await blockchain.call(op('ft3.dev_register_account', user.authDescriptor), user);
+
+        const session = blockchain.newSession(user);
+        const account = await session.getAccountById(user.authDescriptor.id);
+
+        expect(account).not.toBeNull();
+    })
 });

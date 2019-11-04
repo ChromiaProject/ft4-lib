@@ -5,6 +5,8 @@ export default class Operation {
     readonly args: Array<GtvSerializable>
 
     constructor(name: string, ...args: Array<GtvSerializable>) {
+        if (!name) { throw new Error('Missing operation name')}
+
         this.name = name;
         this.args = args;
     }

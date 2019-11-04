@@ -30,3 +30,8 @@ export function nop(): Operation {
     return new Operation('nop', util.hash256(Math.random().toString()));
 }
 
+export function op(...args: GtvSerializable[]): Operation {
+    const [name, ...restArgs] = args;
+    return new Operation(<string>name, ...restArgs);
+}
+
