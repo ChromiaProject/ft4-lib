@@ -102,12 +102,7 @@ export default class Blockchain {
         return await this.connection.query(name, params);
     }
 
-    async call(user: User, ...args: Array<GtvSerializable>): Promise<void> {
-        const [name, ...restArgs] = args;
-        return this.callOp(user, new Operation(<string>name, ...restArgs));
-    }
-
-    async callOp(user: User, operation: Operation): Promise<void> {
+    async call(operation: Operation, user: User): Promise<void> {
         await this.transactionBuilder()
             .add(operation)
             .build(user.authDescriptor.signers)
