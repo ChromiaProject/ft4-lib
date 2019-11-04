@@ -162,8 +162,7 @@ class Account {
         await this.blockchain.transactionBuilder()
             .add(transfer(inputs, outputs))
             .add(nop())
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
+            .buildAndSign(this.session.user)
             .post();
         await this.syncAssets();
     }
@@ -213,8 +212,7 @@ class Account {
         await this.blockchain.transactionBuilder()
             .add(this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
             .add(nop())
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
+            .buildAndSign(this.session.user)
             .post();
         await this.syncAssets();
     }
