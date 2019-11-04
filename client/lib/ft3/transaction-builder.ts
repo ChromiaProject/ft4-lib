@@ -3,6 +3,7 @@ import Transaction from "./transaction";
 import {GtvSerializable} from "./account";
 import { util } from 'postchain-client'
 import Operation from "./operation";
+import User from "./user";
 
 declare global {
     interface Array<T> extends GtvSerializable {}
@@ -44,5 +45,9 @@ export default class TransactionBuilder {
         const tx = this.blockchain.connection.gtx.newTransaction(signers);
         this.operations.forEach(o => tx.addOperation(o.name, ...o.args.map(a => a.toGTV())));
         return new Transaction(tx, this.blockchain);
+    }
+
+    buildAndSign(user: User): Transaction {
+        return this.build(user.authDescriptor.signers).sign(user.keyPair);
     }
 }
