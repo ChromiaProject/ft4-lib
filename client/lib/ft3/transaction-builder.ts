@@ -3,12 +3,14 @@ import Transaction from "./transaction";
 import {GtvSerializable} from "./account";
 import { util } from 'postchain-client'
 import Operation from "./operation";
+import User from "./user";
 
 declare global {
     interface Array<T> extends GtvSerializable {}
     interface String extends GtvSerializable {}
     interface Number extends GtvSerializable {}
     interface Buffer extends GtvSerializable {}
+    interface Boolean extends GtvSerializable {}
 }
 
 Buffer.prototype.toGTV = function(): any {
@@ -16,7 +18,7 @@ Buffer.prototype.toGTV = function(): any {
 };
 
 Array.prototype.toGTV = function(): any[] {
-    return this.map(element => element.toGTV());
+    return this.map(element => element && element.toGTV());
 };
 
 String.prototype.toGTV = function(): any {
@@ -25,6 +27,10 @@ String.prototype.toGTV = function(): any {
 
 Number.prototype.toGTV = function(): any {
     return this;
+};
+
+Boolean.prototype.toGTV = function (): any {
+    return this ? 1 : 0;
 };
 
 export default class TransactionBuilder {
@@ -42,7 +48,13 @@ export default class TransactionBuilder {
 
     build(signers: Buffer[]): Transaction {
         const tx = this.blockchain.connection.gtx.newTransaction(signers);
-        this.operations.forEach(o => tx.addOperation(o.name, ...o.args.map(a => a.toGTV())));
+        this.operations.forEach(
+            o => tx.addOperation(o.name, ...o.args.map(a => a === null ? null : a.toGTV()))
+        );
         return new Transaction(tx, this.blockchain);
+    }
+
+    buildAndSign(user: User): Transaction {
+        return this.build(user.authDescriptor.signers).sign(user.keyPair);
     }
 }

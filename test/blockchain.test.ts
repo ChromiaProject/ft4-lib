@@ -88,7 +88,7 @@ describe("Blockchain", () => {
         await expect(blockchain.isLinkedWithChain(generateId())).resolves.toEqual(false);
     });
 
-    it('should successfuly post raw transactions', async () => {
+    it('should successfully post raw transactions', async () => {
         const user = TestUser.singleSig();
         const vault = TestUser.singleSig();
 

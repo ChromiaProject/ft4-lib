@@ -94,7 +94,7 @@ class Account {
     }
 
     static async register(authDescriptor: AuthDescriptor, session: BlockchainSession): Promise<Account> {
-        await session.callOp(register(authDescriptor));
+        await session.call(register(authDescriptor));
         const account = new Account(authDescriptor.hash(), [authDescriptor], session);
         await account.syncAssets();
         return account
@@ -134,12 +134,12 @@ class Account {
     }
 
     async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.callOp(addAuthDescriptor(this.id_, this.session.user.authDescriptor.id, authDescriptor));
+        await this.session.call(addAuthDescriptor(this.id_, this.session.user.authDescriptor.id, authDescriptor));
         this.authDescriptor.push(authDescriptor);
     }
 
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.callOp(deleteAllAuthDescriptorsExclude(this.id_, authDescriptor.id));
+        await this.session.call(deleteAllAuthDescriptorsExclude(this.id_, authDescriptor.id));
         this.authDescriptor = [authDescriptor];
     }
 
@@ -162,8 +162,7 @@ class Account {
         await this.blockchain.transactionBuilder()
             .add(transfer(inputs, outputs))
             .add(nop())
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
+            .buildAndSign(this.session.user)
             .post();
         await this.syncAssets();
     }
@@ -213,8 +212,7 @@ class Account {
         await this.blockchain.transactionBuilder()
             .add(this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
             .add(nop())
-            .build(this.session.user.authDescriptor.signers)
-            .sign(this.session.user.keyPair)
+            .buildAndSign(this.session.user)
             .post();
         await this.syncAssets();
     }

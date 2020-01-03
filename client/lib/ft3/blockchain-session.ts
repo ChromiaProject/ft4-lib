@@ -28,11 +28,7 @@ export default class BlockchainSession {
         return await this.blockchain.query(name, params);
     }
 
-    async call(...args: Array<GtvSerializable>): Promise<any> {
-        return await this.blockchain.call(this.user, ...args);
-    }
-
-    async callOp(operation: Operation): Promise<any> {
-        return await this.blockchain.callOp(this.user, operation);
+    async call(operation: Operation): Promise<any> {
+        return await this.blockchain.call(operation, this.user);
     }
 }
