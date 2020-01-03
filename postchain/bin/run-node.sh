@@ -122,7 +122,7 @@ for blockchain in $INPUT_DIR_ROOT/$CONF/blockchains/* ; do
         mkdir -p "$BLOCKCHAIN_DIR"
         cp $blockchain/brid.txt "$BLOCKCHAIN_DIR"
         MAIN_RELL=`cat $blockchain/entry-file.txt`
-        $RELL_CFG --template $blockchain/config.template.xml "${POSTCHAIN_DIR}/${MAIN_RELL}" "$BLOCKCHAIN_DIR/0.xml"
+        $RELL_CFG --template $blockchain/config.template.xml -d $MAIN_RELL "" "$BLOCKCHAIN_DIR/0.xml"
         if [ "$?" -ne 0 ]; then
             echo "Compilation error!!!"
             exit 1

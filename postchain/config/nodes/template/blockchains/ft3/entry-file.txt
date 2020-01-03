@@ -1,1 +1,1 @@
-../rell/main.rell
+rell/
