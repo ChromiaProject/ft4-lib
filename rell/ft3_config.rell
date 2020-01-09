@@ -1,3 +1,5 @@
+module;
+
 object ft3_config {
     blockchain_name: text = 'ChromaToken';
     blockchain_website: text = 'https://forum.chroma.dev';

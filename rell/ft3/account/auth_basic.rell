@@ -1,16 +1,14 @@
-//namespace ft3 {
-
 // Auth type:
 
 // "S" - single-sig
 // "M" - multi-sig
 
-record single_sig_args {
+struct single_sig_args {
        flags: set<text>;
        pubkey;
 }
 
-record multi_sig_args {
+struct multi_sig_args {
        flags: set<text>;
        signatures_required: integer;
        pubkeys: list<pubkey>;
@@ -21,7 +19,7 @@ function check_single_sig_auth(args: byte_array, participants: list<byte_array>,
     val ss_args = single_sig_args.from_bytes(args);
     return
           ss_args.flags.contains_all(required_flags)
-            and 
+            and
           is_signer(participants[0]);
 }
 
@@ -59,8 +57,5 @@ function require_auth (account, descriptor_id: byte_array, required_flags: list<
        auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
        required_flags
        )
-   );  
+   );
 }
-
-
-//}

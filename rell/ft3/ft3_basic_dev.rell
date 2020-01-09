@@ -1,7 +1,4 @@
-namespace ft3 {
+module;
 
-include "account/auth_basic";
-include "core";
-include "dev_op";
-
-}
+import ^.core;
+import ^.core.dev_op;

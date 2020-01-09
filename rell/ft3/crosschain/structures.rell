@@ -1,20 +1,20 @@
-record operation_rec {
+struct operation_rec {
    name;
    args: list<gtv>;
 }
 
-record transaction_body_rec {
+struct transaction_body_rec {
     blockchain_rid: byte_array;
     operations: list<operation_rec>;
     signers: list<gtv>;
 }
 
-record transaction_rec {
+struct transaction_rec {
    body: transaction_body_rec;
    signatures: list<gtv>;
 }
 
-record transaction_proof {
+struct transaction_proof {
      tx: virtual<transaction_rec>;
      // block_header: byte_array;
      // merkle_path: virtual<list<byte_array>>;

@@ -1,5 +1,8 @@
-class asset_origin {
-    key asset;
+import ft3: ^.core;
+import acc: ^.account;
+
+entity asset_origin {
+    key ft3.asset;
     origin_chain_rid: byte_array;
 }
 
@@ -7,14 +10,13 @@ function blockchain_account_id (blockchain_rid: byte_array): byte_array {
    return ("B", blockchain_rid).hash();
 }
 
-function ensure_blockchain_account (blockchain_rid: byte_array): account {
+function ensure_blockchain_account (blockchain_rid: byte_array): acc.account {
    val blockchain_account_id = blockchain_account_id(blockchain_rid);
-   val acc = account @? { .id == blockchain_account_id };
+   val acc = acc.account @? { .id == blockchain_account_id };
    return if (acc??)  acc
-   else create account (id = blockchain_account_id);
+   else create acc.account (id = blockchain_account_id);
 }
 
-function get_blockchain_account (blockchain_rid: byte_array): account {
-   return account @ { .id == blockchain_account_id(blockchain_rid) };
+function get_blockchain_account (blockchain_rid: byte_array): acc.account {
+   return acc.account @ { .id == blockchain_account_id(blockchain_rid) };
 }
-
