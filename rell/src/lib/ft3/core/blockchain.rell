@@ -1,0 +1,26 @@
+import config.ft3_config;
+
+
+object blockchain {
+    mutable name: text = ft3_config.ft3_config.blockchain_name;
+    mutable website: text = ft3_config.ft3_config.blockchain_website;
+    mutable description: text = ft3_config.ft3_config.blockchain_description;
+    mutable requests_per_minute: integer = ft3_config.ft3_config.requests_per_minute;
+}
+
+
+operation update_blockchain(name, website: text, description: text) {
+    blockchain.name = name;
+    blockchain.website = website;
+    blockchain.description = description;
+}
+
+query get_blockchain_info() {
+    return (
+        name = blockchain.name,
+        website = blockchain.website,
+        description = blockchain.description,
+        requests_per_minute = blockchain.requests_per_minute 
+    );
+}
+

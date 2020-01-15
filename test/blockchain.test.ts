@@ -6,7 +6,7 @@ import AccountBuilder from "./util/account-builder";
 import {generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
 import ConnectionClient from "../client/lib/ft3/connection-client";
-import {Account} from "../client";
+import {Account} from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 const connection: ConnectionClient = TestConnection.connection();
@@ -19,7 +19,7 @@ describe("Blockchain", () => {
     it("should provide info", async () => {
         const info = await BlockchainInfo.getInfo(connection);
 
-        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description'))
+        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', expect.any(Number)))
     });
 
     it('should be able to register an account', async () => {

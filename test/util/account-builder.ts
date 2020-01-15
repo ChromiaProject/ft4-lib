@@ -1,4 +1,4 @@
-import { Account, FlagsType } from "../../client";
+import { Account, FlagsType } from "../../client/lib/ft3";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/asset";
 import User from "../../client/lib/ft3/user";

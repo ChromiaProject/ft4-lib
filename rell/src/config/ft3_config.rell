@@ -1,0 +1,16 @@
+module;
+
+struct module_args {
+    requests_per_minute: integer;
+}
+
+
+
+object ft3_config {
+    blockchain_name: text = 'test';
+    blockchain_website: text = 'test_website';
+    blockchain_description: text = 'test_description';
+    requests_per_minute: integer = chain_context.args.requests_per_minute;
+}
+
+ 

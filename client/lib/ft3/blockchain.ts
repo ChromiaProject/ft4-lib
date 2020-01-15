@@ -65,19 +65,19 @@ export default class Blockchain {
 
     async linkChain(chainId: Buffer) {
         const tx = this.connection.gtx.newTransaction([]);
-        tx.addOperation('ft3.link_chain', chainId.toString('hex'));
+        tx.addOperation('ft3.xc.link_chain', chainId.toString('hex'));
         await tx.postAndWaitConfirmation();
     }
 
     async isLinkedWithChain(chainId: Buffer): Promise<boolean> {
         return await this.query(
-            'ft3.is_linked_with_chain',
+            'ft3.xc.is_linked_with_chain',
             { 'chain_rid': chainId.toString('hex') }
         ) === 1
     }
 
     async getLinkedChainsIds(): Promise<Buffer[]> {
-        const linkedChains = await this.query('ft3.get_linked_chains', {});
+        const linkedChains = await this.query('ft3.xc.get_linked_chains', {});
         return linkedChains.map(chainId => Buffer.from(chainId, 'hex'));
     }
 

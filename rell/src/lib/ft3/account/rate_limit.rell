@@ -1,0 +1,40 @@
+import ^.core;
+
+
+/** 
+ * Log requests works with previous block timestamp. This is ok, it's like having a clock with a bit too early time 
+ **/
+function log_request(account, requests_per_minute: integer) {
+	// select all request in the last minute.
+	val last_timestamp = op_context.last_block_time;
+	val window_beginning =  last_timestamp - 60000;
+	
+	// clean the log if timestamp is older than the last minute (consider doing this every 10 or 100 requests)
+	delete request_log@*{last_timestamp < window_beginning};
+	val requests = (request_log@*{account}).size();
+	
+	require(requests < requests_per_minute, "Too many requests");
+		
+	// allow to proceed and add a new log
+	create request_log(account, last_timestamp);
+}
+
+
+
+
+struct rate_info {
+	request_count: integer;
+	last_timestamp: timestamp;
+}
+
+query requests_per_user(account_id: byte_array) {
+	val last_timestamp = (block@{.timestamp > 0}(@sort_desc .timestamp) limit 1);
+	val window_beginning = last_timestamp - 60000;
+	val request_count = (request_log@*{account@{account_id}, .timestamp >= window_beginning}).size();
+	return rate_info(request_count, last_timestamp);
+}
+
+query getLastTimestamp(): timestamp {
+	return (block@{.timestamp > 0}(@sort_desc .timestamp) limit 1);
+}
+

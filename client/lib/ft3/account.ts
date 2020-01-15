@@ -21,6 +21,7 @@ import {
     accountsByParticipantId
 } from "./account-queries";
 import Operation from "./operation";
+import RateLimit from './rate-limit';
 
 enum AuthType {
     single_sig = "S",
@@ -71,6 +72,7 @@ class Account {
     readonly id_: Buffer;
     authDescriptor: AuthDescriptor[];
     assets: AssetBalance[] = [];
+    rateLimit: RateLimit;
     readonly session: BlockchainSession;
 
     constructor(id: Buffer, authDescriptor: AuthDescriptor[], session: BlockchainSession) {
@@ -144,11 +146,15 @@ class Account {
     }
 
     async sync(): Promise<void> {
-        await Promise.all([this.syncAssets()]);
+        await Promise.all([this.syncAssets(), this.syncRateLimit()]);
     }
 
     private async syncAssets(): Promise<void> {
         this.assets = await AssetBalance.getByAccountId(this.id_, this.session.blockchain);
+    }
+
+    private async syncRateLimit(): Promise<void> {
+        this.rateLimit = await RateLimit.getByAccountRateLimit(this.id_, this.session.blockchain);
     }
 
     getAssetById(id: Buffer): AssetBalance {
