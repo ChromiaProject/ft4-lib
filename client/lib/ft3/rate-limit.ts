@@ -1,29 +1,49 @@
 
 import Blockchain from "./blockchain";
+import { BlockchainInfo } from ".";
+import { isRegExp } from "util";
 
 export default class RateLimit {
-    requestCount: number;
-    lastTimestamp: number;
-    REQUEST_LIMIT;
+    points: number;
+    last_upgrade: number;
 
-    constructor(requestLimit: number, requestCounter: number, timestamp: number) {
-        this.REQUEST_LIMIT = requestLimit;
-        this.requestCount = requestCounter;
-        this.lastTimestamp = timestamp;
+    constructor(points: number, last_upgrade: number) {
+        this.points = points;
+        this.last_upgrade = last_upgrade;
     }
 
     getRequestsLeft() {
-        return this.REQUEST_LIMIT - this.requestCount;
+        return this.points;
     }
 
     static async getByAccountRateLimit(accountId: Buffer, blockchain: Blockchain): Promise<RateLimit> {
         const rateInfo = await blockchain.connection.gtx.query(
-            'ft3.requests_per_user',
+            'ft3.get_account_rate_limit',
             {
                 account_id: accountId.toString('hex'),
             }  
         );
         if(!rateInfo) return null;
-        return new RateLimit(blockchain.info.requestsPerMinute, rateInfo.request_count, rateInfo.last_timestamp);
+        return new RateLimit(rateInfo.points, rateInfo.last_upgrade);
+    }
+
+    static async getLastTimestamp(blockchain: Blockchain): Promise<number> {
+        return await blockchain.connection.gtx.query(
+            'ft3.get_last_timestamp',
+            {}
+        );
+    }
+
+    static async getPointsAvailable(points: number, lastOperation: number, blockchain: Blockchain) {
+        const maxCount = blockchain.info.requestMaxCount;
+        const recoveryTime = blockchain.info.requestRecoveryTime;
+        const lastTimestamp = await this.getLastTimestamp(blockchain);
+        const delta = lastTimestamp - lastOperation;
+
+        const pointsAvailable = Math.floor(delta / recoveryTime) + points
+        if(pointsAvailable > maxCount) {
+            return maxCount;
+        }
+        return pointsAvailable > 0? pointsAvailable : 0;
     }
 }

@@ -32,9 +32,12 @@ entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
 }
 
-entity request_log {
-	index account; 
-	index timestamp;
+
+// rate limiter
+entity rl_state {
+    key account;
+    mutable points: integer;
+    mutable last_update: timestamp;
 }
 
 function _add_auth_descriptor (account, auth_descriptor) {
@@ -50,22 +53,21 @@ function _add_auth_descriptor (account, auth_descriptor) {
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
-    print(auth_descriptor);
      val id = auth_descriptor.hash();
      val acc = create account (id);
      _add_auth_descriptor(
         acc, auth_descriptor
      );
+     create rl_state(acc, .points = 0, .last_update = op_context.last_block_time);
      return id;
 }
 
 function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>): account {
 	val account = account @ { .id == account_id };
-	log_request(account, core.blockchain.requests_per_minute);
+	rate_limit(account);
 	require_auth(account, auth_descriptor_id, required_flags);
 	return account;
 }
-
 
 
 query get_account_auth_descriptors(id: byte_array) {

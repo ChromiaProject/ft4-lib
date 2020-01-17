@@ -1,11 +1,12 @@
-import config.ft3_config;
+import config: config.ft3_config;
 
 
 object blockchain {
-    mutable name: text = ft3_config.ft3_config.blockchain_name;
-    mutable website: text = ft3_config.ft3_config.blockchain_website;
-    mutable description: text = ft3_config.ft3_config.blockchain_description;
-    mutable requests_per_minute: integer = ft3_config.ft3_config.requests_per_minute;
+    mutable name: text = config.ft3_config.blockchain_name;
+    mutable website: text = config.ft3_config.blockchain_website;
+    mutable description: text = config.ft3_config.blockchain_description;
+    mutable request_max_count: integer = config.ft3_config.request_max_count;
+    mutable request_recovery_time: integer = config.ft3_config.request_recovery_time;
 }
 
 
@@ -20,7 +21,8 @@ query get_blockchain_info() {
         name = blockchain.name,
         website = blockchain.website,
         description = blockchain.description,
-        requests_per_minute = blockchain.requests_per_minute 
+        request_max_count = blockchain.request_max_count,
+        request_recovery_time = blockchain.request_recovery_time
     );
 }
 

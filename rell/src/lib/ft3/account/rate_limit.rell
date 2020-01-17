@@ -1,40 +1,52 @@
 import ^.core;
 
 
-/** 
- * Log requests works with previous block timestamp. This is ok, it's like having a clock with a bit too early time 
- **/
-function log_request(account, requests_per_minute: integer) {
-	// select all request in the last minute.
-	val last_timestamp = op_context.last_block_time;
-	val window_beginning =  last_timestamp - 60000;
+function rate_limit (account) {
+    val max_counter = core.blockchain.request_max_count;
+    val recovery_time = core.blockchain.request_recovery_time; 
+    val stat = rl_state@{account} (.points, .last_update);
+    val delta = op_context.last_block_time - stat.last_update;
+    var got_points = 0;
+    var update_time = stat.last_update;
+
+	print("DELTA", delta);
+	print("RECOVERY TIME", recovery_time);
+	print("MATH", delta - recovery_time);
+    if (delta > recovery_time)
+    {
+        got_points = delta / recovery_time;
+        print("GOT POINTS", got_points);
+        update_time = stat.last_update + got_points * recovery_time;
+        if (got_points + stat.points > max_counter) {
+            got_points = max_counter - stat.points;
+            // if user is at maximum reset his 
+            // timer
+            update_time = op_context.last_block_time;
+        }
+    }
+    
+    require(stat.points + got_points > 0);
+    
+    update rl_state@{account} (
+        .points += got_points - 1,
+        .last_update = update_time
+    );
+    print("NEW POINTS", rl_state@{account}(.points, .last_update));
+}
+
+
+query get_account_rate_limit(account_id: byte_array) {
 	
-	// clean the log if timestamp is older than the last minute (consider doing this every 10 or 100 requests)
-	delete request_log@*{last_timestamp < window_beginning};
-	val requests = (request_log@*{account}).size();
+	val t= rl_state@{.account.id == account_id}
+	(
+		.points, 
+		.last_update
+	);
 	
-	require(requests < requests_per_minute, "Too many requests");
-		
-	// allow to proceed and add a new log
-	create request_log(account, last_timestamp);
+	print("CHECKING THIS", t);
+	return t;
 }
 
-
-
-
-struct rate_info {
-	request_count: integer;
-	last_timestamp: timestamp;
+query get_last_timestamp(): integer {
+	return (block@{.timestamp>0}(@sort_desc .timestamp) limit 1);
 }
-
-query requests_per_user(account_id: byte_array) {
-	val last_timestamp = (block@{.timestamp > 0}(@sort_desc .timestamp) limit 1);
-	val window_beginning = last_timestamp - 60000;
-	val request_count = (request_log@*{account@{account_id}, .timestamp >= window_beginning}).size();
-	return rate_info(request_count, last_timestamp);
-}
-
-query getLastTimestamp(): timestamp {
-	return (block@{.timestamp > 0}(@sort_desc .timestamp) limit 1);
-}
-

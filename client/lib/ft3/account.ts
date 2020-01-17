@@ -1,4 +1,3 @@
-import { gtv, util } from 'postchain-client';
 import AssetBalance from './asset-balance';
 import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
