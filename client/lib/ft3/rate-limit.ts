@@ -1,7 +1,6 @@
 
 import Blockchain from "./blockchain";
-import { BlockchainInfo } from ".";
-import { isRegExp } from "util";
+import { freeOp, nop } from "./account-operations";
 
 export default class RateLimit {
     points: number;
@@ -14,6 +13,14 @@ export default class RateLimit {
 
     getRequestsLeft() {
         return this.points;
+    }
+
+    static async execFreeOperation(accountId: Buffer, blockchain: Blockchain) {
+        await blockchain.transactionBuilder()
+            .add(freeOp(accountId))
+            .add(nop())
+            .build([])
+            .post()            
     }
 
     static async getByAccountRateLimit(accountId: Buffer, blockchain: Blockchain): Promise<RateLimit> {

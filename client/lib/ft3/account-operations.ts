@@ -34,3 +34,9 @@ export function op(name: string, ...args: GtvSerializable[]): Operation {
     return new Operation(name, ...args);
 }
 
+// one operation that updates the counter of rate limit of the account but does not cost points
+export function freeOp(accountId: Buffer): Operation {
+    console.log("QQ", accountId);
+    return new Operation("ft3.dev_free_op", accountId);
+}
+

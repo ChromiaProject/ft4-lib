@@ -50,7 +50,7 @@ describe("Rate Limit", () => {
         });
     });
 
-    describe("Test the account rate limit", async () => {
+    describe("Test the account rate limit", () => {
         it("should show 10 at request count", async () => {
             // check how many requests are left
             await account1.sync();
@@ -59,11 +59,11 @@ describe("Rate Limit", () => {
     
         it("waits 20 seconds and gets 4 points", async () => {
             await timeout(20000);
-            await oneFreeOp(account1); // used to make one block
-    
+            console.log("GGG", account1.id_);
+            await RateLimit.execFreeOperation(account1.id_, blockchain); // used to make one block
 
             // check the balance
-            await oneFreeOp(account1); // used to make one block
+            await RateLimit.execFreeOperation(account1.id_, blockchain); // used to make one block
             await account1.sync();
             expect(account1.rateLimit.points).toBe(4); // 20 seconds / 5s recovery time
         });
@@ -75,7 +75,7 @@ describe("Rate Limit", () => {
         });
 
         it("can't make another operation because she has 0 points", async () => {
-            await oneFreeOp(account1);
+            await RateLimit.execFreeOperation(account1.id_, blockchain); 
             await account1.sync();
             if(account1.rateLimit.points > 0) {
                 await makeRequests(account1.rateLimit.points);
@@ -133,14 +133,5 @@ describe("Rate Limit", () => {
             const disposableKeypair = TestUser.singleSig();
             await account1.addAuthDescriptor(disposableKeypair.authDescriptor);
         }
-    }
-
-    const oneFreeOp = async (accountId: Buffer) => {  // used to update the timer
-        // TODO: move this to util 
-        return await blockchain.transactionBuilder()
-            .add(new Operation("ft3.dev_free_op", account1.id_.toString('hex')))
-            .add(nop())
-            .build([])
-            .post();
     }
 });
