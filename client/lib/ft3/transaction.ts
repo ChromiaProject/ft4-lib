@@ -22,4 +22,4 @@ export default class Transaction {
     raw(): Buffer {
         return this.tx.encode()
     }
-}
+} 

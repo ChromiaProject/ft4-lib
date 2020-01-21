@@ -11,7 +11,7 @@ function require_dev() {
     require(dev_state.allow_dev_ops);
 }
 
-operation dev_register_asset (name, issuing_chain_rid: byte_array, origin_chain_rid: byte_array) {
+operation dev_register_asset (name, issuing_chain_rid: byte_array) {
     require_dev();
     ft3.register_asset(name, issuing_chain_rid);
 }
