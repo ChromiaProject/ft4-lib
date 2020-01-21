@@ -50,11 +50,15 @@ function require_auth (account, descriptor_id: byte_array, required_flags: list<
      account,
      .descriptor_id == descriptor_id
    };
-   require(
+   require_auth_desc(account, account_auth_descriptor, required_flags);
+}
+
+function require_auth_desc(account, descriptor: account_auth_descriptor, required_flags: list<text>) {
+	require(
       check_auth_args(
-       account_auth_descriptor.auth_type,
-       account_auth_descriptor.args,
-       auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
+       descriptor.auth_type,
+       descriptor.args,
+       auth_descriptor_participant @* { descriptor } ( .id ),
        required_flags
        )
    );
