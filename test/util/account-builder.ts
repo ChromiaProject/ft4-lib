@@ -20,6 +20,7 @@ class AccountBuilder {
 
     constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
         this.blockchain = blockchain;
+        this.participants = [user.keyPair];
         this.user = user;
     }
 
@@ -82,11 +83,16 @@ class AccountBuilder {
             return new MultiSignatureAuthDescriptor(
                 this.participants.map(({ pubKey }) => pubKey),
                 this.requiredSignaturesCount,
-                this.flags
+                this.flags,
+                this.user.authDescriptor.rule
             )
         } else {
             const [participant] = this.participants;
-            return new SingleSignatureAuthDescriptor(participant.pubKey, this.flags);
+            return new SingleSignatureAuthDescriptor(
+                participant.pubKey,
+                this.flags,
+                this.user.authDescriptor.rule
+            );
         }
     }
 }

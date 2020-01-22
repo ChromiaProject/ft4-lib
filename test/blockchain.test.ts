@@ -16,7 +16,7 @@ describe("Blockchain", () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain()
     });
 
-    it("should provide info", async () => {
+    it.skip("should provide info", async () => {
         const info = await BlockchainInfo.getInfo(connection);
 
         expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description'))
