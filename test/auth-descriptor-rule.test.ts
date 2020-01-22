@@ -255,4 +255,61 @@ describe("Auth Descriptor Rule", () => {
 
         expect(srcAccount1.authDescriptor.length).toEqual(2);
     });
+
+    it("should add auth descriptors", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
+        const user3 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
+
+        const account = await sourceAccount(user1);
+
+        await account.addAuthDescriptor(user2.authDescriptor);
+        await account.addAuthDescriptor(user3.authDescriptor);
+
+        await account.sync();
+
+        expect(account.authDescriptor.length).toEqual(3);
+    });
+
+    it("should delete auth descriptors", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
+        const user3 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
+
+        const account = await sourceAccount(user1);
+
+        await account.addAuthDescriptor(user2.authDescriptor);
+        await account.addAuthDescriptor(user3.authDescriptor);
+
+        await account.deleteAllAuthDescriptorsExclude(user1.authDescriptor);
+
+        expect(account.authDescriptor.length).toEqual(1);
+
+        await account.sync();
+
+        expect(account.authDescriptor.length).toEqual(1)
+    });
+
+    it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+
+        const account1 = await sourceAccount(user1);
+        await sourceAccount(user2);
+
+        const promise = account1.deleteAuthDescriptor(user2.authDescriptor);
+        await expect(promise).rejects.toThrowError();
+    });
+
+    it("should delete auth descriptor", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+
+        const account = await sourceAccount(user1);
+
+        await account.addAuthDescriptor(user2.authDescriptor);
+        await account.deleteAuthDescriptor(user2.authDescriptor);
+
+        expect(account.authDescriptor.length).toEqual(1);
+    });
 });

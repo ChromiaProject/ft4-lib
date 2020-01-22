@@ -12,7 +12,8 @@ import {
     register,
     nop,
     deleteAllAuthDescriptorsExclude,
-    xcTransfer
+    xcTransfer,
+    deleteAuthDescriptor
 } from "./account-operations";
 import {
     accountAuthDescriptors,
@@ -137,6 +138,11 @@ class Account {
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
         await this.session.call(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id));
         this.authDescriptor = [authDescriptor];
+    }
+
+    async deleteAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
+        await this.session.call(deleteAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor.id));
+        await this.syncAuthDescriptors();
     }
 
     async sync(): Promise<void> {

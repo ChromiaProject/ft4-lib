@@ -26,7 +26,6 @@ entity auth_descriptor_rule_variable {
 
 function is_valid(auth_descriptor: account_auth_descriptor): boolean {
 	// check if rules is null (encoded null is equal to 0xa0020500)
-
 	if (auth_descriptor.rules == x'a0020500') {
 		return true;
 	}
@@ -228,14 +227,8 @@ function delete_expired_auth_descriptors(account) {
 	}
 }
 
-function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
-	delete auth_descriptor_rule_variable @* { auth_descriptor };
-	delete auth_descriptor_participant @* { auth_descriptor };
-	delete auth_descriptor;
-}
-
 /****************************************************************************************
- * 								    block_time											*
+ *                                     block_time                                       *
  ****************************************************************************************/
 
 function is_block_time_rule_active(r: gtv): boolean {
@@ -256,7 +249,7 @@ function is_block_time_rule_active(r: gtv): boolean {
 
 
 /****************************************************************************************
- * 								   block_height											*
+ *                                  block_height                                        *
  ****************************************************************************************/
 
 function is_block_height_rule_active(r: gtv): boolean {
@@ -277,7 +270,7 @@ function is_block_height_rule_active(r: gtv): boolean {
 
 
 /****************************************************************************************
- * 									 op_count											*
+ *                                     op_count                                         *
  ****************************************************************************************/
  
  function op_count_variable_initial_value(): gtv {
