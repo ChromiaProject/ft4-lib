@@ -7,8 +7,6 @@ import { FlagsType } from "../client/lib/ft3/account";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/blockchain";
-import TransactionBuilder from "../client/lib/ft3/transaction-builder";
-import { Operation } from "../client";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;
