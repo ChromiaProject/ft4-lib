@@ -236,7 +236,9 @@ function is_block_time_rule_active(r: gtv): boolean {
 	val operator = rule_operator.value(text.from_gtv(parameters[1]));
 	val value = integer.from_gtv(parameters[2]);
 	when (operator) {
-		rule_operator.gt,
+		rule_operator.gt -> {
+			return op_context.last_block_time > value;
+		}
 		rule_operator.ge,
 		rule_operator.eq -> {
 			return op_context.last_block_time >= value;
@@ -257,7 +259,9 @@ function is_block_height_rule_active(r: gtv): boolean {
 	val operator = rule_operator.value(text.from_gtv(parameters[1]));
 	val value = integer.from_gtv(parameters[2]);
 	when (operator) {
-		rule_operator.gt,
+		rule_operator.gt -> {
+			return op_context.block_height > value;
+		}
 		rule_operator.ge,
 		rule_operator.eq -> {
 			return op_context.block_height >= value;
