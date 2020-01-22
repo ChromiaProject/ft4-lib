@@ -25,7 +25,7 @@ entity account_auth_descriptor {
      index descriptor_id;
      auth_type: text;
      args: byte_array;
-     mutable rules: byte_array;
+     rules: byte_array;
 }
 
 entity auth_descriptor_participant {
