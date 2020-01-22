@@ -13,7 +13,7 @@ enum rule_operator {
 	gt
 }
 
-struct variable_rule {
+struct rule_expression {
 	variable: text;
 	operator: text;
 	value: gtv;
@@ -49,7 +49,7 @@ function is_rule_valid(rule: gtv, variables: map<text, gtv>): boolean {
 
 function handle_single_rule(rule: gtv, variables: map<text, gtv>): boolean {
 	return evaluate_int_variable_rule(
-		variable_rule.from_gtv(rule), 
+		rule_expression.from_gtv(rule), 
 		variables
 	);	
 }
@@ -108,7 +108,7 @@ function is_simple_rule_active(rule: gtv, variables: map<text, gtv>): boolean {
  *  Variables
  */
 
-function evaluate_int_variable_rule(rule: variable_rule, variables: map<text, gtv>): boolean {
+function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, gtv>): boolean {
 	val variable = rule_variable.value(rule.variable);
 	val operator = rule_operator.value(rule.operator);
 	val current_value = variable_value(variable, variables);
