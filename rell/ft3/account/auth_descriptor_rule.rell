@@ -163,7 +163,11 @@ function update_variables(account_auth_descriptor, variables: map<text, gtv>) {
 		val variable = auth_descriptor_rule_variable @ { account_auth_descriptor, name };
 		val int_value = integer.from_gtv(value);
 		
-		variable.value = (int_value + 1).to_gtv().to_bytes();
+		when (name) {
+			rule_variable.op_count.name -> {
+				variable.value = (int_value + 1).to_gtv().to_bytes();
+			}
+		}
 	}
 }
  
