@@ -27,8 +27,6 @@ entity auth_descriptor_rule_variable {
 function is_valid(auth_descriptor: account_auth_descriptor): boolean {
 	// check if rules is null (encoded null is equal to 0xa0020500)
 
-	val gtv_list = list<gtv>.from_gtv(gtv.from_bytes(auth_descriptor.rules));
-
 	if (auth_descriptor.rules == x'a0020500') {
 		return true;
 	}
