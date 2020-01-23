@@ -18,6 +18,7 @@ client/
 postchain/
 rell/
 test/
+app/
 
 /.env.sample
 /db.log
@@ -25,3 +26,5 @@ test/
 /jest.setup.js
 /tsconfig.json
 /index.js
+
+bitbucket-pipelines.yml
