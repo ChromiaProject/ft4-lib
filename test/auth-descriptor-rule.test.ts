@@ -24,6 +24,7 @@ function destinationAccount(): Promise<Account> {
         .build();
 }
 
+
 describe("Auth Descriptor Rule", () => {
     beforeAll(async () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
@@ -312,4 +313,21 @@ describe("Auth Descriptor Rule", () => {
 
         expect(account.authDescriptor.length).toEqual(1);
     });
-});
+    
+    it("Should be able to create same rules with different value", async () => {
+        let rules = Rules.blockHeight.greaterThan(1).and.blockHeight.greaterThan(10000).and.blockTime.greaterOrEqual(122222999);
+           
+        const user = TestUser.singleSig(rules);
+        await expect(sourceAccount(user)).resolves.toBeDefined(); 
+    });
+
+    it("shouldn't be able to create too many rules", async () => {
+        let rules = Rules.blockHeight.greaterThan(1).and.blockHeight.greaterThan(10000).and.blockTime.greaterOrEqual(122222999);
+        for(let i=0; i<400; i++) {
+            rules = rules.and.blockHeight.greaterOrEqual(i);
+        }
+        
+        const user = TestUser.singleSig(rules);
+        await expect(sourceAccount(user)).rejects.toThrowError();
+    });
+})

@@ -13,7 +13,7 @@ enum rule_operator {
 	gt
 }
 
-struct variable_rule {
+struct rule_expression {
 	variable: text;
 	operator: text;
 	value: gtv;
@@ -49,7 +49,7 @@ function is_rule_valid(rule: gtv, variables: map<text, gtv>): boolean {
 
 function handle_single_rule(rule: gtv, variables: map<text, gtv>): boolean {
 	return evaluate_int_variable_rule(
-		variable_rule.from_gtv(rule), 
+		rule_expression.from_gtv(rule), 
 		variables
 	);	
 }
@@ -74,6 +74,7 @@ function is_active(account_auth_descriptor): boolean {
 	
 	return is_rule_active(gtv.from_bytes(account_auth_descriptor.rules), map<text, gtv>());
 }
+
 
 function is_rule_active(r: gtv, variables: map<text, gtv>): boolean {
 	val parameters = list<gtv>.from_gtv(r);
@@ -108,7 +109,7 @@ function is_simple_rule_active(rule: gtv, variables: map<text, gtv>): boolean {
  *  Variables
  */
 
-function evaluate_int_variable_rule(rule: variable_rule, variables: map<text, gtv>): boolean {
+function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, gtv>): boolean {
 	val variable = rule_variable.value(rule.variable);
 	val operator = rule_operator.value(rule.operator);
 	val current_value = variable_value(variable, variables);
@@ -184,6 +185,28 @@ function variable_value(variable: rule_variable, variables: map<text, gtv>): int
 		}
 	}
 }
+
+/*
+ * Analyze the rules before assigning them to an authenticator descriptor
+ */
+ function analyze_auth_descriptor_rules(rules: gtv, hop: integer) {
+ 	require(hop<3, "too many rules");
+ 	val rules_bytes = rules.to_bytes(); 
+ 	if (rules_bytes == x'a0020500') {
+		return;
+	}
+	
+ 	val params = list<gtv>.from_gtv(rules);
+ 	require(params.size() <=3);
+ 	
+ 	val operator = text.from_gtv(params[1]);
+ 	if(operator == "and") {
+ 		analyze_auth_descriptor_rules(params[0], hop+1); 
+ 		analyze_auth_descriptor_rules(params[2], hop+1);
+ 	} 	
+ 	
+	return;
+ }
 
 /*
  * Returns set of variable names used in a rule

@@ -1,0 +1,10 @@
+
+struct version_tag {
+	major: integer;
+	minor: integer;
+	patch: integer;
+}
+
+operation check_version_tag() {
+	require()
+}

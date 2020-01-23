@@ -35,6 +35,8 @@ entity auth_descriptor_participant {
 function _add_auth_descriptor (account, auth_descriptor) {
      val descriptor_id = auth_descriptor.hash();
      
+     analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+     
      val account_auth_descriptor = create account_auth_descriptor (
         account, descriptor_id,
         auth_descriptor.auth_type,
