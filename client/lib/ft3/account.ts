@@ -12,7 +12,8 @@ import {
     register,
     nop,
     deleteAllAuthDescriptorsExclude,
-    xcTransfer
+    xcTransfer,
+    deleteAuthDescriptor
 } from "./account-operations";
 import {
     accountAuthDescriptors,
@@ -21,6 +22,7 @@ import {
     accountsByParticipantId
 } from "./account-queries";
 import Operation from "./operation";
+import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 
 enum AuthType {
     single_sig = "S",
@@ -61,6 +63,7 @@ class Flags {
 interface AuthDescriptor extends GtvSerializable {
     id: Buffer;
     signers: PubKey[];
+    rule: AuthDescriptorRule | null;
     hash(): Buffer;
 }
 
@@ -77,6 +80,10 @@ class Account {
         this.id_ = id;
         this.authDescriptor = authDescriptor;
         this.session = session;
+    }
+
+    get id(): Buffer {
+        return this.id_;
     }
 
     get blockchain(): Blockchain {
@@ -118,37 +125,44 @@ class Account {
 
         if (!account) { return null }
 
-        const authDescriptors = await  session.query(...accountAuthDescriptors(id));
+        const acc = new Account(id, [], session);
+        await acc.sync();
+        return acc;
+    }
+
+    async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
+        await this.session.call(addAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor));
+        this.authDescriptor.push(authDescriptor);
+    }
+
+    async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
+        await this.session.call(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id));
+        this.authDescriptor = [authDescriptor];
+    }
+
+    async deleteAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
+        await this.session.call(deleteAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor.id));
+        await this.syncAuthDescriptors();
+    }
+
+    async sync(): Promise<void> {
+        await Promise.all([this.syncAssets(), this.syncAuthDescriptors()]);
+    }
+
+    private async syncAssets(): Promise<void> {
+        this.assets = await AssetBalance.getByAccountId(this.id, this.session.blockchain);
+    }
+
+    private async syncAuthDescriptors(): Promise<void> {
+        const authDescriptors = await  this.session.query(...accountAuthDescriptors(this.id));
 
         const authDescriptorFactory = new AuthDescriptorFactory();
-        const descriptors = authDescriptors.map(authDescriptor =>
+        this.authDescriptor = authDescriptors.map(authDescriptor =>
             authDescriptorFactory.create(
                 authDescriptor.type,
                 Buffer.from(authDescriptor.args, 'hex')
             )
         );
-
-        const acc = new Account(id, descriptors, session);
-        await acc.syncAssets();
-        return acc;
-    }
-
-    async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.call(addAuthDescriptor(this.id_, this.session.user.authDescriptor.id, authDescriptor));
-        this.authDescriptor.push(authDescriptor);
-    }
-
-    async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
-        await this.session.call(deleteAllAuthDescriptorsExclude(this.id_, authDescriptor.id));
-        this.authDescriptor = [authDescriptor];
-    }
-
-    async sync(): Promise<void> {
-        await Promise.all([this.syncAssets()]);
-    }
-
-    private async syncAssets(): Promise<void> {
-        this.assets = await AssetBalance.getByAccountId(this.id_, this.session.blockchain);
     }
 
     getAssetById(id: Buffer): AssetBalance {
@@ -169,7 +183,7 @@ class Account {
 
     async transfer(accountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
         const input = [
-            this.id_,
+            this.id,
             assetId,
             this.session.user.authDescriptor.id,
             amount,
@@ -188,7 +202,7 @@ class Account {
 
     async burnTokens(assetId, amount): Promise<void> {
         const input = [
-            this.id_,
+            this.id,
             assetId,
             this.session.user.authDescriptor.id,
             amount,
@@ -199,13 +213,13 @@ class Account {
     }
 
     async getPaymentHistory(): Promise<any[]> {
-        return await PaymentHistory.getByAccountId(this.id_, -1, this.session.blockchain.connection);
+        return await PaymentHistory.getByAccountId(this.id, -1, this.session.blockchain.connection);
     }
 
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
         if (pageSize < 1) throw new Error('Page size has to be greater than 1');
-        await this.paymentHistorySyncManager.syncAccount(this.id_, this.session.blockchain);
-        return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id_, pageSize);
+        await this.paymentHistorySyncManager.syncAccount(this.id, this.session.blockchain);
+        return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id, pageSize);
     }
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
@@ -221,7 +235,7 @@ class Account {
 
     xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Operation {
         const source = [
-            this.id_,
+            this.id,
             assetId,
             this.session.user.authDescriptor.id,
             amount,

@@ -5,6 +5,7 @@ struct auth_descriptor {
     auth_type: text;
     participants: list<byte_array>;
     args: list<gtv>;
+    rules: gtv;
 }
 
 entity account {
@@ -24,6 +25,7 @@ entity account_auth_descriptor {
      index descriptor_id;
      auth_type: text;
      args: byte_array;
+     rules: byte_array;
 }
 
 entity auth_descriptor_participant {
@@ -32,14 +34,42 @@ entity auth_descriptor_participant {
 
 function _add_auth_descriptor (account, auth_descriptor) {
      val descriptor_id = auth_descriptor.hash();
+     
+     analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+     
      val account_auth_descriptor = create account_auth_descriptor (
         account, descriptor_id,
         auth_descriptor.auth_type,
-        args = auth_descriptor.args.to_gtv().to_bytes()
+        args = auth_descriptor.args.to_gtv().to_bytes(),
+        rules = auth_descriptor.rules.to_gtv().to_bytes()
      );
+     
      for (participant in auth_descriptor.participants) {
         create auth_descriptor_participant(account_auth_descriptor, id = participant);
      }
+     
+     setup_auth_descriptor_variables(account_auth_descriptor);
+}
+
+function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
+	delete auth_descriptor_rule_variable @* { auth_descriptor };
+	delete auth_descriptor_participant @* { auth_descriptor };
+	delete auth_descriptor;
+}
+
+function _delete_all_auth_descriptors_exclude(account, auth_descriptor_id: byte_array) {
+	delete (adrv: auth_descriptor_rule_variable, ad: account_auth_descriptor) @* {
+		ad.account == account, ad.descriptor_id != auth_descriptor_id, adrv.account_auth_descriptor == ad		
+	};
+	
+	delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
+        ad.account == account and ad.descriptor_id != auth_descriptor_id and adp.account_auth_descriptor == ad
+    };
+
+    delete account_auth_descriptor @* {
+       .account == account,
+       .descriptor_id != auth_descriptor_id
+    };
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
@@ -54,24 +84,18 @@ function create_account_with_auth (auth_descriptor): byte_array {
 operation delete_auth_descriptor (account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
       val account = account @ { .id == account_id };
       require_auth(account, auth_descriptor_id, ["A"]);
-      delete account_auth_descriptor @ {
+
+      _delete_auth_descriptor(account_auth_descriptor @ {
          .account == account,
          .descriptor_id == delete_descriptor_id
-      };
+      });
 }
 
 operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
     val account = account @ { .id == account_id };
     require_auth(account, auth_descriptor_id, ["A"]);
 
-    delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
-        ad.account == account and ad.descriptor_id != auth_descriptor_id and adp.account_auth_descriptor == ad
-    };
-
-    delete account_auth_descriptor @* {
-       .account == account,
-       .descriptor_id != auth_descriptor_id
-    };
+	_delete_all_auth_descriptors_exclude(account, auth_descriptor_id);
 }
 
 operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: auth_descriptor) {

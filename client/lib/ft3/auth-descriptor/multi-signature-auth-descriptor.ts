@@ -1,12 +1,13 @@
 import { gtv } from 'postchain-client';
 import {AuthDescriptor, AuthType, Flags, FlagsType, PubKey} from "../account";
+import AuthDescriptorRule from "./auth-descriptor-rule";
 
 export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
     pubkeys: PubKey[];
     flags: Flags;
     signaturesRequired: number;
 
-    constructor(pubkeys: PubKey[], signaturesRequired: number, flags: FlagsType[]) {
+    constructor(pubkeys: PubKey[], signaturesRequired: number, flags: FlagsType[], readonly rule: AuthDescriptorRule | null = null) {
         if (signaturesRequired > pubkeys.length) {
             throw new Error('Number of required signatures have to be less or equal to number of pubkeys');
         }
@@ -32,7 +33,8 @@ export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
                 this.flags.toGTV(),
                 this.signaturesRequired,
                 this.pubkeys.map(pubkey => pubkey.toString('hex'))
-            ]
+            ],
+            this.rule && this.rule.toGTV()
         ]
     }
 
@@ -44,7 +46,8 @@ export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
                 this.flags.toGTV(),
                 this.signaturesRequired,
                 this.pubkeys.map(pubkey => pubkey.toString('hex'))
-            ]
+            ],
+            this.rule && this.rule.toGTV()
         ]);
     }
 }
