@@ -15,8 +15,12 @@ export default class BlockchainInfo {
         this.requestRecoveryTime = recoveryTime;
     }
 
-    static async getInfo(connection: ConnectionClient)  {
-        const info = await connection.query('ft3.get_blockchain_info', {});
-        return new BlockchainInfo(info.name, info.website, info.description, info.request_max_count, info.request_recovery_time);
+    static async getInfo(connection: ConnectionClient)  {;
+        try {
+            const info = await connection.query('ft3.get_blockchain_info', {});
+            return new BlockchainInfo(info.name, info.website, info.description, info.request_max_count, info.request_recovery_time);
+        } catch {
+            return new BlockchainInfo(connection.chainId, null, null, null, null);
+        }
     }
 }
