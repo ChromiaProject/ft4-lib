@@ -1,10 +1,10 @@
-import ConnectionClient from "../connection-client";
 import PaymentHistoryEntryShort from "./payment-history-entry-short";
+import Blockchain from "../blockchain";
 
 export default class PaymentHistory {
 
-    static async getByAccountId(id: Buffer, afterBlock: number = -1, connection: ConnectionClient): Promise<PaymentHistoryEntryShort[]> {
-        const paymentHistoryEntries = await connection.gtx.query(
+    static async getByAccountId(id: Buffer, afterBlock: number = -1, blockchain: Blockchain): Promise<PaymentHistoryEntryShort[]> {
+        const paymentHistoryEntries = await blockchain.query(
             'ft3.get_payment_history',
             {
                 account_id: id.toString('hex'),

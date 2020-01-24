@@ -8,8 +8,6 @@ import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/m
 import AssetBalance from "../../client/lib/ft3/asset-balance";
 import Blockchain from "../../client/lib/ft3/blockchain";
 import RateLimit from "../../client/lib/ft3/rate-limit";
-import { accountAuthDescriptors } from "../../client/lib/ft3/account-queries";
-
 
 class AccountBuilder {
     private blockchain: Blockchain;

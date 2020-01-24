@@ -1,6 +1,5 @@
 import { gtv, gtx } from 'postchain-client';
 import PaymentHistory from "./payment-history";
-import PaymentHistoryStoreLocalStorage from "./payment-history-store-local-storage";
 import PaymentHistoryEntry from "./payment-history-entry";
 import PaymentHistoryStore from "./payment-history-store";
 import Blockchain from "../blockchain";
@@ -8,6 +7,7 @@ import PaymentHistoryEntryShort from "./payment-history-entry-short";
 import PaymentOperationExtractor from "../payment-operation-extractor";
 import PaymentOperation from "./payment-operation/payment-operation";
 import PaymentParam from "./payment-operation/payment-param";
+import PaymentHistoryStoreMemory from "./payment-history-store-memory";
 
 
 class ParamPaymentPair {
@@ -21,13 +21,13 @@ class ParamPaymentPair {
 }
 
 export default class PaymentHistorySyncManager {
-    readonly paymentHistoryStore: PaymentHistoryStore = new PaymentHistoryStoreLocalStorage();
+    readonly paymentHistoryStore: PaymentHistoryStore = new PaymentHistoryStoreMemory();
 
     async syncAccount(id: Buffer, blockchain: Blockchain) {
         const syncInfo = this.paymentHistoryStore.getSyncInfo(id);
         const lastBlock = +syncInfo.lastBlock || -1;
 
-        const paymentHistory = await PaymentHistory.getByAccountId(id, lastBlock, blockchain.connection);
+        const paymentHistory = await PaymentHistory.getByAccountId(id, lastBlock, blockchain);
         if (paymentHistory.length === 0) { return }
 
         //Add missing sender/receiver info to payment history entries
