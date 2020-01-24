@@ -218,7 +218,7 @@ class Account {
     }
 
     async getPaymentHistory(): Promise<any[]> {
-        return await PaymentHistory.getByAccountId(this.id, -1, this.session.blockchain.connection);
+        return await PaymentHistory.getByAccountId(this.id, -1, this.session.blockchain);
     }
 
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
