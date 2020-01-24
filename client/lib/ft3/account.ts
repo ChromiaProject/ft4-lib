@@ -8,11 +8,11 @@ import Blockchain from "./blockchain";
 import {
     transfer,
     addAuthDescriptor,
-    register,
     nop,
     deleteAllAuthDescriptorsExclude,
     xcTransfer
 } from "./account-operations";
+import { register } from "./account-dev-operations";
 import {
     accountAuthDescriptors,
     accountById,

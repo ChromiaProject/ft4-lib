@@ -9,13 +9,9 @@ function rate_limit (account) {
     var got_points = 0;
     var update_time = stat.last_update;
 
-	print("DELTA", delta);
-	print("RECOVERY TIME", recovery_time);
-	print("MATH", delta - recovery_time);
     if (delta > recovery_time)
     {
         got_points = delta / recovery_time;
-        print("GOT POINTS", got_points);
         update_time = stat.last_update + got_points * recovery_time;
         if (got_points + stat.points > max_counter) {
             got_points = max_counter - stat.points;
@@ -31,7 +27,6 @@ function rate_limit (account) {
         .points += got_points - 1,
         .last_update = update_time
     );
-    print("NEW POINTS", rl_state@{account}(.points, .last_update));
 }
 
 
@@ -43,7 +38,6 @@ query get_account_rate_limit(account_id: byte_array) {
 		.last_update
 	);
 	
-	print("CHECKING THIS", t);
 	return t;
 }
 

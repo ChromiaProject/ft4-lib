@@ -24,6 +24,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
+            .withPoints(1)
             .build();
 
         const account2 = await AccountBuilder
@@ -46,6 +47,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,5)
+            .withPoints(1)
             .build();
 
         const account2 = await AccountBuilder
@@ -64,6 +66,7 @@ describe("Transfer", () => {
             .withAuthFlags([FlagsType.Account])
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
+            .withPoints(1)
             .build();
 
         const account2 = await AccountBuilder
@@ -81,6 +84,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
+            .withPoints(1)
             .build();
 
         const account2 = await AccountBuilder
@@ -105,6 +109,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
+            .withPoints(1)
             .build();
 
         await account.burnTokens(asset.id, 10);
@@ -121,6 +126,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
+            .withPoints(1)
             .build();
 
         const account2 = await AccountBuilder
@@ -140,6 +146,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
+            .withPoints(2)
             .build();
 
         const account2 = await AccountBuilder

@@ -193,6 +193,7 @@ function create_account_with_auth (auth_descriptor): byte_array {
 
 function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list&lt;text&gt;): account {
 	val account = account @ { .id == account_id };
+	print("RATE LIMIT");
 	rate_limit(account);
 	require_auth(account, auth_descriptor_id, required_flags);
 	return account;
@@ -270,13 +271,9 @@ function rate_limit (account) {
     var got_points = 0;
     var update_time = stat.last_update;
 
-	print("DELTA", delta);
-	print("RECOVERY TIME", recovery_time);
-	print("MATH", delta - recovery_time);
     if (delta &gt; recovery_time)
     {
         got_points = delta / recovery_time;
-        print("GOT POINTS", got_points);
         update_time = stat.last_update + got_points * recovery_time;
         if (got_points + stat.points &gt; max_counter) {
             got_points = max_counter - stat.points;
@@ -292,7 +289,6 @@ function rate_limit (account) {
         .points += got_points - 1,
         .last_update = update_time
     );
-    print("NEW POINTS", rl_state@{account}(.points, .last_update));
 }
 
 
@@ -304,7 +300,6 @@ query get_account_rate_limit(account_id: byte_array) {
 		.last_update
 	);
 	
-	print("CHECKING THIS", t);
 	return t;
 }
 
@@ -387,11 +382,11 @@ object blockchain {
 }
 
 
-operation update_blockchain(name, website: text, description: text) {
-    blockchain.name = name;
-    blockchain.website = website;
-    blockchain.description = description;
-}
+//operation update_blockchain(name, website: text, description: text) {
+//    blockchain.name = name;
+//    blockchain.website = website;
+//    blockchain.description = description;
+//}
 
 query get_blockchain_info() {
     return (
@@ -786,19 +781,23 @@ operation dev_register_xc_asset (name, issuing_chain_rid: byte_array, origin_cha
     create xft3.asset_origin (asset, origin_chain_rid);
 }
 
-function dev_give_credit_(account: acc.account, amount: integer) {
+function dev_give_points_(account: acc.account, amount: integer) {
 	dev_op.require_dev();
 	update acc.rl_state@{account}(.points += amount);
 }
-operation dev_give_credit(account_id: byte_array, amount: integer){
+
+/*
+ * Can be negative
+ */
+operation dev_give_points(account_id: byte_array, amount: integer){
 	val account = acc.account@{.id == account_id};
-	dev_give_credit_(account, amount);
+	dev_give_points_(account, amount);
 }
 
 operation dev_free_op(account_id: byte_array) {
 	// this operation does not cost points in the rate limit
 	val account = acc.account@{.id == account_id};
-	dev_give_credit_(account, 1);
+	dev_give_points_(account, 1);
 	acc.rate_limit(account);
 }</string>
                             </entry>

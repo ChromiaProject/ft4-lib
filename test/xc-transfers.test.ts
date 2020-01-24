@@ -24,6 +24,7 @@ describe("Cross-chain transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 100)
+            .withPoints(1)
             .build();
 
         await account.xcTransfer(destinationChainId, destinationAccountId, asset.id, 10);

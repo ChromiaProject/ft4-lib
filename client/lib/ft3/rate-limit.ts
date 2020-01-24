@@ -1,6 +1,7 @@
 
 import Blockchain from "./blockchain";
-import { freeOp, nop } from "./account-operations";
+import { freeOp, givePoints } from "./account-dev-operations";
+import { nop } from './account-operations';
 
 export default class RateLimit {
     points: number;
@@ -32,6 +33,14 @@ export default class RateLimit {
         );
         if(!rateInfo) return null;
         return new RateLimit(rateInfo.points, rateInfo.last_upgrade);
+    }
+
+    static async givePoints(accountId: Buffer, points: number, blockchain: Blockchain) {
+        await blockchain.transactionBuilder()
+            .add(givePoints(accountId, points))
+            .add(nop())
+            .build([])
+            .post()
     }
 
     static async getLastTimestamp(blockchain: Blockchain): Promise<number> {

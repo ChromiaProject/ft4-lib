@@ -2,22 +2,21 @@
 import Asset from "../client/lib/ft3/asset";
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/account";
+import { FlagsType, Account } from "../client/lib/ft3/account";
 import TestUser from "./util/test-user";
 import Blockchain from "../client/lib/ft3/blockchain";
 import ConnectionClient from "../client/lib/ft3/connection-client";
 import { generateAssetName, generateId } from "./util/util";
-import { BlockchainInfo, User, nop } from "../client/lib/ft3";
+import { BlockchainInfo, User, nop, addAuthDescriptor } from "../client/lib/ft3";
 import TestConnection from "./util/test-connection";
 import Operation from "../client/lib/ft3/operation";
 import RateLimit from "../client/lib/ft3/rate-limit";
+import { register } from "../client/lib/ft3/account-dev-operations";
+import TransactionBuilder from "../client/lib/ft3/transaction-builder";
 
 jest.setTimeout(2000000);
 
 let blockchain: Blockchain = null;
-let user: User;
-let account1;
-let asset: Asset = null;
 const connection: ConnectionClient = TestConnection.connection()
 
 const REQUEST_MAX_COUNT = 10;
@@ -27,21 +26,19 @@ describe("Rate Limit", () => {
     beforeAll(async () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
 
-        asset = await Asset.register(generateAssetName(), generateId(), blockchain);
-        
-        user = TestUser.singleSig();
-
-        account1 = await AccountBuilder
-            .account(blockchain, user)
-            .withParticipants([user.keyPair])
-            .withBalance(asset, 200)
-            .build();
     });
+
+  
 
     describe("Blockchain request configuaration in run.xml", () => {
         it("Should have a limit of 10 requests per minute", async () => {
             const info = await BlockchainInfo.getInfo(connection);
             expect(info.requestMaxCount).toEqual(REQUEST_MAX_COUNT);
+        });
+
+        it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
+            const info = await BlockchainInfo.getInfo(connection);
+            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), 10, 5000));
         });
 
         it("Should have a recovery period of 5 seconds", async () => {
@@ -52,35 +49,57 @@ describe("Rate Limit", () => {
 
     describe("Test the account rate limit", () => {
         it("should show 10 at request count", async () => {
-            // check how many requests are left
-            await account1.sync();
-            expect(account1.rateLimit.points).toBe(0);
+            const user = TestUser.singleSig();
+            const account = await AccountBuilder
+                .account(blockchain, user)
+                .withParticipants([user.keyPair])
+                .build();
+    
+            await account.sync();
+            expect(account.rateLimit.points).toBe(0);
         });
     
         it("waits 20 seconds and gets 4 points", async () => {
+            const user = TestUser.singleSig();
+            const account = await AccountBuilder
+                .account(blockchain, user)
+                .withParticipants([user.keyPair])
+                .build();
+
             await timeout(20000);
-            console.log("GGG", account1.id_);
-            await RateLimit.execFreeOperation(account1.id_, blockchain); // used to make one block
-
+            
+            await RateLimit.execFreeOperation(account.id_, blockchain); // used to make one block
+            await RateLimit.execFreeOperation(account.id_, blockchain); // used to calculate the last block's timestamp (previous block).
             // check the balance
-            await RateLimit.execFreeOperation(account1.id_, blockchain); // used to make one block
-            await account1.sync();
-            expect(account1.rateLimit.points).toBe(4); // 20 seconds / 5s recovery time
+            await account.sync();
+            expect(account.rateLimit.points).toBe(4); // 20 seconds / 5s recovery time
         });
 
-        it("can make 4 operations", async () => {
-            await makeRequests(4);
-            await account1.sync();
-            expect(account1.rateLimit.points).toBe(0);
+        it.skip("can make 4 operations", async () => {
+            const user = TestUser.singleSig();
+            const account = await AccountBuilder
+                .account(blockchain, user)
+                .withParticipants([user.keyPair])
+                .withPoints(2)
+                .build();
+
+            await expect(makeRequests(account, 4)).resolves.toBeUndefined();
+            await account.sync();
+            expect(account.rateLimit.points).toBe(0);
         });
 
-        it("can't make another operation because she has 0 points", async () => {
-            await RateLimit.execFreeOperation(account1.id_, blockchain); 
-            await account1.sync();
-            if(account1.rateLimit.points > 0) {
-                await makeRequests(account1.rateLimit.points);
-            }
-            await expect(makeRequests(1)).rejects.toThrowError()
+        it.skip("can't make another operation because she has 0 points", async () => {
+            const user = TestUser.singleSig();
+            const account = await AccountBuilder
+                .account(blockchain, user)
+                .withParticipants([user.keyPair])
+                .withPoints(2)
+                .build();
+            
+            await expect(makeRequests(account, 4)).resolves.toBeUndefined();
+            await account.sync();
+
+            await expect(makeRequests(account, 8)).rejects.toBeInstanceOf(Error);
         })
     });
 
@@ -127,11 +146,15 @@ describe("Rate Limit", () => {
         })
     }
 
-
-    const makeRequests = async (requests: number) => {
-        for(let i = 0; i<requests; i++ ){
+    const makeRequests = async (account: Account, requests: number): Promise<any> => {
+        
+        let txBuilder = blockchain.transactionBuilder()
+        for(let i = 0; i<requests; i++) {
             const disposableKeypair = TestUser.singleSig();
-            await account1.addAuthDescriptor(disposableKeypair.authDescriptor);
+            txBuilder = txBuilder.add(addAuthDescriptor(account.session.user.authDescriptor.id, account.session.user.authDescriptor.id, disposableKeypair.authDescriptor))
         }
+        return txBuilder.build(account.session.user.authDescriptor.signers)
+            .sign(account.session.user.keyPair)
+            .post()
     }
 });

@@ -10,11 +10,11 @@ object blockchain {
 }
 
 
-operation update_blockchain(name, website: text, description: text) {
-    blockchain.name = name;
-    blockchain.website = website;
-    blockchain.description = description;
-}
+//operation update_blockchain(name, website: text, description: text) {
+//    blockchain.name = name;
+//    blockchain.website = website;
+//    blockchain.description = description;
+//}
 
 query get_blockchain_info() {
     return (

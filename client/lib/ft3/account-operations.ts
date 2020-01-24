@@ -6,11 +6,6 @@ export function addAuthDescriptor(accountId: Buffer, authDescriptorId: Buffer, a
     return new Operation('ft3.add_auth_descriptor', accountId, authDescriptorId, authDescriptor);
 }
 
-export function register(authDescriptor: AuthDescriptor): Operation {
-    return new Operation('ft3.dev_register_account', authDescriptor);
-}
-
-
 export function transfer(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Operation {
     return new Operation('ft3.transfer', inputs, outputs);
 }
@@ -33,10 +28,3 @@ export function nop(): Operation {
 export function op(name: string, ...args: GtvSerializable[]): Operation {
     return new Operation(name, ...args);
 }
-
-// one operation that updates the counter of rate limit of the account but does not cost points
-export function freeOp(accountId: Buffer): Operation {
-    console.log("QQ", accountId);
-    return new Operation("ft3.dev_free_op", accountId);
-}
-

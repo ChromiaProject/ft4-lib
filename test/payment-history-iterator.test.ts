@@ -21,6 +21,7 @@ describe('Payment history iterator', () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 200)
+            .withPoints(1)
             .build();
 
         const account2 = await AccountBuilder
@@ -49,6 +50,7 @@ describe('Payment history iterator', () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 200)
+            .withPoints(2)
             .build();
 
         const account2 = await AccountBuilder
@@ -72,6 +74,7 @@ describe('Payment history iterator', () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 200)
+            .withPoints(1)
             .build();
 
         await account.transfer(account.id_, asset.id, 20);
@@ -102,6 +105,7 @@ describe('Payment history iterator', () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 200)
+            .withPoints(4)
             .build();
 
         const account2 = await AccountBuilder
@@ -125,6 +129,7 @@ describe('Payment history iterator', () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 200)
+            .withPoints(1)
             .build();
 
         const chainId2 = generateId();
@@ -151,6 +156,7 @@ describe('Payment history iterator', () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset, 200)
+            .withPoints(2)
             .build();
 
         const account2 = await AccountBuilder

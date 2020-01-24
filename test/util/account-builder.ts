@@ -7,6 +7,7 @@ import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/
 import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 import AssetBalance from "../../client/lib/ft3/asset-balance";
 import Blockchain from "../../client/lib/ft3/blockchain";
+import RateLimit from "../../client/lib/ft3/rate-limit";
 
 
 class AccountBuilder {
@@ -17,6 +18,7 @@ class AccountBuilder {
     private participants = [new KeyPair()];
     private requiredSignaturesCount: number = 1;
     private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
+    private points: number = 0;
 
     constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
         this.blockchain = blockchain;
@@ -45,6 +47,11 @@ class AccountBuilder {
         return this;
     }
 
+    withPoints(points: number): AccountBuilder {
+        this.points = points;
+        return this;
+    }
+
     withRequiredSignatures(count: number): AccountBuilder {
         this.requiredSignaturesCount = count;
         return this;
@@ -54,6 +61,7 @@ class AccountBuilder {
         const account = await this.registerAccount();
 
         await this.addBalanceIfNeeded(account);
+        await this.addPointsIfNeeded(account);
 
         return account;
     }
@@ -70,6 +78,12 @@ class AccountBuilder {
     private async addBalanceIfNeeded(account) {
         if (this.asset && this.balance) {
             await AssetBalance.giveBalance(account.id_, this.asset.id, this.balance, this.blockchain)
+        }
+    }
+
+    private async addPointsIfNeeded(account: Account) {
+        if (this.points > 0) {
+            await RateLimit.givePoints(account.id_, this.points, this.blockchain);
         }
     }
 
