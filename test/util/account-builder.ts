@@ -8,6 +8,7 @@ import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/m
 import AssetBalance from "../../client/lib/ft3/asset-balance";
 import Blockchain from "../../client/lib/ft3/blockchain";
 import RateLimit from "../../client/lib/ft3/rate-limit";
+import { accountAuthDescriptors } from "../../client/lib/ft3/account-queries";
 
 
 class AccountBuilder {
@@ -18,10 +19,11 @@ class AccountBuilder {
     private participants = [new KeyPair()];
     private requiredSignaturesCount: number = 1;
     private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
-    private points: number = 0;
+    private points?: number = 0;
 
     constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
         this.blockchain = blockchain;
+        this.participants = [user.keyPair];
         this.user = user;
     }
 
@@ -58,10 +60,10 @@ class AccountBuilder {
     }
 
     async build(): Promise<Account> {
-        const account = await this.registerAccount();
+        let account = await this.registerAccount();
 
         await this.addBalanceIfNeeded(account);
-        await this.addPointsIfNeeded(account);
+        account.rateLimit = await this.addPointsIfNeeded(account);
 
         return account;
     }
@@ -85,6 +87,7 @@ class AccountBuilder {
         if (this.points > 0) {
             await RateLimit.givePoints(account.id_, this.points, this.blockchain);
         }
+        return RateLimit.getByAccountRateLimit(account.id_, this.blockchain);
     }
 
     private getAuthDescriptor() {
@@ -96,11 +99,16 @@ class AccountBuilder {
             return new MultiSignatureAuthDescriptor(
                 this.participants.map(({ pubKey }) => pubKey),
                 this.requiredSignaturesCount,
-                this.flags
+                this.flags,
+                this.user.authDescriptor.rule
             )
         } else {
             const [participant] = this.participants;
-            return new SingleSignatureAuthDescriptor(participant.pubKey, this.flags);
+            return new SingleSignatureAuthDescriptor(
+                participant.pubKey,
+                this.flags,
+                this.user.authDescriptor.rule
+            );
         }
     }
 }

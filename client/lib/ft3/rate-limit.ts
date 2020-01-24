@@ -32,7 +32,7 @@ export default class RateLimit {
             }  
         );
         if(!rateInfo) return null;
-        return new RateLimit(rateInfo.points, rateInfo.last_upgrade);
+        return new RateLimit(rateInfo.points, rateInfo.last_update);
     }
 
     static async givePoints(accountId: Buffer, points: number, blockchain: Blockchain) {

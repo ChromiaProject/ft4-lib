@@ -175,7 +175,7 @@ describe('Test the account', () => {
             .build();
 
         const foundAccount = await Account.getById(account.id_, blockchain.newSession(user));
-
+        
         expect(account).toEqual(foundAccount);
     });
 

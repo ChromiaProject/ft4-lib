@@ -9,7 +9,7 @@ import xft3: ^^.crosschain;
 
 
 
-operation dev_register_asset (name, issuing_chain_rid: byte_array, origin_chain_rid: byte_array) {
+operation dev_register_asset (name, issuing_chain_rid: byte_array) {
     dev_op.require_dev();
     ft3.register_asset(name, issuing_chain_rid);
 }

@@ -1,6 +1,6 @@
 import BlockchainInfo from "./blockchain-info";
 import ConnectionClient from './connection-client';
-import {Account, AuthDescriptor, GtvSerializable} from "./account";
+import {Account, AuthDescriptor} from "./account";
 import Asset from "./asset";
 import DirectoryService from "./directory-service";
 import TransactionBuilder from "./transaction-builder";
@@ -63,6 +63,14 @@ export default class Blockchain {
         return await Asset.getByName(name, this);
     }
 
+    async getAssetById(id: Buffer): Promise<Asset> {
+        return await Asset.getById(id, this);
+    }
+
+    async getAllAssets(): Promise<Asset[]> {
+        return await Asset.getAssets(this);
+    }
+
     async linkChain(chainId: Buffer) {
         const tx = this.connection.gtx.newTransaction([]);
         tx.addOperation('ft3.xc.link_chain', chainId.toString('hex'));
@@ -88,8 +96,8 @@ export default class Blockchain {
                 Blockchain.initialize(chainId, this.directoryService)
                     .then(resolve)
                     .catch(() => {
-                        console.warn(`Cannot get info for chain with RID: ${chainId.toString('hex')}`)
-                        resolve(null)
+                        console.warn(`Cannot get info for chain with RID: ${chainId.toString('hex')}`);
+                        resolve(null);
                     })
             })))
                 .then(chains => {

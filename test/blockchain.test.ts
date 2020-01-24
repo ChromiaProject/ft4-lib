@@ -3,10 +3,10 @@ import BlockchainInfo from "../client/lib/ft3/blockchain-info";
 import Blockchain from "../client/lib/ft3/blockchain";
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import {generateId} from "./util/util";
+import {generateAssetName, generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
 import ConnectionClient from "../client/lib/ft3/connection-client";
-import {Account} from "../client/lib/ft3";
+import {Account, Asset} from "../client/lib/ft3";
 import RateLimit from "../client/lib/ft3/rate-limit";
 
 let blockchain: Blockchain = null;
@@ -106,5 +106,26 @@ describe("Blockchain", () => {
         const account = await session.getAccountById(user.authDescriptor.id);
 
         expect(account).not.toBeNull()
+    });
+
+
+    it("should return asset queried by id", async () => {
+        const asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+
+        const queriedAsset = await blockchain.getAssetById(asset.id);
+
+        expect(queriedAsset).toEqual(asset);
+    });
+
+    it("should return all registered assets", async () => {
+        const asset1 = await Asset.register(generateAssetName(), generateId(), blockchain);
+        const asset2 = await Asset.register(generateAssetName(), generateId(), blockchain);
+        const asset3 = await Asset.register(generateAssetName(), generateId(), blockchain);
+
+        const expectedAssets = await blockchain.getAllAssets();
+
+        expect(expectedAssets).toEqual(
+            expect.arrayContaining([asset1, asset2, asset3])
+        );
     });
 });
