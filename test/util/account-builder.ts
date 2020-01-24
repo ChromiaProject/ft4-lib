@@ -1,4 +1,4 @@
-import { Account, FlagsType } from "../../client";
+import { Account, FlagsType } from "../../client/lib/ft3";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/asset";
 import User from "../../client/lib/ft3/user";
@@ -7,6 +7,8 @@ import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/
 import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
 import AssetBalance from "../../client/lib/ft3/asset-balance";
 import Blockchain from "../../client/lib/ft3/blockchain";
+import RateLimit from "../../client/lib/ft3/rate-limit";
+import { accountAuthDescriptors } from "../../client/lib/ft3/account-queries";
 
 
 class AccountBuilder {
@@ -17,6 +19,7 @@ class AccountBuilder {
     private participants = [new KeyPair()];
     private requiredSignaturesCount: number = 1;
     private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
+    private points?: number = 0;
 
     constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
         this.blockchain = blockchain;
@@ -46,15 +49,21 @@ class AccountBuilder {
         return this;
     }
 
+    withPoints(points: number): AccountBuilder {
+        this.points = points;
+        return this;
+    }
+
     withRequiredSignatures(count: number): AccountBuilder {
         this.requiredSignaturesCount = count;
         return this;
     }
 
     async build(): Promise<Account> {
-        const account = await this.registerAccount();
+        let account = await this.registerAccount();
 
         await this.addBalanceIfNeeded(account);
+        account.rateLimit = await this.addPointsIfNeeded(account);
 
         return account;
     }
@@ -72,6 +81,13 @@ class AccountBuilder {
         if (this.asset && this.balance) {
             await AssetBalance.giveBalance(account.id_, this.asset.id, this.balance, this.blockchain)
         }
+    }
+
+    private async addPointsIfNeeded(account: Account) {
+        if (this.points > 0) {
+            await RateLimit.givePoints(account.id_, this.points, this.blockchain);
+        }
+        return RateLimit.getByAccountRateLimit(account.id_, this.blockchain);
     }
 
     private getAuthDescriptor() {

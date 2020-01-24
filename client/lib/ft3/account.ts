@@ -1,4 +1,3 @@
-import { gtv, util } from 'postchain-client';
 import AssetBalance from './asset-balance';
 import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
@@ -9,12 +8,12 @@ import Blockchain from "./blockchain";
 import {
     transfer,
     addAuthDescriptor,
-    register,
     nop,
     deleteAllAuthDescriptorsExclude,
     xcTransfer,
     deleteAuthDescriptor
 } from "./account-operations";
+import { register } from "./account-dev-operations";
 import {
     accountAuthDescriptors,
     accountById,
@@ -22,6 +21,7 @@ import {
     accountsByParticipantId
 } from "./account-queries";
 import Operation from "./operation";
+import RateLimit from './rate-limit';
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 
 enum AuthType {
@@ -74,6 +74,7 @@ class Account {
     readonly id_: Buffer;
     authDescriptor: AuthDescriptor[];
     assets: AssetBalance[] = [];
+    rateLimit: RateLimit;
     readonly session: BlockchainSession;
 
     constructor(id: Buffer, authDescriptor: AuthDescriptor[], session: BlockchainSession) {
@@ -103,7 +104,7 @@ class Account {
     static async register(authDescriptor: AuthDescriptor, session: BlockchainSession): Promise<Account> {
         await session.call(register(authDescriptor));
         const account = new Account(authDescriptor.hash(), [authDescriptor], session);
-        await account.syncAssets();
+        await account.sync();
         return account
     }
 
@@ -146,7 +147,7 @@ class Account {
     }
 
     async sync(): Promise<void> {
-        await Promise.all([this.syncAssets(), this.syncAuthDescriptors()]);
+        await Promise.all([this.syncAssets(), this.syncAuthDescriptors(), this.syncRateLimit()]);
     }
 
     private async syncAssets(): Promise<void> {
@@ -163,6 +164,10 @@ class Account {
                 Buffer.from(authDescriptor.args, 'hex')
             )
         );
+    }
+
+    private async syncRateLimit(): Promise<void> {
+        this.rateLimit = await RateLimit.getByAccountRateLimit(this.id_, this.session.blockchain);
     }
 
     getAssetById(id: Buffer): AssetBalance {

@@ -14,6 +14,7 @@ describe('Asset balance', () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
         asset1 = await Asset.register(generateAssetName(), generateId(), blockchain);
         asset2 = await Asset.register(generateAssetName(), generateId(), blockchain);
+        console.log("111111111", asset1);
     });
 
     it('should be returned when queried by account id', async () => {

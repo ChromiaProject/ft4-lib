@@ -1,0 +1,18 @@
+  
+<run wipe-db="true">
+    <nodes>
+        <config src="node-config.properties" add-signers="true" />
+    </nodes>
+    <chains>
+        <chain name="ft3-lib" iid="0">
+            <config height="0">
+		<app module="">
+                <args module="config.ft3_config">
+                  <arg key="request_max_count"><int>10</int></arg> <!-- maximum amount of request credit that is possible to keep -->
+                  <arg key="request_recovery_time"><int>5000</int></arg> 
+                </args>
+                </app>
+            </config>
+        </chain>
+    </chains>
+</run>

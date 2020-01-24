@@ -7,7 +7,8 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/auth-descriptor/mult
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/blockchain";
-import { op } from "../client";
+import { op } from "../client/lib/ft3";
+
 
 require('dotenv').config();
 
@@ -43,10 +44,12 @@ describe('Test the account', () => {
 
     it("can add new auth descriptor if has account edit rights", async () => {
         const user = TestUser.singleSig();
-        const account = await Account.register(
-            new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Account, FlagsType.Transfer]),
-            blockchain.newSession(user)
-        );
+        const account = await AccountBuilder
+            .account(blockchain, user)
+            .withParticipants([user.keyPair])
+            .withPoints(1)
+            .build();
+
         expect(account).not.toBeNull();
 
         await account.addAuthDescriptor(
@@ -152,6 +155,7 @@ describe('Test the account', () => {
         const account2 = await AccountBuilder
             .account(blockchain, user2)
             .withParticipants([user2.keyPair])
+            .withPoints(1)
             .build();
 
         await account2.addAuthDescriptor(
@@ -171,7 +175,7 @@ describe('Test the account', () => {
             .build();
 
         const foundAccount = await Account.getById(account.id_, blockchain.newSession(user));
-
+        
         expect(account).toEqual(foundAccount);
     });
 
@@ -183,6 +187,7 @@ describe('Test the account', () => {
         const account = await AccountBuilder
             .account(blockchain, user1)
             .withParticipants([user1.keyPair])
+            .withPoints(3)
             .build();
 
         const authDescriptor1 = new SingleSignatureAuthDescriptor(

@@ -6,11 +6,6 @@ export function addAuthDescriptor(accountId: Buffer, authDescriptorId: Buffer, a
     return op('ft3.add_auth_descriptor', accountId, authDescriptorId, authDescriptor);
 }
 
-export function register(authDescriptor: AuthDescriptor): Operation {
-    return op('ft3.dev_register_account', authDescriptor);
-}
-
-
 export function transfer(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Operation {
     return op('ft3.transfer', inputs, outputs);
 }
@@ -37,4 +32,3 @@ export function nop(): Operation {
 export function op(name: string, ...args: GtvSerializable[]): Operation {
     return new Operation(name, ...args);
 }
-

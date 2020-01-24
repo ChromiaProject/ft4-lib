@@ -15,6 +15,7 @@ function sourceAccount(user: User): Promise<Account> {
     return AccountBuilder
         .account(blockchain, user)
         .withBalance(asset,200)
+        .withPoints(5)
         .build();
 }
 

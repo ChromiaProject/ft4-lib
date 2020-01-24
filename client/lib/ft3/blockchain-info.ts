@@ -4,15 +4,19 @@ export default class BlockchainInfo {
     name: string;
     website: string;
     description: string;
+    requestMaxCount: number;
+    requestRecoveryTime: number;
 
-    constructor(name: string, website: string, description: string) {
+    constructor(name: string, website: string, description: string, requestMaxCount: number, recoveryTime: number) {
         this.name = name;
         this.website = website;
         this.description = description;
+        this.requestMaxCount = requestMaxCount;
+        this.requestRecoveryTime = recoveryTime;
     }
 
     static async getInfo(connection: ConnectionClient)  {
         const info = await connection.query('ft3.get_blockchain_info', {});
-        return new BlockchainInfo(info.name, info.website, info.description);
+        return new BlockchainInfo(info.name, info.website, info.description, info.request_max_count, info.request_recovery_time);
     }
 }
