@@ -27,7 +27,7 @@ export default class PaymentHistoryStoreMemory implements PaymentHistoryStore {
 
     save(accountId: Buffer, paymentHistoryEntries: PaymentHistoryEntry[]) {
         const entries = this.entriesCache[accountId.toString('hex').toUpperCase()] || [];
-        this.entriesCache[accountId.toString('hex').toUpperCase()] = entries.concat(paymentHistoryEntries);
+        this.entriesCache[accountId.toString('hex').toUpperCase()] = paymentHistoryEntries.concat(entries);
     }
 
     saveSyncInfo(accountId: Buffer, syncInfo: any) {
