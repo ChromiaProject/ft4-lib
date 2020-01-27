@@ -47,7 +47,7 @@ export default class TransactionBuilder {
     }
 
     build(signers: Buffer[]): Transaction {
-        const tx = this.blockchain.connection.gtx.newTransaction(signers);
+        const tx = this.blockchain.connection.newTransaction(signers);
         this.operations.forEach(
             o => tx.addOperation(o.name, ...o.args.map(a => a === null ? null : a.toGTV()))
         );
