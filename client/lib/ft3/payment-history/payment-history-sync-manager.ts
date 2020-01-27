@@ -8,7 +8,9 @@ import PaymentOperationExtractor from "../payment-operation-extractor";
 import PaymentOperation from "./payment-operation/payment-operation";
 import PaymentParam from "./payment-operation/payment-param";
 import PaymentHistoryStoreMemory from "./payment-history-store-memory";
+import PaymentHistoryStoreNullObject from "./payment-history-store-null-object";
 
+let defaultPaymentHistoryStore: PaymentHistoryStore = new PaymentHistoryStoreMemory();
 
 class ParamPaymentPair {
     readonly param: PaymentParam;
@@ -21,7 +23,23 @@ class ParamPaymentPair {
 }
 
 export default class PaymentHistorySyncManager {
-    readonly paymentHistoryStore: PaymentHistoryStore = new PaymentHistoryStoreMemory();
+    readonly paymentHistoryStore: PaymentHistoryStore = defaultPaymentHistoryStore || new PaymentHistoryStoreNullObject();
+
+    static set defaultPaymentHistoryStore(store: PaymentHistoryStore) {
+        defaultPaymentHistoryStore = store;
+    }
+
+    static get defaultPaymentHistoryStore(): PaymentHistoryStore {
+        return defaultPaymentHistoryStore;
+    }
+
+    static deleteAccountPaymentHistory(accountId: Buffer) {
+        defaultPaymentHistoryStore.deletePaymentHistory(accountId);
+    }
+
+    deleteAccountPaymentHistory(accountId: Buffer) {
+        this.paymentHistoryStore.deletePaymentHistory(accountId);
+    }
 
     async syncAccount(id: Buffer, blockchain: Blockchain) {
         const syncInfo = this.paymentHistoryStore.getSyncInfo(id);

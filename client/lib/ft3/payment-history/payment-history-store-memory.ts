@@ -33,4 +33,10 @@ export default class PaymentHistoryStoreMemory implements PaymentHistoryStore {
     saveSyncInfo(accountId: Buffer, syncInfo: any) {
         this.syncInfo[accountId.toString('hex').toUpperCase()] = syncInfo;
     }
+
+    deletePaymentHistory(accountId: Buffer) {
+        if (this.entriesCache[accountId.toString('hex').toUpperCase()]) {
+            delete this.entriesCache[accountId.toString('hex').toUpperCase()];
+        }
+    }
 }

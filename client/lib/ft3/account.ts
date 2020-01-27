@@ -69,7 +69,7 @@ interface AuthDescriptor extends GtvSerializable {
 
 
 class Account {
-    private paymentHistorySyncManager = new PaymentHistorySyncManager();
+    readonly paymentHistorySyncManager = new PaymentHistorySyncManager();
 
     readonly id_: Buffer;
     authDescriptor: AuthDescriptor[];

@@ -74,4 +74,13 @@ export default class PaymentHistoryStoreLocalStorage implements PaymentHistorySt
             entry.blockHeight
         );
     }
+
+    deletePaymentHistory(accountId: Buffer) {
+        if (this.entriesCache[accountId.toString('hex').toUpperCase()]) {
+            delete this.entriesCache[accountId.toString('hex').toUpperCase()];
+        }
+
+        localStorage.removeItem(`FT3_LIB_P_H_${accountId.toString('hex').toUpperCase()}`);
+        localStorage.removeItem(`FT3_LIB_P_H_S_I_${accountId.toString('hex').toUpperCase()}`);
+    }
 }

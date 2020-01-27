@@ -8,4 +8,5 @@ export default interface PaymentHistoryStore {
     get(accountId: Buffer, start: number, pageSize: number): PaymentHistoryEntry[];
     getSyncInfo(accountId: Buffer): any;
     saveSyncInfo(accountId: Buffer, syncInfo: any);
+    deletePaymentHistory(accountId: Buffer);
 }
