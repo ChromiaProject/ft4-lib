@@ -5,8 +5,6 @@ struct module_args {
     request_recovery_time: integer;    
 }
 
-
-
 object ft3_config {
     blockchain_name: text = 'test';
     blockchain_website: text = 'test_website';
@@ -14,5 +12,3 @@ object ft3_config {
     request_max_count: integer = chain_context.args.request_max_count;
     request_recovery_time: integer = chain_context.args.request_recovery_time;
 }
-
- 

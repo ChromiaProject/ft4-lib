@@ -22,13 +22,20 @@
                 <dict>
                     <entry key="moduleArgs">
                         <dict>
+                            <entry key="">
+                                <dict>
+                                    <entry key="admin_pub_key">
+                                        <string>03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D</string>
+                                    </entry>
+                                </dict>
+                            </entry>
                             <entry key="config.ft3_config">
                                 <dict>
                                     <entry key="request_max_count">
-                                        <int>10</int>
+                                        <int>20</int>
                                     </entry>
                                     <entry key="request_recovery_time">
-                                        <int>5000</int>
+                                        <int>60000</int>
                                     </entry>
                                 </dict>
                             </entry>
@@ -41,6 +48,57 @@
                     </entry>
                     <entry key="sources_v0.10">
                         <dict>
+                            <entry key="admin.rell">
+                                <string>import ft3_dev_op: .lib.ft3.core.dev_op;
+import ft3_core: .lib.ft3.core;
+import ft3_acc : .lib.ft3.account;
+
+function require_dev_admin() {
+	ft3_dev_op.require_dev();
+	val adminPubKeyBytes = byte_array(chain_context.args.admin_pub_key);
+	require(is_signer(adminPubKeyBytes), "Needs to be signed by admin");
+}
+
+
+operation dev_register_asset (name, issuing_chain_rid: byte_array) {
+    ft3_dev_op.require_dev();
+    require_dev_admin();
+    ft3_core.register_asset(name, issuing_chain_rid);
+}
+
+operation dev_give_balance (asset_id: byte_array, account_id: byte_array, amount: integer) {
+    ft3_dev_op.require_dev();
+    require_dev_admin();
+    require(amount &gt;= 0);
+    ft3_core.ensure_balance( ft3_acc.account @ { account_id }, ft3_core.asset @ { .id == asset_id } ).amount += amount;
+}
+
+operation dev_register_account (ft3_acc.auth_descriptor) {
+    ft3_dev_op.require_dev();
+    ft3_acc.create_account_with_auth( auth_descriptor );
+}
+
+
+
+/*
+ * Can be negative
+ */
+operation dev_give_points(account_id: byte_array, amount: integer){
+	ft3_dev_op.require_dev();
+	require_dev_admin();
+	val account = ft3_acc.account@{.id == account_id};
+	ft3_dev_op.dev_give_points_(account, amount);
+}
+
+operation dev_free_op(account_id: byte_array) {
+	ft3_dev_op.require_dev();
+	require_dev_admin();
+	// this operation does not cost points in the rate limit
+	val account = ft3_acc.account@{.id == account_id};
+	ft3_dev_op.dev_give_points_(account, 1);
+	ft3_acc.rate_limit(account);
+}</string>
+                            </entry>
                             <entry key="config/ft3_config.rell">
                                 <string>module;
 
@@ -49,17 +107,13 @@ struct module_args {
     request_recovery_time: integer;    
 }
 
-
-
 object ft3_config {
     blockchain_name: text = 'test';
     blockchain_website: text = 'test_website';
     blockchain_description: text = 'test_description';
     request_max_count: integer = chain_context.args.request_max_count;
     request_recovery_time: integer = chain_context.args.request_recovery_time;
-}
-
- </string>
+}</string>
                             </entry>
                             <entry key="lib/ft3/account/auth_basic.rell">
                                 <string>// Auth type:
@@ -581,7 +635,7 @@ query get_accounts_by_auth_descriptor_id(descriptor_id: byte_array) {
                                 <string>@mount('ft3')
 module;
 
-import acc: ^;
+import acc: ^^.account;
 import core: ^^.core;
 
 
@@ -780,12 +834,10 @@ function require_dev() {
     require(dev_state.allow_dev_ops);
 }
 
-function require_dev_admin() {
+function dev_give_points_(account: acc.account, amount: integer) {
 	require_dev();
-	require(is_signer(x"03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D"), "Needs to be signed by admin");
-}
-
-</string>
+	update acc.rl_state@{account}(.points += amount);
+}</string>
                             </entry>
                             <entry key="lib/ft3/core/history.rell">
                                 <string>import acc: ^.account;
@@ -918,188 +970,42 @@ function _transfer (inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/crosschain/blockchain.rell">
-                                <string>import ft3: ^.core;
-import acc: ^.account;
-
-
-entity asset_origin {
-    key ft3.asset;
-    origin_chain_rid: byte_array;
-}
-
-entity linked_chain {
-    key chain_rid: byte_array;
-}
-
-function blockchain_account_id (blockchain_rid: byte_array): byte_array {
-   return ("B", blockchain_rid).hash();
-}
-
-function ensure_blockchain_account (blockchain_rid: byte_array): acc.account {
-   val blockchain_account_id = blockchain_account_id(blockchain_rid);
-   val acc = acc.account @? { .id == blockchain_account_id };
-   return if (acc??)  acc
-   else create acc.account (id = blockchain_account_id);
-}
-
-function get_blockchain_account (blockchain_rid: byte_array): acc.account {
-   return acc.account @ { .id == blockchain_account_id(blockchain_rid) };
-}
-
-
-query get_linked_chains() {
-    return linked_chain @* {} ( .chain_rid );
-}
-
-query is_linked_with_chain(chain_rid: byte_array) {
-    return linked_chain @? { chain_rid } != null;
-}
-</string>
-                            </entry>
-                            <entry key="lib/ft3/crosschain/module.rell">
-                                <string>@mount('ft3.xc')
-module;
-</string>
-                            </entry>
-                            <entry key="lib/ft3/crosschain/structures.rell">
-                                <string>struct operation_rec {
-   name;
-   args: list&lt;gtv&gt;;
-}
-
-struct transaction_body_rec {
-    blockchain_rid: byte_array;
-    operations: list&lt;operation_rec&gt;;
-    signers: list&lt;gtv&gt;;
-}
-
-struct transaction_rec {
-   body: transaction_body_rec;
-   signatures: list&lt;gtv&gt;;
-}
-
-struct transaction_proof {
-     tx: virtual&lt;transaction_rec&gt;;
-     // block_header: byte_array;
-     // merkle_path: virtual&lt;list&lt;byte_array&gt;&gt;;
-     // tx_index: integer;
-     block_rid: byte_array;
-     block_signers: list&lt;byte_array&gt;;
-     signatures: list&lt;byte_array&gt;;     
-}
-
-function verify_transaction_proof( p: transaction_proof ) {
-   // TODO
-}</string>
-                            </entry>
-                            <entry key="lib/ft3/crosschain/transfer.rell">
-                                <string>import ft3: ^.core;
-
-struct xc_target {
-    account_id: byte_array;
-    extra: map&lt;text, gtv&gt;;
-}
-
-function add_to_blockchain_balance (blockchain_rid: byte_array, ft3.asset, amount: integer) {
-    require( chain_context.blockchain_rid != blockchain_rid ); // cannot add to own account
-
-    val origin_chain_rid = asset_origin @? { asset } .origin_chain_rid;
-
-    if (exists(origin_chain_rid) and (blockchain_rid == origin_chain_rid)) {
-       // do nothing. in future we might track origin
-    } else {
-         val bc_acc = ensure_blockchain_account(blockchain_rid);
-         ft3.ensure_balance(bc_acc, asset).amount += amount;
-    }
-}
-
-
-struct init_xfer_args {
-          source: ft3.xfer_input;
-          target: xc_target;
-          hops: list&lt;byte_array&gt;;
-}
-
-entity applied_transfers { key tx_rid: byte_array; }
-
-
-</string>
-                            </entry>
-                            <entry key="lib/ft3/ft3_basic_dev.rell">
+                            <entry key="lib/ft3/ft3_basic.rell">
                                 <string>module;
 
-import ^.core;
-import ^.core.dev_op;
+namespace ft3 {
+	import acc: lib.ft3.account;
+	import acc_op: lib.ft3.account.operations;
+	import transfer_op: lib.ft3.core.operations.transfer;
+}
+
 </string>
                             </entry>
-                            <entry key="lib/ft3/operations/dev_op.rell">
+                            <entry key="lib/ft3/operations/dev_op_account.rell">
                                 <string>@mount('ft3')
 module;
 
 import dev_op: ^^.core.dev_op;
-import ft3: ^^.core;
-import acc: ^^.account;
+import acc: ^^.account; 
 
-import xft3: ^^.crosschain; 
-
-
-
-operation dev_register_asset (name, issuing_chain_rid: byte_array) {
-    dev_op.require_dev_admin();
-    ft3.register_asset(name, issuing_chain_rid);
-}
-
-operation dev_give_balance (asset_id: byte_array, account_id: byte_array, amount: integer) {
-    dev_op.require_dev_admin();
-    require(amount &gt;= 0);
-    ft3.ensure_balance( acc.account @ { account_id }, ft3.asset @ { .id == asset_id } ).amount += amount;
-}
 
 operation dev_register_account (acc.auth_descriptor) {
     dev_op.require_dev();
     acc.create_account_with_auth( auth_descriptor );
 }
-
-operation dev_register_xc_asset (name, issuing_chain_rid: byte_array, origin_chain_rid: byte_array) {
-    dev_op.require_dev();   
-    val asset = ft3.register_asset(name, issuing_chain_rid);
-    create xft3.asset_origin (asset, origin_chain_rid);
-}
-
-function dev_give_points_(account: acc.account, amount: integer) {
-	update acc.rl_state@{account}(.points += amount);
-}
-
-/*
- * Can be negative
- */
-operation dev_give_points(account_id: byte_array, amount: integer){
-	dev_op.require_dev_admin();
-	val account = acc.account@{.id == account_id};
-	dev_give_points_(account, amount);
-}
-
-operation dev_free_op(account_id: byte_array) {
-	dev_op.require_dev_admin();
-	// this operation does not cost points in the rate limit
-	val account = acc.account@{.id == account_id};
-	dev_give_points_(account, 1);
-	acc.rate_limit(account);
-}</string>
+</string>
                             </entry>
                             <entry key="module.rell">
-                                <string>
+                                <string>module;
 
+import lib.ft3.ft3_basic;
+import lib.ft3.operations.dev_op_account;
 
-namespace ft3 {
-	import acc: .lib.ft3.account;
-	import acc_op: .lib.ft3.account.operations;
-	import core: .lib.ft3.ft3_basic_dev;
-	import transfer_op: .lib.ft3.core.operations.transfer;
-//	import xchain_op: .lib.ft3.crosschain.operations;
-	import dev_op: .lib.ft3.operations.dev_op;
-}</string>
+struct module_args {
+    admin_pub_key: text; 
+}
+
+</string>
                             </entry>
                         </dict>
                     </entry>
