@@ -11,3 +11,8 @@ function require_dev() {
     require(dev_state.allow_dev_ops);
 }
 
+function require_dev_admin() {
+	require_dev();
+	require(is_signer(x"03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D"), "Needs to be signed by admin");
+}
+
