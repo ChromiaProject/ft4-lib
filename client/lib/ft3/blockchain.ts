@@ -8,6 +8,7 @@ import BlockchainSession from "./blockchain-session";
 import User from "./user";
 import { gtx } from 'postchain-client';
 import Operation from "./operation";
+import { op } from "./account-operations";
 
 export default class Blockchain {
     readonly id: Buffer;
@@ -72,15 +73,16 @@ export default class Blockchain {
     }
 
     async linkChain(chainId: Buffer) {
-        const tx = this.connection.gtx.newTransaction([]);
-        tx.addOperation('ft3.xc.link_chain', chainId.toString('hex'));
-        await tx.postAndWaitConfirmation();
+        await this.transactionBuilder()
+            .add(op('ft3.xc.link_chain', chainId))
+            .build([])
+            .post()
     }
 
     async isLinkedWithChain(chainId: Buffer): Promise<boolean> {
         return await this.query(
             'ft3.xc.is_linked_with_chain',
-            { 'chain_rid': chainId.toString('hex') }
+            { 'chain_rid': chainId }
         ) === 1
     }
 
@@ -119,7 +121,7 @@ export default class Blockchain {
     }
 
     async postRaw(rawTransaction: Buffer): Promise<void> {
-        const tx = this.connection.gtx.transactionFromRawTransaction(rawTransaction);
+        const tx = this.connection.transactionFromRawTransaction(rawTransaction);
         await tx.postAndWaitConfirmation();
     }
 
