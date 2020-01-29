@@ -25,10 +25,10 @@ export default class RateLimit {
     }
 
     static async getByAccountRateLimit(accountId: Buffer, blockchain: Blockchain): Promise<RateLimit> {
-        const rateInfo = await blockchain.connection.gtx.query(
+        const rateInfo = await blockchain.query(
             'ft3.get_account_rate_limit',
             {
-                account_id: accountId.toString('hex'),
+                account_id: accountId,
             }  
         );
         if(!rateInfo) return null;
@@ -40,11 +40,11 @@ export default class RateLimit {
             .add(givePoints(accountId, points))
             .add(nop())
             .build([])
-            .post()
+            .post();
     }
 
     static async getLastTimestamp(blockchain: Blockchain): Promise<number> {
-        return await blockchain.connection.gtx.query(
+        return await blockchain.query(
             'ft3.get_last_timestamp',
             {}
         );
@@ -56,7 +56,7 @@ export default class RateLimit {
         const lastTimestamp = await this.getLastTimestamp(blockchain);
         const delta = lastTimestamp - lastOperation;
 
-        const pointsAvailable = Math.floor(delta / recoveryTime) + points
+        const pointsAvailable = Math.floor(delta / recoveryTime) + points;
         if(pointsAvailable > maxCount) {
             return maxCount;
         }

@@ -16,3 +16,4 @@ postchain/runtime
 **.pid
 
 dist/
+target/

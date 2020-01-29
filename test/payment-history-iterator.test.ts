@@ -4,6 +4,8 @@ import BlockchainUtil from "./util/blockchain-util";
 import Asset from "../client/lib/ft3/asset";
 import {generateAssetName, generateId} from "./util/util";
 import Blockchain from "../client/lib/ft3/blockchain";
+import PaymentHistorySyncManager from "../client/lib/ft3/payment-history/payment-history-sync-manager";
+import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/payment-history/payment-history-store-local-storage";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;
@@ -171,5 +173,33 @@ describe('Payment history iterator', () => {
 
         expect(paymentHistoryIterator.pageCount).toEqual(1);
         expect(paymentHistoryEntries.length).toEqual(2);
+    });
+
+    describe("local storage store", () => {
+        it("should have more than one page if number of entries is greater than page size", async () => {
+            PaymentHistorySyncManager.defaultPaymentHistoryStore = new PaymentHistoryStoreLocalStorage();
+
+            const user = TestUser.singleSig();
+
+            const account1 = await AccountBuilder
+                .account(blockchain, user)
+                .withParticipants([user.keyPair])
+                .withBalance(asset, 200)
+                .withPoints(4)
+                .build();
+
+            const account2 = await AccountBuilder
+                .account(blockchain)
+                .build();
+
+            await account1.transfer(account2.id_, asset.id, 10);
+            await account1.transfer(account2.id_, asset.id, 10);
+            await account1.transfer(account2.id_, asset.id, 10);
+            await account1.transfer(account2.id_, asset.id, 10);
+
+            const paymentHistoryIterator = await account1.getPaymentHistoryIterator(2);
+
+            expect(paymentHistoryIterator.pageCount).toEqual(2);
+        });
     });
 });
