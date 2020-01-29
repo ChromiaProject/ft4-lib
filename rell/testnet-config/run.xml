@@ -4,10 +4,13 @@
         <config src="node-config.properties" add-signers="true" />
     </nodes>
     <chains>
-        <chain name="ft3-lib" iid="0">
+        <chain name="testnet-ft3-lib" iid="0">
             <config height="0">
 				<app module="">
                 	<args module="config.ft3_config">
+                		<arg key="my_blockchain_name"><string>test</string></arg>
+                		<arg key="my_blockchain_website"><string>test_website</string></arg>
+                		<arg key="my_blockchain_description"><string>test_description</string></arg>
                   		<arg key="request_max_count"><int>20</int></arg> <!-- maximum amount of request credit that is possible to keep -->
                   		<arg key="request_recovery_time"><int>60000</int></arg> 
                 	</args>

@@ -7,7 +7,10 @@
         <chain name="ft3-lib" iid="0">
             <config height="0">
 				<app module="">
-                	<args module="config.ft3_config">
+                	<args module="lib.ft3.core">
+                		<arg key="my_blockchain_name"><string>test</string></arg>
+                		<arg key="my_blockchain_website"><string>test_website</string></arg>
+                		<arg key="my_blockchain_description"><string>test_description</string></arg>
                   		<arg key="request_max_count"><int>10</int></arg> <!-- maximum amount of request credit that is possible to keep -->
                   		<arg key="request_recovery_time"><int>5000</int></arg> 
                 	</args>
