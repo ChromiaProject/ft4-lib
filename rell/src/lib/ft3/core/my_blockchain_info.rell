@@ -1,8 +1,8 @@
 
 object my_blockchain_info {
-    mutable name: text = chain_context.args.blockchain_name;
-    mutable website: text = chain_context.args.blockchain_website;
-    mutable description: text = chain_context.args.blockchain_description;
+    mutable name: text = chain_context.args.my_blockchain_name;
+    mutable website: text = chain_context.args.my_blockchain_website;
+    mutable description: text = chain_context.args.my_blockchain_description;
     mutable request_max_count: integer = chain_context.args.request_max_count;
     mutable request_recovery_time: integer = chain_context.args.request_recovery_time;
 }

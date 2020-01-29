@@ -31,13 +31,13 @@
                             </entry>
                             <entry key="lib.ft3.core">
                                 <dict>
-                                    <entry key="blockchain_description">
+                                    <entry key="my_blockchain_description">
                                         <string>test_description</string>
                                     </entry>
-                                    <entry key="blockchain_name">
+                                    <entry key="my_blockchain_name">
                                         <string>test</string>
                                     </entry>
-                                    <entry key="blockchain_website">
+                                    <entry key="my_blockchain_website">
                                         <string>test_website</string>
                                     </entry>
                                     <entry key="request_max_count">
@@ -842,9 +842,9 @@ query get_payment_history(account_id: byte_array, after_block: integer) {
 module;
 
 struct module_args {
-	blockchain_name: text;
-	blockchain_website: text;
-	blockchain_description: text;
+	my_blockchain_name: text;
+	my_blockchain_website: text;
+	my_blockchain_description: text;
 	request_max_count: integer;
     request_recovery_time: integer;    
 }</string>
@@ -852,9 +852,9 @@ struct module_args {
                             <entry key="lib/ft3/core/my_blockchain_info.rell">
                                 <string>
 object my_blockchain_info {
-    mutable name: text = chain_context.args.blockchain_name;
-    mutable website: text = chain_context.args.blockchain_website;
-    mutable description: text = chain_context.args.blockchain_description;
+    mutable name: text = chain_context.args.my_blockchain_name;
+    mutable website: text = chain_context.args.my_blockchain_website;
+    mutable description: text = chain_context.args.my_blockchain_description;
     mutable request_max_count: integer = chain_context.args.request_max_count;
     mutable request_recovery_time: integer = chain_context.args.request_recovery_time;
 }

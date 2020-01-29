@@ -2,9 +2,9 @@
 module;
 
 struct module_args {
-	blockchain_name: text;
-	blockchain_website: text;
-	blockchain_description: text;
+	my_blockchain_name: text;
+	my_blockchain_website: text;
+	my_blockchain_description: text;
 	request_max_count: integer;
     request_recovery_time: integer;    
 }
