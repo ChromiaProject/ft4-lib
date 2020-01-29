@@ -29,13 +29,22 @@
                                     </entry>
                                 </dict>
                             </entry>
-                            <entry key="config.ft3_config">
+                            <entry key="lib.ft3.core">
                                 <dict>
+                                    <entry key="my_blockchain_description">
+                                        <string>test_description</string>
+                                    </entry>
+                                    <entry key="my_blockchain_name">
+                                        <string>test</string>
+                                    </entry>
+                                    <entry key="my_blockchain_website">
+                                        <string>test_website</string>
+                                    </entry>
                                     <entry key="request_max_count">
-                                        <int>20</int>
+                                        <int>10</int>
                                     </entry>
                                     <entry key="request_recovery_time">
-                                        <int>60000</int>
+                                        <int>5000</int>
                                     </entry>
                                 </dict>
                             </entry>
@@ -97,22 +106,6 @@ operation dev_free_op(account_id: byte_array) {
 	val account = ft3_acc.account@{.id == account_id};
 	ft3_dev_op.dev_give_points_(account, 1);
 	ft3_acc.rate_limit(account);
-}</string>
-                            </entry>
-                            <entry key="config/ft3_config.rell">
-                                <string>module;
-
-struct module_args {
-	request_max_count: integer;
-    request_recovery_time: integer;    
-}
-
-object ft3_config {
-    blockchain_name: text = 'test';
-    blockchain_website: text = 'test_website';
-    blockchain_description: text = 'test_description';
-    request_max_count: integer = chain_context.args.request_max_count;
-    request_recovery_time: integer = chain_context.args.request_recovery_time;
 }</string>
                             </entry>
                             <entry key="lib/ft3/account/auth_basic.rell">
@@ -544,6 +537,8 @@ entity rl_state {
     key account;
     mutable points: integer;
     mutable last_update: timestamp;
+    mutable max_points: integer;
+    mutable recovery_time: timestamp;
 }
 
 function _add_auth_descriptor (account, auth_descriptor) {
@@ -592,7 +587,10 @@ function create_account_with_auth (auth_descriptor): byte_array {
      _add_auth_descriptor(
         acc, auth_descriptor
      );
-     create rl_state(acc, .points = 0, .last_update = op_context.last_block_time);
+     val max_points = core.my_blockchain_info.request_max_count;
+     val recovery_time = core.my_blockchain_info.request_recovery_time;
+     
+     create rl_state(acc, .points = 0, .last_update = op_context.last_block_time, max_points, recovery_time);
      return id;
 }
 
@@ -665,8 +663,8 @@ operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_
 
 
 function rate_limit (account) {
-    val max_counter = core.blockchain.request_max_count;
-    val recovery_time = core.blockchain.request_recovery_time; 
+    val max_counter = core.my_blockchain_info.request_max_count;
+    val recovery_time = core.my_blockchain_info.request_recovery_time;
     val stat = rl_state@{account} (.points, .last_update);
     val delta = op_context.last_block_time - stat.last_update;
     var got_points = 0;
@@ -789,37 +787,6 @@ query get_all_assets() {
 	);
 }</string>
                             </entry>
-                            <entry key="lib/ft3/core/blockchain.rell">
-                                <string>import config: config.ft3_config;
-
-
-object blockchain {
-    mutable name: text = config.ft3_config.blockchain_name;
-    mutable website: text = config.ft3_config.blockchain_website;
-    mutable description: text = config.ft3_config.blockchain_description;
-    mutable request_max_count: integer = config.ft3_config.request_max_count;
-    mutable request_recovery_time: integer = config.ft3_config.request_recovery_time;
-}
-
-
-//operation update_blockchain(name, website: text, description: text) {
-//    blockchain.name = name;
-//    blockchain.website = website;
-//    blockchain.description = description;
-//}
-
-query get_blockchain_info() {
-    return (
-        name = blockchain.name,
-        website = blockchain.website,
-        description = blockchain.description,
-        request_max_count = blockchain.request_max_count,
-        request_recovery_time = blockchain.request_recovery_time
-    );
-}
-
-</string>
-                            </entry>
                             <entry key="lib/ft3/core/dev_op.rell">
                                 <string>module;
 
@@ -873,6 +840,42 @@ query get_payment_history(account_id: byte_array, after_block: integer) {
                             <entry key="lib/ft3/core/module.rell">
                                 <string>@mount('ft3')
 module;
+
+struct module_args {
+	my_blockchain_name: text;
+	my_blockchain_website: text;
+	my_blockchain_description: text;
+	request_max_count: integer;
+    request_recovery_time: integer;    
+}</string>
+                            </entry>
+                            <entry key="lib/ft3/core/my_blockchain_info.rell">
+                                <string>
+object my_blockchain_info {
+    mutable name: text = chain_context.args.my_blockchain_name;
+    mutable website: text = chain_context.args.my_blockchain_website;
+    mutable description: text = chain_context.args.my_blockchain_description;
+    mutable request_max_count: integer = chain_context.args.request_max_count;
+    mutable request_recovery_time: integer = chain_context.args.request_recovery_time;
+}
+
+
+//operation update_blockchain(name, website: text, description: text) {
+//    blockchain.name = name;
+//    blockchain.website = website;
+//    blockchain.description = description;
+//}
+
+query get_blockchain_info() {
+    return (
+        name = my_blockchain_info.name,
+        website = my_blockchain_info.website,
+        description = my_blockchain_info.description,
+        request_max_count = my_blockchain_info.request_max_count,
+        request_recovery_time = my_blockchain_info.request_recovery_time
+    );
+}
+
 </string>
                             </entry>
                             <entry key="lib/ft3/core/operations/transfer.rell">
