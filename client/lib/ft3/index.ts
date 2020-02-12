@@ -16,4 +16,5 @@ export { default as Operation } from './operation';
 export { default as PaymentHistorySyncManager } from './payment-history/payment-history-sync-manager';
 export { default as PaymentHistoryStoreMemory } from './payment-history/payment-history-store-memory';
 export { default as PaymentHistoryStoreLocalStorage } from './payment-history/payment-history-store-local-storage';
+export { default as SSO } from './sso';
 

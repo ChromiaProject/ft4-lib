@@ -1,4 +1,7 @@
 import Blockchain from "./blockchain";
+import TransactionBuilder from "./transaction-builder";
+import { gtx } from 'postchain-client'
+import { op } from './account-operations';
 
 export default class Transaction {
     private readonly tx;
@@ -21,5 +24,17 @@ export default class Transaction {
 
     raw(): Buffer {
         return this.tx.encode()
+    }
+
+    static importRawTransaction(rawTransaction: Buffer, blockchain: Blockchain): Transaction {
+        const deserializedTx = gtx.deserialize(rawTransaction);
+        const txBuild = new TransactionBuilder(blockchain)
+    
+        deserializedTx.operations.map(operation => {
+            txBuild.add(op(operation.opName, ...operation.args));
+        });
+        const tx = txBuild.build(deserializedTx.signers);
+        tx.tx.gtx.signatures = deserializedTx.signatures;
+        return tx;
     }
 } 
