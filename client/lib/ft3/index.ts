@@ -17,3 +17,5 @@ export { default as PaymentHistorySyncManager } from './payment-history/payment-
 export { default as PaymentHistoryStoreMemory } from './payment-history/payment-history-store-memory';
 export { default as PaymentHistoryStoreLocalStorage } from './payment-history/payment-history-store-local-storage';
 export { default as RateLimit } from './rate-limit';
+export { default as SSO } from './sso';
+
