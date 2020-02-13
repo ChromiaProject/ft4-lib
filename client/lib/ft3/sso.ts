@@ -7,20 +7,23 @@ import Transaction from './transaction';
 import User from './user';
 
 export default {
-  
-  initialize (vaultUrl: string, successUrl: string, cancelUrl: string, user: User, blockchain: Blockchain): string {
-    successUrl = encodeURIComponent(successUrl);
-    cancelUrl = encodeURIComponent(cancelUrl);
-
-    return `${vaultUrl}/?route=/authorize&dappId=${blockchain.connection.chainId}&pubkey=${user.keyPair.pubKey.toString('hex')}&successAction=${successUrl}&cancelAction=${cancelUrl}`;
+  authorize(vaultUrl: string, successUrl: string, cancelUrl: string, user: User, blockchain: Blockchain): string {
+    return `${vaultUrl}/?route=/authorize&dappId=${
+      blockchain.connection.chainId
+    }&pubkey=${
+      user.keyPair.pubKey.toString('hex')
+    }&successAction=${
+      encodeURIComponent(successUrl)
+    }&cancelAction=${
+      encodeURIComponent(cancelUrl)
+    }`;
   },
 
   async execute(rawTx: string, session: Session): Promise<Account[]> {
-    const rawTxBuffer = Buffer.from(rawTx, 'hex');
-    const registerAuthDescriptorResult = gtx.signRawTransaction(session.user.keyPair, rawTxBuffer)
-    const res = Transaction.importRawTransaction(registerAuthDescriptorResult, session.blockchain)
+    await Transaction.fromRawTransaction(Buffer.from(rawTx, 'hex'), session.blockchain)
+        .sign(session.user.keyPair)
+        .post();
     
-    await res.post();
-    return Account.getByAuthDescriptorId(session.user.authDescriptor.hash(), session); 
+    return Account.getByAuthDescriptorId(session.user.authDescriptor.id, session);
   }
 }
