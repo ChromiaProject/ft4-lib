@@ -7,7 +7,7 @@ import Transaction from './transaction';
 import User from './user';
 
 export default {
-  authorize(vaultUrl: string, successUrl: string, cancelUrl: string, user: User, blockchain: Blockchain): string {
+  initialize(vaultUrl: string, successUrl: string, cancelUrl: string, user: User, blockchain: Blockchain): string {
     return `${vaultUrl}/?route=/authorize&dappId=${
       blockchain.connection.chainId
     }&pubkey=${
