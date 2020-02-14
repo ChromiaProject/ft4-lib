@@ -26,9 +26,9 @@ export default class Transaction {
         return this.tx.encode()
     }
 
-    static importRawTransaction(rawTransaction: Buffer, blockchain: Blockchain): Transaction {
+    static fromRawTransaction(rawTransaction: Buffer, blockchain: Blockchain): Transaction {
         const deserializedTx = gtx.deserialize(rawTransaction);
-        const txBuild = new TransactionBuilder(blockchain)
+        const txBuild = new TransactionBuilder(blockchain);
     
         deserializedTx.operations.map(operation => {
             txBuild.add(op(operation.opName, ...operation.args));

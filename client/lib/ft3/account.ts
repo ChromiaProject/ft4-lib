@@ -23,6 +23,7 @@ import {
 import Operation from "./operation";
 import RateLimit from './rate-limit';
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
+import User from "./user";
 
 enum AuthType {
     single_sig = "S",
@@ -108,12 +109,39 @@ class Account {
         return account
     }
 
-    static rawRegisterTransaction(authDescriptor: AuthDescriptor, ssoAuthDescriptor: AuthDescriptor, session: BlockchainSession): Buffer {
+    /* obsolete - keep for backward compatibility */
+    static rawRegisterTransaction(
+        authDescriptor: AuthDescriptor,
+        ssoAuthDescriptor: AuthDescriptor,
+        session: BlockchainSession
+    ): Buffer {
         return session.blockchain.transactionBuilder()
             .add(register(authDescriptor))
             .add(addAuthDescriptor(authDescriptor.id, authDescriptor.id, ssoAuthDescriptor))
-            .build([authDescriptor.signers /*, ssoAuthDescriptor.signers */].flat())
+            .build([authDescriptor.signers , ssoAuthDescriptor.signers].flat())
             .sign(session.user.keyPair)
+            .raw()
+    }
+
+    static rawTransactionRegister(user: User, authDescriptor: AuthDescriptor, blockchain: Blockchain): Buffer {
+        return blockchain.transactionBuilder()
+            .add(register(user.authDescriptor))
+            .add(addAuthDescriptor(user.authDescriptor.id, user.authDescriptor.id, authDescriptor))
+            .build([user.authDescriptor.signers , authDescriptor.signers].flat())
+            .sign(user.keyPair)
+            .raw()
+    }
+
+    static rawTransactionAddAuthDescriptor(
+        accountId: Buffer,
+        user: User,
+        authDescriptor: AuthDescriptor,
+        blockchain: Blockchain
+    ): Buffer {
+        return blockchain.transactionBuilder()
+            .add(addAuthDescriptor(accountId, user.authDescriptor.id, authDescriptor))
+            .build([user.authDescriptor.signers , authDescriptor.signers].flat())
+            .sign(user.keyPair)
             .raw()
     }
 
