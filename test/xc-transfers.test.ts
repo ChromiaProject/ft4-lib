@@ -9,7 +9,7 @@ import Blockchain from "../client/lib/ft3/blockchain";
 let blockchain: Blockchain = null;
 let asset: Asset = null;
 
-describe("Cross-chain transfer", () => {
+describe.skip("Cross-chain transfer", () => {
     beforeAll(async () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
         asset = await Asset.register(generateAssetName(), generateId(), blockchain);

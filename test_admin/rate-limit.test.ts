@@ -21,6 +21,7 @@ const connection: ConnectionClient = TestConnection.connection()
 
 const REQUEST_MAX_COUNT = 10;
 const RECOVERY_TIME = 5000;
+const POINTS_AT_ACCOUNT_CREATION = 1;
 
 describe("Rate Limit", () => {
     beforeAll(async () => {
@@ -33,17 +34,17 @@ describe("Rate Limit", () => {
     describe("Blockchain request configuaration in run.xml", () => {
         it("Should have a limit of 10 requests per minute", async () => {
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info.requestMaxCount).toEqual(REQUEST_MAX_COUNT);
+            expect(info.rateLimitMaxPoints).toEqual(REQUEST_MAX_COUNT);
         });
 
         it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), 10, 5000));
+            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), true, 10, 5000, POINTS_AT_ACCOUNT_CREATION));
         });
 
         it("Should have a recovery period of 5 seconds", async () => {
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info.requestRecoveryTime).toEqual(RECOVERY_TIME);
+            expect(info.rateLimitRecoveryTime).toEqual(RECOVERY_TIME);
         });
     });
 
@@ -56,7 +57,7 @@ describe("Rate Limit", () => {
                 .build();
     
             await account.sync();
-            expect(account.rateLimit.points).toBe(0);
+            expect(account.rateLimit.points).toBe(POINTS_AT_ACCOUNT_CREATION);
         });
     
         it("waits 20 seconds and gets 4 points", async () => {
@@ -72,7 +73,7 @@ describe("Rate Limit", () => {
             await RateLimit.execFreeOperation(account.id_, blockchain); // used to calculate the last block's timestamp (previous block).
             // check the balance
             await account.sync();
-            expect(account.rateLimit.points).toBe(4); // 20 seconds / 5s recovery time
+            expect(account.rateLimit.points).toBe(4 + POINTS_AT_ACCOUNT_CREATION); // 20 seconds / 5s recovery time
         });
 
         it.skip("can make 4 operations", async () => {
@@ -80,7 +81,7 @@ describe("Rate Limit", () => {
             const account = await AccountBuilder
                 .account(blockchain, user)
                 .withParticipants([user.keyPair])
-                .withPoints(2)
+                .withPoints(2 - POINTS_AT_ACCOUNT_CREATION)
                 .build();
 
             await expect(makeRequests(account, 4)).resolves.toBeUndefined();
@@ -93,7 +94,7 @@ describe("Rate Limit", () => {
             const account = await AccountBuilder
                 .account(blockchain, user)
                 .withParticipants([user.keyPair])
-                .withPoints(2)
+                .withPoints(2 - POINTS_AT_ACCOUNT_CREATION)
                 .build();
             
             await expect(makeRequests(account, 4)).resolves.toBeUndefined();

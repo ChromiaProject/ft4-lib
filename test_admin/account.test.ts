@@ -12,6 +12,7 @@ import { op } from "../client/lib/ft3";
 
 require('dotenv').config();
 
+const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;
 
 describe('Test the account', () => {
@@ -31,15 +32,15 @@ describe('Test the account', () => {
     });
 
     it("Register account on blockchain", async () => {
-       const user = TestUser.singleSig();
-       const authDescriptor = new SingleSignatureAuthDescriptor(
-           user.keyPair.pubKey,
-           [FlagsType.Account, FlagsType.Transfer]
-       );
+        const user = TestUser.singleSig();
+        const authDescriptor = new SingleSignatureAuthDescriptor(
+            user.keyPair.pubKey,
+            [FlagsType.Account, FlagsType.Transfer]
+        );
 
-       const account = await Account.register(authDescriptor, blockchain.newSession(user));
+        const account = await Account.register(authDescriptor, blockchain.newSession(user));
 
-       expect(account).not.toBeNull();
+        expect(account).not.toBeNull();
     });
 
     it("can add new auth descriptor if has account edit rights", async () => {
@@ -47,7 +48,7 @@ describe('Test the account', () => {
         const account = await AccountBuilder
             .account(blockchain, user)
             .withParticipants([user.keyPair])
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         expect(account).not.toBeNull();
@@ -155,7 +156,7 @@ describe('Test the account', () => {
         const account2 = await AccountBuilder
             .account(blockchain, user2)
             .withParticipants([user2.keyPair])
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         await account2.addAuthDescriptor(
@@ -187,7 +188,7 @@ describe('Test the account', () => {
         const account = await AccountBuilder
             .account(blockchain, user1)
             .withParticipants([user1.keyPair])
-            .withPoints(3)
+            .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const authDescriptor1 = new SingleSignatureAuthDescriptor(

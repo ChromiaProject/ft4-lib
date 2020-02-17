@@ -8,6 +8,7 @@ import { Account } from "../client/lib/ft3/account"
 import User from "../client/lib/ft3/user";
 import { Rules } from "../client/lib/ft3/auth-descriptor/auth-descriptor-rule"
 
+const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;
 let asset: Asset = null;
 
@@ -15,7 +16,7 @@ function sourceAccount(user: User): Promise<Account> {
     return AccountBuilder
         .account(blockchain, user)
         .withBalance(asset,200)
-        .withPoints(5)
+        .withPoints(5 - POINTS_AT_ACCOUNT_CREATION)
         .build();
 }
 

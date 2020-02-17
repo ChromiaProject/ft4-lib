@@ -1,7 +1,6 @@
 import Blockchain from "./blockchain";
 import Transaction from "./transaction";
 import {GtvSerializable} from "./account";
-import { util } from 'postchain-client'
 import Operation from "./operation";
 import User from "./user";
 

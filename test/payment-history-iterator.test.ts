@@ -124,7 +124,7 @@ describe('Payment history iterator', () => {
         expect(paymentHistoryIterator.pageCount).toEqual(2);
     });
 
-    it("should have one payment history entries if one crosschain transfer is made", async () => {
+    it.skip("should have one payment history entries if one crosschain transfer is made", async () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
@@ -151,7 +151,7 @@ describe('Payment history iterator', () => {
         expect(entry.other[0].accountId).toEqual(accountId2.toString('hex'));
     });
 
-    it("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {
+    it.skip("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder

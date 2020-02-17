@@ -4,23 +4,27 @@ export default class BlockchainInfo {
     name: string;
     website: string;
     description: string;
-    requestMaxCount: number;
-    requestRecoveryTime: number;
+    rateLimitActive: boolean
+    rateLimitMaxPoints: number;
+    rateLimitRecoveryTime: number;
+    rateLimitPointsAtAccountCreation: number;
 
-    constructor(name: string, website: string, description: string, requestMaxCount: number, recoveryTime: number) {
+    constructor(name: string, website: string, description: string, rateLimitActive: boolean, rateLimitMaxPoints: number, rateLimitRecoveryTime: number, rateLimitPointsAtAccountCreation: number) {
         this.name = name;
         this.website = website;
         this.description = description;
-        this.requestMaxCount = requestMaxCount;
-        this.requestRecoveryTime = recoveryTime;
+        this.rateLimitActive = rateLimitActive;
+        this.rateLimitMaxPoints = rateLimitMaxPoints;
+        this.rateLimitRecoveryTime = rateLimitRecoveryTime;
+        this.rateLimitPointsAtAccountCreation = rateLimitPointsAtAccountCreation;
     }
 
     static async getInfo(connection: ConnectionClient)  {;
         try {
             const info = await connection.query('ft3.get_blockchain_info', {});
-            return new BlockchainInfo(info.name, info.website, info.description, info.request_max_count, info.request_recovery_time);
+            return new BlockchainInfo(info.name, info.website, info.description, info.rate_limit_active == 1, info.rate_limit_max_points, info.rate_limit_recovery_time, info.rate_limit_points_at_account_creation);
         } catch {
-            return new BlockchainInfo(connection.chainId, null, null, null, null);
+            return new BlockchainInfo(connection.chainId, null, null, null, null, null, null);
         }
     }
 }

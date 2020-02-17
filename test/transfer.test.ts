@@ -8,6 +8,7 @@ import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/blockchain";
 
+const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;
 let asset: Asset = null;
 
@@ -24,7 +25,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -47,7 +48,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,5)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -84,7 +85,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -109,7 +110,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         await account.burnTokens(asset.id, 10);
@@ -126,7 +127,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -146,7 +147,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(2)
+            .withPoints(2 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder

@@ -20,7 +20,7 @@ describe("Blockchain", () => {
     it("should provide info", async () => {
         const info = await BlockchainInfo.getInfo(connection);
 
-        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', 10, 5000));
+        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', true, 10, 5000, 1));
     });
 
     it('should be able to register an account', async () => {
@@ -64,7 +64,7 @@ describe("Blockchain", () => {
         expect(foundAccounts[0]).toEqual(account);
     });
 
-    it('should be able to link other chain', async () => {
+    it.skip('should be able to link other chain', async () => {
         const chainId = generateId();
 
         await blockchain.linkChain(chainId);
@@ -72,7 +72,7 @@ describe("Blockchain", () => {
         await expect(blockchain.isLinkedWithChain(chainId)).resolves.toEqual(true);
     });
 
-    it('should be able to link multiple chains', async () => {
+    it.skip('should be able to link multiple chains', async () => {
         const chainId1 = generateId();
         const chainId2 = generateId();
 
@@ -85,7 +85,7 @@ describe("Blockchain", () => {
         expect(linkedChains).toContainEqual(chainId2);
     });
 
-    it('should return false when isLinkedWithChain is called for unknown chain id', async () => {
+    it.skip('should return false when isLinkedWithChain is called for unknown chain id', async () => {
         await expect(blockchain.isLinkedWithChain(generateId())).resolves.toEqual(false);
     });
 

@@ -51,8 +51,8 @@ export default class RateLimit {
     }
 
     static async getPointsAvailable(points: number, lastOperation: number, blockchain: Blockchain) {
-        const maxCount = blockchain.info.requestMaxCount;
-        const recoveryTime = blockchain.info.requestRecoveryTime;
+        const maxCount = blockchain.info.rateLimitMaxPoints;
+        const recoveryTime = blockchain.info.rateLimitRecoveryTime;
         const lastTimestamp = await this.getLastTimestamp(blockchain);
         const delta = lastTimestamp - lastOperation;
 

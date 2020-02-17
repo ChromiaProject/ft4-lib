@@ -11,6 +11,7 @@ import {TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
 
 let blockchain: Blockchain = null;
 const connection: ConnectionClient = TestConnection.connection();
+const POINTS_AT_ACCOUNT_CREATION = 1;
 
 describe("Blockchain", () => {
     beforeAll(async () => {
@@ -20,7 +21,7 @@ describe("Blockchain", () => {
     it("should provide info", async () => {
         const info = await BlockchainInfo.getInfo(connection);
 
-        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', 10, 5000));
+        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', true, 10, 5000, POINTS_AT_ACCOUNT_CREATION));
     });
 
     it('should be able to register an account', async () => {

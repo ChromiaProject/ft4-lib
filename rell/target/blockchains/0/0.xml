@@ -33,10 +33,16 @@
                                     <entry key="my_blockchain_website">
                                         <string>test_website</string>
                                     </entry>
-                                    <entry key="request_max_count">
+                                    <entry key="rate_limit_active">
+                                        <int>1</int>
+                                    </entry>
+                                    <entry key="rate_limit_max_points">
                                         <int>10</int>
                                     </entry>
-                                    <entry key="request_recovery_time">
+                                    <entry key="rate_limit_points_at_account_creation">
+                                        <int>1</int>
+                                    </entry>
+                                    <entry key="rate_limit_recovery_time">
                                         <int>5000</int>
                                     </entry>
                                 </dict>
@@ -586,11 +592,15 @@ function create_account_with_auth (auth_descriptor): byte_array {
      _add_auth_descriptor(
         acc, auth_descriptor
      );
-     val max_points = core.my_blockchain_info.request_max_count;
-     val recovery_time = core.my_blockchain_info.request_recovery_time;
+     val max_points = core.my_blockchain_info.rate_limit_max_points;
+     val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
+     val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
      
-     create rl_state(acc, .points = 0, .last_update = op_context.last_block_time, max_points, recovery_time);
-     return id;
+    if(core.my_blockchain_info.rate_limit_active == true ) { 
+    	create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+    }
+    
+    return id;
 }
 
 function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list&lt;text&gt;): account {
@@ -662,8 +672,9 @@ operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_
 
 
 function rate_limit (account) {
-    val max_counter = core.my_blockchain_info.request_max_count;
-    val recovery_time = core.my_blockchain_info.request_recovery_time;
+	if(core.my_blockchain_info.rate_limit_active == false ) return;
+    val max_counter = core.my_blockchain_info.rate_limit_max_points;
+    val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
     val stat = rl_state@{account} (.points, .last_update);
     val delta = op_context.last_block_time - stat.last_update;
     var got_points = 0;
@@ -691,7 +702,7 @@ function rate_limit (account) {
 
 
 query get_account_rate_limit(account_id: byte_array) {
-	
+	if(core.my_blockchain_info.rate_limit_active == false ) return null;
 	val t= rl_state@{.account.id == account_id}
 	(
 		.points, 
@@ -844,8 +855,10 @@ struct module_args {
 	my_blockchain_name: text;
 	my_blockchain_website: text;
 	my_blockchain_description: text;
-	request_max_count: integer;
-    request_recovery_time: integer;    
+	rate_limit_active: boolean;
+	rate_limit_max_points: integer;
+    rate_limit_recovery_time: integer;
+    rate_limit_points_at_account_creation: integer;    
 }</string>
                             </entry>
                             <entry key="lib/ft3/core/my_blockchain_info.rell">
@@ -854,8 +867,10 @@ object my_blockchain_info {
     mutable name: text = chain_context.args.my_blockchain_name;
     mutable website: text = chain_context.args.my_blockchain_website;
     mutable description: text = chain_context.args.my_blockchain_description;
-    mutable request_max_count: integer = chain_context.args.request_max_count;
-    mutable request_recovery_time: integer = chain_context.args.request_recovery_time;
+    mutable rate_limit_active: boolean = chain_context.args.rate_limit_active;
+    mutable rate_limit_max_points: integer = chain_context.args.rate_limit_max_points;
+    mutable rate_limit_recovery_time: integer = chain_context.args.rate_limit_recovery_time;
+    mutable rate_limit_points_at_account_creation: integer = chain_context.args.rate_limit_points_at_account_creation;
 }
 
 
@@ -870,8 +885,10 @@ query get_blockchain_info() {
         name = my_blockchain_info.name,
         website = my_blockchain_info.website,
         description = my_blockchain_info.description,
-        request_max_count = my_blockchain_info.request_max_count,
-        request_recovery_time = my_blockchain_info.request_recovery_time
+        rate_limit_active = my_blockchain_info.rate_limit_active,
+        rate_limit_max_points = my_blockchain_info.rate_limit_max_points,
+        rate_limit_recovery_time = my_blockchain_info.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = chain_context.args.rate_limit_points_at_account_creation
     );
 }
 
