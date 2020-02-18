@@ -1,8 +1,8 @@
-import Blockchain from "./blockchain";
+import Blockchain from "./blockchain/blockchain";
 import Transaction from "./transaction";
-import {GtvSerializable} from "./account";
+import {GtvSerializable} from "../user/account";
 import Operation from "./operation";
-import User from "./user";
+import User from "../user/user";
 
 declare global {
     interface Array<T> extends GtvSerializable {}

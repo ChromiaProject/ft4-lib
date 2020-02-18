@@ -1,12 +1,12 @@
 import KeyPair from "../client/lib/cyptoUtils/keyPair"
 import { generateAssetName, generateId } from "./util/util";
-import Asset from "../client/lib/ft3/asset";
-import AssetBalance from "../client/lib/ft3/asset-balance";
+import Asset from "../client/lib/ft3/user/asset";
+import AssetBalance from "../client/lib/ft3/user/asset-balance";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/account";
+import { FlagsType } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;

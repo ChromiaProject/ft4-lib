@@ -3,8 +3,8 @@ import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
-import BlockchainSession from "./blockchain-session";
-import Blockchain from "./blockchain";
+import BlockchainSession from "../core/blockchain/blockchain-session";
+import Blockchain from "../core/blockchain/blockchain";
 import {
     transfer,
     addAuthDescriptor,
@@ -20,7 +20,7 @@ import {
     accountsByAuthDescriptorId,
     accountsByParticipantId
 } from "./account-queries";
-import Operation from "./operation";
+import Operation from "../core/operation";
 import RateLimit from './rate-limit';
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import User from "./user";

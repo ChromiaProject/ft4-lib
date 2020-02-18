@@ -1,9 +1,9 @@
-import { FlagsType } from "../../client/lib/ft3/account";
+import { FlagsType } from "../../client/lib/ft3/user/account";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
-import User from "../../client/lib/ft3/user";
-import SingleSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/single-signature-auth-descriptor";
-import MultiSignatureAuthDescriptor from "../../client/lib/ft3/auth-descriptor/multi-signature-auth-descriptor";
-import AuthDescriptorRule from "../../client/lib/ft3/auth-descriptor/auth-descriptor-rule";
+import User from "../../client/lib/ft3/user/user";
+import SingleSignatureAuthDescriptor from "../../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
+import MultiSignatureAuthDescriptor from "../../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
+import AuthDescriptorRule from "../../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule";
 
 class TestUser {
     static singleSig(rule: AuthDescriptorRule | null = null) {

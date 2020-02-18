@@ -1,5 +1,5 @@
 import { gtv } from 'postchain-client';
-import Blockchain from "./blockchain";
+import Blockchain from "../core/blockchain/blockchain";
 import {op} from "./account-operations";
 
 export default class Asset {

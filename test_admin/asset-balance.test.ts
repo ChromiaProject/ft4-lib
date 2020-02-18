@@ -3,7 +3,7 @@ import {TestnetAssetBalance as AssetBalance} from "./testnetAdmin/testnet-asset-
 import { TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 let blockchain: Blockchain = null;
 let asset1: Asset = null;

@@ -1,8 +1,7 @@
-import { gtv, gtx } from 'postchain-client';
 import PaymentHistory from "./payment-history";
 import PaymentHistoryEntry from "./payment-history-entry";
 import PaymentHistoryStore from "./payment-history-store";
-import Blockchain from "../blockchain";
+import Blockchain from "../../core/blockchain/blockchain";
 import PaymentHistoryEntryShort from "./payment-history-entry-short";
 import PaymentOperationExtractor from "../payment-operation-extractor";
 import PaymentOperation from "./payment-operation/payment-operation";

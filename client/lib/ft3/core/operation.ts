@@ -1,4 +1,4 @@
-import {GtvSerializable} from "./account";
+import {GtvSerializable} from "../user/account";
 
 export default class Operation {
     readonly name: string;

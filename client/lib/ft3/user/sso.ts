@@ -1,9 +1,8 @@
 
 import {Account} from './account';
-import { gtx } from 'postchain-client';
-import Blockchain from './blockchain';
-import Session from "./blockchain-session";
-import Transaction from './transaction';
+import Blockchain from '../core/blockchain/blockchain';
+import Session from "../core/blockchain/blockchain-session";
+import Transaction from '../core/transaction';
 import User from './user';
 
 export default {

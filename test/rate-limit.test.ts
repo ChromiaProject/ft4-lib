@@ -1,18 +1,12 @@
-
-import Asset from "../client/lib/ft3/asset";
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType, Account } from "../client/lib/ft3/account";
+import { FlagsType, Account } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
-import Blockchain from "../client/lib/ft3/blockchain";
-import ConnectionClient from "../client/lib/ft3/connection-client";
-import { generateAssetName, generateId } from "./util/util";
-import { BlockchainInfo, User, nop, addAuthDescriptor } from "../client/lib/ft3";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
+import ConnectionClient from "../client/lib/ft3/core/connection-client";
+import { BlockchainInfo, RateLimitInfo, addAuthDescriptor } from "../client/lib/ft3";
 import TestConnection from "./util/test-connection";
-import Operation from "../client/lib/ft3/operation";
-import RateLimit from "../client/lib/ft3/rate-limit";
-import { register } from "../client/lib/ft3/account-dev-operations";
-import TransactionBuilder from "../client/lib/ft3/transaction-builder";
+import RateLimit from "../client/lib/ft3/user/rate-limit";
 
 jest.setTimeout(2000000);
 
@@ -29,22 +23,22 @@ describe("Rate Limit", () => {
 
     });
 
-  
 
     describe("Blockchain request configuaration in run.xml", () => {
         it("Should have a limit of 10 requests per minute", async () => {
+            console.log("sddd", BlockchainInfo.getInfo(connection));
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info.rateLimitMaxPoints).toEqual(REQUEST_MAX_COUNT);
+            expect(info.rateLimitInfo.maxPoints).toEqual(REQUEST_MAX_COUNT);
         });
 
         it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), expect.any(Boolean), 10, 5000, 1));
+            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), new RateLimitInfo(expect.any(Boolean), 10, 5000, 1)));
         });
 
         it("Should have a recovery period of 5 seconds", async () => {
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info.rateLimitRecoveryTime).toEqual(RECOVERY_TIME);
+            expect(info.rateLimitInfo.recoveryTime).toEqual(RECOVERY_TIME);
         });
     });
 

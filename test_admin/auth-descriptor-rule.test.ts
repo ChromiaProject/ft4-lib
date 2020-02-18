@@ -1,12 +1,12 @@
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import { TestnetAsset as Asset } from "./testnetAdmin/testnet-asset";
 import {generateAssetName, generateId} from "./util/util";
-import { Account } from "../client/lib/ft3/account"
-import User from "../client/lib/ft3/user";
-import { Rules } from "../client/lib/ft3/auth-descriptor/auth-descriptor-rule"
+import { Account } from "../client/lib/ft3/user/account"
+import User from "../client/lib/ft3/user/user";
+import { Rules } from "../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule"
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;

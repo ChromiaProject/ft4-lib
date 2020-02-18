@@ -6,7 +6,7 @@
     <chains>
         <chain name="testnet-ft3-lib" iid="0">
             <config height="0">
-				<app module="">
+				<app module="testnet">
                 	<args module="lib.ft3.core">
                 		<arg key="my_blockchain_name"><string>testnet ft3</string></arg>
                 		<arg key="my_blockchain_website"><string>https://vault-testnet.chromia.com/</string></arg>
@@ -16,7 +16,7 @@
                   		<arg key="rate_limit_recovery_time"><int>60000</int></arg>
                   		<arg key="rate_limit_points_at_account_creation"><int>1</int></arg> 
                 	</args>
-                    <args module="">
+                    <args module="testnet">
                         <arg key="admin_pub_key"><string>03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D</string></arg>
                     </args>
                 </app>

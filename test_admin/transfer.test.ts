@@ -3,10 +3,10 @@ import { generateAssetName, generateId } from "./util/util";
 import { TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
 import { TestnetAssetBalance as AssetBalance} from "./testnetAdmin/testnet-asset-balance";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/account";
+import { FlagsType } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;

@@ -94,9 +94,7 @@ function create_account_with_auth (auth_descriptor): byte_array {
      val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
      val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
      
-    if(core.my_blockchain_info.rate_limit_active == true ) { 
-    	create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
-    }
+	create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
     return id;
 }

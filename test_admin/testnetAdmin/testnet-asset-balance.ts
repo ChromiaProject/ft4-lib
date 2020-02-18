@@ -1,6 +1,6 @@
 import { AssetBalance, Operation } from "../../client/lib/ft3";
-import Blockchain from "../../client/lib/ft3/blockchain";
-import TransactionBuilder from "../../client/lib/ft3/transaction-builder";
+import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
+import TransactionBuilder from "../../client/lib/ft3/core/transaction-builder";
 import AdminKeyPair from "./admin-keypair";
 
 

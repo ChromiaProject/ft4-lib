@@ -6,7 +6,7 @@
     <chains>
         <chain name="ft3-lib" iid="0">
             <config height="0">
-				<app module="ft3_test">
+				<app module="main">
                 	<args module="lib.ft3.core">
                 		<arg key="my_blockchain_name"><string>test</string></arg>
                 		<arg key="my_blockchain_website"><string>test_website</string></arg>

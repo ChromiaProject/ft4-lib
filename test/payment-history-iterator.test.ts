@@ -1,11 +1,11 @@
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import Asset from "../client/lib/ft3/asset";
+import Asset from "../client/lib/ft3/user/asset";
 import {generateAssetName, generateId} from "./util/util";
-import Blockchain from "../client/lib/ft3/blockchain";
-import PaymentHistorySyncManager from "../client/lib/ft3/payment-history/payment-history-sync-manager";
-import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/payment-history/payment-history-store-local-storage";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
+import PaymentHistorySyncManager from "../client/lib/ft3/user/payment-history/payment-history-sync-manager";
+import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/user/payment-history/payment-history-store-local-storage";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;

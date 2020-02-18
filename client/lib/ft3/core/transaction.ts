@@ -1,7 +1,7 @@
-import Blockchain from "./blockchain";
+import Blockchain from "./blockchain/blockchain";
 import TransactionBuilder from "./transaction-builder";
 import { gtx } from 'postchain-client'
-import { op } from './account-operations';
+import { op } from '../user/account-operations';
 
 export default class Transaction {
     private readonly tx;

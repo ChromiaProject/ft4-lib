@@ -1,6 +1,6 @@
 import {util} from 'postchain-client';
 import {AuthDescriptor, FlagsType} from "./account";
-import KeyPair from "../cyptoUtils/keyPair";
+import KeyPair from "../../cyptoUtils/keyPair";
 import SingleSignatureAuthDescriptor from "./auth-descriptor/single-signature-auth-descriptor";
 
 export default class User {
