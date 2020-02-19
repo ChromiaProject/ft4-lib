@@ -1,11 +1,11 @@
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import Asset from "../client/lib/ft3/asset";
+import Asset from "../client/lib/ft3/user/asset";
 import {generateAssetName, generateId} from "./util/util";
-import Blockchain from "../client/lib/ft3/blockchain";
-import PaymentHistorySyncManager from "../client/lib/ft3/payment-history/payment-history-sync-manager";
-import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/payment-history/payment-history-store-local-storage";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
+import PaymentHistorySyncManager from "../client/lib/ft3/user/payment-history/payment-history-sync-manager";
+import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/user/payment-history/payment-history-store-local-storage";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;
@@ -124,7 +124,7 @@ describe('Payment history iterator', () => {
         expect(paymentHistoryIterator.pageCount).toEqual(2);
     });
 
-    it("should have one payment history entries if one crosschain transfer is made", async () => {
+    it.skip("should have one payment history entries if one crosschain transfer is made", async () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder
@@ -151,7 +151,7 @@ describe('Payment history iterator', () => {
         expect(entry.other[0].accountId).toEqual(accountId2.toString('hex'));
     });
 
-    it("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {
+    it.skip("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {
         const user = TestUser.singleSig();
 
         const account1 = await AccountBuilder

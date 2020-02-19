@@ -1,4 +1,4 @@
-import ConnectionClient from "../../client/lib/ft3/connection-client";
+import ConnectionClient from "../../client/lib/ft3/core/connection-client";
 require('dotenv').config();
 
 //TODO: remove TestConnection class and replace it connection util class

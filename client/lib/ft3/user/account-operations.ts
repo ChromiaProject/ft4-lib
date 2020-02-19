@@ -1,6 +1,6 @@
 import { util } from 'postchain-client';
 import { AuthDescriptor, GtvSerializable } from "./account";
-import Operation from "./operation";
+import Operation from "../core//operation";
 
 export function addAuthDescriptor(accountId: Buffer, authDescriptorId: Buffer, authDescriptor: AuthDescriptor): Operation {
     return op('ft3.add_auth_descriptor', accountId, authDescriptorId, authDescriptor);

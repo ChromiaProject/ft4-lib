@@ -1,5 +1,5 @@
 import Asset from "./asset";
-import Blockchain from "./blockchain";
+import Blockchain from "../core/blockchain/blockchain";
 import { nop, op } from "./account-operations";
 
 export default class AssetBalance {

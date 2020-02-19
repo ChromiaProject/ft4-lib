@@ -90,11 +90,13 @@ function create_account_with_auth (auth_descriptor): byte_array {
      _add_auth_descriptor(
         acc, auth_descriptor
      );
-     val max_points = core.my_blockchain_info.request_max_count;
-     val recovery_time = core.my_blockchain_info.request_recovery_time;
+     val max_points = core.my_blockchain_info.rate_limit_max_points;
+     val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
+     val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
      
-     create rl_state(acc, .points = 0, .last_update = op_context.last_block_time, max_points, recovery_time);
-     return id;
+	create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+    
+    return id;
 }
 
 function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>): account {

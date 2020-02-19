@@ -1,5 +1,5 @@
 import PaymentHistoryEntryShort from "./payment-history-entry-short";
-import Blockchain from "../blockchain";
+import Blockchain from "../../core/blockchain/blockchain";
 
 export default class PaymentHistory {
 

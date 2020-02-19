@@ -1,5 +1,5 @@
 import DirectoryService from "./directory-service";
-import ChainConnectionInfo from "./chain-connection-info";
+import ChainConnectionInfo from "../chain-connection-info";
 
 export default class DirectoryServiceBase implements DirectoryService {
     private chainInfos: ChainConnectionInfo[];

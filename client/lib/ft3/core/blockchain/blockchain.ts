@@ -1,14 +1,13 @@
 import BlockchainInfo from "./blockchain-info";
-import ConnectionClient from './connection-client';
-import {Account, AuthDescriptor} from "./account";
-import Asset from "./asset";
+import ConnectionClient from '../connection-client';
+import {Account, AuthDescriptor} from "../../user/account";
+import Asset from "../../user/asset";
 import DirectoryService from "./directory-service";
-import TransactionBuilder from "./transaction-builder";
+import TransactionBuilder from "../transaction-builder";
 import BlockchainSession from "./blockchain-session";
-import User from "./user";
-import { gtx } from 'postchain-client';
-import Operation from "./operation";
-import { op } from "./account-operations";
+import User from "../../user/user";
+import Operation from "../operation";
+import { op } from "../../user/account-operations";
 
 export default class Blockchain {
     readonly id: Buffer;

@@ -1,5 +1,5 @@
-import DirectoryService from "../../client/lib/ft3/directory-service";
-import ChainConnectionInfo from "../../client/lib/ft3/chain-connection-info";
+import DirectoryService from "../../client/lib/ft3/core/blockchain/directory-service";
+import ChainConnectionInfo from "../../client/lib/ft3/core/chain-connection-info";
 
 export default class FakeDirectoryService implements DirectoryService {
     private readonly chainInfos: ChainConnectionInfo[];
