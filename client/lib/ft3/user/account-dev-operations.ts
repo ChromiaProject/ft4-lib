@@ -1,5 +1,5 @@
 import { util } from 'postchain-client';
-import { AuthDescriptor, GtvSerializable } from "./account";
+import { AuthDescriptor } from "./account";
 import Operation from "../core/operation";
 
 
