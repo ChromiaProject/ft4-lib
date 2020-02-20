@@ -9,6 +9,7 @@ import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {addAuthDescriptor, op} from "../client/lib/ft3";
 import User from "../client/lib/ft3/user/user";
+import {register} from "../client/lib/ft3/user/account-dev-operations";
 
 async function addAuthDescriptorTo(account: Account, adminUser: User, user: User, blockchain: Blockchain) {
     await blockchain.transactionBuilder()
@@ -86,15 +87,20 @@ describe('Test the account', () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
 
-        const account = await Account.register(
-            new MultiSignatureAuthDescriptor(
-                [user1.keyPair.pubKey, user2.keyPair.pubKey],
-                2,
-                [FlagsType.Account, FlagsType.Transfer]
-            ),
-            blockchain.newSession(user1)
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user1.keyPair.pubKey, user2.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
         );
-        expect(account).not.toBeNull();
+
+        const promise = blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(user2.keyPair)
+            .post();
+
+        await expect(promise).resolves.not.toThrowError()
     });
 
     //TODO FIX ME
@@ -122,15 +128,20 @@ describe('Test the account', () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
 
-        const account = await Account.register(
-            new MultiSignatureAuthDescriptor(
-                [user1.keyPair.pubKey, user2.keyPair.pubKey],
-                2,
-                [FlagsType.Account, FlagsType.Transfer]
-            ),
-            blockchain.newSession(user1)
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user1.keyPair.pubKey, user2.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
         );
-        expect(account).not.toBeNull();
+
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(user2.keyPair)
+            .post();
+
+        const account = await blockchain.newSession(user1).getAccountById(authDescriptor.id);
 
         const promise = account.addAuthDescriptor(
             new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
@@ -143,7 +154,7 @@ describe('Test the account', () => {
         const user = TestUser.singleSig();
 
         await AccountBuilder
-            .account(blockchain)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .build();
 
@@ -157,7 +168,7 @@ describe('Test the account', () => {
         const user2 = TestUser.singleSig();
 
         await AccountBuilder
-            .account(blockchain)
+            .account(blockchain, user1)
             .withParticipants([user1.keyPair])
             .build();
 
@@ -167,9 +178,7 @@ describe('Test the account', () => {
             .withPoints(1)
             .build();
 
-        await account2.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
-        );
+        await addAuthDescriptorTo(account2, user2, user1, blockchain);
 
         const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, blockchain.newSession(user1));
 
@@ -218,5 +227,71 @@ describe('Test the account', () => {
         const account = await session.getAccountById(user.authDescriptor.id);
 
         expect(account).not.toBeNull();
+    });
+
+    it('should be possible for auth descriptor to delete itself without admin flag', async () => {
+        const user1 = TestUser.singleSig();
+
+        const account = await AccountBuilder
+            .account(blockchain, user1)
+            .withParticipants([user1.keyPair])
+            .withPoints(4)
+            .build();
+
+        const keyPair = new KeyPair();
+        const user2 = new User(
+            keyPair,
+            new SingleSignatureAuthDescriptor(
+                keyPair.pubKey,
+                [FlagsType.Transfer]
+            )
+        );
+
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+
+        const account2 = await blockchain.newSession(user2).getAccountById(account.id);
+
+        const promise = account2.deleteAuthDescriptor(user2.authDescriptor);
+
+        await expect(promise).resolves.not.toThrowError();
+        await account2.sync();
+        expect(account2.authDescriptor.length).toEqual(1);
+    });
+
+    it("shouldn't be possible for auth descriptor to delete other auth descriptor without admin flag", async () => {
+        const user1 = TestUser.singleSig();
+
+        const account = await AccountBuilder
+            .account(blockchain, user1)
+            .withParticipants([user1.keyPair])
+            .withPoints(4)
+            .build();
+
+        const keyPair2 = new KeyPair();
+        const user2 = new User(
+            keyPair2,
+            new SingleSignatureAuthDescriptor(
+                keyPair2.pubKey,
+                [FlagsType.Transfer]
+            )
+        );
+
+        const keyPair3 = new KeyPair();
+        const user3 = new User(
+            keyPair3,
+            new SingleSignatureAuthDescriptor(
+                keyPair3.pubKey,
+                [FlagsType.Transfer]
+            )
+        );
+
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+        await addAuthDescriptorTo(account, user1, user3, blockchain);
+
+        const account2 = await blockchain.newSession(user3).getAccountById(account.id);
+
+        const promise = account2.deleteAuthDescriptor(user2.authDescriptor);
+
+        await expect(promise).rejects.toThrowError();
     });
 });
