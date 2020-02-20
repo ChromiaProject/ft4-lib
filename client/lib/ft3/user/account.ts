@@ -164,6 +164,13 @@ class Account {
         this.authDescriptor.push(authDescriptor);
     }
 
+    async isAuthDescriptorValid(id: Buffer): Promise<boolean> {
+        return await this.session.query("ft3.is_auth_descriptor_valid", {
+            account_id: this.id,
+            auth_descriptor_id: id,
+        });
+    }
+
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {
         await this.session.call(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id));
         this.authDescriptor = [authDescriptor];

@@ -1,12 +1,13 @@
-import KeyPair from "../client/lib/cyptoUtils/keyPair"
-import { generateAssetName, generateId } from "./util/util";
-import { TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
-import { TestnetAssetBalance as AssetBalance} from "./testnetAdmin/testnet-asset-balance";
+import {generateAssetName, generateId} from "./util/util";
+import {TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
+import {TestnetAssetBalance as AssetBalance} from "./testnetAdmin/testnet-asset-balance";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/user/account";
+import {FlagsType} from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
+import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
+import {register} from "../client/lib/ft3/user/account-dev-operations";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;
@@ -79,6 +80,8 @@ describe("Transfer", () => {
 
     it("should succeed if transferring tokens to a multisig account", async () => {
         const user = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+        const user3 = TestUser.singleSig();
 
         const account1 = await AccountBuilder
             .account(blockchain, user)
@@ -87,16 +90,23 @@ describe("Transfer", () => {
             .withPoints(1)
             .build();
 
-        const account2 = await AccountBuilder
-            .account(blockchain)
-            .withParticipants([new KeyPair(), new KeyPair()])
-            .withRequiredSignatures(2)
-            .build();
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user2.keyPair.pubKey, user3.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
+        );
 
-        await account1.transfer(account2.id_, asset.id, 10);
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user2.keyPair)
+            .sign(user3.keyPair)
+            .post();
+
+        await account1.transfer(authDescriptor.id, asset.id, 10);
 
         const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id_, asset.id, blockchain);
-        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(account2.id_, asset.id, blockchain);
+        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(authDescriptor.id, asset.id, blockchain);
 
         expect(assetBalance1.amount).toEqual(190);
         expect(assetBalance2.amount).toEqual(10);

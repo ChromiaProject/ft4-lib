@@ -2,6 +2,7 @@ import Blockchain from "./blockchain/blockchain";
 import TransactionBuilder from "./transaction-builder";
 import { gtx } from 'postchain-client'
 import { op } from '../user/account-operations';
+import Operation from "./operation";
 
 export default class Transaction {
     private readonly tx;
@@ -10,6 +11,10 @@ export default class Transaction {
     constructor(tx, blockchain: Blockchain) {
         this.tx = tx;
         this.blockchain = blockchain;
+    }
+
+    get operations(): Operation[] {
+        return this.tx.gtx.operations.map(({ opName, args }) => op(opName,  ...args))
     }
 
     sign(keyPair): Transaction {
