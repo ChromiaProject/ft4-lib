@@ -1,5 +1,5 @@
 
-import Blockchain from "./blockchain";
+import Blockchain from "../core/blockchain/blockchain";
 import { freeOp, givePoints } from "./account-dev-operations";
 import { nop } from './account-operations';
 
@@ -26,11 +26,12 @@ export default class RateLimit {
 
     static async getByAccountRateLimit(accountId: Buffer, blockchain: Blockchain): Promise<RateLimit> {
         const rateInfo = await blockchain.query(
-            'ft3.get_account_rate_limit',
+            'ft3.get_account_rate_limit_last_update',
             {
                 account_id: accountId,
             }  
         );
+        console.log("RATE INFO", rateInfo)
         if(!rateInfo) return null;
         return new RateLimit(rateInfo.points, rateInfo.last_update);
     }
@@ -51,8 +52,8 @@ export default class RateLimit {
     }
 
     static async getPointsAvailable(points: number, lastOperation: number, blockchain: Blockchain) {
-        const maxCount = blockchain.info.requestMaxCount;
-        const recoveryTime = blockchain.info.requestRecoveryTime;
+        const maxCount = blockchain.info.rateLimitInfo.maxPoints;
+        const recoveryTime = blockchain.info.rateLimitInfo.recoveryTime;
         const lastTimestamp = await this.getLastTimestamp(blockchain);
         const delta = lastTimestamp - lastOperation;
 

@@ -1,7 +1,7 @@
 import Blockchain from "./blockchain";
-import User from "./user";
-import {Account, GtvSerializable} from "./account";
-import Operation from "./operation";
+import User from "../../user/user";
+import {Account, GtvSerializable} from "../../user/account";
+import Operation from "../operation";
 
 export default class BlockchainSession {
     readonly user: User;

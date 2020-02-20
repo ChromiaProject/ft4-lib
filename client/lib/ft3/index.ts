@@ -1,19 +1,22 @@
 export * from '../cyptoUtils';
-export * from './account';
-export * from './account-operations'
-export * from './auth-descriptor';
-export { default as User } from './user';
-export { default as ConnectionClient } from './connection-client';
-export { default as AssetBalance } from './asset-balance';
-export { default as Asset } from './asset';
-export { default as BlockchainInfo } from './blockchain-info';
-export { default as Blockchain } from './blockchain';
-export { default as BlockchainSession } from './blockchain-session';
-export { default as DirectoryService } from './directory-service';
-export { default as DirectoryServiceBase } from './directory-service-base';
-export { default as ChainConnectionInfo } from './chain-connection-info';
-export { default as Operation } from './operation';
-export { default as PaymentHistorySyncManager } from './payment-history/payment-history-sync-manager';
-export { default as PaymentHistoryStoreMemory } from './payment-history/payment-history-store-memory';
-export { default as PaymentHistoryStoreLocalStorage } from './payment-history/payment-history-store-local-storage';
+export * from './user/account';
+export * from './user/account-operations'
+export * from './user/auth-descriptor';
+export { default as User } from './user/user';
+export { default as ConnectionClient } from './core/connection-client';
+export { default as AssetBalance } from './user/asset-balance';
+export { default as Asset } from './user/asset';
+export { default as BlockchainInfo } from './core/blockchain/blockchain-info';
+export { default as RateLimitInfo } from './core/blockchain/rate-limit-info';
+export { default as Blockchain } from './core/blockchain/blockchain';
+export { default as BlockchainSession } from './core/blockchain/blockchain-session';
+export { default as DirectoryService } from './core/blockchain/directory-service';
+export { default as DirectoryServiceBase } from './core/blockchain/directory-service-base';
+export { default as ChainConnectionInfo } from './core/chain-connection-info';
+export { default as Operation } from './core/operation';
+export { default as PaymentHistorySyncManager } from './user/payment-history/payment-history-sync-manager';
+export { default as PaymentHistoryStoreMemory } from './user/payment-history/payment-history-store-memory';
+export { default as PaymentHistoryStoreLocalStorage } from './user/payment-history/payment-history-store-local-storage';
+export { default as RateLimit } from './user/rate-limit';
+export * from './user/sso';
 

@@ -3,7 +3,7 @@ import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import { TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
 import {generateAssetName, generateId} from "./util/util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;

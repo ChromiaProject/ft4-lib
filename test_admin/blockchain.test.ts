@@ -1,16 +1,17 @@
 import TestConnection from "./util/test-connection";
-import BlockchainInfo from "../client/lib/ft3/blockchain-info";
-import Blockchain from "../client/lib/ft3/blockchain";
+import BlockchainInfo from "../client/lib/ft3/core/blockchain/blockchain-info";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import {generateAssetName, generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import ConnectionClient from "../client/lib/ft3/connection-client";
-import {Account} from "../client/lib/ft3";
+import ConnectionClient from "../client/lib/ft3/core/connection-client";
+import {Account, RateLimitInfo} from "../client/lib/ft3";
 import {TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
 
 let blockchain: Blockchain = null;
 const connection: ConnectionClient = TestConnection.connection();
+const POINTS_AT_ACCOUNT_CREATION = 1;
 
 describe("Blockchain", () => {
     beforeAll(async () => {
@@ -20,7 +21,7 @@ describe("Blockchain", () => {
     it("should provide info", async () => {
         const info = await BlockchainInfo.getInfo(connection);
 
-        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', 10, 5000));
+        expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', new RateLimitInfo(true, 10, 5000, POINTS_AT_ACCOUNT_CREATION)));
     });
 
     it('should be able to register an account', async () => {

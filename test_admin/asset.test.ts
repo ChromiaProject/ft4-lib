@@ -1,6 +1,6 @@
 import {generateAssetName, generateId} from "./util/util";
 import { TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import BlockchainUtil from "./util/blockchain-util";
 import { gtv } from "postchain-client";
 

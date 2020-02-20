@@ -16,4 +16,6 @@ postchain/runtime
 **.pid
 
 dist/
-rell/target/
+rell/target
+
+yarn.log

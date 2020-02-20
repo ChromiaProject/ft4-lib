@@ -3,8 +3,8 @@ import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
-import BlockchainSession from "./blockchain-session";
-import Blockchain from "./blockchain";
+import BlockchainSession from "../core/blockchain/blockchain-session";
+import Blockchain from "../core/blockchain/blockchain";
 import {
     transfer,
     addAuthDescriptor,
@@ -20,9 +20,10 @@ import {
     accountsByAuthDescriptorId,
     accountsByParticipantId
 } from "./account-queries";
-import Operation from "./operation";
+import Operation from "../core/operation";
 import RateLimit from './rate-limit';
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
+import User from "./user";
 
 enum AuthType {
     single_sig = "S",
@@ -108,12 +109,39 @@ class Account {
         return account
     }
 
-    static rawRegisterTransaction(authDescriptor: AuthDescriptor, ssoAuthDescriptor: AuthDescriptor, session: BlockchainSession): Buffer {
+    /* obsolete - keep for backward compatibility */
+    static rawRegisterTransaction(
+        authDescriptor: AuthDescriptor,
+        ssoAuthDescriptor: AuthDescriptor,
+        session: BlockchainSession
+    ): Buffer {
         return session.blockchain.transactionBuilder()
             .add(register(authDescriptor))
             .add(addAuthDescriptor(authDescriptor.id, authDescriptor.id, ssoAuthDescriptor))
-            .build([authDescriptor.signers /*, ssoAuthDescriptor.signers */].flat())
+            .build([authDescriptor.signers , ssoAuthDescriptor.signers].flat())
             .sign(session.user.keyPair)
+            .raw()
+    }
+
+    static rawTransactionRegister(user: User, authDescriptor: AuthDescriptor, blockchain: Blockchain): Buffer {
+        return blockchain.transactionBuilder()
+            .add(register(user.authDescriptor))
+            .add(addAuthDescriptor(user.authDescriptor.id, user.authDescriptor.id, authDescriptor))
+            .build([user.authDescriptor.signers , authDescriptor.signers].flat())
+            .sign(user.keyPair)
+            .raw()
+    }
+
+    static rawTransactionAddAuthDescriptor(
+        accountId: Buffer,
+        user: User,
+        authDescriptor: AuthDescriptor,
+        blockchain: Blockchain
+    ): Buffer {
+        return blockchain.transactionBuilder()
+            .add(addAuthDescriptor(accountId, user.authDescriptor.id, authDescriptor))
+            .build([user.authDescriptor.signers , authDescriptor.signers].flat())
+            .sign(user.keyPair)
             .raw()
     }
 
@@ -134,6 +162,13 @@ class Account {
     async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
         await this.session.call(addAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor));
         this.authDescriptor.push(authDescriptor);
+    }
+
+    async isAuthDescriptorValid(id: Buffer): Promise<boolean> {
+        return await this.session.query("ft3.is_auth_descriptor_valid", {
+            account_id: this.id,
+            auth_descriptor_id: id,
+        });
     }
 
     async deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Promise<void> {

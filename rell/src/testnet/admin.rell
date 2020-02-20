@@ -1,6 +1,6 @@
-import ft3_dev_op: .lib.ft3.core.dev_op;
-import ft3_core: .lib.ft3.core;
-import ft3_acc : .lib.ft3.account;
+import ft3_dev_op: ^.lib.ft3.core.dev_op;
+import ft3_core: ^.lib.ft3.core;
+import ft3_acc : ^.lib.ft3.account;
 
 function require_dev_admin() {
 	ft3_dev_op.require_dev();

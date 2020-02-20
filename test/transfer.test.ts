@@ -1,13 +1,15 @@
-import KeyPair from "../client/lib/cyptoUtils/keyPair"
 import { generateAssetName, generateId } from "./util/util";
-import Asset from "../client/lib/ft3/asset";
-import AssetBalance from "../client/lib/ft3/asset-balance";
+import Asset from "../client/lib/ft3/user/asset";
+import AssetBalance from "../client/lib/ft3/user/asset-balance";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/account";
+import { FlagsType } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
+import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
+import {register} from "../client/lib/ft3/user/account-dev-operations";
 
+const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;
 let asset: Asset = null;
 
@@ -24,7 +26,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -47,7 +49,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,5)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -79,24 +81,33 @@ describe("Transfer", () => {
 
     it("should succeed if transferring tokens to a multisig account", async () => {
         const user = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+        const user3 = TestUser.singleSig();
 
         const account1 = await AccountBuilder
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
-        const account2 = await AccountBuilder
-            .account(blockchain)
-            .withParticipants([new KeyPair(), new KeyPair()])
-            .withRequiredSignatures(2)
-            .build();
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user2.keyPair.pubKey, user3.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
+        );
 
-        await account1.transfer(account2.id_, asset.id, 10);
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user2.keyPair)
+            .sign(user3.keyPair)
+            .post();
 
-        const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id_, asset.id, blockchain);
-        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(account2.id_, asset.id, blockchain);
+        await account1.transfer(authDescriptor.id, asset.id, 10);
+
+        const assetBalance1 = await AssetBalance.getByAccountAndAssetId(account1.id, asset.id, blockchain);
+        const assetBalance2 = await AssetBalance.getByAccountAndAssetId(authDescriptor.id, asset.id, blockchain);
 
         expect(assetBalance1.amount).toEqual(190);
         expect(assetBalance2.amount).toEqual(10);
@@ -109,7 +120,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         await account.burnTokens(asset.id, 10);
@@ -126,7 +137,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(1)
+            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
@@ -146,7 +157,7 @@ describe("Transfer", () => {
             .account(blockchain, user)
             .withParticipants([user.keyPair])
             .withBalance(asset,200)
-            .withPoints(2)
+            .withPoints(2 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
         const account2 = await AccountBuilder
