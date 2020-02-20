@@ -7,6 +7,7 @@ import {generateAssetName, generateId} from "./util/util";
 import { Account } from "../client/lib/ft3/user/account"
 import User from "../client/lib/ft3/user/user";
 import { Rules } from "../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule"
+import {addAuthDescriptor} from "../client/lib/ft3";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;
@@ -26,6 +27,14 @@ function destinationAccount(): Promise<Account> {
         .build();
 }
 
+async function addAuthDescriptorTo(account: Account, adminUser: User, user: User, blockchain: Blockchain) {
+    await blockchain.transactionBuilder()
+        .add(addAuthDescriptor(account.id, adminUser.authDescriptor.id, user.authDescriptor))
+        .build([adminUser.authDescriptor.signers, user.authDescriptor.signers].flat())
+        .sign(adminUser.keyPair)
+        .sign(user.keyPair)
+        .post();
+}
 
 describe("Auth Descriptor Rule", () => {
     beforeAll(async () => {
@@ -191,7 +200,7 @@ describe("Auth Descriptor Rule", () => {
         const destAccount = await destinationAccount();
 
         // add expiring auth descriptor to the account
-        await srcAccount1.addAuthDescriptor(user2.authDescriptor);
+        await addAuthDescriptorTo(srcAccount1, user1, user2, blockchain);
 
         // get the same account, but initialized with user2
         // object which contains expiring auth descriptor
@@ -218,7 +227,7 @@ describe("Auth Descriptor Rule", () => {
         const destAccount = await destinationAccount();
 
         // add expiring auth descriptor to the account
-        await srcAccount1.addAuthDescriptor(user2.authDescriptor);
+        await addAuthDescriptorTo(srcAccount1, user1, user2, blockchain);
 
         // get the same account, but initialized with user2
         // object which contains expiring auth descriptor
@@ -244,8 +253,8 @@ describe("Auth Descriptor Rule", () => {
         const srcAccount1 = await sourceAccount(user1);
         const destAccount = await destinationAccount();
 
-        await srcAccount1.addAuthDescriptor(user2.authDescriptor);
-        await srcAccount1.addAuthDescriptor(user3.authDescriptor);
+        await addAuthDescriptorTo(srcAccount1, user1, user2, blockchain);
+        await addAuthDescriptorTo(srcAccount1, user1, user3, blockchain);
 
         const srcAccount2 = await blockchain.newSession(user2).getAccountById(srcAccount1.id);
 
@@ -266,8 +275,8 @@ describe("Auth Descriptor Rule", () => {
 
         const account = await sourceAccount(user1);
 
-        await account.addAuthDescriptor(user2.authDescriptor);
-        await account.addAuthDescriptor(user3.authDescriptor);
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+        await addAuthDescriptorTo(account, user1, user3, blockchain);
 
         await account.sync();
 
@@ -281,8 +290,8 @@ describe("Auth Descriptor Rule", () => {
 
         const account = await sourceAccount(user1);
 
-        await account.addAuthDescriptor(user2.authDescriptor);
-        await account.addAuthDescriptor(user3.authDescriptor);
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+        await addAuthDescriptorTo(account, user1, user3, blockchain);
 
         await account.deleteAllAuthDescriptorsExclude(user1.authDescriptor);
 
@@ -310,7 +319,7 @@ describe("Auth Descriptor Rule", () => {
 
         const account = await sourceAccount(user1);
 
-        await account.addAuthDescriptor(user2.authDescriptor);
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
         await account.deleteAuthDescriptor(user2.authDescriptor);
 
         expect(account.authDescriptor.length).toEqual(1);
@@ -332,4 +341,4 @@ describe("Auth Descriptor Rule", () => {
         const user = TestUser.singleSig(rules);
         await expect(sourceAccount(user)).rejects.toThrowError();
     });
-})
+});

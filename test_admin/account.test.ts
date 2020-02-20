@@ -7,10 +7,21 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import { op } from "../client/lib/ft3";
+import {addAuthDescriptor, op} from "../client/lib/ft3";
+import {register} from "../client/lib/ft3/user/account-dev-operations";
+import User from "../client/lib/ft3/user/user";
 
 
 require('dotenv').config();
+
+async function addAuthDescriptorTo(account: Account, adminUser: User, user: User, blockchain: Blockchain) {
+    await blockchain.transactionBuilder()
+        .add(addAuthDescriptor(account.id, adminUser.authDescriptor.id, user.authDescriptor))
+        .build([adminUser.authDescriptor.signers, user.authDescriptor.signers].flat())
+        .sign(adminUser.keyPair)
+        .sign(user.keyPair)
+        .post();
+}
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain = null;
@@ -78,15 +89,22 @@ describe('Test the account', () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
 
-        const account = await Account.register(
-            new MultiSignatureAuthDescriptor(
-                [user1.keyPair.pubKey, user2.keyPair.pubKey],
-                2,
-                [FlagsType.Account, FlagsType.Transfer]
-            ),
-            blockchain.newSession(user1)
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user1.keyPair.pubKey, user2.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
         );
-        expect(account).not.toBeNull();
+
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(user2.keyPair)
+            .post();
+
+        const account = await Account.getById(authDescriptor.id, blockchain.newSession(user1));
+
+        expect(account.id).toEqual(authDescriptor.id);
     });
 
     //TODO FIX ME
@@ -114,19 +132,31 @@ describe('Test the account', () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
 
-        const account = await Account.register(
-            new MultiSignatureAuthDescriptor(
-                [user1.keyPair.pubKey, user2.keyPair.pubKey],
-                2,
-                [FlagsType.Account, FlagsType.Transfer]
-            ),
-            blockchain.newSession(user1)
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user1.keyPair.pubKey, user2.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
         );
+
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(user2.keyPair)
+            .post();
+
+        const account = await Account.getById(authDescriptor.id, blockchain.newSession(user1));
+
         expect(account).not.toBeNull();
 
-        const promise = account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
-        );
+        const authDescriptor2 = new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]);
+
+        const promise = blockchain.transactionBuilder()
+            .add(addAuthDescriptor(authDescriptor.id, authDescriptor.id, authDescriptor2))
+            .build(authDescriptor2.signers)
+            .sign(user1.keyPair)
+            .post();
+
         await expect(promise).rejects.toBeInstanceOf(Error);
         expect(account.authDescriptor.length).toBe(1);
     });
@@ -135,7 +165,7 @@ describe('Test the account', () => {
         const user = TestUser.singleSig();
 
         await AccountBuilder
-            .account(blockchain)
+            .account(blockchain, user)
             .withParticipants([user.keyPair])
             .build();
 
@@ -149,7 +179,7 @@ describe('Test the account', () => {
         const user2 = TestUser.singleSig();
 
         await AccountBuilder
-            .account(blockchain)
+            .account(blockchain, user1)
             .withParticipants([user1.keyPair])
             .build();
 
@@ -159,9 +189,14 @@ describe('Test the account', () => {
             .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
-        await account2.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
-        );
+        const authDescriptor = new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]);
+
+        await blockchain.transactionBuilder()
+            .add(addAuthDescriptor(account2.id, user2.authDescriptor.id, authDescriptor))
+            .build([user2.authDescriptor.signers, authDescriptor.signers].flat())
+            .sign(user2.keyPair)
+            .sign(user1.keyPair)
+            .post();
 
         const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, blockchain.newSession(user1));
 
@@ -191,18 +226,8 @@ describe('Test the account', () => {
             .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
             .build();
 
-        const authDescriptor1 = new SingleSignatureAuthDescriptor(
-            user2.keyPair.pubKey,
-            [FlagsType.Transfer, FlagsType.Account]
-        );
-
-        const authDescriptor2 = new SingleSignatureAuthDescriptor(
-            user3.keyPair.pubKey,
-            [FlagsType.Account, FlagsType.Transfer]
-        );
-
-        await account.addAuthDescriptor(authDescriptor1);
-        await account.addAuthDescriptor(authDescriptor2);
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+        await addAuthDescriptorTo(account, user1, user3, blockchain);
 
         await account.deleteAllAuthDescriptorsExclude(user1.authDescriptor);
 

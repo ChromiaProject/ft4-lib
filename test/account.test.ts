@@ -7,8 +7,17 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import { op } from "../client/lib/ft3";
+import {addAuthDescriptor, op} from "../client/lib/ft3";
+import User from "../client/lib/ft3/user/user";
 
+async function addAuthDescriptorTo(account: Account, adminUser: User, user: User, blockchain: Blockchain) {
+    await blockchain.transactionBuilder()
+        .add(addAuthDescriptor(account.id, adminUser.authDescriptor.id, user.authDescriptor))
+        .build([adminUser.authDescriptor.signers, user.authDescriptor.signers].flat())
+        .sign(adminUser.keyPair)
+        .sign(user.keyPair)
+        .post();
+}
 
 require('dotenv').config();
 
@@ -187,21 +196,11 @@ describe('Test the account', () => {
         const account = await AccountBuilder
             .account(blockchain, user1)
             .withParticipants([user1.keyPair])
-            .withPoints(3)
+            .withPoints(4)
             .build();
 
-        const authDescriptor1 = new SingleSignatureAuthDescriptor(
-            user2.keyPair.pubKey,
-            [FlagsType.Transfer, FlagsType.Account]
-        );
-
-        const authDescriptor2 = new SingleSignatureAuthDescriptor(
-            user3.keyPair.pubKey,
-            [FlagsType.Account, FlagsType.Transfer]
-        );
-
-        await account.addAuthDescriptor(authDescriptor1);
-        await account.addAuthDescriptor(authDescriptor2);
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+        await addAuthDescriptorTo(account, user1, user3, blockchain);
 
         await account.deleteAllAuthDescriptorsExclude(user1.authDescriptor);
 
@@ -219,5 +218,5 @@ describe('Test the account', () => {
         const account = await session.getAccountById(user.authDescriptor.id);
 
         expect(account).not.toBeNull();
-    })
+    });
 });
