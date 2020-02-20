@@ -1,9 +1,9 @@
 import AccountBuilder from "./util/account-builder";
-import AssetBalance from "../client/lib/ft3/asset-balance";
-import Asset from "../client/lib/ft3/asset";
+import AssetBalance from "../client/lib/ft3/user/asset-balance";
+import Asset from "../client/lib/ft3/user/asset";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 let blockchain: Blockchain = null;
 let asset1: Asset = null;
@@ -14,7 +14,6 @@ describe('Asset balance', () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
         asset1 = await Asset.register(generateAssetName(), generateId(), blockchain);
         asset2 = await Asset.register(generateAssetName(), generateId(), blockchain);
-        console.log("111111111", asset1);
     });
 
     it('should be returned when queried by account id', async () => {

@@ -1,4 +1,4 @@
-import Blockchain from "../../client/lib/ft3/blockchain";
+import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
 import DirectoryServiceUtil from "./directory-service-util";
 
 require('dotenv').config();

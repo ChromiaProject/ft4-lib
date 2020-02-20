@@ -1,10 +1,10 @@
 import AccountBuilder from "./util/account-builder";
 import {blockchainAccountId, generateAssetName, generateId} from "./util/util";
-import Asset from "../client/lib/ft3/asset";
-import AssetBalance from "../client/lib/ft3/asset-balance";
+import Asset from "../client/lib/ft3/user/asset";
+import AssetBalance from "../client/lib/ft3/user/asset-balance";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/blockchain";
+import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 let blockchain: Blockchain = null;
 let asset: Asset = null;

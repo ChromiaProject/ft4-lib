@@ -1,9 +1,0 @@
-module;
-
-import lib.ft3.ft3_basic;
-import lib.ft3.operations.dev_op_account;
-
-struct module_args {
-    admin_pub_key: text; 
-}
-
