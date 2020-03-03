@@ -1,6 +1,6 @@
 import { util } from 'postchain-client';
 import { AuthDescriptor, GtvSerializable } from "./account";
-import Operation from "../core//operation";
+import Operation from "../core/operation";
 
 export function addAuthDescriptor(accountId: Buffer, authDescriptorId: Buffer, authDescriptor: AuthDescriptor): Operation {
     return op('ft3.add_auth_descriptor', accountId, authDescriptorId, authDescriptor);
@@ -26,7 +26,7 @@ export function deleteAuthDescriptor(accountId: Buffer, authDescriptorId: Buffer
 }
 
 export function nop(): Operation {
-    return new Operation('nop', util.hash256(Math.random().toString()));
+    return new Operation('nop', util.randomBytes(32));
 }
 
 export function op(name: string, ...args: GtvSerializable[]): Operation {
