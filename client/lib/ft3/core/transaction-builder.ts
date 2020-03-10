@@ -1,6 +1,6 @@
 import Blockchain from "./blockchain/blockchain";
 import Transaction from "./transaction";
-import {GtvSerializable} from "../user/account";
+import { GtvSerializable } from "../user/account";
 import Operation from "./operation";
 import User from "../user/user";
 
@@ -17,7 +17,7 @@ Buffer.prototype.toGTV = function(): any {
 };
 
 Array.prototype.toGTV = function(): any[] {
-    return this.map(element => element && element.toGTV());
+    return this.map(element => element === null ? null : element.toGTV());
 };
 
 String.prototype.toGTV = function(): any {
