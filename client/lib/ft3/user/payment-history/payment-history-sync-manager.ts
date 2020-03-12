@@ -41,7 +41,7 @@ export default class PaymentHistorySyncManager {
     }
 
     async syncAccount(id: Buffer, blockchain: Blockchain) {
-        const syncInfo = this.paymentHistoryStore.getSyncInfo(id);
+        const syncInfo = this.paymentHistoryStore.getSyncInfo(blockchain.id, id);
         const lastBlock = +syncInfo.lastBlock || -1;
 
         const paymentHistory = await PaymentHistory.getByAccountId(id, lastBlock, blockchain);
@@ -49,9 +49,9 @@ export default class PaymentHistorySyncManager {
 
         //Add missing sender/receiver info to payment history entries
         const paymentHistoryEntries = this.mapShortEntriesToLongEntries(paymentHistory, blockchain.id, id);
-        this.paymentHistoryStore.save(id, paymentHistoryEntries);
+        this.paymentHistoryStore.save(blockchain.id, id, paymentHistoryEntries);
         syncInfo.lastBlock = this.getHighestBlock(paymentHistoryEntries, lastBlock);
-        this.paymentHistoryStore.saveSyncInfo(id, syncInfo);
+        this.paymentHistoryStore.saveSyncInfo(blockchain.id, id, syncInfo);
     }
 
     private mapShortEntriesToLongEntries(entries: PaymentHistoryEntryShort[], chainId: Buffer, accountId: Buffer): PaymentHistoryEntry[] {

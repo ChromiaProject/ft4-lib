@@ -259,7 +259,11 @@ class Account {
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
         if (pageSize < 1) throw new Error('Page size has to be greater than 1');
         await this.paymentHistorySyncManager.syncAccount(this.id, this.session.blockchain);
-        return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(this.id, pageSize);
+        return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(
+            this.session.blockchain.id,
+            this.id,
+            pageSize
+        );
     }
 
     async xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Promise<void> {
