@@ -6,60 +6,74 @@ export default class PaymentHistoryStoreLocalStorage implements PaymentHistorySt
 
     private entriesCache: {[key: string]: PaymentHistoryEntry[]} = {};
 
-    getCount(accountId: Buffer): number {
-        return this.getEntriesFor(accountId).length;
+    getCount(blockchainId: Buffer, accountId: Buffer): number {
+        return this.getEntriesFor(blockchainId, accountId).length;
     }
 
-    getIterator(accountId: Buffer, pageSize: number): PaymentHistoryIterator {
-        return new PaymentHistoryIterator(this, accountId, pageSize);
+    getIterator(blockchainId: Buffer, accountId: Buffer, pageSize: number): PaymentHistoryIterator {
+        return new PaymentHistoryIterator(this, blockchainId, accountId, pageSize);
     }
 
-    save(accountId: Buffer, paymentHistoryEntries: PaymentHistoryEntry[]) {
-        const entries = this.loadFromStore(accountId);
+    save(blockchainId: Buffer, accountId: Buffer, paymentHistoryEntries: PaymentHistoryEntry[]) {
+        const entries = this.loadFromStore(blockchainId, accountId);
         const newEntries = paymentHistoryEntries.concat(entries);
-        this.saveToStore(accountId, newEntries);
-        this.entriesCache[accountId.toString('hex').toUpperCase()] = newEntries;
+        this.saveToStore(blockchainId, accountId, newEntries);
+        this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] = newEntries;
     }
 
-    get(accounId: Buffer, start: number, pageSize: number): PaymentHistoryEntry[] {
-        const entries = this.getEntriesFor(accounId);
+    get(blockchainId: Buffer, accounId: Buffer, start: number, pageSize: number): PaymentHistoryEntry[] {
+        const entries = this.getEntriesFor(blockchainId, accounId);
         if (entries.length < start) { return [] }
         return entries.slice(start, Math.min(entries.length, start + pageSize));
     }
 
-    getSyncInfo(accountId: Buffer): any {
-        const key = `FT3_LIB_P_H_S_I_${accountId.toString('hex').toUpperCase()}`;
-        const value = localStorage.getItem(key);
+    getSyncInfo(blockchainId: Buffer, accountId: Buffer): any {
+        const value = localStorage.getItem(this.syncInfoKey(blockchainId, accountId));
         return (value && JSON.parse(value)) || {}
     }
 
-    saveSyncInfo(accountId: Buffer, syncInfo: any) {
-        const key = `FT3_LIB_P_H_S_I_${accountId.toString('hex').toUpperCase()}`;
-        localStorage.setItem(key, JSON.stringify(syncInfo));
+    saveSyncInfo(blockchainId: Buffer, accountId: Buffer, syncInfo: any) {
+        localStorage.setItem(this.syncInfoKey(blockchainId, accountId), JSON.stringify(syncInfo));
     }
 
-    private getEntriesFor(accountId: Buffer): PaymentHistoryEntry[] {
-        const accountIdString = accountId.toString('hex').toUpperCase();
-        let entries = this.entriesCache[accountIdString];
+    private getEntriesFor(blockchainId: Buffer, accountId: Buffer): PaymentHistoryEntry[] {
+        let entries = this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)];
 
         if (!entries) {
-            entries = this.loadFromStore(accountId);
-            this.entriesCache[accountIdString] = entries;
+            entries = this.loadFromStore(blockchainId, accountId);
+            this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] = entries;
         }
 
         return entries;
     }
 
-    private loadFromStore(id: Buffer): PaymentHistoryEntry[] {
-        const key = `FT3_LIB_P_H_${id.toString('hex').toUpperCase()}`;
-        const value = localStorage.getItem(key);
+    private paymentHistoryKey(blockchainId: Buffer, accountId: Buffer): string {
+        return `FT3_LIB_P_H_${
+            accountId.toString('hex').toUpperCase()
+        }_${
+            blockchainId ? blockchainId.toString('hex').toUpperCase() : ""
+        }`;
+    }
+
+    private syncInfoKey(blockchainId: Buffer, accountId: Buffer): string {
+        return `FT3_LIB_P_H_S_I_${
+            accountId.toString('hex').toUpperCase()
+        }_${
+            blockchainId ? blockchainId.toString('hex').toUpperCase() : ""
+        }`;
+    }
+
+    private loadFromStore(blockchainId: Buffer, accountId: Buffer): PaymentHistoryEntry[] {
+        const value = localStorage.getItem(this.paymentHistoryKey(blockchainId, accountId));
         const entries = value ? JSON.parse(value) : [];
         return entries.map(this.mapToPaymentHistoryEntry);
     }
 
-    private saveToStore(id: Buffer, entries: PaymentHistoryEntry[]) {
-        const key = `FT3_LIB_P_H_${id.toString('hex').toUpperCase()}`;
-        localStorage.setItem(key, JSON.stringify(entries.map(entry => entry.adaptForSerialization())))
+    private saveToStore(blockchainId: Buffer, accountId: Buffer, entries: PaymentHistoryEntry[]) {
+        localStorage.setItem(
+            this.paymentHistoryKey(blockchainId, accountId),
+            JSON.stringify(entries.map(entry => entry.adaptForSerialization()))
+        )
     }
 
     private mapToPaymentHistoryEntry(entry: any): PaymentHistoryEntry {
@@ -75,12 +89,20 @@ export default class PaymentHistoryStoreLocalStorage implements PaymentHistorySt
         );
     }
 
-    deletePaymentHistory(accountId: Buffer) {
-        if (this.entriesCache[accountId.toString('hex').toUpperCase()]) {
-            delete this.entriesCache[accountId.toString('hex').toUpperCase()];
+    deletePaymentHistory(accountId: Buffer, blockchainId: Buffer = null) {
+        const syncInfoKey = this.syncInfoKey(blockchainId, accountId);
+        const paymentHistoryKey = this.paymentHistoryKey(blockchainId, accountId);
+
+        for (const key of Object.keys(this.entriesCache)) {
+            if (this.entriesCache.hasOwnProperty(key) && key.startsWith(paymentHistoryKey)) {
+                delete this.entriesCache[key];
+            }
         }
 
-        localStorage.removeItem(`FT3_LIB_P_H_${accountId.toString('hex').toUpperCase()}`);
-        localStorage.removeItem(`FT3_LIB_P_H_S_I_${accountId.toString('hex').toUpperCase()}`);
+        for (const key of Object.keys(localStorage)) {
+            if (key.startsWith(paymentHistoryKey) || key.startsWith(syncInfoKey) ) {
+                localStorage.removeItem(key);
+            }
+        }
     }
 }
