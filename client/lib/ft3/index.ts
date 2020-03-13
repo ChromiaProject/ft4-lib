@@ -18,5 +18,6 @@ export { default as PaymentHistorySyncManager } from './user/payment-history/pay
 export { default as PaymentHistoryStoreMemory } from './user/payment-history/payment-history-store-memory';
 export { default as PaymentHistoryStoreLocalStorage } from './user/payment-history/payment-history-store-local-storage';
 export { default as RateLimit } from './user/rate-limit';
+export { default as Postchain } from './core/postchain';
 export * from './user/sso';
 
