@@ -1,2 +1,2 @@
 
-import lib.ft3.ft3_basic_dev;
+import ^.lib.ft3.ft3_basic_dev;
