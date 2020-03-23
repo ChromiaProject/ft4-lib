@@ -7,9 +7,9 @@ rm -rf ./target
 
 ./postchain-node/postchain.sh wipe-db -nc testnet-config/node-config.properties
 
-./postchain-node/multigen.sh testnet-config/run.xml -d src -o target/
+./postchain-node/multigen.sh testnet-config/run.xml -d src -o target-testnet/
 
 BRID=`cat ./target/blockchains/0/brid.txt`
 echo $BRID
 
-exec ./postchain-node/postchain.sh run-node-auto -d target
+exec ./postchain-node/postchain.sh run-node-auto -d target-testnet
