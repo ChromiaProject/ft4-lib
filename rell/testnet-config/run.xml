@@ -6,6 +6,9 @@
     <chains>
         <chain name="testnet-ft3-lib" iid="0">
             <config height="0">
+                <gtv src="0.0.1.xml"/>
+            </config>
+            <config height="145000">
 				<app module="testnet">
                 	<args module="lib.ft3.core">
                 		<arg key="my_blockchain_name"><string>testnet ft3</string></arg>
