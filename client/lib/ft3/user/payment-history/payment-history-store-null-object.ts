@@ -4,28 +4,28 @@ import PaymentHistoryIterator from "./payment-history-iterator";
 
 
 export default class PaymentHistoryStoreNullObject implements PaymentHistoryStore {
-    get(accountId: Buffer, start: number, pageSize: number): PaymentHistoryEntry[] {
+    get(blockchainId: Buffer, accountId: Buffer, start: number, pageSize: number): PaymentHistoryEntry[] {
         return [];
     }
 
-    getCount(accountId: Buffer): number {
+    getCount(blockchainId: Buffer, accountId: Buffer): number {
         return 0;
     }
 
-    getIterator(accountId: Buffer, pageSize: number): PaymentHistoryIterator {
-        return new PaymentHistoryIterator(this, accountId, pageSize);
+    getIterator(blockchainId: Buffer, accountId: Buffer, pageSize: number): PaymentHistoryIterator {
+        return new PaymentHistoryIterator(this, blockchainId, accountId, pageSize);
     }
 
-    getSyncInfo(accountId: Buffer): any {
+    getSyncInfo(blockchainId: Buffer, accountId: Buffer): any {
         return {};
     }
 
-    save(accountId: Buffer, paymentHistoryEntries: PaymentHistoryEntry[]) {
+    save(blockchainId: Buffer, accountId: Buffer, paymentHistoryEntries: PaymentHistoryEntry[]) {
     }
 
-    saveSyncInfo(accountId: Buffer, syncInfo: any) {
+    saveSyncInfo(blockchainId: Buffer, accountId: Buffer, syncInfo: any) {
     }
 
-    deletePaymentHistory(accountId: Buffer) {
+    deletePaymentHistory(accountId: Buffer, blockchainId: Buffer) {
     }
 }
