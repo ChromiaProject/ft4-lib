@@ -18,7 +18,7 @@
     "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
   },
   "author": "",
-  "license": "BSD-2-Clause-FreeBSD",
+  "license": "Apache-2.0",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
     "dotenv": "^8.0.0",
