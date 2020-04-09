@@ -15,7 +15,7 @@ export default class Asset {
         return gtv.gtvHash([this.name, this.chainId]);
     }
 
-    static async register(name: string, chainId: Buffer, blockchain: Blockchain) {
+    static async register(name: string, chainId: Buffer, blockchain: Blockchain): Promise<Asset> {
         await blockchain.transactionBuilder()
             .add(op('ft3.dev_register_asset', name, chainId))
             .build([])
