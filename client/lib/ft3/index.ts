@@ -20,4 +20,4 @@ export { default as PaymentHistoryStoreLocalStorage } from './user/payment-histo
 export { default as RateLimit } from './user/rate-limit';
 export { default as Postchain } from './core/postchain';
 export * from './user/sso';
-
+export * from './user/transfer';
