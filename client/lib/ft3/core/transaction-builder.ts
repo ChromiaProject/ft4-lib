@@ -10,6 +10,7 @@ declare global {
     interface Number extends GtvSerializable {}
     interface Buffer extends GtvSerializable {}
     interface Boolean extends GtvSerializable {}
+    interface Object extends GtvSerializable {}
 }
 
 Buffer.prototype.toGTV = function(): any {
@@ -31,6 +32,10 @@ Number.prototype.toGTV = function(): any {
 Boolean.prototype.toGTV = function (): any {
     return this ? 1 : 0;
 };
+
+Object.prototype.toGTV = function(): any {
+    return this;
+}
 
 export default class TransactionBuilder {
     private operations: Array<Operation> = [];

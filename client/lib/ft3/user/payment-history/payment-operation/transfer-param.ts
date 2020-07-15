@@ -5,9 +5,9 @@ export default class TransferParam {
     readonly assetId: string;
     readonly amount: number;
 
-    constructor(accountId: string, assetId: string, amount: number) {
-        this.accountId = accountId;
-        this.assetId = assetId;
+    constructor(accountId: string | Buffer, assetId: string | Buffer, amount: number) {
+        this.accountId = accountId instanceof Buffer ? accountId.toString('hex') : accountId;
+        this.assetId = assetId instanceof Buffer ? assetId.toString('hex') : assetId;
         this.amount = amount;
     }
 
