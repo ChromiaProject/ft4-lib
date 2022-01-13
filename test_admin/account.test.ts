@@ -7,7 +7,7 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import {addAuthDescriptor, op} from "../client/lib/ft3";
+import {addAuthDescriptor, deleteAllAuthDescriptorsExclude, op} from "../client/lib/ft3";
 import {register} from "../client/lib/ft3/user/account-dev-operations";
 import User from "../client/lib/ft3/user/user";
 
@@ -211,11 +211,11 @@ describe('Test the account', () => {
             .build();
 
         const foundAccount = await Account.getById(account.id_, blockchain.newSession(user));
-        
+
         expect(account).toEqual(foundAccount);
     });
 
-    it('should have only one auth descriptor after calling deleteAllAuthDescriptorsExclude', async () => {
+    it('should have only main auth descriptor left after calling deleteAllAuthDescriptorsExclude with main auth_descriptor', async () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
         const user3 = TestUser.singleSig();
@@ -234,6 +234,45 @@ describe('Test the account', () => {
         const foundAccount = await blockchain.newSession(user1).getAccountById(account.id_);
 
         expect(foundAccount.authDescriptor.length).toEqual(1);
+    });
+
+    it('should have 2 auth descriptor left after calling deleteAllAuthDescriptorsExclude with not the main one', async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+        const user3 = TestUser.singleSig();
+
+        const account = await AccountBuilder
+          .account(blockchain, user1)
+          .withParticipants([user1.keyPair])
+          .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
+          .build();
+
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+        await addAuthDescriptorTo(account, user1, user3, blockchain);
+
+        await blockchain
+          .newSession(user2)
+          .call(deleteAllAuthDescriptorsExclude(user1.authDescriptor.id, user2.authDescriptor.id))
+
+        const foundAccount = await blockchain.newSession(user1).getAccountById(account.id_);
+
+        expect(foundAccount.authDescriptor.length).toEqual(2);
+    });
+
+    it('should not be able to remove main auth descriptor', async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig();
+
+        const account = await AccountBuilder
+          .account(blockchain, user1)
+          .withParticipants([user1.keyPair])
+          .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
+          .build();
+
+        await addAuthDescriptorTo(account, user1, user2, blockchain);
+
+        const opPromise = account.deleteAuthDescriptor(user1.authDescriptor);
+        await expect(opPromise).rejects.toEqual(new Error('Message was rejected'));
     });
 
     it('should be able to register account by directly calling \'register_account\' operation', async () => {
