@@ -17,10 +17,12 @@ Buffer.prototype.toGTV = function(): any {
     return this.toString('hex');
 };
 
-Array.prototype.toGTV = function(): any[] {
-    return this.map(element => element === null ? null : element.toGTV());
-};
-Object.defineProperty(Array.prototype, 'toGTV', { enumerable: false, value: Array.prototype.toGTV });
+Object.defineProperty(Array.prototype, 'toGTV', {
+    enumerable: false,
+    value: function(): any[] {
+          return this.map(element => element === null ? null : element.toGTV());
+    }
+});
 
 String.prototype.toGTV = function(): any {
     return this;
@@ -34,10 +36,13 @@ Boolean.prototype.toGTV = function (): any {
     return this ? 1 : 0;
 };
 
-Object.prototype.toGTV = function(): any {
-    return this;
-}
-Object.defineProperty(Object.prototype, 'toGTV', { enumerable: false, value: Object.prototype.toGTV });
+Object.defineProperty(Object.prototype, 'toGTV', {
+    enumerable: false,
+    writable: true,
+    value: function(): any {
+        return this;
+    }
+});
 
 export default class TransactionBuilder {
     private operations: Array<Operation> = [];
