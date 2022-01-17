@@ -57,7 +57,7 @@ function _add_auth_descriptor (account, auth_descriptor) {
      );
      
      for (participant in auth_descriptor.participants) {
-        require(is_signer(participant));
+        require(op_context.is_signer(participant));
         create auth_descriptor_participant(account_auth_descriptor, id = participant);
      }
      
