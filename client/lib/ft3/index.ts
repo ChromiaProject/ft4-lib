@@ -3,7 +3,7 @@ export * from './user/account';
 export * from './user/account-operations'
 export * from './user/auth-descriptor';
 export { default as User } from './user/user';
-export { default as ConnectionClient } from './core/connection-client';
+export { default as ConnectionClient } from './core/connection-client';
 export { default as AssetBalance } from './user/asset-balance';
 export { default as Asset } from './user/asset';
 export { default as BlockchainInfo } from './core/blockchain/blockchain-info';
