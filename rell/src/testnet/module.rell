@@ -1,6 +1,9 @@
 
 import ^.lib.ft3.ft3_xc_basic;
 import ^.lib.ft3.operations.dev_op_account;
+import ^.lib.ft3.operations.dev_op_asset;
+import ^.lib.ft3.operations.dev_op_balance;
+import ^.lib.ft3.operations.dev_op_rate_limit;
 
 struct module_args {
     admin_pub_key: text; 
