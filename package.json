@@ -20,6 +20,7 @@
   "author": "",
   "license": "BSD-2-Clause-FreeBSD",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
+  "keywords": ["rell", "ft3", "chromia", "blockchain"],
   "dependencies": {
     "dotenv": "^8.0.0",
     "postchain-client": "^0.10.2",
