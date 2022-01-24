@@ -5,7 +5,7 @@ import ft3_acc : ^.lib.ft3.account;
 function require_dev_admin() {
 	ft3_dev_op.require_dev();
 	val adminPubKeyBytes = byte_array(chain_context.args.admin_pub_key);
-	require(op_context.is_signer(adminPubKeyBytes), "Needs to be signed by admin");
+	require(is_signer(adminPubKeyBytes), "Needs to be signed by admin");
 }
 
 
