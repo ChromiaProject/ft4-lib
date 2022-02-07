@@ -10,15 +10,19 @@ declare global {
     interface Number extends GtvSerializable {}
     interface Buffer extends GtvSerializable {}
     interface Boolean extends GtvSerializable {}
+    interface Object extends GtvSerializable {}
 }
 
 Buffer.prototype.toGTV = function(): any {
     return this.toString('hex');
 };
 
-Array.prototype.toGTV = function(): any[] {
-    return this.map(element => element === null ? null : element.toGTV());
-};
+Object.defineProperty(Array.prototype, 'toGTV', {
+    enumerable: false,
+    value: function(): any[] {
+          return this.map(element => element === null ? null : element.toGTV());
+    }
+});
 
 String.prototype.toGTV = function(): any {
     return this;
@@ -32,6 +36,13 @@ Boolean.prototype.toGTV = function (): any {
     return this ? 1 : 0;
 };
 
+Object.defineProperty(Object.prototype, 'toGTV', {
+    enumerable: false,
+    writable: true,
+    value: function(): any {
+        return this;
+    }
+});
 
 export default class TransactionBuilder {
     private operations: Array<Operation> = [];
