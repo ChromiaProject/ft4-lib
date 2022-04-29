@@ -2,8 +2,9 @@
 POSTCHAIN_DIR="`( cd \"${BASH_SOURCE%/*}/..\" && pwd )`"
 INPUT_DIR_ROOT="$POSTCHAIN_DIR/config/nodes"
 OUTPUT_DIR_ROOT="$POSTCHAIN_DIR/runtime/nodes"
-RELL_CFG="$POSTCHAIN_DIR/lib/rellcfg.sh"
 POSTCHAIN_SCRIPT="$POSTCHAIN_DIR/lib/postchain.sh"
+MULTIGEN_SCRIPT="$POSTCHAIN_DIR/lib/multigen.sh"
+SRC_DIR="$POSTCHAIN_DIR/../rell/src"
 
 NODE_CONFIG_PROPS=node-config.properties
 PRIVATE_PROPS=private.properties
@@ -56,7 +57,7 @@ shift
 
 
 
-if [ ! -d $INPUT_DIR_ROOT/$CONF ] || [ ! -d $INPUT_DIR_ROOT/$CONF/blockchains ]; then
+if [ ! -d $INPUT_DIR_ROOT/$CONF ] || [ ! -f $INPUT_DIR_ROOT/$CONF/run.xml ]; then
     echo "Error: Cannot find '$CONF' node configuration"
     print_usage
 
@@ -114,22 +115,15 @@ if [ ! -z "$NODE_PORT" ]; then
     fi
 fi
 
-i=1
-
-for blockchain in $INPUT_DIR_ROOT/$CONF/blockchains/* ; do
-    if [ -d $blockchain ] && [ ! -L $blockchain ]; then
-        BLOCKCHAIN_DIR="$OUTPUT_DIR_ROOT/$CONF/blockchains/$i"
-        mkdir -p "$BLOCKCHAIN_DIR"
-        cp $blockchain/brid.txt "$BLOCKCHAIN_DIR"
-        MAIN_RELL=`cat $blockchain/entry-file.txt`
-        $RELL_CFG --template $blockchain/config.template.xml -d $MAIN_RELL "" "$BLOCKCHAIN_DIR/0.xml"
-        if [ "$?" -ne 0 ]; then
-            echo "Compilation error!!!"
-            exit 1
-        fi
-        ((i=i+1))
+ENV_CONFIG="$INPUT_DIR_ROOT/$CONF"
+if [ -d "$ENV_CONFIG" ] && [ ! -L "$ENV_CONFIG" ]; then
+    BLOCKCHAIN_DIR="$OUTPUT_DIR_ROOT/$CONF"
+    "$MULTIGEN_SCRIPT" -d "$SRC_DIR" -o "$BLOCKCHAIN_DIR" "$ENV_CONFIG/run.xml"
+    if [ "$?" -ne 0 ]; then
+        echo "Compilation error!!!"
+        exit 1
     fi
-done
+fi
 
 if [ "$WIPE_DB" = true ]; then
     echo "Wiping database ..."
