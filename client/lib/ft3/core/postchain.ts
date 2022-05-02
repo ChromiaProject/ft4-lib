@@ -1,17 +1,37 @@
 import DirectoryServiceBase from "./blockchain/directory-service-base";
 import ChainConnectionInfo from "./chain-connection-info";
 import Blockchain from "./blockchain/blockchain";
+var fetch;
+if (typeof process === "object") {
+	fetch = require("node-fetch");
+} else {
+	fetch = window.fetch;
+}
 
 export default class Postchain {
     constructor(readonly url: string) {}
 
-    async blockchain(id: Buffer | string): Promise<Blockchain> {
-        const blockchainId = id instanceof Buffer ? id : Buffer.from(id, 'hex');
+    async blockchain(id: Buffer | string | number): Promise<Blockchain> {
+		let _id = Buffer.alloc(0);
+		if(typeof id === "number"){
+			console.log(_id, " => ");
+			if (typeof process === "object") {
+				let readable = await fetch(this.url+"/brid/iid_"+id).then(res=>res.body)
+				_id = readable.read().toString('utf-8');
+			}else{
+				_id = await fetch(this.url+"/brid/iid_"+id).then(res=>res.body.getReader())
+							.then(reader=>reader.read())
+							.then(({done, value})=>{return value});
+			}
+		} else
+		
+		_id = id instanceof Buffer ? id : Buffer.from(id, 'hex');
+				
 
         const directoryService = new DirectoryServiceBase([
-            new ChainConnectionInfo(blockchainId, this.url)
+            new ChainConnectionInfo(_id, this.url)
         ]);
 
-        return await Blockchain.initialize(blockchainId, directoryService);
+        return await Blockchain.initialize(_id, directoryService);
     }
 }

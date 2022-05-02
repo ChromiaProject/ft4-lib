@@ -9,7 +9,7 @@ describe("Postchain", () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
     });
 
-    it("should instantiate blockchain by passing chain id as a string", async () => {
+    it("should instantiate blockchain by passing BRID as a string", async () => {
         const url = process.env.NODE_URL;
         const chainId = process.env.CHAIN_ID;
         const blockchain1 = await new Postchain(url).blockchain(chainId);
@@ -17,10 +17,18 @@ describe("Postchain", () => {
         expect(blockchain1.info).toEqual(blockchain.info);
     });
 
-    it("should instantiate blockchain by passing chain id as a Buffer", async () => {
+    it("should instantiate blockchain by passing BRID as a Buffer", async () => {
         const url = process.env.NODE_URL;
         const chainId = Buffer.from(process.env.CHAIN_ID, 'hex');
         const blockchain1 = await new Postchain(url).blockchain(chainId);
+
+        expect(blockchain1.info).toEqual(blockchain.info);
+    });
+
+    it("should instantiate blockchain by passing internal chain id as a number", async () => {
+        const url = process.env.NODE_URL;
+        const chainId = Buffer.from(process.env.CHAIN_ID, 'hex');
+        const blockchain1 = await new Postchain(url).blockchain(0);
 
         expect(blockchain1.info).toEqual(blockchain.info);
     });
