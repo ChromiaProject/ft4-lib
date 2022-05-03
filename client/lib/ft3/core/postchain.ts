@@ -1,12 +1,7 @@
 import DirectoryServiceBase from "./blockchain/directory-service-base";
 import ChainConnectionInfo from "./chain-connection-info";
 import Blockchain from "./blockchain/blockchain";
-var fetch;
-if (typeof process === "object") {
-	fetch = require("node-fetch");
-} else {
-	fetch = window.fetch;
-}
+const fetch = typeof process === 'object' ? require('node-fetch') : window.fetch;
 
 export default class Postchain {
     constructor(readonly url: string) {}
