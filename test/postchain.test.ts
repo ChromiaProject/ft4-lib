@@ -27,7 +27,6 @@ describe("Postchain", () => {
 
     it("should instantiate blockchain by passing internal chain id as a number", async () => {
         const url = process.env.NODE_URL;
-        const chainId = Buffer.from(process.env.CHAIN_ID, 'hex');
         const blockchain1 = await new Postchain(url).blockchain(0);
 
         expect(blockchain1.info).toEqual(blockchain.info);
