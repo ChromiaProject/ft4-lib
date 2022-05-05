@@ -20,9 +20,9 @@ print_usage () {
     echo "-p                    production mode"
     echo ""
     echo "Available configurations:"
-    for blockchain in $INPUT_DIR_ROOT/* ; do
-        if [ -d $blockchain ] && [ ! -L $blockchain ]; then
-            echo " `basename $blockchain`"
+    for blockchain in "$INPUT_DIR_ROOT/*" ; do
+        if [ -d "$blockchain" ] && [ ! -L "$blockchain" ]; then
+            echo " `basename ${blockchain}`"
         fi
     done
     echo ""
@@ -57,7 +57,7 @@ shift
 
 
 
-if [ ! -d $INPUT_DIR_ROOT/$CONF ] || [ ! -f $INPUT_DIR_ROOT/$CONF/run.xml ]; then
+if [ ! -d "$INPUT_DIR_ROOT/$CONF" ] || [ ! -f "$INPUT_DIR_ROOT/$CONF/run.xml" ]; then
     echo "Error: Cannot find '$CONF' node configuration"
     print_usage
 
@@ -93,17 +93,15 @@ done
 
 echo "Starting run-node.sh script..."
 
-rm -rf $OUTPUT_DIR_ROOT/$CONF
-mkdir -p $OUTPUT_DIR_ROOT/$CONF
+rm -rf "$OUTPUT_DIR_ROOT/$CONF"
 
-cp $INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS $OUTPUT_DIR_ROOT/$CONF
-cp $INPUT_DIR_ROOT/$CONF/$PRIVATE_PROPS $OUTPUT_DIR_ROOT/$CONF
+cp -r "$INPUT_DIR_ROOT/$CONF" "$OUTPUT_DIR_ROOT"
 
 if [ ! -z "$API_PORT" ]; then
     update_api_port "$API_PORT" "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
 
     if [ "$SAVE_TO_CONFIG" = true ]; then
-        update_api_port "$API_PORT" $INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS
+        update_api_port "$API_PORT" "$INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
     fi
 fi
 
@@ -111,14 +109,14 @@ if [ ! -z "$NODE_PORT" ]; then
     update_node_port 0 "$NODE_PORT" "$OUTPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
 
     if [ "$SAVE_TO_CONFIG" = true ]; then
-        update_node_port 0 "$NODE_PORT" $INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS
+        update_node_port 0 "$NODE_PORT" "$INPUT_DIR_ROOT/$CONF/$NODE_CONFIG_PROPS"
     fi
 fi
 
 ENV_CONFIG="$INPUT_DIR_ROOT/$CONF"
 if [ -d "$ENV_CONFIG" ] && [ ! -L "$ENV_CONFIG" ]; then
     BLOCKCHAIN_DIR="$OUTPUT_DIR_ROOT/$CONF"
-    "$MULTIGEN_SCRIPT" -d "$SRC_DIR" -o "$BLOCKCHAIN_DIR" "$ENV_CONFIG/run.xml"
+    "$MULTIGEN_SCRIPT" -d "$SRC_DIR" -o "$BLOCKCHAIN_DIR" "$BLOCKCHAIN_DIR/run.xml"
     if [ "$?" -ne 0 ]; then
         echo "Compilation error!!!"
         exit 1
