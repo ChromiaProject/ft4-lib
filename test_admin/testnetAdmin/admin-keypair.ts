@@ -14,7 +14,7 @@ export default class AdminKeyPair {
 
     private static initialize() {
         if (this.keyPair == null) {
-            this.keyPair = new KeyPair(process.env.ADMIN_PRIV)
+            this.keyPair = new KeyPair(process.env.ADMIN_1_PRIV)
         }
     }
 

@@ -15,6 +15,9 @@
                         <arg key="rate_limit_recovery_time"><int>5000</int></arg>
                         <arg key="rate_limit_points_at_account_creation"><int>1</int></arg>
                     </args>
+                    <args module="testnet">
+                        <arg key="admin_pub_key"><string>02B4D7E4EC6F50D3ACE02226B23C41C326CEBB627ACC17D8F68E44A23DF506BFA2</string></arg>
+                    </args>
                 </app>
             </config>
         </chain>
@@ -31,7 +34,7 @@
                         <arg key="rate_limit_points_at_account_creation"><int>1</int></arg>
                     </args>
                     <args module="testnet">
-                        <arg key="admin_pub_key"><string>03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D</string></arg>
+                        <arg key="admin_pub_key"><string>03B1BE9A6AEA69E249989416C6ADA12B67816334D9F302B59599B616DC4E79CB11</string></arg>
                     </args>
                 </app>
             </config>
