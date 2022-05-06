@@ -28,4 +28,7 @@ app/
 /tsconfig.json
 /index.js
 
+/test-docker
+/chromia-logo-60.png
+
 bitbucket-pipelines.yml

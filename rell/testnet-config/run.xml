@@ -1,4 +1,4 @@
-  
+
 <run wipe-db="true">
     <nodes>
         <config src="node-config.properties" add-signers="true" />
@@ -17,10 +17,10 @@
                   		<arg key="rate_limit_active"><int>1</int></arg>
                   		<arg key="rate_limit_max_points"><int>20</int></arg> <!-- maximum amount of request credit that is possible to keep -->
                   		<arg key="rate_limit_recovery_time"><int>60000</int></arg>
-                  		<arg key="rate_limit_points_at_account_creation"><int>1</int></arg> 
+                  		<arg key="rate_limit_points_at_account_creation"><int>1</int></arg>
                 	</args>
                     <args module="testnet">
-                        <arg key="admin_pub_key"><string>03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D</string></arg>
+                        <arg key="admin_pub_key"><string>039a2b0785d62e9dc0d9720fe5add001d409706aab049fa603205bc08f89126984</string></arg>
                     </args>
                 </app>
             </config>
