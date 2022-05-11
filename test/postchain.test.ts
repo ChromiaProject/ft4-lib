@@ -11,7 +11,7 @@ describe("Postchain", () => {
 
     it("should instantiate blockchain by passing BRID as a string", async () => {
         const url = process.env.NODE_URL;
-        const chainId = process.env.CHAIN_ID;
+        const chainId = process.env.CHAIN_0_ID;
         const blockchain1 = await new Postchain(url).blockchain(chainId);
 
         expect(blockchain1.info).toEqual(blockchain.info);
@@ -19,7 +19,7 @@ describe("Postchain", () => {
 
     it("should instantiate blockchain by passing BRID as a Buffer", async () => {
         const url = process.env.NODE_URL;
-        const chainId = Buffer.from(process.env.CHAIN_ID, 'hex');
+        const chainId = Buffer.from(process.env.CHAIN_0_ID, 'hex');
         const blockchain1 = await new Postchain(url).blockchain(chainId);
 
         expect(blockchain1.info).toEqual(blockchain.info);

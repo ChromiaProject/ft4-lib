@@ -6,7 +6,7 @@ export default class DirectoryServiceUtil {
     static getDefaultDirectoryService(): DirectoryService {
         return new FakeDirectoryService([
             new ChainConnectionInfo(
-                Buffer.from(process.env.CHAIN_ID, 'hex'),
+                Buffer.from(process.env.CHAIN_1_ID, 'hex'),
                 process.env.NODE_URL
             )
         ]);

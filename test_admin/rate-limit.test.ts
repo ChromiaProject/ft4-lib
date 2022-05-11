@@ -14,8 +14,8 @@ jest.setTimeout(2000000);
 let blockchain: Blockchain = null;
 const connection: ConnectionClient = TestConnection.connection()
 
-const REQUEST_MAX_COUNT = 10;
-const RECOVERY_TIME = 5000;
+const REQUEST_MAX_COUNT = 20;
+const RECOVERY_TIME = 60000;
 const POINTS_AT_ACCOUNT_CREATION = 1;
 
 describe("Rate Limit", () => {
@@ -34,7 +34,7 @@ describe("Rate Limit", () => {
 
         it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
             const info = await BlockchainInfo.getInfo(connection);
-            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), new RateLimitInfo(true, 10, 5000, POINTS_AT_ACCOUNT_CREATION)));
+            expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), new RateLimitInfo(true, REQUEST_MAX_COUNT, RECOVERY_TIME, POINTS_AT_ACCOUNT_CREATION)));
         });
 
         it("Should have a recovery period of 5 seconds", async () => {
@@ -120,7 +120,7 @@ describe("Rate Limit", () => {
         });
 
         it("gets maximum 10 points", async () => {
-            timestamp = lastOperation + 10 * 5 * 1000; // ten times the recovery period
+            timestamp = lastOperation + 10 * RECOVERY_TIME; // ten times the recovery period
             const spy = jest.spyOn(RateLimit, 'getLastTimestamp').mockImplementation((blockchain) => new Promise((res, _) => res(timestamp)));
             const expectMax10Points = await RateLimit.getPointsAvailable(5, lastOperation, blockchain);
             expect(expectMax10Points).toBe(10);
@@ -128,7 +128,7 @@ describe("Rate Limit", () => {
         });
 
         it("doesn't into negative number", async () => {
-            timestamp = 0; // ten times the recovery period
+            timestamp = 0; // 0 times the recovery period
             const spy = jest.spyOn(RateLimit, 'getLastTimestamp').mockImplementation((blockchain) => new Promise((res, _) => res(timestamp)));
             const expectMax10Points = await RateLimit.getPointsAvailable(0, lastOperation, blockchain);
             expect(expectMax10Points).toBe(0);
