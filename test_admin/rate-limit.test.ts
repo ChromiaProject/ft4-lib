@@ -27,17 +27,17 @@ describe("Rate Limit", () => {
   
 
     describe("Blockchain request configuaration in run.xml", () => {
-        it("Should have a limit of 10 requests per minute", async () => {
+        it("Should have a limit of 20 requests per minute", async () => {
             const info = await BlockchainInfo.getInfo(connection);
             expect(info.rateLimitInfo.maxPoints).toEqual(REQUEST_MAX_COUNT);
         });
 
-        it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
+        it("should have 20 max requests and 60000 milliseconds recovery time", async () => {
             const info = await BlockchainInfo.getInfo(connection);
             expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), new RateLimitInfo(true, REQUEST_MAX_COUNT, RECOVERY_TIME, POINTS_AT_ACCOUNT_CREATION)));
         });
 
-        it("Should have a recovery period of 5 seconds", async () => {
+        it("Should have a recovery period of 60 seconds", async () => {
             const info = await BlockchainInfo.getInfo(connection);
             expect(info.rateLimitInfo.recoveryTime).toEqual(RECOVERY_TIME);
         });
@@ -55,20 +55,20 @@ describe("Rate Limit", () => {
             expect(account.rateLimit.points).toBe(POINTS_AT_ACCOUNT_CREATION);
         });
     
-        it("waits 20 seconds and gets 4 points", async () => {
+        it("waits 120 seconds and gets 2 points", async () => {
             const user = TestUser.singleSig();
             const account = await AccountBuilder
                 .account(blockchain, user)
                 .withParticipants([user.keyPair])
                 .build();
 
-            await timeout(20000);
+            await timeout(120000);
             
             await RateLimit.execFreeOperation(account.id_, blockchain); // used to make one block
             await RateLimit.execFreeOperation(account.id_, blockchain); // used to calculate the last block's timestamp (previous block).
             // check the balance
             await account.sync();
-            expect(account.rateLimit.points).toBe(4 + POINTS_AT_ACCOUNT_CREATION); // 20 seconds / 5s recovery time
+            expect(account.rateLimit.points).toBe(2 + POINTS_AT_ACCOUNT_CREATION); // 120 seconds / 60s recovery time
         });
 
         it.skip("can make 4 operations", async () => {
@@ -112,18 +112,18 @@ describe("Rate Limit", () => {
         });
 
         it("gets 2 points after 10 seconds", async () => {
-            timestamp += 10000;
+            timestamp += 60000;
             const spy = jest.spyOn(RateLimit, 'getLastTimestamp').mockImplementation((blockchain) => new Promise((res, _) => res(timestamp)));
-            const expect2Points = await RateLimit.getPointsAvailable(0, lastOperation, blockchain);
-            expect(expect2Points).toBe(2);
+            const expect1Point = await RateLimit.getPointsAvailable(0, lastOperation, blockchain);
+            expect(expect1Point).toBe(1);
             spy.mockRestore();
         });
 
-        it("gets maximum 10 points", async () => {
-            timestamp = lastOperation + 10 * RECOVERY_TIME; // ten times the recovery period
+        it("gets maximum 20 points", async () => {
+            timestamp = lastOperation + REQUEST_MAX_COUNT * RECOVERY_TIME; // ten times the recovery period
             const spy = jest.spyOn(RateLimit, 'getLastTimestamp').mockImplementation((blockchain) => new Promise((res, _) => res(timestamp)));
             const expectMax10Points = await RateLimit.getPointsAvailable(5, lastOperation, blockchain);
-            expect(expectMax10Points).toBe(10);
+            expect(expectMax10Points).toBe(REQUEST_MAX_COUNT);
             spy.mockRestore();
         });
 
