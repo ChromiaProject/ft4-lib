@@ -65,7 +65,7 @@ import ft3_acc : .lib.ft3.account;
 function require_dev_admin() {
 	ft3_dev_op.require_dev();
 	val adminPubKeyBytes = byte_array(chain_context.args.admin_pub_key);
-	require(op_context.is_signer(adminPubKeyBytes), "Needs to be signed by admin");
+	require(is_signer(adminPubKeyBytes), "Needs to be signed by admin");
 }
 
 
@@ -131,7 +131,7 @@ function check_single_sig_auth(args: byte_array, participants: list&lt;byte_arra
     return
           ss_args.flags.contains_all(required_flags)
             and
-          op_context.is_signer(participants[0]);
+          is_signer(participants[0]);
 }
 
 function check_multi_sig_auth(args: byte_array, participants: list&lt;byte_array&gt;, required_flags: list&lt;text&gt;): boolean {
@@ -139,7 +139,7 @@ function check_multi_sig_auth(args: byte_array, participants: list&lt;byte_array
    if (not (multi_sign_args.flags.contains_all(required_flags))) return false;
    var num_sign = multi_sign_args.signatures_required;
    for(s in participants) {
-      if(op_context.is_signeris_signer(s)) {
+      if(is_signer(s)) {
           num_sign -= 1;
           if(num_sign &lt; 1) {return true;}
       }
@@ -1018,6 +1018,7 @@ struct module_args {
     </entry>
     <entry key="signers">
         <array>
+            <bytea>0350FE40766BC0CE8D08B3F5B810E49A8352FDD458606BD5FAFE5ACDCDC8FF3F57</bytea>
             <bytea>0350FE40766BC0CE8D08B3F5B810E49A8352FDD458606BD5FAFE5ACDCDC8FF3F57</bytea>
         </array>
     </entry>

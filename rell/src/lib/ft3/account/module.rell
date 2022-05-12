@@ -57,6 +57,7 @@ function _add_auth_descriptor (account, auth_descriptor) {
      );
      
      for (participant in auth_descriptor.participants) {
+        require(op_context.is_signer(participant));
         create auth_descriptor_participant(account_auth_descriptor, id = participant);
      }
      
@@ -64,6 +65,7 @@ function _add_auth_descriptor (account, auth_descriptor) {
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
+	require(auth_descriptor.account.id != auth_descriptor.descriptor_id, "Can't delete initial auth descriptor");
 	delete auth_descriptor_rule_variable @* { auth_descriptor };
 	delete auth_descriptor_participant @* { auth_descriptor };
 	delete auth_descriptor;
@@ -71,15 +73,22 @@ function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
 
 function _delete_all_auth_descriptors_exclude(account, auth_descriptor_id: byte_array) {
 	delete (adrv: auth_descriptor_rule_variable, ad: account_auth_descriptor) @* {
-		ad.account == account, ad.descriptor_id != auth_descriptor_id, adrv.account_auth_descriptor == ad		
+		ad.account == account,
+		ad.descriptor_id != account.id,
+		ad.descriptor_id != auth_descriptor_id,
+		adrv.account_auth_descriptor == ad	
 	};
 	
 	delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
-        ad.account == account and ad.descriptor_id != auth_descriptor_id and adp.account_auth_descriptor == ad
+        ad.account == account and
+        ad.descriptor_id != account.id and
+        ad.descriptor_id != auth_descriptor_id and
+        adp.account_auth_descriptor == ad
     };
 
     delete account_auth_descriptor @* {
        .account == account,
+       .descriptor_id != account.id,
        .descriptor_id != auth_descriptor_id
     };
 }
@@ -106,6 +115,12 @@ function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, re
 	return account;
 }
 
+query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
+    return is_valid(account_auth_descriptor @ {
+        .account.id == account_id,
+        .descriptor_id == auth_descriptor_id
+    });
+}
 
 query get_account_auth_descriptors(id: byte_array) {
     return account_auth_descriptor @* {

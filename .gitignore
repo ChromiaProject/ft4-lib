@@ -17,7 +17,5 @@ postchain/runtime
 
 dist/
 rell/target
-rell/target-devnet
-rell/target-testnet
 
 yarn.log
