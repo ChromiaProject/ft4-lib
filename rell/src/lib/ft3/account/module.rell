@@ -94,6 +94,7 @@ function _delete_all_auth_descriptors_exclude(account, auth_descriptor_id: byte_
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
+	 require(auth_descriptor.rules != null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
      val id = auth_descriptor.hash();
      val acc = create account (id);
      _add_auth_descriptor(

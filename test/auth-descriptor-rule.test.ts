@@ -356,4 +356,11 @@ describe("Auth Descriptor Rule", () => {
         const user = TestUser.singleSig(rules);
         await expect(sourceAccount(user)).rejects.toThrowError();
     });
+
+    it("shouldn't be able to create an account with a limited auth descriptor", async () => {
+        const user = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
+
+        const createPromise = sourceAccount(user);
+        await expect(createPromise).rejects.toThrowError();
+    });
 });
