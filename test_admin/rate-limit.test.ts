@@ -12,7 +12,6 @@ import { TestnetRateLimit as RateLimit} from "./testnetAdmin/testnet-rate-limit"
 jest.setTimeout(2000000);
 
 let blockchain: Blockchain = null;
-const connection: ConnectionClient = TestConnection.connection()
 
 const REQUEST_MAX_COUNT = 20;
 const RECOVERY_TIME = 60000;
@@ -21,24 +20,21 @@ const POINTS_AT_ACCOUNT_CREATION = 1;
 describe("Rate Limit", () => {
     beforeAll(async () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
-
     });
-
-  
 
     describe("Blockchain request configuaration in run.xml", () => {
         it("Should have a limit of 20 requests per minute", async () => {
-            const info = await BlockchainInfo.getInfo(connection);
+            const info = await BlockchainInfo.getInfo(blockchain.connection);
             expect(info.rateLimitInfo.maxPoints).toEqual(REQUEST_MAX_COUNT);
         });
 
         it("should have 20 max requests and 60000 milliseconds recovery time", async () => {
-            const info = await BlockchainInfo.getInfo(connection);
+            const info = await BlockchainInfo.getInfo(blockchain.connection);
             expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), new RateLimitInfo(true, REQUEST_MAX_COUNT, RECOVERY_TIME, POINTS_AT_ACCOUNT_CREATION)));
         });
 
         it("Should have a recovery period of 60 seconds", async () => {
-            const info = await BlockchainInfo.getInfo(connection);
+            const info = await BlockchainInfo.getInfo(blockchain.connection);
             expect(info.rateLimitInfo.recoveryTime).toEqual(RECOVERY_TIME);
         });
     });

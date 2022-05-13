@@ -1,17 +1,14 @@
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType, Account } from "../client/lib/ft3/user/account";
+import { Account } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import ConnectionClient from "../client/lib/ft3/core/connection-client";
 import { BlockchainInfo, RateLimitInfo, addAuthDescriptor } from "../client/lib/ft3";
-import TestConnection from "./util/test-connection";
 import RateLimit from "../client/lib/ft3/user/rate-limit";
 
 jest.setTimeout(2000000);
 
 let blockchain: Blockchain = null;
-const connection: ConnectionClient = TestConnection.connection()
 
 const REQUEST_MAX_COUNT = 10;
 const RECOVERY_TIME = 5000;
@@ -26,18 +23,17 @@ describe("Rate Limit", () => {
 
     describe("Blockchain request configuaration in run.xml", () => {
         it("Should have a limit of 10 requests per minute", async () => {
-            console.log("sddd", BlockchainInfo.getInfo(connection));
-            const info = await BlockchainInfo.getInfo(connection);
+            const info = await BlockchainInfo.getInfo(blockchain.connection);
             expect(info.rateLimitInfo.maxPoints).toEqual(REQUEST_MAX_COUNT);
         });
 
         it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
-            const info = await BlockchainInfo.getInfo(connection);
+            const info = await BlockchainInfo.getInfo(blockchain.connection);
             expect(info).toEqual(new BlockchainInfo(expect.any(String), expect.any(String), expect.any(String), new RateLimitInfo(expect.any(Boolean), 10, 5000, 1)));
         });
 
         it("Should have a recovery period of 5 seconds", async () => {
-            const info = await BlockchainInfo.getInfo(connection);
+            const info = await BlockchainInfo.getInfo(blockchain.connection);
             expect(info.rateLimitInfo.recoveryTime).toEqual(RECOVERY_TIME);
         });
     });
@@ -144,12 +140,16 @@ describe("Rate Limit", () => {
     const makeRequests = async (account: Account, requests: number): Promise<any> => {
         
         let txBuilder = blockchain.transactionBuilder()
+        const users = [];
         for(let i = 0; i<requests; i++) {
-            const disposableKeypair = TestUser.singleSig();
-            txBuilder = txBuilder.add(addAuthDescriptor(account.session.user.authDescriptor.id, account.session.user.authDescriptor.id, disposableKeypair.authDescriptor))
+            const user = TestUser.singleSig();
+            users.push(user);
+            txBuilder = txBuilder.add(addAuthDescriptor(account.session.user.authDescriptor.id, account.session.user.authDescriptor.id, user.authDescriptor))
         }
-        return txBuilder.build(account.session.user.authDescriptor.signers)
-            .sign(account.session.user.keyPair)
-            .post()
+        const allUsers = [...users, account.session.user];
+        const tx = txBuilder.build(allUsers.map(user => user.keyPair.pubKey));
+        allUsers.forEach(user => tx.sign(user.keyPair));
+
+        return tx.post();
     }
 });

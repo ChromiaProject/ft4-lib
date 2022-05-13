@@ -42,7 +42,7 @@ describe("Auth Descriptor Rule", () => {
         asset = await Asset.register(generateAssetName(), generateId(), blockchain);
     });
 
-    it("should succeed when calling operations, number of times less than or equal to value set by operation count rule", async () => {
+    it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
         const user = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
 
         const account1 = await sourceAccount(user);
@@ -55,7 +55,7 @@ describe("Auth Descriptor Rule", () => {
         await expect(op2Promise).resolves.not.toThrowError();
     });
 
-    it("should fail when calling operations, number of times more than value set by operation count rule", async () => {
+    it("should fail when number of called operations is greater than value set by operation count rule", async () => {
         const user = TestUser.singleSig(Rules.operationCount.lessThan(2));
 
         const account1 = await sourceAccount(user);
