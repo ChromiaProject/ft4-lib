@@ -31,34 +31,6 @@ describe('Test the account', () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
     });
 
-    it("Register account on blockchain", async () => {
-        const user = TestUser.singleSig();
-        const authDescriptor = new SingleSignatureAuthDescriptor(
-            user.keyPair.pubKey,
-            [FlagsType.Account, FlagsType.Transfer]
-        );
-
-        const account = await Account.register(authDescriptor, blockchain.newSession(user));
-
-        expect(account).not.toBeNull();
-    });
-
-    it("can add new auth descriptor if has account edit rights", async () => {
-        const user = TestUser.singleSig();
-        const account = await AccountBuilder
-            .account(blockchain, user)
-            .withParticipants([user.keyPair])
-            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-            .build();
-
-        expect(account).not.toBeNull();
-
-        await account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [FlagsType.Transfer])
-        );
-        expect(account.authDescriptor.length).toBe(2);
-    });
-
     it("should create new multisig account", async () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
@@ -112,56 +84,6 @@ describe('Test the account', () => {
 
         await expect(promise).rejects.toBeInstanceOf(Error);
         expect(account.authDescriptor.length).toBe(1);
-    });
-
-    it("should return two accounts when account is participant of two accounts", async () => {
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig();
-
-        await AccountBuilder
-            .account(blockchain, user1)
-            .withParticipants([user1.keyPair])
-            .build();
-
-        const account2 = await AccountBuilder
-            .account(blockchain, user2)
-            .withParticipants([user2.keyPair])
-            .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-            .build();
-
-        const authDescriptor = new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer]);
-
-        await blockchain.transactionBuilder()
-            .add(addAuthDescriptor(account2.id, user2.authDescriptor.id, authDescriptor))
-            .build([user2.authDescriptor.signers, authDescriptor.signers].flat())
-            .sign(user2.keyPair)
-            .sign(user1.keyPair)
-            .post();
-
-        const accounts = await Account.getByParticipantId(user1.keyPair.pubKey, blockchain.newSession(user1));
-
-        expect(accounts.length).toEqual(2);
-    });
-
-    it('should have only main auth descriptor left after calling deleteAllAuthDescriptorsExclude with main auth_descriptor', async () => {
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig();
-        const user3 = TestUser.singleSig();
-
-        const account = await AccountBuilder
-            .account(blockchain, user1)
-            .withParticipants([user1.keyPair])
-            .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
-            .build();
-
-        await addAuthDescriptorTo(account, user1, user2, blockchain);
-        await addAuthDescriptorTo(account, user1, user3, blockchain);
-
-        await account.deleteAllAuthDescriptorsExclude(user1.authDescriptor);
-
-        const foundAccount = await blockchain.newSession(user1).getAccountById(account.id_);
-
-        expect(foundAccount.authDescriptor.length).toEqual(1);
     });
 
     it('should have 2 auth descriptor left after calling deleteAllAuthDescriptorsExclude with not the main one', async () => {
