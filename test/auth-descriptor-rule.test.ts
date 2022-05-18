@@ -6,7 +6,7 @@ import Asset from "../client/lib/ft3/user/asset";
 import {generateAssetName, generateId} from "./util/util";
 import { Account } from "../client/lib/ft3/user/account";
 import User from "../client/lib/ft3/user/user";
-import { Rules } from "../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule"
+import AuthDescriptorRule, { Rules } from "../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule"
 import {addAuthDescriptor} from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
@@ -35,6 +35,21 @@ async function addAuthDescriptorTo(account: Account, adminUser: User, user: User
         .post();
 }
 
+async function getUserAndAccountFromAuthDescriptorRule(rule: AuthDescriptorRule, blockchain: Blockchain): Promise<[User, Account]>{ //to be used when you don't need the admin user
+    const user1 = TestUser.singleSig();
+    const user2 = TestUser.singleSig(rule);
+
+    const account1 = await sourceAccount(user1);
+
+	await addAuthDescriptorTo(account1, user1, user2, blockchain);
+
+	const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, blockchain.newSession(user2));
+	
+	expect(accounts.length).toBe(1);
+
+	return [user2, accounts[0]]
+}
+
 describe("Auth Descriptor Rule", () => {
     beforeAll(async () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
@@ -42,18 +57,8 @@ describe("Auth Descriptor Rule", () => {
     });
 
     it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
-
-        const account1 = await sourceAccount(user1);
+		const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.operationCount.lessOrEqual(2), blockchain);
         const account2 = await destinationAccount();
-
-		await addAuthDescriptorTo(account1, user1, user2, blockchain);
-
-		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
-		
-		expect(accounts.length).toBe(1);
-		const account = accounts[0];
 
         const op1Promise = account.transfer(account2.id, asset.id, 10);
         await expect(op1Promise).resolves.not.toThrowError();
@@ -63,147 +68,129 @@ describe("Auth Descriptor Rule", () => {
     });
 
     it("should fail when number of called operations is greater than value set by operation count rule", async () => {
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig(Rules.operationCount.lessThan(2));
-
-        const account1 = await sourceAccount(user1);
+		const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.operationCount.lessThan(2), blockchain);
         const account2 = await destinationAccount();
-
-		await addAuthDescriptorTo(account1, user1, user2, blockchain);
-
-		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
-		
-		expect(accounts.length).toBe(1);
-		const account = accounts[0];
 
         const op1Promise = account.transfer(account2.id, asset.id, 10);
         await expect(op1Promise).resolves.not.toThrowError();
 
         const op2Promise = account.transfer(account2.id, asset.id, 20);
-        await expect(op2Promise).resolves.not.toThrowError();
+        await expect(op2Promise).rejects.toThrowError();
     });
 
     it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
-        const user = TestUser.singleSig(Rules.blockTime.lessThan(Date.now() - 10000));
-
-        const account1 = await sourceAccount(user);
+		const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.lessThan(Date.now() - 10000), blockchain);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).rejects.toThrowError()
     });
 
     it("should succeed when current time is less than time defined by 'less than' block time rule", async () => {
-        const user = TestUser.singleSig(Rules.blockTime.lessThan(Date.now() + 10000));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.lessThan(Date.now() + 10000), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).resolves.not.toThrowError()
     });
 
     it("should succeed when current block height is less than value defined by 'less than' block height rule", async () => {
-        const user = TestUser.singleSig(Rules.blockHeight.lessThan(10000));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockHeight.lessThan(10000), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).resolves.not.toThrowError()
     });
 
     it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
-        const user = TestUser.singleSig(Rules.blockHeight.lessThan(1));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockHeight.lessThan(1), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).rejects.toThrowError()
     });
 
     it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
-        const user = TestUser.singleSig(Rules.blockTime.greaterThan(Date.now() + 10000));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.greaterThan(Date.now() + 10000), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).rejects.toThrowError()
     });
 
     it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
-        const user = TestUser.singleSig(Rules.blockTime.greaterThan(Date.now() - 10000));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.greaterThan(Date.now() - 10000), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).resolves.not.toThrowError()
     });
 
     it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
-        const user = TestUser.singleSig(Rules.blockHeight.greaterThan(10000));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockHeight.greaterThan(10000), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).rejects.toThrowError();
     });
 
     it("should succeed if operation is executed after block defined by 'greater than' block height rule", async () => {
-        const user = TestUser.singleSig(Rules.blockHeight.greaterThan(1));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockHeight.greaterThan(1), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).resolves.not.toThrowError()
     });
 
     it("should be able to create complex rules", async () => {
-        const user = TestUser.singleSig(Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000), blockchain);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).resolves.not.toThrowError()
     });
 
     it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
-        const user = TestUser.singleSig(Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10));
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+									Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10), 
+									blockchain
+								);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).rejects.toThrowError();
     });
 
     it("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
-        const user = TestUser.singleSig(
-            Rules.blockTime.greaterThan(Date.now() - 20000).and.blockTime.lessThan(Date.now() - 10000)
-        );
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.greaterThan(
+									Date.now() - 20000).and.blockTime.lessThan(Date.now() - 10000), 
+									blockchain
+								);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).rejects.toThrowError();
     });
 
     it("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
-        const user = TestUser.singleSig(
-            Rules.blockTime.greaterThan(Date.now() - 10000).and.blockTime.lessThan(Date.now() + 10000)
-        );
+        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.greaterThan(
+									Date.now() - 10000).and.blockTime.lessThan(Date.now() + 10000), 
+									blockchain
+								);
 
-        const account1 = await sourceAccount(user);
         const account2 = await destinationAccount();
 
-        const opPromise = account1.transfer(account2.id, asset.id, 10);
+        const opPromise = account.transfer(account2.id, asset.id, 10);
         await expect(opPromise).resolves.not.toThrowError()
     });
 
@@ -343,8 +330,16 @@ describe("Auth Descriptor Rule", () => {
     it("Should be able to create same rules with different value", async () => {
         let rules = Rules.blockHeight.greaterThan(1).and.blockHeight.greaterThan(10000).and.blockTime.greaterOrEqual(122222999);
            
-        const user = TestUser.singleSig(rules);
-        await expect(sourceAccount(user)).resolves.toBeDefined(); 
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig(rules);
+
+		const account = await sourceAccount(user1);
+
+
+		await addAuthDescriptorTo(account, user1, user2, blockchain);
+		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account.session);
+		expect(accounts.length).toBe(1);
+		expect(accounts[0]).toBeDefined();
     });
 
     it("shouldn't be able to create too many rules", async () => {
@@ -353,8 +348,11 @@ describe("Auth Descriptor Rule", () => {
             rules = rules.and.blockHeight.greaterOrEqual(i);
         }
         
-        const user = TestUser.singleSig(rules);
-        await expect(sourceAccount(user)).rejects.toThrowError();
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig(rules);
+
+		const account = await sourceAccount(user1);
+        await expect(addAuthDescriptorTo(account, user1, user2, blockchain)).rejects.toThrowError();
     });
 
     it("shouldn't be able to create an account with a limited auth descriptor", async () => {
