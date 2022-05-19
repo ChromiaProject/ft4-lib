@@ -330,14 +330,9 @@ describe("Auth Descriptor Rule", () => {
     it("Should be able to create same rules with different value", async () => {
         let rules = Rules.blockHeight.greaterThan(1).and.blockHeight.greaterThan(10000).and.blockTime.greaterOrEqual(122222999);
            
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig(rules);
+		const [user, account] = await getUserAndAccountFromAuthDescriptorRule(rules, blockchain);
 
-		const account = await sourceAccount(user1);
-
-
-		await addAuthDescriptorTo(account, user1, user2, blockchain);
-		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account.session);
+		const accounts = await Account.getByAuthDescriptorId(user.authDescriptor.id, account.session);
 		expect(accounts.length).toBe(1);
 		expect(accounts[0]).toBeDefined();
     });
