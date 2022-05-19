@@ -48,12 +48,12 @@ describe("Auth Descriptor Rule", () => {
         const account1 = await sourceAccount(user1);
         const account2 = await destinationAccount();
 
-		await addAuthDescriptorTo(account1, user1, user2, blockchain);
+        await addAuthDescriptorTo(account1, user1, user2, blockchain);
 
-		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
-		
-		expect(accounts.length).toBe(1);
-		const account = accounts[0];
+        const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
+        
+        expect(accounts.length).toBe(1);
+        const account = accounts[0];
 
         const op1Promise = account.transfer(account2.id, asset.id, 10);
         await expect(op1Promise).resolves.not.toThrowError();
@@ -69,12 +69,12 @@ describe("Auth Descriptor Rule", () => {
         const account1 = await sourceAccount(user1);
         const account2 = await destinationAccount();
 
-		await addAuthDescriptorTo(account1, user1, user2, blockchain);
+        await addAuthDescriptorTo(account1, user1, user2, blockchain);
 
-		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
-		
-		expect(accounts.length).toBe(1);
-		const account = accounts[0];
+        const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
+        
+        expect(accounts.length).toBe(1);
+        const account = accounts[0];
 
         const op1Promise = account.transfer(account2.id, asset.id, 10);
         await expect(op1Promise).resolves.not.toThrowError();
