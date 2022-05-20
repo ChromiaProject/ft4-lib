@@ -45,7 +45,7 @@ async function getUserAndAccountFromAuthDescriptorRule(rule: AuthDescriptorRule,
 
 	const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, blockchain.newSession(user2));
 	
-	expect(accounts.length).toBe(1);
+	if (accounts.length > 1) throw new Error(“Found more than one account”);
 
 	return [user2, accounts[0]]
 }
