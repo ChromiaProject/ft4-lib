@@ -44,7 +44,7 @@ async function getUserAndAccountFromAuthDescriptorRule(rule: AuthDescriptorRule,
     await addAuthDescriptorTo(account1, user1, user2, blockchain);
 
     const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, blockchain.newSession(user2));
-    
+
     if (accounts.length > 1) throw new Error(“Found more than one account”);
 
     return [user2, accounts[0]]
@@ -160,7 +160,7 @@ describe("Auth Descriptor Rule", () => {
 
     it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
         const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
-                                    Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10), 
+                                    Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10),
                                     blockchain
                                 );
 
@@ -172,7 +172,7 @@ describe("Auth Descriptor Rule", () => {
 
     it("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
         const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.greaterThan(
-                                    Date.now() - 20000).and.blockTime.lessThan(Date.now() - 10000), 
+                                    Date.now() - 20000).and.blockTime.lessThan(Date.now() - 10000),
                                     blockchain
                                 );
 
@@ -184,7 +184,7 @@ describe("Auth Descriptor Rule", () => {
 
     it("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
         const [user, account] = await getUserAndAccountFromAuthDescriptorRule(Rules.blockTime.greaterThan(
-                                    Date.now() - 10000).and.blockTime.lessThan(Date.now() + 10000), 
+                                    Date.now() - 10000).and.blockTime.lessThan(Date.now() + 10000),
                                     blockchain
                                 );
 
@@ -330,11 +330,8 @@ describe("Auth Descriptor Rule", () => {
     it("Should be able to create same rules with different value", async () => {
         let rules = Rules.blockHeight.greaterThan(1).and.blockHeight.greaterThan(10000).and.blockTime.greaterOrEqual(122222999);
            
-        const [user, account] = await getUserAndAccountFromAuthDescriptorRule(rules, blockchain);
-
-        const accounts = await Account.getByAuthDescriptorId(user.authDescriptor.id, account.session);
-        expect(accounts.length).toBe(1);
-        expect(accounts[0]).toBeDefined();
+        const user = TestUser.singleSig(rules);
+        await expect(sourceAccount(user)).resolves.toBeDefined(); 
     });
 
     it("shouldn't be able to create too many rules", async () => {
@@ -343,17 +340,7 @@ describe("Auth Descriptor Rule", () => {
             rules = rules.and.blockHeight.greaterOrEqual(i);
         }
         
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig(rules);
-
-        const account = await sourceAccount(user1);
-        await expect(addAuthDescriptorTo(account, user1, user2, blockchain)).rejects.toThrowError();
-    });
-
-    it("shouldn't be able to create an account with a limited auth descriptor", async () => {
-        const user = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
-
-        const createPromise = sourceAccount(user);
-        await expect(createPromise).rejects.toThrowError();
+        const user = TestUser.singleSig(rules);
+        await expect(sourceAccount(user)).rejects.toThrowError();
     });
 });

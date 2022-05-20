@@ -5,7 +5,7 @@ import DirectoryServiceUtil from "./directory-service-util";
 require('dotenv').config();
 
 export default class BlockchainUtil {
-	static async getDefaultBlockchain(): Promise<Blockchain> {
-		return await new Postchain(process.env.NODE_URL).blockchain(0);
-	}
+    static async getDefaultBlockchain(): Promise<Blockchain> {
+        return await new Postchain(process.env.NODE_URL).blockchain(0);
+    }
 }
