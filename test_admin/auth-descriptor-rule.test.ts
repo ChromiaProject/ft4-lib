@@ -36,36 +36,67 @@ async function addAuthDescriptorTo(account: Account, adminUser: User, user: User
         .post();
 }
 
+/*
+        let txBuilder = blockchain.transactionBuilder()
+        const users = [];
+        for(let i = 0; i<requests; i++) {
+            const user = TestUser.singleSig();
+            users.push(user);
+            txBuilder = txBuilder.add(addAuthDescriptor(account.session.user.authDescriptor.id, account.session.user.authDescriptor.id, user.authDescriptor))
+        }
+        const allUsers = [...users, account.session.user];
+        const tx = txBuilder.build(allUsers.map(user => user.keyPair.pubKey));
+        allUsers.forEach(user => tx.sign(user.keyPair));
+
+        return tx.post();
+*/
+
 describe("Auth Descriptor Rule", () => {
     beforeAll(async () => {
         blockchain = await BlockchainUtil.getDefaultBlockchain();
         asset = await Asset.register(generateAssetName(), generateId(), blockchain);
     });
 
-    it("should succeed when calling operations, number of times less than or equal to value set by operation count rule", async () => {
-        const user = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
+    it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
 
-        const account1 = await sourceAccount(user);
+        const account1 = await sourceAccount(user1);
         const account2 = await destinationAccount();
 
-        const op1Promise = account1.transfer(account2.id, asset.id, 10);
+		await addAuthDescriptorTo(account1, user1, user2, blockchain);
+
+		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
+		
+		expect(accounts.length).toBe(1);
+		const account = accounts[0];
+
+        const op1Promise = account.transfer(account2.id, asset.id, 10);
         await expect(op1Promise).resolves.not.toThrowError();
 
-        const op2Promise = account1.transfer(account2.id, asset.id, 20);
+        const op2Promise = account.transfer(account2.id, asset.id, 20);
         await expect(op2Promise).resolves.not.toThrowError();
     });
 
-    it("should fail when calling operations, number of times more than value set by operation count rule", async () => {
-        const user = TestUser.singleSig(Rules.operationCount.lessThan(2));
+    it("should fail when number of called operations is greater than value set by operation count rule", async () => {
+        const user1 = TestUser.singleSig();
+        const user2 = TestUser.singleSig(Rules.operationCount.lessThan(2));
 
-        const account1 = await sourceAccount(user);
+        const account1 = await sourceAccount(user1);
         const account2 = await destinationAccount();
 
-        const op1Promise = account1.transfer(account2.id, asset.id, 10);
+		await addAuthDescriptorTo(account1, user1, user2, blockchain);
+
+		const accounts = await Account.getByAuthDescriptorId(user2.authDescriptor.id, account1.session);
+		
+		expect(accounts.length).toBe(1);
+		const account = accounts[0];
+
+        const op1Promise = account.transfer(account2.id, asset.id, 10);
         await expect(op1Promise).resolves.not.toThrowError();
 
-        const op2Promise = account1.transfer(account2.id, asset.id, 20);
-        await expect(op2Promise).rejects.toThrowError()
+        const op2Promise = account.transfer(account2.id, asset.id, 20);
+        await expect(op2Promise).resolves.not.toThrowError();
     });
 
     it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {

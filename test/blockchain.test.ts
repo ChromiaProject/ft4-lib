@@ -5,11 +5,9 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import {generateAssetName, generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import ConnectionClient from "../client/lib/ft3/core/connection-client";
 import {Account, Asset, RateLimitInfo} from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
-const connection: ConnectionClient = TestConnection.connection();
 
 describe("Blockchain", () => {
     beforeAll(async () => {
@@ -17,7 +15,7 @@ describe("Blockchain", () => {
     });
 
     it("should provide info", async () => {
-        const info = await BlockchainInfo.getInfo(connection);
+        const info = await BlockchainInfo.getInfo(blockchain.connection);
 
         expect(info).toEqual(new BlockchainInfo('test', 'test_website', 'test_description', new RateLimitInfo(true, 10, 5000, 1)));
     });

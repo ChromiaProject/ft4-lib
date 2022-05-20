@@ -31,7 +31,6 @@ export default class RateLimit {
                 account_id: accountId,
             }  
         );
-        console.log("RATE INFO", rateInfo)
         if(!rateInfo) return null;
         return new RateLimit(rateInfo.points, rateInfo.last_update);
     }

@@ -5,11 +5,11 @@ require('dotenv').config();
 // which creates an instance of ConnectionClient
 class TestConnection extends ConnectionClient {
     constructor() {
-        super('http://localhost:7740/', process.env.CHAIN_ID);
+        super('http://localhost:7740/', process.env.CHAIN_1_ID);
     }
 
     static connection() {
-        return new ConnectionClient('http://localhost:7740/', process.env.CHAIN_ID);
+        return new ConnectionClient('http://localhost:7740/', process.env.CHAIN_1_ID);
     }
 }
 
