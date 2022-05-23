@@ -79,3 +79,11 @@ function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
       idx += 1;
    }
 }
+
+@extendable function _before_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
+   
+}
+
+@extendablefunction _after_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
+   
+}
