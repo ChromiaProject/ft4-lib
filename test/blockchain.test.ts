@@ -1,4 +1,3 @@
-import TestConnection from "./util/test-connection";
 import BlockchainInfo from "../client/lib/ft3/core/blockchain/blockchain-info";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import TestUser from "./util/test-user";
