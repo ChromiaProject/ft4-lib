@@ -5,7 +5,5 @@ import ft3: ^^;
 
 
 operation transfer (inputs: list<ft3.xfer_input>, outputs: list<ft3.xfer_output>) {
-    ft3._before_transfer(inputs, outputs);
     ft3._transfer(inputs, outputs);
-    ft3._after_transfer(inputs, outputs);
 }
