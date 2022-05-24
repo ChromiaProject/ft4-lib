@@ -65,8 +65,8 @@ function process_transfer_output (o: xfer_output, idx: integer, available_assets
       );
 }
 
-function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
-    _before_transfer(inputs, outputs);
+function _transfer (_inputs: list<xfer_input>, _outputs: list<xfer_output>) {
+   val inputs, outputs = _before_transfer(_inputs, _outputs);
 
    val sum_inputs = map<asset, integer>();
    var idx = 0;
@@ -83,8 +83,8 @@ function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
     _after_transfer(inputs, outputs);
 }
 
-@extendable function _before_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
-   
+@extendable function _before_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) : (inputs: list<xfer_input>, outputs: list<xfer_output>) {
+   return inputs, outputs
 }
 
 @extendablefunction _after_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
