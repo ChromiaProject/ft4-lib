@@ -1,0 +1,34 @@
+module;
+
+import ^.lib.ft3.*
+
+struct xfer_input {
+   account_id: byte_array;
+   asset_id: byte_array;
+   auth_descriptor_id: byte_array;
+   amount: integer;
+   extra: map<text, gtv>;
+}
+
+struct xfer_output {
+   account_id: byte_array;
+   asset_id: byte_array;
+   amount: integer;
+   extra: map<text, gtv>;
+}
+
+@extends("_before_transfer") function(inputs: list<xfer_input>, outputs: list<xfer_output>) returns (inputs: list<xfer_input>, outputs: list<xfer_output>){
+    for (i in inputs){
+        i.amount /= 2;
+    }
+    for (o in outputs){
+        o.amount /= 2;
+    }
+    return inputs, outputs;
+}
+
+@extends("_after_transfer") function(inputs: list<xfer_input>, outputs: list<xfer_output>){
+    for (i in inputs){
+        log(i.amount);
+    }
+}
