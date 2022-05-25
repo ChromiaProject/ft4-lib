@@ -1,0 +1,30 @@
+@test
+module;
+
+import ^^^.main.*;
+import ^^.extensions.*;
+import ^^^.lib.ft3.core;
+
+function test_before_transfer_extension_is_called() {
+    // TODO: define inputs
+    val inputs = list<core.xfer_input>();
+    // TODO: define outputs
+    val outputs = list<core.xfer_output>();
+    // TODO: call transfer operation
+    
+    assert_true(transfer_extensions_state.is_before_transfer_called);
+    assert_equals(transfer_extensions_state.before_transfer_arg_inputs, inputs.to_gtv().to_bytes());
+    assert_equals(transfer_extensions_state.before_transfer_arg_outputs, outputs.to_gtv().to_bytes());
+}
+
+function test_after_transfer_extension_is_called() {
+    // TODO: define inputs
+    val inputs = list<core.xfer_input>();
+    // TODO: define outputs
+    val outputs = list<core.xfer_output>();
+    // TODO: call transfer operation
+    
+    assert_true(transfer_extensions_state.is_after_transfer_called);
+    assert_equals(transfer_extensions_state.after_transfer_arg_inputs, inputs.to_gtv().to_bytes());
+    assert_equals(transfer_extensions_state.after_transfer_arg_outputs, outputs.to_gtv().to_bytes());
+}
