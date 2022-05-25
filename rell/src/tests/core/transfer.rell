@@ -4,13 +4,41 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
+import acc: ^^^.lib.ft3.account;
+import asset: ^^^.lib.ft3.asset;
+import utils;
 
 function test_before_transfer_extension_is_called() {
-    // TODO: define inputs
+    val acc_data_1 = create_ft3_test_acc(rell.test.keypair.alice).auth_id;
+    val acc_data_2 = create_ft3_test_acc(rell.test.keypair.bob).auth_id;
+    val asset_id = create asset(
+            id = ("test", chain_context.blockchain_rid).hash(), 
+            name = "test", 
+            issuing_chain_rid = chain_context.blockchain_rid)
+        .id;
+
     val inputs = list<core.xfer_input>();
-    // TODO: define outputs
+    inputs.add(
+        core.xfer_input(
+            account_id = acc_data_1.account_id, 
+            asset_id, 
+            auth_descriptor_id = acc_data_1.auth_descriptor_id,
+            1,
+            extra = map()
+        )
+    );
+
     val outputs = list<core.xfer_output>();
-    // TODO: call transfer operation
+    outputs.add(
+        core.xfer_output(
+            account_id = acc_data_2.account_id, 
+            asset_id = asset_id, 
+            amount = 1,
+            extra = map()
+        )
+    );
+
+    core._transfer(inputs, outputs);
     
     assert_true(transfer_extensions_state.is_before_transfer_called);
     assert_equals(transfer_extensions_state.before_transfer_arg_inputs, inputs.to_gtv().to_bytes());
@@ -18,11 +46,36 @@ function test_before_transfer_extension_is_called() {
 }
 
 function test_after_transfer_extension_is_called() {
-    // TODO: define inputs
+    val acc_data_1 = create_ft3_test_acc(rell.test.keypair.alice).auth_id;
+    val acc_data_2 = create_ft3_test_acc(rell.test.keypair.bob).auth_id;
+    val asset_id = create asset(
+            id = ("test", chain_context.blockchain_rid).hash(), 
+            name = "test", 
+            issuing_chain_rid = chain_context.blockchain_rid)
+        .id;
+
     val inputs = list<core.xfer_input>();
-    // TODO: define outputs
+    inputs.add(
+        core.xfer_input(
+            account_id = acc_data_1.account_id, 
+            asset_id, 
+            auth_descriptor_id = acc_data_1.auth_descriptor_id,
+            1,
+            extra = map()
+        )
+    );
+
     val outputs = list<core.xfer_output>();
-    // TODO: call transfer operation
+    outputs.add(
+        core.xfer_output(
+            account_id = acc_data_2.account_id, 
+            asset_id = asset_id, 
+            amount = 1,
+            extra = map()
+        )
+    );
+
+    core._transfer(inputs, outputs);
     
     assert_true(transfer_extensions_state.is_after_transfer_called);
     assert_equals(transfer_extensions_state.after_transfer_arg_inputs, inputs.to_gtv().to_bytes());
