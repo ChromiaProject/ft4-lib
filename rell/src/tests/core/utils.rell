@@ -1,3 +1,7 @@
+@test module;
+import acc: ^^^.lib.ft3.account;
+import dev_op_account: ^^^.lib.ft3.operations.dev_op_account;
+
 struct auth_id {
     account_id: byte_array;
     auth_descriptor_id: byte_array;
@@ -8,15 +12,15 @@ struct auth_data {
 	rell.test.keypair;
 }
 
-function create_ft3_test_acc(rell.test.keypair) {
+function create_ft3_test_acc(rell.test.keypair): auth_data {
 	val auth_descriptor = create_auth_descriptor(keypair.pub);
 	val tx1 = rell.test.tx()
-		.op(ft3.dev_op_account.dev_register_account(auth_descriptor))
+		.op(dev_op_account.dev_register_account(auth_descriptor))
 		.sign(keypair);
 		
 	rell.test.block().tx(tx1).run();
 		
-	val account = ft3.acc.account_auth_descriptor @ { 
+	val account = acc.account_auth_descriptor @ { 
 		.descriptor_id == auth_descriptor.hash()
 	} ( .account.id );
 	
@@ -26,10 +30,10 @@ function create_ft3_test_acc(rell.test.keypair) {
     );
 }
 
-function get_ft3_test_acc(rell.test.keypair) {
+function get_ft3_test_acc(rell.test.keypair): auth_data {
 	val auth_descriptor = create_auth_descriptor(keypair.pub);
 			
-	val account = ft3.acc.account_auth_descriptor @ { 
+	val account = acc.account_auth_descriptor @ { 
 		.descriptor_id == auth_descriptor.hash()
 	} ( .account.id );
 	
@@ -39,7 +43,7 @@ function get_ft3_test_acc(rell.test.keypair) {
     );
 }
 
-function create_auth_descriptor(pubkey): ft3.acc.auth_descriptor {
+function create_auth_descriptor(pubkey): acc.auth_descriptor {
 	val rules = [ "block_height".to_gtv(), "gt".to_gtv(), integer(0).to_gtv() ].to_gtv();
-	return ft3.acc.auth_descriptor("S", [ pubkey ], [ ["T"].to_gtv(), pubkey.to_hex().to_gtv() ], rules = rules.to_gtv());
+	return acc.auth_descriptor("S", [ pubkey ], [ ["T"].to_gtv(), pubkey.to_hex().to_gtv() ], rules = rules.to_gtv());
 }

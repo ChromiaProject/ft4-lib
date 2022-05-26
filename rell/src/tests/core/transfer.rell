@@ -5,13 +5,14 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
 import acc: ^^^.lib.ft3.account;
-import asset: ^^^.lib.ft3.asset;
-import utils;
+import core: ^^^.lib.ft3.core;
+import ^.utils;
+import ^^.rell;
 
 function test_before_transfer_extension_is_called() {
-    val acc_data_1 = create_ft3_test_acc(rell.test.keypair.alice).auth_id;
-    val acc_data_2 = create_ft3_test_acc(rell.test.keypair.bob).auth_id;
-    val asset_id = create asset(
+    val acc_data_1 = utils.create_ft3_test_acc(rell.test.keypair.alice).auth_id;
+    val acc_data_2 = utils.create_ft3_test_acc(rell.test.keypair.bob).auth_id;
+    val asset_id = create core.asset(
             id = ("test", chain_context.blockchain_rid).hash(), 
             name = "test", 
             issuing_chain_rid = chain_context.blockchain_rid)
@@ -46,9 +47,9 @@ function test_before_transfer_extension_is_called() {
 }
 
 function test_after_transfer_extension_is_called() {
-    val acc_data_1 = create_ft3_test_acc(rell.test.keypair.alice).auth_id;
-    val acc_data_2 = create_ft3_test_acc(rell.test.keypair.bob).auth_id;
-    val asset_id = create asset(
+    val acc_data_1 = utils.create_ft3_test_acc(rell.test.keypair.alice).auth_id;
+    val acc_data_2 = utils.create_ft3_test_acc(rell.test.keypair.bob).auth_id;
+    val asset_id = create core.asset(
             id = ("test", chain_context.blockchain_rid).hash(), 
             name = "test", 
             issuing_chain_rid = chain_context.blockchain_rid)
