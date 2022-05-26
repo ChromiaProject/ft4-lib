@@ -1,0 +1,24 @@
+
+import ^^.lib.ft3.core;
+
+object transfer_extensions_state {
+    mutable is_before_transfer_called: boolean = false;
+    mutable before_transfer_arg_inputs: byte_array = x"";
+    mutable before_transfer_arg_outputs: byte_array = x"";
+    
+    mutable is_after_transfer_called: boolean = false;
+    mutable after_transfer_arg_inputs: byte_array = x"";
+    mutable after_transfer_arg_outputs: byte_array = x"";
+}
+
+@extend(core.before_transfer) function (inputs: list<core.xfer_input>, outputs: list<core.xfer_output>) {
+    transfer_extensions_state.is_before_transfer_called = true;
+    transfer_extensions_state.before_transfer_arg_inputs = inputs.to_gtv().to_bytes();
+    transfer_extensions_state.before_transfer_arg_outputs = outputs.to_gtv().to_bytes();
+}
+
+@extend(core.after_transfer) function (inputs: list<core.xfer_input>, outputs: list<core.xfer_output>) {
+    transfer_extensions_state.is_after_transfer_called = true;
+    transfer_extensions_state.after_transfer_arg_inputs = inputs.to_gtv().to_bytes();
+    transfer_extensions_state.after_transfer_arg_outputs = outputs.to_gtv().to_bytes();    
+}
