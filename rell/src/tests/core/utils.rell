@@ -1,6 +1,7 @@
 @test module;
 import acc: ^^^.lib.ft3.account;
-import dev_op_account: ^^^.lib.ft3.operations.dev_op_account;
+import ^^^.lib.ft3.operations.dev_op_account;
+import ^^^.lib.ft3.operations.dev_op_asset;
 
 struct auth_id {
     account_id: byte_array;
@@ -44,6 +45,19 @@ function get_ft3_test_acc(rell.test.keypair): auth_data {
 }
 
 function create_auth_descriptor(pubkey): acc.auth_descriptor {
-	val rules = [ "block_height".to_gtv(), "gt".to_gtv(), integer(0).to_gtv() ].to_gtv();
-	return acc.auth_descriptor("S", [ pubkey ], [ ["T"].to_gtv(), pubkey.to_hex().to_gtv() ], rules = rules.to_gtv());
+	return acc.auth_descriptor("S", [ pubkey ], [ ["T"].to_gtv(), pubkey.to_hex().to_gtv() ], rules = null.to_gtv());
+}
+
+function create_asset(name: text): byte_array {
+	val tx = rell.test.tx()
+		.op(dev_op_asset.dev_register_asset(
+                name,
+                issuing_chain_rid = chain_context.blockchain_rid
+            )
+        )
+		.sign(rell.test.keypairs.alice);
+
+	rell.test.block().tx(tx).run();
+    
+    return (name, chain_context.blockchain_rid).hash();
 }

@@ -4,19 +4,16 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
+import ft3: ^^^.lib.ft3.ft3_basic_dev;
+import ^^^.lib.ft3.operations.dev_op_balance;
 import acc: ^^^.lib.ft3.account;
-import core: ^^^.lib.ft3.core;
 import ^.utils;
-import ^^.rell;
 
 function test_before_transfer_extension_is_called() {
-    val acc_data_1 = utils.create_ft3_test_acc(rell.test.keypair.alice).auth_id;
-    val acc_data_2 = utils.create_ft3_test_acc(rell.test.keypair.bob).auth_id;
-    val asset_id = create core.asset(
-            id = ("test", chain_context.blockchain_rid).hash(), 
-            name = "test", 
-            issuing_chain_rid = chain_context.blockchain_rid)
-        .id;
+    val acc_data_1 = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+    val acc_data_2 = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
+
+    val asset_id = utils.create_asset("test");
 
     val inputs = list<core.xfer_input>();
     inputs.add(
@@ -24,7 +21,7 @@ function test_before_transfer_extension_is_called() {
             account_id = acc_data_1.account_id, 
             asset_id, 
             auth_descriptor_id = acc_data_1.auth_descriptor_id,
-            1,
+            amount = 1,
             extra = map()
         )
     );
@@ -33,13 +30,18 @@ function test_before_transfer_extension_is_called() {
     outputs.add(
         core.xfer_output(
             account_id = acc_data_2.account_id, 
-            asset_id = asset_id, 
+            asset_id,
             amount = 1,
             extra = map()
         )
     );
 
-    core._transfer(inputs, outputs);
+	val tx = rell.test.tx()
+        .op(dev_op_balance.dev_give_balance(asset_id, acc_data_1.account_id, 1))
+        .op(ft3.ft3.transfer_op.transfer(inputs, outputs))
+		.sign(rell.test.keypairs.alice);
+
+	rell.test.block().tx(tx).run();
     
     assert_true(transfer_extensions_state.is_before_transfer_called);
     assert_equals(transfer_extensions_state.before_transfer_arg_inputs, inputs.to_gtv().to_bytes());
@@ -47,13 +49,10 @@ function test_before_transfer_extension_is_called() {
 }
 
 function test_after_transfer_extension_is_called() {
-    val acc_data_1 = utils.create_ft3_test_acc(rell.test.keypair.alice).auth_id;
-    val acc_data_2 = utils.create_ft3_test_acc(rell.test.keypair.bob).auth_id;
-    val asset_id = create core.asset(
-            id = ("test", chain_context.blockchain_rid).hash(), 
-            name = "test", 
-            issuing_chain_rid = chain_context.blockchain_rid)
-        .id;
+    val acc_data_1 = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+    val acc_data_2 = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
+
+    val asset_id = utils.create_asset("test");
 
     val inputs = list<core.xfer_input>();
     inputs.add(
@@ -61,7 +60,7 @@ function test_after_transfer_extension_is_called() {
             account_id = acc_data_1.account_id, 
             asset_id, 
             auth_descriptor_id = acc_data_1.auth_descriptor_id,
-            1,
+            amount = 1,
             extra = map()
         )
     );
@@ -70,13 +69,18 @@ function test_after_transfer_extension_is_called() {
     outputs.add(
         core.xfer_output(
             account_id = acc_data_2.account_id, 
-            asset_id = asset_id, 
+            asset_id,
             amount = 1,
             extra = map()
         )
     );
 
-    core._transfer(inputs, outputs);
+	val tx = rell.test.tx()
+        .op(dev_op_balance.dev_give_balance(asset_id, acc_data_1.account_id, 1))
+        .op(ft3.ft3.transfer_op.transfer(inputs, outputs))
+		.sign(rell.test.keypairs.alice);
+
+	rell.test.block().tx(tx).run();
     
     assert_true(transfer_extensions_state.is_after_transfer_called);
     assert_equals(transfer_extensions_state.after_transfer_arg_inputs, inputs.to_gtv().to_bytes());
