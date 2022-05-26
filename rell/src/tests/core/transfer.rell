@@ -4,7 +4,6 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
-import ft3: ^^^.lib.ft3.ft3_basic_dev;
 import ^^^.lib.ft3.operations.dev_op_balance;
 import acc: ^^^.lib.ft3.account;
 import ^.utils;
@@ -34,10 +33,10 @@ function test_before_transfer_extension_is_called() {
         )
     ]
 
-	val tx = rell.test.tx()
+    val tx = rell.test.tx()
         .op(dev_op_balance.dev_give_balance(asset_id, acc_data_1.account_id, 1))
         .op(ft3.ft3.transfer_op.transfer(inputs, outputs))
-		.sign(rell.test.keypairs.alice);
+        .sign(rell.test.keypairs.alice);
         .run();
     
     assert_true(transfer_extensions_state.is_before_transfer_called);
@@ -70,10 +69,10 @@ function test_after_transfer_extension_is_called() {
         )
     ]
 
-	rell.test.tx()
+    rell.test.tx()
         .op(dev_op_balance.dev_give_balance(asset_id, acc_data_1.account_id, 1))
         .op(ft3.ft3.transfer_op.transfer(inputs, outputs))
-		.sign(rell.test.keypairs.alice);
+        .sign(rell.test.keypairs.alice);
         .run();
     
     assert_true(transfer_extensions_state.is_after_transfer_called);

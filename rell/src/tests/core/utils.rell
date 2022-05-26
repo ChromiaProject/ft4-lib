@@ -9,50 +9,57 @@ struct auth_id {
 }
 
 struct auth_data {
-	auth_id;
-	rell.test.keypair;
+    auth_id;
+    rell.test.keypair;
 }
 
 function create_ft3_test_acc(rell.test.keypair): auth_data {
-	val auth_descriptor = create_auth_descriptor(keypair.pub);
-	dev_op_account.dev_register_account(auth_descriptor)
-		.sign(keypair);
-		.run();
-		
-	val account = acc.account_auth_descriptor @ { 
-		.descriptor_id == auth_descriptor.hash()
-	} ( .account.id );
-	
-	return auth_data(
+    val auth_descriptor = create_auth_descriptor(keypair.pub);
+    dev_op_account.dev_register_account(auth_descriptor)
+        .sign(keypair);
+        .run();
+        
+    val account = acc.account_auth_descriptor @ { 
+        .descriptor_id == auth_descriptor.hash()
+    } ( .account.id );
+    
+    return auth_data(
         auth_id(account_id = account, auth_descriptor_id = auth_descriptor.hash()),
         keypair = keypair
     );
 }
 
 function get_ft3_test_acc(rell.test.keypair): auth_data {
-	val auth_descriptor = create_auth_descriptor(keypair.pub);
-			
-	val account = acc.account_auth_descriptor @ { 
-		.descriptor_id == auth_descriptor.hash()
-	} ( .account.id );
-	
-	return auth_data(
+    val auth_descriptor = create_auth_descriptor(keypair.pub);
+            
+    val account = acc.account_auth_descriptor @ { 
+        .descriptor_id == auth_descriptor.hash()
+    } ( .account.id );
+    
+    return auth_data(
         auth_id(account_id = account, auth_descriptor_id = auth_descriptor.hash()),
         keypair = keypair
     );
 }
 
 function create_auth_descriptor(pubkey): acc.auth_descriptor {
-	return acc.auth_descriptor("S", [ pubkey ], [ ["T"].to_gtv(), pubkey.to_hex().to_gtv() ], rules = null.to_gtv());
+    return acc.auth_descriptor(
+        "S", 
+        [ pubkey ], 
+        [ 
+            ["T"].to_gtv(), 
+            pubkey.to_hex().to_gtv() 
+        ], 
+        rules = null.to_gtv());
 }
 
 function create_asset(name: text): byte_array {
-	dev_op_asset.dev_register_asset(
+    dev_op_asset.dev_register_asset(
                 name,
                 issuing_chain_rid = chain_context.blockchain_rid
             )
         )
-	    .sign(rell.test.keypairs.alice);
+        .sign(rell.test.keypairs.alice);
         .run();
     
     return (name, chain_context.blockchain_rid).hash();
