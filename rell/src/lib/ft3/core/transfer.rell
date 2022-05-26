@@ -65,22 +65,22 @@ function process_transfer_output (o: xfer_output, idx: integer, available_assets
       );
 }
 
-function _transfer (_inputs: list<xfer_input>, _outputs: list<xfer_output>) {
-   before_transfer(_inputs, _outputs);
+function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
+   before_transfer(inputs, outputs);
 
    val sum_inputs = map<asset, integer>();
    var idx = 0;
-   for (i in _inputs) {
+   for (i in inputs) {
       consume_input(i, idx, sum_inputs);
       idx += 1;
    }
 
    idx = 0;
-   for (o in _outputs) {
+   for (o in outputs) {
       process_transfer_output(o, idx, sum_inputs);
       idx += 1;
    }
-   after_transfer(_inputs, _outputs);
+   after_transfer(inputs, outputs);
 }
 
 @extendable function before_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>);
