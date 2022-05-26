@@ -16,7 +16,7 @@ struct auth_data {
 function create_ft3_test_acc(rell.test.keypair): auth_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
     dev_op_account.dev_register_account(auth_descriptor)
-        .sign(keypair);
+        .sign(keypair)
         .run();
         
     val account = acc.account_auth_descriptor @ { 
@@ -55,11 +55,10 @@ function create_auth_descriptor(pubkey): acc.auth_descriptor {
 
 function create_asset(name: text): byte_array {
     dev_op_asset.dev_register_asset(
-                name,
-                issuing_chain_rid = chain_context.blockchain_rid
-            )
+            name,
+            issuing_chain_rid = chain_context.blockchain_rid
         )
-        .sign(rell.test.keypairs.alice);
+        .sign(rell.test.keypairs.alice)
         .run();
     
     return (name, chain_context.blockchain_rid).hash();
