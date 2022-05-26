@@ -15,33 +15,30 @@ function test_before_transfer_extension_is_called() {
 
     val asset_id = utils.create_asset("test");
 
-    val inputs = list<core.xfer_input>();
-    inputs.add(
+    val inputs = [
         core.xfer_input(
-            account_id = acc_data_1.account_id, 
-            asset_id, 
+            account_id = acc_data_1.account_id,
+            asset_id,
             auth_descriptor_id = acc_data_1.auth_descriptor_id,
             amount = 1,
             extra = map()
         )
-    );
+    ];
 
-    val outputs = list<core.xfer_output>();
-    outputs.add(
+    val outputs = [
         core.xfer_output(
             account_id = acc_data_2.account_id, 
             asset_id,
             amount = 1,
             extra = map()
         )
-    );
+    ]
 
 	val tx = rell.test.tx()
         .op(dev_op_balance.dev_give_balance(asset_id, acc_data_1.account_id, 1))
         .op(ft3.ft3.transfer_op.transfer(inputs, outputs))
 		.sign(rell.test.keypairs.alice);
-
-	rell.test.block().tx(tx).run();
+        .run();
     
     assert_true(transfer_extensions_state.is_before_transfer_called);
     assert_equals(transfer_extensions_state.before_transfer_arg_inputs, inputs.to_gtv().to_bytes());
@@ -54,8 +51,7 @@ function test_after_transfer_extension_is_called() {
 
     val asset_id = utils.create_asset("test");
 
-    val inputs = list<core.xfer_input>();
-    inputs.add(
+    val inputs = [
         core.xfer_input(
             account_id = acc_data_1.account_id, 
             asset_id, 
@@ -63,24 +59,22 @@ function test_after_transfer_extension_is_called() {
             amount = 1,
             extra = map()
         )
-    );
+    ]
 
-    val outputs = list<core.xfer_output>();
-    outputs.add(
+    val outputs = [
         core.xfer_output(
             account_id = acc_data_2.account_id, 
             asset_id,
             amount = 1,
             extra = map()
         )
-    );
+    ]
 
-	val tx = rell.test.tx()
+	rell.test.tx()
         .op(dev_op_balance.dev_give_balance(asset_id, acc_data_1.account_id, 1))
         .op(ft3.ft3.transfer_op.transfer(inputs, outputs))
 		.sign(rell.test.keypairs.alice);
-
-	rell.test.block().tx(tx).run();
+        .run();
     
     assert_true(transfer_extensions_state.is_after_transfer_called);
     assert_equals(transfer_extensions_state.after_transfer_arg_inputs, inputs.to_gtv().to_bytes());
