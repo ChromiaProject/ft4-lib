@@ -33,9 +33,16 @@ describe('Test the account', () => {
         expect(process.env.DEV).toBe('true');
     });
 
-    it("Correctly creates keypair", () => {
+    it("Correctly creates keypair from string", () => {
         const keyPairToImport = pcl.util.makeKeyPair();
         const user = new KeyPair(buffToHex(keyPairToImport.privKey));
+        expect(user.privKey).toEqual(keyPairToImport.privKey);
+        expect(user.pubKey).toEqual(keyPairToImport.pubKey);
+    });
+
+    it("Correctly creates keypair from buffer", () => {
+        const keyPairToImport = pcl.util.makeKeyPair();
+        const user = new KeyPair(keyPairToImport.privKey);
         expect(user.privKey).toEqual(keyPairToImport.privKey);
         expect(user.pubKey).toEqual(keyPairToImport.pubKey);
     });

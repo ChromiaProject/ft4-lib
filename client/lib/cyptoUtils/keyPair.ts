@@ -6,9 +6,9 @@ class KeyPair {
     readonly pubKey: Buffer;
     readonly privKey: Buffer;
 
-    constructor(privateKey?: string) {
+    constructor(privateKey?: Buffer | string) {
         if (privateKey) {
-            this.privKey = hexToBuff(privateKey);
+            this.privKey = typeof privateKey === "string"? hexToBuff(privateKey) : privateKey;
             this.pubKey = pcl.util.createPublicKey(this.privKey);
         } else {
             const {pubKey, privKey} = this.makeKeyPair();
