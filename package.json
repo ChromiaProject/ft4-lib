@@ -8,7 +8,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest",
+    "test:js": "docker-compose up -d && sleep 60 && npx jest && docker-compose down",
+    "test:rell": "docker run -v $PWD/rell:/usr/src/rell snieking/postchain test",
+    "test": "npm run test:js && npm run test:rell",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",
     "prepublish": "npm run build"
