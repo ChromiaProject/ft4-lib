@@ -2,7 +2,7 @@ version: '3.3'
 
 services:
   ft3-test:
-    container_name: postchain
+    container_name: ft3-lib
     image: snieking/postchain:latest
     volumes:
       - ./postchain/config/nodes/test:/usr/src/rell/config
