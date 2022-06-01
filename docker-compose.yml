@@ -1,0 +1,14 @@
+version: '3.3'
+
+services:
+  ft3-test:
+    container_name: postchain
+    image: snieking/postchain:latest
+    volumes:
+      - ./postchain/config/nodes/test:/usr/src/rell/config
+      - ./rell:/usr/src/rell
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - 7740:80
+    environment:
+      - RUN_XML=config/run.xml
