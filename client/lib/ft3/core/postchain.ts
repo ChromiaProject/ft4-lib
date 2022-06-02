@@ -10,7 +10,7 @@ export default class Postchain {
         let _id;
         if (typeof id === "number") {
             _id = await getBRID(this.url, id);
-        } else {    
+        } else {
             _id = id instanceof Buffer ? id : Buffer.from(id, 'hex');
         }
 
