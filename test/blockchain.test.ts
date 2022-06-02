@@ -4,7 +4,7 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import {generateAssetName, generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import {Account, Asset, RateLimitInfo, nop} from "../client/lib/ft3";
+import {Account, Asset, RateLimitInfo} from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 
@@ -102,16 +102,6 @@ describe("Blockchain", () => {
         const account = await session.getAccountById(user.authDescriptor.id);
 
         expect(account).not.toBeNull()
-    });
-
-    it('should successfully get the transaction ID', async () => {
-        const user = TestUser.singleSig();
-
-        const tx = blockchain.transactionBuilder()
-            .add(nop())
-            .build(user.authDescriptor.signers)
-
-        expect(tx.getTxRID()).not.toBeNull()
     });
 
 
