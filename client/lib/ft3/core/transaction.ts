@@ -42,4 +42,8 @@ export default class Transaction {
         tx.tx.gtx.signatures = deserializedTx.signatures;
         return tx;
     }
+
+    getTxRID(): Buffer{
+        return this.tx.getTxRID();
+    }
 } 
