@@ -1,7 +1,8 @@
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import {nop} from "../client/lib/ft3";
+import { gtv } from "postchain-client";
+import { op } from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 
@@ -11,12 +12,18 @@ describe("Blockchain", () => {
     });
 
     it('should successfully get the transaction ID', async () => {
-        const user = TestUser.singleSig();
-
         const tx = blockchain.transactionBuilder()
-            .add(nop())
-            .build(user.authDescriptor.signers)
+            .add(op('foo', 'bar'))
+            .build([])
 
-        expect(tx.getTxRID()).not.toBeNull()
+        const expectedTxRID = gtv.gtvHash([
+            blockchain.id,
+            [
+                ['foo', [ 'bar' ]]
+            ],
+            []
+        ]);
+
+        expect(tx.getTxRID()).toEqual(expectedTxRID)
     });
 });
