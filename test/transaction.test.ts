@@ -1,5 +1,6 @@
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import TestUser from "./util/test-user";
+import Transaction from "../client/lib/ft3/core/transaction";
+import Postchain from "../client/lib/ft3/core/postchain";
 import BlockchainUtil from "./util/blockchain-util";
 import { gtv } from "postchain-client";
 import { op } from "../client/lib/ft3";
@@ -25,5 +26,18 @@ describe("Blockchain", () => {
         ]);
 
         expect(tx.getTxRID()).toEqual(expectedTxRID)
+    });
+
+    it('should stop raw transactions intended for a different blockchain', async () => {
+        const tx = blockchain.transactionBuilder()
+            .add(op('foo', 'bar'))
+            .build([])
+            .raw()
+
+        let bc = await new Postchain(process.env.NODE_URL || "http://localhost:7740").blockchain(1)
+
+        expect(()=>{
+            Transaction.fromRawTransaction(tx, bc);
+        }).toThrowError()
     });
 });

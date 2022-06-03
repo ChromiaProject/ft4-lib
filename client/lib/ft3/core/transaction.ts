@@ -33,6 +33,9 @@ export default class Transaction {
 
     static fromRawTransaction(rawTransaction: Buffer, blockchain: Blockchain): Transaction {
         const deserializedTx = gtx.deserialize(rawTransaction);
+        if (deserializedTx.blockchainRID !== blockchain.id) {
+            throw new Error(`This transaction should have been sent to ${deserializedTx.blockchainRID.toString('hex')}, it has been sent to ${blockchain.id.toString('hex')}`)
+        }
         const txBuild = new TransactionBuilder(blockchain);
     
         deserializedTx.operations.map(operation => {
