@@ -10,7 +10,7 @@ export default class ConnectionClient {
         this.chainId = typeof chainId === "string"? chainId : chainId.toString('hex');
         this.gtx = gtxClient.createClient(
             restClient.createRestClient(chainURL, this.chainId, 5),
-            Buffer.from(chainId, 'hex'),
+            Buffer.from(this.chainId, 'hex'),
             []
         );
     }

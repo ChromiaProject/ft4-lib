@@ -21,7 +21,7 @@ export default class Blockchain {
         connection: ConnectionClient,
         directoryService: DirectoryService
     ) {
-        if (id.toString('hex').toLower()!==connection.id.toLower()) throw new Error(`Invalid ConnectionClient (BRID: ${connection.id}). Expected BRID: ${id.toString('hex')}`)
+        if (id.toString('hex').toLowerCase()!==connection.chainId.toLowerCase()) throw new Error(`Invalid ConnectionClient (BRID: ${connection.chainId}). Expected BRID: ${id.toString('hex')}`)
         this.id = id;
         this.info = info;
         this.connection = connection;
