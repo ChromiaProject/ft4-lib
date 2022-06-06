@@ -5,11 +5,11 @@ export default class ConnectionClient {
     readonly chainId: string;
     private gtx;
 
-    constructor(chainURL: string, chainId: string) {
+    constructor(chainURL: string, chainId: string | Buffer) {
         this.chainURL = chainURL;
-        this.chainId = chainId;
+        this.chainId = typeof chainId === "string"? chainId : chainId.toString('hex');
         this.gtx = gtxClient.createClient(
-            restClient.createRestClient(chainURL, chainId, 5),
+            restClient.createRestClient(chainURL, this.chainId, 5),
             Buffer.from(chainId, 'hex'),
             []
         );
