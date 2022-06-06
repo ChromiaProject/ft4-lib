@@ -1,6 +1,5 @@
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import Transaction from "../client/lib/ft3/core/transaction";
-import Postchain from "../client/lib/ft3/core/postchain";
 import BlockchainUtil from "./util/blockchain-util";
 import { gtv } from "postchain-client";
 import { op } from "../client/lib/ft3";
@@ -34,7 +33,7 @@ describe("Blockchain", () => {
             .build([])
             .raw()
 
-        let bc = await new Postchain(process.env.NODE_URL || "http://localhost:7740").blockchain(1)
+        let bc = BlockchainUtil.getNewBlockchain()
 
         expect(()=>{
             Transaction.fromRawTransaction(tx, bc);
