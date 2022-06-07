@@ -129,7 +129,7 @@ describe('Test the account', () => {
 
         const account = await blockchain.newSession(user1).getAccountById(authDescriptor.id);
 
-        await blockchain.transactionBuilder()
+        await blockchain.transactionBuilder()//We need to test the Account class, not the blockchain class: add something into that
             .add(
                 addAuthDescriptor(
                     account.id,
@@ -144,7 +144,7 @@ describe('Test the account', () => {
 
         await account.sync()
 
-        expect(account.authDescriptor.length).toBe(2);//doesn't add to account
+        expect(account.authDescriptor.length).toBe(2);
     });
 
     it("should fail if only one signature provided", async () => {
