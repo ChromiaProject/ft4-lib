@@ -206,10 +206,9 @@ class Account {
     }
 
     getAssetById(id: Buffer): AssetBalance {
-        //TODO: find better way to compare buffers
         return this.assets.find(assetBalance => (
-            assetBalance.asset.id.toString('hex') === id.toString('hex'))
-        );
+            assetBalance.asset.id.compare(id)===0
+        ));
     }
 
     async transferInputsToOutputs(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Promise<void> {

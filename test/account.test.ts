@@ -110,25 +110,41 @@ describe('Test the account', () => {
         await expect(promise).resolves.not.toThrowError()
     });
 
-    //TODO FIX ME
-    it.skip("should update account if 2 signatures provided", async () => {
+    it("should update account if 2 signatures provided", async () => {
         const user1 = TestUser.singleSig();
         const user2 = TestUser.singleSig();
 
-        const account = await Account.register(
-            new MultiSignatureAuthDescriptor(
-                [user1.keyPair.pubKey, user2.keyPair.pubKey],
-                2,
-                [FlagsType.Account, FlagsType.Transfer]
-            ),
-            blockchain.newSession(user1)
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [user1.keyPair.pubKey, user2.keyPair.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
         );
-        expect(account).not.toBeNull();
 
-        await account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
-        );
-        expect(account.authDescriptor.length).toBe(2);
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(user2.keyPair)
+            .post();
+
+        const account = await blockchain.newSession(user1).getAccountById(authDescriptor.id);
+
+        await blockchain.transactionBuilder()
+            .add(
+                addAuthDescriptor(
+                    account.id,
+                    authDescriptor.id,
+                    new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
+                )
+            )
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(user2.keyPair)
+            .post();
+
+        await account.sync()
+
+        expect(account.authDescriptor.length).toBe(2);//doesn't add to account
     });
 
     it("should fail if only one signature provided", async () => {
