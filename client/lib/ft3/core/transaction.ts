@@ -33,7 +33,7 @@ export default class Transaction {
 
     static fromRawTransaction(rawTransaction: Buffer, blockchain: Blockchain): Transaction {
         const deserializedTx = gtx.deserialize(rawTransaction);
-        if (deserializedTx.blockchainRID !== blockchain.id) {
+        if (deserializedTx.blockchainRID.compare(blockchain.id)) {
             throw new Error(`Invalid blockchain ${deserializedTx.blockchainRID.toString('hex')}. Expected blockchain with BRID ${blockchain.id.toString('hex')}`)
         }
         const txBuild = new TransactionBuilder(blockchain);
