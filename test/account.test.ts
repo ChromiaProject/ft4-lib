@@ -30,7 +30,7 @@ describe('Test the account', () => {
     });
 
     it('should be in DEV mode', () => {
-        expect(process.env.DEV).toBe('true');
+        expect(process.env.TEST_DEV || 'true').toBe('true');
     });
 
     it("Correctly creates keypair from string", () => {

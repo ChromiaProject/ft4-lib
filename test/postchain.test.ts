@@ -10,21 +10,21 @@ describe("Postchain", () => {
     });
 
     it("should instantiate blockchain by passing internal chain id as a number", async () => {
-        const url = process.env.NODE_URL;
+        const url = process.env.TEST_NODE_URL || "http://localhost:7740";
         const blockchain1 = await new Postchain(url).blockchain(0);
 
         expect(blockchain1.info).toEqual(blockchain.info);
     });
 
     it("should instantiate blockchain by passing BRID as a string", async () => {
-        const url = process.env.NODE_URL;
+        const url = process.env.TEST_NODE_URL || "http://localhost:7740";
         const blockchain1 = await new Postchain(url).blockchain(blockchain.id.toString('hex'));
 
         expect(blockchain1.info).toEqual(blockchain.info);
     });
 
     it("should instantiate blockchain by passing BRID as a Buffer", async () => {
-        const url = process.env.NODE_URL;
+        const url = process.env.TEST_NODE_URL || "http://localhost:7740";
         const blockchain1 = await new Postchain(url).blockchain(blockchain.id);
 
         expect(blockchain1.info).toEqual(blockchain.info);
