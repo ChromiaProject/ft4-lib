@@ -15,20 +15,6 @@ class TestUser {
         );
         return new User(keyPair, singleSigAuthDescriptor);
     }
-
-    static multiSig(requiredSignatures: number, numberOfParticipants: number, rule: AuthDescriptorRule | null = null) {
-        //TODO: add validation
-        const keyPairs = Array(numberOfParticipants).map(() => new KeyPair());
-
-        const multiSigAuthDescriptor = new MultiSignatureAuthDescriptor(
-            keyPairs.map(({ pubKey}) => pubKey),
-            requiredSignatures,
-            [FlagsType.Account, FlagsType.Transfer],
-            rule
-        );
-
-        return new User(keyPairs[0], multiSigAuthDescriptor)
-    }
 }
 
 export default TestUser;

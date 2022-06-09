@@ -57,7 +57,12 @@ export default class TransactionBuilder {
         return this;
     }
 
-    build(signers: Buffer[]): Transaction {
+    build(_signers: Buffer[]): Transaction {
+        var signers = []
+
+        signers = [...new Set(_signers.map(s=>s.toString("hex")))] //filters duplicates
+        signers = signers.map(s=>Buffer.from(s, "hex"))
+
         const tx = this.blockchain.connection.newTransaction(signers);
         this.operations.forEach(
             o => tx.addOperation(o.name, ...o.args.map(a => a === null ? null : a.toGTV()))

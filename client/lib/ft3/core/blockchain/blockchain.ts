@@ -55,8 +55,8 @@ export default class Blockchain {
         return await Account.getByAuthDescriptorId(id , this.newSession(user));
     }
 
-    async registerAccount(authDesciptor: AuthDescriptor, user): Promise<Account> {
-        return await Account.register(authDesciptor, this.newSession(user));
+    async registerAccount(authDescriptor: AuthDescriptor, user): Promise<Account> {
+        return await Account.register(authDescriptor, this.newSession(user));
     }
 
     async getAssetsByName(name): Promise<Asset[]> {

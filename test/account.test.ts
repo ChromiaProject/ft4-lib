@@ -111,35 +111,32 @@ describe('Test the account', () => {
     });
 
     it("should update account if 2 signatures provided", async () => {
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig();
+        const keyPair1 = new KeyPair();
+        const keyPair2 = new KeyPair();
 
         const authDescriptor = new MultiSignatureAuthDescriptor(
-            [user1.keyPair.pubKey, user2.keyPair.pubKey],
+            [keyPair1.pubKey, keyPair2.pubKey],
             2,
             [FlagsType.Account, FlagsType.Transfer]
         );
+
+        let user1 = new User(keyPair1, authDescriptor)
 
         await blockchain.transactionBuilder()
             .add(register(authDescriptor))
             .build(authDescriptor.signers)
             .sign(user1.keyPair)
-            .sign(user2.keyPair)
+            .sign(keyPair2)
             .post();
 
         const account = await blockchain.newSession(user1).getAccountById(authDescriptor.id);
 
-        await blockchain.transactionBuilder()//We need to test the Account class, not the blockchain class: add something into that
-            .add(
-                addAuthDescriptor(
-                    account.id,
-                    authDescriptor.id,
-                    new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
-                )
-            )
-            .build(authDescriptor.signers)
-            .sign(user1.keyPair)
-            .sign(user2.keyPair)
+        let tx = account.tx.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(keyPair1.pubKey, [FlagsType.Transfer])
+        )
+
+        await tx.sign(keyPair2)
+            .sign(keyPair1)
             .post();
 
         await account.sync()
