@@ -19,6 +19,25 @@
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
   },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "test/*.ts": [
+      "prettier -c",
+      "eslint"
+    ],
+    "test-admin/*.ts": [
+      "prettier -c",
+      "eslint"
+    ],
+    "client/*.ts": [
+      "prettier -c",
+      "eslint"
+    ]
+  },
   "author": "",
   "license": "BSD-2-Clause-FreeBSD",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
@@ -32,7 +51,14 @@
     "@types/jest": "^24.0.15",
     "@types/node": "^12.6.2",
     "@types/node-fetch": "^2.6.1",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "husky": "^8.0.1",
     "jest": "^24.8.0",
+    "lint-staged": "^13.0.1",
+    "prettier": "2.7.0",
     "shx": "^0.3.2",
     "ts-jest": "^24.0.2",
     "tslint": "^5.18.0"
