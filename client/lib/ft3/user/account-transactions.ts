@@ -38,35 +38,33 @@ export default class AccountTransactions {
             .add(addAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor))
             .add(nop())
             .build([this.session.user.authDescriptor.signers , authDescriptor.signers].flat())
-            .sign(this.session.user.keyPair)
+            .sign(this.session.user.keyPair);
     }
 
     deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Transaction {
         return this.session.blockchain.transactionBuilder()
             .add(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id))
-            .build([this.session.user.authDescriptor.signers , authDescriptor.signers].flat())
-            .sign(this.session.user.keyPair)
+            .buildAndSign(this.session.user);
     }
 
     deleteAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
         return this.session.blockchain.transactionBuilder()
             .add(deleteAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor.id))
-            .build([this.session.user.authDescriptor.signers , authDescriptor.signers].flat())
-            .sign(this.session.user.keyPair)
+            .buildAndSign(this.session.user);
     }
 
     transferInputsToOutputs(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Transaction {
         return this.session.blockchain.transactionBuilder()
             .add(transfer(inputs, outputs))
             .add(nop())
-            .buildAndSign(this.session.user)
+            .buildAndSign(this.session.user);
     }
 
     xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Transaction {
         return this.session.blockchain.transactionBuilder()
             .add(this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
             .add(nop())
-            .buildAndSign(this.session.user)
+            .buildAndSign(this.session.user);
     }
 
     /* Operation */
