@@ -81,7 +81,7 @@ class Account {
     constructor(id: Buffer, authDescriptor: AuthDescriptor[], session: BlockchainSession) {
         this.id_ = id;
         this.authDescriptor = authDescriptor;
-        this.tx = new AccountTransactions(id, authDescriptor, session);
+        this.tx = new AccountTransactions(id, session);
     }
 
     get id(): Buffer {
@@ -94,6 +94,10 @@ class Account {
 
     get session(): BlockchainSession {
         return this.tx.session;
+    }
+
+    get user(): User {
+      return this.tx.session.user;
     }
 
     static async getByParticipantId(id: Buffer, session: BlockchainSession): Promise<Account[]> {
@@ -169,7 +173,7 @@ class Account {
     }
 
     async isAuthDescriptorValid(id: Buffer): Promise<boolean> {
-        return await  this.tx.session.query("ft3.is_auth_descriptor_valid", {
+        return await this.session.query("ft3.is_auth_descriptor_valid", {
             account_id: this.id,
             auth_descriptor_id: id,
         });
@@ -190,11 +194,11 @@ class Account {
     }
 
     private async syncAssets(): Promise<void> {
-        this.assets = await AssetBalance.getByAccountId(this.id,  this.tx.session.blockchain);
+        this.assets = await AssetBalance.getByAccountId(this.id,  this.session.blockchain);
     }
 
     private async syncAuthDescriptors(): Promise<void> {
-        const authDescriptors = await   this.tx.session.query(...accountAuthDescriptors(this.id));
+        const authDescriptors = await this.session.query(...accountAuthDescriptors(this.id));
 
         const authDescriptorFactory = new AuthDescriptorFactory();
          this.authDescriptor = authDescriptors.map(authDescriptor =>
@@ -206,7 +210,7 @@ class Account {
     }
 
     private async syncRateLimit(): Promise<void> {
-        this.rateLimit = await RateLimit.getByAccountRateLimit(this.id_,  this.tx.session.blockchain);
+        this.rateLimit = await RateLimit.getByAccountRateLimit(this.id_,  this.session.blockchain);
     }
 
     getAssetById(id: Buffer): AssetBalance {
@@ -224,7 +228,7 @@ class Account {
         const input = [
             this.id,
             assetId,
-             this.tx.session.user.authDescriptor.id,
+              this.user.authDescriptor.id,
             amount,
             []
         ];
@@ -243,7 +247,7 @@ class Account {
         const input = [
             this.id,
             assetId,
-             this.tx.session.user.authDescriptor.id,
+              this.user.authDescriptor.id,
             amount,
             []
         ];
@@ -252,14 +256,14 @@ class Account {
     }
 
     async getPaymentHistory(): Promise<any[]> {
-        return await PaymentHistory.getByAccountId(this.id, -1,  this.tx.session.blockchain);
+        return await PaymentHistory.getByAccountId(this.id, -1,  this.session.blockchain);
     }
 
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
         if (pageSize < 1) throw new Error('Page size has to be greater than 1');
-        await this.paymentHistorySyncManager.syncAccount(this.id,  this.tx.session.blockchain);
+        await this.paymentHistorySyncManager.syncAccount(this.id,  this.session.blockchain);
         return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(
-             this.tx.session.blockchain.id,
+             this.session.blockchain.id,
             this.id,
             pageSize
         );

@@ -58,9 +58,7 @@ export default class TransactionBuilder {
     }
 
     build(_signers: Buffer[]): Transaction {
-        var signers = []
-
-        signers = [...new Set(_signers.map(s=>s.toString("hex")))] //filters duplicates
+        var signers = [...new Set(_signers.map(s=>s.toString("hex")))] //filters duplicates
         signers = signers.map(s=>Buffer.from(s, "hex"))
 
         const tx = this.blockchain.connection.newTransaction(signers);

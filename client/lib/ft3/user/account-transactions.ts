@@ -31,7 +31,7 @@ export default class AccountTransactions {
     readonly id: Buffer;
     readonly session: BlockchainSession;
 
-    constructor(id: Buffer, authDescriptor: AuthDescriptor[], session: BlockchainSession) {
+    constructor(id: Buffer, session: BlockchainSession) {
         this.id = id;
         this.session = session;
     }
@@ -72,7 +72,7 @@ export default class AccountTransactions {
             .buildAndSign(this.session.user)
     }
 
-    /* Operation and query */
+    /* Operation */
 
     xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Operation {
         const source = [
