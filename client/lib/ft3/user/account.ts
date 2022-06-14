@@ -6,14 +6,7 @@ import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
 import BlockchainSession from "../core/blockchain/blockchain-session";
 import Blockchain from "../core/blockchain/blockchain";
-import {
-    transfer,
-    addAuthDescriptor,
-    nop,
-    deleteAllAuthDescriptorsExclude,
-    xcTransfer,
-    deleteAuthDescriptor
-} from "./account-operations";
+import { addAuthDescriptor } from "./account-operations";
 import { register } from "./account-dev-operations";
 import {
     accountAuthDescriptors,
@@ -194,14 +187,14 @@ class Account {
     }
 
     private async syncAssets(): Promise<void> {
-        this.assets = await AssetBalance.getByAccountId(this.id,  this.session.blockchain);
+        this.assets = await AssetBalance.getByAccountId(this.id, this.blockchain);
     }
 
     private async syncAuthDescriptors(): Promise<void> {
         const authDescriptors = await this.session.query(...accountAuthDescriptors(this.id));
 
         const authDescriptorFactory = new AuthDescriptorFactory();
-         this.authDescriptor = authDescriptors.map(authDescriptor =>
+        this.authDescriptor = authDescriptors.map(authDescriptor =>
             authDescriptorFactory.create(
                 authDescriptor.type,
                 Buffer.from(authDescriptor.args, 'hex')
@@ -210,12 +203,12 @@ class Account {
     }
 
     private async syncRateLimit(): Promise<void> {
-        this.rateLimit = await RateLimit.getByAccountRateLimit(this.id_,  this.session.blockchain);
+        this.rateLimit = await RateLimit.getByAccountRateLimit(this.id_, this.blockchain);
     }
 
     getAssetById(id: Buffer): AssetBalance {
         return this.assets.find(assetBalance => (
-            assetBalance.asset.id.compare(id)===0
+            assetBalance.asset.id.compare(id) === 0
         ));
     }
 
@@ -256,14 +249,14 @@ class Account {
     }
 
     async getPaymentHistory(): Promise<any[]> {
-        return await PaymentHistory.getByAccountId(this.id, -1,  this.session.blockchain);
+        return await PaymentHistory.getByAccountId(this.id, -1, this.blockchain);
     }
 
     async getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
         if (pageSize < 1) throw new Error('Page size has to be greater than 1');
-        await this.paymentHistorySyncManager.syncAccount(this.id,  this.session.blockchain);
+        await this.paymentHistorySyncManager.syncAccount(this.id, this.blockchain);
         return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(
-             this.session.blockchain.id,
+            this.blockchain.id,
             this.id,
             pageSize
         );

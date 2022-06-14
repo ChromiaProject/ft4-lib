@@ -1,12 +1,7 @@
-import TestConnection from "./util/test-connection";
 import BlockchainInfo from "../client/lib/ft3/core/blockchain/blockchain-info";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import TestUser from "./util/test-user";
-import AccountBuilder from "./util/account-builder";
-import {generateAssetName, generateId} from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import {Account, RateLimitInfo} from "../client/lib/ft3";
-import {TestnetAsset as Asset} from "./testnetAdmin/testnet-asset";
+import { RateLimitInfo } from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 const POINTS_AT_ACCOUNT_CREATION = 1;

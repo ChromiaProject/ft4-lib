@@ -4,9 +4,7 @@ import AccountBuilder from "./util/account-builder";
 import { Account } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import ConnectionClient from "../client/lib/ft3/core/connection-client";
 import { BlockchainInfo, RateLimitInfo, addAuthDescriptor } from "../client/lib/ft3";
-import TestConnection from "./util/test-connection";
 import { TestnetRateLimit as RateLimit} from "./testnetAdmin/testnet-rate-limit";
 
 jest.setTimeout(2000000);

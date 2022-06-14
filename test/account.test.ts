@@ -113,6 +113,7 @@ describe('Test the account', () => {
     it("should update account if 2 signatures provided", async () => {
         const keyPair1 = new KeyPair();
         const keyPair2 = new KeyPair();
+        const keyPair3 = new KeyPair();
 
         const authDescriptor = new MultiSignatureAuthDescriptor(
             [keyPair1.pubKey, keyPair2.pubKey],
@@ -132,11 +133,11 @@ describe('Test the account', () => {
         const account = await blockchain.newSession(user1).getAccountById(authDescriptor.id);
 
         let tx = account.tx.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(keyPair1.pubKey, [FlagsType.Transfer])
+            new SingleSignatureAuthDescriptor(keyPair3.pubKey, [FlagsType.Transfer])
         )
 
         await tx.sign(keyPair2)
-            .sign(keyPair1)
+            .sign(keyPair3)
             .post();
 
         await account.sync()

@@ -1,5 +1,4 @@
 import BlockchainSession from "../core/blockchain/blockchain-session";
-import Blockchain from "../core/blockchain/blockchain";
 import Transaction from "../core/transaction";
 import {
     transfer,
@@ -9,10 +8,8 @@ import {
     xcTransfer,
     deleteAuthDescriptor
 } from "./account-operations";
-import { register } from "./account-dev-operations";
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import Operation from "../core/operation";
-import User from "./user";
 
 type PubKey = Buffer;
 
