@@ -8,8 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test:js": "./runtests.sh",
-    "test:rell": "docker run -v $(pwd)/rell:/usr/src/rell -e RUN_XML=src/tests/run.xml snieking/postchain test",
+    "test:js": "./jesttest.sh",
+    "test:rell": "./relltest.sh",
     "test": "npm run test:js && npm run test:rell",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",
