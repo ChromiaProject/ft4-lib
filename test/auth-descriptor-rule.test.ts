@@ -391,7 +391,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("Should be able to create same rules with different value", async () => {
-    let rules = Rules.blockHeight
+    const rules = Rules.blockHeight
       .greaterThan(1)
       .and.blockHeight.greaterThan(10000)
       .and.blockTime.greaterOrEqual(122222999);

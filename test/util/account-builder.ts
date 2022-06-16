@@ -15,7 +15,7 @@ class AccountBuilder {
   private balance?: number;
   private asset?: Asset;
   private participants = [new KeyPair()];
-  private requiredSignaturesCount: number = 1;
+  private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points?: number = 0;
 
@@ -58,7 +58,7 @@ class AccountBuilder {
   }
 
   async build(): Promise<Account> {
-    let account = await this.registerAccount();
+    const account = await this.registerAccount();
 
     await this.addBalanceIfNeeded(account);
     account.rateLimit = await this.addPointsIfNeeded(account);

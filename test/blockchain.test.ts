@@ -30,9 +30,9 @@ describe("Blockchain", () => {
   });
 
   it("shouldn't create a blockchain with non-matching ID and ConnectionClient", async () => {
-    let rateLimit = new RateLimitInfo(false, 0, 0, 1);
+    const rateLimit = new RateLimitInfo(false, 0, 0, 1);
 
-    let f = () =>
+    const f = () =>
       new Blockchain(
         generateId(),
         new BlockchainInfo("name", "website", "description", rateLimit),

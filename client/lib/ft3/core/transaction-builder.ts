@@ -5,12 +5,12 @@ import Operation from "./operation";
 import User from "../user/user";
 
 declare global {
-  interface Array<T> extends GtvSerializable {}
-  interface String extends GtvSerializable {}
-  interface Number extends GtvSerializable {}
-  interface Buffer extends GtvSerializable {}
-  interface Boolean extends GtvSerializable {}
-  interface Object extends GtvSerializable {}
+  type Array<T> = GtvSerializable
+  type String = GtvSerializable
+  type Number = GtvSerializable
+  type Buffer = GtvSerializable
+  type Boolean = GtvSerializable
+  type Object = GtvSerializable
 }
 
 Buffer.prototype.toGTV = function (): any {

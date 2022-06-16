@@ -13,7 +13,7 @@ import { register } from "../client/lib/ft3/user/account-dev-operations";
 let blockchain: Blockchain = null;
 
 function createUser(): User {
-  let keyPair = new KeyPair();
+  const keyPair = new KeyPair();
 
   return new User(
     keyPair,

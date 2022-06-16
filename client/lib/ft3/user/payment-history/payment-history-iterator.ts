@@ -5,7 +5,7 @@ export default class PaymentHistoryIterator {
   readonly blockchainId: Buffer;
   readonly accountId: Buffer;
   readonly pageSize: number;
-  private currentPage: number = -1;
+  private currentPage = -1;
   private paymentHistoryStore: PaymentHistoryStore;
 
   constructor(

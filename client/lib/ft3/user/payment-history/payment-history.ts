@@ -4,7 +4,7 @@ import Blockchain from "../../core/blockchain/blockchain";
 export default class PaymentHistory {
   static async getByAccountId(
     id: Buffer,
-    afterBlock: number = -1,
+    afterBlock = -1,
     blockchain: Blockchain
   ): Promise<PaymentHistoryEntryShort[]> {
     const paymentHistoryEntries = await blockchain.query(

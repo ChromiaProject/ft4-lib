@@ -17,8 +17,8 @@ export default class BlockchainUtil {
   }
 
   static getNewBlockchain(): Blockchain {
-    let rateLimit = new RateLimitInfo(false, null, null, null);
-    let id = generateId();
+    const rateLimit = new RateLimitInfo(false, null, null, null);
+    const id = generateId();
     return new Blockchain(
       id,
       new BlockchainInfo("name", "website", "description", rateLimit),

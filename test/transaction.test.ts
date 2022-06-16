@@ -26,7 +26,7 @@ describe("Blockchain", () => {
       .build([])
       .raw();
 
-    let bc = BlockchainUtil.getNewBlockchain();
+    const bc = BlockchainUtil.getNewBlockchain();
 
     expect(() => {
       Transaction.fromRawTransaction(tx, bc);

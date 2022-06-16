@@ -1,10 +1,10 @@
 import { util, gtv } from "postchain-client";
 
-function generateNumber(max: number = 10000): number {
+function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
 }
 
-function generateAssetName(prefix: string = "CHROMA"): string {
+function generateAssetName(prefix = "CHROMA"): string {
   return prefix + "_" + generateNumber();
 }
 

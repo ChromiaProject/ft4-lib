@@ -160,7 +160,7 @@ export default class SSO {
 
     await transaction.post();
 
-    let accountId = getAccountId(transaction);
+    const accountId = getAccountId(transaction);
 
     this.store.accountId = accountId;
 
