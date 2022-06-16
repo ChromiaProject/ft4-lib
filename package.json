@@ -13,16 +13,12 @@
     "test": "npm run test:js && npm run test:rell",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "*.ts": [
