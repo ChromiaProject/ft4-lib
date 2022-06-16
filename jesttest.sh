@@ -22,6 +22,7 @@ then
     docker-compose -f jest-test.yml down
     exit 0
 else
+    echo "There was an error starting the container. Shutting it down (if it's open)..."
     docker-compose -f jest-test.yml down
     exit 1
 fi
