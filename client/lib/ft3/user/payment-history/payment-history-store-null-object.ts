@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function */
 import PaymentHistoryStore from "./payment-history-store";
 import PaymentHistoryEntry from "./payment-history-entry";
 import PaymentHistoryIterator from "./payment-history-iterator";

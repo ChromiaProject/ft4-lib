@@ -1,6 +1,4 @@
 import RateLimit from "../../client/lib/ft3/user/rate-limit";
-import { TestnetAssetBalance as AssetBalance } from "./testnet-asset-balance";
-import { TestnetAsset as Asset } from "./testnet-asset";
 import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
 import { nop, Operation } from "../../client/lib/ft3";
 import AdminKeyPair from "./admin-keypair";

@@ -7,7 +7,7 @@ import DirectoryServiceBase from "../../client/lib/ft3/core/blockchain/directory
 import ChainConnectionInfo from "../../client/lib/ft3/core/chain-connection-info";
 import { generateId } from "./util";
 
-require("dotenv").config();
+require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
 
 export default class BlockchainUtil {
   static async getDefaultBlockchain(): Promise<Blockchain> {

@@ -1,6 +1,4 @@
 import { Account, FlagsType } from "../client/lib/ft3/user/account";
-import * as pcl from "postchain-client";
-import { buffToHex, KeyPair } from "../client/lib/cyptoUtils";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
@@ -15,7 +13,7 @@ import {
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 import User from "../client/lib/ft3/user/user";
 
-require("dotenv").config();
+require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
 
 async function addAuthDescriptorTo(
   account: Account,

@@ -13,7 +13,7 @@ export default class AdminKeyPair {
     this.keyPair = new KeyPair(privKey);
   }
 
-  private AdminKeyPair() {}
+  private AdminKeyPair() {} /*eslint: needed? if yes: */ //eslint-disable-line @typescript-eslint/no-empty-function
 
   private static initialize() {
     if (this.keyPair == null) {

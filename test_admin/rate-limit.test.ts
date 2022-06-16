@@ -3,7 +3,6 @@ import AccountBuilder from "./util/account-builder";
 import { Account } from "../client/lib/ft3/user/account";
 import TestUser from "./util/test-user";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import ConnectionClient from "../client/lib/ft3/core/connection-client";
 import {
   BlockchainInfo,
   RateLimitInfo,
@@ -112,9 +111,7 @@ describe("Rate Limit", () => {
     it("initializes with 0 points", async () => {
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expect0Points = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -128,9 +125,7 @@ describe("Rate Limit", () => {
       timestamp += 60000;
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expect1Point = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -144,9 +139,7 @@ describe("Rate Limit", () => {
       timestamp = lastOperation + REQUEST_MAX_COUNT * RECOVERY_TIME; // ten times the recovery period
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expectMax10Points = await RateLimit.getPointsAvailable(
         5,
         lastOperation,
@@ -160,9 +153,7 @@ describe("Rate Limit", () => {
       timestamp = 0; // 0 times the recovery period
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expectMax10Points = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -174,7 +165,7 @@ describe("Rate Limit", () => {
   });
 
   const timeout = async (timer: number) => {
-    return new Promise((res, rej) => {
+    return new Promise((res) => {
       setTimeout(res, timer);
     });
   };

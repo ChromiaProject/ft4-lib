@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import SSOStore from "./sso-store";
 import { KeyPair } from "../../../cyptoUtils";
 

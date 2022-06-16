@@ -34,7 +34,7 @@ async function addAuthDescriptorTo(
     .post();
 }
 
-require("dotenv").config();
+require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
 
 let blockchain: Blockchain = null;
 

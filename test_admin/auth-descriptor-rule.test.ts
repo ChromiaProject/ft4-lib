@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */ // this fixes all lines like 82, but might hide useful errors. Better, uglier solution found on line 82
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
@@ -79,6 +80,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
     const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+      /*to be applied to every line like this*/ // eslint-disable-line @typescript-eslint/no-unused-vars
       Rules.operationCount.lessOrEqual(2),
       blockchain
     );

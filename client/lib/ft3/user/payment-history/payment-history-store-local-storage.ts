@@ -127,7 +127,7 @@ export default class PaymentHistoryStoreLocalStorage
 
     for (const key of Object.keys(this.entriesCache)) {
       if (
-        this.entriesCache.hasOwnProperty(key) &&
+        Object.prototype.hasOwnProperty.call(this.entriesCache, key) &&
         key.startsWith(paymentHistoryKey)
       ) {
         delete this.entriesCache[key];

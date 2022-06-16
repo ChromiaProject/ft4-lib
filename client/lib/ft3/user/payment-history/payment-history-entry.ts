@@ -28,8 +28,9 @@ export default class PaymentHistoryEntry {
     this.transactionId = transactionId;
     this.blockHeight = blockHeight;
   }
-
+  //eslint-disable-next-line @typescript-eslint/ban-types
   adaptForSerialization(): {} {
+    //eslint: {} is "non-nullish"; use Record<string, unknown> (means any object), unknown (means any value), or Record<string, never> (means empty object)
     const {
       isInput,
       delta,

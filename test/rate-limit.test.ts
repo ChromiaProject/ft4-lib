@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */ // this fixes all lines like 82, but might hide useful errors. Better, uglier solution found on line 115
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
 import { Account } from "../client/lib/ft3/user/account";
@@ -108,11 +109,12 @@ describe("Rate Limit", () => {
     let timestamp = lastOperation;
 
     it("initializes with 0 points", async () => {
-      const spy = jest
-        .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+      const spy = jest.spyOn(RateLimit, "getLastTimestamp").mockImplementation(
+        (blockchain) =>
+          new Promise((res, _) =>
+            res(timestamp)
+          ) /*to be applied to 131, 147, 163*/ // eslint-disable-line @typescript-eslint/no-unused-vars
+      );
       const expect0Points = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -172,7 +174,7 @@ describe("Rate Limit", () => {
   });
 
   const timeout = async (timer: number) => {
-    return new Promise((res, rej) => {
+    return new Promise((res) => {
       setTimeout(res, timer);
     });
   };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import SSOStore from "../../client/lib/ft3/user/sso/sso-store";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 

@@ -1,6 +1,8 @@
 import { GtvSerializable } from "../account";
 
-export default type AuthDescriptorRule = GtvSerializable
+type AuthDescriptorRule = GtvSerializable;
+
+export default AuthDescriptorRule;
 
 export class Rules {
   static get blockHeight(): RuleVariable {

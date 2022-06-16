@@ -1,5 +1,5 @@
 import { Account, FlagsType } from "../account";
-import { gtx, util } from "postchain-client";
+import { util } from "postchain-client";
 import Blockchain from "../../core/blockchain/blockchain";
 import Transaction from "../../core/transaction";
 import User from "../user";
@@ -41,7 +41,7 @@ function validateRegisterAccountOperation(operation: Operation) {
 
 function validateAddAuthDescriptorOperation(
   operation: Operation,
-  pubKey: Buffer
+  pubKey: Buffer /*eslint: unused. is this for backwards compatibility? if yes: */ // eslint-disable-line @typescript-eslint/no-unused-vars
 ) {
   assert(
     operation.name === Operations.addAuthDescriptor,

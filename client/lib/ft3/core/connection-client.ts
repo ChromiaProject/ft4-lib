@@ -20,7 +20,7 @@ export default class ConnectionClient {
     const convertedParams = {};
 
     for (const name of Object.keys(params)) {
-      if (params.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(params, name)) {
         convertedParams[name] = params[name].toGTV();
       }
     }
