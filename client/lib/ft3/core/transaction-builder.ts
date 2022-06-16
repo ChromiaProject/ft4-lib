@@ -5,12 +5,12 @@ import Operation from "./operation";
 import User from "../user/user";
 
 declare global {
-  type Array<T> = GtvSerializable; //eslint-disable-line @typescript-eslint/no-unused-vars
-  type String = GtvSerializable;
-  type Number = GtvSerializable;
-  type Buffer = GtvSerializable;
-  type Boolean = GtvSerializable;
-  type Object = GtvSerializable;
+  interface Array<T> extends GtvSerializable {} //eslint-disable-line @typescript-eslint/no-unused-vars
+  interface String extends GtvSerializable {}
+  interface Number extends GtvSerializable {}
+  interface Buffer extends GtvSerializable {}
+  interface Boolean extends GtvSerializable {}
+  interface Object extends GtvSerializable {}
 }
 
 Buffer.prototype.toGTV = function (): any {

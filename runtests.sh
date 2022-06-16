@@ -15,5 +15,6 @@ exitfn () {
 trap "exitfn" 2
 
 docker-compose up -d
+sleep 10
 npx jest test $*
 docker-compose down
