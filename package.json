@@ -25,15 +25,15 @@
     }
   },
   "lint-staged": {
-    "test/*.ts": [
+    "test/**/\*.ts": [
       "prettier -c",
       "eslint"
     ],
-    "test-admin/*.ts": [
+    "test-admin/**/\*.ts": [
       "prettier -c",
       "eslint"
     ],
-    "client/*.ts": [
+    "client/**/\*.ts": [
       "prettier -c",
       "eslint"
     ]
