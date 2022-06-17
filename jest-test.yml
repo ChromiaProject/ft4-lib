@@ -20,7 +20,7 @@ services:
     depends_on:
       - ft3-lib-jest-postgres
     volumes:
-      - ./postchain/config/nodes/test:/opt/chromaway/rell/config
+      - ./config/test:/opt/chromaway/rell/config
       - ./rell:/opt/chromaway/rell
     environment:
       POSTCHAIN_DB_URL: jdbc:postgresql://ft3-lib-jest-postgres/postchain
