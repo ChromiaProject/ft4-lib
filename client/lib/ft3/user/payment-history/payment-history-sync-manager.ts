@@ -104,7 +104,7 @@ export default class PaymentHistorySyncManager {
             )
             .flat();
 
-        //TODO: investigate if this check has to be removed, because lib might me used with new FT3 contract which
+        //TODO: investigate if this check has to be removed, because lib might be used with new FT3 contract which
         //maybe has new transfer type, which adds payment history entries, but transfer is not supported by this version
         //of the client lib and it will not be loaded, and in the and number of inputs and outputs will not match
         //number of entries, and therefore exception will be thrown.

@@ -110,24 +110,38 @@ describe('Test the account', () => {
         await expect(promise).resolves.not.toThrowError()
     });
 
-    //TODO FIX ME
-    it.skip("should update account if 2 signatures provided", async () => {
-        const user1 = TestUser.singleSig();
-        const user2 = TestUser.singleSig();
+    it("should update account if 2 signatures provided", async () => {
+        const keyPair1 = new KeyPair();
+        const keyPair2 = new KeyPair();
+        const keyPair3 = new KeyPair();
 
-        const account = await Account.register(
-            new MultiSignatureAuthDescriptor(
-                [user1.keyPair.pubKey, user2.keyPair.pubKey],
-                2,
-                [FlagsType.Account, FlagsType.Transfer]
-            ),
-            blockchain.newSession(user1)
+        const authDescriptor = new MultiSignatureAuthDescriptor(
+            [keyPair1.pubKey, keyPair2.pubKey],
+            2,
+            [FlagsType.Account, FlagsType.Transfer]
         );
-        expect(account).not.toBeNull();
 
-        await account.addAuthDescriptor(
-            new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [FlagsType.Transfer])
-        );
+        let user1 = new User(keyPair1, authDescriptor)
+
+        await blockchain.transactionBuilder()
+            .add(register(authDescriptor))
+            .build(authDescriptor.signers)
+            .sign(user1.keyPair)
+            .sign(keyPair2)
+            .post();
+
+        const account = await blockchain.newSession(user1).getAccountById(authDescriptor.id);
+
+        let tx = account.tx.addAuthDescriptor(
+            new SingleSignatureAuthDescriptor(keyPair3.pubKey, [FlagsType.Transfer])
+        )
+
+        await tx.sign(keyPair2)
+            .sign(keyPair3)
+            .post();
+
+        await account.sync()
+
         expect(account.authDescriptor.length).toBe(2);
     });
 
