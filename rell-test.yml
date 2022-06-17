@@ -1,0 +1,26 @@
+version: "3.3"
+
+services:
+  ft3-lib-rell-postgres:
+    image: postgres:14.1-alpine
+    container_name: ft3-lib-rell-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postchain
+      POSTGRES_USER: postchain
+      POSTGRES_PASSWORD: postchain
+
+  ft3-lib-rell-postchain:
+    image: registry.gitlab.com/chromaway/postchain-distribution/chromaway/postchain-test-dapp:3.5.0
+    container_name: ft3-lib-rell-postchain
+    command:
+      - test
+    ports:
+      - "7740:7740"
+    depends_on:
+      - ft3-lib-rell-postgres
+    volumes:
+      - ./rell:/opt/chromaway/rell
+    environment:
+      POSTCHAIN_DB_URL: jdbc:postgresql://ft3-lib-rell-postgres/postchain
+      CHAIN_CONF: /opt/chromaway/rell/src/tests/run.xml

@@ -17,5 +17,6 @@ postchain/runtime
 
 dist/
 rell/target
+rell/out
 
 yarn.log
