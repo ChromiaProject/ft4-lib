@@ -11,7 +11,7 @@ require('dotenv').config();
 
 export default class BlockchainUtil {
     static async getDefaultBlockchain(): Promise<Blockchain> {
-        return await new Postchain(process.env.TEST_NODE_URL || "http://localhost:7740").blockchain(0);
+        return await new Postchain(process.env.TEST_NODE_URL || "http://localhost:7741").blockchain(0);
     }
 
     static getNewBlockchain(): Blockchain {

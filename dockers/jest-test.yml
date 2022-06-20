@@ -16,12 +16,12 @@ services:
     command:
       - run-node-auto
     ports:
-      - "7740:7740"
+      - "7741:7740"
     depends_on:
       - ft3-lib-jest-postgres
     volumes:
-      - ./config/test:/opt/chromaway/rell/config
-      - ./rell:/opt/chromaway/rell
+      - ../config/test:/opt/chromaway/rell/config
+      - ../rell:/opt/chromaway/rell
     environment:
       POSTCHAIN_DB_URL: jdbc:postgresql://ft3-lib-jest-postgres/postchain
 

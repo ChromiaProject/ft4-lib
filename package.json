@@ -8,9 +8,14 @@
     "test": "test"
   },
   "scripts": {
-    "test:js": "./jesttest.sh",
-    "test:rell": "./relltest.sh",
+    "test:js": "./scripts/jesttest.sh",
+    "test:rell": "./scripts/relltest.sh",
     "test": "npm run test:js && npm run test:rell",
+    "postchain:test": "docker-compose -f dockers/rell-test.yml up",
+    "postchain:demo": "docker-compose -f dockers/demo.yml up",
+    "stop-postchain:jest": "docker-compose -f dockers/jest-test.yml down",
+    "stop-postchain:rell": "docker-compose -f dockers/rell-test.yml down",
+    "stop-postchain:demo": "docker-compose -f dockers/demo.yml down",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",
     "prepublish": "npm run build"
