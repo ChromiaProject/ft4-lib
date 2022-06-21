@@ -1,13 +1,11 @@
-  
 <run wipe-db="true">
     <nodes>
-        <test-config src="../../config/node-config.properties"/>
-        <config src="../../config/node-config.properties"/>
+        <config src="node-config.properties" add-signers="true" />
     </nodes>
     <chains>
         <chain name="ft3-lib" iid="0">
             <config height="0">
-                <app module="tests.core.app_module">
+                <app module="main">
                     <args module="lib.ft3.core">
                         <arg key="my_blockchain_name"><string>test</string></arg>
                         <arg key="my_blockchain_website"><string>test_website</string></arg>
@@ -20,6 +18,6 @@
                 </app>
             </config>
         </chain>
-        <test module="tests" />
     </chains>
 </run>
+

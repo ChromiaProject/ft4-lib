@@ -23,4 +23,5 @@ services:
       - ../rell:/opt/chromaway/rell
     environment:
       POSTCHAIN_DB_URL: jdbc:postgresql://ft3-lib-demo-postgres/postchain
+      CHAIN_CONF: /opt/chromaway/rell/config/demo/run.xml
 
