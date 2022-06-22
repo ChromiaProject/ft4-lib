@@ -1,0 +1,9 @@
+object my_blockchain_info {
+    mutable name: text = chain_context.args.my_blockchain_name;
+    mutable website: text = chain_context.args.my_blockchain_website;
+    mutable description: text = chain_context.args.my_blockchain_description;
+    mutable rate_limit_active: boolean = chain_context.args.rate_limit_active;
+    mutable rate_limit_max_points: integer = chain_context.args.rate_limit_max_points;
+    mutable rate_limit_recovery_time: integer = chain_context.args.rate_limit_recovery_time;
+    mutable rate_limit_points_at_account_creation: integer = chain_context.args.rate_limit_points_at_account_creation;
+}

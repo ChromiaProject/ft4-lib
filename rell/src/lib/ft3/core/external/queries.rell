@@ -1,15 +1,15 @@
-import core: ^;
+import core: ^^.core;
 import acc: ^^.account;
 
 query get_blockchain_info() {
     return (
-        name = chain_context.args.my_blockchain_name,
-        website = chain_context.args.my_blockchain_website,
-        description = chain_context.args.my_blockchain_description,
-        rate_limit_active = chain_context.args.rate_limit_active,
-        rate_limit_max_points = chain_context.args.rate_limit_max_points,
-        rate_limit_recovery_time = chain_context.args.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = chain_context.args.rate_limit_points_at_account_creation
+        name = core.my_blockchain_info.name,
+        website = core.my_blockchain_info.website,
+        description = core.my_blockchain_info.description,
+        rate_limit_active = core.my_blockchain_info.rate_limit_active,
+        rate_limit_max_points = core.my_blockchain_info.rate_limit_max_points,
+        rate_limit_recovery_time = core.my_blockchain_info.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = core.my_blockchain_info.rate_limit_points_at_account_creation
     );
 }
 

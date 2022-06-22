@@ -1,10 +1,9 @@
-import core_ext: ^.core.external;
+import core: ^.core;
 
 function rate_limit (account) {
-    val chain_info = core_ext.get_blockchain_info();
-	if ( chain_info.rate_limit_active == false ) return;
-    val max_counter = chain_info.rate_limit_max_points;
-    val recovery_time = chain_info.rate_limit_recovery_time;
+	if ( core.my_blockchain_info.rate_limit_active == false ) return;
+    val max_counter = core.my_blockchain_info.rate_limit_max_points;
+    val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
     val stat = rl_state@{account} (.points, .last_update);
     val delta = op_context.last_block_time - stat.last_update;
     var got_points = 0;
