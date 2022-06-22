@@ -1,7 +1,7 @@
 @mount('ft3')
 module;
 
-import core: ^.core;
+import core_ext: ^.core.external;
 
 struct auth_descriptor {
     auth_type: text;
@@ -94,16 +94,19 @@ function _delete_all_auth_descriptors_exclude(account, auth_descriptor_id: byte_
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
-     require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
-     val id = auth_descriptor.hash();
-     val acc = create account (id);
-     _add_auth_descriptor(
-        acc, auth_descriptor
-     );
-     val max_points = core.my_blockchain_info.rate_limit_max_points;
-     val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
-     val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
-     
+    require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
+    val id = auth_descriptor.hash();
+    val acc = create account (id);
+    _add_auth_descriptor(
+       acc, auth_descriptor
+    );
+
+    val chain_info = core_ext.get_blockchain_info();
+
+    val max_points = chain_info.rate_limit_max_points;
+    val recovery_time = chain_info.rate_limit_recovery_time;
+    val points_at_start = chain_info.rate_limit_points_at_account_creation;
+    
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
     return id;
