@@ -29,19 +29,3 @@ function rate_limit (account) {
         .last_update = update_time
     );
 }
-
-
-query get_account_rate_limit_last_update(account_id: byte_array) {
-	if(core.my_blockchain_info.rate_limit_active == false ) return (points = 0, last_update = 0);
-	val t= rl_state@{.account.id == account_id}
-	(
-		.points, 
-		.last_update
-	);
-	
-	return t;
-}
-
-query get_last_timestamp(): integer {
-	return (block@{.timestamp>0}(@sort_desc .timestamp) limit 1);
-}

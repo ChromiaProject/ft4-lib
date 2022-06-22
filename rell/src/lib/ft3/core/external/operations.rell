@@ -1,6 +1,3 @@
-@mount('ft3')
-module;
-
 import ft3: ^^;
 
 

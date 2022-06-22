@@ -1,0 +1,9 @@
+import xc: ^;
+
+query get_linked_chains() {
+    return xc.linked_chain @* {} ( .chain_rid );
+}
+
+query is_linked_with_chain(chain_rid: byte_array) {
+    return xc.linked_chain @? { chain_rid } != null;
+}

@@ -1,9 +1,5 @@
-@mount('ft3')
-module;
-
 import acc: ^^.account;
 import core: ^^.core;
-
 
 operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
     val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];

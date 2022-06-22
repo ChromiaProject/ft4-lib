@@ -1,8 +1,5 @@
-@mount('ft3.xc')
-module;
-
 import ft3: ^^.core;
-import xc: ^^.crosschain;
+import xc: ^;
 
 operation link_chain(chain_rid: byte_array) {
     create xc.linked_chain(chain_rid);

@@ -1,0 +1,75 @@
+import core: ^;
+import acc: ^.account;
+
+query get_blockchain_info() {
+    return (
+        name = chain_context.args.my_blockchain_name,
+        website = chain_context.args.my_blockchain_website,
+        description = chain_context.args.my_blockchain_description,
+        rate_limit_active = chain_context.args.rate_limit_active,
+        rate_limit_max_points = chain_context.args.rate_limit_max_points,
+        rate_limit_recovery_time = chain_context.args.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = chain_context.args.rate_limit_points_at_account_creation
+    );
+}
+
+query get_asset_balances(account_id: byte_array) {
+    return core.get_asset_balances(account_id);
+}
+
+query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
+    return core.balance @? {
+        .account.id == account_id,
+        .asset.id == asset_id
+    } (
+        id = .asset.id,
+        name = .asset.name,
+        amount = .amount,
+        chain_id = .asset.issuing_chain_rid
+    );
+}
+
+query get_asset_by_name(name) {
+    return core.asset @* { name } (
+        .id,
+        .name,
+        .issuing_chain_rid
+    );
+    
+}
+
+query get_asset_by_id(asset_id: byte_array) {
+	return core.asset@{
+		.id == asset_id
+	}(
+		id = .id,
+		name = .name,
+		issuing_chain_rid = .issuing_chain_rid
+		
+	);
+}
+
+query get_all_assets() {
+	return core.asset@*{}(
+		id = .id,
+		name = .name,
+		issuing_chain_rid = .issuing_chain_rid	
+	);
+}
+
+query get_payment_history(account_id: byte_array, after_block: integer) {
+    return core.payment_history_entry @* {
+        acc.account @ { account_id },
+        .transaction.block.block_height > after_block
+    } (
+        delta = .delta,
+        asset = .asset.name,
+        asset_id = .asset.id,
+        is_input = .is_input,
+        timestamp = .transaction.block.timestamp,
+        block_height = .transaction.block.block_height,
+        entry_index = .entry_index,
+        tx_rid = .transaction.tx_rid,
+        tx_data = .transaction.tx_data
+    );
+}
