@@ -1,4 +1,3 @@
-  
 <run wipe-db="true">
     <nodes>
         <config src="node-config.properties" add-signers="true" />
@@ -6,7 +5,7 @@
     <chains>
         <chain name="ft3-lib" iid="0">
             <config height="0">
-				<app module="main">
+                <app module="main">
                     <args module="lib.ft3.core">
                         <arg key="my_blockchain_name"><string>test</string></arg>
                         <arg key="my_blockchain_website"><string>test_website</string></arg>
@@ -21,3 +20,4 @@
         </chain>
     </chains>
 </run>
+

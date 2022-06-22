@@ -1,8 +1,8 @@
   
 <run wipe-db="true">
     <nodes>
-        <test-config src="../../config/node-config.properties"/>
-        <config src="../../config/node-config.properties"/>
+        <test-config src="./node-config.properties"/>
+        <config src="./node-config.properties"/>
     </nodes>
     <chains>
         <chain name="ft3-lib" iid="0">
