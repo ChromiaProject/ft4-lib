@@ -26,8 +26,8 @@ operation apply_xfer (
         init_tx.tx.body.operations[0].args.to_full().to_gtv()
     );
 
-val my_blockchain_rid = chain_context.blockchain_rid;
-val source = init_args.source;
+    val my_blockchain_rid = chain_context.blockchain_rid;
+    val source = init_args.source;
 
     require(init_args.hops.size() > hop_index);
     require(init_args.hops[hop_index] == my_blockchain_rid);
