@@ -1,16 +1,16 @@
 module;
 
 namespace ft3 {
-	import acc: ^.account;
-	import acc_ext: ^.account.external;
-	import core: ^.ft3_basic_dev;
-	import transfer_op: ^.core.external;
+    import acc: ^.account;
+    import acc_ext: ^.account.external;
+    import core: ^.ft3_basic_dev;
+    import transfer_op: ^.core.external;
 //	import ^.crosschain;
 //	import ^.crosschain.operations;
-	
-	import ^.operations.dev_op_account;
-	import ^.operations.dev_op_asset;
-	import ^.operations.dev_op_balance;
-	import ^.operations.dev_op_rate_limit;
+
+    import ^.operations.dev_op_account;
+    import ^.operations.dev_op_asset;
+    import ^.operations.dev_op_balance;
+    import ^.operations.dev_op_rate_limit;
 }
 

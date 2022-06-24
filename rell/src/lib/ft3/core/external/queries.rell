@@ -39,22 +39,22 @@ query get_asset_by_name(name) {
 }
 
 query get_asset_by_id(asset_id: byte_array) {
-	return core.asset@{
-		.id == asset_id
-	}(
-		id = .id,
-		name = .name,
-		issuing_chain_rid = .issuing_chain_rid
-		
-	);
+    return core.asset @ {
+        .id == asset_id
+    }(
+        id = .id,
+        name = .name,
+        issuing_chain_rid = .issuing_chain_rid
+        
+    );
 }
 
 query get_all_assets() {
-	return core.asset@*{}(
-		id = .id,
-		name = .name,
-		issuing_chain_rid = .issuing_chain_rid	
-	);
+    return core.asset @* {} (
+        id = .id,
+        name = .name,
+        issuing_chain_rid = .issuing_chain_rid
+    );
 }
 
 query get_payment_history(account_id: byte_array, after_block: integer) {

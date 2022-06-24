@@ -1,8 +1,8 @@
 module;
 
 namespace ft3 {
-	import acc: ^.account;
-	import acc_ext: ^.account.external;
-	import transfer_op: ^.core.external;
+    import acc: ^.account;
+    import acc_ext: ^.account.external;
+    import transfer_op: ^.core.external;
 }
 
