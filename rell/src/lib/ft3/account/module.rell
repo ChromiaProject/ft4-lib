@@ -94,16 +94,17 @@ function _delete_all_auth_descriptors_exclude(account, auth_descriptor_id: byte_
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
-     require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
-     val id = auth_descriptor.hash();
-     val acc = create account (id);
-     _add_auth_descriptor(
-        acc, auth_descriptor
-     );
-     val max_points = core.my_blockchain_info.rate_limit_max_points;
-     val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
-     val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
-     
+    require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
+    val id = auth_descriptor.hash();
+    val acc = create account (id);
+    _add_auth_descriptor(
+       acc, auth_descriptor
+    );
+
+    val max_points = core.my_blockchain_info.rate_limit_max_points;
+    val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
+    val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
+    
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
     return id;
@@ -114,37 +115,4 @@ function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, re
     rate_limit(account);
     require_auth(account, auth_descriptor_id, required_flags);
     return account;
-}
-
-query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
-    return is_valid(account_auth_descriptor @ {
-        .account.id == account_id,
-        .descriptor_id == auth_descriptor_id
-    });
-}
-
-query get_account_auth_descriptors(id: byte_array) {
-    return account_auth_descriptor @* {
-        .account.id == id
-    } (
-        id = .descriptor_id,
-        type = .auth_type,
-        args = .args
-    );
-}
-
-query get_account_by_id(id: byte_array) {
-    return account @? { id } ( .id );
-}
-
-query get_account_by_auth_descriptor(auth_descriptor) {
-    return account @? { .id == auth_descriptor.hash() } ( .id );
-}
-
-query get_accounts_by_participant_id(id: byte_array) {
-    return auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
-}
-
-query get_accounts_by_auth_descriptor_id(descriptor_id: byte_array) {
-    return account_auth_descriptor @* { descriptor_id } ( .account.id );
 }

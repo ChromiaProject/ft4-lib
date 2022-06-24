@@ -25,55 +25,11 @@ function register_asset (name, issuing_chain_rid: byte_array): asset {
    return create asset (id, name, issuing_chain_rid);
 }
 
-function _get_asset_balances(account_id: byte_array): list<(id:byte_array,name:text,amount:integer,chain_id:byte_array)> {
+function get_asset_balances(account_id: byte_array): list<(id:byte_array,name:text,amount:integer,chain_id:byte_array)> {
     return balance @* { .account.id == account_id } (
       id = .asset.id,
       name = .asset.name,
       amount = .amount,
       chain_id = .asset.issuing_chain_rid
     );
-}
-
-query get_asset_balances(account_id: byte_array) {
-    return _get_asset_balances(account_id);
-}
-
-query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
-    return balance @? {
-        .account.id == account_id,
-        .asset.id == asset_id
-    } (
-        id = .asset.id,
-        name = .asset.name,
-        amount = .amount,
-        chain_id = .asset.issuing_chain_rid
-    );
-}
-
-query get_asset_by_name(name) {
-    return asset @* { name } (
-        .id,
-        .name,
-        .issuing_chain_rid
-    );
-    
-}
-
-query get_asset_by_id(asset_id: byte_array) {
-	return asset@{
-		.id == asset_id
-	}(
-		id = .id,
-		name = .name,
-		issuing_chain_rid = .issuing_chain_rid
-		
-	);
-}
-
-query get_all_assets() {
-	return asset@*{}(
-		id = .id,
-		name = .name,
-		issuing_chain_rid = .issuing_chain_rid	
-	);
 }
