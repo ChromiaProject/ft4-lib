@@ -22,8 +22,8 @@
   },
   "lint-staged": {
     "*.ts": [
-      "prettier -c",
-      "eslint"
+      "prettier -w",
+      "eslint --fix --max-warnings 0"
     ]
   },
   "author": "",
