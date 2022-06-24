@@ -109,7 +109,15 @@ export default class PaymentHistorySyncManager {
       return [];
     }
 
-    //const [firstEntry] = entries;
+    const [firstEntry] = entries;
+
+    // Get all the payments from the transaction which are related to the current account,
+    // and then get all inputs and outputs for which current account is source or destination.
+    const payments = this.getPaymentsForChainAndAccountFromRawTransaction(
+      chainId.toString("hex"),
+      accountId,
+      firstEntry.transactionData
+    );
 
     let inputs = payments
       .map((payment) =>
@@ -134,44 +142,6 @@ export default class PaymentHistorySyncManager {
       .flat();
 
     //TODO: investigate if this check has to be removed, because lib might be used with new FT3 contract which
-    //maybe has new transfer type, which adds payment history entries, but transfer is not supported by this version
-    //of the client lib and it will not be loaded, and in the and number of inputs and outputs will not match
-    //number of entries, and therefore exception will be thrown.
-    if (inputs.length + outputs.length !== entries.length) {
-      throw new Error(
-        `Number of payment entries (${
-          entries.length
-        }) and number of transfer inputs and outputs (${
-          inputs.length + outputs.length
-        }) with address (${accountId.toString(
-          "hex"
-        )}) in the transaction are not the same`
-      );
-    }
-
-    let inputs = payments
-      .map((payment) =>
-        payment
-          .inputsWithChainAndAccount(
-            chainId.toString("hex"),
-            accountId.toString("hex")
-          )
-          .map((input) => new ParamPaymentPair(input, payment))
-      )
-      .flat();
-
-    let outputs = payments
-      .map((payment) =>
-        payment
-          .outputsWithChainAndAccount(
-            chainId.toString("hex"),
-            accountId.toString("hex")
-          )
-          .map((output) => new ParamPaymentPair(output, payment))
-      )
-      .flat();
-
-    //TODO: investigate if this check has to be removed, because lib might me used with new FT3 contract which
     //maybe has new transfer type, which adds payment history entries, but transfer is not supported by this version
     //of the client lib and it will not be loaded, and in the and number of inputs and outputs will not match
     //number of entries, and therefore exception will be thrown.
