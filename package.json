@@ -18,11 +18,18 @@
     "stop-postchain:demo": "docker-compose -f dockers/demo.yml down",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier -w",
+      "eslint --fix --max-warnings 0"
+    ]
   },
   "author": "",
   "license": "BSD-2-Clause-FreeBSD",
@@ -37,7 +44,14 @@
     "@types/jest": "^24.0.15",
     "@types/node": "^12.6.2",
     "@types/node-fetch": "^2.6.1",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "husky": "^8.0.1",
     "jest": "^24.8.0",
+    "lint-staged": "^13.0.1",
+    "prettier": "2.7.0",
     "shx": "^0.3.2",
     "ts-jest": "^24.0.2",
     "tslint": "^5.18.0"

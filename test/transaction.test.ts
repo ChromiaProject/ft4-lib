@@ -7,36 +7,29 @@ import { op } from "../client/lib/ft3";
 let blockchain: Blockchain = null;
 
 describe("Blockchain", () => {
-    beforeAll(async () => {
-        blockchain = await BlockchainUtil.getDefaultBlockchain()
-    });
+  beforeAll(async () => {
+    blockchain = await BlockchainUtil.getDefaultBlockchain();
+  });
 
-    it('should successfully get the transaction ID', async () => {
-        const tx = blockchain.transactionBuilder()
-            .add(op('foo', 'bar'))
-            .build([])
+  it("should successfully get the transaction ID", async () => {
+    const tx = blockchain.transactionBuilder().add(op("foo", "bar")).build([]);
 
-        const expectedTxRID = gtv.gtvHash([
-            blockchain.id,
-            [
-                ['foo', [ 'bar' ]]
-            ],
-            []
-        ]);
+    const expectedTxRID = gtv.gtvHash([blockchain.id, [["foo", ["bar"]]], []]);
 
-        expect(tx.getTxRID()).toEqual(expectedTxRID)
-    });
+    expect(tx.getTxRID()).toEqual(expectedTxRID);
+  });
 
-    it('should stop raw transactions intended for a different blockchain', async () => {
-        const tx = blockchain.transactionBuilder()
-            .add(op('foo', 'bar'))
-            .build([])
-            .raw()
+  it("should stop raw transactions intended for a different blockchain", async () => {
+    const tx = blockchain
+      .transactionBuilder()
+      .add(op("foo", "bar"))
+      .build([])
+      .raw();
 
-        let bc = BlockchainUtil.getNewBlockchain()
+    const bc = BlockchainUtil.getNewBlockchain();
 
-        expect(()=>{
-            Transaction.fromRawTransaction(tx, bc);
-        }).toThrowError()
-    });
+    expect(() => {
+      Transaction.fromRawTransaction(tx, bc);
+    }).toThrowError();
+  });
 });

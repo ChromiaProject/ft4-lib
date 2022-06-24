@@ -1,7 +1,7 @@
 export default class XTransferTarget {
-    readonly accountId: string;
+  readonly accountId: string;
 
-    constructor(accountId: string) {
-        this.accountId = accountId;
-    }
+  constructor(accountId: string) {
+    this.accountId = accountId;
+  }
 }
