@@ -1,12 +1,12 @@
 import BlockchainSession from "../core/blockchain/blockchain-session";
 import Transaction from "../core/transaction";
 import {
-    transfer,
-    addAuthDescriptor,
-    nop,
-    deleteAllAuthDescriptorsExclude,
-    xcTransfer,
-    deleteAuthDescriptor
+  transfer,
+  addAuthDescriptor,
+  nop,
+  deleteAllAuthDescriptorsExclude,
+  xcTransfer,
+  deleteAuthDescriptor,
 } from "./account-operations";
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import Operation from "../core/operation";
@@ -14,77 +14,114 @@ import Operation from "../core/operation";
 type PubKey = Buffer;
 
 interface GtvSerializable {
-    toGTV(): any[];
+  toGTV(): any[];
 }
 
 interface AuthDescriptor extends GtvSerializable {
-    id: Buffer;
-    signers: PubKey[];
-    rule: AuthDescriptorRule | null;
-    hash(): Buffer;
+  id: Buffer;
+  signers: PubKey[];
+  rule: AuthDescriptorRule | null;
+  hash(): Buffer;
 }
 
 export default class AccountTransactions {
-    readonly id: Buffer;
-    readonly session: BlockchainSession;
+  readonly id: Buffer;
+  readonly session: BlockchainSession;
 
-    constructor(id: Buffer, session: BlockchainSession) {
-        this.id = id;
-        this.session = session;
-    }
+  constructor(id: Buffer, session: BlockchainSession) {
+    this.id = id;
+    this.session = session;
+  }
 
-    addAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
-        return this.session.blockchain.transactionBuilder()
-            .add(addAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor))
-            .add(nop())
-            .build([this.session.user.authDescriptor.signers , authDescriptor.signers].flat())
-            .sign(this.session.user.keyPair);
-    }
+  addAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
+    return this.session.blockchain
+      .transactionBuilder()
+      .add(
+        addAuthDescriptor(
+          this.id,
+          this.session.user.authDescriptor.id,
+          authDescriptor
+        )
+      )
+      .add(nop())
+      .build(
+        [
+          this.session.user.authDescriptor.signers,
+          authDescriptor.signers,
+        ].flat()
+      )
+      .sign(this.session.user.keyPair);
+  }
 
-    deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Transaction {
-        return this.session.blockchain.transactionBuilder()
-            .add(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id))
-            .buildAndSign(this.session.user);
-    }
+  deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Transaction {
+    return this.session.blockchain
+      .transactionBuilder()
+      .add(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id))
+      .buildAndSign(this.session.user);
+  }
 
-    deleteAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
-        return this.session.blockchain.transactionBuilder()
-            .add(deleteAuthDescriptor(this.id, this.session.user.authDescriptor.id, authDescriptor.id))
-            .buildAndSign(this.session.user);
-    }
+  deleteAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
+    return this.session.blockchain
+      .transactionBuilder()
+      .add(
+        deleteAuthDescriptor(
+          this.id,
+          this.session.user.authDescriptor.id,
+          authDescriptor.id
+        )
+      )
+      .buildAndSign(this.session.user);
+  }
 
-    transferInputsToOutputs(inputs: Array<GtvSerializable>, outputs: Array<GtvSerializable>): Transaction {
-        return this.session.blockchain.transactionBuilder()
-            .add(transfer(inputs, outputs))
-            .add(nop())
-            .buildAndSign(this.session.user);
-    }
+  transferInputsToOutputs(
+    inputs: Array<GtvSerializable>,
+    outputs: Array<GtvSerializable>
+  ): Transaction {
+    return this.session.blockchain
+      .transactionBuilder()
+      .add(transfer(inputs, outputs))
+      .add(nop())
+      .buildAndSign(this.session.user);
+  }
 
-    xcTransfer(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Transaction {
-        return this.session.blockchain.transactionBuilder()
-            .add(this.xcTransferOp(destinationChainId, destinationAccountId, assetId, amount))
-            .add(nop())
-            .buildAndSign(this.session.user);
-    }
+  xcTransfer(
+    destinationChainId: Buffer,
+    destinationAccountId: Buffer,
+    assetId: Buffer,
+    amount: number
+  ): Transaction {
+    return this.session.blockchain
+      .transactionBuilder()
+      .add(
+        this.xcTransferOp(
+          destinationChainId,
+          destinationAccountId,
+          assetId,
+          amount
+        )
+      )
+      .add(nop())
+      .buildAndSign(this.session.user);
+  }
 
-    /* Operation */
+  /* Operation */
 
-    xcTransferOp(destinationChainId: Buffer, destinationAccountId: Buffer, assetId: Buffer, amount: number): Operation {
-        const source = [
-            this.id,
-            assetId,
-            this.session.user.authDescriptor.id,
-            amount,
-            []
-        ];
-        const target = [
-            destinationAccountId,
-            []
-        ];
-        const hops = [
-            destinationChainId
-        ];
+  xcTransferOp(
+    destinationChainId: Buffer,
+    destinationAccountId: Buffer,
+    assetId: Buffer,
+    amount: number
+  ): Operation {
+    const source = [
+      this.id,
+      assetId,
+      this.session.user.authDescriptor.id,
+      amount,
+      [],
+    ];
+    const target = [destinationAccountId, []];
+    const hops = [destinationChainId];
 
-        return xcTransfer(source, target, hops);
-    }
+    return xcTransfer(source, target, hops);
+  }
 }

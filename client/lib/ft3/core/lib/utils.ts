@@ -1,11 +1,10 @@
-import { get } from './http';
+import { get } from "./http";
 
 export async function getBRID(nodeUrl: string, id: number): Promise<Buffer> {
-    if (!Number.isInteger(id)) throw new Error('Invalid chain iid');
-    if (!nodeUrl) throw new Error('Cannot get BRID. Node url missing.');
+  if (!Number.isInteger(id)) throw new Error("Invalid chain iid");
+  if (!nodeUrl) throw new Error("Cannot get BRID. Node url missing.");
 
-    const brid = await get(`${nodeUrl}/brid/iid_${id}`);
+  const brid = await get(`${nodeUrl}/brid/iid_${id}`);
 
-    return Buffer.from(brid, 'hex');
+  return Buffer.from(brid, "hex");
 }
-

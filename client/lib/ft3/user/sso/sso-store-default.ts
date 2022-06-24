@@ -1,40 +1,50 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import SSOStore from "./sso-store";
-import {KeyPair} from "../../../cyptoUtils";
-
+import { KeyPair } from "../../../cyptoUtils";
 
 export default class SSOStoreDefault implements SSOStore {
-    set accountId(value: Buffer) {}
-    get accountId(): Buffer { return null }
+  set accountId(value: Buffer) {}
+  get accountId(): Buffer {
+    return null;
+  }
 
-    get keyPair(): KeyPair { return null }
-    get privKey(): Buffer { return null }
-    set privKey(value: Buffer) {}
+  get keyPair(): KeyPair {
+    return null;
+  }
+  get privKey(): Buffer {
+    return null;
+  }
+  set privKey(value: Buffer) {}
 
-    get tmpPrivKey(): Buffer {
-        const privKeyString = localStorage.getItem('__ssoTmpPrivKey');
+  get tmpPrivKey(): Buffer {
+    const privKeyString = localStorage.getItem("__ssoTmpPrivKey");
 
-        if (!privKeyString) { return null }
-
-        return Buffer.from(privKeyString, 'hex');
+    if (!privKeyString) {
+      return null;
     }
 
-    set tmpPrivKey(value: Buffer) {
-        localStorage.setItem('__ssoTmpPrivKey', value.toString('hex'));
+    return Buffer.from(privKeyString, "hex");
+  }
+
+  set tmpPrivKey(value: Buffer) {
+    localStorage.setItem("__ssoTmpPrivKey", value.toString("hex"));
+  }
+
+  get tmpKeyPair(): KeyPair {
+    const privKeyString = localStorage.getItem("__ssoTmpPrivKey");
+
+    if (!privKeyString) {
+      return null;
     }
 
-    get tmpKeyPair(): KeyPair {
-        const privKeyString = localStorage.getItem('__ssoTmpPrivKey');
+    return new KeyPair(privKeyString);
+  }
 
-        if (!privKeyString) { return null }
+  clearTmp() {
+    localStorage.removeItem("__ssoTmpPrivKey");
+  }
 
-        return new KeyPair(privKeyString);
-    }
-
-    clearTmp() {
-        localStorage.removeItem('__ssoTmpPrivKey');
-    }
-
-    clear() {
-        this.clearTmp();
-    }
+  clear() {
+    this.clearTmp();
+  }
 }
