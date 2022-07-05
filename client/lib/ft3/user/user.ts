@@ -1,5 +1,5 @@
 import { util } from "postchain-client";
-import { AuthDescriptor, FlagsType } from "./account";
+import { AuthDescriptor, FlagsType } from "./account-utils";
 import KeyPair from "../../cyptoUtils/keyPair";
 import SingleSignatureAuthDescriptor from "./auth-descriptor/single-signature-auth-descriptor";
 

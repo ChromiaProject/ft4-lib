@@ -1,4 +1,5 @@
-import { Account, FlagsType } from "../account";
+import { FlagsType } from "../account-utils";
+import MutableAccount from "../mutable-account";
 import { util } from "postchain-client";
 import Blockchain from "../../core/blockchain/blockchain";
 import Transaction from "../../core/transaction";
@@ -77,7 +78,9 @@ export default class SSO {
     vaultUrl = value;
   }
 
-  private async getAccountAndUserByStoredIds(): Promise<[Account, User]> {
+  private async getAccountAndUserByStoredIds(): Promise<
+    [MutableAccount, User]
+  > {
     const keyPair = this.store.keyPair;
     const accountId = this.store.accountId;
 
@@ -102,7 +105,7 @@ export default class SSO {
     return [account, user];
   }
 
-  async autoLogin(): Promise<[Account, User]> {
+  async autoLogin(): Promise<[MutableAccount, User]> {
     const [account, user] = await this.getAccountAndUserByStoredIds();
 
     if (!account || !user) {
@@ -135,7 +138,7 @@ export default class SSO {
     )}&cancelAction=${encodeURIComponent(cancelUrl)}&version=0.1`;
   }
 
-  async finalizeLogin(tx: string): Promise<[Account, User]> {
+  async finalizeLogin(tx: string): Promise<[MutableAccount, User]> {
     const keyPair = this.store.tmpKeyPair;
     this.store.clearTmp();
 

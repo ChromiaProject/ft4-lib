@@ -1,4 +1,4 @@
-import { GtvSerializable } from "./account";
+import { GtvSerializable } from "./account-utils";
 
 export class XferInput implements GtvSerializable {
   constructor(
