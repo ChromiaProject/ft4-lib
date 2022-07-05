@@ -27,7 +27,7 @@ describe("Payment history iterator", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
 
     const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
     const paymentHistoryEntries = paymentHistoryIterator.next();
@@ -39,7 +39,7 @@ describe("Payment history iterator", () => {
 
     expect(entry.other.length).toEqual(1);
     expect(entry.other[0].chainId).toEqual(blockchain.id.toString("hex"));
-    expect(entry.other[0].accountId).toEqual(account2.id_.toString("hex"));
+    expect(entry.other[0].accountId).toEqual(account2.id.toString("hex"));
   });
 
   it("should have two payment history entries if two transfers made", async () => {
@@ -53,8 +53,8 @@ describe("Payment history iterator", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
-    await account1.transfer(account2.id_, asset.id, 11);
+    await account1.transfer(account2.id, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 11);
 
     const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
     const paymentHistoryEntries = paymentHistoryIterator.next();
@@ -72,7 +72,7 @@ describe("Payment history iterator", () => {
       .withPoints(1)
       .build();
 
-    await account.transfer(account.id_, asset.id, 20);
+    await account.transfer(account.id, asset.id, 20);
 
     const paymentHistoryIterator = await account.getPaymentHistoryIterator(5);
     const paymentHistoryEntries = paymentHistoryIterator.next();
@@ -85,12 +85,12 @@ describe("Payment history iterator", () => {
     expect(entry1.isInput).toEqual(false);
     expect(entry1.other.length).toEqual(1);
     expect(entry1.other[0].chainId).toEqual(blockchain.id.toString("hex"));
-    expect(entry1.other[0].accountId).toEqual(account.id_.toString("hex"));
+    expect(entry1.other[0].accountId).toEqual(account.id.toString("hex"));
 
     expect(entry2.isInput).toEqual(true);
     expect(entry2.other.length).toEqual(1);
     expect(entry2.other[0].chainId).toEqual(blockchain.id.toString("hex"));
-    expect(entry2.other[0].accountId).toEqual(account.id_.toString("hex"));
+    expect(entry2.other[0].accountId).toEqual(account.id.toString("hex"));
   });
 
   it("should have more than one page if number of entries is greater than page size", async () => {
@@ -104,10 +104,10 @@ describe("Payment history iterator", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
-    await account1.transfer(account2.id_, asset.id, 10);
-    await account1.transfer(account2.id_, asset.id, 10);
-    await account1.transfer(account2.id_, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
 
     const paymentHistoryIterator = await account1.getPaymentHistoryIterator(2);
 
@@ -151,7 +151,7 @@ describe("Payment history iterator", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
     await account1.xcTransfer(generateId(), generateId(), asset.id, 10);
 
     const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
@@ -176,10 +176,10 @@ describe("Payment history iterator", () => {
 
       const account2 = await AccountBuilder.account(blockchain).build();
 
-      await account1.transfer(account2.id_, asset.id, 10);
-      await account1.transfer(account2.id_, asset.id, 10);
-      await account1.transfer(account2.id_, asset.id, 10);
-      await account1.transfer(account2.id_, asset.id, 10);
+      await account1.transfer(account2.id, asset.id, 10);
+      await account1.transfer(account2.id, asset.id, 10);
+      await account1.transfer(account2.id, asset.id, 10);
+      await account1.transfer(account2.id, asset.id, 10);
 
       const paymentHistoryIterator = await account1.getPaymentHistoryIterator(
         2

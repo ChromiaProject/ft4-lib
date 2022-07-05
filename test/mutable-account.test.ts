@@ -1,4 +1,5 @@
-import { Account, FlagsType } from "../client/lib/ft3/user/account";
+import { FlagsType } from "../client/lib/ft3/user/account-utils";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import * as pcl from "postchain-client";
 import { buffToHex, KeyPair } from "../client/lib/cyptoUtils";
 import TestUser from "./util/test-user";
@@ -12,7 +13,7 @@ import User from "../client/lib/ft3/user/user";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 
 async function addAuthDescriptorTo(
-  account: Account,
+  account: MutableAccount,
   adminUser: User,
   user: User,
   blockchain: Blockchain
@@ -68,7 +69,7 @@ describe("Test the account", () => {
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    const account = await Account.register(
+    const account = await MutableAccount.register(
       authDescriptor,
       blockchain.newSession(user)
     );
@@ -95,7 +96,7 @@ describe("Test the account", () => {
 
   it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
     const user = TestUser.singleSig();
-    const account = await Account.register(
+    const account = await MutableAccount.register(
       new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [
         FlagsType.Transfer,
       ]),
@@ -207,7 +208,7 @@ describe("Test the account", () => {
       .withParticipants([user.keyPair])
       .build();
 
-    const accounts = await Account.getByParticipantId(
+    const accounts = await MutableAccount.getByParticipantId(
       user.keyPair.pubKey,
       blockchain.newSession(user)
     );
@@ -230,7 +231,7 @@ describe("Test the account", () => {
 
     await addAuthDescriptorTo(account2, user2, user1, blockchain);
 
-    const accounts = await Account.getByParticipantId(
+    const accounts = await MutableAccount.getByParticipantId(
       user1.keyPair.pubKey,
       blockchain.newSession(user1)
     );
@@ -243,8 +244,8 @@ describe("Test the account", () => {
 
     const account = await AccountBuilder.account(blockchain, user).build();
 
-    const foundAccount = await Account.getById(
-      account.id_,
+    const foundAccount = await MutableAccount.getById(
+      account.id,
       blockchain.newSession(user)
     );
 
@@ -268,7 +269,7 @@ describe("Test the account", () => {
 
     const foundAccount = await blockchain
       .newSession(user1)
-      .getAccountById(account.id_);
+      .getAccountById(account.id);
 
     expect(foundAccount.authDescriptor.length).toEqual(1);
   });

@@ -4,7 +4,8 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import { Account, Asset, RateLimitInfo } from "../client/lib/ft3";
+import { Asset, RateLimitInfo } from "../client/lib/ft3";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import ConnectionClient from "../client/lib/ft3/core/connection-client";
 import ChainConnectionInfo from "../client/lib/ft3/core/chain-connection-info";
 import DirectoryServiceBase from "../client/lib/ft3/core/blockchain/directory-service-base";
@@ -48,7 +49,7 @@ describe("Blockchain", () => {
     const session = blockchain.newSession(user);
 
     const account = await blockchain.registerAccount(user.authDescriptor, user);
-    const foundAccount = await session.getAccountById(account.id_);
+    const foundAccount = await session.getAccountById(account.id);
 
     expect(account).toEqual(foundAccount);
   });
@@ -118,10 +119,10 @@ describe("Blockchain", () => {
 
     const session = blockchain.newSession(user);
 
-    const rawTransaction = Account.rawRegisterTransaction(
+    const rawTransaction = MutableAccount.rawTransactionRegister(
       user.authDescriptor,
       vault.authDescriptor,
-      session
+      blockchain
     );
 
     await blockchain.postRaw(rawTransaction);

@@ -1,4 +1,5 @@
-import { Account, FlagsType } from "../client/lib/ft3/user/account";
+import { FlagsType } from "../client/lib/ft3/user/account-utils";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
@@ -16,7 +17,7 @@ import User from "../client/lib/ft3/user/user";
 require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
 
 async function addAuthDescriptorTo(
-  account: Account,
+  account: MutableAccount,
   adminUser: User,
   user: User,
   blockchain: Blockchain
@@ -64,7 +65,7 @@ describe("Test the account", () => {
       .sign(user2.keyPair)
       .post();
 
-    const account = await Account.getById(
+    const account = await MutableAccount.getById(
       authDescriptor.id,
       blockchain.newSession(user1)
     );
@@ -90,7 +91,7 @@ describe("Test the account", () => {
       .sign(user2.keyPair)
       .post();
 
-    const account = await Account.getById(
+    const account = await MutableAccount.getById(
       authDescriptor.id,
       blockchain.newSession(user1)
     );
@@ -139,7 +140,7 @@ describe("Test the account", () => {
 
     const foundAccount = await blockchain
       .newSession(user1)
-      .getAccountById(account.id_);
+      .getAccountById(account.id);
 
     expect(foundAccount.authDescriptor.length).toEqual(2);
   });
