@@ -72,6 +72,6 @@ export default class TransactionBuilder {
   }
 
   buildAndSign(user: User): Transaction {
-    return this.build(user.authDescriptor.signers).sign(user.keyPair);
+    return this.build(user.authDescriptor.signers).sign(user.signatureProvider);
   }
 }

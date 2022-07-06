@@ -57,11 +57,11 @@ describe("Blockchain", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .build();
 
     const foundAccounts = await blockchain.getAccountsByParticipantId(
-      user.keyPair.pubKey,
+      user.signatureProvider.pubKey,
       user
     );
 
@@ -73,7 +73,7 @@ describe("Blockchain", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .build();
 
     const foundAccounts = await blockchain.getAccountsByAuthDescriptorId(

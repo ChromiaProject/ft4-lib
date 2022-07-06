@@ -44,8 +44,8 @@ async function addAuthDescriptorTo(
     .build(
       [adminUser.authDescriptor.signers, user.authDescriptor.signers].flat()
     )
-    .sign(adminUser.keyPair)
-    .sign(user.keyPair)
+    .sign(adminUser.signatureProvider)
+    .sign(user.signatureProvider)
     .post();
 }
 

@@ -33,8 +33,8 @@ async function addAuthDescriptorTo(
     .build(
       [adminUser.authDescriptor.signers, user.authDescriptor.signers].flat()
     )
-    .sign(adminUser.keyPair)
-    .sign(user.keyPair)
+    .sign(adminUser.signatureProvider)
+    .sign(user.signatureProvider)
     .post();
 }
 
@@ -51,7 +51,7 @@ describe("Test the account", () => {
     const user2 = TestUser.singleSig();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
-      [user1.keyPair.pubKey, user2.keyPair.pubKey],
+      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
       2,
       [FlagsType.Account, FlagsType.Transfer]
     );
@@ -60,8 +60,8 @@ describe("Test the account", () => {
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.keyPair)
-      .sign(user2.keyPair)
+      .sign(user1.signatureProvider)
+      .sign(user2.signatureProvider)
       .post();
 
     const account = await Account.getById(
@@ -77,7 +77,7 @@ describe("Test the account", () => {
     const user2 = TestUser.singleSig();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
-      [user1.keyPair.pubKey, user2.keyPair.pubKey],
+      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
       2,
       [FlagsType.Account, FlagsType.Transfer]
     );
@@ -86,8 +86,8 @@ describe("Test the account", () => {
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.keyPair)
-      .sign(user2.keyPair)
+      .sign(user1.signatureProvider)
+      .sign(user2.signatureProvider)
       .post();
 
     const account = await Account.getById(
@@ -98,7 +98,7 @@ describe("Test the account", () => {
     expect(account).not.toBeNull();
 
     const authDescriptor2 = new SingleSignatureAuthDescriptor(
-      user1.keyPair.pubKey,
+      user1.signatureProvider.pubKey,
       [FlagsType.Transfer]
     );
 
@@ -108,7 +108,7 @@ describe("Test the account", () => {
         addAuthDescriptor(authDescriptor.id, authDescriptor.id, authDescriptor2)
       )
       .build(authDescriptor2.signers)
-      .sign(user1.keyPair)
+      .sign(user1.signatureProvider)
       .post();
 
     await expect(promise).rejects.toBeInstanceOf(Error);
@@ -121,7 +121,7 @@ describe("Test the account", () => {
     const user3 = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user1)
-      .withParticipants([user1.keyPair])
+      .withParticipants([user1.signatureProvider])
       .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
@@ -149,7 +149,7 @@ describe("Test the account", () => {
     const user2 = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user1)
-      .withParticipants([user1.keyPair])
+      .withParticipants([user1.signatureProvider])
       .withPoints(3 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 

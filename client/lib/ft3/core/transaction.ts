@@ -2,6 +2,7 @@ import Blockchain from "./blockchain/blockchain";
 import TransactionBuilder from "./transaction-builder";
 import { gtx } from "postchain-client";
 import { op } from "../user/account-operations";
+import SignatureProvider from "../user/signature-provider";
 import Operation from "./operation";
 
 export default class Transaction {
@@ -17,12 +18,6 @@ export default class Transaction {
     return this.tx.gtx.operations.map(({ opName, args }) =>
       op(opName, ...args)
     );
-  }
-
-  sign(keyPair): Transaction {
-    const { privKey, pubKey } = keyPair;
-    this.tx.sign(privKey, pubKey);
-    return this;
   }
 
   async post() {
@@ -57,5 +52,26 @@ export default class Transaction {
 
   getTxRID(): Buffer {
     return this.tx.getTxRID();
+  }
+
+  getDigestToSign(): Buffer {
+    return this.tx.getDigestToSign();
+  }
+
+  sign(provider: SignatureProvider): Transaction {
+    const raw = this.raw();
+    const signature = provider.sign(this);
+    if (raw.compare(this.raw()))
+      throw new Error("SignatureProvider tried to change Transaction");
+    console.log(
+      "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+      this.tx,
+      provider.pubKey,
+      signature,
+      "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+    );
+    this.tx.addSignature(provider.pubKey, signature);
+
+    return this;
   }
 }

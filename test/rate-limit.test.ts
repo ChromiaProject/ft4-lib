@@ -52,7 +52,7 @@ describe("Rate Limit", () => {
     it("should show 10 at request count", async () => {
       const user = TestUser.singleSig();
       const account = await AccountBuilder.account(blockchain, user)
-        .withParticipants([user.keyPair])
+        .withParticipants([user.signatureProvider])
         .build();
 
       await account.sync();
@@ -62,7 +62,7 @@ describe("Rate Limit", () => {
     it("waits 20 seconds and gets 4 points", async () => {
       const user = TestUser.singleSig();
       const account = await AccountBuilder.account(blockchain, user)
-        .withParticipants([user.keyPair])
+        .withParticipants([user.signatureProvider])
         .build();
 
       await timeout(20000);
@@ -77,7 +77,7 @@ describe("Rate Limit", () => {
     it("can make 4 operations", async () => {
       const user = TestUser.singleSig();
       const account = await AccountBuilder.account(blockchain, user)
-        .withParticipants([user.keyPair])
+        .withParticipants([user.signatureProvider])
         .withPoints(4)
         .build();
 
@@ -91,7 +91,7 @@ describe("Rate Limit", () => {
     it("can't make another operation because she has 0 points", async () => {
       const user = TestUser.singleSig();
       const account = await AccountBuilder.account(blockchain, user)
-        .withParticipants([user.keyPair])
+        .withParticipants([user.signatureProvider])
         .withPoints(4)
         .build();
 
@@ -197,8 +197,10 @@ describe("Rate Limit", () => {
       );
     }
     const allUsers = [...users, account.session.user];
-    const tx = txBuilder.build(allUsers.map((user) => user.keyPair.pubKey));
-    allUsers.forEach((user) => tx.sign(user.keyPair));
+    const tx = txBuilder.build(
+      allUsers.map((user) => user.signatureProvider.pubKey)
+    );
+    allUsers.forEach((user) => tx.sign(user.signatureProvider));
 
     return tx.post();
   };

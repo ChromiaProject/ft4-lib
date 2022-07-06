@@ -50,7 +50,7 @@ export default class AccountTransactions {
           authDescriptor.signers,
         ].flat()
       )
-      .sign(this.session.user.keyPair);
+      .sign(this.session.user.signatureProvider);
   }
 
   deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Transaction {

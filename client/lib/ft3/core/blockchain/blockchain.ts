@@ -144,7 +144,7 @@ export default class Blockchain {
     await this.transactionBuilder()
       .add(operation)
       .build(user.authDescriptor.signers)
-      .sign(user.keyPair)
+      .sign(user.signatureProvider)
       .post();
   }
 

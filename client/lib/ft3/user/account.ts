@@ -149,7 +149,7 @@ class Account {
         )
       )
       .build([authDescriptor.signers, ssoAuthDescriptor.signers].flat())
-      .sign(session.user.keyPair)
+      .sign(session.user.signatureProvider)
       .raw();
   }
 
@@ -169,7 +169,7 @@ class Account {
         )
       )
       .build([user.authDescriptor.signers, authDescriptor.signers].flat())
-      .sign(user.keyPair)
+      .sign(user.signatureProvider)
       .raw();
   }
 
@@ -183,7 +183,7 @@ class Account {
       .transactionBuilder()
       .add(addAuthDescriptor(accountId, user.authDescriptor.id, authDescriptor))
       .build([user.authDescriptor.signers, authDescriptor.signers].flat())
-      .sign(user.keyPair)
+      .sign(user.signatureProvider)
       .raw();
   }
 
