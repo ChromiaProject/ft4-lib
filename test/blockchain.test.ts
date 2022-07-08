@@ -62,12 +62,11 @@ describe("Blockchain", () => {
       .build();
 
     const foundAccounts = await blockchain.getAccountsByParticipantId(
-      user.keyPair.pubKey,
-      user
+      user.keyPair.pubKey
     );
 
     expect(foundAccounts.length).toEqual(1);
-    expect(foundAccounts[0]).toEqual(account);
+    expect(await foundAccounts[0].mutable(user)).toEqual(account);
   });
 
   it("should return account by auth descriptor id", async () => {
@@ -78,12 +77,11 @@ describe("Blockchain", () => {
       .build();
 
     const foundAccounts = await blockchain.getAccountsByAuthDescriptorId(
-      user.authDescriptor.hash(),
-      user
+      user.authDescriptor.hash()
     );
 
     expect(foundAccounts.length).toEqual(1);
-    expect(foundAccounts[0]).toEqual(account);
+    expect(await foundAccounts[0].mutable(user)).toEqual(account);
   });
 
   it.skip("should be able to link other chain", async () => {
@@ -120,7 +118,7 @@ describe("Blockchain", () => {
     const session = blockchain.newSession(user);
 
     const rawTransaction = MutableAccount.rawTransactionRegister(
-      user.authDescriptor,
+      user,
       vault.authDescriptor,
       blockchain
     );

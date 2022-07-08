@@ -22,10 +22,10 @@ export default class MutableAccount implements Account {
   readonly paymentHistorySyncManager = new PaymentHistorySyncManager();
 
   readonly id: Buffer;
-  assets: AssetBalance[] = [];
-  authDescriptor: AuthDescriptor[];
-  rateLimit: RateLimit;
-  tx: AccountTransactions;
+  private _assets: AssetBalance[];
+  private _authDescriptor: AuthDescriptor[];
+  private _rateLimit: RateLimit;
+  readonly tx: AccountTransactions;
 
   constructor(
     id: Buffer,
@@ -33,7 +33,7 @@ export default class MutableAccount implements Account {
     session: BlockchainSession
   ) {
     this.id = id;
-    this.authDescriptor = authDescriptor;
+    this._authDescriptor = authDescriptor;
     this.tx = new AccountTransactions(id, session);
   }
 
@@ -47,6 +47,18 @@ export default class MutableAccount implements Account {
 
   get user(): User {
     return this.tx.session.user;
+  }
+
+  get assets(): AssetBalance[] {
+    return this._assets;
+  }
+
+  get authDescriptor(): AuthDescriptor[] {
+    return this._authDescriptor;
+  }
+
+  get rateLimit(): RateLimit {
+    return this._rateLimit;
   }
 
   static async getByParticipantId(
@@ -164,7 +176,7 @@ export default class MutableAccount implements Account {
 
   async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
     await this.tx.addAuthDescriptor(authDescriptor).post();
-    this.authDescriptor.push(authDescriptor);
+    this._authDescriptor.push(authDescriptor);
   }
 
   async isAuthDescriptorValid(id: Buffer): Promise<boolean> {
@@ -178,7 +190,7 @@ export default class MutableAccount implements Account {
     authDescriptor: AuthDescriptor
   ): Promise<void> {
     await this.tx.deleteAllAuthDescriptorsExclude(authDescriptor).post();
-    this.authDescriptor = [authDescriptor];
+    this._authDescriptor = [authDescriptor];
   }
 
   async deleteAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
@@ -195,7 +207,7 @@ export default class MutableAccount implements Account {
   }
 
   private async syncAssets(): Promise<void> {
-    this.assets = await AssetBalance.getByAccountId(this.id, this.blockchain);
+    this._assets = await AssetBalance.getByAccountId(this.id, this.blockchain);
   }
 
   private async syncAuthDescriptors(): Promise<void> {
@@ -204,7 +216,7 @@ export default class MutableAccount implements Account {
     );
 
     const authDescriptorFactory = new AuthDescriptorFactory();
-    this.authDescriptor = authDescriptors.map((authDescriptor) =>
+    this._authDescriptor = authDescriptors.map((authDescriptor) =>
       authDescriptorFactory.create(
         authDescriptor.type,
         Buffer.from(authDescriptor.args, "hex")
@@ -213,14 +225,14 @@ export default class MutableAccount implements Account {
   }
 
   private async syncRateLimit(): Promise<void> {
-    this.rateLimit = await RateLimit.getByAccountRateLimit(
+    this._rateLimit = await RateLimit.getByAccountRateLimit(
       this.id,
       this.blockchain
     );
   }
 
   getAssetById(id: Buffer): AssetBalance {
-    return this.assets.find(
+    return this._assets.find(
       (assetBalance) => assetBalance.asset.id.compare(id) === 0
     );
   }

@@ -62,7 +62,8 @@ class AccountBuilder {
     const account = await this.registerAccount();
 
     await this.addBalanceIfNeeded(account);
-    account.rateLimit = await this.addPointsIfNeeded(account);
+    await this.addPointsIfNeeded(account);
+    await account.sync();
 
     return account;
   }
@@ -91,7 +92,6 @@ class AccountBuilder {
     if (this.points > 0) {
       await RateLimit.givePoints(account.id, this.points, this.blockchain);
     }
-    return RateLimit.getByAccountRateLimit(account.id, this.blockchain);
   }
 
   private getAuthDescriptor() {

@@ -51,10 +51,9 @@ interface AuthDescriptor extends GtvSerializable {
 interface Account {
   readonly paymentHistorySyncManager: PaymentHistorySyncManager;
   readonly id: Buffer;
-  assets: AssetBalance[];
-  authDescriptor: AuthDescriptor[];
-  rateLimit: RateLimit;
-
+  readonly assets: AssetBalance[];
+  readonly authDescriptor: AuthDescriptor[];
+  readonly rateLimit: RateLimit;
   readonly blockchain: Blockchain;
 
   isAuthDescriptorValid(id: Buffer): Promise<boolean>;

@@ -1,6 +1,7 @@
 import BlockchainInfo from "./blockchain-info";
 import ConnectionClient from "../connection-client";
 import { AuthDescriptor } from "../../user/account-utils";
+import StaticAccount from "../../user/static-account";
 import MutableAccount from "../../user/mutable-account";
 import Asset from "../../user/asset";
 import DirectoryService from "./directory-service";
@@ -62,21 +63,12 @@ export default class Blockchain {
     return new BlockchainSession(user, this);
   }
 
-  async getAccountsByParticipantId(
-    id: Buffer,
-    user: User
-  ): Promise<MutableAccount[]> {
-    return await MutableAccount.getByParticipantId(id, this.newSession(user));
+  async getAccountsByParticipantId(id: Buffer): Promise<StaticAccount[]> {
+    return await StaticAccount.getByParticipantId(id, this);
   }
 
-  async getAccountsByAuthDescriptorId(
-    id: Buffer,
-    user: User
-  ): Promise<MutableAccount[]> {
-    return await MutableAccount.getByAuthDescriptorId(
-      id,
-      this.newSession(user)
-    );
+  async getAccountsByAuthDescriptorId(id: Buffer): Promise<StaticAccount[]> {
+    return await StaticAccount.getByAuthDescriptorId(id, this);
   }
 
   async registerAccount(
