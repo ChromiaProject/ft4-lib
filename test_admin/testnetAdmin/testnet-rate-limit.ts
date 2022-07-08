@@ -5,13 +5,13 @@ import AdminKeyPair from "./admin-keypair";
 
 export class TestnetRateLimit extends RateLimit {
   static async execFreeOperation(accountId: Buffer, blockchain: Blockchain) {
-    await blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(new Operation("dev_free_op", accountId))
       .add(nop())
       .build([AdminKeyPair.get().pubKey])
-      .sign(AdminKeyPair.get())
-      .post();
+      .sign(AdminKeyPair.get());
+    await tx.post();
   }
 
   static async givePoints(
@@ -19,12 +19,12 @@ export class TestnetRateLimit extends RateLimit {
     points: number,
     blockchain: Blockchain
   ) {
-    await blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(new Operation("dev_give_points", accountId, points))
       .add(nop())
       .build([AdminKeyPair.get().pubKey])
-      .sign(AdminKeyPair.get())
-      .post();
+      .sign(AdminKeyPair.get());
+    await tx.post();
   }
 }

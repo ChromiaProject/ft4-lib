@@ -4,12 +4,12 @@ import AdminKeyPair from "./admin-keypair";
 
 export class TestnetAsset extends Asset {
   static async register(name: string, chainId: Buffer, blockchain: Blockchain) {
-    await blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(new Operation("dev_register_asset", name, chainId.toString("hex")))
       .build([AdminKeyPair.get().pubKey])
-      .sign(AdminKeyPair.get())
-      .post();
+      .sign(AdminKeyPair.get());
+    await tx.post();
     return new Asset(name, chainId);
   }
 }

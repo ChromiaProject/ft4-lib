@@ -33,8 +33,10 @@ export default class AccountTransactions {
     this.session = session;
   }
 
-  addAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
-    return this.session.blockchain
+  async addAuthDescriptor(
+    authDescriptor: AuthDescriptor
+  ): Promise<Transaction> {
+    return await this.session.blockchain
       .transactionBuilder()
       .add(
         addAuthDescriptor(
@@ -53,15 +55,19 @@ export default class AccountTransactions {
       .sign(this.session.user.signatureProvider);
   }
 
-  deleteAllAuthDescriptorsExclude(authDescriptor: AuthDescriptor): Transaction {
-    return this.session.blockchain
+  async deleteAllAuthDescriptorsExclude(
+    authDescriptor: AuthDescriptor
+  ): Promise<Transaction> {
+    return await this.session.blockchain
       .transactionBuilder()
       .add(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id))
       .buildAndSign(this.session.user);
   }
 
-  deleteAuthDescriptor(authDescriptor: AuthDescriptor): Transaction {
-    return this.session.blockchain
+  async deleteAuthDescriptor(
+    authDescriptor: AuthDescriptor
+  ): Promise<Transaction> {
+    return await this.session.blockchain
       .transactionBuilder()
       .add(
         deleteAuthDescriptor(
@@ -73,24 +79,24 @@ export default class AccountTransactions {
       .buildAndSign(this.session.user);
   }
 
-  transferInputsToOutputs(
+  async transferInputsToOutputs(
     inputs: Array<GtvSerializable>,
     outputs: Array<GtvSerializable>
-  ): Transaction {
-    return this.session.blockchain
+  ): Promise<Transaction> {
+    return await this.session.blockchain
       .transactionBuilder()
       .add(transfer(inputs, outputs))
       .add(nop())
       .buildAndSign(this.session.user);
   }
 
-  xcTransfer(
+  async xcTransfer(
     destinationChainId: Buffer,
     destinationAccountId: Buffer,
     assetId: Buffer,
     amount: number
-  ): Transaction {
-    return this.session.blockchain
+  ): Promise<Transaction> {
+    return await this.session.blockchain
       .transactionBuilder()
       .add(
         this.xcTransferOp(

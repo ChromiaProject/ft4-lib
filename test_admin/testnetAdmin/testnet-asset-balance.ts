@@ -5,7 +5,7 @@ import AdminKeyPair from "./admin-keypair";
 
 export class TestnetAssetBalance extends AssetBalance {
   static async giveBalance(accountId, assetId, amount, blockchain: Blockchain) {
-    await new TransactionBuilder(blockchain)
+    const tx = await new TransactionBuilder(blockchain)
       .add(
         new Operation(
           "dev_give_balance",
@@ -15,7 +15,7 @@ export class TestnetAssetBalance extends AssetBalance {
         )
       )
       .build([AdminKeyPair.get().pubKey])
-      .sign(AdminKeyPair.get())
-      .post();
+      .sign(AdminKeyPair.get());
+    await tx.post();
   }
 }

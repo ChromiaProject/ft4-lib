@@ -185,9 +185,9 @@ describe("Rate Limit", () => {
         )
       );
     }
-    return txBuilder
+    const tx = await txBuilder
       .build(account.session.user.authDescriptor.signers)
-      .sign(account.session.user.signatureProvider)
-      .post();
+      .sign(account.session.user.signatureProvider);
+    return tx.post();
   };
 });

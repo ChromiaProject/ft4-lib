@@ -18,7 +18,7 @@ async function addAuthDescriptorTo(
   user: User,
   blockchain: Blockchain
 ) {
-  await blockchain
+  let tx = await blockchain
     .transactionBuilder()
     .add(
       addAuthDescriptor(
@@ -30,9 +30,9 @@ async function addAuthDescriptorTo(
     .build(
       [adminUser.authDescriptor.signers, user.authDescriptor.signers].flat()
     )
-    .sign(adminUser.signatureProvider)
-    .sign(user.signatureProvider)
-    .post();
+    .sign(adminUser.signatureProvider);
+  tx = await tx.sign(user.signatureProvider);
+  await tx.post();
 }
 
 require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
@@ -123,13 +123,13 @@ describe("Test the account", () => {
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    const promise = blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.signatureProvider)
-      .sign(user2.signatureProvider)
-      .post();
+      .sign(user1.signatureProvider);
+    tx = await tx.sign(user2.signatureProvider);
+    const promise = tx.post();
 
     await expect(promise).resolves.not.toThrowError();
   });
@@ -147,23 +147,25 @@ describe("Test the account", () => {
 
     const user1 = new User(sigProv1, authDescriptor);
 
-    await blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.signatureProvider)
-      .sign(sigProv2)
-      .post();
+      .sign(user1.signatureProvider);
+    tx = await tx.sign(sigProv2);
+    await tx.post();
 
     const account = await blockchain
       .newSession(user1)
       .getAccountById(authDescriptor.id);
 
-    const tx = account.tx.addAuthDescriptor(
+    tx = await account.tx.addAuthDescriptor(
       new SingleSignatureAuthDescriptor(sigProv3.pubKey, [FlagsType.Transfer])
     );
 
-    await tx.sign(sigProv2).sign(sigProv3).post();
+    tx = await tx.sign(sigProv2);
+    tx = await tx.sign(sigProv3);
+    await tx.post();
 
     await account.sync();
 
@@ -180,13 +182,13 @@ describe("Test the account", () => {
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    await blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.signatureProvider)
-      .sign(user2.signatureProvider)
-      .post();
+      .sign(user1.signatureProvider);
+    tx = await tx.sign(user2.signatureProvider);
+    await tx.post();
 
     const account = await blockchain
       .newSession(user1)

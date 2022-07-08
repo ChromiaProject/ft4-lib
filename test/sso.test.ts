@@ -6,7 +6,6 @@ import { BasicSignatureProvider } from "../client/lib/ft3/user/signature-provide
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import { Account, addAuthDescriptor, FlagsType, nop } from "../client/lib/ft3";
 import SSO from "../client/lib/ft3/user/sso/sso";
-import SSOStoreFake from "./util/sso-store-fake";
 import RateLimit from "../client/lib/ft3/user/rate-limit";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 
@@ -32,15 +31,13 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = Account.rawTransactionRegister(
+    const rawTransaction = await Account.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
     );
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
 
     const [account, user] = await sso.finalizeLogin(
       rawTransaction.toString("hex")
@@ -54,46 +51,42 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = Account.rawTransactionRegister(
+    const rawTransaction = await Account.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
     );
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
     await sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await RateLimit.givePoints(vaultUser.authDescriptor.id, 1, blockchain);
 
     const dappUser2 = createUser();
-    const rawTransaction2 = Account.rawTransactionAddAuthDescriptor(
+    const rawTransaction2 = await Account.rawTransactionAddAuthDescriptor(
       vaultUser.authDescriptor.id,
       vaultUser,
       dappUser2.authDescriptor,
       blockchain
     );
 
-    const store2 = new SSOStoreFake();
-    store2.tmpKeyPair = dappUser2.signatureProvider;
-    const sso2 = new SSO(blockchain, store2);
+    const sso2 = new SSO(blockchain, dappUser2.signatureProvider);
     const [account] = await sso2.finalizeLogin(rawTransaction2.toString("hex"));
 
     expect(account.authDescriptor.length).toEqual(3);
   });
 
-  it("should throw an error if key pair cannot be found in store", async () => {
+  it("should throw an error if key pair cannot be found", async () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = Account.rawTransactionRegister(
+    const rawTransaction = await Account.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
     );
 
-    const sso = new SSO(blockchain, new SSOStoreFake());
+    const sso = new SSO(blockchain);
     const promise = sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await expect(promise).rejects.toThrowError("Error loading public key");
@@ -103,7 +96,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = Account.rawTransactionRegister(
+    const rawTransaction = await Account.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
@@ -117,7 +110,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(register(vaultUser.authDescriptor))
       .add(
@@ -134,12 +127,10 @@ describe("SSO", () => {
           dappUser.authDescriptor.signers,
         ].flat()
       )
-      .sign(vaultUser.signatureProvider)
-      .raw();
+      .sign(vaultUser.signatureProvider);
+    const rawTransaction = tx.raw();
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
     const promise = sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await expect(promise).rejects.toThrowError("Invalid operation count");
@@ -149,7 +140,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .build(
         [
@@ -157,32 +148,27 @@ describe("SSO", () => {
           dappUser.authDescriptor.signers,
         ].flat()
       )
-      .sign(vaultUser.signatureProvider)
-      .raw();
+      .sign(vaultUser.signatureProvider);
+    const rawTransaction = tx.raw();
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
     const promise = sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await expect(promise).rejects.toThrowError("Invalid operation count");
   });
 
-  it("should auto-login if accountId and keyPair are saved in store", async () => {
+  it("should auto-login if accountId and keyPair are saved", async () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = Account.rawTransactionRegister(
+    const rawTransaction = await Account.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
     );
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    store.keyPair = dappUser.signatureProvider;
-    store.accountId = vaultUser.authDescriptor.id;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
+    sso.accountId = vaultUser.authDescriptor.id;
 
     await sso.finalizeLogin(rawTransaction.toString("hex"));
 
@@ -196,7 +182,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(nop())
       .build(
@@ -205,12 +191,10 @@ describe("SSO", () => {
           dappUser.authDescriptor.signers,
         ].flat()
       )
-      .sign(vaultUser.signatureProvider)
-      .raw();
+      .sign(vaultUser.signatureProvider);
+    const rawTransaction = tx.raw();
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
     const promise = sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await expect(promise).rejects.toThrowError(
@@ -222,7 +206,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(nop())
       .add(nop())
@@ -232,12 +216,10 @@ describe("SSO", () => {
           dappUser.authDescriptor.signers,
         ].flat()
       )
-      .sign(vaultUser.signatureProvider)
-      .raw();
+      .sign(vaultUser.signatureProvider);
+    const rawTransaction = tx.raw();
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
     const promise = sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await expect(promise).rejects.toThrowError(
@@ -249,7 +231,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const dappUser = createUser();
 
-    const rawTransaction = blockchain
+    const tx = await blockchain
       .transactionBuilder()
       .add(register(vaultUser.authDescriptor))
       .add(nop())
@@ -259,12 +241,10 @@ describe("SSO", () => {
           dappUser.authDescriptor.signers,
         ].flat()
       )
-      .sign(vaultUser.signatureProvider)
-      .raw();
+      .sign(vaultUser.signatureProvider);
+    const rawTransaction = tx.raw();
 
-    const store = new SSOStoreFake();
-    store.tmpKeyPair = dappUser.signatureProvider;
-    const sso = new SSO(blockchain, store);
+    const sso = new SSO(blockchain, dappUser.signatureProvider);
     const promise = sso.finalizeLogin(rawTransaction.toString("hex"));
 
     await expect(promise).rejects.toThrowError(

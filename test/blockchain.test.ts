@@ -118,10 +118,10 @@ describe("Blockchain", () => {
 
     const session = blockchain.newSession(user);
 
-    const rawTransaction = Account.rawRegisterTransaction(
-      user.authDescriptor,
+    const rawTransaction = await Account.rawTransactionRegister(
+      user,
       vault.authDescriptor,
-      session
+      blockchain
     );
 
     await blockchain.postRaw(rawTransaction);

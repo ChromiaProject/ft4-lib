@@ -95,13 +95,13 @@ describe("Transfer", () => {
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    await blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user2.signatureProvider)
-      .sign(user3.signatureProvider)
-      .post();
+      .sign(user2.signatureProvider);
+    tx = await tx.sign(user3.signatureProvider);
+    await tx.post();
 
     await account1.transfer(authDescriptor.id, asset.id, 10);
 

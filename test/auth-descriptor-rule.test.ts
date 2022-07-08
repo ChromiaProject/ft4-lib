@@ -32,7 +32,7 @@ async function addAuthDescriptorTo(
   user: User,
   blockchain: Blockchain
 ) {
-  await blockchain
+  let tx = await blockchain
     .transactionBuilder()
     .add(
       addAuthDescriptor(
@@ -44,9 +44,9 @@ async function addAuthDescriptorTo(
     .build(
       [adminUser.authDescriptor.signers, user.authDescriptor.signers].flat()
     )
-    .sign(adminUser.signatureProvider)
-    .sign(user.signatureProvider)
-    .post();
+    .sign(adminUser.signatureProvider);
+  tx = await tx.sign(user.signatureProvider);
+  await tx.post();
 }
 
 async function getUserAndAccountFromAuthDescriptorRule(
