@@ -1,0 +1,31 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
+import SSO from "../../client/lib/ft3/user/sso/sso";
+import { Account } from "../../client/lib/ft3/user/account";
+import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
+import User from "../../client/lib/ft3/user/user";
+import { LocalSignatureProvider } from "../../client/lib/ft3/user/signature-provider";
+
+export default class FakeSSO extends SSO {
+  accountId: Buffer;
+  signatureProvider: LocalSignatureProvider;
+
+  constructor(
+    readonly blockchain: Blockchain,
+    signatureProvider: LocalSignatureProvider | null = new LocalSignatureProvider()
+  ) {
+    super(
+      blockchain,
+      signatureProvider ? signatureProvider : new LocalSignatureProvider()
+    );
+    // if it's explicitly null it will not act as if login has been initiated (sso.test.ts: "should throw an error if key pair cannot be found")
+    if (signatureProvider) this.tmpSigProv = signatureProvider;
+  }
+
+  async autoLogin(): Promise<[Account, User]> {
+    return super.autoLogin();
+  }
+
+  async finalizeLogin(tx: string): Promise<[Account, User]> {
+    return super.finalizeLogin(tx);
+  }
+}

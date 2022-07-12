@@ -25,36 +25,26 @@ export class BasicSignatureProvider implements SignatureProvider {
 }
 
 export class LocalSignatureProvider implements SignatureProvider {
-  private readonly keyPair: KeyPair;
-
   constructor(privateKey?: Buffer | string) {
-    this.keyPair = new KeyPair(privateKey);
+    const kp = new KeyPair(privateKey);
+    localStorage.setItem("__localSigProvPubKey", kp.pubKey.toString("hex"));
+    localStorage.setItem("__localSigProvPrivKey", kp.privKey.toString("hex"));
   }
 
   async sign(transaction: Transaction): Promise<Buffer> {
     const digestToSign = transaction.getDigestToSign();
-    return util.signDigest(digestToSign, this.keyPair.privKey);
+    return util.signDigest(
+      digestToSign,
+      Buffer.from(localStorage.getItem("__localSigProvPrivKey"), "hex")
+    );
   }
 
   get pubKey(): Buffer {
-    return this.keyPair.pubKey;
+    return Buffer.from(localStorage.getItem("__localSigProvPubKey"), "hex");
+  }
+
+  clear() {
+    localStorage.removeItem("__localSigProvPubKey");
+    localStorage.removeItem("__localSigProvPrivKey");
   }
 }
-
-/*
-  get accountId(): Buffer {
-    const accountIdString = localStorage.getItem("__ssoAccountId");
-
-    if (!accountIdString) {
-      return null;
-    }
-
-    return Buffer.from(accountIdString, "hex");
-  }
-
-  set accountId(value: Buffer) {
-    localStorage.setItem("__ssoAccountId", value.toString("hex"));
-  }
-
-  clearTmp() {
-    localStorage.removeItem("__ssoTmpPrivKey");*/

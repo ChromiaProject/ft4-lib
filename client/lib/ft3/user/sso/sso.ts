@@ -2,9 +2,7 @@ import { Account, FlagsType } from "../account";
 import Blockchain from "../../core/blockchain/blockchain";
 import Transaction from "../../core/transaction";
 import User from "../user";
-import SignatureProvider, {
-  BasicSignatureProvider,
-} from "../signature-provider";
+import { LocalSignatureProvider } from "../signature-provider";
 import SingleSignatureAuthDescriptor from "../auth-descriptor/single-signature-auth-descriptor";
 import Operation from "../../core/operation";
 
@@ -65,12 +63,12 @@ function validateTransaction(transaction: Transaction, pubKey: Buffer) {
 
 export default class SSO {
   accountId: Buffer;
-  private tmpSigProv: SignatureProvider;
-  signatureProvider: SignatureProvider;
+  protected tmpSigProv: LocalSignatureProvider;
+  signatureProvider: LocalSignatureProvider;
 
   constructor(
     readonly blockchain: Blockchain,
-    signatureProvider: SignatureProvider = new BasicSignatureProvider()
+    signatureProvider = new LocalSignatureProvider()
   ) {
     this.signatureProvider = signatureProvider;
   }
@@ -84,6 +82,8 @@ export default class SSO {
   }
 
   private clear() {
+    this.tmpSigProv.clear();
+    this.signatureProvider.clear();
     this.tmpSigProv = undefined;
     this.signatureProvider = undefined;
     this.accountId = undefined;
@@ -133,7 +133,7 @@ export default class SSO {
   initiateLogin(successUrl: string, cancelUrl: string) {
     this.clear();
 
-    this.tmpSigProv = new BasicSignatureProvider();
+    this.tmpSigProv = new LocalSignatureProvider();
 
     window.location.href = `${vaultUrl}/?route=/authorize&dappId=${this.blockchain.id.toString(
       "hex"

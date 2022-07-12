@@ -94,7 +94,6 @@ describe("Rate Limit", () => {
         .withParticipants([user.signatureProvider])
         .withPoints(4)
         .build();
-
       await expect(
         makeRequests(account, 4 + POINTS_AT_ACCOUNT_CREATION)
       ).resolves.toBeUndefined();
@@ -200,7 +199,9 @@ describe("Rate Limit", () => {
     const tx = txBuilder.build(
       allUsers.map((user) => user.signatureProvider.pubKey)
     );
-    allUsers.forEach(async (user) => await tx.sign(user.signatureProvider));
+    await allUsers.forEach(
+      async (user) => await tx.sign(user.signatureProvider)
+    );
 
     return tx.post();
   };
