@@ -1,10 +1,10 @@
-import { Account, FlagsType } from "../account";
-import Blockchain from "../../core/blockchain/blockchain";
-import Transaction from "../../core/transaction";
-import User from "../user";
-import { LocalSignatureProvider } from "../signature-provider";
-import SingleSignatureAuthDescriptor from "../auth-descriptor/single-signature-auth-descriptor";
-import Operation from "../../core/operation";
+import { Account, FlagsType } from "./account";
+import Blockchain from "../core/blockchain/blockchain";
+import Transaction from "../core/transaction";
+import User from "./user";
+import { LocalStorageSignatureProvider } from "./signature-provider";
+import SingleSignatureAuthDescriptor from "./auth-descriptor/single-signature-auth-descriptor";
+import Operation from "../core/operation";
 
 let vaultUrl = "https://vault-testnet.chromia.com";
 
@@ -63,12 +63,12 @@ function validateTransaction(transaction: Transaction, pubKey: Buffer) {
 
 export default class SSO {
   accountId: Buffer;
-  protected tmpSigProv: LocalSignatureProvider;
-  signatureProvider: LocalSignatureProvider;
+  protected tmpSigProv: LocalStorageSignatureProvider;
+  signatureProvider: LocalStorageSignatureProvider;
 
   constructor(
     readonly blockchain: Blockchain,
-    signatureProvider = new LocalSignatureProvider()
+    signatureProvider = new LocalStorageSignatureProvider()
   ) {
     this.signatureProvider = signatureProvider;
   }
@@ -133,7 +133,7 @@ export default class SSO {
   initiateLogin(successUrl: string, cancelUrl: string) {
     this.clear();
 
-    this.tmpSigProv = new LocalSignatureProvider();
+    this.tmpSigProv = new LocalStorageSignatureProvider();
 
     window.location.href = `${vaultUrl}/?route=/authorize&dappId=${this.blockchain.id.toString(
       "hex"

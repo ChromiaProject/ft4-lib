@@ -1,7 +1,7 @@
 import { Account, FlagsType } from "../client/lib/ft3/user/account";
 import * as pcl from "postchain-client";
 import { buffToHex, KeyPair } from "../client/lib/cyptoUtils";
-import { BasicSignatureProvider } from "../client/lib/ft3/user/signature-provider";
+import { InMemorySignatureProvider } from "../client/lib/ft3/user/signature-provider";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
@@ -135,9 +135,9 @@ describe("Test the account", () => {
   });
 
   it("should update account if 2 signatures provided", async () => {
-    const sigProv1 = new BasicSignatureProvider();
-    const sigProv2 = new BasicSignatureProvider();
-    const sigProv3 = new BasicSignatureProvider();
+    const sigProv1 = new InMemorySignatureProvider();
+    const sigProv2 = new InMemorySignatureProvider();
+    const sigProv3 = new InMemorySignatureProvider();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
       [sigProv1.pubKey, sigProv2.pubKey],
@@ -298,7 +298,7 @@ describe("Test the account", () => {
       .withPoints(4)
       .build();
 
-    const sigProv = new BasicSignatureProvider();
+    const sigProv = new InMemorySignatureProvider();
     const user2 = new User(
       sigProv,
       new SingleSignatureAuthDescriptor(sigProv.pubKey, [FlagsType.Transfer])
@@ -325,13 +325,13 @@ describe("Test the account", () => {
       .withPoints(4)
       .build();
 
-    const sigProv2 = new BasicSignatureProvider();
+    const sigProv2 = new InMemorySignatureProvider();
     const user2 = new User(
       sigProv2,
       new SingleSignatureAuthDescriptor(sigProv2.pubKey, [FlagsType.Transfer])
     );
 
-    const sigProv3 = new BasicSignatureProvider();
+    const sigProv3 = new InMemorySignatureProvider();
     const user3 = new User(
       sigProv3,
       new SingleSignatureAuthDescriptor(sigProv3.pubKey, [FlagsType.Transfer])

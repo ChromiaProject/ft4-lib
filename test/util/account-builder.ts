@@ -1,6 +1,6 @@
 import { Account, FlagsType } from "../../client/lib/ft3";
 import SignatureProvider, {
-  BasicSignatureProvider,
+  InMemorySignatureProvider,
 } from "../../client/lib/ft3/user/signature-provider";
 import Asset from "../../client/lib/ft3/user/asset";
 import User from "../../client/lib/ft3/user/user";
@@ -16,7 +16,7 @@ class AccountBuilder {
   private user: User;
   private balance?: number;
   private asset?: Asset;
-  private participants: SignatureProvider[] = [new BasicSignatureProvider()];
+  private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points?: number = 0;

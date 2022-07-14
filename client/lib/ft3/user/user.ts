@@ -1,6 +1,6 @@
 import { AuthDescriptor, FlagsType } from "./account";
 import SignatureProvider, {
-  BasicSignatureProvider,
+  InMemorySignatureProvider,
 } from "./signature-provider";
 import SingleSignatureAuthDescriptor from "./auth-descriptor/single-signature-auth-descriptor";
 
@@ -19,7 +19,7 @@ export default class User {
   static generateSingleSigUser(
     flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer]
   ): User {
-    const signatureProvider = new BasicSignatureProvider();
+    const signatureProvider = new InMemorySignatureProvider();
     return new User(
       signatureProvider,
       new SingleSignatureAuthDescriptor(signatureProvider.pubKey, flags)

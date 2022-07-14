@@ -7,7 +7,7 @@ export default interface SignatureProvider {
   readonly pubKey: Buffer;
 }
 
-export class BasicSignatureProvider implements SignatureProvider {
+export class InMemorySignatureProvider implements SignatureProvider {
   private readonly keyPair: KeyPair;
 
   constructor(privateKey?: Buffer | string) {
@@ -24,27 +24,38 @@ export class BasicSignatureProvider implements SignatureProvider {
   }
 }
 
-export class LocalSignatureProvider implements SignatureProvider {
-  constructor(privateKey?: Buffer | string) {
-    const kp = new KeyPair(privateKey);
-    localStorage.setItem("__localSigProvPubKey", kp.pubKey.toString("hex"));
-    localStorage.setItem("__localSigProvPrivKey", kp.privKey.toString("hex"));
+export class LocalStorageSignatureProvider implements SignatureProvider {
+  private kp: KeyPair;
+
+  constructor() {
+    const pk = localStorage.getItem("__localSigProvPrivKey");
+    if (!pk) return;
+    this.kp = new KeyPair(pk);
+  }
+
+  static get hasPrivateKey(): boolean {
+    return localStorage.getItem("__localSigProvPrivKey") !== null;
+  }
+
+  storePrivateKey(privKey?: Buffer | string) {
+    this.kp = new KeyPair(privKey);
+    localStorage.setItem(
+      "__localSigProvPrivKey",
+      this.kp.privKey.toString("hex")
+    );
   }
 
   async sign(transaction: Transaction): Promise<Buffer> {
     const digestToSign = transaction.getDigestToSign();
-    return util.signDigest(
-      digestToSign,
-      Buffer.from(localStorage.getItem("__localSigProvPrivKey"), "hex")
-    );
+    return util.signDigest(digestToSign, this.kp.privKey);
   }
 
   get pubKey(): Buffer {
-    return Buffer.from(localStorage.getItem("__localSigProvPubKey"), "hex");
+    return this.kp.pubKey;
   }
 
   clear() {
-    localStorage.removeItem("__localSigProvPubKey");
     localStorage.removeItem("__localSigProvPrivKey");
+    this.kp = undefined;
   }
 }

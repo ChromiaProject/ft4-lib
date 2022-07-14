@@ -5,7 +5,7 @@ import {
 } from "../../client/lib/ft3";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import SignatureProvider, {
-  BasicSignatureProvider,
+  InMemorySignatureProvider,
 } from "../../client/lib/ft3/user/signature-provider";
 
 export default class AdminKeyPair {
@@ -34,14 +34,14 @@ export default class AdminKeyPair {
         FlagsType.Account,
         FlagsType.Transfer,
       ]);
-      const sigProv = new BasicSignatureProvider(this.keyPair.privKey);
+      const sigProv = new InMemorySignatureProvider(this.keyPair.privKey);
       this.user = new User(sigProv, authDescr);
     }
   }
 
   static get(): SignatureProvider {
     if (this.user == null) this.initialize();
-    return new BasicSignatureProvider(this.keyPair.privKey);
+    return new InMemorySignatureProvider(this.keyPair.privKey);
   }
 
   static getAsUser(): User {

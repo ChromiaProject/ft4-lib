@@ -2,7 +2,7 @@ import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import BlockchainUtil from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 import User from "../client/lib/ft3/user/user";
-import { LocalSignatureProvider } from "../client/lib/ft3/user/signature-provider";
+import { LocalStorageSignatureProvider } from "../client/lib/ft3/user/signature-provider";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import { Account, addAuthDescriptor, FlagsType, nop } from "../client/lib/ft3";
 import SSO from "./util/fake-sso";
@@ -11,8 +11,9 @@ import { register } from "../client/lib/ft3/user/account-dev-operations";
 
 let blockchain: Blockchain = null;
 
-function createUser(): [User, LocalSignatureProvider] {
-  const signatureProvider = new LocalSignatureProvider();
+function createUser(): [User, LocalStorageSignatureProvider] {
+  const signatureProvider = new LocalStorageSignatureProvider();
+  signatureProvider.storePrivateKey();
 
   return [
     new User(
