@@ -1,5 +1,6 @@
-import { FlagsType } from "../../client/lib/ft3/user/account-utils";
+import { FlagsType, Account } from "../../client/lib/ft3/user/account-utils";
 import MutableAccount from "../../client/lib/ft3/user/mutable-account";
+import StaticAccount from "../../client/lib/ft3/user/static-account";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Asset from "../../client/lib/ft3/user/asset";
 import User from "../../client/lib/ft3/user/user";
@@ -28,7 +29,7 @@ class AccountBuilder {
 
   /* Public functions */
 
-  static account(blockchain: Blockchain, user?: User): AccountBuilder {
+  static account(blockchain: Blockchain, user: User): AccountBuilder {
     return new AccountBuilder(blockchain, user);
   }
 
@@ -68,6 +69,16 @@ class AccountBuilder {
     return account;
   }
 
+  async buildStatic(): Promise<StaticAccount> {
+    const account = await this.registerStaticAccount();
+
+    await this.addBalanceIfNeeded(account);
+    await this.addPointsIfNeeded(account);
+    await account.sync();
+
+    return account;
+  }
+
   /* Private functions */
 
   private async registerAccount(): Promise<MutableAccount> {
@@ -77,7 +88,14 @@ class AccountBuilder {
     );
   }
 
-  private async addBalanceIfNeeded(account) {
+  private async registerStaticAccount(): Promise<StaticAccount> {
+    return await StaticAccount.register(
+      this.getAuthDescriptor(),
+      this.blockchain.newSession(this.user)
+    );
+  }
+
+  private async addBalanceIfNeeded(account: Account) {
     if (this.asset && this.balance) {
       await AssetBalance.giveBalance(
         account.id,
@@ -88,7 +106,7 @@ class AccountBuilder {
     }
   }
 
-  private async addPointsIfNeeded(account: MutableAccount) {
+  private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
       await RateLimit.givePoints(account.id, this.points, this.blockchain);
     }

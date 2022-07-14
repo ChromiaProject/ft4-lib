@@ -4,12 +4,14 @@ import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
 import Blockchain from "../core/blockchain/blockchain";
+import BlockchainSession from "../core/blockchain/blockchain-session";
 import {
   accountAuthDescriptors,
   accountById,
   accountsByAuthDescriptorId,
   accountsByParticipantId,
 } from "./account-queries";
+import { register } from "./account-dev-operations";
 import RateLimit from "./rate-limit";
 import { Account, AuthDescriptor } from "./account-utils";
 import MutableAccount from "./mutable-account";
@@ -44,6 +46,20 @@ export default class StaticAccount implements Account {
 
   get rateLimit(): RateLimit {
     return this._rateLimit;
+  }
+
+  static async register(
+    authDescriptor: AuthDescriptor,
+    session: BlockchainSession
+  ): Promise<StaticAccount> {
+    await session.call(register(authDescriptor));
+    const account = new StaticAccount(
+      authDescriptor.hash(),
+      [authDescriptor],
+      session.blockchain
+    );
+    await account.sync();
+    return account;
   }
 
   static async getByParticipantId(

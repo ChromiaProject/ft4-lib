@@ -63,6 +63,10 @@ export default class Blockchain {
     return new BlockchainSession(user, this);
   }
 
+  async getAccountById(id: Buffer): Promise<StaticAccount> {
+    return await StaticAccount.getById(id, this);
+  }
+
   async getAccountsByParticipantId(id: Buffer): Promise<StaticAccount[]> {
     return await StaticAccount.getByParticipantId(id, this);
   }

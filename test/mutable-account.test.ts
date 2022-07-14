@@ -39,7 +39,7 @@ require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ 
 
 let blockchain: Blockchain = null;
 
-describe("Test the account", () => {
+describe("Test the mutable account", () => {
   beforeAll(async () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
   });
