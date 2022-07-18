@@ -33,7 +33,7 @@ describe("Test the static account", () => {
   it("should register account on blockchain", async () => {
     const user = TestUser.singleSig();
     const authDescriptor = new SingleSignatureAuthDescriptor(
-      user.keyPair.pubKey,
+      user.signatureProvider.pubKey,
       [FlagsType.Account, FlagsType.Transfer]
     );
 

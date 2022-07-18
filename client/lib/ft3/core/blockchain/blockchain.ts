@@ -144,11 +144,11 @@ export default class Blockchain {
   }
 
   async call(operation: Operation, user: User): Promise<void> {
-    await this.transactionBuilder()
+    const tx = await this.transactionBuilder()
       .add(operation)
       .build(user.authDescriptor.signers)
-      .sign(user.keyPair)
-      .post();
+      .sign(user.signatureProvider);
+    await tx.post();
   }
 
   async postRaw(rawTransaction: Buffer): Promise<void> {

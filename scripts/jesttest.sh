@@ -18,7 +18,7 @@ docker-compose -f dockers/jest-test.yml up -d
 if test $? -eq 0
 then
     sleep 20
-    npx jest test $*
+    npx jest test -t "$@"
     docker-compose -f dockers/jest-test.yml down
     exit 0
 else

@@ -1,13 +1,11 @@
-import { FlagsType } from "../account-utils";
-import MutableAccount from "../mutable-account";
-import { util } from "postchain-client";
-import Blockchain from "../../core/blockchain/blockchain";
-import Transaction from "../../core/transaction";
-import User from "../user";
-import SSOStore from "./sso-store";
-import SingleSignatureAuthDescriptor from "../auth-descriptor/single-signature-auth-descriptor";
-import Operation from "../../core/operation";
-import SSOStoreDefault from "./sso-store-default";
+import { FlagsType } from "./account-utils";
+import MutableAccount from "./mutable-account";
+import Blockchain from "../core/blockchain/blockchain";
+import Transaction from "../core/transaction";
+import User from "./user";
+import { LocalStorageSignatureProvider } from "./signature-provider";
+import SingleSignatureAuthDescriptor from "./auth-descriptor/single-signature-auth-descriptor";
+import Operation from "../core/operation";
 
 let vaultUrl = "https://vault-testnet.chromia.com";
 
@@ -65,10 +63,16 @@ function validateTransaction(transaction: Transaction, pubKey: Buffer) {
 }
 
 export default class SSO {
+  accountId: Buffer;
+  protected tmpSigProv: LocalStorageSignatureProvider;
+  signatureProvider: LocalStorageSignatureProvider;
+
   constructor(
     readonly blockchain: Blockchain,
-    readonly store: SSOStore = new SSOStoreDefault()
-  ) {}
+    signatureProvider = new LocalStorageSignatureProvider()
+  ) {
+    this.signatureProvider = signatureProvider;
+  }
 
   static get vaultUrl(): string {
     return vaultUrl;
@@ -78,25 +82,31 @@ export default class SSO {
     vaultUrl = value;
   }
 
+  private clear() {
+    this.tmpSigProv.clear();
+    this.signatureProvider.clear();
+    this.tmpSigProv = undefined;
+    this.signatureProvider = undefined;
+    this.accountId = undefined;
+  }
+
   private async getAccountAndUserByStoredIds(): Promise<
     [MutableAccount, User]
   > {
-    const keyPair = this.store.keyPair;
-    const accountId = this.store.accountId;
-
-    if (!keyPair || !accountId) {
+    if (!this.signatureProvider || !this.accountId) {
       return [null, null];
     }
 
-    const authDescriptor = new SingleSignatureAuthDescriptor(keyPair.pubKey, [
-      FlagsType.Transfer,
-    ]);
+    const authDescriptor = new SingleSignatureAuthDescriptor(
+      this.signatureProvider.pubKey,
+      [FlagsType.Transfer]
+    );
 
-    const user = new User(keyPair, authDescriptor);
+    const user = new User(this.signatureProvider, authDescriptor);
 
     const account = await this.blockchain
       .newSession(user)
-      .getAccountById(accountId);
+      .getAccountById(this.accountId);
 
     if (!account || !user) {
       return [null, null];
@@ -124,14 +134,13 @@ export default class SSO {
   }
 
   initiateLogin(successUrl: string, cancelUrl: string) {
-    this.store.clear();
+    this.clear();
 
-    const keyPair = util.makeKeyPair();
-    this.store.tmpPrivKey = keyPair.privKey;
+    this.tmpSigProv = new LocalStorageSignatureProvider();
 
     window.location.href = `${vaultUrl}/?route=/authorize&dappId=${this.blockchain.id.toString(
       "hex"
-    )}&pubkey=${keyPair.pubKey.toString(
+    )}&pubkey=${this.tmpSigProv.pubKey.toString(
       "hex"
     )}&successAction=${encodeURIComponent(
       successUrl
@@ -139,33 +148,33 @@ export default class SSO {
   }
 
   async finalizeLogin(tx: string): Promise<[MutableAccount, User]> {
-    const keyPair = this.store.tmpKeyPair;
-    this.store.clearTmp();
+    const sigProv = this.tmpSigProv;
+    this.tmpSigProv = undefined;
 
-    if (!keyPair) {
+    if (!sigProv) {
       throw new Error("Error loading public key");
     }
 
-    this.store.privKey = keyPair.privKey;
+    this.signatureProvider = sigProv;
 
-    const authDescriptor = new SingleSignatureAuthDescriptor(keyPair.pubKey, [
+    const authDescriptor = new SingleSignatureAuthDescriptor(sigProv.pubKey, [
       FlagsType.Transfer,
     ]);
 
-    const user = new User(keyPair, authDescriptor);
+    const user = new User(sigProv, authDescriptor);
 
-    const transaction = Transaction.fromRawTransaction(
+    const transaction = await Transaction.fromRawTransaction(
       Buffer.from(tx, "hex"),
       this.blockchain
-    ).sign(keyPair);
+    ).sign(sigProv);
 
-    validateTransaction(transaction, keyPair.pubKey);
+    validateTransaction(transaction, sigProv.pubKey);
 
     await transaction.post();
 
     const accountId = getAccountId(transaction);
 
-    this.store.accountId = accountId;
+    this.accountId = accountId;
 
     const account = await this.blockchain
       .newSession(user)
@@ -181,6 +190,6 @@ export default class SSO {
       await account.deleteAuthDescriptor(user.authDescriptor);
     }
 
-    this.store.clear();
+    this.clear();
   }
 }

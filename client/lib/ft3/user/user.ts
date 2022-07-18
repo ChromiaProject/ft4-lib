@@ -1,24 +1,15 @@
-import { util } from "postchain-client";
-import { AuthDescriptor, FlagsType } from "./account-utils";
-import KeyPair from "../../cyptoUtils/keyPair";
-import SingleSignatureAuthDescriptor from "./auth-descriptor/single-signature-auth-descriptor";
+import { AuthDescriptor } from "./account-utils";
+import SignatureProvider from "./signature-provider";
 
 export default class User {
-  keyPair: KeyPair;
+  signatureProvider: SignatureProvider;
   authDescriptor: AuthDescriptor;
 
-  constructor(keyPair: KeyPair, authDescriptor: AuthDescriptor) {
-    this.keyPair = keyPair;
+  constructor(
+    signatureProvider: SignatureProvider,
+    authDescriptor: AuthDescriptor
+  ) {
+    this.signatureProvider = signatureProvider;
     this.authDescriptor = authDescriptor;
-  }
-
-  static generateSingleSigUser(
-    flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer]
-  ): User {
-    const keyPair = util.makeKeyPair();
-    return new User(
-      keyPair,
-      new SingleSignatureAuthDescriptor(keyPair.pubKey, flags)
-    );
   }
 }

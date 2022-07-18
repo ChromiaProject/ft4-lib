@@ -23,7 +23,7 @@ describe("Transfer", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
@@ -51,7 +51,7 @@ describe("Transfer", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 5)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
@@ -67,7 +67,7 @@ describe("Transfer", () => {
 
     const account1 = await AccountBuilder.account(blockchain, user)
       .withAuthFlags([FlagsType.Account])
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
@@ -84,24 +84,24 @@ describe("Transfer", () => {
     const user3 = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
-      [user2.keyPair.pubKey, user3.keyPair.pubKey],
+      [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey],
       2,
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    await blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user2.keyPair)
-      .sign(user3.keyPair)
-      .post();
+      .sign(user2.signatureProvider);
+    tx = await tx.sign(user3.signatureProvider);
+    await tx.post();
 
     await account1.transfer(authDescriptor.id, asset.id, 10);
 
@@ -124,7 +124,7 @@ describe("Transfer", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
@@ -140,7 +140,7 @@ describe("Transfer", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
@@ -157,7 +157,7 @@ describe("Transfer", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(2 - POINTS_AT_ACCOUNT_CREATION)
       .build();

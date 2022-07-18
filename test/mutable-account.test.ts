@@ -2,6 +2,7 @@ import { FlagsType } from "../client/lib/ft3/user/account-utils";
 import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import * as pcl from "postchain-client";
 import { buffToHex, KeyPair } from "../client/lib/cyptoUtils";
+import { InMemorySignatureProvider } from "../client/lib/ft3/user/signature-provider";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
@@ -18,7 +19,7 @@ async function addAuthDescriptorTo(
   user: User,
   blockchain: Blockchain
 ) {
-  await blockchain
+  let tx = await blockchain
     .transactionBuilder()
     .add(
       addAuthDescriptor(
@@ -30,9 +31,9 @@ async function addAuthDescriptorTo(
     .build(
       [adminUser.authDescriptor.signers, user.authDescriptor.signers].flat()
     )
-    .sign(adminUser.keyPair)
-    .sign(user.keyPair)
-    .post();
+    .sign(adminUser.signatureProvider);
+  tx = await tx.sign(user.signatureProvider);
+  await tx.post();
 }
 
 require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
@@ -65,7 +66,7 @@ describe("Test the mutable account", () => {
   it("Register account on blockchain", async () => {
     const user = TestUser.singleSig();
     const authDescriptor = new SingleSignatureAuthDescriptor(
-      user.keyPair.pubKey,
+      user.signatureProvider.pubKey,
       [FlagsType.Account, FlagsType.Transfer]
     );
 
@@ -80,14 +81,14 @@ describe("Test the mutable account", () => {
   it("can add new auth descriptor if has account edit rights", async () => {
     const user = TestUser.singleSig();
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withPoints(1)
       .build();
 
     expect(account).not.toBeNull();
 
     await account.addAuthDescriptor(
-      new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [
+      new SingleSignatureAuthDescriptor(user.signatureProvider.pubKey, [
         FlagsType.Transfer,
       ])
     );
@@ -97,7 +98,7 @@ describe("Test the mutable account", () => {
   it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
     const user = TestUser.singleSig();
     const account = await MutableAccount.register(
-      new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [
+      new SingleSignatureAuthDescriptor(user.signatureProvider.pubKey, [
         FlagsType.Transfer,
       ]),
       blockchain.newSession(user)
@@ -105,7 +106,7 @@ describe("Test the mutable account", () => {
     expect(account).not.toBeNull();
 
     const promise = account.addAuthDescriptor(
-      new SingleSignatureAuthDescriptor(user.keyPair.pubKey, [
+      new SingleSignatureAuthDescriptor(user.signatureProvider.pubKey, [
         FlagsType.Transfer,
       ])
     );
@@ -118,52 +119,54 @@ describe("Test the mutable account", () => {
     const user2 = TestUser.singleSig();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
-      [user1.keyPair.pubKey, user2.keyPair.pubKey],
+      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
       2,
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    const promise = blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.keyPair)
-      .sign(user2.keyPair)
-      .post();
+      .sign(user1.signatureProvider);
+    tx = await tx.sign(user2.signatureProvider);
+    const promise = tx.post();
 
     await expect(promise).resolves.not.toThrowError();
   });
 
   it("should update account if 2 signatures provided", async () => {
-    const keyPair1 = new KeyPair();
-    const keyPair2 = new KeyPair();
-    const keyPair3 = new KeyPair();
+    const sigProv1 = new InMemorySignatureProvider();
+    const sigProv2 = new InMemorySignatureProvider();
+    const sigProv3 = new InMemorySignatureProvider();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
-      [keyPair1.pubKey, keyPair2.pubKey],
+      [sigProv1.pubKey, sigProv2.pubKey],
       2,
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    const user1 = new User(keyPair1, authDescriptor);
+    const user1 = new User(sigProv1, authDescriptor);
 
-    await blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.keyPair)
-      .sign(keyPair2)
-      .post();
+      .sign(user1.signatureProvider);
+    tx = await tx.sign(sigProv2);
+    await tx.post();
 
     const account = await blockchain
       .newSession(user1)
       .getAccountById(authDescriptor.id);
 
-    const tx = account.tx.addAuthDescriptor(
-      new SingleSignatureAuthDescriptor(keyPair3.pubKey, [FlagsType.Transfer])
+    tx = await account.tx.addAuthDescriptor(
+      new SingleSignatureAuthDescriptor(sigProv3.pubKey, [FlagsType.Transfer])
     );
 
-    await tx.sign(keyPair2).sign(keyPair3).post();
+    tx = await tx.sign(sigProv2);
+    tx = await tx.sign(sigProv3);
+    await tx.post();
 
     await account.sync();
 
@@ -175,25 +178,25 @@ describe("Test the mutable account", () => {
     const user2 = TestUser.singleSig();
 
     const authDescriptor = new MultiSignatureAuthDescriptor(
-      [user1.keyPair.pubKey, user2.keyPair.pubKey],
+      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
       2,
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    await blockchain
+    let tx = await blockchain
       .transactionBuilder()
       .add(register(authDescriptor))
       .build(authDescriptor.signers)
-      .sign(user1.keyPair)
-      .sign(user2.keyPair)
-      .post();
+      .sign(user1.signatureProvider);
+    tx = await tx.sign(user2.signatureProvider);
+    await tx.post();
 
     const account = await blockchain
       .newSession(user1)
       .getAccountById(authDescriptor.id);
 
     const promise = account.addAuthDescriptor(
-      new SingleSignatureAuthDescriptor(user1.keyPair.pubKey, [
+      new SingleSignatureAuthDescriptor(user1.signatureProvider.pubKey, [
         FlagsType.Transfer,
       ])
     );
@@ -205,11 +208,11 @@ describe("Test the mutable account", () => {
     const user = TestUser.singleSig();
 
     await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .build();
 
     const accounts = await MutableAccount.getByParticipantId(
-      user.keyPair.pubKey,
+      user.signatureProvider.pubKey,
       blockchain.newSession(user)
     );
 
@@ -221,18 +224,18 @@ describe("Test the mutable account", () => {
     const user2 = TestUser.singleSig();
 
     await AccountBuilder.account(blockchain, user1)
-      .withParticipants([user1.keyPair])
+      .withParticipants([user1.signatureProvider])
       .build();
 
     const account2 = await AccountBuilder.account(blockchain, user2)
-      .withParticipants([user2.keyPair])
+      .withParticipants([user2.signatureProvider])
       .withPoints(1)
       .build();
 
     await addAuthDescriptorTo(account2, user2, user1, blockchain);
 
     const accounts = await MutableAccount.getByParticipantId(
-      user1.keyPair.pubKey,
+      user1.signatureProvider.pubKey,
       blockchain.newSession(user1)
     );
 
@@ -258,7 +261,7 @@ describe("Test the mutable account", () => {
     const user3 = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user1)
-      .withParticipants([user1.keyPair])
+      .withParticipants([user1.signatureProvider])
       .withPoints(4)
       .build();
 
@@ -292,14 +295,14 @@ describe("Test the mutable account", () => {
     const user1 = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user1)
-      .withParticipants([user1.keyPair])
+      .withParticipants([user1.signatureProvider])
       .withPoints(4)
       .build();
 
-    const keyPair = new KeyPair();
+    const sigProv = new InMemorySignatureProvider();
     const user2 = new User(
-      keyPair,
-      new SingleSignatureAuthDescriptor(keyPair.pubKey, [FlagsType.Transfer])
+      sigProv,
+      new SingleSignatureAuthDescriptor(sigProv.pubKey, [FlagsType.Transfer])
     );
 
     await addAuthDescriptorTo(account, user1, user2, blockchain);
@@ -319,20 +322,20 @@ describe("Test the mutable account", () => {
     const user1 = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user1)
-      .withParticipants([user1.keyPair])
+      .withParticipants([user1.signatureProvider])
       .withPoints(4)
       .build();
 
-    const keyPair2 = new KeyPair();
+    const sigProv2 = new InMemorySignatureProvider();
     const user2 = new User(
-      keyPair2,
-      new SingleSignatureAuthDescriptor(keyPair2.pubKey, [FlagsType.Transfer])
+      sigProv2,
+      new SingleSignatureAuthDescriptor(sigProv2.pubKey, [FlagsType.Transfer])
     );
 
-    const keyPair3 = new KeyPair();
+    const sigProv3 = new InMemorySignatureProvider();
     const user3 = new User(
-      keyPair3,
-      new SingleSignatureAuthDescriptor(keyPair3.pubKey, [FlagsType.Transfer])
+      sigProv3,
+      new SingleSignatureAuthDescriptor(sigProv3.pubKey, [FlagsType.Transfer])
     );
 
     await addAuthDescriptorTo(account, user1, user2, blockchain);

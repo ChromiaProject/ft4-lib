@@ -25,7 +25,7 @@ describe.skip("Cross-chain transfer", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 100)
       .withPoints(1)
       .build();

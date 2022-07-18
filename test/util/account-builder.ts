@@ -1,7 +1,9 @@
 import { FlagsType, Account } from "../../client/lib/ft3/user/account-utils";
 import MutableAccount from "../../client/lib/ft3/user/mutable-account";
 import StaticAccount from "../../client/lib/ft3/user/static-account";
-import KeyPair from "../../client/lib/cyptoUtils/keyPair";
+import SignatureProvider, {
+  InMemorySignatureProvider,
+} from "../../client/lib/ft3/user/signature-provider";
 import Asset from "../../client/lib/ft3/user/asset";
 import User from "../../client/lib/ft3/user/user";
 import TestUser from "./test-user";
@@ -16,20 +18,20 @@ class AccountBuilder {
   private user: User;
   private balance?: number;
   private asset?: Asset;
-  private participants = [new KeyPair()];
+  private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points?: number = 0;
 
   constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
     this.blockchain = blockchain;
-    this.participants = [user.keyPair];
+    this.participants = [user.signatureProvider];
     this.user = user;
   }
 
   /* Public functions */
 
-  static account(blockchain: Blockchain, user: User): AccountBuilder {
+  static account(blockchain: Blockchain, user?: User): AccountBuilder {
     return new AccountBuilder(blockchain, user);
   }
 
@@ -38,7 +40,7 @@ class AccountBuilder {
     return this;
   }
 
-  withParticipants(participants: KeyPair[]): AccountBuilder {
+  withParticipants(participants: SignatureProvider[]): AccountBuilder {
     this.participants = participants;
     return this;
   }
@@ -121,7 +123,7 @@ class AccountBuilder {
 
     if (this.participants.length > 1) {
       return new MultiSignatureAuthDescriptor(
-        this.participants.map(({ pubKey }) => pubKey),
+        this.participants.map((participant) => participant.pubKey),
         this.requiredSignaturesCount,
         this.flags,
         this.user.authDescriptor.rule
