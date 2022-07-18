@@ -20,7 +20,7 @@ describe("Payment history iterator", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
@@ -46,7 +46,7 @@ describe("Payment history iterator", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(2)
       .build();
@@ -67,7 +67,7 @@ describe("Payment history iterator", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
@@ -97,7 +97,7 @@ describe("Payment history iterator", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(4)
       .build();
@@ -118,7 +118,7 @@ describe("Payment history iterator", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
@@ -144,7 +144,7 @@ describe("Payment history iterator", () => {
     const user = TestUser.singleSig();
 
     const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(2)
       .build();
@@ -169,7 +169,7 @@ describe("Payment history iterator", () => {
       const user = TestUser.singleSig();
 
       const account1 = await AccountBuilder.account(blockchain, user)
-        .withParticipants([user.keyPair])
+        .withParticipants([user.signatureProvider])
         .withBalance(asset, 200)
         .withPoints(4)
         .build();

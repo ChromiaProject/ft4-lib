@@ -57,11 +57,11 @@ describe("Blockchain", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .build();
 
     const foundAccounts = await blockchain.getAccountsByParticipantId(
-      user.keyPair.pubKey,
+      user.signatureProvider.pubKey,
       user
     );
 
@@ -73,7 +73,7 @@ describe("Blockchain", () => {
     const user = TestUser.singleSig();
 
     const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+      .withParticipants([user.signatureProvider])
       .build();
 
     const foundAccounts = await blockchain.getAccountsByAuthDescriptorId(
@@ -118,10 +118,10 @@ describe("Blockchain", () => {
 
     const session = blockchain.newSession(user);
 
-    const rawTransaction = Account.rawRegisterTransaction(
-      user.authDescriptor,
+    const rawTransaction = await Account.rawTransactionRegister(
+      user,
       vault.authDescriptor,
-      session
+      blockchain
     );
 
     await blockchain.postRaw(rawTransaction);

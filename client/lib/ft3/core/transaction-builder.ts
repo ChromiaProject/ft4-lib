@@ -71,7 +71,9 @@ export default class TransactionBuilder {
     return new Transaction(tx, this.blockchain);
   }
 
-  buildAndSign(user: User): Transaction {
-    return this.build(user.authDescriptor.signers).sign(user.keyPair);
+  async buildAndSign(user: User): Promise<Transaction> {
+    return await this.build(user.authDescriptor.signers).sign(
+      user.signatureProvider
+    );
   }
 }

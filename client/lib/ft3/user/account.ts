@@ -132,33 +132,12 @@ class Account {
     return account;
   }
 
-  /* obsolete - keep for backward compatibility */
-  static rawRegisterTransaction(
-    authDescriptor: AuthDescriptor,
-    ssoAuthDescriptor: AuthDescriptor,
-    session: BlockchainSession
-  ): Buffer {
-    return session.blockchain
-      .transactionBuilder()
-      .add(register(authDescriptor))
-      .add(
-        addAuthDescriptor(
-          authDescriptor.id,
-          authDescriptor.id,
-          ssoAuthDescriptor
-        )
-      )
-      .build([authDescriptor.signers, ssoAuthDescriptor.signers].flat())
-      .sign(session.user.keyPair)
-      .raw();
-  }
-
-  static rawTransactionRegister(
+  static async rawTransactionRegister(
     user: User,
     authDescriptor: AuthDescriptor,
     blockchain: Blockchain
-  ): Buffer {
-    return blockchain
+  ): Promise<Buffer> {
+    const tx = await blockchain
       .transactionBuilder()
       .add(register(user.authDescriptor))
       .add(
@@ -169,22 +148,22 @@ class Account {
         )
       )
       .build([user.authDescriptor.signers, authDescriptor.signers].flat())
-      .sign(user.keyPair)
-      .raw();
+      .sign(user.signatureProvider);
+    return tx.raw();
   }
 
-  static rawTransactionAddAuthDescriptor(
+  static async rawTransactionAddAuthDescriptor(
     accountId: Buffer,
     user: User,
     authDescriptor: AuthDescriptor,
     blockchain: Blockchain
-  ): Buffer {
-    return blockchain
+  ): Promise<Buffer> {
+    const tx = await blockchain
       .transactionBuilder()
       .add(addAuthDescriptor(accountId, user.authDescriptor.id, authDescriptor))
       .build([user.authDescriptor.signers, authDescriptor.signers].flat())
-      .sign(user.keyPair)
-      .raw();
+      .sign(user.signatureProvider);
+    return tx.raw();
   }
 
   static async getByIds(
@@ -210,7 +189,8 @@ class Account {
   }
 
   async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
-    await this.tx.addAuthDescriptor(authDescriptor).post();
+    const tx = await this.tx.addAuthDescriptor(authDescriptor);
+    await tx.post();
     this.authDescriptor.push(authDescriptor);
   }
 
@@ -224,12 +204,14 @@ class Account {
   async deleteAllAuthDescriptorsExclude(
     authDescriptor: AuthDescriptor
   ): Promise<void> {
-    await this.tx.deleteAllAuthDescriptorsExclude(authDescriptor).post();
+    const tx = await this.tx.deleteAllAuthDescriptorsExclude(authDescriptor);
+    await tx.post();
     this.authDescriptor = [authDescriptor];
   }
 
   async deleteAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
-    await this.tx.deleteAuthDescriptor(authDescriptor).post();
+    const tx = await this.tx.deleteAuthDescriptor(authDescriptor);
+    await tx.post();
     await this.syncAuthDescriptors();
   }
 
@@ -276,7 +258,8 @@ class Account {
     inputs: Array<GtvSerializable>,
     outputs: Array<GtvSerializable>
   ): Promise<void> {
-    await this.tx.transferInputsToOutputs(inputs, outputs).post();
+    const tx = await this.tx.transferInputsToOutputs(inputs, outputs);
+    await tx.post();
     await this.syncAssets();
   }
 
@@ -318,9 +301,13 @@ class Account {
     assetId: Buffer,
     amount: number
   ): Promise<void> {
-    await this.tx
-      .xcTransfer(destinationChainId, destinationAccountId, assetId, amount)
-      .post();
+    const tx = await this.tx.xcTransfer(
+      destinationChainId,
+      destinationAccountId,
+      assetId,
+      amount
+    );
+    await tx.post();
     await this.syncAssets();
   }
 }

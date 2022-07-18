@@ -10,7 +10,7 @@
   "scripts": {
     "test:js": "./scripts/jesttest.sh",
     "test:rell": "./scripts/relltest.sh",
-    "test": "npm run test:js && npm run test:rell",
+    "test": "./scripts/test.sh",
     "postchain:test": "docker-compose -f dockers/rell-test.yml up -d",
     "postchain:demo": "docker-compose -f dockers/demo.yml up -d",
     "stop-postchain:jest": "docker-compose -f dockers/jest-test.yml down",
