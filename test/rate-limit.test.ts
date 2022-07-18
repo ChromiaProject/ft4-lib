@@ -199,9 +199,7 @@ describe("Rate Limit", () => {
     const tx = txBuilder.build(
       allUsers.map((user) => user.signatureProvider.pubKey)
     );
-    await allUsers.forEach(
-      async (user) => await tx.sign(user.signatureProvider)
-    );
+    await Promise.all(allUsers.map((user) => tx.sign(user.signatureProvider)));
 
     return tx.post();
   };
