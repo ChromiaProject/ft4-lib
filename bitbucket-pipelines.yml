@@ -1,3 +1,4 @@
+image: node:16
 
 options:
   docker: true
@@ -7,10 +8,7 @@ pipelines:
     '**':
       - step:
           script:
-            - apt update
-            - apt install -y python3-pip
-            - pip3 install --upgrade setuptools
-            - pip3 install docker-compose
+            - pip install docker-compose
             - npm install
             - npm test
 
