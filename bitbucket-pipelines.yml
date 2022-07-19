@@ -9,6 +9,7 @@ pipelines:
           script:
             - apt update
             - apt install -y python3-pip
+            - pip3 install --upgrade setuptools
             - pip3 install docker-compose
             - npm install
             - npm test
