@@ -7,7 +7,7 @@ pipelines:
     '**':
       - step:
           script:
-            - apt install python3-pip
+            - apt install -y python3-pip
             - pip install --no-cache-dir docker-compose
             - npm install
             - npm test
