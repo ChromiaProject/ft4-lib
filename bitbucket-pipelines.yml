@@ -1,4 +1,3 @@
-image: node:16
 
 options:
   docker: true
@@ -8,6 +7,7 @@ pipelines:
     '**':
       - step:
           script:
+            - pip install --no-cache-dir docker-compose
             - npm install
             - npm test
 
