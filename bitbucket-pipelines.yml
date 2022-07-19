@@ -8,7 +8,8 @@ pipelines:
     '**':
       - step:
           script:
-            - pip install docker-compose
+            - apt install python3-pip
+            - pip3 install docker-compose
             - npm install
             - npm test
 
