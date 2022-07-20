@@ -1,5 +1,5 @@
 import { gtv } from "postchain-client";
-import { AuthDescriptor } from "../account";
+import { AuthDescriptor } from "../account-utils";
 import SingleSignatureAuthDescriptor from "./single-signature-auth-descriptor";
 
 export default class AuthDescriptorFactory {

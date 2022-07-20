@@ -1,4 +1,4 @@
-import { AuthDescriptor } from "./account";
+import { AuthDescriptor } from "./account-utils";
 import SignatureProvider from "./signature-provider";
 
 export default class User {

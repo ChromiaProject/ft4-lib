@@ -4,7 +4,8 @@ import TestUser from "./util/test-user";
 import User from "../client/lib/ft3/user/user";
 import { LocalStorageSignatureProvider } from "../client/lib/ft3/user/signature-provider";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
-import { Account, addAuthDescriptor, FlagsType, nop } from "../client/lib/ft3";
+import { addAuthDescriptor, FlagsType, nop } from "../client/lib/ft3";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import SSO from "./util/fake-sso";
 import RateLimit from "../client/lib/ft3/user/rate-limit";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
@@ -35,7 +36,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const [dappUser, dappSigProv] = createUser();
 
-    const rawTransaction = await Account.rawTransactionRegister(
+    const rawTransaction = await MutableAccount.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
@@ -55,7 +56,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const [dappUser, dappSigProv] = createUser();
 
-    const rawTransaction = await Account.rawTransactionRegister(
+    const rawTransaction = await MutableAccount.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
@@ -67,12 +68,13 @@ describe("SSO", () => {
     await RateLimit.givePoints(vaultUser.authDescriptor.id, 1, blockchain);
 
     const [dappUser2, dapp2SigProv] = createUser();
-    const rawTransaction2 = await Account.rawTransactionAddAuthDescriptor(
-      vaultUser.authDescriptor.id,
-      vaultUser,
-      dappUser2.authDescriptor,
-      blockchain
-    );
+    const rawTransaction2 =
+      await MutableAccount.rawTransactionAddAuthDescriptor(
+        vaultUser.authDescriptor.id,
+        vaultUser,
+        dappUser2.authDescriptor,
+        blockchain
+      );
 
     const sso2 = new SSO(blockchain, dapp2SigProv);
     const [account] = await sso2.finalizeLogin(rawTransaction2.toString("hex"));
@@ -84,7 +86,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const [dappUser] = createUser();
 
-    const rawTransaction = await Account.rawTransactionRegister(
+    const rawTransaction = await MutableAccount.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
@@ -100,7 +102,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const [dappUser] = createUser();
 
-    const rawTransaction = await Account.rawTransactionRegister(
+    const rawTransaction = await MutableAccount.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain
@@ -165,7 +167,7 @@ describe("SSO", () => {
     const vaultUser = TestUser.singleSig();
     const [dappUser, dappSigProv] = createUser();
 
-    const rawTransaction = await Account.rawTransactionRegister(
+    const rawTransaction = await MutableAccount.rawTransactionRegister(
       vaultUser,
       dappUser.authDescriptor,
       blockchain

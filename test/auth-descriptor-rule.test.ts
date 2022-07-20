@@ -5,7 +5,7 @@ import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import Asset from "../client/lib/ft3/user/asset";
 import { generateAssetName, generateId } from "./util/util";
-import { Account } from "../client/lib/ft3/user/account";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import User from "../client/lib/ft3/user/user";
 import AuthDescriptorRule, {
   Rules,
@@ -15,19 +15,19 @@ import { addAuthDescriptor } from "../client/lib/ft3";
 let blockchain: Blockchain = null;
 let asset: Asset = null;
 
-function sourceAccount(user: User): Promise<Account> {
+function sourceAccount(user: User): Promise<MutableAccount> {
   return AccountBuilder.account(blockchain, user)
     .withBalance(asset, 200)
     .withPoints(5)
     .build();
 }
 
-function destinationAccount(): Promise<Account> {
+function destinationAccount(): Promise<MutableAccount> {
   return AccountBuilder.account(blockchain).build();
 }
 
 async function addAuthDescriptorTo(
-  account: Account,
+  account: MutableAccount,
   adminUser: User,
   user: User,
   blockchain: Blockchain
@@ -52,7 +52,7 @@ async function addAuthDescriptorTo(
 async function getUserAndAccountFromAuthDescriptorRule(
   rule: AuthDescriptorRule,
   blockchain: Blockchain
-): Promise<[User, Account]> {
+): Promise<[User, MutableAccount]> {
   //to be used when you don't need the admin user
   const user1 = TestUser.singleSig();
   const user2 = TestUser.singleSig(rule);
@@ -60,7 +60,7 @@ async function getUserAndAccountFromAuthDescriptorRule(
 
   await addAuthDescriptorTo(account, user1, user2, blockchain);
 
-  const accounts = await Account.getByAuthDescriptorId(
+  const accounts = await MutableAccount.getByAuthDescriptorId(
     user2.authDescriptor.id,
     blockchain.newSession(user2)
   );

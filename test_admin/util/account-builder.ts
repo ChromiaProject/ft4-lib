@@ -1,4 +1,5 @@
-import { Account, FlagsType } from "../../client/lib/ft3";
+import { FlagsType } from "../../client/lib/ft3/user/account-utils";
+import MutableAccount from "../../client/lib/ft3/user/mutable-account";
 import SignatureProvider, {
   InMemorySignatureProvider,
 } from "../../client/lib/ft3/user/signature-provider";
@@ -59,19 +60,20 @@ class AccountBuilder {
     return this;
   }
 
-  async build(): Promise<Account> {
+  async build(): Promise<MutableAccount> {
     const account = await this.registerAccount();
 
     await this.addBalanceIfNeeded(account);
-    account.rateLimit = await this.addPointsIfNeeded(account);
+    await this.addPointsIfNeeded(account);
+    await account.sync();
 
     return account;
   }
 
   /* Private functions */
 
-  private async registerAccount(): Promise<Account> {
-    return await Account.register(
+  private async registerAccount(): Promise<MutableAccount> {
+    return await MutableAccount.register(
       this.getAuthDescriptor(),
       this.blockchain.newSession(this.user)
     );
@@ -80,7 +82,7 @@ class AccountBuilder {
   private async addBalanceIfNeeded(account) {
     if (this.asset && this.balance) {
       await AssetBalance.giveBalance(
-        account.id_,
+        account.id,
         this.asset.id,
         this.balance,
         this.blockchain
@@ -88,11 +90,10 @@ class AccountBuilder {
     }
   }
 
-  private async addPointsIfNeeded(account: Account) {
+  private async addPointsIfNeeded(account: MutableAccount) {
     if (this.points > 0) {
-      await RateLimit.givePoints(account.id_, this.points, this.blockchain);
+      await RateLimit.givePoints(account.id, this.points, this.blockchain);
     }
-    return RateLimit.getByAccountRateLimit(account.id_, this.blockchain);
   }
 
   private getAuthDescriptor() {

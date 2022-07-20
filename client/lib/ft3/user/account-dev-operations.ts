@@ -1,4 +1,4 @@
-import { AuthDescriptor } from "./account";
+import { AuthDescriptor } from "./account-utils";
 import Operation from "../core/operation";
 
 export function register(authDescriptor: AuthDescriptor): Operation {
