@@ -7,6 +7,8 @@ pipelines:
   pull-requests:
     '**':
       - step:
+          caches:
+            - pip
           script:
             - apt update
             - apt install -y python3-pip
