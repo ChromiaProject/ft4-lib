@@ -10,28 +10,22 @@ import Operation from "../operation";
 import { op } from "../../user/account-operations";
 
 export default class Blockchain {
-  readonly id: Buffer;
   readonly info: BlockchainInfo;
   readonly connection: ConnectionClient;
   private readonly directoryService: DirectoryService;
 
   constructor(
-    id: Buffer,
     info: BlockchainInfo,
     connection: ConnectionClient,
     directoryService: DirectoryService
   ) {
-    if (id.toString("hex").toLowerCase() !== connection.chainId.toLowerCase()) {
-      throw new Error(
-        `Invalid ConnectionClient (BRID: ${
-          connection.chainId
-        }). Expected BRID: ${id.toString("hex")}`
-      );
-    }
-    this.id = id;
     this.info = info;
     this.connection = connection;
     this.directoryService = directoryService;
+  }
+
+  get id(): Buffer {
+    return this.connection.brid;
   }
 
   static async initialize(
@@ -51,10 +45,10 @@ export default class Blockchain {
 
     const connection = new ConnectionClient(
       chainConnectionInfo.url,
-      blockchainRID.toString("hex")
+      blockchainRID
     );
     const info = await BlockchainInfo.getInfo(connection);
-    return new Blockchain(blockchainRID, info, connection, directoryService);
+    return new Blockchain(info, connection, directoryService);
   }
 
   newSession(user: User): BlockchainSession {

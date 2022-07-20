@@ -20,7 +20,6 @@ export default class BlockchainUtil {
     const rateLimit = new RateLimitInfo(false, null, null, null);
     const id = generateId();
     return new Blockchain(
-      id,
       new BlockchainInfo("name", "website", "description", rateLimit),
       new ConnectionClient("URL", id.toString("hex")),
       new DirectoryServiceBase([new ChainConnectionInfo(id, "URL")])
