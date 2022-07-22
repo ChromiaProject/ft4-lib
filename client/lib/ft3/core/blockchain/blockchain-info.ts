@@ -35,7 +35,7 @@ export default class BlockchainInfo {
       );
     } catch {
       return new BlockchainInfo(
-        connection.chainId,
+        connection.brid.toString("hex"),
         null,
         null,
         new RateLimitInfo(false, null, null, null)

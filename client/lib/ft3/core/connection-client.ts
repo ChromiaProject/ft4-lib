@@ -2,16 +2,15 @@ import { restClient, gtxClient } from "postchain-client";
 
 export default class ConnectionClient {
   readonly chainURL: string;
-  readonly chainId: string;
+  readonly brid: Buffer;
   private gtx;
 
-  constructor(chainURL: string, chainId: string | Buffer) {
+  constructor(chainURL: string, brid: string | Buffer) {
     this.chainURL = chainURL;
-    this.chainId =
-      typeof chainId === "string" ? chainId : chainId.toString("hex");
+    this.brid = typeof brid === "string" ? Buffer.from(brid, "hex") : brid;
     this.gtx = gtxClient.createClient(
-      restClient.createRestClient(chainURL, this.chainId, 5),
-      Buffer.from(this.chainId, "hex"),
+      restClient.createRestClient(chainURL, this.brid.toString("hex"), 5),
+      this.brid,
       []
     );
   }

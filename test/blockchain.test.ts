@@ -4,11 +4,7 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import { Asset, RateLimitInfo } from "../client/lib/ft3";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
-import ConnectionClient from "../client/lib/ft3/core/connection-client";
-import ChainConnectionInfo from "../client/lib/ft3/core/chain-connection-info";
-import DirectoryServiceBase from "../client/lib/ft3/core/blockchain/directory-service-base";
+import { MutableAccount, Asset, RateLimitInfo } from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 
@@ -28,20 +24,6 @@ describe("Blockchain", () => {
         new RateLimitInfo(true, 10, 5000, 1)
       )
     );
-  });
-
-  it("shouldn't create a blockchain with non-matching ID and ConnectionClient", async () => {
-    const rateLimit = new RateLimitInfo(false, 0, 0, 1);
-
-    const f = () =>
-      new Blockchain(
-        generateId(),
-        new BlockchainInfo("name", "website", "description", rateLimit),
-        new ConnectionClient("URL", generateId().toString("hex")),
-        new DirectoryServiceBase([new ChainConnectionInfo(generateId(), "URL")])
-      );
-
-    expect(f).toThrowError();
   });
 
   it("should be able to register an account", async () => {

@@ -1,7 +1,7 @@
 export * from "../cyptoUtils";
 export * from "./user/account-utils";
-export * from "./user/mutable-account";
-export * from "./user/static-account";
+export { default as MutableAccount } from "./user/mutable-account";
+export { default as StaticAccount } from "./user/static-account";
 export * from "./user/account-operations";
 export * from "./user/auth-descriptor";
 export { default as User } from "./user/user";
