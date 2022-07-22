@@ -1,6 +1,6 @@
 import Blockchain from "./blockchain/blockchain";
 import Transaction from "./transaction";
-import { GtvSerializable } from "../user/account";
+import { GtvSerializable } from "../user/account-utils";
 import Operation from "./operation";
 import User from "../user/user";
 

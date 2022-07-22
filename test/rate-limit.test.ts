@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */ // this fixes all lines like 82, but might hide useful errors. Better, uglier solution found on line 115
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import { Account } from "../client/lib/ft3/user/account";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import TestUser from "./util/test-user";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {
@@ -67,8 +67,8 @@ describe("Rate Limit", () => {
 
       await timeout(20000);
 
-      await RateLimit.execFreeOperation(account.id_, blockchain); // used to make one block
-      await RateLimit.execFreeOperation(account.id_, blockchain); // used to calculate the last block's timestamp (previous block).
+      await RateLimit.execFreeOperation(account.id, blockchain); // used to make one block
+      await RateLimit.execFreeOperation(account.id, blockchain); // used to calculate the last block's timestamp (previous block).
       // check the balance
       await account.sync();
       expect(account.rateLimit.points).toBe(4 + POINTS_AT_ACCOUNT_CREATION); // 20 seconds / 5s recovery time + 1 point given by default
@@ -179,7 +179,7 @@ describe("Rate Limit", () => {
   };
 
   const makeRequests = async (
-    account: Account,
+    account: MutableAccount,
     requests: number
   ): Promise<any> => {
     let txBuilder = blockchain.transactionBuilder();

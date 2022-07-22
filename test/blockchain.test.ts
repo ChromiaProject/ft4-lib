@@ -4,7 +4,7 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import { Account, Asset, RateLimitInfo } from "../client/lib/ft3";
+import { MutableAccount, Asset, RateLimitInfo } from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 
@@ -31,7 +31,7 @@ describe("Blockchain", () => {
     const session = blockchain.newSession(user);
 
     const account = await blockchain.registerAccount(user.authDescriptor, user);
-    const foundAccount = await session.getAccountById(account.id_);
+    const foundAccount = await session.getAccountById(account.id);
 
     expect(account).toEqual(foundAccount);
   });
@@ -44,12 +44,11 @@ describe("Blockchain", () => {
       .build();
 
     const foundAccounts = await blockchain.getAccountsByParticipantId(
-      user.signatureProvider.pubKey,
-      user
+      user.signatureProvider.pubKey
     );
 
     expect(foundAccounts.length).toEqual(1);
-    expect(foundAccounts[0]).toEqual(account);
+    expect(await foundAccounts[0].mutable(user)).toEqual(account);
   });
 
   it("should return account by auth descriptor id", async () => {
@@ -60,12 +59,11 @@ describe("Blockchain", () => {
       .build();
 
     const foundAccounts = await blockchain.getAccountsByAuthDescriptorId(
-      user.authDescriptor.hash(),
-      user
+      user.authDescriptor.hash()
     );
 
     expect(foundAccounts.length).toEqual(1);
-    expect(foundAccounts[0]).toEqual(account);
+    expect(await foundAccounts[0].mutable(user)).toEqual(account);
   });
 
   it.skip("should be able to link other chain", async () => {
@@ -101,7 +99,7 @@ describe("Blockchain", () => {
 
     const session = blockchain.newSession(user);
 
-    const rawTransaction = await Account.rawTransactionRegister(
+    const rawTransaction = await MutableAccount.rawTransactionRegister(
       user,
       vault.authDescriptor,
       blockchain

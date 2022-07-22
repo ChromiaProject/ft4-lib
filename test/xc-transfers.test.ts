@@ -38,7 +38,7 @@ describe.skip("Cross-chain transfer", () => {
     );
 
     const accountBalance = await AssetBalance.getByAccountAndAssetId(
-      account.id_,
+      account.id,
       asset.id,
       blockchain
     );

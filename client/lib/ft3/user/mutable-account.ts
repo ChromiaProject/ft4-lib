@@ -1,6 +1,5 @@
 import AssetBalance from "./asset-balance";
 import AccountTransactions from "./account-transactions";
-import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
@@ -9,79 +8,32 @@ import Blockchain from "../core/blockchain/blockchain";
 import { addAuthDescriptor } from "./account-operations";
 import { register } from "./account-dev-operations";
 import {
-  accountAuthDescriptors,
   accountById,
   accountsByAuthDescriptorId,
   accountsByParticipantId,
 } from "./account-queries";
 import RateLimit from "./rate-limit";
-import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import User from "./user";
+import { Account, AuthDescriptor, GtvSerializable } from "./account-utils";
+import StaticAccount from "./static-account";
 
-enum AuthType {
-  single_sig = "S",
-  multi_sig = "M",
-}
-
-type PubKey = Buffer;
-
-enum FlagsType {
-  Account = "A", // Change Account settings
-  Transfer = "T", // Transfer balance
-}
-
-interface GtvSerializable {
-  toGTV(): any[];
-}
-
-class Flags {
-  private flagsOrder = [FlagsType.Account, FlagsType.Transfer];
-
-  flags: Set<FlagsType>;
-
-  constructor(flags: Set<FlagsType>) {
-    this.flags = flags;
-  }
-
-  hasFlag(flag: FlagsType) {
-    return this.flags.has(flag);
-  }
-
-  toGTV() {
-    return this.flagsOrder
-      .map((flag) => (this.flags.has(flag) ? flag : null))
-      .filter((flag) => flag);
-  }
-}
-
-interface AuthDescriptor extends GtvSerializable {
-  id: Buffer;
-  signers: PubKey[];
-  rule: AuthDescriptorRule | null;
-  hash(): Buffer;
-}
-
-class Account {
+export default class MutableAccount implements Account {
   readonly paymentHistorySyncManager = new PaymentHistorySyncManager();
 
-  readonly id_: Buffer;
-  assets: AssetBalance[] = [];
-  authDescriptor: AuthDescriptor[];
-  rateLimit: RateLimit;
-  tx: AccountTransactions;
+  private account: StaticAccount;
+  readonly tx: AccountTransactions;
 
   constructor(
     id: Buffer,
     authDescriptor: AuthDescriptor[],
     session: BlockchainSession
   ) {
-    this.id_ = id;
-    this.authDescriptor = authDescriptor;
+    this.account = new StaticAccount(id, authDescriptor, session.blockchain);
     this.tx = new AccountTransactions(id, session);
   }
 
   get id(): Buffer {
-    return this.id_;
+    return this.account.id;
   }
 
   get blockchain(): Blockchain {
@@ -96,10 +48,22 @@ class Account {
     return this.tx.session.user;
   }
 
+  get assets(): AssetBalance[] {
+    return this.account.assets;
+  }
+
+  get authDescriptor(): AuthDescriptor[] {
+    return this.account.authDescriptor;
+  }
+
+  get rateLimit(): RateLimit {
+    return this.account.rateLimit;
+  }
+
   static async getByParticipantId(
     id: Buffer,
     session: BlockchainSession
-  ): Promise<Account[]> {
+  ): Promise<MutableAccount[]> {
     const accountIds = await session.query(...accountsByParticipantId(id));
     return await this.getByIds(
       accountIds.map((id) => Buffer.from(id, "hex")),
@@ -110,7 +74,7 @@ class Account {
   static async getByAuthDescriptorId(
     id: Buffer,
     session: BlockchainSession
-  ): Promise<Account[]> {
+  ): Promise<MutableAccount[]> {
     const accountIds = await session.query(...accountsByAuthDescriptorId(id));
     return await this.getByIds(
       accountIds.map((id) => Buffer.from(id, "hex")),
@@ -121,9 +85,9 @@ class Account {
   static async register(
     authDescriptor: AuthDescriptor,
     session: BlockchainSession
-  ): Promise<Account> {
+  ): Promise<MutableAccount> {
     await session.call(register(authDescriptor));
-    const account = new Account(
+    const account = new MutableAccount(
       authDescriptor.hash(),
       [authDescriptor],
       session
@@ -169,21 +133,21 @@ class Account {
   static async getByIds(
     ids: Buffer[],
     session: BlockchainSession
-  ): Promise<Account[]> {
+  ): Promise<MutableAccount[]> {
     return Promise.all(ids.map((id) => this.getById(id, session)));
   }
 
   static async getById(
     id: Buffer,
     session: BlockchainSession
-  ): Promise<Account> {
+  ): Promise<MutableAccount> {
     const account = await session.query(...accountById(id));
 
     if (!account) {
       return null;
     }
 
-    const acc = new Account(id, [], session);
+    const acc = new MutableAccount(id, [], session);
     await acc.sync();
     return acc;
   }
@@ -191,7 +155,7 @@ class Account {
   async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
     const tx = await this.tx.addAuthDescriptor(authDescriptor);
     await tx.post();
-    this.authDescriptor.push(authDescriptor);
+    await this.account.sync();
   }
 
   async isAuthDescriptorValid(id: Buffer): Promise<boolean> {
@@ -206,52 +170,21 @@ class Account {
   ): Promise<void> {
     const tx = await this.tx.deleteAllAuthDescriptorsExclude(authDescriptor);
     await tx.post();
-    this.authDescriptor = [authDescriptor];
+    await this.account.sync();
   }
 
   async deleteAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
     const tx = await this.tx.deleteAuthDescriptor(authDescriptor);
     await tx.post();
-    await this.syncAuthDescriptors();
+    await this.sync();
   }
 
   async sync(): Promise<void> {
-    await Promise.all([
-      this.syncAssets(),
-      this.syncAuthDescriptors(),
-      this.syncRateLimit(),
-    ]);
-  }
-
-  private async syncAssets(): Promise<void> {
-    this.assets = await AssetBalance.getByAccountId(this.id, this.blockchain);
-  }
-
-  private async syncAuthDescriptors(): Promise<void> {
-    const authDescriptors = await this.session.query(
-      ...accountAuthDescriptors(this.id)
-    );
-
-    const authDescriptorFactory = new AuthDescriptorFactory();
-    this.authDescriptor = authDescriptors.map((authDescriptor) =>
-      authDescriptorFactory.create(
-        authDescriptor.type,
-        Buffer.from(authDescriptor.args, "hex")
-      )
-    );
-  }
-
-  private async syncRateLimit(): Promise<void> {
-    this.rateLimit = await RateLimit.getByAccountRateLimit(
-      this.id_,
-      this.blockchain
-    );
+    await this.account.sync();
   }
 
   getAssetById(id: Buffer): AssetBalance {
-    return this.assets.find(
-      (assetBalance) => assetBalance.asset.id.compare(id) === 0
-    );
+    return this.account.getAssetById(id);
   }
 
   async transferInputsToOutputs(
@@ -260,7 +193,7 @@ class Account {
   ): Promise<void> {
     const tx = await this.tx.transferInputsToOutputs(inputs, outputs);
     await tx.post();
-    await this.syncAssets();
+    await this.sync();
   }
 
   async transfer(
@@ -308,16 +241,6 @@ class Account {
       amount
     );
     await tx.post();
-    await this.syncAssets();
+    await this.sync();
   }
 }
-
-export {
-  PubKey,
-  Account,
-  AuthDescriptor,
-  AuthType,
-  Flags,
-  FlagsType,
-  GtvSerializable,
-};

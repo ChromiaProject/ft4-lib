@@ -1,4 +1,4 @@
-import { GtvSerializable } from "../account";
+import { GtvSerializable } from "../account-utils";
 
 export default interface AuthDescriptorRule extends GtvSerializable {}
 

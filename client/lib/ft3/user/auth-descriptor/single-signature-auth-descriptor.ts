@@ -1,5 +1,11 @@
 import { gtv } from "postchain-client";
-import { AuthDescriptor, AuthType, Flags, FlagsType, PubKey } from "../account";
+import {
+  AuthDescriptor,
+  AuthType,
+  Flags,
+  FlagsType,
+  PubKey,
+} from "../account-utils";
 import AuthDescriptorRule from "./auth-descriptor-rule";
 
 export default class SingleSignatureAuthDescriptor implements AuthDescriptor {

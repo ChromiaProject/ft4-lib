@@ -1,4 +1,4 @@
-import { FlagsType } from "../../client/lib/ft3/user/account";
+import { FlagsType } from "../../client/lib/ft3/user/account-utils";
 import { InMemorySignatureProvider } from "../../client/lib/ft3/user/signature-provider";
 import User from "../../client/lib/ft3/user/user";
 import SingleSignatureAuthDescriptor from "../../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";

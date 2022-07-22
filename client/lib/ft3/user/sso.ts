@@ -1,4 +1,5 @@
-import { Account, FlagsType } from "./account";
+import { FlagsType } from "./account-utils";
+import MutableAccount from "./mutable-account";
 import Blockchain from "../core/blockchain/blockchain";
 import Transaction from "../core/transaction";
 import User from "./user";
@@ -89,7 +90,9 @@ export default class SSO {
     this.accountId = undefined;
   }
 
-  private async getAccountAndUserByStoredIds(): Promise<[Account, User]> {
+  private async getAccountAndUserByStoredIds(): Promise<
+    [MutableAccount, User]
+  > {
     if (!this.signatureProvider || !this.accountId) {
       return [null, null];
     }
@@ -112,7 +115,7 @@ export default class SSO {
     return [account, user];
   }
 
-  async autoLogin(): Promise<[Account, User]> {
+  async autoLogin(): Promise<[MutableAccount, User]> {
     const [account, user] = await this.getAccountAndUserByStoredIds();
 
     if (!account || !user) {
@@ -144,7 +147,7 @@ export default class SSO {
     )}&cancelAction=${encodeURIComponent(cancelUrl)}&version=0.1`;
   }
 
-  async finalizeLogin(tx: string): Promise<[Account, User]> {
+  async finalizeLogin(tx: string): Promise<[MutableAccount, User]> {
     const sigProv = this.tmpSigProv;
     this.tmpSigProv = undefined;
 

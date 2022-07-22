@@ -2,7 +2,7 @@ import { generateAssetName, generateId } from "./util/util";
 import Asset from "../client/lib/ft3/user/asset";
 import AssetBalance from "../client/lib/ft3/user/asset-balance";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/user/account";
+import { FlagsType } from "../client/lib/ft3/user/account-utils";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
@@ -30,15 +30,15 @@ describe("Transfer", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
 
     const assetBalance1 = await AssetBalance.getByAccountAndAssetId(
-      account1.id_,
+      account1.id,
       asset.id,
       blockchain
     );
     const assetBalance2 = await AssetBalance.getByAccountAndAssetId(
-      account2.id_,
+      account2.id,
       asset.id,
       blockchain
     );
@@ -58,7 +58,7 @@ describe("Transfer", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    const promise = account1.transfer(account2.id_, asset.id, 10);
+    const promise = account1.transfer(account2.id, asset.id, 10);
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
 
@@ -74,7 +74,7 @@ describe("Transfer", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    const promise = account1.transfer(account2.id_, asset.id, 10);
+    const promise = account1.transfer(account2.id, asset.id, 10);
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
 
@@ -147,7 +147,7 @@ describe("Transfer", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 10);
     const paymentHistory = await account1.getPaymentHistory();
 
     expect(paymentHistory.length).toEqual(1);
@@ -164,8 +164,8 @@ describe("Transfer", () => {
 
     const account2 = await AccountBuilder.account(blockchain).build();
 
-    await account1.transfer(account2.id_, asset.id, 10);
-    await account1.transfer(account2.id_, asset.id, 11);
+    await account1.transfer(account2.id, asset.id, 10);
+    await account1.transfer(account2.id, asset.id, 11);
     const paymentHistory = await account1.getPaymentHistory();
 
     expect(paymentHistory.length).toEqual(2);

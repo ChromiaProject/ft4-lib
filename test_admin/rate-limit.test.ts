@@ -1,6 +1,6 @@
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import { Account } from "../client/lib/ft3/user/account";
+import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import TestUser from "./util/test-user";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {
@@ -71,8 +71,8 @@ describe("Rate Limit", () => {
 
       await timeout(120000);
 
-      await RateLimit.execFreeOperation(account.id_, blockchain); // used to make one block
-      await RateLimit.execFreeOperation(account.id_, blockchain); // used to calculate the last block's timestamp (previous block).
+      await RateLimit.execFreeOperation(account.id, blockchain); // used to make one block
+      await RateLimit.execFreeOperation(account.id, blockchain); // used to calculate the last block's timestamp (previous block).
       // check the balance
       await account.sync();
       expect(account.rateLimit.points).toBe(2 + POINTS_AT_ACCOUNT_CREATION); // 120 seconds / 60s recovery time
@@ -171,7 +171,7 @@ describe("Rate Limit", () => {
   };
 
   const makeRequests = async (
-    account: Account,
+    account: MutableAccount,
     requests: number
   ): Promise<any> => {
     let txBuilder = blockchain.transactionBuilder();
