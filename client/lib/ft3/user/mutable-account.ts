@@ -1,6 +1,5 @@
 import AssetBalance from "./asset-balance";
 import AccountTransactions from "./account-transactions";
-import AuthDescriptorFactory from "./auth-descriptor/auth-descriptor-factory";
 import PaymentHistory from "./payment-history/payment-history";
 import PaymentHistoryIterator from "./payment-history/payment-history-iterator";
 import PaymentHistorySyncManager from "./payment-history/payment-history-sync-manager";
@@ -9,7 +8,6 @@ import Blockchain from "../core/blockchain/blockchain";
 import { addAuthDescriptor } from "./account-operations";
 import { register } from "./account-dev-operations";
 import {
-  accountAuthDescriptors,
   accountById,
   accountsByAuthDescriptorId,
   accountsByParticipantId,
@@ -17,14 +15,12 @@ import {
 import RateLimit from "./rate-limit";
 import User from "./user";
 import { Account, AuthDescriptor, GtvSerializable } from "./account-utils";
+import StaticAccount from "./static-account";
 
 export default class MutableAccount implements Account {
   readonly paymentHistorySyncManager = new PaymentHistorySyncManager();
 
-  readonly id: Buffer;
-  private _assets: AssetBalance[];
-  private _authDescriptor: AuthDescriptor[];
-  private _rateLimit: RateLimit;
+  private account: StaticAccount;
   readonly tx: AccountTransactions;
 
   constructor(
@@ -32,9 +28,12 @@ export default class MutableAccount implements Account {
     authDescriptor: AuthDescriptor[],
     session: BlockchainSession
   ) {
-    this.id = id;
-    this._authDescriptor = authDescriptor;
+    this.account = new StaticAccount(id, authDescriptor, session.blockchain);
     this.tx = new AccountTransactions(id, session);
+  }
+
+  get id(): Buffer {
+    return this.account.id;
   }
 
   get blockchain(): Blockchain {
@@ -50,15 +49,15 @@ export default class MutableAccount implements Account {
   }
 
   get assets(): AssetBalance[] {
-    return this._assets;
+    return this.account.assets;
   }
 
   get authDescriptor(): AuthDescriptor[] {
-    return this._authDescriptor;
+    return this.account.authDescriptor;
   }
 
   get rateLimit(): RateLimit {
-    return this._rateLimit;
+    return this.account.rateLimit;
   }
 
   static async getByParticipantId(
@@ -156,7 +155,7 @@ export default class MutableAccount implements Account {
   async addAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
     const tx = await this.tx.addAuthDescriptor(authDescriptor);
     await tx.post();
-    this._authDescriptor.push(authDescriptor);
+    await this.account.sync();
   }
 
   async isAuthDescriptorValid(id: Buffer): Promise<boolean> {
@@ -171,52 +170,21 @@ export default class MutableAccount implements Account {
   ): Promise<void> {
     const tx = await this.tx.deleteAllAuthDescriptorsExclude(authDescriptor);
     await tx.post();
-    this._authDescriptor = [authDescriptor];
+    await this.account.sync();
   }
 
   async deleteAuthDescriptor(authDescriptor: AuthDescriptor): Promise<void> {
     const tx = await this.tx.deleteAuthDescriptor(authDescriptor);
     await tx.post();
-    await this.syncAuthDescriptors();
+    await this.sync();
   }
 
   async sync(): Promise<void> {
-    await Promise.all([
-      this.syncAssets(),
-      this.syncAuthDescriptors(),
-      this.syncRateLimit(),
-    ]);
-  }
-
-  private async syncAssets(): Promise<void> {
-    this._assets = await AssetBalance.getByAccountId(this.id, this.blockchain);
-  }
-
-  private async syncAuthDescriptors(): Promise<void> {
-    const authDescriptors = await this.session.query(
-      ...accountAuthDescriptors(this.id)
-    );
-
-    const authDescriptorFactory = new AuthDescriptorFactory();
-    this._authDescriptor = authDescriptors.map((authDescriptor) =>
-      authDescriptorFactory.create(
-        authDescriptor.type,
-        Buffer.from(authDescriptor.args, "hex")
-      )
-    );
-  }
-
-  private async syncRateLimit(): Promise<void> {
-    this._rateLimit = await RateLimit.getByAccountRateLimit(
-      this.id,
-      this.blockchain
-    );
+    await this.account.sync();
   }
 
   getAssetById(id: Buffer): AssetBalance {
-    return this._assets.find(
-      (assetBalance) => assetBalance.asset.id.compare(id) === 0
-    );
+    return this.account.getAssetById(id);
   }
 
   async transferInputsToOutputs(
@@ -225,7 +193,7 @@ export default class MutableAccount implements Account {
   ): Promise<void> {
     const tx = await this.tx.transferInputsToOutputs(inputs, outputs);
     await tx.post();
-    await this.syncAssets();
+    await this.sync();
   }
 
   async transfer(
@@ -273,6 +241,6 @@ export default class MutableAccount implements Account {
       amount
     );
     await tx.post();
-    await this.syncAssets();
+    await this.sync();
   }
 }
