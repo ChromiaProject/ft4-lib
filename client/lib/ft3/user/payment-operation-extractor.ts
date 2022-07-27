@@ -34,11 +34,11 @@ function extractPaymentDetails(operation) {
 
 export default class PaymentOperationExtractor {
   private readonly transaction: Buffer;
-  private readonly chainId: string;
+  private readonly brid: string;
 
-  constructor(rawTransaction: Buffer, chainId: string) {
+  constructor(rawTransaction: Buffer, brid: string) {
     this.transaction = rawTransaction;
-    this.chainId = chainId;
+    this.brid = brid;
   }
 
   extract(): PaymentOperation[] {
@@ -50,18 +50,18 @@ export default class PaymentOperationExtractor {
           case "ft3.transfer":
             return PaymentOperation.fromTransfer(
               TransferOperation.from(operation),
-              this.chainId
+              this.brid
             );
           case "ft3.xc.init_xfer":
             return PaymentOperation.fromXTransfer(
               XTransferOperation.from(operation),
-              this.chainId
+              this.brid
             );
           default:
             if (isCustomPaymentOperation(operation)) {
               return PaymentOperation.fromTransfer(
                 TransferOperation.from(extractPaymentDetails(operation)),
-                this.chainId
+                this.brid
               );
             } else {
               return null;

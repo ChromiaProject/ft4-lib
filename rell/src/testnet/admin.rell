@@ -9,10 +9,10 @@ function require_dev_admin() {
 }
 
 
-operation dev_register_asset (name, issuing_chain_rid: byte_array) {
+operation dev_register_asset (name, issuing_BRID: byte_array) {
     ft3_dev_op.require_dev();
     require_dev_admin();
-    ft3_core.register_asset(name, issuing_chain_rid);
+    ft3_core.register_asset(name, issuing_BRID);
 }
 
 operation dev_give_balance (asset_id: byte_array, account_id: byte_array, amount: integer) {

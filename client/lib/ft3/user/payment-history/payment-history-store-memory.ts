@@ -7,68 +7,66 @@ export default class PaymentHistoryStoreMemory implements PaymentHistoryStore {
   private syncInfo: { [key: string]: any } = {};
 
   get(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     start: number,
     pageSize: number
   ): PaymentHistoryEntry[] {
-    const entries =
-      this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)];
+    const entries = this.entriesCache[this.paymentHistoryKey(brid, accountId)];
     if (entries.length < start) {
       return [];
     }
     return entries.slice(start, Math.min(entries.length, start + pageSize));
   }
 
-  getCount(blockchainId: Buffer, accountId: Buffer): number {
-    return (
-      this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] || []
-    ).length;
+  getCount(brid: Buffer, accountId: Buffer): number {
+    return (this.entriesCache[this.paymentHistoryKey(brid, accountId)] || [])
+      .length;
   }
 
   getIterator(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     pageSize: number
   ): PaymentHistoryIterator {
-    return new PaymentHistoryIterator(this, blockchainId, accountId, pageSize);
+    return new PaymentHistoryIterator(this, brid, accountId, pageSize);
   }
 
-  getSyncInfo(blockchainId: Buffer, accountId: Buffer): any {
-    return this.syncInfo[this.syncInfoKey(blockchainId, accountId)] || {};
+  getSyncInfo(brid: Buffer, accountId: Buffer): any {
+    return this.syncInfo[this.syncInfoKey(brid, accountId)] || {};
   }
 
   save(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     paymentHistoryEntries: PaymentHistoryEntry[]
   ) {
     const entries =
-      this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] || [];
-    this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] =
+      this.entriesCache[this.paymentHistoryKey(brid, accountId)] || [];
+    this.entriesCache[this.paymentHistoryKey(brid, accountId)] =
       paymentHistoryEntries.concat(entries);
   }
 
-  saveSyncInfo(blockchainId: Buffer, accountId: Buffer, syncInfo: any) {
-    this.syncInfo[this.syncInfoKey(blockchainId, accountId)] = syncInfo;
+  saveSyncInfo(brid: Buffer, accountId: Buffer, syncInfo: any) {
+    this.syncInfo[this.syncInfoKey(brid, accountId)] = syncInfo;
   }
 
-  deletePaymentHistory(accountId: Buffer, blockchainId: Buffer) {
-    const key = this.syncInfoKey(blockchainId, accountId);
+  deletePaymentHistory(accountId: Buffer, brid: Buffer) {
+    const key = this.syncInfoKey(brid, accountId);
     if (this.entriesCache[key]) {
       delete this.entriesCache[key];
     }
   }
 
-  private paymentHistoryKey(blockchainId: Buffer, accountId: Buffer): string {
+  private paymentHistoryKey(brid: Buffer, accountId: Buffer): string {
     return `FT3_LIB_P_H_${accountId.toString("hex").toUpperCase()}_${
-      blockchainId ? blockchainId.toString("hex").toUpperCase() : ""
+      brid ? brid.toString("hex").toUpperCase() : ""
     }`;
   }
 
-  private syncInfoKey(blockchainId: Buffer, accountId: Buffer): string {
+  private syncInfoKey(brid: Buffer, accountId: Buffer): string {
     return `FT3_LIB_P_H_S_I_${accountId.toString("hex").toUpperCase()}_${
-      blockchainId ? blockchainId.toString("hex").toUpperCase() : ""
+      brid ? brid.toString("hex").toUpperCase() : ""
     }`;
   }
 }

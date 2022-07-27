@@ -67,24 +67,24 @@ describe("Blockchain", () => {
   });
 
   it.skip("should be able to link other chain", async () => {
-    const chainId = generateId();
+    const brid = generateId();
 
-    await blockchain.linkChain(chainId);
+    await blockchain.linkChain(brid);
 
-    await expect(blockchain.isLinkedWithChain(chainId)).resolves.toEqual(true);
+    await expect(blockchain.isLinkedWithChain(brid)).resolves.toEqual(true);
   });
 
   it.skip("should be able to link multiple chains", async () => {
-    const chainId1 = generateId();
-    const chainId2 = generateId();
+    const brid1 = generateId();
+    const brid2 = generateId();
 
-    await blockchain.linkChain(chainId1);
-    await blockchain.linkChain(chainId2);
+    await blockchain.linkChain(brid1);
+    await blockchain.linkChain(brid2);
 
-    const linkedChains = await blockchain.getLinkedChainsIds();
+    const linkedChains = await blockchain.getLinkedBRIDs();
 
-    expect(linkedChains).toContainEqual(chainId1);
-    expect(linkedChains).toContainEqual(chainId2);
+    expect(linkedChains).toContainEqual(brid1);
+    expect(linkedChains).toContainEqual(brid2);
   });
 
   it.skip("should return false when isLinkedWithChain is called for unknown chain id", async () => {

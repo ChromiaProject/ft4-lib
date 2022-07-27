@@ -38,7 +38,7 @@ describe("Payment history iterator", () => {
     const [entry] = paymentHistoryEntries;
 
     expect(entry.other.length).toEqual(1);
-    expect(entry.other[0].chainId).toEqual(blockchain.id.toString("hex"));
+    expect(entry.other[0].brid).toEqual(blockchain.id.toString("hex"));
     expect(entry.other[0].accountId).toEqual(account2.id.toString("hex"));
   });
 
@@ -84,12 +84,12 @@ describe("Payment history iterator", () => {
 
     expect(entry1.isInput).toEqual(false);
     expect(entry1.other.length).toEqual(1);
-    expect(entry1.other[0].chainId).toEqual(blockchain.id.toString("hex"));
+    expect(entry1.other[0].brid).toEqual(blockchain.id.toString("hex"));
     expect(entry1.other[0].accountId).toEqual(account.id.toString("hex"));
 
     expect(entry2.isInput).toEqual(true);
     expect(entry2.other.length).toEqual(1);
-    expect(entry2.other[0].chainId).toEqual(blockchain.id.toString("hex"));
+    expect(entry2.other[0].brid).toEqual(blockchain.id.toString("hex"));
     expect(entry2.other[0].accountId).toEqual(account.id.toString("hex"));
   });
 
@@ -123,9 +123,9 @@ describe("Payment history iterator", () => {
       .withPoints(1)
       .build();
 
-    const chainId2 = generateId();
+    const brid2 = generateId();
     const accountId2 = generateId();
-    await account1.xcTransfer(chainId2, accountId2, asset.id, 10);
+    await account1.xcTransfer(brid2, accountId2, asset.id, 10);
 
     const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
     const paymentHistoryEntries = paymentHistoryIterator.next();
@@ -136,7 +136,7 @@ describe("Payment history iterator", () => {
     const [entry] = paymentHistoryEntries;
 
     expect(entry.other.length).toEqual(1);
-    expect(entry.other[0].chainId).toEqual(chainId2.toString("hex"));
+    expect(entry.other[0].brid).toEqual(brid2.toString("hex"));
     expect(entry.other[0].accountId).toEqual(accountId2.toString("hex"));
   });
 

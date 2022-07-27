@@ -229,13 +229,13 @@ export default class MutableAccount implements Account {
   }
 
   async xcTransfer(
-    destinationChainId: Buffer,
+    destinationBRID: Buffer,
     destinationAccountId: Buffer,
     assetId: Buffer,
     amount: number
   ): Promise<void> {
     const tx = await this.tx.xcTransfer(
-      destinationChainId,
+      destinationBRID,
       destinationAccountId,
       assetId,
       amount

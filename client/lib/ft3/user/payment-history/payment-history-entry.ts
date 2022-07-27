@@ -3,7 +3,7 @@ export default class PaymentHistoryEntry {
   readonly delta: number;
   readonly asset: string;
   readonly assetId: Buffer;
-  readonly chainId: Buffer;
+  readonly brid: Buffer;
   readonly other: any[];
   readonly timestamp: Date;
   readonly transactionId: Buffer;

@@ -68,7 +68,7 @@ export default class PaymentHistorySyncManager {
 
   private mapShortEntriesToLongEntries(
     entries: PaymentHistoryEntryShort[],
-    chainId: Buffer,
+    brid: Buffer,
     accountId: Buffer
   ): PaymentHistoryEntry[] {
     const entriesMap = this.groupShortEntriesByTransactionRID(entries);
@@ -76,7 +76,7 @@ export default class PaymentHistorySyncManager {
 
     for (const entries of entriesMap.values()) {
       paymentHistoryEntries.push(
-        this.paymentHistoryEntriesFrom(entries, chainId, accountId)
+        this.paymentHistoryEntriesFrom(entries, brid, accountId)
       );
     }
 
@@ -102,7 +102,7 @@ export default class PaymentHistorySyncManager {
 
   private paymentHistoryEntriesFrom(
     entries: PaymentHistoryEntryShort[],
-    chainId: Buffer,
+    brid: Buffer,
     accountId: Buffer
   ): PaymentHistoryEntry[] {
     if (entries.length === 0) {
@@ -114,7 +114,7 @@ export default class PaymentHistorySyncManager {
     // Get all the payments from the transaction which are related to the current account,
     // and then get all inputs and outputs for which current account is source or destination.
     const payments = this.getPaymentsForChainAndAccountFromRawTransaction(
-      chainId.toString("hex"),
+      brid.toString("hex"),
       accountId,
       firstEntry.transactionData
     );
@@ -123,7 +123,7 @@ export default class PaymentHistorySyncManager {
       .map((payment) =>
         payment
           .inputsWithChainAndAccount(
-            chainId.toString("hex"),
+            brid.toString("hex"),
             accountId.toString("hex")
           )
           .map((input) => new ParamPaymentPair(input, payment))
@@ -134,7 +134,7 @@ export default class PaymentHistorySyncManager {
       .map((payment) =>
         payment
           .outputsWithChainAndAccount(
-            chainId.toString("hex"),
+            brid.toString("hex"),
             accountId.toString("hex")
           )
           .map((output) => new ParamPaymentPair(output, payment))
@@ -221,10 +221,10 @@ export default class PaymentHistorySyncManager {
     const other = entry.isInput
       ? payment
           .outputsWithAsset(entry.assetId)
-          .map(({ chainId, accountId }) => ({ chainId, accountId }))
+          .map(({ brid, accountId }) => ({ brid, accountId }))
       : payment
           .inputsWithAsset(entry.assetId)
-          .map(({ chainId, accountId }) => ({ chainId, accountId }));
+          .map(({ brid, accountId }) => ({ brid, accountId }));
 
     return new PaymentHistoryEntry(
       entry.isInput,
@@ -248,15 +248,15 @@ export default class PaymentHistorySyncManager {
   }
 
   private getPaymentsForChainAndAccountFromRawTransaction(
-    chainId: string,
+    brid: string,
     accountId: Buffer,
     transactionData: Buffer
   ): PaymentOperation[] {
-    return new PaymentOperationExtractor(transactionData, chainId)
+    return new PaymentOperationExtractor(transactionData, brid)
       .extract()
       .filter((transfer) =>
         transfer.hasInputOrOutputWithChainAndAccount(
-          chainId,
+          brid,
           accountId.toString("hex")
         )
       );
