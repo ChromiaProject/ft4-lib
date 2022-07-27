@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import SignatureProvider from "../../client/lib/ft3/user/signature-provider";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Transaction from "../../client/lib/ft3/core/transaction";
@@ -18,6 +17,7 @@ export default class MaliciousSignatureProvider implements SignatureProvider {
     this.transactionBuilder = transactionBuilder;
   }
 
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   async sign(transaction: Transaction): Promise<Buffer> {
     const tx = this.transactionBuilder
       .add(op("malicious", "code"))
