@@ -59,10 +59,10 @@ export default class Transaction {
   }
 
   async sign(provider: SignatureProvider): Promise<Transaction> {
-    //const raw = this.raw();
+    const body = this.tx.getDigestToSign();
     const signature = await provider.sign(this);
-    //if (raw.compare(this.raw()))
-    //throw new Error("SignatureProvider tried to change Transaction");
+    if (body.compare(this.tx.getDigestToSign()))
+      throw new Error("SignatureProvider tried to change Transaction");
     this.tx.addSignature(provider.pubKey, signature);
 
     return this;
