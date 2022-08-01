@@ -8,6 +8,7 @@
     "test": "test"
   },
   "scripts": {
+    "version": "./scripts/version.sh",
     "test:js": "./scripts/jesttest.sh",
     "test:rell": "./scripts/relltest.sh",
     "test": "./scripts/test.sh",

@@ -4,7 +4,12 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import { MutableAccount, Asset, RateLimitInfo } from "../client/lib/ft3";
+import {
+  MutableAccount,
+  Asset,
+  RateLimitInfo,
+  getClientVersion,
+} from "../client/lib/ft3";
 
 let blockchain: Blockchain = null;
 
@@ -24,6 +29,14 @@ describe("Blockchain", () => {
         new RateLimitInfo(true, 10, 5000, 1)
       )
     );
+  });
+
+  it("should provide ft3 rell-side version number", async () => {
+    const info = await blockchain.getRellVersion();
+
+    expect(info).toEqual("4.0.0r");
+
+    expect(getClientVersion()).toEqual("4.0.0c");
   });
 
   it("should be able to register an account", async () => {
