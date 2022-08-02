@@ -20,10 +20,12 @@ describe("Blockchain", () => {
   });
 
   it("should successfully build transactions with null arguments", async () => {
-    blockchain
+    const txBuilder = blockchain
       .transactionBuilder()
-      .add(op("test_op_with_null_value", null))
-      .build([]);
+      .add(op("test_op_with_null_value", null));
+    expect(() => {
+      txBuilder.build([]);
+    }).not.toThrow();
   });
 
   it("should stop raw transactions intended for a different blockchain", async () => {
