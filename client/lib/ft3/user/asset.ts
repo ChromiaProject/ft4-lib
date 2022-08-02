@@ -34,8 +34,8 @@ export default class Asset {
   ): Promise<Asset[]> {
     const assets = await blockchain.query("ft3.get_asset_by_name", { name });
     return assets.map(
-      ({ name, issuing_BRID }) =>
-        new Asset(name, Buffer.from(issuing_BRID, "hex"))
+      ({ name, issuing_brid }) =>
+        new Asset(name, Buffer.from(issuing_brid, "hex"))
     );
   }
 
@@ -43,13 +43,13 @@ export default class Asset {
     const asset = await blockchain.query("ft3.get_asset_by_id", {
       asset_id: id,
     });
-    return new Asset(asset.name, Buffer.from(asset.issuing_BRID, "hex"));
+    return new Asset(asset.name, Buffer.from(asset.issuing_brid, "hex"));
   }
 
   static async getAssets(blockchain: Blockchain) {
     const assets = await blockchain.query("ft3.get_all_assets", {});
-    return assets.map(({ name, issuing_BRID }) => {
-      return new Asset(name, Buffer.from(issuing_BRID, "hex"));
+    return assets.map(({ name, issuing_brid }) => {
+      return new Asset(name, Buffer.from(issuing_brid, "hex"));
     });
   }
 }
