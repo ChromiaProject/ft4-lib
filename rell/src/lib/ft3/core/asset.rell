@@ -4,7 +4,7 @@ entity asset {
     id: byte_array;
     key id;
     name;
-    issuing_BRID: byte_array;
+    issuing_brid: byte_array;
 }
 
 entity balance {
@@ -20,9 +20,9 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0);
 }
 
-function register_asset (name, issuing_BRID: byte_array): asset {
-   val id = (name, issuing_BRID).hash();
-   return create asset (id, name, issuing_BRID);
+function register_asset (name, issuing_brid: byte_array): asset {
+   val id = (name, issuing_brid).hash();
+   return create asset (id, name, issuing_brid);
 }
 
 function get_asset_balances(account_id: byte_array): list<(id:byte_array,name:text,amount:integer,brid:byte_array)> {
@@ -30,6 +30,6 @@ function get_asset_balances(account_id: byte_array): list<(id:byte_array,name:te
       id = .asset.id,
       name = .asset.name,
       amount = .amount,
-      brid = .asset.issuing_BRID
+      brid = .asset.issuing_brid
     );
 }

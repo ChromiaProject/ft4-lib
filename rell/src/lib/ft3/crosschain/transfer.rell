@@ -8,9 +8,9 @@ struct xc_target {
 function add_to_blockchain_balance (brid: byte_array, ft3.asset, amount: integer) {
     require( chain_context.blockchain_rid != brid ); // cannot add to own account
 
-    val origin_BRID = asset_origin @? { asset } .origin_BRID;
+    val origin_brid = asset_origin @? { asset } .origin_brid;
 
-    if (exists(origin_BRID) and (brid == origin_BRID)) {
+    if (exists(origin_brid) and (brid == origin_brid)) {
        // do nothing. in future we might track origin
     } else {
          val bc_acc = ensure_blockchain_account(brid);

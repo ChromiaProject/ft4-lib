@@ -56,7 +56,7 @@ function create_auth_descriptor(pubkey): acc.auth_descriptor {
 function create_asset(name: text): byte_array {
     dev_op_asset.dev_register_asset(
             name,
-            issuing_BRID = chain_context.blockchain_rid
+            issuing_brid = chain_context.blockchain_rid
         )
         .sign(rell.test.keypairs.alice)
         .run();

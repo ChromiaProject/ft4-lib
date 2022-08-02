@@ -98,13 +98,13 @@ export default class Blockchain {
     );
   }
 
-  async getLinkedBRIDs(): Promise<Buffer[]> {
+  async getLinkedChainBRIDs(): Promise<Buffer[]> {
     const linkedChains = await this.query("ft3.xc.get_linked_chains", {});
     return linkedChains.map((brid) => Buffer.from(brid, "hex"));
   }
 
   async getLinkedChains(): Promise<Blockchain[]> {
-    const brids = await this.getLinkedBRIDs();
+    const brids = await this.getLinkedChainBRIDs();
     return new Promise<Blockchain[]>((resolve) => {
       Promise.all<Blockchain>(
         brids.map(

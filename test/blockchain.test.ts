@@ -81,7 +81,7 @@ describe("Blockchain", () => {
     await blockchain.linkChain(brid1);
     await blockchain.linkChain(brid2);
 
-    const linkedChains = await blockchain.getLinkedBRIDs();
+    const linkedChains = await blockchain.getLinkedChainBRIDs();
 
     expect(linkedChains).toContainEqual(brid1);
     expect(linkedChains).toContainEqual(brid2);

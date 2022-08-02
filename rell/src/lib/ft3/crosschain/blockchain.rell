@@ -4,7 +4,7 @@ import acc: ^.account;
 
 entity asset_origin {
     key ft3.asset;
-    origin_BRID: byte_array;
+    origin_brid: byte_array;
 }
 
 entity linked_chain {
