@@ -36,7 +36,7 @@ describe("Blockchain", () => {
 
     expect(info).toEqual("4.0.0r");
 
-    expect(getClientVersion()).toEqual("4.0.0c");
+    expect(getClientVersion()).toEqual(process.env.npm_package_version);
   });
 
   it("should be able to register an account", async () => {

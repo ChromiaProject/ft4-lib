@@ -24,5 +24,5 @@ export { default as Postchain } from "./core/postchain";
 export * from "./user/sso";
 export * from "./user/transfer";
 export function getClientVersion() {
-  return "4.0.0c";
+  return process.env.npm_package_version;
 }
