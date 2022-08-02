@@ -32,13 +32,12 @@ describe("Blockchain", () => {
       [FlagsType.Account, FlagsType.Transfer]
     );
 
-    const tx = await blockchain
+    const tx = blockchain
       .transactionBuilder()
       .add(op("ft3.dev_register_account", authDescriptor))
-      .build([signatureProvider.pubKey])
-      .sign(signatureProvider);
+      .build([signatureProvider.pubKey]);
 
-    await expect(tx.post()).rejects.toBeInstanceOf(Error);
+    await expect(tx.sign(signatureProvider)).rejects.toBeInstanceOf(Error);
   });
 
   it("should stop raw transactions intended for a different blockchain", async () => {

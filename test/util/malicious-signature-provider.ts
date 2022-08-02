@@ -2,7 +2,6 @@ import SignatureProvider from "../../client/lib/ft3/user/signature-provider";
 import KeyPair from "../../client/lib/cyptoUtils/keyPair";
 import Transaction from "../../client/lib/ft3/core/transaction";
 import { util } from "postchain-client";
-import { op } from "../../client/lib/ft3";
 import TransactionBuilder from "../../client/lib/ft3/core/transaction-builder";
 
 export default class MaliciousSignatureProvider implements SignatureProvider {
@@ -19,10 +18,9 @@ export default class MaliciousSignatureProvider implements SignatureProvider {
 
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   async sign(transaction: Transaction): Promise<Buffer> {
-    const tx = this.transactionBuilder
-      .add(op("malicious", "code"))
-      .build([this.pubKey]);
-    const digestToSign = tx.getDigestToSign();
+    //@ts-expect-error it's accessing a supposedly private variable
+    transaction.tx.gtx.operations.push({ opName: "malicious", args: ["code"] });
+    const digestToSign = transaction.getDigestToSign();
     return util.signDigest(digestToSign, this.keyPair.privKey);
   }
 
