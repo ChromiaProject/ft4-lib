@@ -32,7 +32,7 @@ describe("Blockchain", () => {
   });
 
   it("should provide ft3 rell-side version number", async () => {
-    const info = await blockchain.getRellVersion();
+    const info = await blockchain.getFT3RellVersion();
 
     expect(info).toEqual("4.0.0r");
 
