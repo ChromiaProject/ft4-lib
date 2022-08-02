@@ -10,6 +10,7 @@ import {
   RateLimitInfo,
   getClientVersion,
 } from "../client/lib/ft3";
+import { version } from "../package.json";
 
 let blockchain: Blockchain = null;
 
@@ -36,7 +37,7 @@ describe("Blockchain", () => {
 
     expect(info).toEqual("4.0.0r");
 
-    expect(getClientVersion()).toEqual(process.env.npm_package_version);
+    expect(getClientVersion()).toEqual(version);
   });
 
   it("should be able to register an account", async () => {

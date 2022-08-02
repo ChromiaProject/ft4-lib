@@ -23,7 +23,7 @@ updaterell(){
     sed -i 's/toEqual("[0-9]\+\.[0-9]\+\.[0-9]\+r")/toEqual("'${version}'r")/' test/blockchain.test.ts
 }
 
-while getopts 'r:h' OPTION; do
+while getopts 'h' OPTION; do
   case "$OPTION" in
     h)
         echo "If you want to update the rell version, use \n\tnpm run version -r [version number]\n"
@@ -32,10 +32,6 @@ while getopts 'r:h' OPTION; do
         echo "Will update the rell version to 4.1.3r"
         exit 0
         ;;
-    r)
-        echo "moving rell version to $OPTARG";
-        updaterell $OPTARG
-        ;;
     ?)
         echo "script usage: npm run version [-h] [-r 'version']" >&2
         exit 1
@@ -43,3 +39,6 @@ while getopts 'r:h' OPTION; do
   esac
 done
 shift "$(($OPTIND -1))"
+
+echo "moving rell version to $1";
+updaterell $1

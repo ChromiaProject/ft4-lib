@@ -1,3 +1,5 @@
+import { version } from "../../../package.json";
+
 export * from "../cyptoUtils";
 export * from "./user/account-utils";
 export { default as MutableAccount } from "./user/mutable-account";
@@ -24,5 +26,5 @@ export { default as Postchain } from "./core/postchain";
 export * from "./user/sso";
 export * from "./user/transfer";
 export function getClientVersion() {
-  return process.env.npm_package_version;
+  return version;
 }
