@@ -19,15 +19,11 @@ describe("Blockchain", () => {
     expect(tx.getTxRID()).toEqual(expectedTxRID);
   });
 
-  it("should successfully send transactions with null arguments", async () => {
-    const tx = blockchain
+  it("should successfully build transactions with null arguments", async () => {
+    blockchain
       .transactionBuilder()
-      .add(op("test_this_with_null_value", null))
+      .add(op("test_op_with_null_value", null))
       .build([]);
-
-    const promise = tx.post();
-
-    await expect(promise).resolves.not.toThrowError();
   });
 
   it("should stop raw transactions intended for a different blockchain", async () => {
