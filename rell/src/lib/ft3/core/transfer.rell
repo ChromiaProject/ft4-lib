@@ -23,7 +23,7 @@ function deduct_balance (acc.account, asset, d_amount: integer) {
 
 function consume_input (i: xfer_input, idx: integer, assets: map<asset, integer>): payment_history_entry {
       val asset = asset @ { .id == i.asset_id };
-      val account = acc.auth_and_log(i.account_id, i.auth_descriptor_id, ["T"]);
+      val account = acc.auth(i.account_id, i.auth_descriptor_id, ["T"]);
       require( i.amount > 0, "Amount should be non 0 positive." );
 
       deduct_balance(account, asset, i.amount);
