@@ -1,5 +1,8 @@
 module;
 
-import ^.core;
-import ^.core.dev_op;
-import ^.crosschain;
+namespace ft3 {
+    import ^.core;
+    import ^.core.dev_op;
+    import ^.crosschain;
+    import ^.version;
+}

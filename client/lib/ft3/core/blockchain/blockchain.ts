@@ -95,6 +95,10 @@ export default class Blockchain {
       .post();
   }
 
+  async getFT3RellVersion(): Promise<string> {
+    return await this.query("ft3.get_version", {});
+  }
+
   async isLinkedWithChain(chainId: Buffer): Promise<boolean> {
     return (
       (await this.query("ft3.xc.is_linked_with_chain", {
