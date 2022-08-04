@@ -2,9 +2,9 @@ import { GtvSerializable } from "../user/account-utils";
 
 export default class Operation {
   readonly name: string;
-  readonly args: Array<GtvSerializable>;
+  readonly args: Array<GtvSerializable | null>;
 
-  constructor(name: string, ...args: Array<GtvSerializable>) {
+  constructor(name: string, ...args: Array<GtvSerializable | null>) {
     if (!name) {
       throw new Error("Missing operation name");
     }
