@@ -23,9 +23,7 @@ describe("Blockchain", () => {
   });
 
   it("should fail if tx gets modified by signature provider", async () => {
-    const signatureProvider = new MaliciousSignatureProvider(
-      blockchain.transactionBuilder()
-    );
+    const signatureProvider = new MaliciousSignatureProvider();
 
     const authDescriptor = new SingleSignatureAuthDescriptor(
       signatureProvider.pubKey,
