@@ -110,7 +110,7 @@ function create_account_with_auth (auth_descriptor): byte_array {
     return id;
 }
 
-function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>): account {
+function auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>): account {
     val account = account @ { .id == account_id };
     rate_limit(account);
     require_auth(account, auth_descriptor_id, required_flags);
