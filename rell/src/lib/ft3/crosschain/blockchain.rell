@@ -4,24 +4,24 @@ import acc: ^.account;
 
 entity asset_origin {
     key ft3.asset;
-    origin_chain_rid: byte_array;
+    origin_brid: byte_array;
 }
 
 entity linked_chain {
-    key chain_rid: byte_array;
+    key brid: byte_array;
 }
 
-function blockchain_account_id (blockchain_rid: byte_array): byte_array {
-   return ("B", blockchain_rid).hash();
+function blockchain_account_id (brid: byte_array): byte_array {
+   return ("B", brid).hash();
 }
 
-function ensure_blockchain_account (blockchain_rid: byte_array): acc.account {
-   val blockchain_account_id = blockchain_account_id(blockchain_rid);
+function ensure_blockchain_account (brid: byte_array): acc.account {
+   val blockchain_account_id = blockchain_account_id(brid);
    val acc = acc.account @? { .id == blockchain_account_id };
    return if (acc??)  acc
    else create acc.account (id = blockchain_account_id);
 }
 
-function get_blockchain_account (blockchain_rid: byte_array): acc.account {
-   return acc.account @ { .id == blockchain_account_id(blockchain_rid) };
+function get_blockchain_account (brid: byte_array): acc.account {
+   return acc.account @ { .id == blockchain_account_id(brid) };
 }

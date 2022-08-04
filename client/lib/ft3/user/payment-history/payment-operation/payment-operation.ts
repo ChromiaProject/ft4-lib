@@ -18,34 +18,28 @@ export default class PaymentOperation {
   }
 
   hasInputOrOutputWithChainAndAccount(
-    chainId: string,
+    brid: string,
     accountId: string
   ): boolean {
     return (
       this.inputs.some(
-        (input) => input.isChainId(chainId) && input.isAccountId(accountId)
+        (input) => input.isBRID(brid) && input.isAccountId(accountId)
       ) ||
       this.outputs.some(
-        (output) => output.isChainId(chainId) && output.isAccountId(accountId)
+        (output) => output.isBRID(brid) && output.isAccountId(accountId)
       )
     );
   }
 
-  inputsWithChainAndAccount(
-    chainId: string,
-    accountId: string
-  ): PaymentParam[] {
+  inputsWithChainAndAccount(brid: string, accountId: string): PaymentParam[] {
     return this.inputs.filter(
-      (input) => input.isChainId(chainId) && input.isAccountId(accountId)
+      (input) => input.isBRID(brid) && input.isAccountId(accountId)
     );
   }
 
-  outputsWithChainAndAccount(
-    chainId: string,
-    accountId: string
-  ): PaymentParam[] {
+  outputsWithChainAndAccount(brid: string, accountId: string): PaymentParam[] {
     return this.outputs.filter(
-      (output) => output.isChainId(chainId) && output.isAccountId(accountId)
+      (output) => output.isBRID(brid) && output.isAccountId(accountId)
     );
   }
 
@@ -59,25 +53,22 @@ export default class PaymentOperation {
 
   static fromTransfer(
     transfer: TransferOperation,
-    chainId: string
+    brid: string
   ): PaymentOperation {
     const inputs = transfer.inputs.map((input) =>
-      PaymentParam.fromTransferParam(input, chainId)
+      PaymentParam.fromTransferParam(input, brid)
     );
     const outputs = transfer.outputs.map((output) =>
-      PaymentParam.fromTransferParam(output, chainId)
+      PaymentParam.fromTransferParam(output, brid)
     );
     return new PaymentOperation(inputs, outputs);
   }
 
   static fromXTransfer(
     transfer: XTransferOperation,
-    sourceChainId: string
+    sourceBRID: string
   ): PaymentOperation {
-    const input = PaymentParam.fromTransferParam(
-      transfer.source,
-      sourceChainId
-    );
+    const input = PaymentParam.fromTransferParam(transfer.source, sourceBRID);
     const output = new PaymentParam(
       transfer.hops[transfer.hops.length - 1],
       transfer.target.accountId,

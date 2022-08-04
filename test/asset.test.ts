@@ -32,15 +32,15 @@ describe("Asset", () => {
 
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
-    const chainId = generateId();
-    const assetId = gtv.gtvHash([assetName, chainId]);
-    await Asset.register(assetName, chainId, blockchain);
+    const brid = generateId();
+    const assetId = gtv.gtvHash([assetName, brid]);
+    await Asset.register(assetName, brid, blockchain);
 
     const expectedAsset = await Asset.getById(assetId, blockchain);
 
     expect(expectedAsset.name).toEqual(assetName);
     expect(expectedAsset.id).toEqual(assetId);
-    expect(expectedAsset.chainId).toEqual(chainId);
+    expect(expectedAsset.brid).toEqual(brid);
   });
 
   it("should return all the assets registered", async () => {

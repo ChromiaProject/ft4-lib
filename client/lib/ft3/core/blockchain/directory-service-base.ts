@@ -10,7 +10,7 @@ export default class DirectoryServiceBase implements DirectoryService {
 
   async getChainConnectionInfo(id: Buffer): Promise<ChainConnectionInfo> {
     return this.chainInfos.find(
-      (info) => info.chainId.toString("hex") === id.toString("hex")
+      (info) => info.brid.toString("hex") === id.toString("hex")
     );
   }
 }

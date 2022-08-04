@@ -4,7 +4,13 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
-import { MutableAccount, Asset, RateLimitInfo } from "../client/lib/ft3";
+import {
+  MutableAccount,
+  Asset,
+  RateLimitInfo,
+  getClientVersion,
+} from "../client/lib/ft3";
+import { version } from "../package.json";
 
 let blockchain: Blockchain = null;
 
@@ -24,6 +30,14 @@ describe("Blockchain", () => {
         new RateLimitInfo(true, 10, 5000, 1)
       )
     );
+  });
+
+  it("should provide ft3 rell-side version number", async () => {
+    const info = await blockchain.getFT3RellVersion();
+
+    expect(info).toEqual("4.0.0r");
+
+    expect(getClientVersion()).toEqual(version);
   });
 
   it("should be able to register an account", async () => {
@@ -67,24 +81,24 @@ describe("Blockchain", () => {
   });
 
   it.skip("should be able to link other chain", async () => {
-    const chainId = generateId();
+    const brid = generateId();
 
-    await blockchain.linkChain(chainId);
+    await blockchain.linkChain(brid);
 
-    await expect(blockchain.isLinkedWithChain(chainId)).resolves.toEqual(true);
+    await expect(blockchain.isLinkedWithChain(brid)).resolves.toEqual(true);
   });
 
   it.skip("should be able to link multiple chains", async () => {
-    const chainId1 = generateId();
-    const chainId2 = generateId();
+    const brid1 = generateId();
+    const brid2 = generateId();
 
-    await blockchain.linkChain(chainId1);
-    await blockchain.linkChain(chainId2);
+    await blockchain.linkChain(brid1);
+    await blockchain.linkChain(brid2);
 
-    const linkedChains = await blockchain.getLinkedChainsIds();
+    const linkedChains = await blockchain.getLinkedChainBRIDs();
 
-    expect(linkedChains).toContainEqual(chainId1);
-    expect(linkedChains).toContainEqual(chainId2);
+    expect(linkedChains).toContainEqual(brid1);
+    expect(linkedChains).toContainEqual(brid2);
   });
 
   it.skip("should return false when isLinkedWithChain is called for unknown chain id", async () => {

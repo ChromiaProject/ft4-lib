@@ -1,25 +1,25 @@
 import TransferParam from "./transfer-param";
 
 export default class PaymentParam {
-  readonly chainId: string;
+  readonly brid: string;
   readonly accountId: string;
   readonly assetId: string;
   readonly amount: number;
 
   constructor(
-    chainId: string,
+    brid: string,
     accountId: string,
     assetId: string,
     amount: number
   ) {
-    this.chainId = chainId;
+    this.brid = brid;
     this.accountId = accountId;
     this.assetId = assetId;
     this.amount = amount;
   }
 
-  isChainId(chainId: string): boolean {
-    return this.chainId.toUpperCase() === chainId.toUpperCase();
+  isBRID(brid: string): boolean {
+    return this.brid.toUpperCase() === brid.toUpperCase();
   }
 
   isAccountId(accountId: string): boolean {
@@ -30,15 +30,7 @@ export default class PaymentParam {
     return this.assetId.toUpperCase() === assetId.toUpperCase();
   }
 
-  static fromTransferParam(
-    param: TransferParam,
-    chainId: string
-  ): PaymentParam {
-    return new PaymentParam(
-      chainId,
-      param.accountId,
-      param.assetId,
-      param.amount
-    );
+  static fromTransferParam(param: TransferParam, brid: string): PaymentParam {
+    return new PaymentParam(brid, param.accountId, param.assetId, param.amount);
   }
 }

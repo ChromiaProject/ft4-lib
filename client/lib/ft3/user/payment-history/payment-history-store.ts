@@ -2,24 +2,24 @@ import PaymentHistoryIterator from "./payment-history-iterator";
 import PaymentHistoryEntry from "./payment-history-entry";
 
 export default interface PaymentHistoryStore {
-  getCount(blockchainId: Buffer, accountId: Buffer): number;
+  getCount(brid: Buffer, accountId: Buffer): number;
   getIterator(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     pageSize: number
   ): PaymentHistoryIterator;
   save(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     paymentHistoryEntries: PaymentHistoryEntry[]
   );
   get(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     start: number,
     pageSize: number
   ): PaymentHistoryEntry[];
-  getSyncInfo(blockchainId: Buffer, accountId: Buffer): any;
-  saveSyncInfo(blockchainId: Buffer, accountId: Buffer, syncInfo: any);
-  deletePaymentHistory(accountId: Buffer, blockchainId?: Buffer);
+  getSyncInfo(brid: Buffer, accountId: Buffer): any;
+  saveSyncInfo(brid: Buffer, accountId: Buffer, syncInfo: any);
+  deletePaymentHistory(accountId: Buffer, brid?: Buffer);
 }

@@ -4,7 +4,7 @@ struct operation_rec {
 }
 
 struct transaction_body_rec {
-    blockchain_rid: byte_array;
+    brid: byte_array;
     operations: list<operation_rec>;
     signers: list<gtv>;
 }
@@ -21,7 +21,7 @@ struct transaction_proof {
      // tx_index: integer;
      block_rid: byte_array;
      block_signers: list<byte_array>;
-     signatures: list<byte_array>;     
+     signatures: list<byte_array>;
 }
 
 function verify_transaction_proof( p: transaction_proof ) {

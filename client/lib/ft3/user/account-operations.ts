@@ -58,6 +58,9 @@ export function nop(): Operation {
   return new Operation("nop", util.randomBytes(32));
 }
 
-export function op(name: string, ...args: GtvSerializable[]): Operation {
+export function op(
+  name: string,
+  ...args: Array<GtvSerializable | null>
+): Operation {
   return new Operation(name, ...args);
 }
