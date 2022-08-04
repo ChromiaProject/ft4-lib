@@ -2,7 +2,7 @@ import PaymentHistoryEntry from "./payment-history-entry";
 import PaymentHistoryStore from "./payment-history-store";
 
 export default class PaymentHistoryIterator {
-  readonly blockchainId: Buffer;
+  readonly brid: Buffer;
   readonly accountId: Buffer;
   readonly pageSize: number;
   private currentPage = -1;
@@ -10,25 +10,25 @@ export default class PaymentHistoryIterator {
 
   constructor(
     paymentHistoryStore: PaymentHistoryStore,
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     pageSize: number
   ) {
     this.paymentHistoryStore = paymentHistoryStore;
-    this.blockchainId = blockchainId;
+    this.brid = brid;
     this.accountId = accountId;
     this.pageSize = pageSize;
   }
 
   get pageCount(): number {
     return Math.ceil(
-      this.paymentHistoryStore.getCount(this.blockchainId, this.accountId) /
+      this.paymentHistoryStore.getCount(this.brid, this.accountId) /
         this.pageSize
     );
   }
 
   get totalCount(): number {
-    return this.paymentHistoryStore.getCount(this.blockchainId, this.accountId);
+    return this.paymentHistoryStore.getCount(this.brid, this.accountId);
   }
 
   get current(): number {
@@ -37,7 +37,7 @@ export default class PaymentHistoryIterator {
 
   rewind(): PaymentHistoryEntry[] {
     const entries = this.paymentHistoryStore.get(
-      this.blockchainId,
+      this.brid,
       this.accountId,
       0,
       this.pageSize
@@ -52,7 +52,7 @@ export default class PaymentHistoryIterator {
     }
     const page = this.currentPage - 1;
     const entries = this.paymentHistoryStore.get(
-      this.blockchainId,
+      this.brid,
       this.accountId,
       page * this.pageSize,
       this.pageSize
@@ -67,7 +67,7 @@ export default class PaymentHistoryIterator {
     }
     const page = this.currentPage + 1;
     const entries = this.paymentHistoryStore.get(
-      this.blockchainId,
+      this.brid,
       this.accountId,
       page * this.pageSize,
       this.pageSize
@@ -79,7 +79,7 @@ export default class PaymentHistoryIterator {
   fastForward(): PaymentHistoryEntry[] {
     const page = this.pageCount - 1;
     const entries = this.paymentHistoryStore.get(
-      this.blockchainId,
+      this.brid,
       this.accountId,
       page * this.pageSize,
       this.pageSize

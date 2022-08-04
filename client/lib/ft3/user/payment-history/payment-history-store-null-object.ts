@@ -7,7 +7,7 @@ export default class PaymentHistoryStoreNullObject
   implements PaymentHistoryStore
 {
   get(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     start: number,
     pageSize: number
@@ -15,29 +15,29 @@ export default class PaymentHistoryStoreNullObject
     return [];
   }
 
-  getCount(blockchainId: Buffer, accountId: Buffer): number {
+  getCount(brid: Buffer, accountId: Buffer): number {
     return 0;
   }
 
   getIterator(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     pageSize: number
   ): PaymentHistoryIterator {
-    return new PaymentHistoryIterator(this, blockchainId, accountId, pageSize);
+    return new PaymentHistoryIterator(this, brid, accountId, pageSize);
   }
 
-  getSyncInfo(blockchainId: Buffer, accountId: Buffer): any {
+  getSyncInfo(brid: Buffer, accountId: Buffer): any {
     return {};
   }
 
   save(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     paymentHistoryEntries: PaymentHistoryEntry[]
   ) {}
 
-  saveSyncInfo(blockchainId: Buffer, accountId: Buffer, syncInfo: any) {}
+  saveSyncInfo(brid: Buffer, accountId: Buffer, syncInfo: any) {}
 
-  deletePaymentHistory(accountId: Buffer, blockchainId: Buffer) {}
+  deletePaymentHistory(accountId: Buffer, brid: Buffer) {}
 }

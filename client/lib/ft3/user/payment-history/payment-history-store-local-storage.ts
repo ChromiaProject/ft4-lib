@@ -7,103 +7,96 @@ export default class PaymentHistoryStoreLocalStorage
 {
   private entriesCache: { [key: string]: PaymentHistoryEntry[] } = {};
 
-  getCount(blockchainId: Buffer, accountId: Buffer): number {
-    return this.getEntriesFor(blockchainId, accountId).length;
+  getCount(brid: Buffer, accountId: Buffer): number {
+    return this.getEntriesFor(brid, accountId).length;
   }
 
   getIterator(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     pageSize: number
   ): PaymentHistoryIterator {
-    return new PaymentHistoryIterator(this, blockchainId, accountId, pageSize);
+    return new PaymentHistoryIterator(this, brid, accountId, pageSize);
   }
 
   save(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     paymentHistoryEntries: PaymentHistoryEntry[]
   ) {
-    const entries = this.loadFromStore(blockchainId, accountId);
+    const entries = this.loadFromStore(brid, accountId);
     const newEntries = paymentHistoryEntries.concat(entries);
-    this.saveToStore(blockchainId, accountId, newEntries);
-    this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] =
-      newEntries;
+    this.saveToStore(brid, accountId, newEntries);
+    this.entriesCache[this.paymentHistoryKey(brid, accountId)] = newEntries;
   }
 
   get(
-    blockchainId: Buffer,
+    brid: Buffer,
     accounId: Buffer,
     start: number,
     pageSize: number
   ): PaymentHistoryEntry[] {
-    const entries = this.getEntriesFor(blockchainId, accounId);
+    const entries = this.getEntriesFor(brid, accounId);
     if (entries.length < start) {
       return [];
     }
     return entries.slice(start, Math.min(entries.length, start + pageSize));
   }
 
-  getSyncInfo(blockchainId: Buffer, accountId: Buffer): any {
-    const value = localStorage.getItem(
-      this.syncInfoKey(blockchainId, accountId)
-    );
+  getSyncInfo(brid: Buffer, accountId: Buffer): any {
+    const value = localStorage.getItem(this.syncInfoKey(brid, accountId));
     return (value && JSON.parse(value)) || {};
   }
 
-  saveSyncInfo(blockchainId: Buffer, accountId: Buffer, syncInfo: any) {
+  saveSyncInfo(brid: Buffer, accountId: Buffer, syncInfo: any) {
     localStorage.setItem(
-      this.syncInfoKey(blockchainId, accountId),
+      this.syncInfoKey(brid, accountId),
       JSON.stringify(syncInfo)
     );
   }
 
   private getEntriesFor(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer
   ): PaymentHistoryEntry[] {
-    let entries =
-      this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)];
+    let entries = this.entriesCache[this.paymentHistoryKey(brid, accountId)];
 
     if (!entries) {
-      entries = this.loadFromStore(blockchainId, accountId);
-      this.entriesCache[this.paymentHistoryKey(blockchainId, accountId)] =
-        entries;
+      entries = this.loadFromStore(brid, accountId);
+      this.entriesCache[this.paymentHistoryKey(brid, accountId)] = entries;
     }
 
     return entries;
   }
 
-  private paymentHistoryKey(blockchainId: Buffer, accountId: Buffer): string {
+  private paymentHistoryKey(brid: Buffer, accountId: Buffer): string {
     return `FT3_LIB_P_H_${accountId.toString("hex").toUpperCase()}_${
-      blockchainId ? blockchainId.toString("hex").toUpperCase() : ""
+      brid ? brid.toString("hex").toUpperCase() : ""
     }`;
   }
 
-  private syncInfoKey(blockchainId: Buffer, accountId: Buffer): string {
+  private syncInfoKey(brid: Buffer, accountId: Buffer): string {
     return `FT3_LIB_P_H_S_I_${accountId.toString("hex").toUpperCase()}_${
-      blockchainId ? blockchainId.toString("hex").toUpperCase() : ""
+      brid ? brid.toString("hex").toUpperCase() : ""
     }`;
   }
 
   private loadFromStore(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer
   ): PaymentHistoryEntry[] {
-    const value = localStorage.getItem(
-      this.paymentHistoryKey(blockchainId, accountId)
-    );
+    const value = localStorage.getItem(this.paymentHistoryKey(brid, accountId));
     const entries = value ? JSON.parse(value) : [];
     return entries.map(this.mapToPaymentHistoryEntry);
   }
 
   private saveToStore(
-    blockchainId: Buffer,
+    brid: Buffer,
     accountId: Buffer,
     entries: PaymentHistoryEntry[]
   ) {
     localStorage.setItem(
-      this.paymentHistoryKey(blockchainId, accountId),
+      this.paymentHistoryKey(brid, accountId),
       JSON.stringify(entries.map((entry) => entry.adaptForSerialization()))
     );
   }
@@ -121,9 +114,9 @@ export default class PaymentHistoryStoreLocalStorage
     );
   }
 
-  deletePaymentHistory(accountId: Buffer, blockchainId: Buffer = null) {
-    const syncInfoKey = this.syncInfoKey(blockchainId, accountId);
-    const paymentHistoryKey = this.paymentHistoryKey(blockchainId, accountId);
+  deletePaymentHistory(accountId: Buffer, brid: Buffer = null) {
+    const syncInfoKey = this.syncInfoKey(brid, accountId);
+    const paymentHistoryKey = this.paymentHistoryKey(brid, accountId);
 
     for (const key of Object.keys(this.entriesCache)) {
       if (

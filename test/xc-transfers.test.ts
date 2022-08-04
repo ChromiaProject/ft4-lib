@@ -20,7 +20,7 @@ describe.skip("Cross-chain transfer", () => {
   });
 
   it("should succeessfully initialize when there's enough balance on the account", async () => {
-    const destinationChainId = generateId();
+    const destinationBRID = generateId();
     const destinationAccountId = generateId();
     const user = TestUser.singleSig();
 
@@ -31,7 +31,7 @@ describe.skip("Cross-chain transfer", () => {
       .build();
 
     await account.xcTransfer(
-      destinationChainId,
+      destinationBRID,
       destinationAccountId,
       asset.id,
       10
@@ -43,7 +43,7 @@ describe.skip("Cross-chain transfer", () => {
       blockchain
     );
     const chainBalance = await AssetBalance.getByAccountAndAssetId(
-      blockchainAccountId(destinationChainId),
+      blockchainAccountId(destinationBRID),
       asset.id,
       blockchain
     );

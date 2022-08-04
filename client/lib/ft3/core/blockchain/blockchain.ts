@@ -31,24 +31,19 @@ export default class Blockchain {
   }
 
   static async initialize(
-    blockchainRID: Buffer,
+    brid: Buffer,
     directoryService: DirectoryService
   ): Promise<Blockchain> {
     const chainConnectionInfo = await directoryService.getChainConnectionInfo(
-      blockchainRID
+      brid
     );
     if (!chainConnectionInfo) {
       throw new Error(
-        `Cannot find details for chain with RID: ${blockchainRID.toString(
-          "hex"
-        )}`
+        `Cannot find details for chain with RID: ${brid.toString("hex")}`
       );
     }
 
-    const connection = new ConnectionClient(
-      chainConnectionInfo.url,
-      blockchainRID
-    );
+    const connection = new ConnectionClient(chainConnectionInfo.url, brid);
     const info = await BlockchainInfo.getInfo(connection);
     return new Blockchain(info, connection, directoryService);
   }
@@ -88,42 +83,42 @@ export default class Blockchain {
     return await Asset.getAssets(this);
   }
 
-  async linkChain(chainId: Buffer) {
+  async linkChain(brid: Buffer) {
     await this.transactionBuilder()
-      .add(op("ft3.xc.link_chain", chainId))
+      .add(op("ft3.xc.link_chain", brid))
       .build([])
       .post();
   }
-
+  
   async getFT3RellVersion(): Promise<string> {
     return await this.query("ft3.get_version", {});
   }
 
-  async isLinkedWithChain(chainId: Buffer): Promise<boolean> {
+  async isLinkedWithChain(brid: Buffer): Promise<boolean> {
     return (
       (await this.query("ft3.xc.is_linked_with_chain", {
-        chain_rid: chainId,
+        brid: brid,
       })) === 1
     );
   }
 
-  async getLinkedChainsIds(): Promise<Buffer[]> {
+  async getLinkedChainBRIDs(): Promise<Buffer[]> {
     const linkedChains = await this.query("ft3.xc.get_linked_chains", {});
-    return linkedChains.map((chainId) => Buffer.from(chainId, "hex"));
+    return linkedChains.map((brid) => Buffer.from(brid, "hex"));
   }
 
   async getLinkedChains(): Promise<Blockchain[]> {
-    const chainIds = await this.getLinkedChainsIds();
+    const brids = await this.getLinkedChainBRIDs();
     return new Promise<Blockchain[]>((resolve) => {
       Promise.all<Blockchain>(
-        chainIds.map(
-          (chainId) =>
+        brids.map(
+          (brid) =>
             new Promise((resolve) => {
-              Blockchain.initialize(chainId, this.directoryService)
+              Blockchain.initialize(brid, this.directoryService)
                 .then(resolve)
                 .catch(() => {
                   console.warn(
-                    `Cannot get info for chain with RID: ${chainId.toString(
+                    `Cannot get info for chain with RID: ${brid.toString(
                       "hex"
                     )}`
                   );

@@ -12,8 +12,8 @@ function generateId() {
   return util.hash256(`${generateNumber()}`);
 }
 
-function blockchainAccountId(chainId: Buffer) {
-  return gtv.gtvHash(["B", chainId]);
+function blockchainAccountId(brid: Buffer) {
+  return gtv.gtvHash(["B", brid]);
 }
 
 export { generateAssetName, generateId, blockchainAccountId };

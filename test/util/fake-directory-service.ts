@@ -12,7 +12,7 @@ export default class FakeDirectoryService implements DirectoryService {
     id: Buffer
   ): Promise<ChainConnectionInfo | null> {
     return this.chainInfos.find(
-      (info) => info.chainId.toString("hex") === id.toString("hex")
+      (info) => info.brid.toString("hex") === id.toString("hex")
     );
   }
 }

@@ -91,7 +91,7 @@ export default class AccountTransactions {
   }
 
   async xcTransfer(
-    destinationChainId: Buffer,
+    destinationBRID: Buffer,
     destinationAccountId: Buffer,
     assetId: Buffer,
     amount: number
@@ -100,7 +100,7 @@ export default class AccountTransactions {
       .transactionBuilder()
       .add(
         this.xcTransferOp(
-          destinationChainId,
+          destinationBRID,
           destinationAccountId,
           assetId,
           amount
@@ -113,7 +113,7 @@ export default class AccountTransactions {
   /* Operation */
 
   xcTransferOp(
-    destinationChainId: Buffer,
+    destinationBRID: Buffer,
     destinationAccountId: Buffer,
     assetId: Buffer,
     amount: number
@@ -126,7 +126,7 @@ export default class AccountTransactions {
       [],
     ];
     const target = [destinationAccountId, []];
-    const hops = [destinationChainId];
+    const hops = [destinationBRID];
 
     return xcTransfer(source, target, hops);
   }

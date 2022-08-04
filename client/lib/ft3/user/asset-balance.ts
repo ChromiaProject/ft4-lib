@@ -23,7 +23,7 @@ export default class AssetBalance {
       (asset) =>
         new AssetBalance(
           asset.amount,
-          new Asset(asset.name, Buffer.from(asset.chain_id, "hex"))
+          new Asset(asset.name, Buffer.from(asset.brid, "hex"))
         )
     );
   }
@@ -42,7 +42,7 @@ export default class AssetBalance {
       return null;
     }
 
-    return new AssetBalance(asset.amount, new Asset(asset.name, asset.chainId));
+    return new AssetBalance(asset.amount, new Asset(asset.name, asset.brid));
   }
 
   static async giveBalance(accountId, assetId, amount, blockchain: Blockchain) {
