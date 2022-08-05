@@ -31,14 +31,9 @@ export function xcTransfer(
 }
 
 export function deleteAllAuthDescriptorsExclude(
-  accountId: Buffer,
   excludeAuthDescriptorId: Buffer
 ): Operation {
-  return op(
-    "ft3.delete_all_auth_descriptors_exclude",
-    accountId,
-    excludeAuthDescriptorId
-  );
+  return op("ft3.delete_all_auth_descriptors_exclude", excludeAuthDescriptorId);
 }
 
 export function deleteAuthDescriptor(

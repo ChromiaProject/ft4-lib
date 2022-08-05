@@ -4,21 +4,31 @@ import core: ^^.core;
 operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
     val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
 
-    val account = acc.auth(account_id, auth_descriptor_id, flags);
+    val account = acc.account @ { .id == account_id };
+    acc.auth(account, 
+        acc.account_auth_descriptor @ {
+            .id == auth_descriptor_id,
+            .account == account
+        }, 
+        flags
+    );
 
     acc._delete_auth_descriptor(acc.account_auth_descriptor @ {
         .account == account,
-        .descriptor_id == delete_descriptor_id
+        .id == delete_descriptor_id
     });
 }
 
-operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
-    val account = acc.auth(account_id, auth_descriptor_id, ["A"]);
+operation delete_all_auth_descriptors_exclude(auth_descriptor_id: byte_array) {
+    val auth_descriptor = acc.account_auth_descriptor @ { .id == auth_descriptor_id };
+    val account =  acc.account @ { .id == auth_descriptor.account.id };
+    acc.auth(account, auth_descriptor, ["A"]);
 
-    acc._delete_all_auth_descriptors_exclude(account, auth_descriptor_id);
+    acc._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
 
 operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: acc.auth_descriptor) {
-      val account = acc.auth(account_id, auth_id, ["A"]);
-      acc._add_auth_descriptor(account, new_desc);
+    val account = acc.account @ { .id == account_id };
+    acc.auth(account, acc.account_auth_descriptor @ { .id == auth_id }, ["A"]);
+    acc._add_auth_descriptor(account, new_desc);
 }

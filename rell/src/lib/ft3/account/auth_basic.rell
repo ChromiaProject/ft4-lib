@@ -46,12 +46,7 @@ function check_auth_args (a_t: text, args: byte_array, participants: list<byte_a
 
 
 
-function require_auth (account, descriptor_id: byte_array, required_flags: list<text>) {
-   val account_auth_descriptor = account_auth_descriptor @ {
-     account,
-     .descriptor_id == descriptor_id
-   };
-	
+function require_auth (account, account_auth_descriptor, required_flags: list<text>) {
 	require(is_valid(account_auth_descriptor));
 	
    	require(

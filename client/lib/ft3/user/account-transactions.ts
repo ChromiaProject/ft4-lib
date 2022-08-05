@@ -60,7 +60,7 @@ export default class AccountTransactions {
   ): Promise<Transaction> {
     return await this.session.blockchain
       .transactionBuilder()
-      .add(deleteAllAuthDescriptorsExclude(this.id, authDescriptor.id))
+      .add(deleteAllAuthDescriptorsExclude(authDescriptor.id))
       .buildAndSign(this.session.user);
   }
 
