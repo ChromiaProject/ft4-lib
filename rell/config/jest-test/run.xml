@@ -1,0 +1,41 @@
+<run wipe-db="true">
+    <nodes>
+        <config src="node-config.properties" add-signers="true" />
+    </nodes>
+    <chains>
+        <chain name="ft3-lib" iid="0">
+            <config height="0">
+                <app module="main">
+                    <args module="lib.ft3.core">
+                        <arg key="my_blockchain_name"><string>test</string></arg>
+                        <arg key="my_blockchain_website"><string>test_website</string></arg>
+                        <arg key="my_blockchain_description"><string>test_description</string></arg>
+                        <arg key="rate_limit_active"><int>1</int></arg>
+                        <arg key="rate_limit_max_points"><int>10</int></arg> <!-- maximum amount of request credit that is possible to keep -->
+                        <arg key="rate_limit_recovery_time"><int>5000</int></arg>
+                        <arg key="rate_limit_points_at_account_creation"><int>1</int></arg>
+                    </args>
+                </app>
+            </config>
+        </chain>
+        <chain name="testnet-ft3-lib" iid="1">
+            <config height="0">
+                <app module="testnet">
+                    <args module="lib.ft3.core">
+                        <arg key="my_blockchain_name"><string>testnet ft3</string></arg>
+                        <arg key="my_blockchain_website"><string>https://vault-testnet.chromia.com/</string></arg>
+                        <arg key="my_blockchain_description"><string>FT3 vault DEVELOPMENT MODE - TESTNET</string></arg>
+                        <arg key="rate_limit_active"><int>1</int></arg>
+                        <arg key="rate_limit_max_points"><int>20</int></arg> <!-- maximum amount of request credit that is possible to keep -->
+                        <arg key="rate_limit_recovery_time"><int>60000</int></arg>
+                        <arg key="rate_limit_points_at_account_creation"><int>1</int></arg>
+                    </args>
+                    <args module="testnet">
+                        <arg key="admin_pub_key"><string>02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD</string></arg>
+                    </args>
+                </app>
+            </config>
+        </chain>
+    </chains>
+</run>
+

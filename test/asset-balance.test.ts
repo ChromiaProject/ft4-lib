@@ -9,24 +9,29 @@ let blockchain: Blockchain = null;
 let asset1: Asset = null;
 let asset2: Asset = null;
 
-describe('Asset balance', () => {
-    beforeAll(async () => {
-        blockchain = await BlockchainUtil.getDefaultBlockchain();
-        asset1 = await Asset.register(generateAssetName(), generateId(), blockchain);
-        asset2 = await Asset.register(generateAssetName(), generateId(), blockchain);
-        console.log("111111111", asset1);
-    });
+describe("Asset balance", () => {
+  beforeAll(async () => {
+    blockchain = await BlockchainUtil.getDefaultBlockchain();
+    asset1 = await Asset.register(
+      generateAssetName(),
+      generateId(),
+      blockchain
+    );
+    asset2 = await Asset.register(
+      generateAssetName(),
+      generateId(),
+      blockchain
+    );
+  });
 
-    it('should be returned when queried by account id', async () => {
-        const account = await AccountBuilder
-            .account(blockchain)
-            .build();
+  it("should be returned when queried by account id", async () => {
+    const account = await AccountBuilder.account(blockchain).build();
 
-        await AssetBalance.giveBalance(account.id_, asset1.id, 10, blockchain);
-        await AssetBalance.giveBalance(account.id_, asset2.id, 20, blockchain);
+    await AssetBalance.giveBalance(account.id_, asset1.id, 10, blockchain);
+    await AssetBalance.giveBalance(account.id_, asset2.id, 20, blockchain);
 
-        const assets = await AssetBalance.getByAccountId(account.id_, blockchain);
+    const assets = await AssetBalance.getByAccountId(account.id_, blockchain);
 
-        expect(assets.length).toEqual(2);
-    });
+    expect(assets.length).toEqual(2);
+  });
 });

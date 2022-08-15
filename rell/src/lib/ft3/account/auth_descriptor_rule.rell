@@ -248,7 +248,7 @@ function delete_expired_auth_descriptors(account) {
 	val auth_descriptors = account_auth_descriptor @* { account };
 	
 	for (auth_descriptor in auth_descriptors) {
-		if (not (is_active(auth_descriptor) and is_valid(auth_descriptor))) {
+		if (is_active(auth_descriptor) and not is_valid(auth_descriptor)) {
 			_delete_auth_descriptor(auth_descriptor);
 		}
 	}

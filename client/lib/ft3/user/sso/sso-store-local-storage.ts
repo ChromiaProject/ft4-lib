@@ -2,65 +2,75 @@ import SSOStore from "./sso-store";
 import KeyPair from "../../../cyptoUtils/keyPair";
 
 export default class SSOStoreLocalStorage implements SSOStore {
-    get tmpKeyPair(): KeyPair {
-        const privKeyString = localStorage.getItem('__ssoTmpPrivKey');
+  get tmpKeyPair(): KeyPair {
+    const privKeyString = localStorage.getItem("__ssoTmpPrivKey");
 
-        if (!privKeyString) { return null }
-
-        return new KeyPair(privKeyString);
+    if (!privKeyString) {
+      return null;
     }
 
-    get keyPair(): KeyPair {
-        const privKeyString = localStorage.getItem('__ssoPrivKey');
+    return new KeyPair(privKeyString);
+  }
 
-        if (!privKeyString) { return null }
+  get keyPair(): KeyPair {
+    const privKeyString = localStorage.getItem("__ssoPrivKey");
 
-        return new KeyPair(privKeyString);
+    if (!privKeyString) {
+      return null;
     }
 
-    get tmpPrivKey(): Buffer {
-        const privKeyString = localStorage.getItem('__ssoTmpPrivKey');
+    return new KeyPair(privKeyString);
+  }
 
-        if (!privKeyString) { return null }
+  get tmpPrivKey(): Buffer {
+    const privKeyString = localStorage.getItem("__ssoTmpPrivKey");
 
-        return Buffer.from(privKeyString, 'hex');
+    if (!privKeyString) {
+      return null;
     }
 
-    set tmpPrivKey(value: Buffer) {
-        localStorage.setItem('__ssoTmpPrivKey', value.toString('hex'));
+    return Buffer.from(privKeyString, "hex");
+  }
+
+  set tmpPrivKey(value: Buffer) {
+    localStorage.setItem("__ssoTmpPrivKey", value.toString("hex"));
+  }
+
+  get privKey(): Buffer {
+    const privKeyString = localStorage.getItem("__ssoPrivKey");
+
+    if (!privKeyString) {
+      return null;
     }
 
-    get privKey(): Buffer {
-        const privKeyString = localStorage.getItem('__ssoPrivKey');
+    return Buffer.from(privKeyString, "hex");
+  }
 
-        if (!privKeyString) { return null }
+  set privKey(value: Buffer) {
+    localStorage.setItem("__ssoPrivKey", value.toString("hex"));
+  }
 
-        return Buffer.from(privKeyString, 'hex');
+  get accountId(): Buffer {
+    const accountIdString = localStorage.getItem("__ssoAccountId");
+
+    if (!accountIdString) {
+      return null;
     }
 
-    set privKey(value: Buffer) {
-        localStorage.setItem('__ssoPrivKey', value.toString('hex'));
-    }
+    return Buffer.from(accountIdString, "hex");
+  }
 
-    get accountId(): Buffer {
-        const accountIdString = localStorage.getItem('__ssoAccountId');
+  set accountId(value: Buffer) {
+    localStorage.setItem("__ssoAccountId", value.toString("hex"));
+  }
 
-        if (!accountIdString) { return null }
+  clearTmp() {
+    localStorage.removeItem("__ssoTmpPrivKey");
+  }
 
-        return Buffer.from(accountIdString, 'hex');
-    }
-
-    set accountId(value: Buffer) {
-        localStorage.setItem('__ssoAccountId', value.toString('hex'));
-    }
-
-    clearTmp() {
-        localStorage.removeItem('__ssoTmpPrivKey');
-    }
-
-    clear(): void {
-        this.clearTmp();
-        localStorage.removeItem('__ssoPrivKey');
-        localStorage.removeItem('__ssoAccountId');
-    }
+  clear(): void {
+    this.clearTmp();
+    localStorage.removeItem("__ssoPrivKey");
+    localStorage.removeItem("__ssoAccountId");
+  }
 }

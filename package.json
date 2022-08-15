@@ -1,6 +1,6 @@
 {
   "name": "ft3-lib",
-  "version": "3.3.1",
+  "version": "3.4.2",
   "description": "FT3 Library is a library for Rell modules (Chromia smart contract language). It can be imported and used as a token provider and manager. It allows several operations, among them: creation of different assets (type of tokens), allocation of tokens, transfer, and cross crosschain transfer. It also have some basic data structure for users (account) that can be used independently from the use of the tokens.",
   "main": "dist/ft3/index.js",
   "types": "dist/ft3/index.d.ts",
@@ -8,27 +8,50 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest",
+    "test:js": "./scripts/jesttest.sh",
+    "test:rell": "./scripts/relltest.sh",
+    "test": "npm run test:js && npm run test:rell",
+    "postchain:test": "docker-compose -f dockers/rell-test.yml up -d",
+    "postchain:demo": "docker-compose -f dockers/demo.yml up -d",
+    "stop-postchain:jest": "docker-compose -f dockers/jest-test.yml down",
+    "stop-postchain:rell": "docker-compose -f dockers/rell-test.yml down",
+    "stop-postchain:demo": "docker-compose -f dockers/demo.yml down",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "prettier -w",
+      "eslint --fix --max-warnings 0"
+    ]
   },
   "author": "",
   "license": "Apache-2.0",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
     "dotenv": "^8.0.0",
-    "postchain-client": "^0.9.2",
+    "node-fetch": "^2.6.7",
+    "postchain-client": "^0.10.5",
     "typescript": "^3.5.3"
   },
   "devDependencies": {
     "@types/jest": "^24.0.15",
     "@types/node": "^12.6.2",
+    "@types/node-fetch": "^2.6.1",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "husky": "^8.0.1",
     "jest": "^24.8.0",
+    "lint-staged": "^13.0.1",
+    "prettier": "2.7.0",
     "shx": "^0.3.2",
     "ts-jest": "^24.0.2",
     "tslint": "^5.18.0"

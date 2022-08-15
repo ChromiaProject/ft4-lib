@@ -16,7 +16,7 @@
                         <arg key="rate_limit_points_at_account_creation"><int>1</int></arg> 
                     </args>
                     <args module="testnet">
-                        <arg key="admin_pub_key"><string>03E868D007F8C9529978AEE29E989AFF963C12451E393A349C65B5516AA15C605D</string></arg>
+                        <arg key="admin_pub_key"><string>033430B82DD1C07FD3F38D270235610C85B1FD6E78CCC97DC97598E6C2886C358C</string></arg>
                     </args>
                 </app>
             </config>
