@@ -131,7 +131,9 @@ describe("Test the account", () => {
 
     await blockchain
       .newSession(user2)
-      .call(deleteAllAuthDescriptorsExclude(user2.authDescriptor.id));
+      .call(
+        deleteAllAuthDescriptorsExclude(account.id, user2.authDescriptor.id)
+      );
 
     const foundAccount = await blockchain
       .newSession(user1)
