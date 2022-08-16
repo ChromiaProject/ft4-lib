@@ -27,7 +27,7 @@ operation delete_all_auth_descriptors_exclude(auth_descriptor_id: byte_array) {
     acc._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
 
-operation add_auth_descriptor (account_id: byte_array, auth_id: byte_array, new_desc: acc.auth_descriptor) {
+operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_desc: acc.auth_descriptor) {
     val account = acc.account @ { .id == account_id };
     acc.auth(account, acc.account_auth_descriptor @ { .id == auth_id }, ["A"]);
     acc._add_auth_descriptor(account, new_desc);

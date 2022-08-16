@@ -9,20 +9,20 @@ function require_dev_admin() {
 }
 
 
-operation dev_register_asset (name, issuing_brid: byte_array) {
+operation dev_register_asset(name, issuing_brid: byte_array) {
     ft3_dev_op.require_dev();
     require_dev_admin();
     ft3_core.register_asset(name, issuing_brid);
 }
 
-operation dev_give_balance (asset_id: byte_array, account_id: byte_array, amount: integer) {
+operation dev_give_balance(asset_id: byte_array, account_id: byte_array, amount: integer) {
     ft3_dev_op.require_dev();
     require_dev_admin();
     require(amount >= 0);
     ft3_core.ensure_balance( ft3_acc.account @ { account_id }, ft3_core.asset @ { .id == asset_id } ).amount += amount;
 }
 
-operation dev_register_account (ft3_acc.auth_descriptor) {
+operation dev_register_account(ft3_acc.auth_descriptor) {
     ft3_dev_op.require_dev();
     ft3_acc.create_account_with_auth( auth_descriptor );
 }

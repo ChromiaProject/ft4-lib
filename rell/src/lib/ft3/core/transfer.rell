@@ -15,13 +15,13 @@ struct xfer_output {
    extra: map<text, gtv>;
 }
 
-function deduct_balance (acc.account, asset, d_amount: integer) {
+function deduct_balance(acc.account, asset, d_amount: integer) {
     val b = balance @ { account, asset };
     require( b.amount >= d_amount, "Balance is too low");
     update b (amount -= d_amount);
 }
 
-function consume_input (i: xfer_input, idx: integer, assets: map<asset, integer>): payment_history_entry {
+function consume_input(i: xfer_input, idx: integer, assets: map<asset, integer>): payment_history_entry {
       val asset = asset @ { .id == i.asset_id };
       val account = acc.account @ { .id == i.account_id };
       acc.auth(
@@ -46,7 +46,7 @@ function consume_input (i: xfer_input, idx: integer, assets: map<asset, integer>
       );
 }
 
-function process_transfer_output (o: xfer_output, idx: integer, available_assets: map<asset, integer>): payment_history_entry {
+function process_transfer_output(o: xfer_output, idx: integer, available_assets: map<asset, integer>): payment_history_entry {
       if (o.extra.contains("reg_auth_desc")) {
           val auth_desc = acc.auth_descriptor.from_gtv(o.extra["reg_auth_desc"]);
           require(o.account_id
@@ -73,7 +73,7 @@ function process_transfer_output (o: xfer_output, idx: integer, available_assets
       );
 }
 
-function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
+function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
    before_transfer(inputs, outputs);
 
    val sum_inputs = map<asset, integer>();
@@ -91,6 +91,6 @@ function _transfer (inputs: list<xfer_input>, outputs: list<xfer_output>) {
    after_transfer(inputs, outputs);
 }
 
-@extendable function before_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>);
+@extendable function before_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
 
-@extendable function after_transfer (inputs: list<xfer_input>, outputs: list<xfer_output>);
+@extendable function after_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);

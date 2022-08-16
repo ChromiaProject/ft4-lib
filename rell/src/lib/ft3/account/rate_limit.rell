@@ -1,6 +1,6 @@
 import ^.core;
 
-function rate_limit (account) {
+function rate_limit(account) {
     if (core.my_blockchain_info.rate_limit_active == false) return;
     
     val max_counter = core.my_blockchain_info.rate_limit_max_points;

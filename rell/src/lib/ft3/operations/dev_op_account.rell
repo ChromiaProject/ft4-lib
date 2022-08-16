@@ -5,7 +5,7 @@ import dev_op: ^^.core.dev_op;
 import acc: ^^.account; 
 
 
-operation dev_register_account (acc.auth_descriptor) {
+operation dev_register_account(acc.auth_descriptor) {
     dev_op.require_dev();
     acc.create_account_with_auth( auth_descriptor );
 }
