@@ -89,7 +89,7 @@ export default class Blockchain {
       .build([])
       .post();
   }
-  
+
   async getFT3RellVersion(): Promise<string> {
     return await this.query("ft3.get_version", {});
   }
