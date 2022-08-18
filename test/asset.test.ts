@@ -4,7 +4,7 @@ import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import BlockchainUtil from "./util/blockchain-util";
 import { gtv } from "postchain-client";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Asset", () => {
   beforeAll(async () => {

@@ -8,9 +8,7 @@ import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import { op } from "../client/lib/ft3";
 
-require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
-
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Test the static account", () => {
   beforeAll(async () => {

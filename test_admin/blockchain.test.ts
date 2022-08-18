@@ -3,7 +3,7 @@ import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import BlockchainUtil from "./util/blockchain-util";
 import { RateLimitInfo } from "../client/lib/ft3";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 const POINTS_AT_ACCOUNT_CREATION = 1;
 
 describe("Blockchain", () => {

@@ -21,7 +21,7 @@ class AccountBuilder {
   private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
-  private points?: number = 0;
+  private points = 0;
 
   constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
     this.blockchain = blockchain;

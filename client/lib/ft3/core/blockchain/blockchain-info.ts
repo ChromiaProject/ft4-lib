@@ -38,7 +38,7 @@ export default class BlockchainInfo {
         connection.brid.toString("hex"),
         null,
         null,
-        new RateLimitInfo(false, null, null, null)
+        new RateLimitInfo(false)
       );
     }
   }

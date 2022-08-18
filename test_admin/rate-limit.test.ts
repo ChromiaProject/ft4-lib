@@ -12,7 +12,7 @@ import { TestnetRateLimit as RateLimit } from "./testnetAdmin/testnet-rate-limit
 
 jest.setTimeout(2000000);
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 const REQUEST_MAX_COUNT = 20;
 const RECOVERY_TIME = 60000;

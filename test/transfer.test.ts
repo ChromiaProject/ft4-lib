@@ -10,8 +10,8 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let blockchain: Blockchain;
+let asset: Asset;
 
 describe("Transfer", () => {
   beforeAll(async () => {

@@ -12,7 +12,7 @@ import {
 } from "../client/lib/ft3";
 import { version } from "../package.json";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Blockchain", () => {
   beforeAll(async () => {

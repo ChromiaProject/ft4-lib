@@ -7,7 +7,7 @@ import { FlagsType } from "../client/lib/ft3/user/account-utils";
 import { gtv } from "postchain-client";
 import { op } from "../client/lib/ft3";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Blockchain", () => {
   beforeAll(async () => {

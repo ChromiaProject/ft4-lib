@@ -10,7 +10,6 @@ export default class MaliciousSignatureProvider implements SignatureProvider {
     this.keyPair = new KeyPair(privateKey);
   }
 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   async sign(transaction: Transaction): Promise<Buffer> {
     //@ts-expect-error it's accessing a supposedly private variable
     transaction.tx.gtx.operations.push({ opName: "malicious", args: ["code"] });

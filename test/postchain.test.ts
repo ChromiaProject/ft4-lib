@@ -2,7 +2,7 @@ import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import Postchain from "../client/lib/ft3/core/postchain";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Postchain", () => {
   beforeAll(async () => {
