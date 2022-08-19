@@ -8,7 +8,7 @@ function generateAssetName(prefix = "CHROMA"): string {
   return prefix + "_" + generateNumber();
 }
 
-function generateId() {
+function generateId(): Buffer {
   return util.hash256(`${generateNumber()}`);
 }
 

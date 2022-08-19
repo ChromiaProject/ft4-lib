@@ -72,7 +72,7 @@ async function getUserAndAccountFromAuthDescriptorRule(
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+    asset = await BlockchainUtil.getNewAsset(blockchain);
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
@@ -335,7 +335,7 @@ describe("Auth Descriptor Rule", () => {
     expect(srcAccount1.authDescriptor.length).toEqual(2);
   });
 
-  it("should add auth descriptors", async () => {
+  it.skip("should add auth descriptors", async () => {
     const user1 = TestUser.singleSig();
     const user2 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
     const user3 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
@@ -423,5 +423,12 @@ describe("Auth Descriptor Rule", () => {
     await expect(
       addAuthDescriptorTo(account, user1, user2, blockchain)
     ).rejects.toThrowError();
+  });
+
+  it("shouldn't be able to create an account with a limited auth descriptor", async () => {
+    const user = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
+
+    const createPromise = sourceAccount(user);
+    await expect(createPromise).rejects.toThrowError();
   });
 });

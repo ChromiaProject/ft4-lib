@@ -16,8 +16,8 @@ import RateLimit from "../../client/lib/ft3/user/rate-limit";
 class AccountBuilder {
   private blockchain: Blockchain;
   private user: User;
-  private balance?: number;
-  private asset?: Asset;
+  private balances?: number[];
+  private assets?: Asset[];
   private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
@@ -46,8 +46,24 @@ class AccountBuilder {
   }
 
   withBalance(asset: Asset, balance: number): AccountBuilder {
-    this.asset = asset;
-    this.balance = balance;
+    if (this.assets && this.balances) {
+      this.assets.push(asset);
+      this.balances.push(balance);
+      return this;
+    }
+    this.assets = [asset];
+    this.balances = [balance];
+    return this;
+  }
+
+  withBalances(assets: Asset[], balances: number[]): AccountBuilder {
+    if (this.assets && this.balances) {
+      this.assets.concat(assets);
+      this.balances.concat(balances);
+      return this;
+    }
+    this.assets = assets;
+    this.balances = balances;
     return this;
   }
 
@@ -98,12 +114,19 @@ class AccountBuilder {
   }
 
   private async addBalanceIfNeeded(account: Account) {
-    if (this.asset && this.balance) {
-      await AssetBalance.giveBalance(
-        account.id,
-        this.asset.id,
-        this.balance,
-        this.blockchain
+    if (this.assets && this.balances) {
+      await Promise.all(
+        this.assets.map(async (asset, i) => {
+          //!this.balances just to remove ts warning
+          if (!this.balances || this.balances.length < i)
+            throw new Error("Mismatching balances and assets lengths");
+          await AssetBalance.giveBalance(
+            account.id,
+            asset.id,
+            this.balances[i],
+            this.blockchain
+          );
+        })
       );
     }
   }
