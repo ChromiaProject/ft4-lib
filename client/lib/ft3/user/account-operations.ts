@@ -60,7 +60,7 @@ export function nop(): Operation {
 
 export function op(
   name: string,
-  ...args: Array<GtvSerializable | null>
+  ...args: Array<GtvSerializable | null | undefined>
 ): Operation {
   return new Operation(name, ...args);
 }
