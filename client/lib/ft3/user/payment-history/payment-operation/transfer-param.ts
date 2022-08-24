@@ -1,6 +1,8 @@
+import { ensureBuffer } from "../../../../cyptoUtils";
+
 export default class TransferParam {
-  readonly accountId: string;
-  readonly assetId: string;
+  readonly accountId: Buffer;
+  readonly assetId: Buffer;
   readonly amount: number;
 
   constructor(
@@ -8,18 +10,16 @@ export default class TransferParam {
     assetId: string | Buffer,
     amount: number
   ) {
-    this.accountId =
-      accountId instanceof Buffer ? accountId.toString("hex") : accountId;
-    this.assetId =
-      assetId instanceof Buffer ? assetId.toString("hex") : assetId;
+    this.accountId = ensureBuffer(accountId);
+    this.assetId = ensureBuffer(assetId);
     this.amount = amount;
   }
 
-  isAccountId(accountId: string): boolean {
-    return this.accountId.toUpperCase() === accountId.toUpperCase();
+  isAccountId(accountId: string | Buffer): boolean {
+    return this.accountId.compare(ensureBuffer(accountId)) === 0;
   }
 
-  isAssetId(assetId: string): boolean {
-    return this.assetId.toUpperCase() === assetId.toUpperCase();
+  isAssetId(assetId: string | Buffer): boolean {
+    return this.assetId.compare(ensureBuffer(assetId)) === 0;
   }
 }

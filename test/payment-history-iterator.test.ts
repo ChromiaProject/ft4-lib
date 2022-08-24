@@ -38,8 +38,8 @@ describe("Payment history iterator", () => {
     const [entry] = paymentHistoryEntries;
 
     expect(entry.other.length).toEqual(1);
-    expect(entry.other[0].brid).toEqual(blockchain.id.toString("hex"));
-    expect(entry.other[0].accountId).toEqual(account2.id.toString("hex"));
+    expect(entry.other[0].brid).toEqual(blockchain.id);
+    expect(entry.other[0].accountId).toEqual(account2.id);
   });
 
   it("should have two payment history entries if two transfers made", async () => {
@@ -84,13 +84,13 @@ describe("Payment history iterator", () => {
 
     expect(entry1.isInput).toEqual(false);
     expect(entry1.other.length).toEqual(1);
-    expect(entry1.other[0].brid).toEqual(blockchain.id.toString("hex"));
-    expect(entry1.other[0].accountId).toEqual(account.id.toString("hex"));
+    expect(entry1.other[0].brid).toEqual(blockchain.id);
+    expect(entry1.other[0].accountId).toEqual(account.id);
 
     expect(entry2.isInput).toEqual(true);
     expect(entry2.other.length).toEqual(1);
-    expect(entry2.other[0].brid).toEqual(blockchain.id.toString("hex"));
-    expect(entry2.other[0].accountId).toEqual(account.id.toString("hex"));
+    expect(entry2.other[0].brid).toEqual(blockchain.id);
+    expect(entry2.other[0].accountId).toEqual(account.id);
   });
 
   it("should have more than one page if number of entries is greater than page size", async () => {
@@ -136,8 +136,8 @@ describe("Payment history iterator", () => {
     const [entry] = paymentHistoryEntries;
 
     expect(entry.other.length).toEqual(1);
-    expect(entry.other[0].brid).toEqual(brid2.toString("hex"));
-    expect(entry.other[0].accountId).toEqual(accountId2.toString("hex"));
+    expect(entry.other[0].brid).toEqual(brid2);
+    expect(entry.other[0].accountId).toEqual(accountId2);
   });
 
   it.skip("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {
