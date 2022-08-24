@@ -20,7 +20,9 @@ Buffer.prototype.toGTV = function (): any {
 Object.defineProperty(Array.prototype, "toGTV", {
   enumerable: false,
   value: function (): any[] {
-    return this.map((element) => (element === null ? null : element.toGTV()));
+    return this.map((element) =>
+      element === null || element === undefined ? null : element.toGTV()
+    );
   },
 });
 

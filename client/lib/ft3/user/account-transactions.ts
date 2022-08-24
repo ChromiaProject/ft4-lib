@@ -10,6 +10,7 @@ import {
 } from "./account-operations";
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import Operation from "../core/operation";
+import { XferInput, XferOutput } from "./transfer";
 
 type PubKey = Buffer;
 
@@ -80,8 +81,8 @@ export default class AccountTransactions {
   }
 
   async transferInputsToOutputs(
-    inputs: Array<GtvSerializable>,
-    outputs: Array<GtvSerializable>
+    inputs: XferInput[],
+    outputs?: XferOutput[]
   ): Promise<Transaction> {
     return await this.session.blockchain
       .transactionBuilder()

@@ -20,7 +20,10 @@ export default class ConnectionClient {
 
     for (const name of Object.keys(params)) {
       if (Object.prototype.hasOwnProperty.call(params, name)) {
-        convertedParams[name] = params[name].toGTV();
+        convertedParams[name] =
+          params[name] === null || params[name] === undefined
+            ? null
+            : params[name].toGTV();
       }
     }
 

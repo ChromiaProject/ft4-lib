@@ -14,8 +14,9 @@ import {
 } from "./account-queries";
 import RateLimit from "./rate-limit";
 import User from "./user";
-import { Account, AuthDescriptor, GtvSerializable } from "./account-utils";
+import { Account, AuthDescriptor } from "./account-utils";
 import StaticAccount from "./static-account";
+import { XferInput, xferInput, XferOutput, xferOutput } from "./transfer";
 
 export default class MutableAccount implements Account {
   readonly paymentHistorySyncManager = new PaymentHistorySyncManager();
@@ -188,8 +189,8 @@ export default class MutableAccount implements Account {
   }
 
   async transferInputsToOutputs(
-    inputs: Array<GtvSerializable>,
-    outputs: Array<GtvSerializable>
+    inputs: XferInput[],
+    outputs: XferOutput[]
   ): Promise<void> {
     const tx = await this.tx.transferInputsToOutputs(inputs, outputs);
     await tx.post();
@@ -201,15 +202,25 @@ export default class MutableAccount implements Account {
     assetId: Buffer,
     amount: number
   ): Promise<void> {
-    const input = [this.id, assetId, this.user.authDescriptor.id, amount, []];
+    const input = xferInput(
+      this.id,
+      this.user.authDescriptor.id,
+      assetId,
+      amount
+    );
 
-    const output = [accountId, assetId, amount, []];
+    const output = xferOutput(accountId, assetId, amount);
 
     await this.transferInputsToOutputs([input], [output]);
   }
 
   async burnTokens(assetId, amount): Promise<void> {
-    const input = [this.id, assetId, this.user.authDescriptor.id, amount, []];
+    const input = xferInput(
+      this.id,
+      this.user.authDescriptor.id,
+      assetId,
+      amount
+    );
 
     await this.transferInputsToOutputs([input], []);
   }
