@@ -1,4 +1,4 @@
-image: node
+image: node:18
 
 options:
   docker: true
