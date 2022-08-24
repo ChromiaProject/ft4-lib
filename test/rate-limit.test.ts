@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */ // this fixes all lines like 82, but might hide useful errors. Better, uglier solution found on line 115
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
 import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import TestUser from "./util/test-user";
+import User from "../client/lib/ft3/user/user";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {
   BlockchainInfo,
@@ -13,7 +13,7 @@ import RateLimit from "../client/lib/ft3/user/rate-limit";
 
 jest.setTimeout(2000000);
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 const REQUEST_MAX_COUNT = 10;
 const RECOVERY_TIME = 5000;
@@ -24,12 +24,7 @@ describe("Rate Limit", () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
   });
 
-  describe("Blockchain request configuaration in run.xml", () => {
-    it("Should have a limit of 10 requests per minute", async () => {
-      const info = await BlockchainInfo.getInfo(blockchain.connection);
-      expect(info.rateLimitInfo.maxPoints).toEqual(REQUEST_MAX_COUNT);
-    });
-
+  describe("Blockchain request configuration in run.xml", () => {
     it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
       const info = await BlockchainInfo.getInfo(blockchain.connection);
       expect(info).toEqual(
@@ -37,14 +32,14 @@ describe("Rate Limit", () => {
           expect.any(String),
           expect.any(String),
           expect.any(String),
-          new RateLimitInfo(expect.any(Boolean), 10, 5000, 1)
+          new RateLimitInfo(
+            true,
+            REQUEST_MAX_COUNT,
+            RECOVERY_TIME,
+            POINTS_AT_ACCOUNT_CREATION
+          )
         )
       );
-    });
-
-    it("Should have a recovery period of 5 seconds", async () => {
-      const info = await BlockchainInfo.getInfo(blockchain.connection);
-      expect(info.rateLimitInfo.recoveryTime).toEqual(RECOVERY_TIME);
     });
   });
 
@@ -108,12 +103,9 @@ describe("Rate Limit", () => {
     let timestamp = lastOperation;
 
     it("initializes with 0 points", async () => {
-      const spy = jest.spyOn(RateLimit, "getLastTimestamp").mockImplementation(
-        (blockchain) =>
-          new Promise((res, _) =>
-            res(timestamp)
-          ) /*to be applied to 131, 147, 163*/ // eslint-disable-line @typescript-eslint/no-unused-vars
-      );
+      const spy = jest
+        .spyOn(RateLimit, "getLastTimestamp")
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expect0Points = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -127,9 +119,7 @@ describe("Rate Limit", () => {
       timestamp += 10000;
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expect2Points = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -143,9 +133,7 @@ describe("Rate Limit", () => {
       timestamp = lastOperation + 10 * 5 * 1000; // ten times the recovery period
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expectMax10Points = await RateLimit.getPointsAvailable(
         5,
         lastOperation,
@@ -159,9 +147,7 @@ describe("Rate Limit", () => {
       timestamp = 0; // ten times the recovery period
       const spy = jest
         .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(
-          (blockchain) => new Promise((res, _) => res(timestamp))
-        );
+        .mockImplementation(() => new Promise((res) => res(timestamp)));
       const expectMax10Points = await RateLimit.getPointsAvailable(
         0,
         lastOperation,
@@ -183,7 +169,7 @@ describe("Rate Limit", () => {
     requests: number
   ): Promise<any> => {
     let txBuilder = blockchain.transactionBuilder();
-    const users = [];
+    const users: User[] = [];
     for (let i = 0; i < requests; i++) {
       const user = TestUser.singleSig();
       users.push(user);

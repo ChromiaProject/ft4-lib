@@ -6,8 +6,8 @@ import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let blockchain: Blockchain;
+let asset: Asset;
 
 describe.skip("Cross-chain transfer", () => {
   beforeAll(async () => {

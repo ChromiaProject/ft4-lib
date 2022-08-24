@@ -7,8 +7,8 @@ import DirectoryServiceBase from "../../client/lib/ft3/core/blockchain/directory
 import ChainConnectionInfo from "../../client/lib/ft3/core/chain-connection-info";
 import { generateAssetName, generateId } from "./util";
 import Asset from "../../client/lib/ft3/user/asset";
-
-require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
+import { config } from "dotenv";
+config();
 
 export default class BlockchainUtil {
   static async getDefaultBlockchain(): Promise<Blockchain> {
@@ -18,7 +18,7 @@ export default class BlockchainUtil {
   }
 
   static getNewBlockchain(): Blockchain {
-    const rateLimit = new RateLimitInfo(false, null, null, null);
+    const rateLimit = new RateLimitInfo(false);
     const id = generateId();
     return new Blockchain(
       new BlockchainInfo("name", "website", "description", rateLimit),

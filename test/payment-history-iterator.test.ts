@@ -7,8 +7,8 @@ import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import PaymentHistorySyncManager from "../client/lib/ft3/user/payment-history/payment-history-sync-manager";
 import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/user/payment-history/payment-history-store-local-storage";
 
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let blockchain: Blockchain;
+let asset: Asset;
 
 describe("Payment history iterator", () => {
   beforeAll(async () => {
