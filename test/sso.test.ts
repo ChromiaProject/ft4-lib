@@ -10,7 +10,7 @@ import SSO from "./util/fake-sso";
 import RateLimit from "../client/lib/ft3/user/rate-limit";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 function createUser(): [User, LocalStorageSignatureProvider] {
   const signatureProvider = new LocalStorageSignatureProvider();

@@ -10,7 +10,7 @@ export default class FakeDirectoryService implements DirectoryService {
 
   async getChainConnectionInfo(
     id: Buffer
-  ): Promise<ChainConnectionInfo | null> {
+  ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
       (info) => info.brid.toString("hex") === id.toString("hex")
     );

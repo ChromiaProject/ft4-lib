@@ -8,14 +8,12 @@ import SignatureProvider, {
 } from "../../client/lib/ft3/user/signature-provider";
 
 export default class AdminSignatureProvider {
-  private static sigProv: SignatureProvider = null;
-  private static user: User = null;
+  private static sigProv: SignatureProvider;
+  private static user: User;
 
   static change(privKey: string) {
     this.sigProv = new InMemorySignatureProvider(privKey);
   }
-
-  private AdminSignatureProvider() {} /*eslint: needed? if yes: */ //eslint-disable-line @typescript-eslint/no-empty-function
 
   private static initialize() {
     if (this.sigProv == null) {

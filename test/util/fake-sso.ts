@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import SSO from "../../client/lib/ft3/user/sso";
 import MutableAccount from "../../client/lib/ft3/user/mutable-account";
 import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";

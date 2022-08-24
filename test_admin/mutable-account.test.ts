@@ -14,8 +14,6 @@ import {
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 import User from "../client/lib/ft3/user/user";
 
-require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
-
 async function addAuthDescriptorTo(
   account: MutableAccount,
   adminUser: User,
@@ -40,7 +38,7 @@ async function addAuthDescriptorTo(
 }
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Test the account", () => {
   beforeAll(async () => {

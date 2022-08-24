@@ -5,9 +5,9 @@ import { generateAssetName, generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
-let blockchain: Blockchain = null;
-let asset1: Asset = null;
-let asset2: Asset = null;
+let blockchain: Blockchain;
+let asset1: Asset;
+let asset2: Asset;
 
 describe("Asset balance", () => {
   beforeAll(async () => {

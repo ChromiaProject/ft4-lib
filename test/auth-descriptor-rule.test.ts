@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */ // this fixes all lines like 82, but might hide useful errors. Better, uglier solution found on line 79
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
@@ -12,8 +11,8 @@ import AuthDescriptorRule, {
 } from "../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule";
 import { addAuthDescriptor } from "../client/lib/ft3";
 
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let blockchain: Blockchain;
+let asset: Asset;
 
 function sourceAccount(user: User): Promise<MutableAccount> {
   return AccountBuilder.account(blockchain, user)
@@ -76,8 +75,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
-      /*to be applied to every line like this*/ // eslint-disable-line @typescript-eslint/no-unused-vars
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.operationCount.lessOrEqual(2),
       blockchain
     );
@@ -91,7 +89,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when number of called operations is greater than value set by operation count rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.operationCount.lessThan(2),
       blockchain
     );
@@ -105,7 +103,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockTime.lessThan(Date.now() - 10000),
       blockchain
     );
@@ -116,7 +114,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current time is less than time defined by 'less than' block time rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockTime.lessThan(Date.now() + 10000),
       blockchain
     );
@@ -128,7 +126,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current block height is less than value defined by 'less than' block height rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockHeight.lessThan(10000),
       blockchain
     );
@@ -140,7 +138,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockHeight.lessThan(1),
       blockchain
     );
@@ -152,7 +150,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockTime.greaterThan(Date.now() + 10000),
       blockchain
     );
@@ -164,7 +162,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockTime.greaterThan(Date.now() - 10000),
       blockchain
     );
@@ -176,7 +174,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockHeight.greaterThan(10000),
       blockchain
     );
@@ -188,7 +186,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after block defined by 'greater than' block height rule", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockHeight.greaterThan(1),
       blockchain
     );
@@ -200,7 +198,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should be able to create complex rules", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000),
       blockchain
     );
@@ -212,7 +210,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       Rules.blockHeight.greaterThan(1).and.blockHeight.lessThan(10),
       blockchain
     );
@@ -227,7 +225,7 @@ describe("Auth Descriptor Rule", () => {
     const rules = Rules.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000);
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       rules,
       blockchain
     );
@@ -242,7 +240,7 @@ describe("Auth Descriptor Rule", () => {
     const rules = Rules.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000);
-    const [user, account] = await getUserAndAccountFromAuthDescriptorRule(
+    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
       rules,
       blockchain
     );
