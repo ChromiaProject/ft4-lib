@@ -17,7 +17,10 @@ describe("Asset balance", () => {
 
   it("should be returned when queried by account id", async () => {
     const account = await AccountBuilder.account(blockchain)
-      .withBalances([asset1, asset2], [10, 20])
+      .withBalances([
+        new AssetBalance(10, asset1),
+        new AssetBalance(20, asset2),
+      ])
       .build();
 
     const assets = await AssetBalance.getByAccountId(account.id, blockchain);

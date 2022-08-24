@@ -16,8 +16,7 @@ import RateLimit from "../../client/lib/ft3/user/rate-limit";
 class AccountBuilder {
   private blockchain: Blockchain;
   private user: User;
-  private balances?: number[];
-  private assets?: Asset[];
+  private balances?: AssetBalance[];
   private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
@@ -45,24 +44,20 @@ class AccountBuilder {
     return this;
   }
 
-  withBalance(asset: Asset, balance: number): AccountBuilder {
-    if (this.assets && this.balances) {
-      this.assets.push(asset);
-      this.balances.push(balance);
+  withBalance(asset: Asset, amount: number): AccountBuilder {
+    if (this.balances) {
+      this.balances.push(new AssetBalance(amount, asset));
       return this;
     }
-    this.assets = [asset];
-    this.balances = [balance];
+    this.balances = [new AssetBalance(amount, asset)];
     return this;
   }
 
-  withBalances(assets: Asset[], balances: number[]): AccountBuilder {
-    if (this.assets && this.balances) {
-      this.assets.concat(assets);
+  withBalances(balances: AssetBalance[]): AccountBuilder {
+    if (this.balances) {
       this.balances.concat(balances);
       return this;
     }
-    this.assets = assets;
     this.balances = balances;
     return this;
   }
@@ -114,16 +109,13 @@ class AccountBuilder {
   }
 
   private async addBalanceIfNeeded(account: Account) {
-    if (this.assets && this.balances) {
+    if (this.balances) {
       await Promise.all(
-        this.assets.map(async (asset, i) => {
-          //!this.balances just to remove ts warning
-          if (!this.balances || this.balances.length < i)
-            throw new Error("Mismatching balances and assets lengths");
+        this.balances.map(async (balance) => {
           await AssetBalance.giveBalance(
             account.id,
-            asset.id,
-            this.balances[i],
+            balance.asset.id,
+            balance.amount,
             this.blockchain
           );
         })
