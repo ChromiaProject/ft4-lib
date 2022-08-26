@@ -18,8 +18,8 @@ export default class PaymentOperation {
   }
 
   hasInputOrOutputWithChainAndAccount(
-    brid: string,
-    accountId: string
+    brid: string | Buffer,
+    accountId: string | Buffer
   ): boolean {
     return (
       this.inputs.some(
@@ -31,29 +31,35 @@ export default class PaymentOperation {
     );
   }
 
-  inputsWithChainAndAccount(brid: string, accountId: string): PaymentParam[] {
+  inputsWithChainAndAccount(
+    brid: string | Buffer,
+    accountId: string | Buffer
+  ): PaymentParam[] {
     return this.inputs.filter(
       (input) => input.isBRID(brid) && input.isAccountId(accountId)
     );
   }
 
-  outputsWithChainAndAccount(brid: string, accountId: string): PaymentParam[] {
+  outputsWithChainAndAccount(
+    brid: string | Buffer,
+    accountId: string | Buffer
+  ): PaymentParam[] {
     return this.outputs.filter(
       (output) => output.isBRID(brid) && output.isAccountId(accountId)
     );
   }
 
-  inputsWithAsset(assetId: string): PaymentParam[] {
+  inputsWithAsset(assetId: string | Buffer): PaymentParam[] {
     return this.inputs.filter((output) => output.isAssetId(assetId));
   }
 
-  outputsWithAsset(assetId: string): PaymentParam[] {
+  outputsWithAsset(assetId: string | Buffer): PaymentParam[] {
     return this.outputs.filter((output) => output.isAssetId(assetId));
   }
 
   static fromTransfer(
     transfer: TransferOperation,
-    brid: string
+    brid: string | Buffer
   ): PaymentOperation {
     const inputs = transfer.inputs.map((input) =>
       PaymentParam.fromTransferParam(input, brid)
@@ -66,7 +72,7 @@ export default class PaymentOperation {
 
   static fromXTransfer(
     transfer: XTransferOperation,
-    sourceBRID: string
+    sourceBRID: string | Buffer
   ): PaymentOperation {
     const input = PaymentParam.fromTransferParam(transfer.source, sourceBRID);
     const output = new PaymentParam(
