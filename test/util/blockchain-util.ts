@@ -5,7 +5,8 @@ import RateLimitInfo from "../../client/lib/ft3/core/blockchain/rate-limit-info"
 import Postchain from "../../client/lib/ft3/core/postchain";
 import DirectoryServiceBase from "../../client/lib/ft3/core/blockchain/directory-service-base";
 import ChainConnectionInfo from "../../client/lib/ft3/core/chain-connection-info";
-import { generateId } from "./util";
+import { generateAssetName, generateId } from "./util";
+import Asset from "../../client/lib/ft3/user/asset";
 import { config } from "dotenv";
 config();
 
@@ -24,5 +25,13 @@ export default class BlockchainUtil {
       new ConnectionClient("URL", id.toString("hex")),
       new DirectoryServiceBase([new ChainConnectionInfo(id, "URL")])
     );
+  }
+
+  static async getNewAsset(
+    blockchain: Blockchain,
+    name = generateAssetName(),
+    brid = generateId()
+  ): Promise<Asset> {
+    return await Asset.register(name, brid, blockchain);
   }
 }

@@ -3,7 +3,6 @@ import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import Asset from "../client/lib/ft3/user/asset";
-import { generateAssetName, generateId } from "./util/util";
 import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import User from "../client/lib/ft3/user/user";
 import AuthDescriptorRule, {
@@ -71,7 +70,7 @@ async function getUserAndAccountFromAuthDescriptorRule(
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+    asset = await BlockchainUtil.getNewAsset(blockchain);
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
@@ -421,5 +420,12 @@ describe("Auth Descriptor Rule", () => {
     await expect(
       addAuthDescriptorTo(account, user1, user2, blockchain)
     ).rejects.toThrowError();
+  });
+
+  it("shouldn't be able to create an account with an expiring auth descriptor", async () => {
+    const user = TestUser.singleSig(Rules.operationCount.lessOrEqual(2));
+
+    const createPromise = sourceAccount(user);
+    await expect(createPromise).rejects.toThrowError();
   });
 });

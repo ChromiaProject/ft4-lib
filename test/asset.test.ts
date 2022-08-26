@@ -12,29 +12,25 @@ describe("Asset", () => {
   });
 
   it("should be successfully registered", async () => {
-    const asset = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
+    const asset = await BlockchainUtil.getNewAsset(blockchain);
     expect(asset).not.toBeNull();
   });
 
   it("should be returned when queried by name", async () => {
     const assetName = generateAssetName();
-    const asset = await Asset.register(assetName, generateId(), blockchain);
+    const asset = await BlockchainUtil.getNewAsset(blockchain, assetName);
 
     const expectedAssets = await Asset.getByName(assetName, blockchain);
 
     expect(expectedAssets.length).toEqual(1);
-    expect(expectedAssets[0].id).toEqual(asset.id);
+    expect(expectedAssets[0]).toEqual(asset);
   });
 
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const brid = generateId();
     const assetId = gtv.gtvHash([assetName, brid]);
-    await Asset.register(assetName, brid, blockchain);
+    await BlockchainUtil.getNewAsset(blockchain, assetName, brid);
 
     const expectedAsset = await Asset.getById(assetId, blockchain);
 
@@ -44,21 +40,9 @@ describe("Asset", () => {
   });
 
   it("should return all the assets registered", async () => {
-    const asset1 = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
-    const asset2 = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
-    const asset3 = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
+    const asset1 = await BlockchainUtil.getNewAsset(blockchain);
+    const asset2 = await BlockchainUtil.getNewAsset(blockchain);
+    const asset3 = await BlockchainUtil.getNewAsset(blockchain);
 
     const expectedAssets = await Asset.getAssets(blockchain);
 

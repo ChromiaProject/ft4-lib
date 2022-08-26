@@ -1,9 +1,5 @@
 import AccountBuilder from "./util/account-builder";
-import {
-  blockchainAccountId,
-  generateAssetName,
-  generateId,
-} from "./util/util";
+import { blockchainAccountId, generateId } from "./util/util";
 import Asset from "../client/lib/ft3/user/asset";
 import AssetBalance from "../client/lib/ft3/user/asset-balance";
 import TestUser from "./util/test-user";
@@ -16,7 +12,7 @@ let asset: Asset;
 describe.skip("Cross-chain transfer", () => {
   beforeAll(async () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+    asset = await BlockchainUtil.getNewAsset(blockchain);
   });
 
   it("should succeessfully initialize when there's enough balance on the account", async () => {
