@@ -1,6 +1,8 @@
 import { util } from "postchain-client";
-import { AuthDescriptor, GtvSerializable } from "./account-utils";
+import { AuthDescriptor } from "./account-utils";
+import GtvSerializable from "../core/gtv";
 import Operation from "../core/operation";
+import { XferInput, XferOutput } from "./transfer";
 
 export function addAuthDescriptor(
   accountId: Buffer,
@@ -16,8 +18,8 @@ export function addAuthDescriptor(
 }
 
 export function transfer(
-  inputs: Array<GtvSerializable>,
-  outputs: Array<GtvSerializable>
+  inputs: XferInput[],
+  outputs: XferOutput[]
 ): Operation {
   return op("ft3.transfer", inputs, outputs);
 }
@@ -60,7 +62,7 @@ export function nop(): Operation {
 
 export function op(
   name: string,
-  ...args: Array<GtvSerializable | null>
+  ...args: Array<GtvSerializable | null | undefined>
 ): Operation {
   return new Operation(name, ...args);
 }

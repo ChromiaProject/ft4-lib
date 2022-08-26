@@ -1,4 +1,5 @@
 import { gtv } from "postchain-client";
+import { toGTV } from "../../core/gtv";
 import {
   AuthDescriptor,
   AuthType,
@@ -34,7 +35,7 @@ export default class SingleSignatureAuthDescriptor implements AuthDescriptor {
       AuthType.single_sig,
       [this.pubkey.toString("hex")],
       [this.flags.toGTV(), this.pubkey.toString("hex")],
-      this.rule && this.rule.toGTV(),
+      toGTV(this.rule),
     ];
   }
 
@@ -43,7 +44,7 @@ export default class SingleSignatureAuthDescriptor implements AuthDescriptor {
       AuthType.single_sig,
       [this.pubkey],
       [this.flags.toGTV(), this.pubkey.toString("hex")],
-      this.rule && this.rule.toGTV(),
+      toGTV(this.rule),
     ]);
   }
 }

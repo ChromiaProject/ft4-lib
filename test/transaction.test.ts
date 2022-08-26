@@ -38,10 +38,10 @@ describe("Blockchain", () => {
     await expect(tx.sign(signatureProvider)).rejects.toBeInstanceOf(Error);
   });
 
-  it("should successfully build transactions with null arguments", async () => {
+  it("should successfully build transactions with null and undefined arguments", async () => {
     const txBuilder = blockchain
       .transactionBuilder()
-      .add(op("test_op_with_null_value", null));
+      .add(op("test_op_with_null_and_undefined_value", null, undefined));
     expect(() => {
       txBuilder.build([]);
     }).not.toThrow();

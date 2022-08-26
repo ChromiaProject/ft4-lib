@@ -4,6 +4,7 @@ import PaymentHistorySyncManager from "./payment-history/payment-history-sync-ma
 import Blockchain from "../core/blockchain/blockchain";
 import RateLimit from "./rate-limit";
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
+import GtvSerializable from "../core/gtv";
 
 enum AuthType {
   single_sig = "S",
@@ -15,10 +16,6 @@ type PubKey = Buffer;
 enum FlagsType {
   Account = "A", // Change Account settings
   Transfer = "T", // Transfer balance
-}
-
-interface GtvSerializable {
-  toGTV(): any[];
 }
 
 class Flags {
