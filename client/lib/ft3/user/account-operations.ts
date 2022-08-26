@@ -1,5 +1,6 @@
 import { util } from "postchain-client";
-import { AuthDescriptor, GtvSerializable } from "./account-utils";
+import { AuthDescriptor } from "./account-utils";
+import GtvSerializable from "../core/gtv";
 import Operation from "../core/operation";
 import { XferInput, XferOutput } from "./transfer";
 
@@ -20,7 +21,7 @@ export function transfer(
   inputs: XferInput[],
   outputs: XferOutput[]
 ): Operation {
-  return op("ft3.transfer", inputs.toGTV(), outputs.toGTV());
+  return op("ft3.transfer", inputs, outputs);
 }
 
 export function xcTransfer(

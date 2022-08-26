@@ -11,12 +11,9 @@ import {
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import Operation from "../core/operation";
 import { XferInput, XferOutput } from "./transfer";
+import GtvSerializable from "../core/gtv";
 
 type PubKey = Buffer;
-
-interface GtvSerializable {
-  toGTV(): any[];
-}
 
 interface AuthDescriptor extends GtvSerializable {
   id: Buffer;
@@ -82,7 +79,7 @@ export default class AccountTransactions {
 
   async transferInputsToOutputs(
     inputs: XferInput[],
-    outputs?: XferOutput[]
+    outputs: XferOutput[]
   ): Promise<Transaction> {
     return await this.session.blockchain
       .transactionBuilder()
