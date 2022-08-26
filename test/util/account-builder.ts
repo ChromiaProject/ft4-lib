@@ -16,7 +16,7 @@ import RateLimit from "../../client/lib/ft3/user/rate-limit";
 class AccountBuilder {
   private blockchain: Blockchain;
   private user: User;
-  private balances?: AssetBalance[];
+  private balances: AssetBalance[] = [];
   private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
@@ -45,20 +45,12 @@ class AccountBuilder {
   }
 
   withBalance(asset: Asset, amount: number): AccountBuilder {
-    if (this.balances) {
-      this.balances.push(new AssetBalance(amount, asset));
-      return this;
-    }
-    this.balances = [new AssetBalance(amount, asset)];
+    this.balances.push(new AssetBalance(amount, asset));
     return this;
   }
 
   withBalances(balances: AssetBalance[]): AccountBuilder {
-    if (this.balances) {
-      this.balances.concat(balances);
-      return this;
-    }
-    this.balances = balances;
+    this.balances = this.balances.concat(balances);
     return this;
   }
 
@@ -109,7 +101,7 @@ class AccountBuilder {
   }
 
   private async addBalanceIfNeeded(account: Account) {
-    if (this.balances) {
+    if (this.balances.length) {
       await Promise.all(
         this.balances.map(async (balance) => {
           await AssetBalance.giveBalance(
