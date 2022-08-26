@@ -2,17 +2,16 @@ import BlockchainInfo from "../client/lib/ft3/core/blockchain/blockchain-info";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { generateAssetName, generateId } from "./util/util";
+import { generateId } from "./util/util";
 import BlockchainUtil from "./util/blockchain-util";
 import {
   MutableAccount,
-  Asset,
   RateLimitInfo,
   getClientVersion,
 } from "../client/lib/ft3";
 import { version } from "../package.json";
 
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Blockchain", () => {
   beforeAll(async () => {
@@ -127,11 +126,7 @@ describe("Blockchain", () => {
   });
 
   it("should return asset queried by id", async () => {
-    const asset = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
+    const asset = await BlockchainUtil.getNewAsset(blockchain);
 
     const queriedAsset = await blockchain.getAssetById(asset.id);
 
@@ -139,21 +134,9 @@ describe("Blockchain", () => {
   });
 
   it("should return all registered assets", async () => {
-    const asset1 = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
-    const asset2 = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
-    const asset3 = await Asset.register(
-      generateAssetName(),
-      generateId(),
-      blockchain
-    );
+    const asset1 = await BlockchainUtil.getNewAsset(blockchain);
+    const asset2 = await BlockchainUtil.getNewAsset(blockchain);
+    const asset3 = await BlockchainUtil.getNewAsset(blockchain);
 
     const expectedAssets = await blockchain.getAllAssets();
 

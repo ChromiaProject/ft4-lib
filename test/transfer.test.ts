@@ -1,4 +1,3 @@
-import { generateAssetName, generateId } from "./util/util";
 import Asset from "../client/lib/ft3/user/asset";
 import AssetBalance from "../client/lib/ft3/user/asset-balance";
 import AccountBuilder from "./util/account-builder";
@@ -10,13 +9,13 @@ import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let blockchain: Blockchain;
+let asset: Asset;
 
 describe("Transfer", () => {
   beforeAll(async () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+    asset = await BlockchainUtil.getNewAsset(blockchain);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {

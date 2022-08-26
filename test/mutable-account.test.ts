@@ -12,6 +12,8 @@ import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import { addAuthDescriptor, op } from "../client/lib/ft3";
 import User from "../client/lib/ft3/user/user";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
+import { config } from "dotenv";
+config();
 
 async function addAuthDescriptorTo(
   account: MutableAccount,
@@ -36,9 +38,7 @@ async function addAuthDescriptorTo(
   await tx.post();
 }
 
-require("dotenv").config(); /*I don't know how to fix if it needs to be fixed*/ // eslint-disable-line @typescript-eslint/no-var-requires
-
-let blockchain: Blockchain = null;
+let blockchain: Blockchain;
 
 describe("Test the mutable account", () => {
   beforeAll(async () => {

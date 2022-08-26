@@ -38,23 +38,20 @@ function validateRegisterAccountOperation(operation: Operation) {
   );
 }
 
-function validateAddAuthDescriptorOperation(
-  operation: Operation,
-  pubKey: Buffer /*eslint: unused. is this for backwards compatibility? if yes: */ // eslint-disable-line @typescript-eslint/no-unused-vars
-) {
+function validateAddAuthDescriptorOperation(operation: Operation) {
   assert(
     operation.name === Operations.addAuthDescriptor,
     `Expected '${Operations.addAuthDescriptor}', found '${operation.name}'`
   );
 }
 
-function validateTransaction(transaction: Transaction, pubKey: Buffer) {
+function validateTransaction(transaction: Transaction) {
   const operations = transaction.operations;
   if (operations.length === 1) {
-    validateAddAuthDescriptorOperation(operations[0], pubKey);
+    validateAddAuthDescriptorOperation(operations[0]);
   } else if (operations.length === 2) {
     validateRegisterAccountOperation(operations[0]);
-    validateAddAuthDescriptorOperation(operations[1], pubKey);
+    validateAddAuthDescriptorOperation(operations[1]);
   } else {
     throw new Error(
       `Invalid operation count. Found ${operations.length} operations in sso transaction`
@@ -168,7 +165,7 @@ export default class SSO {
       this.blockchain
     ).sign(sigProv);
 
-    validateTransaction(transaction, sigProv.pubKey);
+    validateTransaction(transaction);
 
     await transaction.post();
 

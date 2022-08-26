@@ -8,7 +8,9 @@ export default class DirectoryServiceBase implements DirectoryService {
     this.chainInfos = chainInfos;
   }
 
-  async getChainConnectionInfo(id: Buffer): Promise<ChainConnectionInfo> {
+  async getChainConnectionInfo(
+    id: Buffer
+  ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
       (info) => info.brid.toString("hex") === id.toString("hex")
     );

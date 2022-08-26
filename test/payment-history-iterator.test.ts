@@ -2,18 +2,18 @@ import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
 import Asset from "../client/lib/ft3/user/asset";
-import { generateAssetName, generateId } from "./util/util";
+import { generateId } from "./util/util";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import PaymentHistorySyncManager from "../client/lib/ft3/user/payment-history/payment-history-sync-manager";
 import PaymentHistoryStoreLocalStorage from "../client/lib/ft3/user/payment-history/payment-history-store-local-storage";
 
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let blockchain: Blockchain;
+let asset: Asset;
 
 describe("Payment history iterator", () => {
   beforeAll(async () => {
     blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+    asset = await BlockchainUtil.getNewAsset(blockchain);
   });
 
   it("should have one payment history entry when one transfer is made", async () => {
@@ -38,8 +38,8 @@ describe("Payment history iterator", () => {
     const [entry] = paymentHistoryEntries;
 
     expect(entry.other.length).toEqual(1);
-    expect(entry.other[0].brid).toEqual(blockchain.id.toString("hex"));
-    expect(entry.other[0].accountId).toEqual(account2.id.toString("hex"));
+    expect(entry.other[0].brid).toEqual(blockchain.id);
+    expect(entry.other[0].accountId).toEqual(account2.id);
   });
 
   it("should have two payment history entries if two transfers made", async () => {
@@ -84,13 +84,13 @@ describe("Payment history iterator", () => {
 
     expect(entry1.isInput).toEqual(false);
     expect(entry1.other.length).toEqual(1);
-    expect(entry1.other[0].brid).toEqual(blockchain.id.toString("hex"));
-    expect(entry1.other[0].accountId).toEqual(account.id.toString("hex"));
+    expect(entry1.other[0].brid).toEqual(blockchain.id);
+    expect(entry1.other[0].accountId).toEqual(account.id);
 
     expect(entry2.isInput).toEqual(true);
     expect(entry2.other.length).toEqual(1);
-    expect(entry2.other[0].brid).toEqual(blockchain.id.toString("hex"));
-    expect(entry2.other[0].accountId).toEqual(account.id.toString("hex"));
+    expect(entry2.other[0].brid).toEqual(blockchain.id);
+    expect(entry2.other[0].accountId).toEqual(account.id);
   });
 
   it("should have more than one page if number of entries is greater than page size", async () => {
@@ -136,8 +136,8 @@ describe("Payment history iterator", () => {
     const [entry] = paymentHistoryEntries;
 
     expect(entry.other.length).toEqual(1);
-    expect(entry.other[0].brid).toEqual(brid2.toString("hex"));
-    expect(entry.other[0].accountId).toEqual(accountId2.toString("hex"));
+    expect(entry.other[0].brid).toEqual(brid2);
+    expect(entry.other[0].accountId).toEqual(accountId2);
   });
 
   it.skip("should have two payment history entries if one crosschain transfer and one transfer is made", async () => {

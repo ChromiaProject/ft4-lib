@@ -1,4 +1,5 @@
 import { restClient, gtxClient } from "postchain-client";
+import { ensureBuffer } from "../../cyptoUtils";
 import { toGTV } from "./gtv";
 
 export default class ConnectionClient {
@@ -8,7 +9,7 @@ export default class ConnectionClient {
 
   constructor(chainURL: string, brid: string | Buffer) {
     this.chainURL = chainURL;
-    this.brid = typeof brid === "string" ? Buffer.from(brid, "hex") : brid;
+    this.brid = ensureBuffer(brid);
     this.gtx = gtxClient.createClient(
       restClient.createRestClient(chainURL, this.brid.toString("hex"), 5),
       this.brid,

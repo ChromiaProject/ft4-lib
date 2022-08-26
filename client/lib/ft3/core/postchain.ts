@@ -2,6 +2,7 @@ import DirectoryServiceBase from "./blockchain/directory-service-base";
 import ChainConnectionInfo from "./chain-connection-info";
 import Blockchain from "./blockchain/blockchain";
 import { getBRID } from "./lib/utils";
+import { ensureBuffer } from "../../cyptoUtils";
 
 export default class Postchain {
   constructor(readonly url: string) {}
@@ -11,7 +12,7 @@ export default class Postchain {
     if (typeof id === "number") {
       _id = await getBRID(this.url, id);
     } else {
-      _id = id instanceof Buffer ? id : Buffer.from(id, "hex");
+      _id = ensureBuffer(id);
     }
 
     const directoryService = new DirectoryServiceBase([
