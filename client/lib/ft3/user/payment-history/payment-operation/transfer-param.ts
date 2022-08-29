@@ -1,4 +1,4 @@
-import { ensureBuffer, Id } from "../../../../cyptoUtils";
+import { ensureBuffer, Id } from "../../../../cryptoUtils";
 
 export default class TransferParam {
   readonly accountId: Buffer;

@@ -2,7 +2,7 @@ import DirectoryServiceBase from "./blockchain/directory-service-base";
 import ChainConnectionInfo from "./chain-connection-info";
 import Blockchain from "./blockchain/blockchain";
 import { getBRID } from "./lib/utils";
-import { ensureBuffer, Id } from "../../cyptoUtils";
+import { ensureBuffer, Id } from "../../cryptoUtils";
 
 export default class Postchain {
   constructor(readonly url: string) {}

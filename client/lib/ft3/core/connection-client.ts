@@ -1,5 +1,5 @@
 import { restClient, gtxClient } from "postchain-client";
-import { ensureBuffer, Id } from "../../cyptoUtils";
+import { ensureBuffer, Id } from "../../cryptoUtils";
 import { toGTV } from "./gtv";
 
 export default class ConnectionClient {

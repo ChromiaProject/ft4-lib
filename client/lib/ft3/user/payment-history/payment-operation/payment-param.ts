@@ -1,4 +1,4 @@
-import { ensureBuffer, Id } from "../../../../cyptoUtils";
+import { ensureBuffer, Id } from "../../../../cryptoUtils";
 import TransferParam from "./transfer-param";
 
 export default class PaymentParam {
