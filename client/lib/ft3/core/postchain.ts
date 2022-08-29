@@ -2,12 +2,12 @@ import DirectoryServiceBase from "./blockchain/directory-service-base";
 import ChainConnectionInfo from "./chain-connection-info";
 import Blockchain from "./blockchain/blockchain";
 import { getBRID } from "./lib/utils";
-import { ensureBuffer } from "../../cyptoUtils";
+import { ensureBuffer, Id } from "../../cyptoUtils";
 
 export default class Postchain {
   constructor(readonly url: string) {}
 
-  async blockchain(id: Buffer | string | number): Promise<Blockchain> {
+  async blockchain(id: Id | number): Promise<Blockchain> {
     let _id;
     if (typeof id === "number") {
       _id = await getBRID(this.url, id);

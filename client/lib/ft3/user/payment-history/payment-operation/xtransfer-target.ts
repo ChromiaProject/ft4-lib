@@ -1,9 +1,9 @@
-import { ensureBuffer } from "../../../../cyptoUtils";
+import { ensureBuffer, Id } from "../../../../cyptoUtils";
 
 export default class XTransferTarget {
   readonly accountId: Buffer;
 
-  constructor(accountId: string | Buffer) {
+  constructor(accountId: Id) {
     this.accountId = ensureBuffer(accountId);
   }
 }
