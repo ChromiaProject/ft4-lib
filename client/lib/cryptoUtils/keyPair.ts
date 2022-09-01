@@ -1,11 +1,11 @@
 import * as pcl from "postchain-client";
-import { ensureBuffer, Id } from "./index";
+import { ensureBuffer } from "./index";
 
 class KeyPair {
   readonly pubKey: Buffer;
   readonly privKey: Buffer;
 
-  constructor(privateKey?: Id) {
+  constructor(privateKey?: Buffer | string) {
     if (privateKey) {
       this.privKey = ensureBuffer(privateKey);
       this.pubKey = pcl.util.createPublicKey(this.privKey);
