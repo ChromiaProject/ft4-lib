@@ -1,7 +1,7 @@
 import { FlagsType } from "../client/lib/ft3/user/account-utils";
 import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import * as pcl from "postchain-client";
-import { buffToHex, KeyPair } from "../client/lib/cyptoUtils";
+import { buffToHex, KeyPair } from "../client/lib/cryptoUtils";
 import { InMemorySignatureProvider } from "../client/lib/ft3/user/signature-provider";
 import TestUser from "./util/test-user";
 import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";

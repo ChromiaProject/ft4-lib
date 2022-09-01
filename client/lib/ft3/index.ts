@@ -1,6 +1,6 @@
 import { version } from "../../../package.json";
 
-export * from "../cyptoUtils";
+export * from "../cryptoUtils";
 export * from "./user/account-utils";
 export { default as MutableAccount } from "./user/mutable-account";
 export { default as StaticAccount } from "./user/static-account";

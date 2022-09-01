@@ -1,5 +1,5 @@
 import Transaction from "../core/transaction";
-import KeyPair from "../../cyptoUtils/keyPair";
+import KeyPair from "../../cryptoUtils/keyPair";
 import { util } from "postchain-client";
 
 export default interface SignatureProvider {

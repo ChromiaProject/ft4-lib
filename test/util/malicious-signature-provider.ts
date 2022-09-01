@@ -1,5 +1,5 @@
 import SignatureProvider from "../../client/lib/ft3/user/signature-provider";
-import KeyPair from "../../client/lib/cyptoUtils/keyPair";
+import KeyPair from "../../client/lib/cryptoUtils/keyPair";
 import Transaction from "../../client/lib/ft3/core/transaction";
 import { util } from "postchain-client";
 

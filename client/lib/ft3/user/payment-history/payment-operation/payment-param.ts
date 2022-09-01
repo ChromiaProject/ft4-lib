@@ -1,4 +1,4 @@
-import { ensureBuffer } from "../../../../cyptoUtils";
+import { ensureBuffer, Id } from "../../../../cryptoUtils";
 import TransferParam from "./transfer-param";
 
 export default class PaymentParam {
@@ -7,34 +7,26 @@ export default class PaymentParam {
   readonly assetId: Buffer;
   readonly amount: number;
 
-  constructor(
-    brid: string | Buffer,
-    accountId: string | Buffer,
-    assetId: string | Buffer,
-    amount: number
-  ) {
+  constructor(brid: Id, accountId: Id, assetId: Id, amount: number) {
     this.brid = ensureBuffer(brid);
     this.accountId = ensureBuffer(accountId);
     this.assetId = ensureBuffer(assetId);
     this.amount = amount;
   }
 
-  isBRID(brid: string | Buffer): boolean {
+  isBRID(brid: Id): boolean {
     return this.brid.compare(ensureBuffer(brid)) === 0;
   }
 
-  isAccountId(accountId: string | Buffer): boolean {
+  isAccountId(accountId: Id): boolean {
     return this.accountId.compare(ensureBuffer(accountId)) === 0;
   }
 
-  isAssetId(assetId: string | Buffer): boolean {
+  isAssetId(assetId: Id): boolean {
     return this.assetId.compare(ensureBuffer(assetId)) === 0;
   }
 
-  static fromTransferParam(
-    param: TransferParam,
-    brid: string | Buffer
-  ): PaymentParam {
+  static fromTransferParam(param: TransferParam, brid: Id): PaymentParam {
     return new PaymentParam(brid, param.accountId, param.assetId, param.amount);
   }
 }
