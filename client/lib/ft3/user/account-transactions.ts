@@ -1,5 +1,6 @@
 import BlockchainSession from "../core/blockchain/blockchain-session";
 import Transaction from "../core/transaction";
+import { AuthDescriptor } from "./account-utils";
 import {
   transfer,
   addAuthDescriptor,
@@ -8,19 +9,8 @@ import {
   xcTransfer,
   deleteAuthDescriptor,
 } from "./account-operations";
-import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
 import Operation from "../core/operation";
 import { XferInput, XferOutput } from "./transfer";
-import GtvSerializable from "../core/gtv";
-
-type PubKey = Buffer;
-
-interface AuthDescriptor extends GtvSerializable {
-  id: Buffer;
-  signers: PubKey[];
-  rule: AuthDescriptorRule | null;
-  hash(): Buffer;
-}
 
 export default class AccountTransactions {
   readonly id: Buffer;
