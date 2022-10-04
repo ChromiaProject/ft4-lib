@@ -1,11 +1,13 @@
-import Asset from "../client/lib/ft3/user/asset";
-import AssetBalance from "../client/lib/ft3/user/asset-balance";
+import {
+  Asset,
+  AssetBalance,
+  FlagsType,
+  MultiSignatureAuthDescriptor,
+  Blockchain,
+} from "../client/lib/ft3";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/user/account-utils";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;

@@ -1,10 +1,12 @@
 import { version } from "../../../package.json";
+import { util } from "postchain-client";
 
 export * from "../cryptoUtils";
 export * from "./user/account-utils";
 export { default as MutableAccount } from "./user/mutable-account";
 export { default as StaticAccount } from "./user/static-account";
 export * from "./user/account-operations";
+export * from "./user/account-transactions";
 export * from "./user/auth-descriptor";
 export { default as User } from "./user/user";
 export { default as ConnectionClient } from "./core/connection-client";
@@ -23,8 +25,16 @@ export { default as PaymentHistoryStoreMemory } from "./user/payment-history/pay
 export { default as PaymentHistoryStoreLocalStorage } from "./user/payment-history/payment-history-store-local-storage";
 export { default as RateLimit } from "./user/rate-limit";
 export { default as Postchain } from "./core/postchain";
+export { default as SignatureProvider } from "./user/signature-provider";
+export { default as SSO } from "./user/sso";
+export { default as Transaction } from "./core/transaction";
+export * from "./user/signature-provider";
 export * from "./user/sso";
 export * from "./user/transfer";
 export function getClientVersion() {
   return version;
 }
+export function setLogLevel(level: number) {
+  util.setLogLevel(level);
+}
+util.setLogLevel(0);

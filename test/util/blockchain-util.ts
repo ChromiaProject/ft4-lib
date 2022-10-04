@@ -1,12 +1,14 @@
-import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
-import BlockchainInfo from "../../client/lib/ft3/core/blockchain/blockchain-info";
-import ConnectionClient from "../../client/lib/ft3/core/connection-client";
-import RateLimitInfo from "../../client/lib/ft3/core/blockchain/rate-limit-info";
-import Postchain from "../../client/lib/ft3/core/postchain";
-import DirectoryServiceBase from "../../client/lib/ft3/core/blockchain/directory-service-base";
-import ChainConnectionInfo from "../../client/lib/ft3/core/chain-connection-info";
+import {
+  Blockchain,
+  BlockchainInfo,
+  ConnectionClient,
+  RateLimitInfo,
+  Postchain,
+  DirectoryServiceBase,
+  ChainConnectionInfo,
+  Asset,
+} from "../../client/lib/ft3";
 import { generateAssetName, generateId } from "./util";
-import Asset from "../../client/lib/ft3/user/asset";
 import { config } from "dotenv";
 config();
 

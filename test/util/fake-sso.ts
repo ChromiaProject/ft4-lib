@@ -1,8 +1,10 @@
-import SSO from "../../client/lib/ft3/user/sso";
-import MutableAccount from "../../client/lib/ft3/user/mutable-account";
-import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
-import User from "../../client/lib/ft3/user/user";
-import { LocalStorageSignatureProvider } from "../../client/lib/ft3/user/signature-provider";
+import {
+  SSO,
+  MutableAccount,
+  Blockchain,
+  User,
+  LocalStorageSignatureProvider,
+} from "../../client/lib/ft3";
 
 export default class FakeSSO extends SSO {
   accountId: Buffer;

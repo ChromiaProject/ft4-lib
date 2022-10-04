@@ -1,17 +1,20 @@
-import { FlagsType } from "../client/lib/ft3/user/account-utils";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
+import {
+  FlagsType,
+  MutableAccount,
+  InMemorySignatureProvider,
+  User,
+  Blockchain,
+  SingleSignatureAuthDescriptor,
+  addAuthDescriptor,
+  op,
+} from "../client/lib/ft3";
 import * as pcl from "postchain-client";
+import { register } from "../client/lib/ft3/user/account-dev-operations";
 import { buffToHex, KeyPair } from "../client/lib/cryptoUtils";
-import { InMemorySignatureProvider } from "../client/lib/ft3/user/signature-provider";
 import TestUser from "./util/test-user";
-import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import { addAuthDescriptor, op } from "../client/lib/ft3";
-import User from "../client/lib/ft3/user/user";
-import { register } from "../client/lib/ft3/user/account-dev-operations";
 import { config } from "dotenv";
 config();
 

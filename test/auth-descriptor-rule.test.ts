@@ -1,14 +1,16 @@
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import Asset from "../client/lib/ft3/user/asset";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
-import User from "../client/lib/ft3/user/user";
+import {
+  Blockchain,
+  Asset,
+  MutableAccount,
+  User,
+  addAuthDescriptor,
+} from "../client/lib/ft3";
 import AuthDescriptorRule, {
   Rules,
 } from "../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule";
-import { addAuthDescriptor } from "../client/lib/ft3";
 
 let blockchain: Blockchain;
 let asset: Asset;

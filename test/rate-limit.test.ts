@@ -1,15 +1,15 @@
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import TestUser from "./util/test-user";
-import User from "../client/lib/ft3/user/user";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {
+  MutableAccount,
+  User,
+  RateLimit,
+  Blockchain,
   BlockchainInfo,
   RateLimitInfo,
   addAuthDescriptor,
 } from "../client/lib/ft3";
-import RateLimit from "../client/lib/ft3/user/rate-limit";
 
 jest.setTimeout(2000000);
 

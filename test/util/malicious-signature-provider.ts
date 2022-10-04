@@ -1,6 +1,5 @@
-import SignatureProvider from "../../client/lib/ft3/user/signature-provider";
+import { SignatureProvider, Transaction } from "../../client/lib/ft3";
 import KeyPair from "../../client/lib/cryptoUtils/keyPair";
-import Transaction from "../../client/lib/ft3/core/transaction";
 import { util } from "postchain-client";
 
 export default class MaliciousSignatureProvider implements SignatureProvider {
