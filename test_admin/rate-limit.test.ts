@@ -1,9 +1,9 @@
 import BlockchainUtil from "./util/blockchain-util";
 import AccountBuilder from "./util/account-builder";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
 import TestUser from "./util/test-user";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {
+  MutableAccount,
+  Blockchain,
   BlockchainInfo,
   RateLimitInfo,
   addAuthDescriptor,

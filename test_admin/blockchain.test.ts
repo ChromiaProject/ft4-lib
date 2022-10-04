@@ -1,7 +1,5 @@
-import BlockchainInfo from "../client/lib/ft3/core/blockchain/blockchain-info";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
+import { BlockchainInfo, Blockchain, RateLimitInfo } from "../client/lib/ft3";
 import BlockchainUtil from "./util/blockchain-util";
-import { RateLimitInfo } from "../client/lib/ft3";
 
 let blockchain: Blockchain;
 const POINTS_AT_ACCOUNT_CREATION = 1;
