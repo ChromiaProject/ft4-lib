@@ -6,7 +6,6 @@ export * from "./user/account-utils";
 export { default as MutableAccount } from "./user/mutable-account";
 export { default as StaticAccount } from "./user/static-account";
 export * from "./user/account-operations";
-export * from "./user/account-transactions";
 export * from "./user/auth-descriptor";
 export { default as User } from "./user/user";
 export { default as ConnectionClient } from "./core/connection-client";
@@ -28,9 +27,10 @@ export { default as Postchain } from "./core/postchain";
 export { default as SignatureProvider } from "./user/signature-provider";
 export { default as SSO } from "./user/sso";
 export { default as Transaction } from "./core/transaction";
+export { default as GtvSerializable } from "./core/gtv";
+export { default as TransactionBuilder } from "./core/transaction-builder";
 export * from "./user/signature-provider";
 export * from "./user/sso";
-export * from "./user/transfer";
 export function getClientVersion() {
   return version;
 }

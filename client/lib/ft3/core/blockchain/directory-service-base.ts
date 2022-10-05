@@ -1,5 +1,6 @@
 import DirectoryService from "./directory-service";
 import ChainConnectionInfo from "../chain-connection-info";
+import { ensureBuffer, Id } from "../../../cryptoUtils";
 
 export default class DirectoryServiceBase implements DirectoryService {
   private chainInfos: ChainConnectionInfo[];
@@ -9,10 +10,10 @@ export default class DirectoryServiceBase implements DirectoryService {
   }
 
   async getChainConnectionInfo(
-    id: Buffer
+    id: Id
   ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
-      (info) => info.brid.toString("hex") === id.toString("hex")
+      (info) => info.brid.compare(ensureBuffer(id)) === 0
     );
   }
 }

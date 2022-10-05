@@ -1,4 +1,9 @@
-import { DirectoryService, ChainConnectionInfo } from "../../client/lib/ft3";
+import {
+  DirectoryService,
+  ChainConnectionInfo,
+  Id,
+  ensureBuffer,
+} from "../../client/lib/ft3";
 
 export default class FakeDirectoryService implements DirectoryService {
   private readonly chainInfos: ChainConnectionInfo[];
@@ -8,10 +13,10 @@ export default class FakeDirectoryService implements DirectoryService {
   }
 
   async getChainConnectionInfo(
-    id: Buffer
+    id: Id
   ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
-      (info) => info.brid.toString("hex") === id.toString("hex")
+      (info) => info.brid.compare(ensureBuffer(id)) === 0
     );
   }
 }
