@@ -140,7 +140,7 @@ function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, 
  */
 function setup_auth_descriptor_variables(account_auth_descriptor) {
 	
-	if (account_auth_descriptor.rules == x'a0020500') {
+	if (account_auth_descriptor.rules == x'a0020500') { // This is the "hash(null)" value
 		return;
 	} 
 	
@@ -192,7 +192,7 @@ function variable_value(variable: rule_variable, variables: map<text, gtv>): int
  function analyze_auth_descriptor_rules(rules: gtv, hop: integer) {
  	require(hop<3, "too many rules");
  	val rules_bytes = rules.to_bytes(); 
- 	if (rules_bytes == x'a0020500') {
+ 	if (rules_bytes == x'a0020500') { // this is "hash(null)" 
 		return;
 	}
 	
