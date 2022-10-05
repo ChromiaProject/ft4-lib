@@ -4,7 +4,7 @@ import PaymentHistorySyncManager from "./payment-history/payment-history-sync-ma
 import Blockchain from "../core/blockchain/blockchain";
 import RateLimit from "./rate-limit";
 import AuthDescriptorRule from "./auth-descriptor/auth-descriptor-rule";
-import GtvSerializable from "../core/gtv";
+import { GtvEncodable, GtvEncoded } from "../core/gtv";
 
 enum AuthType {
   single_sig = "S",
@@ -31,14 +31,14 @@ class Flags {
     return this.flags.has(flag);
   }
 
-  toGTV() {
+  encodeGtv(): GtvEncoded {
     return this.flagsOrder
       .map((flag) => (this.flags.has(flag) ? flag : null))
       .filter((flag) => flag);
   }
 }
 
-interface AuthDescriptor extends GtvSerializable {
+interface AuthDescriptor extends GtvEncodable {
   id: Buffer;
   signers: PubKey[];
   rule: AuthDescriptorRule | null;
@@ -60,12 +60,4 @@ interface Account {
   getPaymentHistoryIterator(pageSize: number): Promise<PaymentHistoryIterator>;
 }
 
-export {
-  PubKey,
-  Account,
-  AuthDescriptor,
-  AuthType,
-  Flags,
-  FlagsType,
-  GtvSerializable,
-};
+export { PubKey, Account, AuthDescriptor, AuthType, Flags, FlagsType };

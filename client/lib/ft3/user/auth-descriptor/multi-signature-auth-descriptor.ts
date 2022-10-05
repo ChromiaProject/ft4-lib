@@ -1,5 +1,5 @@
 import { gtv } from "postchain-client";
-import { toGTV } from "../../core/gtv";
+import { encodeGtv, GtvEncoded } from "../../core/gtv";
 import {
   AuthDescriptor,
   AuthType,
@@ -39,16 +39,16 @@ export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
     return this.hash();
   }
 
-  toGTV(): any[] {
+  encodeGtv(): GtvEncoded {
     return [
       AuthType.multi_sig,
       this.pubkeys.map((pubkey) => pubkey.toString("hex")),
       [
-        this.flags.toGTV(),
+        this.flags.encodeGtv(),
         this.signaturesRequired,
         this.pubkeys.map((pubkey) => pubkey.toString("hex")),
       ],
-      toGTV(this.rule),
+      encodeGtv(this.rule),
     ];
   }
 
@@ -57,11 +57,11 @@ export default class MultiSignatureAuthDescriptor implements AuthDescriptor {
       AuthType.multi_sig,
       this.pubkeys,
       [
-        this.flags.toGTV(),
+        this.flags.encodeGtv(),
         this.signaturesRequired,
         this.pubkeys.map((pubkey) => pubkey.toString("hex")),
       ],
-      toGTV(this.rule),
+      encodeGtv(this.rule),
     ]);
   }
 }

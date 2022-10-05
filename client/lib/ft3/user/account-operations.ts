@@ -1,6 +1,6 @@
 import { util } from "postchain-client";
 import { AuthDescriptor } from "./account-utils";
-import GtvSerializable from "../core/gtv";
+import { GtvEncodable } from "../core/gtv";
 import Operation from "../core/operation";
 import { XferInput, XferOutput } from "./transfer";
 
@@ -25,8 +25,8 @@ export function transfer(
 }
 
 export function xcTransfer(
-  source: GtvSerializable,
-  target: GtvSerializable,
+  source: GtvEncodable,
+  target: GtvEncodable,
   hops: Array<Buffer>
 ): Operation {
   return op("ft3.xc.init_xfer", source, target, hops);
@@ -62,7 +62,7 @@ export function nop(): Operation {
 
 export function op(
   name: string,
-  ...args: Array<GtvSerializable | null | undefined>
+  ...args: Array<GtvEncodable | null | undefined>
 ): Operation {
   return new Operation(name, ...args);
 }
