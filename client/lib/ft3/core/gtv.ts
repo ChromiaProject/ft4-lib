@@ -7,7 +7,8 @@ export type GtvEncoded =
   | null
   | GtvPrimitive
   | Array<GtvEncoded>
-  | { [key: string]: GtvEncoded; [index: number]: GtvEncoded };
+  | { [key: string]: GtvEncoded }
+  | { [index: number]: GtvEncoded };
 
 export function encodeGtv(value?: GtvEncodable): GtvEncoded {
   return value?.encodeGtv() ?? null;
