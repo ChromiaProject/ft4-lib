@@ -2,14 +2,15 @@ export interface GtvEncodable {
   encodeGtv(): GtvEncoded;
 }
 
-type GtvPrimitive = string | number | null;
+type GtvPrimitive = string | number;
 export type GtvEncoded =
+  | null
   | GtvPrimitive
   | Array<GtvEncoded>
-  | { [index: string]: GtvEncoded };
+  | { [index: GtvPrimitive]: GtvEncoded };
 
-export function encodeGtv(value: GtvEncodable | null | undefined): GtvEncoded {
-  return value === null || value === undefined ? null : value.encodeGtv();
+export function encodeGtv(value?: GtvEncodable): GtvEncoded {
+  return value?.encodeGtv() ?? null;
 }
 
 declare global {
@@ -27,7 +28,7 @@ Buffer.prototype.encodeGtv = function (): GtvEncoded {
 
 Object.defineProperty(Array.prototype, "encodeGtv", {
   enumerable: false,
-  value: function (): GtvEncoded[] {
+  value: function (): GtvEncoded {
     return this.map((element) => encodeGtv(element));
   },
 });
