@@ -50,6 +50,6 @@ Object.defineProperty(Object.prototype, "encodeGtv", {
   enumerable: false,
   writable: true,
   value: function (): GtvEncoded {
-    return this;
+    return Object.entries(this).encodeGtv();
   },
 });
