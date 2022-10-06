@@ -351,9 +351,7 @@ describe("Auth Descriptor Rule", () => {
     const user1 = TestUser.singleSig();
     const user2 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
     const user3 = TestUser.singleSig(Rules.operationCount.lessOrEqual(1));
-
     const account = await sourceAccount(user1);
-
     await addAuthDescriptorTo(account, user1, user2, blockchain);
     await addAuthDescriptorTo(account, user1, user3, blockchain);
 
