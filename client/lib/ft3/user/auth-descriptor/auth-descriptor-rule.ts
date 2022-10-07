@@ -1,6 +1,6 @@
-import GtvSerializable from "../../core/gtv";
+import { GtvEncodable, GtvEncoded } from "../../core/gtv";
 
-export default interface AuthDescriptorRule extends GtvSerializable {}
+export default interface AuthDescriptorRule extends GtvEncodable {}
 
 export class Rules {
   static get blockHeight(): RuleVariable {
@@ -55,7 +55,7 @@ class RuleExpression implements AuthDescriptorRule {
     return new RuleCompositeExpressionOperator(this, "and");
   }
 
-  toGTV(): any[] {
+  encodeGtv(): GtvEncoded {
     return [this.name, this.operator, this.value];
   }
 }
@@ -141,7 +141,7 @@ class RuleCompositeExpression implements AuthDescriptorRule {
     return new RuleCompositeExpressionOperator(this, "and");
   }
 
-  toGTV(): any[] {
-    return [this.left.toGTV(), this.operator, this.right.toGTV()];
+  encodeGtv(): GtvEncoded {
+    return [this.left.encodeGtv(), this.operator, this.right.encodeGtv()];
   }
 }
