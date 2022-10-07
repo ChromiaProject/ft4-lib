@@ -27,7 +27,7 @@ export { default as Postchain } from "./core/postchain";
 export { default as SignatureProvider } from "./user/signature-provider";
 export { default as SSO } from "./user/sso";
 export { default as Transaction } from "./core/transaction";
-export { default as GtvSerializable } from "./core/gtv";
+export { GtvEncodable, GtvEncoded, encodeGtv } from "./core/gtv";
 export { default as TransactionBuilder } from "./core/transaction-builder";
 export * from "./user/signature-provider";
 export * from "./user/sso";
