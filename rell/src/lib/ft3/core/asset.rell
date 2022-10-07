@@ -20,7 +20,7 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0);
 }
 
-function register_asset (name, issuing_brid: byte_array): asset {
+function register_asset(name, issuing_brid: byte_array): asset {
    val id = (name, issuing_brid).hash();
    return create asset (id, name, issuing_brid);
 }

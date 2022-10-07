@@ -1,6 +1,6 @@
-import GtvSerializable from "../core/gtv";
+import { GtvEncodable, GtvEncoded } from "../core/gtv";
 
-export class XferInput implements GtvSerializable {
+export class XferInput implements GtvEncodable {
   constructor(
     readonly accountId: Buffer,
     readonly authDescriptorId: Buffer,
@@ -8,14 +8,14 @@ export class XferInput implements GtvSerializable {
     readonly amount: number
   ) {}
 
-  toGTV(): any[] {
+  encodeGtv(): GtvEncoded {
     return [
       this.accountId,
       this.assetId,
       this.authDescriptorId,
       this.amount,
       [],
-    ].toGTV();
+    ].encodeGtv();
   }
 }
 
@@ -28,15 +28,15 @@ export function xferInput(
   return new XferInput(accountId, authDescriptorId, assetId, amount);
 }
 
-export class XferOutput implements GtvSerializable {
+export class XferOutput implements GtvEncodable {
   constructor(
     readonly accountId: Buffer,
     readonly assetId: Buffer,
     readonly amount: number
   ) {}
 
-  toGTV(): any[] {
-    return [this.accountId, this.assetId, this.amount, []].toGTV();
+  encodeGtv(): GtvEncoded {
+    return [this.accountId, this.assetId, this.amount, []].encodeGtv();
   }
 }
 
@@ -48,7 +48,7 @@ export function xferOutput(
   return new XferOutput(accountId, assetId, amount);
 }
 
-export class SimpleTransfer implements GtvSerializable {
+export class SimpleTransfer implements GtvEncodable {
   constructor(
     readonly sourceAccountId: Buffer,
     readonly destinationAccountId: Buffer,
@@ -57,7 +57,7 @@ export class SimpleTransfer implements GtvSerializable {
     readonly amount: number
   ) {}
 
-  toGTV(): any[] {
+  encodeGtv(): GtvEncoded {
     return [
       "simple_transfer",
       xferInput(
@@ -67,7 +67,7 @@ export class SimpleTransfer implements GtvSerializable {
         this.amount
       ),
       xferOutput(this.destinationAccountId, this.assetId, this.amount),
-    ].toGTV();
+    ].encodeGtv();
   }
 }
 
@@ -87,10 +87,10 @@ export function simpleTransfer(
   );
 }
 
-export class Transfer implements GtvSerializable {
+export class Transfer implements GtvEncodable {
   constructor(readonly inputs: XferInput[], readonly outputs: XferOutput[]) {}
 
-  toGTV(): any[] {
-    return ["transfer", this.inputs, this.outputs].toGTV();
+  encodeGtv(): GtvEncoded {
+    return ["transfer", this.inputs, this.outputs].encodeGtv();
   }
 }
