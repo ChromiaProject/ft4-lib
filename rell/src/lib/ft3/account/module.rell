@@ -45,14 +45,15 @@ entity rl_state {
 }
 
 function _add_auth_descriptor (account, auth_descriptor) {
-     require_auth_descriptor_signers(auth_descriptor);
-     Unsafe._add_auth_descriptor (account, auth_descriptor);
+    require_auth_descriptor_signers(auth_descriptor);
+    Unsafe._add_auth_descriptor (account, auth_descriptor);
 }
 
 function require_auth_descriptor_signers(auth_descriptor) {
-     for (participant in auth_descriptor.participants) {
-        require(op_context.is_signer(participant));
-     }
+
+    for (participant in auth_descriptor.participants) {
+       require(op_context.is_signer(participant));
+    }
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
