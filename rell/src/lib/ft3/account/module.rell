@@ -45,11 +45,11 @@ entity rl_state {
 }
 
 function _add_auth_descriptor (account, auth_descriptor) {
-    require_auth_descriptor_signers(auth_descriptor);
+    require_signed_by_auth_descriptor_participants(auth_descriptor);
     Unsafe._add_auth_descriptor (account, auth_descriptor);
 }
 
-function require_auth_descriptor_signers(auth_descriptor) {
+function require_signed_by_auth_descriptor_participants(auth_descriptor) {
     for (participant in auth_descriptor.participants) {
        require(op_context.is_signer(participant));
     }
@@ -85,7 +85,7 @@ function _delete_all_auth_descriptors_exclude(account, auth_descriptor_id: byte_
 }
 
 function create_account_with_auth (auth_descriptor): byte_array {
-    require_auth_descriptor_signers(auth_descriptor);
+    require_signed_by_auth_descriptor_participants(auth_descriptor);
     return Unsafe.create_account_with_auth(auth_descriptor);
 }
 
@@ -97,6 +97,7 @@ function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, re
 }
 
 namespace Unsafe {
+    //doesn't check that the account is being created by the owner(s)
     function create_account_with_auth (auth_descriptor): byte_array {
         require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
         val id = auth_descriptor.hash();
@@ -113,6 +114,7 @@ namespace Unsafe {
         return id;
     }
 
+    //doesn't check that the auth_descriptor is being added by the participant(s) nor owner(s)
     function _add_auth_descriptor (account, auth_descriptor) {
         val descriptor_id = auth_descriptor.hash();
         
