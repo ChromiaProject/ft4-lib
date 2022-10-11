@@ -97,7 +97,7 @@ function auth_and_log(account_id: byte_array, auth_descriptor_id: byte_array, re
 }
 
 namespace Unsafe {
-    //doesn't check that the account is being created by the owner(s)
+    //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth (auth_descriptor): byte_array {
         require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
         val id = auth_descriptor.hash();
@@ -114,7 +114,7 @@ namespace Unsafe {
         return id;
     }
 
-    //doesn't check that the auth_descriptor is being added by the participant(s) nor owner(s)
+    //WARNING: doesn't check that the auth_descriptor is being added by the participant(s) nor owner(s)
     function _add_auth_descriptor (account, auth_descriptor) {
         val descriptor_id = auth_descriptor.hash();
         
