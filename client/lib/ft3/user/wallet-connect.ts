@@ -1,33 +1,42 @@
-// const crypto = require("crypto")
 const crypto = require("crypto")
 import WalletConnect from "@walletconnect/client";
-import QRCodeModal from "@walletconnect/qrcode-modal";
 
-const BRIDGE_URL = "https://1.bridge.walletconnect.org";
+const BRIDGE_URL = "https://bridge.walletconnect.org";
 
-export const initConnection = () => {
-  const key = crypto.randomBytes(32).toString('hex') 
-  console.log(`wc:${crypto.randomUUID()}@1?bridge=${encodeURIComponent(BRIDGE_URL)}&key=${key}`)
-
+export const initConnection = async () => {
   const connector = new WalletConnect({
-    bridge: "https://1.bridge.walletconnect.org", // Required
-    qrcodeModal: QRCodeModal,
+    bridge: "https://bridge.walletconnect.org"
   });
-  
-  // Check if connection is already established
-  if (!connector.connected) {
-    // create new session
-    connector.createSession();
-  }
-  
+
+  await connector.createSession()
+  const uri = connector.uri
+  console.log(uri)
+
   // Subscribe to connection events
-  connector.on("connect", (error, payload) => {
+  connector.on("connect", async (error, payload) => {
     if (error) {
       throw error;
     }
   
     // Get provided accounts and chainId
     const { accounts, chainId } = payload.params[0];
+    console.log("Connect: ", JSON.stringify(payload))
+    // Draft Message Parameters
+    const message = JSON.stringify({
+      message: "Do you want to send 1000 CHR to 0x828395927373... \n\n Parameter hash: 0x78289483873...",
+      parameterHash: "0x78289483873...",
+      messageHash: "0x85832020220...",
+      parameters: [1000, "0x828395927373..."]
+    });
+
+    const msgParams = [
+      message, // Required
+      accounts[0], // Required
+    ];
+
+    // Sign personal message
+    const signResults = await connector.signPersonalMessage(msgParams)
+    console.log("Sign result: ", signResults)
   });
   
   connector.on("session_update", (error, payload) => {
@@ -37,6 +46,7 @@ export const initConnection = () => {
   
     // Get updated accounts and chainId
     const { accounts, chainId } = payload.params[0];
+    console.log("session_update: ", JSON.stringify(payload))
   });
   
   connector.on("disconnect", (error, payload) => {
@@ -45,6 +55,7 @@ export const initConnection = () => {
     }
   
     // Delete connector
+    console.log("disconnect: ", JSON.stringify(payload))
   });
 }
 

@@ -37,7 +37,6 @@
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
     "@walletconnect/client": "^1.8.0",
-    "@walletconnect/qrcode-modal": "^1.8.0",
     "dotenv": "^8.0.0",
     "node-fetch": "^2.6.7",
     "postchain-client": "^0.10.5",
