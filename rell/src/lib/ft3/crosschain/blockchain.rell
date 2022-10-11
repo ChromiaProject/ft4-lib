@@ -11,17 +11,17 @@ entity linked_chain {
     key brid: byte_array;
 }
 
-function blockchain_account_id (brid: byte_array): byte_array {
+function blockchain_account_id(brid: byte_array): byte_array {
    return ("B", brid).hash();
 }
 
-function ensure_blockchain_account (brid: byte_array): acc.account {
+function ensure_blockchain_account(brid: byte_array): acc.account {
    val blockchain_account_id = blockchain_account_id(brid);
    val acc = acc.account @? { .id == blockchain_account_id };
    return if (acc??)  acc
    else create acc.account (id = blockchain_account_id);
 }
 
-function get_blockchain_account (brid: byte_array): acc.account {
+function get_blockchain_account(brid: byte_array): acc.account {
    return acc.account @ { .id == blockchain_account_id(brid) };
 }

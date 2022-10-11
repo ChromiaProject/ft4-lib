@@ -5,13 +5,13 @@ operation link_chain(brid: byte_array) {
     create xc.linked_chain(brid);
 }
 
-operation init_xfer (source: ft3.xfer_input, target: xc.xc_target, hops: list<byte_array>) {
+operation init_xfer(source: ft3.xfer_input, target: xc.xc_target, hops: list<byte_array>) {
     ft3.consume_input(source, 0, map<ft3.asset, integer>());
     val asset = ft3.asset @ { .id == source.asset_id };
     xc.add_to_blockchain_balance( hops[0], asset, source.amount );
 }
 
-operation apply_xfer (
+operation apply_xfer(
     init_tx_rid: byte_array,
     init_tx: xc.transaction_proof,
     prev_hop: xc.transaction_proof?,

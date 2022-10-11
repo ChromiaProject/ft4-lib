@@ -11,5 +11,5 @@ export function accountsByParticipantId(id: Buffer): [string, object] {
 }
 
 export function accountsByAuthDescriptorId(id: Buffer): [string, object] {
-  return ["ft3.get_accounts_by_auth_descriptor_id", { descriptor_id: id }];
+  return ["ft3.get_accounts_by_auth_descriptor_id", { id: id }];
 }
