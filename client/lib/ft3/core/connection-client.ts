@@ -1,6 +1,6 @@
 import { restClient, gtxClient } from "postchain-client";
 import { ensureBuffer, Id } from "../../cryptoUtils";
-import { toGTV } from "./gtv";
+import { encodeGtv } from "./gtv";
 
 export default class ConnectionClient {
   readonly chainURL: string;
@@ -22,7 +22,7 @@ export default class ConnectionClient {
 
     for (const name of Object.keys(params)) {
       if (Object.prototype.hasOwnProperty.call(params, name)) {
-        convertedParams[name] = toGTV(params[name]);
+        convertedParams[name] = encodeGtv(params[name]);
       }
     }
 

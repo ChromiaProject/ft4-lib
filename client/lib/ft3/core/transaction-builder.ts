@@ -2,7 +2,7 @@ import Blockchain from "./blockchain/blockchain";
 import Transaction from "./transaction";
 import Operation from "./operation";
 import User from "../user/user";
-import { toGTV } from "./gtv";
+import { encodeGtv } from "./gtv";
 
 export default class TransactionBuilder {
   private operations: Array<Operation> = [];
@@ -23,7 +23,7 @@ export default class TransactionBuilder {
 
     const tx = this.blockchain.connection.newTransaction(signers);
     this.operations.forEach((o) =>
-      tx.addOperation(o.name, ...o.args.map(toGTV))
+      tx.addOperation(o.name, ...o.args.map(encodeGtv))
     );
     return new Transaction(tx, this.blockchain);
   }

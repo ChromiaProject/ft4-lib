@@ -1,5 +1,5 @@
 import ft3: ^^.core;
 
-operation transfer (inputs: list<ft3.xfer_input>, outputs: list<ft3.xfer_output>) {
+operation transfer(inputs: list<ft3.xfer_input>, outputs: list<ft3.xfer_output>) {
     ft3._transfer(inputs, outputs);
 }

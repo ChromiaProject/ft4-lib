@@ -20,7 +20,7 @@ function create_ft3_test_acc(rell.test.keypair): auth_data {
         .run();
 
     val account = acc.account_auth_descriptor @ {
-        .descriptor_id == auth_descriptor.hash()
+        .id == auth_descriptor.hash()
     } ( .account.id );
 
     return auth_data(
@@ -33,7 +33,7 @@ function get_ft3_test_acc(rell.test.keypair): auth_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
 
     val account = acc.account_auth_descriptor @ {
-        .descriptor_id == auth_descriptor.hash()
+        .id == auth_descriptor.hash()
     } ( .account.id );
 
     return auth_data(
