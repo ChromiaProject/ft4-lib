@@ -13,11 +13,7 @@ export default class ExternalWalletConnection {
   private constructor(private connector: WalletConnect) {}
 
   public static async init(): Promise<ExternalWalletConnection> {
-    const connector = new WalletConnect({
-      bridge: BRIDGE_URL,
-    });
-
-    await connector.createSession();
+    const connector = await ExternalWalletConnection.createConnection();
     const conn = new ExternalWalletConnection(connector);
     
     connector.on("connect", conn.updateSession.bind(conn))
@@ -36,7 +32,25 @@ export default class ExternalWalletConnection {
   }
   
   private disconnectSession(error: Error, params: ConnectionCallbackParams) {
-    // TODO: Implement disconnection logic
+    this.connector = undefined
+  }
+
+  private async ensureConnection() {
+    if (!this.connector) {
+      this.connector = await ExternalWalletConnection.createConnection();
+      this.connector.on("connect", this.updateSession.bind(this))
+      this.connector.on("session_update", this.updateSession.bind(this))
+      this.connector.on("disconnect", this.disconnectSession.bind(this))
+    }
+  }
+
+  private static async createConnection() {
+    const connector = new WalletConnect({
+      bridge: BRIDGE_URL,
+    });
+
+    await connector.createSession();
+    return connector
   }
 
   get connectionUri(): string {
@@ -52,6 +66,8 @@ export default class ExternalWalletConnection {
   }
 
   async signMessage({ message, account }: { message: string, account: string }): Promise<string> {
+    await this.ensureConnection()
+
     const msgParams = [
       message, 
       account,

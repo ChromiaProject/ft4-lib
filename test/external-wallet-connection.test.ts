@@ -66,4 +66,23 @@ describe("ExternalWalletConnection", () => {
     expect(signMethodMock).toHaveBeenCalledWith([ "Hello", "0xabcd" ])
     expect(signature).toStrictEqual("the signature")
   })
+
+  it("handles reconnection before signing", async () => {
+    let onDisconnect = undefined
+    const onEventMock = (method, func) => {
+      if (method === "disconnect") {
+        onDisconnect = func
+      }
+    }
+    const signMethodMock = jest.fn()
+    signMethodMock.mockReturnValue("the signature")
+    overrideWalletConnectMethods({ on: onEventMock, signPersonalMessage: signMethodMock })
+    
+    const connector = await ExternalWalletConnection.init()
+    onDisconnect()
+
+    const signature = await connector.signMessage({ message: "Hello", account: "0xabcd" })
+    expect(signMethodMock).toHaveBeenCalledWith([ "Hello", "0xabcd" ])
+    expect(signature).toStrictEqual("the signature")
+  })
 })
