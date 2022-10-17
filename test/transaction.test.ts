@@ -1,11 +1,13 @@
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import Transaction from "../client/lib/ft3/core/transaction";
 import BlockchainUtil from "./util/blockchain-util";
 import MaliciousSignatureProvider from "./util/malicious-signature-provider";
-import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
-import { FlagsType } from "../client/lib/ft3/user/account-utils";
+import {
+  FlagsType,
+  Blockchain,
+  Transaction,
+  SingleSignatureAuthDescriptor,
+  op,
+} from "../client/lib/ft3";
 import { gtv } from "postchain-client";
-import { op } from "../client/lib/ft3";
 
 let blockchain: Blockchain;
 

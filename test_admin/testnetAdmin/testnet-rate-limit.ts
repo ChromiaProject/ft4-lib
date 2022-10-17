@@ -1,6 +1,4 @@
-import RateLimit from "../../client/lib/ft3/user/rate-limit";
-import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
-import { nop, Operation } from "../../client/lib/ft3";
+import { RateLimit, Blockchain, nop, Operation } from "../../client/lib/ft3";
 import AdminSignatureProvider from "./admin-signature-provider";
 
 export class TestnetRateLimit extends RateLimit {

@@ -1,17 +1,19 @@
-import { FlagsType, Account } from "../../client/lib/ft3/user/account-utils";
-import MutableAccount from "../../client/lib/ft3/user/mutable-account";
-import StaticAccount from "../../client/lib/ft3/user/static-account";
-import SignatureProvider, {
+import {
+  FlagsType,
+  Account,
+  MutableAccount,
+  StaticAccount,
+  SignatureProvider,
   InMemorySignatureProvider,
-} from "../../client/lib/ft3/user/signature-provider";
-import Asset from "../../client/lib/ft3/user/asset";
-import User from "../../client/lib/ft3/user/user";
+  Asset,
+  User,
+  SingleSignatureAuthDescriptor,
+  MultiSignatureAuthDescriptor,
+  AssetBalance,
+  Blockchain,
+  RateLimit,
+} from "../../client/lib/ft3";
 import TestUser from "./test-user";
-import SingleSignatureAuthDescriptor from "../../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
-import MultiSignatureAuthDescriptor from "../../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
-import AssetBalance from "../../client/lib/ft3/user/asset-balance";
-import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
-import RateLimit from "../../client/lib/ft3/user/rate-limit";
 
 class AccountBuilder {
   private blockchain: Blockchain;

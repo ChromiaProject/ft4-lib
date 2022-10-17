@@ -1,18 +1,18 @@
-import { FlagsType } from "../client/lib/ft3/user/account-utils";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
-import TestUser from "./util/test-user";
-import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
-import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
-import AccountBuilder from "./util/account-builder";
-import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import {
+  FlagsType,
+  MutableAccount,
+  SingleSignatureAuthDescriptor,
+  MultiSignatureAuthDescriptor,
+  Blockchain,
   addAuthDescriptor,
   deleteAllAuthDescriptorsExclude,
   op,
+  User,
 } from "../client/lib/ft3";
+import BlockchainUtil from "./util/blockchain-util";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
-import User from "../client/lib/ft3/user/user";
+import AccountBuilder from "./util/account-builder";
+import TestUser from "./util/test-user";
 
 async function addAuthDescriptorTo(
   account: MutableAccount,
@@ -152,7 +152,7 @@ describe("Test the account", () => {
     await addAuthDescriptorTo(account, user1, user2, blockchain);
 
     const opPromise = account.deleteAuthDescriptor(user1.authDescriptor);
-    await expect(opPromise).rejects.toEqual(new Error("Message was rejected"));
+    await expect(opPromise).rejects.toThrow("Transaction was rejected");
   });
 
   it("should be able to register account by directly calling 'register_account' operation", async () => {

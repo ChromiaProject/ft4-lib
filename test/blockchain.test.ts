@@ -1,14 +1,14 @@
-import BlockchainInfo from "../client/lib/ft3/core/blockchain/blockchain-info";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import TestUser from "./util/test-user";
-import AccountBuilder from "./util/account-builder";
-import { generateId } from "./util/util";
-import BlockchainUtil from "./util/blockchain-util";
 import {
+  BlockchainInfo,
+  Blockchain,
   MutableAccount,
   RateLimitInfo,
   getClientVersion,
 } from "../client/lib/ft3";
+import TestUser from "./util/test-user";
+import AccountBuilder from "./util/account-builder";
+import { generateId } from "./util/util";
+import BlockchainUtil from "./util/blockchain-util";
 import { version } from "../package.json";
 
 let blockchain: Blockchain;

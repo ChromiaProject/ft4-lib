@@ -1,8 +1,6 @@
 import AccountBuilder from "./util/account-builder";
-import AssetBalance from "../client/lib/ft3/user/asset-balance";
-import Asset from "../client/lib/ft3/user/asset";
+import { AssetBalance, Asset, Blockchain } from "../client/lib/ft3";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 
 let blockchain: Blockchain;
 let asset1: Asset;

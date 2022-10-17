@@ -2,10 +2,9 @@ import {
   User,
   FlagsType,
   SingleSignatureAuthDescriptor,
-} from "../../client/lib/ft3";
-import SignatureProvider, {
   InMemorySignatureProvider,
-} from "../../client/lib/ft3/user/signature-provider";
+  SignatureProvider,
+} from "../../client/lib/ft3";
 
 export default class AdminSignatureProvider {
   private static sigProv: SignatureProvider;
