@@ -1,5 +1,5 @@
 import Transaction from "../core/transaction";
-import KeyPair from "../../cryptoUtils/keyPair";
+import { BufferId, KeyPair } from "../../cryptoUtils";
 import { util } from "postchain-client";
 
 export default interface SignatureProvider {
@@ -10,7 +10,7 @@ export default interface SignatureProvider {
 export class InMemorySignatureProvider implements SignatureProvider {
   private readonly keyPair: KeyPair;
 
-  constructor(privateKey?: Buffer | string) {
+  constructor(privateKey?: BufferId) {
     this.keyPair = new KeyPair(privateKey);
   }
 
@@ -37,7 +37,7 @@ export class LocalStorageSignatureProvider implements SignatureProvider {
     return localStorage.getItem("__localSigProvPrivKey") !== null;
   }
 
-  storePrivateKey(privKey?: Buffer | string) {
+  storePrivateKey(privKey?: BufferId) {
     this.kp = new KeyPair(privKey);
     localStorage.setItem(
       "__localSigProvPrivKey",

@@ -1,10 +1,11 @@
 import KeyPair from "./keyPair";
 
-type Id = string | Buffer;
+// If this is a string, we'll be expecting it to contain HEX.
+type BufferId = string | Buffer;
 
 const hexToBuff = (text: string): Buffer => Buffer.from(text, "hex");
 const buffToHex = (buff: Buffer): string => buff.toString("hex");
-const ensureBuffer = (buff: Id): Buffer =>
+const ensureBuffer = (buff: BufferId): Buffer =>
   buff instanceof Buffer ? buff : hexToBuff(buff);
 
-export { ensureBuffer, hexToBuff, buffToHex, KeyPair, Id };
+export { ensureBuffer, hexToBuff, buffToHex, KeyPair, BufferId };

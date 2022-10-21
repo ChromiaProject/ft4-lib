@@ -1,9 +1,9 @@
-import { ensureBuffer, Id } from "../../../../cryptoUtils";
+import { ensureBuffer, BufferId } from "../../../../cryptoUtils";
 
 export default class XTransferTarget {
   readonly accountId: Buffer;
 
-  constructor(accountId: Id) {
+  constructor(accountId: BufferId) {
     this.accountId = ensureBuffer(accountId);
   }
 }
