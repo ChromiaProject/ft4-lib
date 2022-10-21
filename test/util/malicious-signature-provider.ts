@@ -1,10 +1,15 @@
-import { SignatureProvider, KeyPair, Transaction } from "../../client/lib/ft3";
+import {
+  SignatureProvider,
+  KeyPair,
+  BufferId,
+  Transaction,
+} from "../../client/lib/ft3";
 import { util } from "postchain-client";
 
 export default class MaliciousSignatureProvider implements SignatureProvider {
   private readonly keyPair: KeyPair;
 
-  constructor(privateKey?: Buffer | string) {
+  constructor(privateKey?: BufferId) {
     this.keyPair = new KeyPair(privateKey);
   }
 

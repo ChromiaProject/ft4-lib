@@ -1,7 +1,7 @@
 import {
   DirectoryService,
   ChainConnectionInfo,
-  Id,
+  BufferId,
   ensureBuffer,
 } from "../../client/lib/ft3";
 
@@ -13,7 +13,7 @@ export default class FakeDirectoryService implements DirectoryService {
   }
 
   async getChainConnectionInfo(
-    id: Id
+    id: BufferId
   ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
       (info) => info.brid.compare(ensureBuffer(id)) === 0

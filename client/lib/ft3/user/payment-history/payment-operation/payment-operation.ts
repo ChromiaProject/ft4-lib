@@ -1,7 +1,7 @@
 import TransferOperation from "./transfer-operation";
 import XTransferOperation from "./xtransfer-operation";
 import PaymentParam from "./payment-param";
-import { Id } from "../../../../cryptoUtils";
+import { BufferId } from "../../../../cryptoUtils";
 
 // PaymentOperation class is used to represent transfers and cross-chain transfers using one type. Original
 // idea vas to implement PaymentOperation as adapter for for TransferOperation and XTransferOperation, to abstract
@@ -18,7 +18,10 @@ export default class PaymentOperation {
     this.outputs = outputs;
   }
 
-  hasInputOrOutputWithChainAndAccount(brid: Id, accountId: Id): boolean {
+  hasInputOrOutputWithChainAndAccount(
+    brid: BufferId,
+    accountId: BufferId
+  ): boolean {
     return (
       this.inputs.some(
         (input) => input.isBRID(brid) && input.isAccountId(accountId)
@@ -29,27 +32,36 @@ export default class PaymentOperation {
     );
   }
 
-  inputsWithChainAndAccount(brid: Id, accountId: Id): PaymentParam[] {
+  inputsWithChainAndAccount(
+    brid: BufferId,
+    accountId: BufferId
+  ): PaymentParam[] {
     return this.inputs.filter(
       (input) => input.isBRID(brid) && input.isAccountId(accountId)
     );
   }
 
-  outputsWithChainAndAccount(brid: Id, accountId: Id): PaymentParam[] {
+  outputsWithChainAndAccount(
+    brid: BufferId,
+    accountId: BufferId
+  ): PaymentParam[] {
     return this.outputs.filter(
       (output) => output.isBRID(brid) && output.isAccountId(accountId)
     );
   }
 
-  inputsWithAsset(assetId: Id): PaymentParam[] {
+  inputsWithAsset(assetId: BufferId): PaymentParam[] {
     return this.inputs.filter((output) => output.isAssetId(assetId));
   }
 
-  outputsWithAsset(assetId: Id): PaymentParam[] {
+  outputsWithAsset(assetId: BufferId): PaymentParam[] {
     return this.outputs.filter((output) => output.isAssetId(assetId));
   }
 
-  static fromTransfer(transfer: TransferOperation, brid: Id): PaymentOperation {
+  static fromTransfer(
+    transfer: TransferOperation,
+    brid: BufferId
+  ): PaymentOperation {
     const inputs = transfer.inputs.map((input) =>
       PaymentParam.fromTransferParam(input, brid)
     );
@@ -61,7 +73,7 @@ export default class PaymentOperation {
 
   static fromXTransfer(
     transfer: XTransferOperation,
-    sourceBRID: Id
+    sourceBRID: BufferId
   ): PaymentOperation {
     const input = PaymentParam.fromTransferParam(transfer.source, sourceBRID);
     const output = new PaymentParam(
