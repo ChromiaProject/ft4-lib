@@ -16,6 +16,17 @@ struct multi_sig_args {
        pubkeys: list<pubkey>;
 }
 
+struct auth_details {
+    flags: list<text>;
+    message: text? = null;
+}
+
+struct signature {
+    r: text;
+    s: text;
+    v: integer;
+}
+
 /*
  * Returns VALID if valid.
  */
@@ -26,7 +37,6 @@ function check_single_sig_auth(args: byte_array, participants: list<byte_array>,
     if (participants.size() < 1) {
         return u.invalid("Single sig Auth Descriptor's participant list is empty.");
     }
-
     val ss_args = single_sig_args.from_bytes(args);
     if ( check_required_flags(ss_args.flags, required_flags)) {
         if (op_context.is_signer(participants[0])) {
@@ -130,3 +140,73 @@ function get_participants(a_t: text, args: byte_array): list<byte_array>{
     //TODO: add extendable callback for custom types
     return require(participants, "Unknown auth_descriptor type"); // or return empty list?
 }
+
+function format(template: text, arguments: list<text>) {
+    val parts = template.split("%s");
+    require(parts.size() == arguments.size() + 1, "Number of arguments does not match number of placeholders in message");
+
+    var message_to_return = "";
+    for (i in range(arguments.size())) {
+        message_to_return = message_to_return + parts[i] + arguments[i];
+    }
+
+    return message_to_return + parts[parts.size() - 1];
+}
+
+function authenticate(auth_details): boolean {
+    require(op_context.op_index > 0, "Expected at least two operations");
+    
+    val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
+    require(previous_op.name in ["eth_auth", "ft3_auth"], "Incorrect auth operation");
+
+    val message = text.from_gtv(previous_op.args[0]);
+    val sig = signature.from_gtv(previous_op.args[1]);
+    val eth_addr = text.from_gtv(previous_op.args[2]);
+    val acc_id = byte_array.from_gtv(previous_op.args[3]);
+
+    val acc_descriptors = account_auth_descriptor @* { .account == account_by_id(acc_id) };
+
+    for (desc in acc_descriptors) {
+        require(
+            check_auth_args(
+                desc.auth_type,
+                desc.args,
+                auth_descriptor_participant @* { desc } ( .id ),
+                auth_details.flags
+            ).valid
+        );
+    }
+
+    return when (previous_op.name) {
+        "eth_auth" -> validate_eth_signature(sig, message, eth_addr);
+        else -> false;
+    };
+}
+
+function validate_eth_signature(signature, msg: text, eth_addr: text): boolean {
+    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + msg.size().to_text() + msg).to_bytes());
+
+    print("Hash", msg_hash);
+
+    val eth_pubkey = eth_ecrecover(
+        byte_array.from_hex(signature.r),
+        byte_array.from_hex(signature.s),
+        signature.v - 27,
+        msg_hash
+    );
+
+    print("pubkey", eth_pubkey);
+
+    val recovered_address = "0x" + keccak256(eth_pubkey).sub(12).to_hex();
+    
+    print("Recovered addr", recovered_address);
+    print("Eth addr", "0x" + eth_addr);
+    require("0x" + eth_addr == recovered_address, "Signature not valid");
+    
+    return true;
+}
+
+operation eth_auth(message: text, signature, eth_addr: text, account_id: byte_array) {
+
+}
+

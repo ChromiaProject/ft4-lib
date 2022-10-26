@@ -38,5 +38,9 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
     } else {
         dev_error.msg = result.error!!;
     }
+}
 
+operation authenticated_operation(details: acc.auth_details) {
+  dev_op.require_dev();
+  acc.authenticate(details);
 }
