@@ -27,7 +27,7 @@ function test_eth_signatures_are_validated() {
     v=27
   );
 
-  assert_true(acc.validate_eth_signature(signature, message, "dc922451d86a9c802257066592122a7cc9a64d16"));
+  assert_true(acc.validate_eth_signature(signature, message, "0xdc922451d86a9c802257066592122a7cc9a64d16"));
 }
 
 function test_fails_if_insufficient_permissions() {

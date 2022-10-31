@@ -186,8 +186,6 @@ function authenticate(auth_details): boolean {
 function validate_eth_signature(signature, msg: text, eth_addr: text): boolean {
     val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + msg.size().to_text() + msg).to_bytes());
 
-    print("Hash", msg_hash);
-
     val eth_pubkey = eth_ecrecover(
         byte_array.from_hex(signature.r),
         byte_array.from_hex(signature.s),
@@ -195,13 +193,9 @@ function validate_eth_signature(signature, msg: text, eth_addr: text): boolean {
         msg_hash
     );
 
-    print("pubkey", eth_pubkey);
-
     val recovered_address = "0x" + keccak256(eth_pubkey).sub(12).to_hex();
-    
-    print("Recovered addr", recovered_address);
-    print("Eth addr", "0x" + eth_addr);
-    require("0x" + eth_addr == recovered_address, "Signature not valid");
+
+    require(eth_addr == recovered_address, "Signature not valid");
     
     return true;
 }
