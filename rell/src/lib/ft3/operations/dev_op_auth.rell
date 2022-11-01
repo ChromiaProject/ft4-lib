@@ -40,7 +40,28 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
     }
 }
 
-operation authenticated_operation(details: acc.auth_details) {
+operation authenticated_operation(details: acc.auth_details, desc: acc.account_auth_descriptor) {
   dev_op.require_dev();
-  acc.authenticate(details);
+  acc.authenticate(details, desc);
+}
+
+operation add_auth_description_for_account(account: acc.account, desc: acc.auth_descriptor) {
+  dev_op.require_dev();
+  acc._add_auth_descriptor(account, desc);
+}
+
+operation perform_large_transfer(
+  details: acc.auth_details, 
+  desc: acc.account_auth_descriptor, 
+  from: acc.account,
+  to: acc.account,
+  amount: integer
+) {
+  dev_op.require_dev();
+  val args = list<text>();
+  args.add(amount.to_text());
+  args.add("0x" + to.id.to_hex());
+
+  details.message = acc.format(details.message_template!!, args);
+  acc.authenticate(details, desc);
 }

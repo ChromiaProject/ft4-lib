@@ -5,6 +5,28 @@ import ^^.core.utils;
 import acc: ^^^.lib.ft3.account;
 import dev_op: ^^^.lib.ft3.operations.dev_op_auth;
 
+function setup_extended_auth() {
+  val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+  val pubkey = rell.test.keypairs.alice.pub;
+  val desc = acc.auth_descriptor(
+        "S",
+        [ pubkey ],
+        [
+          ["E"].to_gtv(),
+          pubkey.to_hex().to_gtv()
+        ],
+        rules = null.to_gtv());
+
+  val alice_acc = acc.account @ { .id == alice.account_id };
+
+  rell.test.tx()
+    .op(dev_op.add_auth_description_for_account(alice_acc, desc))
+    .sign(rell.test.keypairs.alice.priv)
+    .run();
+
+  return alice_acc;
+}
+
 function test_correctly_format_message() {
   val args = list<text>();
   args.add("100 CHR");
@@ -14,8 +36,9 @@ function test_correctly_format_message() {
 }
 
 function test_operation_without_auth_operation() {
+  utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
   rell.test.tx()
-    .op(dev_op.authenticated_operation(acc.auth_details(flags=list<text>(), message="")))
+    .op(dev_op.authenticated_operation(acc.auth_details(flags=list<text>(), message=""), acc.account_auth_descriptor @ {}))
     .run_must_fail();
 }
 
@@ -27,7 +50,12 @@ function test_eth_signatures_are_validated() {
     v=27
   );
 
-  assert_true(acc.validate_eth_signature(signature, message, "0xdc922451d86a9c802257066592122a7cc9a64d16"));
+  val args = list<gtv>();
+  args.add(message.to_gtv());
+  args.add(signature.to_gtv());
+  args.add("0xdc922451d86a9c802257066592122a7cc9a64d16".to_gtv());
+
+  assert_true(acc.validate_eth_signature(args, message));
 }
 
 function test_fails_if_insufficient_permissions() {
@@ -43,8 +71,53 @@ function test_fails_if_insufficient_permissions() {
   flags.add("E");
 
   rell.test.tx()
-    .op(acc.eth_auth("", signature, "", alice.account_id))
-    .op(dev_op.authenticated_operation(acc.auth_details(flags=flags, message="")))
+    .op(acc.eth_auth("", signature, ""))
+    .op(dev_op.authenticated_operation(acc.auth_details(flags, message=""), acc.account_auth_descriptor @ {}))
     .run_must_fail();
+}
+
+function test_it_rejects_empty_messages() {
+  val alice_acc = setup_extended_auth();
+  val message = "";
+  val eth_addr = "0xdc922451d86a9C802257066592122a7CC9a64D16";
+  val signature = acc.signature(
+    r="a93754f90fe2a42f2b5705eeb7f7cd4e13f2f70ae049ebac035c5401ed663e8d",
+    s="1e926edb77543a4d50310ac792a5cc615cf648320915e353e55af779146fd30f",
+    v=28
+  );
+
+  val acc_desc = acc.account_auth_descriptor @* {};
+
+  val flags = list<text>();
+  flags.add("E");
+
+  rell.test.tx()
+    .op(acc.eth_auth(message, signature, eth_addr))
+    .op(dev_op.authenticated_operation(acc.auth_details(flags, message_template="", message=message), acc_desc[1]))
+    .sign(rell.test.keypairs.alice.priv)
+    .run_must_fail();
+}
+
+function test_perform_eth_auth_transaction() {
+  val alice_acc = setup_extended_auth();
+  val msg_template = "Do you want to send %s CHR to %s";
+  val message = "Do you want to send 1000 CHR to 0x630254209511bfc7b40fcee0f426fe368197d784c046e41880ca196d41ec3342";
+  val eth_addr = "0xdc922451d86a9C802257066592122a7CC9a64D16";
+  val signature = acc.signature(
+    r="cb9f4c641898d3c9c1bc594092092864478212532651e7398e2f045c99289418",
+    s="6eb7557937428a93f42bfab9f6552ac0920815446f6ccff06794e3e2753d932e",
+    v=28
+  );
+
+  val acc_desc = acc.account_auth_descriptor @* {};
+
+  val flags = list<text>();
+  flags.add("E");
+
+  rell.test.tx()
+    .op(acc.eth_auth(message, signature, eth_addr))
+    .op(dev_op.perform_large_transfer(acc.auth_details(flags, message_template=msg_template), acc_desc[1], alice_acc, alice_acc, 1000))
+    .sign(rell.test.keypairs.alice.priv)
+    .run();
 }
 
