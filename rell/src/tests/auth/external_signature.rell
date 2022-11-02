@@ -20,8 +20,15 @@ function setup_extended_auth() {
   val alice_acc = acc.account @ { .id == alice.account_id };
 
   rell.test.tx()
-    .op(dev_op.add_auth_description_for_account(alice_acc, desc))
+    .op(dev_op.add_auth_descriptor_for_account(alice_acc, desc))
     .sign(rell.test.keypairs.alice.priv)
+    .run();
+
+  val account_auth_desc = acc.account_auth_descriptor @* {}[1];
+  val external_key = byte_array.from_hex("dc922451d86a9c802257066592122a7cc9a64d16");
+  
+  rell.test.tx()
+    .op(dev_op.create_external_key(account_auth_desc, external_key))
     .run();
 
   return alice_acc;
@@ -42,22 +49,6 @@ function test_operation_without_auth_operation() {
     .run_must_fail();
 }
 
-function test_eth_signatures_are_validated() {
-  val message = "Do you want to send 1000 CHR to 0xdc922451d86a9C802257066592122a7CC9a64D16";
-  val signature = acc.signature(
-    r="cf72aa907cd66181a87bcbc773584880e1e5a477f23a6493fa6e41d95c41e0f9",
-    s="281d3b27910ec79a63848e633575b8ccacc31ad6773b62d24947dd03b1900471",
-    v=27
-  );
-
-  val args = list<gtv>();
-  args.add(message.to_gtv());
-  args.add(signature.to_gtv());
-  args.add("0xdc922451d86a9c802257066592122a7cc9a64d16".to_gtv());
-
-  assert_true(acc._validate_eth_signature(args, acc.auth_details(list<text>(), message=message)));
-}
-
 function test_fails_if_insufficient_permissions() {
   val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id; // Gets 'T' flag
 
@@ -71,7 +62,7 @@ function test_fails_if_insufficient_permissions() {
   flags.add("E");
 
   rell.test.tx()
-    .op(acc.eth_auth("", signature, ""))
+    .op(acc.eth_auth("", signature))
     .op(dev_op.authenticated_operation(acc.auth_details(flags, message=""), acc.account_auth_descriptor @ {}))
     .run_must_fail();
 }
@@ -92,7 +83,7 @@ function test_it_rejects_empty_messages() {
   flags.add("E");
 
   rell.test.tx()
-    .op(acc.eth_auth(message, signature, eth_addr))
+    .op(acc.eth_auth(message, signature))
     .op(dev_op.authenticated_operation(acc.auth_details(flags, message_template="", message=message), acc_desc[1]))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
@@ -115,7 +106,7 @@ function test_perform_eth_auth_transaction() {
   flags.add("E");
 
   rell.test.tx()
-    .op(acc.eth_auth(message, signature, eth_addr))
+    .op(acc.eth_auth(message, signature))
     .op(dev_op.perform_large_transfer(acc.auth_details(flags, message_template=msg_template), acc_desc[1], alice_acc, alice_acc, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();

@@ -42,12 +42,17 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
 
 operation authenticated_operation(details: acc.auth_details, desc: acc.account_auth_descriptor) {
   dev_op.require_dev();
-  acc.authenticate(details, desc);
+  acc.require_auth_strong(details, desc);
 }
 
-operation add_auth_description_for_account(account: acc.account, desc: acc.auth_descriptor) {
+operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
   dev_op.require_dev();
   acc._add_auth_descriptor(account, desc);
+}
+
+operation create_external_key(auth_desc: acc.account_auth_descriptor, external_key: byte_array) {
+  dev_op.require_dev();
+  create acc.account_auth_descriptor_external_key(auth_descriptor=auth_desc, external_key=external_key);
 }
 
 operation perform_large_transfer(
@@ -63,14 +68,18 @@ operation perform_large_transfer(
   args.add("0x" + to.id.to_hex());
 
   details.message = acc.format(details.message_template!!, args);
-  acc.authenticate(details, desc);
+  acc.require_auth_strong(details, desc);
 }
 
 operation custom_auth_validator() {
   dev_op.require_dev();
 }
 
-function validator_callback(args: list<gtv>, auth_details: acc.auth_details) {
+function validator_callback(
+  args: list<gtv>, 
+  auth_details: acc.auth_details, 
+  descriptor_key: acc.account_auth_descriptor
+) {
   return true;
 }
 
@@ -82,5 +91,5 @@ operation large_transfer_with_custom_auth(details: acc.auth_details, desc: acc.a
     validator=validator_callback(*)
   );
 
-  require(acc.authenticate(details, desc, validator), "Unauthorized");
+  require(acc.require_auth_strong(details, desc, validator), "Unauthorized");
 }

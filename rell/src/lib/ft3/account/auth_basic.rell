@@ -24,7 +24,7 @@ struct auth_details {
 
 struct auth_validator {
     validator_name: text;
-    validator: (list<gtv>, auth_details) -> boolean;
+    validator: (list<gtv>, auth_details, account_auth_descriptor) -> boolean;
 }
 
 struct signature {
@@ -159,7 +159,8 @@ function format(template: text, arguments: list<text>) {
     return message_to_return + parts[parts.size() - 1];
 }
 
-function authenticate(auth_details, account_auth_descriptor, auth_validator? = null): boolean {
+function require_auth_strong(auth_details, account_auth_descriptor, auth_validator? = null): boolean {
+    require(is_valid(account_auth_descriptor));
     require(op_context.op_index > 0, "Expected at least two operations");
     require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
     
@@ -171,7 +172,7 @@ function authenticate(auth_details, account_auth_descriptor, auth_validator? = n
 
 function _authenticate_custom(auth_details, account_auth_descriptor, auth_validator): boolean {
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-    return auth_validator.validator(previous_op.args, auth_details);
+    return auth_validator.validator(previous_op.args, auth_details, account_auth_descriptor);
 }
 
 function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
@@ -180,7 +181,6 @@ function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
 
     val message = text.from_gtv(previous_op.args[0]);
     val sig = signature.from_gtv(previous_op.args[1]);
-    val eth_addr = text.from_gtv(previous_op.args[2]);
 
     require(
         check_auth_args(
@@ -193,12 +193,12 @@ function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
     require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
 
     return when (previous_op.name) {
-        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details);
+        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details, account_auth_descriptor);
         else -> false;
     };
 }
 
-function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
+function _validate_eth_signature(auth_args: list<gtv>, auth_details, account_auth_descriptor): boolean {
     val client_msg = text.from_gtv(auth_args[0]);
     val server_message = auth_details.message;
     
@@ -207,7 +207,6 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
     require(client_msg == server_message, "The provided message does not match the expected message");
 
     val signature = signature.from_gtv(auth_args[1]);
-    val eth_addr = text.from_gtv(auth_args[2]);
     val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + client_msg.size().to_text() + client_msg).to_bytes());
 
     val eth_pubkey = eth_ecrecover(
@@ -217,14 +216,15 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
         msg_hash
     );
 
-    val recovered_address = "0x" + keccak256(eth_pubkey).sub(12).to_hex();
+    val recovered_address = keccak256(eth_pubkey).sub(12);
+    val eth_addr = account_auth_descriptor_external_key @ { .auth_descriptor == account_auth_descriptor}( .external_key );
 
-    require(eth_addr.lower_case() == recovered_address.lower_case(), "Signature not valid");
+    require(eth_addr == recovered_address, "Signature not valid");
     
     return true;
 }
 
-operation eth_auth(message: text, signature, eth_addr: text) {
+operation eth_auth(message: text, signature) {
 
 }
 

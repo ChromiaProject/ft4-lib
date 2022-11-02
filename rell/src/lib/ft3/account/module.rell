@@ -29,6 +29,11 @@ entity account_auth_descriptor {
     rules: byte_array;
 }
 
+entity account_auth_descriptor_external_key {
+    index auth_descriptor: account_auth_descriptor;
+    index external_key: byte_array;
+}
+
 entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
 }
