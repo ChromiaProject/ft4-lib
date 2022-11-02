@@ -22,6 +22,11 @@ struct auth_details {
     mutable message: text? = null;
 }
 
+struct auth_validator {
+    validator_name: text;
+    validator: (list<gtv>, auth_details) -> boolean;
+}
+
 struct signature {
     r: text;
     s: text;
@@ -154,9 +159,22 @@ function format(template: text, arguments: list<text>) {
     return message_to_return + parts[parts.size() - 1];
 }
 
-function authenticate(auth_details, acc_desc: account_auth_descriptor): boolean {
+function authenticate(auth_details, account_auth_descriptor, auth_validator? = null): boolean {
     require(op_context.op_index > 0, "Expected at least two operations");
+    require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
     
+    return (
+        if (auth_validator != null) _authenticate_custom(auth_details, account_auth_descriptor, auth_validator)
+        else _authenticate_builtin(auth_details, account_auth_descriptor)
+    );
+}
+
+function _authenticate_custom(auth_details, account_auth_descriptor, auth_validator): boolean {
+    val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
+    return auth_validator.validator(previous_op.args, auth_details);
+}
+
+function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(previous_op.name in ["ft3.eth_auth", "ft3_auth"], "Incorrect auth operation");
 
@@ -166,30 +184,31 @@ function authenticate(auth_details, acc_desc: account_auth_descriptor): boolean 
 
     require(
         check_auth_args(
-            acc_desc.auth_type,
-            acc_desc.args,
-            auth_descriptor_participant @* { acc_desc } ( .id ),
+            account_auth_descriptor.auth_type,
+            account_auth_descriptor.args,
+            auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
             auth_details.flags
         ).valid
     );
-    require_auth(acc_desc.account, acc_desc, auth_details.flags);
+    require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
 
     return when (previous_op.name) {
-        "ft3.eth_auth" -> validate_eth_signature(previous_op.args, auth_details.message);
+        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details);
         else -> false;
     };
 }
 
-function validate_eth_signature(auth_args: list<gtv>, message: text?): boolean {
-    val msg = text.from_gtv(auth_args[0]);
+function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
+    val client_msg = text.from_gtv(auth_args[0]);
+    val server_message = auth_details.message;
     
-    require(message);
-    require(message != "");
-    require(msg == message, "The provided message does not match the expected message");
+    require(server_message);
+    require(server_message != "");
+    require(client_msg == server_message, "The provided message does not match the expected message");
 
     val signature = signature.from_gtv(auth_args[1]);
     val eth_addr = text.from_gtv(auth_args[2]);
-    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + msg.size().to_text() + msg).to_bytes());
+    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + client_msg.size().to_text() + client_msg).to_bytes());
 
     val eth_pubkey = eth_ecrecover(
         byte_array.from_hex(signature.r),

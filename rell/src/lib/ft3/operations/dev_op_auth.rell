@@ -65,3 +65,22 @@ operation perform_large_transfer(
   details.message = acc.format(details.message_template!!, args);
   acc.authenticate(details, desc);
 }
+
+operation custom_auth_validator() {
+  dev_op.require_dev();
+}
+
+function validator_callback(args: list<gtv>, auth_details: acc.auth_details) {
+  return true;
+}
+
+operation large_transfer_with_custom_auth(details: acc.auth_details, desc: acc.account_auth_descriptor) {
+  dev_op.require_dev();
+
+  val validator = acc.auth_validator(
+    validator_name="custom_auth_validator",
+    validator=validator_callback(*)
+  );
+
+  require(acc.authenticate(details, desc, validator), "Unauthorized");
+}
