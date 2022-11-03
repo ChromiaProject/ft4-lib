@@ -39,9 +39,7 @@ function setup_extended_auth() {
 }
 
 function test_correctly_format_message() {
-  val args = list<text>();
-  args.add("100 CHR");
-  args.add("0xabc123");
+  val args = ["100 CHR", "0xabc123"];
   val msg = acc.format("transfer '%s' to '%s'", args);
   assert_equals(msg, "transfer '100 CHR' to '0xabc123'");
 }
@@ -62,12 +60,12 @@ function test_eth_signatures_are_validated() {
     v=27
   );
 
-  val args = list<gtv>();
-  args.add(message.to_gtv());
-  args.add(signature.to_gtv());
-  args.add("0xdc922451d86a9c802257066592122a7cc9a64d16".to_gtv());
+  val args = [
+    signature.to_gtv(),
+    acc.account_auth_descriptor @* {}[1].id.to_gtv()
+  ];
 
-  assert_true(acc._validate_eth_signature(args, acc.auth_details(list<text>(), message=message), acc.account_auth_descriptor @* {}[1]));
+  assert_true(acc._validate_eth_signature(args, acc.auth_details(list<text>(), message=message)));
 }
 
 function test_fails_if_insufficient_permissions() {
@@ -79,12 +77,9 @@ function test_fails_if_insufficient_permissions() {
     v=1
   );
 
-  val flags = list<text>();
-  flags.add("E");
-
   rell.test.tx()
-    .op(acc.eth_auth("", signature))
-    .op(dev_op.authenticated_operation(acc.auth_details(flags, message=""), acc.account_auth_descriptor @ {}))
+    .op(acc.eth_auth(signature, acc.account_auth_descriptor @ {}( .id )))
+    .op(dev_op.authenticated_operation(acc.auth_details(["E"], message=""), acc.account_auth_descriptor @ {}))
     .run_must_fail();
 }
 
@@ -100,12 +95,9 @@ function test_it_rejects_empty_messages() {
 
   val acc_desc = acc.account_auth_descriptor @* {};
 
-  val flags = list<text>();
-  flags.add("E");
-
   rell.test.tx()
-    .op(acc.eth_auth(message, signature))
-    .op(dev_op.authenticated_operation(acc.auth_details(flags, message_template="", message=message), acc_desc[1]))
+    .op(acc.eth_auth(signature, acc_desc[1].id))
+    .op(dev_op.authenticated_operation(acc.auth_details(["E"], message_template="", message=message), acc.account_auth_descriptor @* {}[1]))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
 }
@@ -123,12 +115,9 @@ function test_perform_eth_auth_transaction() {
 
   val acc_desc = acc.account_auth_descriptor @* {};
 
-  val flags = list<text>();
-  flags.add("E");
-
   rell.test.tx()
-    .op(acc.eth_auth(message, signature))
-    .op(dev_op.perform_large_transfer(acc.auth_details(flags, message_template=msg_template), acc_desc[1], alice_acc, alice_acc, 1000))
+    .op(acc.eth_auth(signature, acc_desc[1].id))
+    .op(dev_op.perform_large_transfer(acc.auth_details(["E"], message_template=msg_template), acc_desc[1], alice_acc, alice_acc, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -137,12 +126,9 @@ function test_provide_custom_authenticator() {
   val alice_acc = setup_extended_auth();
   val acc_desc = acc.account_auth_descriptor @* {};
 
-  val flags = list<text>();
-  flags.add("E");
-
   rell.test.tx()
     .op(dev_op.custom_auth_validator())
-    .op(dev_op.large_transfer_with_custom_auth(acc.auth_details(flags, message_template=""), acc_desc[1]))
+    .op(dev_op.large_transfer_with_custom_auth(acc.auth_details(["E"], message_template=""), acc_desc[1]))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }

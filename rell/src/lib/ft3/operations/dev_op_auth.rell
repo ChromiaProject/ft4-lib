@@ -63,9 +63,8 @@ operation perform_large_transfer(
   amount: integer
 ) {
   dev_op.require_dev();
-  val args = list<text>();
-  args.add(amount.to_text());
-  args.add("0x" + to.id.to_hex());
+  
+  val args = [amount.to_text(), "0x" + to.id.to_hex()];
 
   details.message = acc.format(details.message_template!!, args);
   acc.require_auth_strong(details, desc);

@@ -179,8 +179,7 @@ function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(previous_op.name in ["ft3.eth_auth", "ft3_auth"], "Incorrect auth operation");
 
-    val message = text.from_gtv(previous_op.args[0]);
-    val sig = signature.from_gtv(previous_op.args[1]);
+    val sig = signature.from_gtv(previous_op.args[0]);
 
     require(
         check_auth_args(
@@ -193,21 +192,20 @@ function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
     require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
 
     return when (previous_op.name) {
-        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details, account_auth_descriptor);
+        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details);
         else -> false;
     };
 }
 
-function _validate_eth_signature(auth_args: list<gtv>, auth_details, account_auth_descriptor): boolean {
-    val client_msg = text.from_gtv(auth_args[0]);
-    val server_message = auth_details.message;
+function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
+    require(auth_args.size() == 2, "Incorrect number of arguments to auth operation");
+    val message = auth_details.message;
     
-    require(server_message);
-    require(server_message != "");
-    require(client_msg == server_message, "The provided message does not match the expected message");
+    require(message);
+    require(message != "");
 
-    val signature = signature.from_gtv(auth_args[1]);
-    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + client_msg.size().to_text() + client_msg).to_bytes());
+    val signature = signature.from_gtv(auth_args[0]);
+    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
 
     val eth_pubkey = eth_ecrecover(
         byte_array.from_hex(signature.r),
@@ -217,14 +215,15 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details, account_aut
     );
 
     val recovered_address = keccak256(eth_pubkey).sub(12);
-    val eth_addr = account_auth_descriptor_external_key @ { .auth_descriptor == account_auth_descriptor}( .external_key );
+    val auth_desc_id = byte_array.from_gtv(auth_args[1]);
+    val eth_addr = account_auth_descriptor_external_key @ { .auth_descriptor.id == auth_desc_id }( .external_key );
 
     require(eth_addr == recovered_address, "Signature not valid");
     
     return true;
 }
 
-operation eth_auth(message: text, signature) {
+operation eth_auth(signature, auth_descriptor_id: byte_array) {
 
 }
 
