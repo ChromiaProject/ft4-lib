@@ -154,7 +154,7 @@ function format(template: text, arguments: list<text>) {
     return message_to_return + parts[parts.size() - 1];
 }
 
-function require_auth_strong(auth_details, account_auth_descriptor): boolean {
+function authenticate(auth_details, account_auth_descriptor): boolean {
     require(is_valid(account_auth_descriptor));
     require(op_context.op_index > 0, "Expected at least two operations");
     require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
@@ -181,7 +181,7 @@ function require_auth_strong(auth_details, account_auth_descriptor): boolean {
 }
 
 function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
-    require(auth_args.size() == 2, "Incorrect number of arguments to auth operation");
+    require(auth_args.size() >= 2, "Not all required arguments provided");
     val message = auth_details.message;
     
     require(message);
@@ -199,14 +199,19 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
 
     val recovered_address = keccak256(eth_pubkey).sub(12);
     val auth_desc_id = byte_array.from_gtv(auth_args[1]);
-    val eth_addr = account_auth_descriptor_external_key @ { .auth_descriptor.id == auth_desc_id }( .external_key );
+    val external_key = account_auth_descriptor_external_key @ { .auth_descriptor.id == auth_desc_id };
 
-    require(eth_addr == recovered_address, "Signature not valid");
+    require(external_key.external_key == recovered_address, "Signature not valid");
     
     return true;
 }
 
-operation eth_auth(signature, auth_descriptor_id: byte_array) {
-
+operation eth_auth(signature, auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer) {
+    val external = account_auth_descriptor_external_key @ {
+        .auth_descriptor.id == auth_descriptor_id, 
+        .external_key == external_key
+    };
+    require(ctr == external.ctr, "Unexpected counter value");
+    external.ctr += 1;
 }
 
