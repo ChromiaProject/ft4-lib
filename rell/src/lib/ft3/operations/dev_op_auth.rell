@@ -81,14 +81,3 @@ function validator_callback(
 ) {
   return true;
 }
-
-operation large_transfer_with_custom_auth(details: acc.auth_details, desc: acc.account_auth_descriptor) {
-  dev_op.require_dev();
-
-  val validator = acc.auth_validator(
-    validator_name="custom_auth_validator",
-    validator=validator_callback(*)
-  );
-
-  require(acc.require_auth_strong(details, desc, validator), "Unauthorized");
-}

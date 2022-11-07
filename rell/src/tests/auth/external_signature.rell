@@ -121,15 +121,3 @@ function test_perform_eth_auth_transaction() {
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
-
-function test_provide_custom_authenticator() {
-  val alice_acc = setup_extended_auth();
-  val acc_desc = acc.account_auth_descriptor @* {};
-
-  rell.test.tx()
-    .op(dev_op.custom_auth_validator())
-    .op(dev_op.large_transfer_with_custom_auth(acc.auth_details(["E"], message_template=""), acc_desc[1]))
-    .sign(rell.test.keypairs.alice.priv)
-    .run();
-}
-

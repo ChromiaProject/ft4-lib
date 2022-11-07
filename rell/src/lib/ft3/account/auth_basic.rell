@@ -22,11 +22,6 @@ struct auth_details {
     mutable message: text? = null;
 }
 
-struct auth_validator {
-    validator_name: text;
-    validator: (list<gtv>, auth_details, account_auth_descriptor) -> boolean;
-}
-
 struct signature {
     r: text;
     s: text;
@@ -159,23 +154,11 @@ function format(template: text, arguments: list<text>) {
     return message_to_return + parts[parts.size() - 1];
 }
 
-function require_auth_strong(auth_details, account_auth_descriptor, auth_validator? = null): boolean {
+function require_auth_strong(auth_details, account_auth_descriptor): boolean {
     require(is_valid(account_auth_descriptor));
     require(op_context.op_index > 0, "Expected at least two operations");
     require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
-    
-    return (
-        if (auth_validator != null) _authenticate_custom(auth_details, account_auth_descriptor, auth_validator)
-        else _authenticate_builtin(auth_details, account_auth_descriptor)
-    );
-}
 
-function _authenticate_custom(auth_details, account_auth_descriptor, auth_validator): boolean {
-    val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-    return auth_validator.validator(previous_op.args, auth_details, account_auth_descriptor);
-}
-
-function _authenticate_builtin(auth_details, account_auth_descriptor): boolean {
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(previous_op.name in ["ft3.eth_auth", "ft3_auth"], "Incorrect auth operation");
 
