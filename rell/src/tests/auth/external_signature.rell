@@ -40,25 +40,6 @@ function test_operation_without_auth_operation() {
     .run_must_fail();
 }
 
-function test_eth_signatures_are_validated() {
-  val alice_auth_desc_id = setup_extended_auth();
-  val message = "Do you want to send 1000 CHR to 0xdc922451d86a9C802257066592122a7CC9a64D16";
-  val signature = acc.signature(
-    r="cf72aa907cd66181a87bcbc773584880e1e5a477f23a6493fa6e41d95c41e0f9",
-    s="281d3b27910ec79a63848e633575b8ccacc31ad6773b62d24947dd03b1900471",
-    v=27
-  );
-
-  val args = [
-    alice_auth_desc_id.to_gtv(),
-    external_key.to_gtv(),
-    0x0.to_gtv(),
-    signature.to_gtv()
-  ];
-
-  assert_true(acc._validate_eth_signature(args, acc.auth_details(list<text>(), message=message)));
-}
-
 function test_fails_if_insufficient_permissions() {
   val alice_auth_desc_id = setup_extended_auth();
 
@@ -105,9 +86,15 @@ function test_perform_eth_auth_transaction() {
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
   val alice_acc = alice_acc_desc.account;
 
+  val auth_details = acc.auth_details(
+    list<text>(),
+    message_template=msg_template,
+    disposable_key=rell.test.keypairs.alice.pub
+  );
+
   rell.test.tx()
     .op(acc.eth_auth(alice_acc_desc_id, external_key, acc_ext.get_ctr_for_external_key(alice_acc_desc_id, external_key), signature))
-    .op(dev_op.perform_large_transfer(acc.auth_details(["E"], message_template=msg_template), alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -130,11 +117,17 @@ function test_requires_correct_ctr() {
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
   val alice_acc = alice_acc_desc.account;
 
+  val auth_details = acc.auth_details(
+    ["E"],
+    message_template=msg_template,
+    disposable_key=rell.test.keypairs.alice.pub
+  );
+
   rell.test.tx()
     .op(acc.eth_auth(alice_acc_desc_id, external_key, 0, signature0))
-    .op(dev_op.perform_large_transfer(acc.auth_details(["E"], message_template=msg_template), alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
     .op(acc.eth_auth(alice_acc_desc_id, external_key, 1, signature1))
-    .op(dev_op.perform_large_transfer(acc.auth_details(["E"], message_template=msg_template), alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }

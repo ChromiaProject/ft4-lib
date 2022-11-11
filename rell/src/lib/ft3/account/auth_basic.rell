@@ -18,6 +18,7 @@ struct multi_sig_args {
 
 struct auth_details {
     flags: list<text>;
+    disposable_key: byte_array? = null;
     message_template: text? = null;
     mutable message: text? = null;
 }
@@ -169,8 +170,12 @@ function authenticate(auth_details, account_auth_descriptor): boolean {
 
 function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
     require(auth_args.size() >= 3, "Not all required arguments provided");
-    val message = auth_details.message;
     
+    val disposable_key = auth_details.disposable_key;
+    require(disposable_key, "Must provide the disposable key");
+    require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
+
+    val message = auth_details.message;
     require(message);
     require(message != "");
 
