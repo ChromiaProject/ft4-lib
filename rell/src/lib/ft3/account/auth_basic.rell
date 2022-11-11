@@ -157,37 +157,25 @@ function format(template: text, arguments: list<text>) {
 function authenticate(auth_details, account_auth_descriptor): boolean {
     require(is_valid(account_auth_descriptor));
     require(op_context.op_index > 0, "Expected at least two operations");
-    require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-    require(previous_op.name in ["ft3.eth_auth", "ft3_auth"], "Incorrect auth operation");
-
-    val sig = signature.from_gtv(previous_op.args[0]);
-
-    require(
-        check_auth_args(
-            account_auth_descriptor.auth_type,
-            account_auth_descriptor.args,
-            auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
-            auth_details.flags
-        ).valid
-    );
-    require_auth(account_auth_descriptor.account, account_auth_descriptor, auth_details.flags);
-
+    require(previous_op.name in ["ft3.eth_auth", "ft3.ft4_auth"], "Incorrect auth operation");
     return when (previous_op.name) {
         "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details);
+        "ft3.ft4_auth" -> _validate_ft4_signature(previous_op.args, auth_details);
         else -> false;
     };
 }
 
 function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
-    require(auth_args.size() >= 2, "Not all required arguments provided");
+    require(auth_args.size() >= 3, "Not all required arguments provided");
     val message = auth_details.message;
     
     require(message);
     require(message != "");
 
-    val signature = signature.from_gtv(auth_args[0]);
+    val external_key = byte_array.from_gtv(auth_args[1]);
+    val signature = signature.from_gtv(auth_args[3]);
     val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
 
     val eth_pubkey = eth_ecrecover(
@@ -198,20 +186,49 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
     );
 
     val recovered_address = keccak256(eth_pubkey).sub(12);
-    val auth_desc_id = byte_array.from_gtv(auth_args[1]);
-    val external_key = account_auth_descriptor_external_key @ { .auth_descriptor.id == auth_desc_id };
+    val auth_desc_id = byte_array.from_gtv(auth_args[0]);
+    val external = account_auth_descriptor_external_key @ {
+        .auth_descriptor.id == auth_desc_id,
+        .external_key == external_key
+    };
 
-    require(external_key.external_key == recovered_address, "Signature not valid");
+    require(external.external_key == recovered_address, "Signature not valid");
     
     return true;
 }
 
-operation eth_auth(signature, auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer) {
+function _validate_ft4_signature(auth_args: list<gtv>, auth_details): boolean {
+    val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
+    val external_key = byte_array.from_gtv(auth_args[1]);
+
+    val external = account_auth_descriptor_external_key @ {
+        .auth_descriptor.id == auth_descriptor_id, 
+        .external_key == external_key
+    };
+
+    require_auth(
+        external.auth_descriptor.account,
+        external.auth_descriptor,
+        ["E"]
+    );
+
+    return true;
+}
+
+function _check_ctr(auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer) {
     val external = account_auth_descriptor_external_key @ {
         .auth_descriptor.id == auth_descriptor_id, 
         .external_key == external_key
     };
     require(ctr == external.ctr, "Unexpected counter value");
     external.ctr += 1;
+}
+
+operation eth_auth(auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer, signature) {
+    _check_ctr(auth_descriptor_id, external_key, ctr);
+}
+
+operation ft4_auth(auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer) {
+    _check_ctr(auth_descriptor_id, external_key, ctr);
 }
 

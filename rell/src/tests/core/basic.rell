@@ -20,6 +20,7 @@ function test_an_account_can_be_created() {
 function test_multi_sig_auth_descriptor_can_be_added() {
   val auth_descriptor = acc.auth_descriptor(
     "M",
+    [ alice.pub, bob.pub ],
     [
         ["T"].to_gtv(),
         0x2.to_gtv(),
@@ -41,6 +42,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
 function test_an_invalid_descriptor_can_not_be_added() {
   val auth_descriptor = acc.auth_descriptor(
     "M",
+    [ alice.pub, bob.pub ],
     [
         ["T"].to_gtv(),
         alice.pub.to_hex().to_gtv(),

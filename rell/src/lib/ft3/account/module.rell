@@ -48,9 +48,19 @@ entity rl_state {
 }
 
 
-function _add_auth_descriptor(account, auth_descriptor) {
+function _add_auth_descriptor(account, auth_descriptor): byte_array {
     require_signed_by_auth_descriptor_participants(auth_descriptor);
-    Unsafe._add_auth_descriptor (account, auth_descriptor);
+    val id = Unsafe._add_auth_descriptor (account, auth_descriptor);
+
+     val account_auth_descriptor = create account_auth_descriptor (
+        account, id,
+        auth_descriptor.auth_type,
+        args = auth_descriptor.args.to_gtv().to_bytes(),
+        rules = auth_descriptor.rules.to_gtv().to_bytes()
+     );
+
+     setup_auth_descriptor_variables(account_auth_descriptor);
+     return id;
 }
 
 function require_signed_by_auth_descriptor_participants(auth_descriptor) {
@@ -91,6 +101,37 @@ function create_account_with_auth(auth_descriptor): byte_array {
     return Unsafe.create_account_with_auth(auth_descriptor);
 }
 
+function create_account_with_eth_auth(auth_descriptor): byte_array {
+    require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
+    val acc_id = auth_descriptor.hash();
+    val account = create account (acc_id);
+
+    val id = auth_descriptor.hash();
+     
+     analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+     
+     val account_auth_descriptor = create account_auth_descriptor (
+        account, id,
+        auth_descriptor.auth_type,
+        args = auth_descriptor.args.to_gtv().to_bytes(),
+        rules = auth_descriptor.rules.to_gtv().to_bytes()
+     );
+     
+    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
+        create account_auth_descriptor_external_key(account_auth_descriptor, participant, 0);
+    }
+     
+    setup_auth_descriptor_variables(account_auth_descriptor);
+
+    val max_points = core.my_blockchain_info.rate_limit_max_points;
+    val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
+    val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
+    
+    create rl_state(account, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+
+    return id;
+}
+
 function auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
     rate_limit(account);
     require_auth(account, auth_descriptor, required_flags);
@@ -125,7 +166,7 @@ namespace Unsafe {
     }
 
     //WARNING: doesn't check that the auth_descriptor is being added by the participant(s) nor owner(s)
-    function _add_auth_descriptor(account, auth_descriptor) {
+    function _add_auth_descriptor(account, auth_descriptor): byte_array {
         val id = auth_descriptor.hash();
         
         analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
@@ -147,5 +188,6 @@ namespace Unsafe {
         }
         
         setup_auth_descriptor_variables(account_auth_descriptor);
+        return id;
     }
 }

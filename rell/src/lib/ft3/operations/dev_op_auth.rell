@@ -55,6 +55,16 @@ operation create_external_key(auth_desc: acc.account_auth_descriptor, external_k
   create acc.account_auth_descriptor_external_key(auth_descriptor=auth_desc, external_key=external_key, ctr=0);
 }
 
+operation create_eth_account(auth_desc: acc.auth_descriptor) {
+  dev_op.require_dev();
+  acc.create_account_with_eth_auth(auth_desc);
+}
+
+operation create_ft4_account(auth_desc: acc.auth_descriptor) {
+  dev_op.require_dev();
+  acc.create_account_with_auth(auth_desc);
+}
+
 operation perform_large_transfer(
   details: acc.auth_details, 
   desc: acc.account_auth_descriptor, 
@@ -63,8 +73,9 @@ operation perform_large_transfer(
   amount: integer
 ) {
   dev_op.require_dev();
-  
-  val args = [amount.to_text(), "0x" + to.id.to_hex()];
+  val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
+  val ctr = integer.from_gtv(previous_op.args[2]);
+  val args = [amount.to_text(), "0x" + to.id.to_hex(), ctr.to_text()];
 
   details.message = acc.format(details.message_template!!, args);
   require(acc.authenticate(details, desc));
