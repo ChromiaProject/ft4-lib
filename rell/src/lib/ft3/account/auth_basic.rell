@@ -20,7 +20,7 @@ struct auth_details {
     flags: list<text>;
     disposable_key: byte_array? = null;
     message_template: text? = null;
-    mutable message: text? = null;
+    mutable messages: list<text> = [];
 }
 
 struct signature {
@@ -175,65 +175,85 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
     require(disposable_key, "Must provide the disposable key");
     require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
 
-    val message = auth_details.message;
-    require(message);
-    require(message != "");
+    val external_keys = list<byte_array>.from_gtv(auth_args[1]);
+    val signatures = list<signature>.from_gtv(auth_args[3]);
 
-    val external_key = byte_array.from_gtv(auth_args[1]);
-    val signature = signature.from_gtv(auth_args[3]);
-    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
+    require(signatures.size() == external_keys.size(), "# signatures does not match # external keys provided");
+    require(signatures.size() == auth_details.messages.size(), "# signatures does not match # messages provided");
+    for (i in range(signatures.size())) {
+        val message = auth_details.messages[i];
+        require(message != "");
 
-    val eth_pubkey = eth_ecrecover(
-        byte_array.from_hex(signature.r),
-        byte_array.from_hex(signature.s),
-        signature.v - 27,
-        msg_hash
-    );
+        val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
+        val signature = signatures[i];
+        val eth_pubkey = eth_ecrecover(
+            byte_array.from_hex(signature.r),
+            byte_array.from_hex(signature.s),
+            signature.v - 27,
+            msg_hash
+        );
 
-    val recovered_address = keccak256(eth_pubkey).sub(12);
-    val auth_desc_id = byte_array.from_gtv(auth_args[0]);
-    val external = account_auth_descriptor_external_key @ {
-        .auth_descriptor.id == auth_desc_id,
-        .external_key == external_key
-    };
-
-    require(external.external_key == recovered_address, "Signature not valid");
-    
+        val recovered_address = keccak256(eth_pubkey).sub(12);
+        val auth_desc_id = byte_array.from_gtv(auth_args[0]);
+        val external = account_auth_descriptor_external_key @ {
+            .auth_descriptor.id == auth_desc_id,
+            .external_key == recovered_address
+        };
+    }
     return true;
 }
 
 function _validate_ft4_signature(auth_args: list<gtv>, auth_details): boolean {
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
-    val external_key = byte_array.from_gtv(auth_args[1]);
+    val external_keys = list<byte_array>.from_gtv(auth_args[1]);
 
     val external = account_auth_descriptor_external_key @ {
         .auth_descriptor.id == auth_descriptor_id, 
-        .external_key == external_key
+        .external_key in external_keys
     };
 
     require_auth(
         external.auth_descriptor.account,
         external.auth_descriptor,
-        ["E"]
+        auth_details.flags
     );
 
     return true;
 }
 
-function _check_ctr(auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer) {
-    val external = account_auth_descriptor_external_key @ {
+function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_array>, ctrs: list<integer>) {
+    require(external_keys.size() == ctrs.size(), "# of external keys and # counters differ");
+
+    val externals = account_auth_descriptor_external_key @+ {
         .auth_descriptor.id == auth_descriptor_id, 
-        .external_key == external_key
+        .external_key in external_keys
     };
-    require(ctr == external.ctr, "Unexpected counter value");
-    external.ctr += 1;
+
+    var provided = map<byte_array, integer>();
+    for (i in range(external_keys.size())) {
+        provided.put(external_keys[i], ctrs[i]);
+    }
+
+    for (external in externals) {
+        require(provided[external.external_key] == external.ctr, "Unexpected counter value");
+        external.ctr += 1;
+    }
 }
 
-operation eth_auth(auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer, signature) {
-    _check_ctr(auth_descriptor_id, external_key, ctr);
+operation eth_auth(
+    auth_descriptor_id: byte_array,
+    external_keys: list<byte_array>,
+    ctrs: list<integer>,
+    signatures: list<signature>
+) {
+    _check_ctr(auth_descriptor_id, external_keys, ctrs);
 }
 
-operation ft4_auth(auth_descriptor_id: byte_array, external_key: byte_array, ctr: integer) {
-    _check_ctr(auth_descriptor_id, external_key, ctr);
+operation ft4_auth(
+    auth_descriptor_id: byte_array,
+    external_keys: list<byte_array>,
+    ctrs: list<integer>
+) {
+    _check_ctr(auth_descriptor_id, external_keys, ctrs);
 }
 

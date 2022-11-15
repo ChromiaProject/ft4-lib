@@ -74,10 +74,15 @@ operation perform_large_transfer(
 ) {
   dev_op.require_dev();
   val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-  val ctr = integer.from_gtv(previous_op.args[2]);
-  val args = [amount.to_text(), "0x" + to.id.to_hex(), ctr.to_text()];
+  val ctrs = list<integer>.from_gtv(previous_op.args[2]);
 
-  details.message = acc.format(details.message_template!!, args);
+  var messages = list<text>();
+  for (ctr in ctrs) {
+    val args = [amount.to_text(), "0x" + to.id.to_hex(), ctr.to_text()];
+    messages.add(acc.format(details.message_template!!, args));
+  }
+
+  details.messages = messages;
   require(acc.authenticate(details, desc));
 }
 
