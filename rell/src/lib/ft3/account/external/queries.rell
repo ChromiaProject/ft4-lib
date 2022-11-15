@@ -49,8 +49,8 @@ query get_accounts_by_auth_descriptor_id(id: byte_array) {
 }
 
 query get_ctr_for_external_key(auth_descriptor_id: byte_array, external_key: byte_array) {
-    return acc.account_auth_descriptor_external_key @ {
-        .auth_descriptor == acc.account_auth_descriptor @ { .id == auth_descriptor_id },
-        .external_key == external_key
+    return acc.auth_descriptor_participant @ {
+        .account_auth_descriptor == acc.account_auth_descriptor @ { .id == auth_descriptor_id },
+        .id == external_key
     }( .ctr );
 } 

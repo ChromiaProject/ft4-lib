@@ -29,13 +29,9 @@ entity account_auth_descriptor {
     rules: byte_array;
 }
 
-entity account_auth_descriptor_external_key {
-    key auth_descriptor: account_auth_descriptor, external_key: byte_array;
-    mutable ctr: integer;
-}
-
 entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
+    mutable ctr: integer;
 }
 
 // rate limiter
@@ -58,7 +54,6 @@ function _add_auth_descriptor(account, auth_descriptor): byte_array {
         args = auth_descriptor.args.to_gtv().to_bytes(),
         rules = auth_descriptor.rules.to_gtv().to_bytes()
      );
-
      setup_auth_descriptor_variables(account_auth_descriptor);
      return id;
 }
@@ -116,10 +111,6 @@ function create_account_with_eth_auth(auth_descriptor): byte_array {
         args = auth_descriptor.args.to_gtv().to_bytes(),
         rules = auth_descriptor.rules.to_gtv().to_bytes()
      );
-     
-    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-        create account_auth_descriptor_external_key(account_auth_descriptor, participant, 0);
-    }
      
     setup_auth_descriptor_variables(account_auth_descriptor);
 
@@ -182,10 +173,6 @@ namespace Unsafe {
             args = auth_descriptor.args.to_gtv().to_bytes(),
             rules = auth_descriptor.rules.to_gtv().to_bytes()
         );
-        
-        for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-            create auth_descriptor_participant(account_auth_descriptor, id = participant);
-        }
         
         setup_auth_descriptor_variables(account_auth_descriptor);
         return id;

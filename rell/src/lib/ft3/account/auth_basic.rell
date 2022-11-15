@@ -195,9 +195,9 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
 
         val recovered_address = keccak256(eth_pubkey).sub(12);
         val auth_desc_id = byte_array.from_gtv(auth_args[0]);
-        val external = account_auth_descriptor_external_key @ {
-            .auth_descriptor.id == auth_desc_id,
-            .external_key == recovered_address
+        val external = auth_descriptor_participant @ {
+            .account_auth_descriptor.id == auth_desc_id,
+            .id == recovered_address
         };
     }
     return true;
@@ -207,14 +207,14 @@ function _validate_ft4_signature(auth_args: list<gtv>, auth_details): boolean {
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
     val external_keys = list<byte_array>.from_gtv(auth_args[1]);
 
-    val external = account_auth_descriptor_external_key @ {
-        .auth_descriptor.id == auth_descriptor_id, 
-        .external_key in external_keys
+    val external = auth_descriptor_participant @ {
+        .account_auth_descriptor.id == auth_descriptor_id, 
+        .id in external_keys
     };
 
     require_auth(
-        external.auth_descriptor.account,
-        external.auth_descriptor,
+        external.account_auth_descriptor.account,
+        external.account_auth_descriptor,
         auth_details.flags
     );
 
@@ -224,9 +224,9 @@ function _validate_ft4_signature(auth_args: list<gtv>, auth_details): boolean {
 function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_array>, ctrs: list<integer>) {
     require(external_keys.size() == ctrs.size(), "# of external keys and # counters differ");
 
-    val externals = account_auth_descriptor_external_key @+ {
-        .auth_descriptor.id == auth_descriptor_id, 
-        .external_key in external_keys
+    val externals = auth_descriptor_participant @+ {
+        .account_auth_descriptor.id == auth_descriptor_id, 
+        .id in external_keys
     };
 
     var provided = map<byte_array, integer>();
@@ -235,7 +235,7 @@ function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_arr
     }
 
     for (external in externals) {
-        require(provided[external.external_key] == external.ctr, "Unexpected counter value");
+        require(provided[external.id] == external.ctr, "Unexpected counter value");
         external.ctr += 1;
     }
 }
@@ -246,6 +246,7 @@ operation eth_auth(
     ctrs: list<integer>,
     signatures: list<signature>
 ) {
+    require(is_valid(account_auth_descriptor @ { .id == auth_descriptor_id }));
     _check_ctr(auth_descriptor_id, external_keys, ctrs);
 }
 
