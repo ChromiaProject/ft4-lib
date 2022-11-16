@@ -7,14 +7,22 @@ import acc_ext: ^^^.lib.ft3.account.external;
 import dev_op: ^^^.lib.ft3.operations.dev_op_auth;
 
 val external_key = byte_array.from_hex("dc922451d86a9c802257066592122a7cc9a64d16");
+val to_addr = "ba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
+val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
 
 function setup_extended_auth() {
   val desc = acc.auth_descriptor(
     "S",
     [ external_key ],
     [
-      ["E"].to_gtv(),
-      external_key.to_hex().to_gtv()
+      rell.test.keypairs.alice.pub.to_gtv(),
+      "".to_gtv(),
+      [""].to_gtv(),
+      [
+        set(["E"]).to_gtv(),
+        rell.test.keypairs.alice.pub.to_gtv()
+      ].to_gtv(),
+      null.to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -26,6 +34,16 @@ function setup_extended_auth() {
     return desc.hash();
 }
 
+
+function default_external_sig_args() {
+  return acc.external_sig_args(
+    messages=[""],
+    disposable_key=rell.test.keypairs.alice.pub,
+    message_template=msg_template,
+    acc.single_sig_args(flags=set(["E"]), pubkey=rell.test.keypairs.alice.pub)
+  );
+}
+
 function test_correctly_format_message() {
   val args = ["100 CHR", "0xabc123"];
   val msg = acc.format("transfer '%s' to '%s'", args);
@@ -35,7 +53,7 @@ function test_correctly_format_message() {
 function test_operation_without_auth_operation() {
   utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
   rell.test.tx()
-    .op(dev_op.authenticated_operation(acc.auth_details(flags=list<text>(), messages=[""]), acc.account_auth_descriptor @ {}))
+    .op(dev_op.authenticated_operation(default_external_sig_args(), acc.account_auth_descriptor @ {}))
     .run_must_fail();
 }
 
@@ -50,62 +68,69 @@ function test_fails_if_insufficient_permissions() {
 
   rell.test.tx()
     .op(acc.eth_auth(alice_auth_desc_id, [external_key], [0], [signature]))
-    .op(dev_op.authenticated_operation(acc.auth_details(flags=["E"], messages=[""]), acc.account_auth_descriptor @ {}))
+    .op(dev_op.authenticated_operation(default_external_sig_args(), acc.account_auth_descriptor @ {}))
     .run_must_fail();
 }
 
 function test_it_rejects_empty_messages() {
   val alice_auth_desc_id = setup_extended_auth();
-  val message = "";
   val signature = acc.signature(
     r="a93754f90fe2a42f2b5705eeb7f7cd4e13f2f70ae049ebac035c5401ed663e8d",
     s="1e926edb77543a4d50310ac792a5cc615cf648320915e353e55af779146fd30f",
     v=28
   );
 
-  val acc_desc = acc.account_auth_descriptor @* {};
-
   rell.test.tx()
     .op(acc.eth_auth(alice_auth_desc_id, [external_key], [0], [signature]))
-    .op(dev_op.authenticated_operation(acc.auth_details(flags=["E"], message_template="", messages=[message]), acc_desc[0]))
+    .op(dev_op.authenticated_operation(default_external_sig_args(), acc.account_auth_descriptor @ {}))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
 }
 
 function test_perform_eth_auth_transaction() {
   val alice_acc_desc_id = setup_extended_auth();
-  val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
   val signature = acc.signature(
-    r="b62cce38c2c5fbd3041f2369cc5e859121b4fbca25c043d3a4f31cc8cb0a1be2",
-    s="10bde20497c1a51532cdd301cde1d4285b59a4422b1977babb9c38b515e131c7",
+    r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
+    s="4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
     v=28
   );
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
   val alice_acc = alice_acc_desc.account;
 
-  val auth_details = acc.auth_details(
-    flags=["E"],
-    message_template=msg_template,
-    disposable_key=rell.test.keypairs.alice.pub
-  );
-
   rell.test.tx()
     .op(acc.eth_auth(alice_acc_desc_id, [external_key], [acc_ext.get_ctr_for_external_key(alice_acc_desc_id, external_key)], [signature]))
-    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
 
 function test_multisig_external_signature() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
+  
+  val external_sig_args = acc.external_sig_args(
+    messages=[""],
+    message_template=msg_template,
+    disposable_key=rell.test.keypairs.alice.pub,
+    acc.multi_sig_args(
+      flags=set(["E"]),
+      pubkeys=[rell.test.keypairs.alice.pub],
+      signatures_required=2
+    )
+  );
   val desc = acc.auth_descriptor(
     "M",
     [ external_key, second_external_key ],
     [
-      ["E"].to_gtv(),
-      external_key.to_hex().to_gtv(),
-      second_external_key.to_hex().to_gtv()
+      rell.test.keypairs.alice.pub.to_gtv(),
+      msg_template.to_gtv(),
+      [""].to_gtv(),
+      null.to_gtv(),
+      [
+        set(["E"]).to_gtv(),
+        0x2.to_gtv(),
+        [rell.test.keypairs.alice.pub].to_gtv()
+      ].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -117,7 +142,6 @@ function test_multisig_external_signature() {
   val alice_acc_desc = acc.account_auth_descriptor @ {};
   val alice_acc = alice_acc_desc.account;
 
-  val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
   val signature0 = acc.signature(
     r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
     s="4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
@@ -129,56 +153,41 @@ function test_multisig_external_signature() {
     v=28
   );
 
-  val auth_details = acc.auth_details(
-    flags=["E"],
-    message_template=msg_template,
-    disposable_key=rell.test.keypairs.alice.pub
-  );
-
   rell.test.tx()
     .op(acc.eth_auth(desc.hash(), [external_key, second_external_key], [0, 0], [signature0, signature1]))
-    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(external_sig_args, alice_acc_desc, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
 
 function test_requires_correct_ctr() {
   val alice_acc_desc_id = setup_extended_auth();
-  val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
   val signature0 = acc.signature(
-    r="b62cce38c2c5fbd3041f2369cc5e859121b4fbca25c043d3a4f31cc8cb0a1be2",
-    s="10bde20497c1a51532cdd301cde1d4285b59a4422b1977babb9c38b515e131c7",
+    r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
+    s="4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
     v=28
   );
 
   val signature1 = acc.signature(
-    r="2106eda77e00f608f158784d8095ac63a97aa89d2a7d14da1678fe6552942ffd",
-    s="6b446296c6926cce4d64db6f0aa4b4f3ff333798a82266dabe63bb0ce67d55fd",
-    v=27
+    r="cbdb6d7ee8139647783035cc54805a4de4049fbaf5b819bc0c89cbcbbed72577",
+    s="18c6881717ae1939a97dc7eb443644625a4a8765b22f5de19f881c10a2e24fbf",
+    v=28
   );
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
   val alice_acc = alice_acc_desc.account;
 
-  val auth_details = acc.auth_details(
-    flags=["E"],
-    message_template=msg_template,
-    disposable_key=rell.test.keypairs.alice.pub
-  );
-
   rell.test.tx()
     .op(acc.eth_auth(alice_acc_desc_id, [external_key], [0], [signature0]))
-    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
     .op(acc.eth_auth(alice_acc_desc_id, [external_key], [1], [signature1]))
-    .op(dev_op.perform_large_transfer(auth_details, alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
 
 function test_ft4_auth_fails_if_key_invalid() {
-  val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
   val external_key = rell.test.keypairs.alice;
-  val external_key_bob = rell.test.keypairs.bob;
   val desc = acc.auth_descriptor(
     "S",
     [ external_key.pub ],
@@ -198,13 +207,12 @@ function test_ft4_auth_fails_if_key_invalid() {
 
   rell.test.tx()
     .op(acc.ft4_auth(desc.hash(), [external_key.pub], [0]))
-    .op(dev_op.perform_large_transfer(acc.auth_details(flags=["E"], message_template=msg_template), alice_acc_desc, alice_acc, alice_acc, 1000))
-    .sign(external_key_bob.priv)
+    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
+    .sign(rell.test.keypairs.bob.priv)
     .run_must_fail();
 }
 
 function test_perform_ft4_auth_transaction() {
-  val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
   val external_key = rell.test.keypairs.alice;
   val desc = acc.auth_descriptor(
     "S",
@@ -225,7 +233,7 @@ function test_perform_ft4_auth_transaction() {
 
   rell.test.tx()
     .op(acc.ft4_auth(desc.hash(), [external_key.pub], [0]))
-    .op(dev_op.perform_large_transfer(acc.auth_details(flags=["E"], message_template=msg_template), alice_acc_desc, alice_acc, alice_acc, 1000))
+    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
     .sign(external_key.priv)
     .run();
 }

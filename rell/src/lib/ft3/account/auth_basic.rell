@@ -16,11 +16,12 @@ struct multi_sig_args {
        pubkeys: list<pubkey>;
 }
 
-struct auth_details {
-    flags: list<text>;
-    disposable_key: byte_array? = null;
-    message_template: text? = null;
-    mutable messages: list<text> = [];
+struct external_sig_args {
+    disposable_key: byte_array;
+    message_template: text;
+    messages: list<text>;
+    single_sig_args? = null;
+    multi_sig_args? = null;
 }
 
 struct signature {
@@ -155,33 +156,42 @@ function format(template: text, arguments: list<text>) {
     return message_to_return + parts[parts.size() - 1];
 }
 
-function authenticate(auth_details, account_auth_descriptor): boolean {
+function authenticate(external_sig_args, account_auth_descriptor): boolean {
     require(is_valid(account_auth_descriptor));
     require(op_context.op_index > 0, "Expected at least two operations");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(previous_op.name in ["ft3.eth_auth", "ft3.ft4_auth"], "Incorrect auth operation");
     return when (previous_op.name) {
-        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, auth_details);
-        "ft3.ft4_auth" -> _validate_ft4_signature(previous_op.args, auth_details);
+        "ft3.eth_auth" -> _validate_eth_signature(previous_op.args, op_context.get_signers(), external_sig_args);
+        "ft3.ft4_auth" -> _validate_ft4_signature(previous_op.args, external_sig_args);
         else -> false;
     };
 }
 
-function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
+function _validate_eth_signature(auth_args: list<gtv>, signers: list<byte_array>, external: external_sig_args): boolean {
     require(auth_args.size() >= 3, "Not all required arguments provided");
     
-    val disposable_key = auth_details.disposable_key;
-    require(disposable_key, "Must provide the disposable key");
-    require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
+    val acc_desc_args = external_sig_args.from_bytes(account_auth_descriptor @ { .id == byte_array.from_gtv(auth_args[0]) }( .args ));
+    val auth_desc_flags = _get_flags_list(acc_desc_args);
+    val flags = _get_flags_list(external);
+    for (flag in flags) {
+        require(flag in auth_desc_flags, "The auth descriptor does not have the required permissions");
+    }
+
+    val disposable_key = external.disposable_key;
+    require(disposable_key in signers, "Transaction must be signed with disposable key");
 
     val external_keys = list<byte_array>.from_gtv(auth_args[1]);
     val signatures = list<signature>.from_gtv(auth_args[3]);
 
     require(signatures.size() == external_keys.size(), "# signatures does not match # external keys provided");
-    require(signatures.size() == auth_details.messages.size(), "# signatures does not match # messages provided");
+    require(signatures.size() == external.messages.size(), "# signatures does not match # messages provided");
+    require(set(external.messages).size() == 1, "All signing messages are not the same");
+
+    var remaining_signatures = if (external.multi_sig_args != null) external.multi_sig_args!!.signatures_required else 1;
     for (i in range(signatures.size())) {
-        val message = auth_details.messages[i];
+        val message = external.messages[i];
         require(message != "");
 
         val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
@@ -195,15 +205,18 @@ function _validate_eth_signature(auth_args: list<gtv>, auth_details): boolean {
 
         val recovered_address = keccak256(eth_pubkey).sub(12);
         val auth_desc_id = byte_array.from_gtv(auth_args[0]);
-        val external = auth_descriptor_participant @ {
+        auth_descriptor_participant @ {
             .account_auth_descriptor.id == auth_desc_id,
             .id == recovered_address
         };
+
+        remaining_signatures -= 1;
     }
+    require(remaining_signatures <= 0, "Minimum number of valid signatures not reached");
     return true;
 }
 
-function _validate_ft4_signature(auth_args: list<gtv>, auth_details): boolean {
+function _validate_ft4_signature(auth_args: list<gtv>, external_sig_args): boolean {
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
     val external_keys = list<byte_array>.from_gtv(auth_args[1]);
 
@@ -215,10 +228,24 @@ function _validate_ft4_signature(auth_args: list<gtv>, auth_details): boolean {
     require_auth(
         external.account_auth_descriptor.account,
         external.account_auth_descriptor,
-        auth_details.flags
+        _get_flags_list(external_sig_args)
     );
 
     return true;
+}
+
+function _get_flags_list(external_sig_args): list<text> {
+     require(
+        external_sig_args.single_sig_args != null or 
+        external_sig_args.multi_sig_args != null, 
+        "Either single sig or multisig args must be provided"
+    );
+
+    var flags = 
+        if (external_sig_args.single_sig_args != null) external_sig_args.single_sig_args!!.flags 
+        else external_sig_args.multi_sig_args!!.flags;
+    
+    return list(flags);
 }
 
 function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_array>, ctrs: list<integer>) {
@@ -246,7 +273,6 @@ operation eth_auth(
     ctrs: list<integer>,
     signatures: list<signature>
 ) {
-    require(is_valid(account_auth_descriptor @ { .id == auth_descriptor_id }));
     _check_ctr(auth_descriptor_id, external_keys, ctrs);
 }
 

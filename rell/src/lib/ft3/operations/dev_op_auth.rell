@@ -40,7 +40,7 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
     }
 }
 
-operation authenticated_operation(details: acc.auth_details, desc: acc.account_auth_descriptor) {
+operation authenticated_operation(details: acc.external_sig_args, desc: acc.account_auth_descriptor) {
   dev_op.require_dev();
   acc.authenticate(details, desc);
 }
@@ -61,10 +61,10 @@ operation create_ft4_account(auth_desc: acc.auth_descriptor) {
 }
 
 operation perform_large_transfer(
-  details: acc.auth_details, 
+  external_args: acc.external_sig_args, 
   desc: acc.account_auth_descriptor, 
   from: acc.account,
-  to: acc.account,
+  to: text,
   amount: integer
 ) {
   dev_op.require_dev();
@@ -73,12 +73,18 @@ operation perform_large_transfer(
 
   var messages = list<text>();
   for (ctr in ctrs) {
-    val args = [amount.to_text(), "0x" + to.id.to_hex(), ctr.to_text()];
-    messages.add(acc.format(details.message_template!!, args));
+    val args = [amount.to_text(), "0x" + to, ctr.to_text()];
+    messages.add(acc.format(external_args.message_template, args));
   }
 
-  details.messages = messages;
-  require(acc.authenticate(details, desc));
+  val decorated_args = acc.external_sig_args(
+    disposable_key=external_args.disposable_key,
+    message_template=external_args.message_template,
+    messages=messages,
+    single_sig_args=external_args.single_sig_args,
+    multi_sig_args=external_args.multi_sig_args
+  );
+  require(acc.authenticate(decorated_args, desc));
 }
 
 
