@@ -15,14 +15,10 @@ function setup_extended_auth() {
     "S",
     [ external_key ],
     [
-      rell.test.keypairs.alice.pub.to_gtv(),
-      "".to_gtv(),
-      [""].to_gtv(),
-      [
-        set(["E"]).to_gtv(),
-        rell.test.keypairs.alice.pub.to_gtv()
-      ].to_gtv(),
-      null.to_gtv()
+      set(["E"]).to_gtv(),
+      0x1.to_gtv(),
+      [external_key].to_gtv(),
+      [0].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -34,16 +30,6 @@ function setup_extended_auth() {
     return desc.hash();
 }
 
-
-function default_external_sig_args() {
-  return acc.external_sig_args(
-    messages=[""],
-    disposable_key=rell.test.keypairs.alice.pub,
-    message_template=msg_template,
-    acc.single_sig_args(flags=set(["E"]), pubkey=rell.test.keypairs.alice.pub)
-  );
-}
-
 function test_correctly_format_message() {
   val args = ["100 CHR", "0xabc123"];
   val msg = acc.format("transfer '%s' to '%s'", args);
@@ -53,7 +39,7 @@ function test_correctly_format_message() {
 function test_operation_without_auth_operation() {
   utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
   rell.test.tx()
-    .op(dev_op.authenticated_operation(default_external_sig_args(), acc.account_auth_descriptor @ {}))
+    .op(dev_op.authenticated_operation())
     .run_must_fail();
 }
 
@@ -67,8 +53,8 @@ function test_fails_if_insufficient_permissions() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_auth_desc_id, [external_key], [0], [signature]))
-    .op(dev_op.authenticated_operation(default_external_sig_args(), acc.account_auth_descriptor @ {}))
+    .op(acc.eth_auth(alice_auth_desc_id, [signature], [0], rell.test.keypairs.alice.pub))
+    .op(dev_op.authenticated_operation())
     .run_must_fail();
 }
 
@@ -81,8 +67,8 @@ function test_it_rejects_empty_messages() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_auth_desc_id, [external_key], [0], [signature]))
-    .op(dev_op.authenticated_operation(default_external_sig_args(), acc.account_auth_descriptor @ {}))
+    .op(acc.eth_auth(alice_auth_desc_id, [signature], [0], rell.test.keypairs.alice.pub))
+    .op(dev_op.authenticated_operation())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
 }
@@ -97,40 +83,26 @@ function test_perform_eth_auth_transaction() {
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
   val alice_acc = alice_acc_desc.account;
+  val counters = [acc_ext.get_ctr_for_external_key(alice_acc_desc_id, external_key)];
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_acc_desc_id, [external_key], [acc_ext.get_ctr_for_external_key(alice_acc_desc_id, external_key)], [signature]))
-    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
+    .op(acc.eth_auth(alice_acc_desc_id, [signature], counters, rell.test.keypairs.alice.pub))
+    .op(dev_op.perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
 
 function test_multisig_external_signature() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
-  
-  val external_sig_args = acc.external_sig_args(
-    messages=[""],
-    message_template=msg_template,
-    disposable_key=rell.test.keypairs.alice.pub,
-    acc.multi_sig_args(
-      flags=set(["E"]),
-      pubkeys=[rell.test.keypairs.alice.pub],
-      signatures_required=2
-    )
-  );
+
   val desc = acc.auth_descriptor(
     "M",
     [ external_key, second_external_key ],
     [
-      rell.test.keypairs.alice.pub.to_gtv(),
-      msg_template.to_gtv(),
-      [""].to_gtv(),
-      null.to_gtv(),
-      [
-        set(["E"]).to_gtv(),
-        0x2.to_gtv(),
-        [rell.test.keypairs.alice.pub].to_gtv()
-      ].to_gtv()
+      set(["E"]).to_gtv(),
+      0x2.to_gtv(),
+      [external_key, second_external_key].to_gtv(),
+      [0, 0].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -139,8 +111,7 @@ function test_multisig_external_signature() {
     .op(dev_op.create_eth_account(desc))
     .run();
 
-  val alice_acc_desc = acc.account_auth_descriptor @ {};
-  val alice_acc = alice_acc_desc.account;
+  val alice_acc = acc.account_auth_descriptor @ {}(.account);
 
   val signature0 = acc.signature(
     r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
@@ -154,8 +125,8 @@ function test_multisig_external_signature() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), [external_key, second_external_key], [0, 0], [signature0, signature1]))
-    .op(dev_op.perform_large_transfer(external_sig_args, alice_acc_desc, alice_acc, to_addr, 1000))
+    .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
+    .op(dev_op.perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -178,10 +149,10 @@ function test_requires_correct_ctr() {
   val alice_acc = alice_acc_desc.account;
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_acc_desc_id, [external_key], [0], [signature0]))
-    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
-    .op(acc.eth_auth(alice_acc_desc_id, [external_key], [1], [signature1]))
-    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
+    .op(acc.eth_auth(alice_acc_desc_id, [signature0], [0], rell.test.keypairs.alice.pub))
+    .op(dev_op.perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(acc.eth_auth(alice_acc_desc_id, [signature1], [1], rell.test.keypairs.alice.pub))
+    .op(dev_op.perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -202,12 +173,11 @@ function test_ft4_auth_fails_if_key_invalid() {
     .sign(external_key.priv)
     .run();
 
-  val alice_acc_desc = acc.account_auth_descriptor @ { .id == desc.hash() };
-  val alice_acc = alice_acc_desc.account;
+  val alice_acc = acc.account_auth_descriptor @ { .id == desc.hash() }( .account );
 
   rell.test.tx()
     .op(acc.ft4_auth(desc.hash(), [external_key.pub], [0]))
-    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
+    .op(dev_op.perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.bob.priv)
     .run_must_fail();
 }
@@ -228,12 +198,11 @@ function test_perform_ft4_auth_transaction() {
     .sign(external_key.priv)
     .run();
 
-  val alice_acc_desc = acc.account_auth_descriptor @ { .id == desc.hash() };
-  val alice_acc = alice_acc_desc.account;
+  val alice_acc = acc.account_auth_descriptor @ { .id == desc.hash() }( .account );
 
   rell.test.tx()
     .op(acc.ft4_auth(desc.hash(), [external_key.pub], [0]))
-    .op(dev_op.perform_large_transfer(default_external_sig_args(), alice_acc_desc, alice_acc, to_addr, 1000))
+    .op(dev_op.perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(external_key.priv)
     .run();
 }
