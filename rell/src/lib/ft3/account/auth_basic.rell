@@ -20,7 +20,6 @@ struct external_sig_args {
     flags: set<text>;
     signatures_required: integer;
     pubkeys: list<pubkey>;
-    mutable ctrs: list<integer>;
 }
 
 struct signature {
@@ -183,7 +182,6 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     }
 
     require(signatures.size() == messages.size(), "# signatures does not match # messages provided");
-    require(set(messages).size() == 1, "All signing messages are not the same");
 
     var recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
@@ -233,7 +231,7 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
 function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_array>, ctrs: list<integer>) {
     require(external_keys.size() == ctrs.size(), "# of external keys and # counters differ");
 
-    val externals = auth_descriptor_participant @+ {
+    val participants = auth_descriptor_participant @+ {
         .account_auth_descriptor.id == auth_descriptor_id, 
         .id in external_keys
     };
@@ -243,9 +241,9 @@ function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_arr
         provided.put(external_keys[i], ctrs[i]);
     }
 
-    for (external in externals) {
-        require(provided[external.id] == external.ctr, "Unexpected counter value");
-        external.ctr += 1;
+    for (participant in participants) {
+        require(provided[participant.id] == participant.ctr, "Unexpected counter value");
+        participant.ctr += 1;
     }
 }
 

@@ -17,8 +17,7 @@ function setup_extended_auth() {
     [
       set(["E"]).to_gtv(),
       0x1.to_gtv(),
-      [external_key].to_gtv(),
-      [0].to_gtv()
+      [external_key].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -101,8 +100,7 @@ function test_multisig_external_signature() {
     [
       set(["E"]).to_gtv(),
       0x2.to_gtv(),
-      [external_key, second_external_key].to_gtv(),
-      [0, 0].to_gtv()
+      [external_key, second_external_key].to_gtv()
     ],
     rules = null.to_gtv()
   );
