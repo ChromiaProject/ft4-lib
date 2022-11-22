@@ -1,3 +1,5 @@
+import u: ^.utils;
+
 // Auth type:
 
 // "S" - single-sig
@@ -17,44 +19,44 @@ struct multi_sig_args {
 /*
  * Returns null if valid.
  */
-function check_single_sig_auth(args: byte_array, participants: list<byte_array>, required_flags: list<text>): text? {
+function check_single_sig_auth(args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     if(participants.size() > 1) {
-        return "Single sig Auth Descriptor must have only one participant.";
+        return u.invalid("Single sig Auth Descriptor must have only one participant.");
     }
     if (participants.size() < 1) {
-        return "Single sig Auth Descriptor's participant list is empty.";
+        return u.invalid("Single sig Auth Descriptor's participant list is empty.");
     }
 
     val ss_args = single_sig_args.from_bytes(args);
     if ( check_required_flags(ss_args.flags, required_flags)) {
           if (op_context.is_signer(participants[0])) {
-            return null; // Ok
+            return u.VALID;
           } else {
-            return "The participant is not the signer of this transaction.";
+            return u.invalid("The participant is not the signer of this transaction.");
           }
     } else {
-        return "Some required flags " + required_flags.to_text() + " are missing on the (single sig) Auth Descriptor.";
+        return u.invalid("Some required flags " + required_flags.to_text() + " are missing on the (single sig) Auth Descriptor.");
     }
 }
 
 /*
  * Returns null if valid.
  */
-function check_multi_sig_auth(args: byte_array, participants: list<byte_array>, required_flags: list<text>): text? {
+function check_multi_sig_auth(args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     val multi_sign_args = multi_sig_args.from_bytes(args);
     if (not (check_required_flags(multi_sign_args.flags, required_flags))) {
-       return "Some required flags " + required_flags.to_text() + " are missing on the (multi sig) Auth Descriptor";
+       return u.invalid("Some required flags " + required_flags.to_text() + " are missing on the (multi sig) Auth Descriptor");
     }
     var num_sign = multi_sign_args.signatures_required;
     for(s in participants) {
         if(op_context.is_signer(s)) {
             num_sign -= 1;
             if(num_sign < 1) {
-                return null; // Ok
+                return u.VALID;
             }
         }
     }
-    return "Transaction must be signed by all participants in the Auth Descriptor.";
+    return u.invalid("Transaction must be signed by all participants in the Auth Descriptor.");
 }
 
 /*
@@ -85,11 +87,11 @@ function get_flags_from_args(a_t: text, args: byte_array): set<text> {
 /*
  * Returns null authentication arguments are valid.
  */
-function check_auth_args(a_t: text, args: byte_array, participants: list<byte_array>, required_flags: list<text>): text? {
+function check_auth_args(a_t: text, args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     return when (a_t) {
         "S" -> check_single_sig_auth(args, participants, required_flags);
         "M" -> check_multi_sig_auth(args, participants, required_flags);
-        else -> "Don't recognize authentication type (S or M).";
+        else -> u.invalid("Don't recognize authentication type (S or M).");
     };
 }
 
@@ -103,14 +105,14 @@ function check_auth_args(a_t: text, args: byte_array, participants: list<byte_ar
 function require_auth(account, account_auth_descriptor, required_flags: list<text>) {
 	require(is_valid(account_auth_descriptor), "Invalid Auth Descriptor structure.");
 
-	val result: text? = check_auth_args(
+	val result: u.validation_result = check_auth_args(
        		account_auth_descriptor.auth_type,
        		account_auth_descriptor.args,
        		auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
        		required_flags
 	);
 
-    require(result == null, result!!); // Prints a precise error message.
+    require(result.valid, result.error!!); // Prints a precise error message.
 
     update_auth_descriptor_rule_variables(account_auth_descriptor);
     delete_expired_auth_descriptors(account);
