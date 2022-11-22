@@ -8,10 +8,14 @@ object dev_state {
 }
 
 function require_dev() {
-    require(dev_state.allow_dev_ops);
+    require(dev_state.allow_dev_ops, "Developer operations are not allowed!");
 }
 
 function dev_give_points_(account: acc.account, amount: integer) {
 	require_dev();
-	update acc.rl_state@{account}(.points += amount);
+    var state = require(
+        acc.rl_state@?{account}, 
+        "Rate limiter state not found for the account with ID: %s".format(account.id)
+    );
+	state.points += amount;
 }
