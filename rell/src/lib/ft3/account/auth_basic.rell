@@ -16,12 +16,6 @@ struct multi_sig_args {
        pubkeys: list<pubkey>;
 }
 
-struct external_sig_args {
-    flags: set<text>;
-    signatures_required: integer;
-    pubkeys: list<pubkey>;
-}
-
 struct signature {
     r: text;
     s: text;
@@ -167,6 +161,23 @@ function authenticate(required_flags: set<text>, messages: list<text>): boolean 
 }
 
 function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, messages: list<text>): boolean {
+    val validated_args = _validate_eth_arguments(auth_args, required_flags, messages);
+
+    var recovered_keys = 
+        if (validated_args.account_auth_descriptor.auth_type == "S") [_recover_eth_key(messages[0], validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
+        else _recover_multiple_eth_keys(messages, validated_args.signatures, validated_args.account_auth_descriptor);
+    
+    _check_ctr(validated_args.account_auth_descriptor.id, recovered_keys, validated_args.ctrs);
+    return true;
+}
+
+struct eth_auth_args {
+    account_auth_descriptor;
+    signatures: list<signature>;
+    ctrs: list<integer>;
+}
+
+function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>, messages: list<text>): eth_auth_args {
     require(auth_args.size() == 4, "Incorrect number of arguments to auth operation");
 
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
@@ -176,38 +187,57 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     val auth_descriptor = account_auth_descriptor @ { .id == auth_descriptor_id };
     require(is_valid(auth_descriptor));
     
-    val acc_desc_args = external_sig_args.from_bytes(auth_descriptor.args);
+    val auth_desc_flags = when (auth_descriptor.auth_type) {
+        "S" -> single_sig_args.from_bytes(auth_descriptor.args).flags;
+        "M" -> multi_sig_args.from_bytes(auth_descriptor.args).flags;
+        else -> set<text>();
+    };
+    
     for (flag in required_flags) {
-        require(flag in acc_desc_args.flags, "The auth descriptor does not have the required permissions");
+        require(flag in auth_desc_flags, "The auth descriptor does not have the required permissions");
     }
 
     require(signatures.size() == messages.size(), "# signatures does not match # messages provided");
 
+    return eth_auth_args(auth_descriptor, signatures, ctrs);
+}
+
+function _recover_multiple_eth_keys(messages: list<text>, signatures: list<signature>, account_auth_descriptor) {
     var recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
-        val message = messages[i];
-        require(message != "");
-
-        val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
-        val signature = signatures[i];
-        val eth_pubkey = eth_ecrecover(
-            byte_array.from_hex(signature.r),
-            byte_array.from_hex(signature.s),
-            signature.v - 27,
-            msg_hash
+        recovered_keys.add(
+            _recover_eth_key(
+                messages[i], 
+                signatures[i], 
+                account_auth_descriptor.id
+            )
         );
-
-        val recovered_address = keccak256(eth_pubkey).sub(12);
-        auth_descriptor_participant @ {
-            .account_auth_descriptor.id == auth_descriptor.id,
-            .id == recovered_address
-        };
-
-        recovered_keys.add(recovered_address);
     }
-    require(recovered_keys.size() >= acc_desc_args.signatures_required, "Minimum number of valid signatures not reached");
-    _check_ctr(auth_descriptor_id, recovered_keys, ctrs);
-    return true;
+    require(
+        recovered_keys.size() >= multi_sig_args.from_bytes(account_auth_descriptor.args).signatures_required, 
+        "Minimum number of valid signatures not reached"
+    );
+    return recovered_keys;
+}
+
+function _recover_eth_key(message: text, signature, auth_descriptor_id: byte_array) {
+    require(message != "");
+
+    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
+    val eth_pubkey = eth_ecrecover(
+        byte_array.from_hex(signature.r),
+        byte_array.from_hex(signature.s),
+        signature.v - 27,
+        msg_hash
+    );
+
+    val recovered_address = keccak256(eth_pubkey).sub(12);
+    auth_descriptor_participant @ {
+        .account_auth_descriptor.id == auth_descriptor_id,
+        .id == recovered_address
+    };
+
+    return recovered_address;
 }
 
 function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>): boolean {

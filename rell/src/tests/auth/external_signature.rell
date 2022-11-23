@@ -15,9 +15,8 @@ function setup_extended_auth() {
     "S",
     [ external_key ],
     [
-      set(["E"]).to_gtv(),
-      0x1.to_gtv(),
-      [external_key].to_gtv()
+      set(["A"]).to_gtv(),
+      external_key.to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -30,8 +29,9 @@ function setup_extended_auth() {
 }
 
 function test_correctly_format_message() {
-  val args = ["100 CHR", "0xabc123"];
-  val msg = acc.format("transfer '%s' to '%s'", args);
+  val amount = "100 CHR";
+  val address = "0xabc123";
+  val msg = "transfer '%s' to '%s'".format(amount, address);
   assert_equals(msg, "transfer '100 CHR' to '0xabc123'");
 }
 
@@ -98,7 +98,7 @@ function test_multisig_external_signature() {
     "M",
     [ external_key, second_external_key ],
     [
-      set(["E"]).to_gtv(),
+      set(["A"]).to_gtv(),
       0x2.to_gtv(),
       [external_key, second_external_key].to_gtv()
     ],
@@ -161,7 +161,7 @@ function test_ft4_auth_fails_if_key_invalid() {
     "S",
     [ external_key.pub ],
     [
-      ["E"].to_gtv(),
+      ["A"].to_gtv(),
       external_key.pub.to_hex().to_gtv()
     ],
     rules = null.to_gtv()
@@ -186,7 +186,7 @@ function test_perform_ft4_auth_transaction() {
     "S",
     [ external_key.pub ],
     [
-      ["E"].to_gtv(),
+      ["A"].to_gtv(),
       external_key.pub.to_hex().to_gtv()
     ],
     rules = null.to_gtv()

@@ -42,7 +42,7 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
 
 operation authenticated_operation() {
   dev_op.require_dev();
-  require(acc.authenticate(set<text>(["E"]), [""]));
+  require(acc.authenticate(set<text>(["A"]), [""]));
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
@@ -73,10 +73,9 @@ operation perform_large_transfer(
   var messages = list<text>();
   for (ctr in ctrs) {
     val args = [amount.to_text(), "0x" + to, ctr.to_text()];
-    messages.add(acc.format(message_template, args));
+    messages.add(message_template.format(amount.to_text(), "0x" + to, ctr.to_text()));
   }
-
-  require(acc.authenticate(set(["E"]), messages));
+  require(acc.authenticate(set(["A"]), messages));
 }
 
 
