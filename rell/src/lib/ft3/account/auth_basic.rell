@@ -187,16 +187,13 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     val auth_descriptor = account_auth_descriptor @ { .id == auth_descriptor_id };
     require(is_valid(auth_descriptor));
     
-    val auth_desc_flags = when (auth_descriptor.auth_type) {
-        "S" -> single_sig_args.from_bytes(auth_descriptor.args).flags;
-        "M" -> multi_sig_args.from_bytes(auth_descriptor.args).flags;
-        else -> set<text>();
+    val has_all_flags = when (auth_descriptor.auth_type) {
+        "S" -> single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
+        "M" -> multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
+        else -> false;
     };
     
-    for (flag in required_flags) {
-        require(flag in auth_desc_flags, "The auth descriptor does not have the required permissions");
-    }
-
+    require(has_all_flags, "The auth descriptor does not have the required permissions");
     require(signatures.size() == messages.size(), "# signatures does not match # messages provided");
 
     return eth_auth_args(auth_descriptor, signatures, ctrs);
