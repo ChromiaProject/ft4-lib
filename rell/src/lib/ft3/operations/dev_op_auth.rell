@@ -49,9 +49,9 @@ operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
   acc.create_account_with_auth(auth_desc);
 }
 
-operation dev_authenticated_operation() {
+operation dev_authenticated_operation(message: text) {
   dev_op.require_dev();
-  require(acc.authenticate(set<text>(["A"]), [""]));
+  require(acc.authenticate(set<text>(["A"]), [message]));
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
@@ -84,6 +84,20 @@ operation dev_perform_large_transfer(
     val args = [amount.to_text(), "0x" + to, ctr.to_text()];
     messages.add(message_template.format(amount.to_text(), "0x" + to, ctr.to_text()));
   }
+  require(acc.authenticate(set(["A"]), messages));
+}
+
+operation dev_perform_large_transfer_with_custom_messages(
+  message_template: text,
+  from: acc.account,
+  to: text,
+  amount: integer,
+  messages: list<text>
+) {
+  dev_op.require_dev();
+  val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
+  val ctrs = list<integer>.from_gtv(previous_op.args[2]);
+
   require(acc.authenticate(set(["A"]), messages));
 }
 
