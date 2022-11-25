@@ -17,7 +17,7 @@ struct multi_sig_args {
 }
 
 /*
- * Returns null if valid.
+ * Returns VALID if valid.
  */
 function check_single_sig_auth(args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     if(participants.size() > 1) {
@@ -29,23 +29,23 @@ function check_single_sig_auth(args: byte_array, participants: list<byte_array>,
 
     val ss_args = single_sig_args.from_bytes(args);
     if ( check_required_flags(ss_args.flags, required_flags)) {
-          if (op_context.is_signer(participants[0])) {
+        if (op_context.is_signer(participants[0])) {
             return u.VALID;
-          } else {
+        } else {
             return u.invalid("The participant is not the signer of this transaction.");
-          }
+        }
     } else {
         return u.invalid("Some required flags " + required_flags.to_text() + " are missing on the (single sig) Auth Descriptor.");
     }
 }
 
 /*
- * Returns null if valid.
+ * Returns VALID if valid.
  */
 function check_multi_sig_auth(args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     val multi_sign_args = multi_sig_args.from_bytes(args);
     if (not (check_required_flags(multi_sign_args.flags, required_flags))) {
-       return u.invalid("Some required flags " + required_flags.to_text() + " are missing on the (multi sig) Auth Descriptor");
+       return u.invalid("Some required flags " + required_flags.to_text() + " are missing on the (multi sig) Auth Descriptor.");
     }
     var num_sign = multi_sign_args.signatures_required;
     for(s in participants) {
@@ -56,7 +56,7 @@ function check_multi_sig_auth(args: byte_array, participants: list<byte_array>, 
             }
         }
     }
-    return u.invalid("Transaction must be signed by all participants in the Auth Descriptor.");
+    return u.invalid("Transaction must be signed by at least " + multi_sign_args.signatures_required + " participants in the Auth Descriptor.");
 }
 
 /*
@@ -85,7 +85,7 @@ function get_flags_from_args(a_t: text, args: byte_array): set<text> {
 }
 
 /*
- * Returns null authentication arguments are valid.
+ * Returns VALID if authentication arguments are valid.
  */
 function check_auth_args(a_t: text, args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     return when (a_t) {
