@@ -10,6 +10,7 @@ namespace ft3 {
 
     import ^.operations.dev_op_account;
     import ^.operations.dev_op_asset;
+    import ^.operations.dev_op_auth;
     import ^.operations.dev_op_balance;
     import ^.operations.dev_op_rate_limit;
     import ^.version;

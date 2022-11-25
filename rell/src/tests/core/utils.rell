@@ -2,6 +2,7 @@
 import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.operations.dev_op_account;
 import ^^^.lib.ft3.operations.dev_op_asset;
+import cu: ^^.core.utils;
 
 struct auth_id {
     account_id: byte_array;
@@ -62,4 +63,60 @@ function create_asset(name: text): byte_array {
         .run();
 
     return (name, chain_context.blockchain_rid).hash();
+}
+
+/*
+ * Looks up the "account Auth Desc" and uses the found id to build the "auth_id" struct.
+ */
+function _build_auth_id(auth_desc_id: byte_array) {
+    val account = acc.account_auth_descriptor @ {
+        .id == auth_desc_id 
+    } ( .account.id );
+
+    return auth_id(account_id = account, auth_descriptor_id = auth_desc_id);
+}
+
+/*
+ * Creates a single sig Auth Desc.
+ *
+ * returns "auth_data"
+ */
+function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): auth_data {
+    dev_op_account.dev_register_account(auth_descriptor)
+        .sign(keypair)
+        .run();
+
+    return auth_data(
+        _build_auth_id(auth_descriptor.hash()),
+        keypair = keypair
+    ); 
+}
+
+
+/*
+ * Creates a multi sig Auth Desc.
+ *
+ * returns "auth_data"
+ */
+function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): auth_data {
+    val op = dev_op_account.dev_register_account(auth_descriptor);
+    var tx = _sign_many(op, keys); 
+    tx.run();
+
+    return auth_data(
+        _build_auth_id(auth_descriptor.hash()),
+        keypair = keys[0] // Doesn't matter much which we use
+    ); 
+}
+
+function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
+    var tx: rell.test.tx = op.sign(keys[0]); // Yeah, it's ugly but it was hard to get the types right.
+    var i = 0;
+    for (k in keys) {
+        if (i > 0) {
+            tx = tx.sign(k);
+        }
+        i += 1;
+    }    
+    return tx;
 }

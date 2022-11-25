@@ -1,0 +1,42 @@
+@mount('ft3')
+module;
+
+import dev_op: ^^.core.dev_op;
+import acc: ^^.account; 
+
+/*
+ * We can store the error message in this singleton, and later check it in our tests.
+ */
+object dev_error {
+    mutable msg: text = "valid";
+}
+
+/*
+ * This operation does NOTHING but authenticates the transaction. 
+ * Only used for testing of authentication mechanics.
+ */
+operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>) {
+    dev_op.require_dev();
+
+    val account = acc.account @ { .id == account_id };
+
+    val acc_auth_desc = acc.account_auth_descriptor @ {
+          .id == auth_descriptor_id,
+          .account == account
+    };
+    val participants = acc.auth_descriptor_participant @* { .account_auth_descriptor == acc_auth_desc } ( .id );
+
+    val result = acc.check_auth_args(
+       		acc_auth_desc.auth_type,
+       		acc_auth_desc.args,
+            participants,
+       		required_flags
+	);
+
+    if (result.valid) {
+        dev_error.msg = "valid";
+    } else {
+        dev_error.msg = result.error!!;
+    }
+
+}
