@@ -1,4 +1,4 @@
-@mount('ft3')
+@mount('ft')
 module;
 
 import core: ^.core;

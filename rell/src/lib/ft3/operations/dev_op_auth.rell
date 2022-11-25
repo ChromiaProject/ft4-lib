@@ -39,8 +39,17 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
         dev_error.msg = result.error!!;
     }
 }
+operation dev_create_eth_account(auth_desc: acc.auth_descriptor) {
+  dev_op.require_dev();
+  acc.create_account_with_eth_auth(auth_desc);
+}
 
-operation authenticated_operation() {
+operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
+  dev_op.require_dev();
+  acc.create_account_with_auth(auth_desc);
+}
+
+operation dev_authenticated_operation() {
   dev_op.require_dev();
   require(acc.authenticate(set<text>(["A"]), [""]));
 }
@@ -60,7 +69,7 @@ operation create_ft4_account(auth_desc: acc.auth_descriptor) {
   acc.create_account_with_auth(auth_desc);
 }
 
-operation perform_large_transfer(
+operation dev_perform_large_transfer(
   message_template: text,
   from: acc.account,
   to: text,
