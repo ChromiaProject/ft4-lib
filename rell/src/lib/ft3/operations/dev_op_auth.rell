@@ -87,6 +87,10 @@ operation dev_perform_large_transfer(
   require(acc.authenticate(set(["A"]), messages));
 }
 
+/**
+* NOTE: This operation is used specifically to reach a certain validation rule in the auth 
+* implementation and does not represent a usage example of the API
+*/
 operation dev_perform_large_transfer_with_custom_messages(
   message_template: text,
   from: acc.account,
