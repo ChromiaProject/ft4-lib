@@ -32,4 +32,14 @@ describe("Blockchain", () => {
       Transaction.fromRawTransaction(tx, bc);
     }).toThrowError();
   });
+
+  it("should send transactions with null values", async () => {
+    const tx = blockchain
+      .transactionBuilder()
+      .add(op("nullable", null))
+      .build([])
+      .post();
+
+    await expect(tx).resolves.not.toThrow();
+  });
 });
