@@ -32,4 +32,21 @@ describe("Blockchain", () => {
       Transaction.fromRawTransaction(tx, bc);
     }).toThrowError();
   });
+
+  it("should send transactions with null and undefined values in ops", async () => {
+    const tx = blockchain
+      .transactionBuilder()
+      .add(op("nullable_op", null))
+      .add(op("nullable_op", undefined))
+      .build([])
+      .post();
+
+    await expect(tx).resolves.not.toThrow();
+  });
+
+  it("should send transactions with null and undefined values in queries", async () => {
+    const tx = blockchain.query("nullable_query", { p1: null, p2: undefined });
+
+    await expect(tx).resolves.not.toThrow();
+  });
 });

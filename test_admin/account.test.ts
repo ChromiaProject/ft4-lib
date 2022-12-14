@@ -156,7 +156,9 @@ describe("Test the account", () => {
     await addAuthDescriptorTo(account, user1, user2, blockchain);
 
     const opPromise = account.deleteAuthDescriptor(user1.authDescriptor);
-    await expect(opPromise).rejects.toEqual(new Error("Message was rejected"));
+    await expect(opPromise).rejects.toEqual(
+      new Error("Transaction was rejected")
+    );
   });
 
   it("should be able to register account by directly calling 'register_account' operation", async () => {
