@@ -1,3 +1,5 @@
+import { util } from "postchain-client";
+
 export * from "../cyptoUtils";
 export * from "./user/account";
 export * from "./user/account-operations";
@@ -21,3 +23,8 @@ export { default as RateLimit } from "./user/rate-limit";
 export { default as Postchain } from "./core/postchain";
 export * from "./user/sso";
 export * from "./user/transfer";
+
+export function setLogLevel(level: number) {
+  util.setLogLevel(level);
+}
+util.setLogLevel(0);

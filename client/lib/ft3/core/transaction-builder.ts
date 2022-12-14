@@ -65,7 +65,7 @@ export default class TransactionBuilder {
     this.operations.forEach((o) =>
       tx.addOperation(
         o.name,
-        ...o.args.map((a) => (a === null ? null : a.toGTV()))
+        ...o.args.map((a) => (a == null ? null : a.toGTV()))
       )
     );
     return new Transaction(tx, this.blockchain);

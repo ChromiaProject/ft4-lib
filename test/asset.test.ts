@@ -1,5 +1,5 @@
 import { generateAssetName, generateId } from "./util/util";
-import Asset from "../client/lib/ft3/user/asset";
+import { Asset } from "../client/lib/ft3";
 import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import BlockchainUtil from "./util/blockchain-util";
 import { gtv } from "postchain-client";
