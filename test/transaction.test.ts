@@ -33,10 +33,11 @@ describe("Blockchain", () => {
     }).toThrowError();
   });
 
-  it("should send transactions with null values", async () => {
+  it("should send transactions with null and undefined values", async () => {
     const tx = blockchain
       .transactionBuilder()
       .add(op("nullable", null))
+      .add(op("nullable", undefined))
       .build([])
       .post();
 
