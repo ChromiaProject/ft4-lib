@@ -10,11 +10,19 @@ struct eth_auth_args {
     ctrs: list<integer>;
 }
 
+function AuthDescriptor(id: byte_array) = require(
+    account_auth_descriptor @? { id },
+    "Provided auth descriptor id does not exist %s".format(id)
+);
+
 function authenticate(required_flags: set<text>, messages: list<text>): boolean {
     require(op_context.op_index > 0, "Expected at least two operations");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-    require(previous_op.name in ["ft.eth_auth", "ft.ft_auth"], "Incorrect auth operation");
+    require(
+        previous_op.name in ["ft.eth_auth", "ft.ft_auth"],
+        "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
+    );
     return when (previous_op.name) {
         "ft.eth_auth" -> _validate_eth_signature(previous_op.args, required_flags, messages);
         "ft.ft_auth" -> _validate_ft4_signature(previous_op.args, required_flags);
@@ -39,9 +47,12 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
     val signatures = list<signature>.from_gtv(auth_args[1]);
     val ctrs = list<integer>.from_gtv(auth_args[2]);
+
+    require(
+        signatures.size() == messages.size(),
+        "# signatures (%d) does not match # messages provided (%d)".format(signatures.size(), messages.size()));
     
-    val auth_descriptor = account_auth_descriptor @? { .id == auth_descriptor_id };
-    require(auth_descriptor, "Provided auth descriptor id does not exist");
+    val auth_descriptor = AuthDescriptor(auth_descriptor_id);
     require(is_valid(auth_descriptor));
     
     val has_all_flags = when (auth_descriptor.auth_type) {
@@ -51,7 +62,6 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     };
     
     require(has_all_flags, "The auth descriptor does not have the required permissions");
-    require(signatures.size() == messages.size(), "# signatures does not match # messages provided");
 
     return eth_auth_args(auth_descriptor, signatures, ctrs);
 }
@@ -97,13 +107,12 @@ function _recover_eth_key(message: text, signature, auth_descriptor_id: byte_arr
 
 function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>): boolean {
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
-    val external_keys = list<byte_array>.from_gtv(auth_args[1]);
 
     val external = auth_descriptor_participant @? {
         .account_auth_descriptor.id == auth_descriptor_id, 
-        .id in external_keys
+        .id in op_context.get_signers()
     };
-    require(external, "The proided key is not a signer of this auth descriptor");
+    require(external, "The proided key(s) is not a signer of this auth descriptor");
 
     require_auth(
         external.account_auth_descriptor.account,
@@ -145,10 +154,6 @@ operation eth_auth(
 }
 
 operation ft_auth(
-    auth_descriptor_id: byte_array,
-    external_keys: list<byte_array>,
-    ctrs: list<integer>
-) {
-    _check_ctr(auth_descriptor_id, external_keys, ctrs);
-}
+    auth_descriptor_id: byte_array
+) {}
 

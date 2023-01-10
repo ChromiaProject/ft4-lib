@@ -284,7 +284,7 @@ function test_ft_auth_fails_if_key_invalid() {
   val alice_acc = acc.account_auth_descriptor @ { .id == desc.hash() }( .account );
 
   rell.test.tx()
-    .op(acc.ft_auth(desc.hash(), [external_key.pub], [0]))
+    .op(acc.ft_auth(desc.hash()))
     .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(rell.test.keypairs.bob.priv)
     .run_must_fail();
@@ -309,7 +309,7 @@ function test_perform_ft_auth_transaction() {
   val alice_acc = acc.account_auth_descriptor @ { .id == desc.hash() }( .account );
 
   rell.test.tx()
-    .op(acc.ft_auth(desc.hash(), [external_key.pub], [0]))
+    .op(acc.ft_auth(desc.hash()))
     .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
     .sign(external_key.priv)
     .run();

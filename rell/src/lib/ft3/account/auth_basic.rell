@@ -26,6 +26,7 @@ function check_single_sig_auth(args: byte_array, participants: list<byte_array>,
     if (participants.size() < 1) {
         return u.invalid("Single sig Auth Descriptor's participant list is empty.");
     }
+
     val ss_args = single_sig_args.from_bytes(args);
     if ( check_required_flags(ss_args.flags, required_flags)) {
         if (op_context.is_signer(participants[0])) {

@@ -77,7 +77,7 @@ operation dev_perform_large_transfer(
 ) {
   dev_op.require_dev();
   val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-  val ctrs = list<integer>.from_gtv(previous_op.args[2]);
+  val ctrs = if (previous_op.args.size() > 1) list<integer>.from_gtv(previous_op.args[2]) else list<integer>();
 
   var messages = list<text>();
   for (ctr in ctrs) {
