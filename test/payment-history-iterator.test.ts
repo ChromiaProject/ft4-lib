@@ -1,7 +1,7 @@
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import { generateId } from "./util/util";
+import { generateId, LocalStorageMock } from "./util/util";
 import {
   Asset,
   Blockchain,
@@ -14,6 +14,7 @@ let asset: Asset;
 
 describe("Payment history iterator", () => {
   beforeAll(async () => {
+    global.localStorage = new LocalStorageMock();
     blockchain = await BlockchainUtil.getDefaultBlockchain();
     asset = await BlockchainUtil.getNewAsset(blockchain);
   });

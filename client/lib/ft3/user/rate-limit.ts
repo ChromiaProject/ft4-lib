@@ -60,8 +60,9 @@ export default class RateLimit {
     lastOperation: number,
     blockchain: Blockchain
   ) {
-    const maxCount = blockchain.info.rateLimitInfo.maxPoints;
-    const recoveryTime = blockchain.info.rateLimitInfo.recoveryTime;
+    const info = await blockchain.getChainInfo();
+    const maxCount = info.rateLimitInfo.maxPoints;
+    const recoveryTime = info.rateLimitInfo.recoveryTime;
     const lastTimestamp = await this.getLastTimestamp(blockchain);
     const delta = lastTimestamp - lastOperation;
 

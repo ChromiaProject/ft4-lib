@@ -1,8 +1,6 @@
 import {
   Blockchain,
-  BlockchainInfo,
   ConnectionClient,
-  RateLimitInfo,
   Postchain,
   DirectoryServiceBase,
   ChainConnectionInfo,
@@ -20,10 +18,8 @@ export default class BlockchainUtil {
   }
 
   static getNewBlockchain(): Blockchain {
-    const rateLimit = new RateLimitInfo(false);
     const id = generateId();
     return new Blockchain(
-      new BlockchainInfo("name", "website", "description", rateLimit),
       new ConnectionClient("URL", id.toString("hex")),
       new DirectoryServiceBase([new ChainConnectionInfo(id, "URL")])
     );
