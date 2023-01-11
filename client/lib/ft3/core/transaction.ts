@@ -4,14 +4,13 @@ import { gtx } from "postchain-client";
 import { op } from "../user/account-operations";
 import SignatureProvider from "../user/signature-provider";
 import Operation from "./operation";
+import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 
 export default class Transaction {
-  private readonly tx;
-  private readonly blockchain: Blockchain;
+  tx: Itransaction;
 
-  constructor(tx, blockchain: Blockchain) {
+  constructor(tx: Itransaction) {
     this.tx = tx;
-    this.blockchain = blockchain;
   }
 
   get operations(): Operation[] {

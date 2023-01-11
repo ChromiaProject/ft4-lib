@@ -17,15 +17,12 @@ export default class TransactionBuilder {
     return this;
   }
 
-  build(_signers: Buffer[]): Transaction {
-    let signers: any[] = [...new Set(_signers.map((s) => s.toString("hex")))]; //filters duplicates
-    signers = signers.map((s) => Buffer.from(s, "hex"));
-
+  build(signers: Buffer[]): Transaction {
     const tx = this.blockchain.connection.newTransaction(signers);
     this.operations.forEach((o) =>
       tx.addOperation(o.name, ...o.args.map(encodeGtv))
     );
-    return new Transaction(tx, this.blockchain);
+    return new Transaction(tx);
   }
 
   async buildAndSign(user: User): Promise<Transaction> {

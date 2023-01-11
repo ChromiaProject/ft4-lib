@@ -1,11 +1,12 @@
 import { restClient, gtxClient, formatter } from "postchain-client";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { encodeGtv } from "./gtv";
 
 export default class ConnectionClient {
   readonly chainURLs: string[];
   readonly brid: Buffer;
-  private gtx;
+  private gtx: GtxClient;
 
   constructor(chainURLs: string[], brid: BufferId) {
     this.chainURLs = chainURLs;
@@ -18,7 +19,7 @@ export default class ConnectionClient {
   }
 
   async query(name: string, params: any): Promise<any> {
-    const convertedParams = {};
+    const convertedParams = { type: name };
 
     for (const name of Object.keys(params)) {
       if (Object.prototype.hasOwnProperty.call(params, name)) {
@@ -26,7 +27,7 @@ export default class ConnectionClient {
       }
     }
 
-    return await this.gtx.query(name, convertedParams);
+    return await this.gtx.query(convertedParams);
   }
 
   transactionFromRawTransaction(rawTransaction: Buffer): any {

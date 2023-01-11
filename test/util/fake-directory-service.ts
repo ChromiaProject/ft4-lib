@@ -1,8 +1,8 @@
+import { formatter } from "postchain-client";
 import {
   DirectoryService,
   ChainConnectionInfo,
   BufferId,
-  ensureBuffer,
 } from "../../client/lib/ft3";
 
 export default class FakeDirectoryService implements DirectoryService {
@@ -16,7 +16,7 @@ export default class FakeDirectoryService implements DirectoryService {
     id: BufferId
   ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
-      (info) => info.brid.compare(ensureBuffer(id)) === 0
+      (info) => info.brid.compare(formatter.ensureBuffer(id)) === 0
     );
   }
 }
