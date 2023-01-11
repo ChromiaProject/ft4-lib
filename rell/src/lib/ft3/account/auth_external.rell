@@ -34,7 +34,7 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     val validated_args = _validate_eth_arguments(auth_args, required_flags, messages);
 
     var recovered_keys = 
-        if (validated_args.account_auth_descriptor.auth_type == "ES") [_recover_eth_key(messages[0], validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
+        if (validated_args.account_auth_descriptor.auth_type == auth_type.ES) [_recover_eth_key(messages[0], validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
         else _recover_multiple_eth_keys(messages, validated_args.signatures, validated_args.account_auth_descriptor);
     
     _check_ctr(validated_args.account_auth_descriptor.id, recovered_keys, validated_args.ctrs);
@@ -56,8 +56,8 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     require(is_valid(auth_descriptor));
     
     val has_all_flags = when (auth_descriptor.auth_type) {
-        "S", "ES" -> single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
-        "M", "EM" -> multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
+        S, ES -> single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
+        M, EM -> multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
         else -> false;
     };
     

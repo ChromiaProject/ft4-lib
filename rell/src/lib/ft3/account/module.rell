@@ -3,8 +3,12 @@ module;
 
 import core: ^.core;
 
+enum auth_type {
+    S, M, E, ES, EM,
+}
+
 struct auth_descriptor {
-    auth_type: text;
+    auth_type;
     args: list<gtv>;
     rules: gtv;
 }
@@ -24,7 +28,7 @@ entity account_auth_descriptor {
     id: byte_array;
     key account, id;
     index id;
-    auth_type: text;
+    auth_type;
     args: byte_array;
     rules: byte_array;
 }
@@ -55,8 +59,8 @@ function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
     );
      
     when (auth_descriptor.auth_type) {
-        "S", "M" -> _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor);
-        "ES", "EM" -> _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor);
+        S, M -> _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor);
+        ES, EM -> _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor);
     }
      
      setup_auth_descriptor_variables(account_auth_descriptor);
@@ -163,8 +167,8 @@ namespace Unsafe {
         analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
      
         when (auth_descriptor.auth_type) {
-            "S" -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-            "M" -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+            S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+            M -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
         }
         
         val account_auth_descriptor = create account_auth_descriptor (

@@ -45,7 +45,7 @@ function get_ft3_test_acc(rell.test.keypair): auth_data {
 
 function create_auth_descriptor(pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "S",
+        acc.auth_type.S,
         [ pubkey ],
         [
             ["T"].to_gtv(),

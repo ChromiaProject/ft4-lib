@@ -12,7 +12,7 @@ val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
 
 function setup_extended_auth() {
   val desc = acc.auth_descriptor(
-    "ES",
+    acc.auth_type.ES,
     [ external_key ],
     [
       set(["A"]).to_gtv(),
@@ -109,7 +109,7 @@ function test_multisig_external_signature() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
-    "EM",
+    acc.auth_type.EM,
     [ external_key, second_external_key ],
     [
       set(["A"]).to_gtv(),
@@ -147,7 +147,7 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
-    "EM",
+    acc.auth_type.EM,
     [ external_key, second_external_key ],
     [
       set(["A"]).to_gtv(),
@@ -185,7 +185,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
-    "EM",
+    acc.auth_type.EM,
     [ external_key ],
     [
       set(["A"]).to_gtv(),
@@ -268,7 +268,7 @@ function test_it_rejects_incorrect_counters() {
 function test_ft_auth_fails_if_key_invalid() {
   val external_key = rell.test.keypairs.alice;
   val desc = acc.auth_descriptor(
-    "S",
+    acc.auth_type.S,
     [ external_key.pub ],
     [
       ["A"].to_gtv(),
@@ -293,7 +293,7 @@ function test_ft_auth_fails_if_key_invalid() {
 function test_perform_ft_auth_transaction() {
   val external_key = rell.test.keypairs.alice;
   val desc = acc.auth_descriptor(
-    "S",
+    acc.auth_type.S,
     [ external_key.pub ],
     [
       ["A"].to_gtv(),

@@ -127,7 +127,7 @@ function good_ad_3_of_3() = create_auth_descriptor_M_3_pub(
 function create_auth_descriptor_M_1_pub(pubkey): acc.auth_descriptor {
     val number_of_sigs = 1;
     return acc.auth_descriptor(
-        "M",
+        acc.auth_type.M,
         [ pubkey ],
         [
             ["T"].to_gtv(),
@@ -142,7 +142,7 @@ function create_auth_descriptor_M_1_pub(pubkey): acc.auth_descriptor {
  */
 function create_auth_descriptor_M_2_pub(pubkey1: pubkey, pubkey2: pubkey, required_signs: integer): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "M",
+        acc.auth_type.M,
         [ pubkey1, pubkey2 ],
         [
             ["T"].to_gtv(),
@@ -157,7 +157,7 @@ function create_auth_descriptor_M_2_pub(pubkey1: pubkey, pubkey2: pubkey, requir
  */
 function create_auth_descriptor_M_3_pub(pubkey1: pubkey, pubkey2: pubkey, pubkey3: pubkey, required_signs: integer): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "M",
+        acc.auth_type.M,
         [ pubkey1, pubkey2, pubkey3 ],
         [
             ["T"].to_gtv(),

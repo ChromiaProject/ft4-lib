@@ -1,12 +1,5 @@
 import u: ^.utils;
 
-// Auth type:
-
-// "S" - single-sig
-// "M" - multi-sig
-// "ES" - ethereum single-sig
-// "EM" - ethereum multi-sig
-
 struct single_sig_args {
        flags: set<text>;
        pubkey;
@@ -71,12 +64,12 @@ function check_required_flags(flags: set<text>, required_flags: list<text>): boo
 /*
  * Returns the set of flags found in the "args" parameter.
  */
-function get_flags_from_args(a_t: text, args: byte_array): set<text> {
+function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
     when (a_t) {
-        "S" -> {
+        auth_type.S -> {
             return single_sig_args.from_bytes(args).flags;
         }
-        "M" -> {
+        auth_type.M -> {
             return multi_sig_args.from_bytes(args).flags;
         }
         else -> {
@@ -89,10 +82,10 @@ function get_flags_from_args(a_t: text, args: byte_array): set<text> {
 /*
  * Returns VALID if authentication arguments are valid.
  */
-function check_auth_args(a_t: text, args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
+function check_auth_args(a_t: auth_type, args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     return when (a_t) {
-        "S" -> check_single_sig_auth(args, participants, required_flags);
-        "M" -> check_multi_sig_auth(args, participants, required_flags);
+        auth_type.S -> check_single_sig_auth(args, participants, required_flags);
+        auth_type.M -> check_multi_sig_auth(args, participants, required_flags);
         else -> u.invalid("Don't recognize authentication type (S or M).");
     };
 }
@@ -121,12 +114,12 @@ function require_auth(account, account_auth_descriptor, required_flags: list<tex
     delete_expired_auth_descriptors(account);
 }
 
-function get_participants(a_t: text, args: byte_array): list<byte_array>{
+function get_participants(a_t: auth_type, args: byte_array): list<byte_array>{
     var participants: list<byte_array>? = null;
-    if (a_t == "S" or a_t == "ES"){
+    if (a_t == auth_type.S or a_t == auth_type.ES){
         participants = [single_sig_args.from_bytes(args).pubkey];
     }
-    if (a_t == "M" or a_t == "EM") {
+    if (a_t == auth_type.M or a_t == auth_type.EM) {
         participants = multi_sig_args.from_bytes(args).pubkeys;
     }
     //TODO: add extendable callback for custom types
