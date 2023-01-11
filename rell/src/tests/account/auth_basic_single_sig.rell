@@ -103,6 +103,23 @@ function test_bad_ad_missing_data() {
         .run_must_fail(); // Won't get a message back
 }
 
+function test_unsigned_ad_is_rejected() {
+    val keypair = rell.test.keypairs.alice;
+    val adBad = acc.auth_descriptor(
+        "S",
+        [ keypair.pub ],
+        [
+            ["T"].to_gtv(),
+            keypair.pub.to_hex().to_gtv()
+        ],
+        rules = null.to_gtv()
+    );
+
+    rell.test.tx()
+        .op(dev_op_account.dev_register_account(adBad))
+        .run_must_fail();
+}
+
 // ----- util -----
 
 /*

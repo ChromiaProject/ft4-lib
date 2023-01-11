@@ -21,14 +21,13 @@ function required_flags() = ["T"];
 
 function test_multi_sig_valid_1_of_1() {
     val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice, rell.test.keypairs.bob], 
+        [rell.test.keypairs.alice], 
         good_ad_1_of_1()
     ).auth_id;
 
     rell.test.tx()
         .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice) 
-        .sign(rell.test.keypairs.bob) 
         .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "valid");

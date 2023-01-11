@@ -12,7 +12,7 @@ val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
 
 function setup_extended_auth() {
   val desc = acc.auth_descriptor(
-    "S",
+    "ES",
     [ external_key ],
     [
       set(["A"]).to_gtv(),
@@ -109,7 +109,7 @@ function test_multisig_external_signature() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
-    "M",
+    "EM",
     [ external_key, second_external_key ],
     [
       set(["A"]).to_gtv(),
@@ -147,7 +147,7 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
-    "M",
+    "EM",
     [ external_key, second_external_key ],
     [
       set(["A"]).to_gtv(),
@@ -185,7 +185,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
-    "M",
+    "EM",
     [ external_key ],
     [
       set(["A"]).to_gtv(),

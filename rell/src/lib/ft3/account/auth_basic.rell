@@ -4,6 +4,8 @@ import u: ^.utils;
 
 // "S" - single-sig
 // "M" - multi-sig
+// "ES" - ethereum single-sig
+// "EM" - ethereum multi-sig
 
 struct single_sig_args {
        flags: set<text>;
@@ -121,10 +123,10 @@ function require_auth(account, account_auth_descriptor, required_flags: list<tex
 
 function get_participants(a_t: text, args: byte_array): list<byte_array>{
     var participants: list<byte_array>? = null;
-    if (a_t == "S"){
+    if (a_t == "S" or a_t == "ES"){
         participants = [single_sig_args.from_bytes(args).pubkey];
     }
-    if (a_t == "M") {
+    if (a_t == "M" or a_t == "EM") {
         participants = multi_sig_args.from_bytes(args).pubkeys;
     }
     //TODO: add extendable callback for custom types
