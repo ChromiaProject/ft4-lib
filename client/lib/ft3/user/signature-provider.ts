@@ -1,6 +1,6 @@
 import Transaction from "../core/transaction";
 import { KeyPair } from "../../cryptoUtils";
-import { util } from "postchain-client";
+import { encryption } from "postchain-client";
 
 export default interface SignatureProvider {
   sign(transaction: Transaction): Promise<Buffer>;
@@ -16,7 +16,7 @@ export class InMemorySignatureProvider implements SignatureProvider {
 
   async sign(transaction: Transaction): Promise<Buffer> {
     const digestToSign = transaction.getDigestToSign();
-    return util.signDigest(digestToSign, this.keyPair.privKey);
+    return encryption.signDigest(digestToSign, this.keyPair.privKey);
   }
 
   get pubKey(): Buffer {
@@ -47,7 +47,7 @@ export class LocalStorageSignatureProvider implements SignatureProvider {
 
   async sign(transaction: Transaction): Promise<Buffer> {
     const digestToSign = transaction.getDigestToSign();
-    return util.signDigest(digestToSign, this.kp.privKey);
+    return encryption.signDigest(digestToSign, this.kp.privKey);
   }
 
   get pubKey(): Buffer {

@@ -1,5 +1,5 @@
 import * as pcl from "postchain-client";
-import { ensureBuffer, BufferId } from "./index";
+import { BufferId } from "./index";
 
 class KeyPair {
   readonly pubKey: Buffer;
@@ -7,8 +7,8 @@ class KeyPair {
 
   constructor(privateKey?: BufferId) {
     if (privateKey) {
-      this.privKey = ensureBuffer(privateKey);
-      this.pubKey = pcl.util.createPublicKey(this.privKey);
+      this.privKey = pcl.formatter.ensureBuffer(privateKey);
+      this.pubKey = pcl.encryption.createPublicKey(this.privKey);
     } else {
       const { pubKey, privKey } = this.makeKeyPair();
       this.pubKey = pubKey;
@@ -17,7 +17,7 @@ class KeyPair {
   }
 
   makeKeyPair = () => {
-    return pcl.util.makeKeyPair();
+    return pcl.encryption.makeKeyPair();
   };
 }
 

@@ -1,4 +1,4 @@
-import { util } from "postchain-client";
+import { encryption } from "postchain-client";
 import { AuthDescriptor } from "./account-utils";
 import { GtvEncodable } from "../core/gtv";
 import Operation from "../core/operation";
@@ -57,7 +57,7 @@ export function deleteAuthDescriptor(
 }
 
 export function nop(): Operation {
-  return new Operation("nop", util.randomBytes(32));
+  return new Operation("nop", encryption.randomBytes(32));
 }
 
 export function op(

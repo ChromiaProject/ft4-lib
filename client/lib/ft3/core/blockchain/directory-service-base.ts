@@ -1,6 +1,7 @@
 import DirectoryService from "./directory-service";
 import ChainConnectionInfo from "../chain-connection-info";
-import { ensureBuffer, BufferId } from "../../../cryptoUtils";
+import { BufferId } from "../../../cryptoUtils";
+import { formatter } from "postchain-client";
 
 export default class DirectoryServiceBase implements DirectoryService {
   private chainInfos: ChainConnectionInfo[];
@@ -13,7 +14,7 @@ export default class DirectoryServiceBase implements DirectoryService {
     id: BufferId
   ): Promise<ChainConnectionInfo | undefined> {
     return this.chainInfos.find(
-      (info) => info.brid.compare(ensureBuffer(id)) === 0
+      (info) => info.brid.compare(formatter.ensureBuffer(id)) === 0
     );
   }
 }

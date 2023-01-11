@@ -1,18 +1,18 @@
-import { restClient, gtxClient } from "postchain-client";
-import { ensureBuffer, BufferId } from "../../cryptoUtils";
+import { restClient, gtxClient, formatter } from "postchain-client";
+import { BufferId } from "../../cryptoUtils";
 import { encodeGtv } from "./gtv";
 
 export default class ConnectionClient {
-  readonly chainURL: string;
+  readonly chainURLs: string[];
   readonly brid: Buffer;
   private gtx;
 
-  constructor(chainURL: string, brid: BufferId) {
-    this.chainURL = chainURL;
-    this.brid = ensureBuffer(brid);
+  constructor(chainURLs: string[], brid: BufferId) {
+    this.chainURLs = chainURLs;
+    this.brid = formatter.ensureBuffer(brid);
     this.gtx = gtxClient.createClient(
-      restClient.createRestClient(chainURL, this.brid.toString("hex"), 5),
-      this.brid,
+      restClient.createRestClient(chainURLs, this.brid.toString("hex"), 5),
+      this.brid.toString("hex"),
       []
     );
   }

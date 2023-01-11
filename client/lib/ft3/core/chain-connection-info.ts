@@ -1,9 +1,9 @@
 export default class ChainConnectionInfo {
-  readonly url: string;
+  readonly urls: string[];
   readonly brid: Buffer;
 
-  constructor(brid: Buffer, url: string) {
+  constructor(brid: Buffer, urls: string[]) {
     this.brid = brid;
-    this.url = url;
+    this.urls = urls;
   }
 }

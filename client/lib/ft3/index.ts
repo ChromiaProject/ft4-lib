@@ -1,5 +1,5 @@
 import { version } from "../../../package.json";
-import { util } from "postchain-client";
+import { logger } from "postchain-client";
 
 export * from "../cryptoUtils";
 export * from "./user/account-utils";
@@ -35,6 +35,6 @@ export function getClientVersion() {
   return version;
 }
 export function setLogLevel(level: number) {
-  util.setLogLevel(level);
+  logger.setLogLevel(level);
 }
-util.setLogLevel(0);
+logger.setLogLevel(0);

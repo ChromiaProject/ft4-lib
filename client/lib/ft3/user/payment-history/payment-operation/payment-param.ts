@@ -1,4 +1,5 @@
-import { ensureBuffer, BufferId } from "../../../../cryptoUtils";
+import { formatter } from "postchain-client";
+import { BufferId } from "../../../../cryptoUtils";
 import TransferParam from "./transfer-param";
 
 export default class PaymentParam {
@@ -13,22 +14,22 @@ export default class PaymentParam {
     assetId: BufferId,
     amount: number
   ) {
-    this.brid = ensureBuffer(brid);
-    this.accountId = ensureBuffer(accountId);
-    this.assetId = ensureBuffer(assetId);
+    this.brid = formatter.ensureBuffer(brid);
+    this.accountId = formatter.ensureBuffer(accountId);
+    this.assetId = formatter.ensureBuffer(assetId);
     this.amount = amount;
   }
 
   isBRID(brid: BufferId): boolean {
-    return this.brid.compare(ensureBuffer(brid)) === 0;
+    return this.brid.compare(formatter.ensureBuffer(brid)) === 0;
   }
 
   isAccountId(accountId: BufferId): boolean {
-    return this.accountId.compare(ensureBuffer(accountId)) === 0;
+    return this.accountId.compare(formatter.ensureBuffer(accountId)) === 0;
   }
 
   isAssetId(assetId: BufferId): boolean {
-    return this.assetId.compare(ensureBuffer(assetId)) === 0;
+    return this.assetId.compare(formatter.ensureBuffer(assetId)) === 0;
   }
 
   static fromTransferParam(param: TransferParam, brid: BufferId): PaymentParam {

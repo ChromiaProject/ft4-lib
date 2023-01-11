@@ -1,9 +1,10 @@
-import { ensureBuffer, BufferId } from "../../../../cryptoUtils";
+import { formatter } from "postchain-client";
+import { BufferId } from "../../../../cryptoUtils";
 
 export default class XTransferTarget {
   readonly accountId: Buffer;
 
   constructor(accountId: BufferId) {
-    this.accountId = ensureBuffer(accountId);
+    this.accountId = formatter.ensureBuffer(accountId);
   }
 }

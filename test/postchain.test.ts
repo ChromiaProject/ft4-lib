@@ -11,7 +11,7 @@ describe("Postchain", () => {
 
   it("should instantiate blockchain by passing internal chain id as a number", async () => {
     const url = process.env.TEST_NODE_URL || "http://localhost:7741";
-    const blockchain1 = await new Postchain(url).blockchain(0);
+    const blockchain1 = await new Postchain([url]).blockchain(0);
     const info = await blockchain.getChainInfo();
     const info1 = await blockchain1.getChainInfo();
 
@@ -20,7 +20,7 @@ describe("Postchain", () => {
 
   it("should instantiate blockchain by passing BRID as a string", async () => {
     const url = process.env.TEST_NODE_URL || "http://localhost:7741";
-    const blockchain1 = await new Postchain(url).blockchain(
+    const blockchain1 = await new Postchain([url]).blockchain(
       blockchain.id.toString("hex")
     );
     const info = await blockchain.getChainInfo();
@@ -31,7 +31,7 @@ describe("Postchain", () => {
 
   it("should instantiate blockchain by passing BRID as a Buffer", async () => {
     const url = process.env.TEST_NODE_URL || "http://localhost:7741";
-    const blockchain1 = await new Postchain(url).blockchain(blockchain.id);
+    const blockchain1 = await new Postchain([url]).blockchain(blockchain.id);
     const info = await blockchain.getChainInfo();
     const info1 = await blockchain1.getChainInfo();
 

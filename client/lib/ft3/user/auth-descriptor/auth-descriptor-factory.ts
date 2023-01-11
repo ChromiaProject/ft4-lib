@@ -11,7 +11,7 @@ export default class AuthDescriptorFactory {
   }
 
   private createSingleSig(args: Buffer): SingleSignatureAuthDescriptor {
-    const decodedDescriptor = gtv.decodeGtv(args);
+    const decodedDescriptor = gtv.decode(args);
     return new SingleSignatureAuthDescriptor(
       Buffer.from(decodedDescriptor[1], "hex"),
       decodedDescriptor[0]

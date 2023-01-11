@@ -41,7 +41,7 @@ export default class Blockchain {
       );
     }
 
-    const connection = new ConnectionClient(chainConnectionInfo.url, brid);
+    const connection = new ConnectionClient(chainConnectionInfo.urls, brid);
     return new Blockchain(connection, directoryService);
   }
 

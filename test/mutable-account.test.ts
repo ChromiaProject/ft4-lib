@@ -10,7 +10,7 @@ import {
 } from "../client/lib/ft3";
 import * as pcl from "postchain-client";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
-import { buffToHex, KeyPair } from "../client/lib/cryptoUtils";
+import { KeyPair } from "../client/lib/cryptoUtils";
 import TestUser from "./util/test-user";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
 import AccountBuilder from "./util/account-builder";
@@ -53,14 +53,14 @@ describe("Test the mutable account", () => {
   });
 
   it("Correctly creates keypair from string", () => {
-    const keyPairToImport = pcl.util.makeKeyPair();
-    const user = new KeyPair(buffToHex(keyPairToImport.privKey));
+    const keyPairToImport = pcl.encryption.makeKeyPair();
+    const user = new KeyPair(pcl.formatter.toString(keyPairToImport.privKey)); //!
     expect(user.privKey).toEqual(keyPairToImport.privKey);
     expect(user.pubKey).toEqual(keyPairToImport.pubKey);
   });
 
   it("Correctly creates keypair from buffer", () => {
-    const keyPairToImport = pcl.util.makeKeyPair();
+    const keyPairToImport = pcl.encryption.makeKeyPair();
     const user = new KeyPair(keyPairToImport.privKey);
     expect(user.privKey).toEqual(keyPairToImport.privKey);
     expect(user.pubKey).toEqual(keyPairToImport.pubKey);

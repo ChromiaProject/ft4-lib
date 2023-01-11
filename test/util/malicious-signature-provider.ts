@@ -4,7 +4,7 @@ import {
   BufferId,
   Transaction,
 } from "../../client/lib/ft3";
-import { util } from "postchain-client";
+import { encryption } from "postchain-client";
 
 export default class MaliciousSignatureProvider implements SignatureProvider {
   private readonly keyPair: KeyPair;
@@ -17,7 +17,7 @@ export default class MaliciousSignatureProvider implements SignatureProvider {
     //@ts-expect-error it's accessing a supposedly private variable
     transaction.tx.gtx.operations.push({ opName: "malicious", args: ["code"] });
     const digestToSign = transaction.getDigestToSign();
-    return util.signDigest(digestToSign, this.keyPair.privKey);
+    return encryption.signDigest(digestToSign, this.keyPair.privKey);
   }
 
   get pubKey(): Buffer {
