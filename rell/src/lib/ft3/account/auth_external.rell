@@ -15,7 +15,7 @@ function AuthDescriptor(id: byte_array) = require(
     "Provided auth descriptor id does not exist %s".format(id)
 );
 
-function authenticate(required_flags: set<text>, messages: list<text>): boolean {
+function authenticate(required_flags: set<text>, message_template: text): boolean {
     require(op_context.op_index > 0, "Expected at least two operations");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
@@ -24,14 +24,16 @@ function authenticate(required_flags: set<text>, messages: list<text>): boolean 
         "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
     );
     return when (previous_op.name) {
-        "ft.eth_auth" -> _validate_eth_signature(previous_op.args, required_flags, messages);
+        "ft.eth_auth" -> _validate_eth_signature(previous_op.args, required_flags, message_template);
         "ft.ft_auth" -> _validate_ft4_signature(previous_op.args, required_flags);
         else -> false;
     };
 }
 
-function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, messages: list<text>): boolean {
-    val validated_args = _validate_eth_arguments(auth_args, required_flags, messages);
+function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, message_template: text): boolean {
+    val validated_args = _validate_eth_arguments(auth_args, required_flags);
+    val op_args = op_context.get_all_operations()[op_context.op_index].args;
+    val messages = _create_messages(message_template, op_args, validated_args.ctrs);
 
     var recovered_keys = 
         if (validated_args.account_auth_descriptor.auth_type == auth_type.ES) [_recover_eth_key(messages[0], validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
@@ -41,7 +43,21 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     return true;
 }
 
-function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>, messages: list<text>): eth_auth_args {
+function _create_messages(message_template: text, args: list<gtv>, ctrs: list<integer>): list<text> {
+    var messages = list<text>();
+
+    for (ctr in ctrs) {
+        var message = message_template;
+        for (i in range(args.size())) {
+            message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
+        }
+        messages.add(message.replace("{%d}".format(args.size()), ctr.to_text().replace("\"", "")));
+    }
+
+    return messages;
+}
+
+function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): eth_auth_args {
     require(auth_args.size() == 4, "Incorrect number of arguments to auth operation");
 
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
@@ -49,8 +65,8 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     val ctrs = list<integer>.from_gtv(auth_args[2]);
 
     require(
-        signatures.size() == messages.size(),
-        "# signatures (%d) does not match # messages provided (%d)".format(signatures.size(), messages.size()));
+        signatures.size() == ctrs.size(),
+        "# signatures (%d) does not match # counters provided (%d)".format(signatures.size(), ctrs.size()));
     
     val auth_descriptor = AuthDescriptor(auth_descriptor_id);
     require(is_valid(auth_descriptor));

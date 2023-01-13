@@ -7,8 +7,7 @@ import acc_ext: ^^^.lib.ft3.account.external;
 import dev_op: ^^^.lib.ft3.operations.dev_op_auth;
 
 val external_key = byte_array.from_hex("dc922451d86a9c802257066592122a7cc9a64d16");
-val to_addr = "ba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
-val msg_template = "Do you want to send %s CHR to %s? Nonce: %s";
+val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
 
 function setup_extended_auth() {
   val desc = acc.auth_descriptor(
@@ -100,7 +99,7 @@ function test_perform_eth_auth_transaction() {
 
   rell.test.tx()
     .op(acc.eth_auth(alice_acc_desc_id, [signature], counters, rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -138,7 +137,7 @@ function test_multisig_external_signature() {
 
   rell.test.tx()
     .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -161,8 +160,6 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
     .op(dev_op.dev_create_eth_account(desc))
     .run();
 
-  val alice_acc = acc.account_auth_descriptor @ {}(.account);
-
   val signature0 = acc.signature(
     r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
     s="4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
@@ -176,7 +173,7 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
 
   rell.test.tx()
     .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
 }
@@ -199,8 +196,6 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     .op(dev_op.dev_create_eth_account(desc))
     .run();
 
-  val alice_acc = acc.account_auth_descriptor @ {}(.account);
-
   val signature0 = acc.signature(
     r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
     s="4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
@@ -214,7 +209,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
 
   rell.test.tx()
     .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
 }
@@ -234,35 +229,14 @@ function test_requires_correct_ctr() {
   );
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
-  val alice_acc = alice_acc_desc.account;
 
   rell.test.tx()
     .op(acc.eth_auth(alice_acc_desc_id, [signature0], [0], rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .op(acc.eth_auth(alice_acc_desc_id, [signature1], [1], rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
-}
-
-function test_it_rejects_incorrect_counters() {
-  val alice_acc_desc_id = setup_extended_auth();
-  val signature0 = acc.signature(
-    r="a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
-    s="4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
-    v=28
-  );
-
-  val msg = "Do you want to send 1000 CHR to 0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a? Nonce: 0";
-
-  val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
-  val alice_acc = alice_acc_desc.account;
-
-  rell.test.tx()
-    .op(acc.eth_auth(alice_acc_desc_id, [signature0], [1], rell.test.keypairs.alice.pub))
-    .op(dev_op.dev_perform_large_transfer_with_custom_messages(msg_template, alice_acc, to_addr, 1000, [msg]))
-    .sign(rell.test.keypairs.alice.priv)
-    .run_must_fail();
 }
 
 function test_ft_auth_fails_if_key_invalid() {
@@ -281,11 +255,9 @@ function test_ft_auth_fails_if_key_invalid() {
     .sign(external_key.priv)
     .run();
 
-  val alice_acc = acc.account_auth_descriptor @ { .id == desc.hash() }( .account );
-
   rell.test.tx()
     .op(acc.ft_auth(desc.hash()))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.bob.priv)
     .run_must_fail();
 }
@@ -306,11 +278,9 @@ function test_perform_ft_auth_transaction() {
     .sign(external_key.priv)
     .run();
 
-  val alice_acc = acc.account_auth_descriptor @ { .id == desc.hash() }( .account );
-
   rell.test.tx()
     .op(acc.ft_auth(desc.hash()))
-    .op(dev_op.dev_perform_large_transfer(msg_template, alice_acc, to_addr, 1000))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(external_key.priv)
     .run();
 }

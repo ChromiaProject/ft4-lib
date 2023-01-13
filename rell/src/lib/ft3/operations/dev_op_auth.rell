@@ -49,9 +49,9 @@ operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
   acc.create_account_with_auth(auth_desc);
 }
 
-operation dev_authenticated_operation(message: text) {
+operation dev_authenticated_operation(message_temaplate: text) {
   dev_op.require_dev();
-  require(acc.authenticate(set<text>(["A"]), [message]));
+  require(acc.authenticate(set<text>(["A"]), message_temaplate));
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
@@ -70,39 +70,10 @@ operation create_ft4_account(auth_desc: acc.auth_descriptor) {
 }
 
 operation dev_perform_large_transfer(
-  message_template: text,
-  from: acc.account,
-  to: text,
-  amount: integer
-) {
-  dev_op.require_dev();
-  val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-  val ctrs = if (previous_op.args.size() > 1) list<integer>.from_gtv(previous_op.args[2]) else list<integer>();
-
-  var messages = list<text>();
-  for (ctr in ctrs) {
-    val args = [amount.to_text(), "0x" + to, ctr.to_text()];
-    messages.add(message_template.format(amount.to_text(), "0x" + to, ctr.to_text()));
-  }
-  require(acc.authenticate(set(["A"]), messages));
-}
-
-/**
-* NOTE: This operation is used specifically to reach a certain validation rule in the auth 
-* implementation and does not represent a usage example of the API
-*/
-operation dev_perform_large_transfer_with_custom_messages(
-  message_template: text,
-  from: acc.account,
-  to: text,
   amount: integer,
-  messages: list<text>
+  to: text
 ) {
   dev_op.require_dev();
-  val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-  val ctrs = list<integer>.from_gtv(previous_op.args[2]);
-
-  require(acc.authenticate(set(["A"]), messages));
+  val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {2}";
+  require(acc.authenticate(set(["A"]), msg_template));
 }
-
-

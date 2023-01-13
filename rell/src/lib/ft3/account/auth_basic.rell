@@ -66,10 +66,10 @@ function check_required_flags(flags: set<text>, required_flags: list<text>): boo
  */
 function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
     when (a_t) {
-        auth_type.S -> {
+        S -> {
             return single_sig_args.from_bytes(args).flags;
         }
-        auth_type.M -> {
+        M -> {
             return multi_sig_args.from_bytes(args).flags;
         }
         else -> {
@@ -84,8 +84,8 @@ function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
  */
 function check_auth_args(a_t: auth_type, args: byte_array, participants: list<byte_array>, required_flags: list<text>): u.validation_result {
     return when (a_t) {
-        auth_type.S -> check_single_sig_auth(args, participants, required_flags);
-        auth_type.M -> check_multi_sig_auth(args, participants, required_flags);
+        S -> check_single_sig_auth(args, participants, required_flags);
+        M -> check_multi_sig_auth(args, participants, required_flags);
         else -> u.invalid("Don't recognize authentication type (S or M).");
     };
 }
