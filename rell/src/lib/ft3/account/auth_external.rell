@@ -39,7 +39,7 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
         if (validated_args.account_auth_descriptor.auth_type == auth_type.ES) [_recover_eth_key(messages[0], validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
         else _recover_multiple_eth_keys(messages, validated_args.signatures, validated_args.account_auth_descriptor);
     
-    _check_ctr(validated_args.account_auth_descriptor.id, recovered_keys, validated_args.ctrs);
+    _check_ctr(validated_args.account_auth_descriptor, recovered_keys, validated_args.ctrs);
     return true;
 }
 
@@ -139,11 +139,11 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
     return true;
 }
 
-function _check_ctr(auth_descriptor_id: byte_array, external_keys: list<byte_array>, ctrs: list<integer>) {
+function _check_ctr(account_auth_descriptor, external_keys: list<byte_array>, ctrs: list<integer>) {
     require(external_keys.size() == ctrs.size(), "# of external keys and # counters differ");
 
     val participants = auth_descriptor_participant @* {
-        .account_auth_descriptor.id == auth_descriptor_id, 
+        .account_auth_descriptor == account_auth_descriptor,
         .id in external_keys
     };
 
