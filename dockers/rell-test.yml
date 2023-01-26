@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: postchain
 
   ft3-lib-rell-postchain:
-    image: registry.gitlab.com/chromaway/postchain-distribution/chromaway/postchain-test-dapp:3.6.0
+    image: registry.gitlab.com/chromaway/postchain-distribution/chromaway/postchain-test-dapp:3.7.0
     container_name: ft3-lib-rell-postchain
     command:
       - test
