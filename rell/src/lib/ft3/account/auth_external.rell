@@ -7,7 +7,6 @@ struct signature {
 struct eth_auth_args {
     account_auth_descriptor;
     signatures: list<signature>;
-    ctrs: list<integer>;
 }
 
 function AuthDescriptor(id: byte_array) = require(
@@ -33,40 +32,29 @@ function authenticate(required_flags: set<text>, message_template: text): boolea
 function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, message_template: text): boolean {
     val validated_args = _validate_eth_arguments(auth_args, required_flags);
     val op_args = op_context.get_all_operations()[op_context.op_index].args;
-    val messages = _create_messages(message_template, op_args, validated_args.ctrs);
+    val message = _create_message(message_template, op_args, validated_args.account_auth_descriptor.ctr);
 
     var recovered_keys = 
-        if (validated_args.account_auth_descriptor.auth_type == auth_type.ES) [_recover_eth_key(messages[0], validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
-        else _recover_multiple_eth_keys(messages, validated_args.signatures, validated_args.account_auth_descriptor);
+        if (validated_args.account_auth_descriptor.auth_type == auth_type.ES) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
+        else _recover_multiple_eth_keys(message, validated_args.signatures, validated_args.account_auth_descriptor);
     
-    _check_ctr(validated_args.account_auth_descriptor, recovered_keys, validated_args.ctrs);
+    validated_args.account_auth_descriptor.ctr += 1;
     return true;
 }
 
-function _create_messages(message_template: text, args: list<gtv>, ctrs: list<integer>): list<text> {
-    var messages = list<text>();
-
-    for (ctr in ctrs) {
-        var message = message_template;
-        for (i in range(args.size())) {
-            message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
-        }
-        messages.add(message.replace("{%d}".format(args.size()), ctr.to_text().replace("\"", "")));
+function _create_message(message_template: text, args: list<gtv>, ctr: integer): text {
+    var message = message_template;
+    for (i in range(args.size())) {
+        message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
     }
-
-    return messages;
+    return message.replace("{%d}".format(args.size()), ctr.to_text().replace("\"", ""));
 }
 
 function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): eth_auth_args {
-    require(auth_args.size() == 4, "Incorrect number of arguments to auth operation");
+    require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
 
     val auth_descriptor_id = byte_array.from_gtv(auth_args[0]);
     val signatures = list<signature>.from_gtv(auth_args[1]);
-    val ctrs = list<integer>.from_gtv(auth_args[2]);
-
-    require(
-        signatures.size() == ctrs.size(),
-        "# signatures (%d) does not match # counters provided (%d)".format(signatures.size(), ctrs.size()));
     
     val auth_descriptor = AuthDescriptor(auth_descriptor_id);
     require(is_valid(auth_descriptor));
@@ -79,16 +67,16 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     
     require(has_all_flags, "The auth descriptor does not have the required permissions");
 
-    return eth_auth_args(auth_descriptor, signatures, ctrs);
+    return eth_auth_args(auth_descriptor, signatures);
 }
 
-function _recover_multiple_eth_keys(messages: list<text>, signatures: list<signature>, account_auth_descriptor) {
+function _recover_multiple_eth_keys(message: text, signatures: list<signature>, account_auth_descriptor) {
     var recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
         recovered_keys.add(
             _recover_eth_key(
-                messages[i], 
-                signatures[i], 
+                message,
+                signatures[i],
                 account_auth_descriptor.id
             )
         );
@@ -139,31 +127,9 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
     return true;
 }
 
-function _check_ctr(account_auth_descriptor, external_keys: list<byte_array>, ctrs: list<integer>) {
-    require(external_keys.size() == ctrs.size(), "# of external keys and # counters differ");
-
-    val participants = auth_descriptor_participant @* {
-        .account_auth_descriptor == account_auth_descriptor,
-        .id in external_keys
-    };
-
-    require(participants.size() > 0, "No valid participants found for the specified auth descriptor");
-
-    var provided = map<byte_array, integer>();
-    for (i in range(external_keys.size())) {
-        provided.put(external_keys[i], ctrs[i]);
-    }
-
-    for (participant in participants) {
-        require(provided[participant.id] == participant.ctr, "Unexpected counter value");
-        participant.ctr += 1;
-    }
-}
-
 operation eth_auth(
     auth_descriptor_id: byte_array,
     signatures: list<signature>,
-    ctrs: list<integer>,
     disposable_key: pubkey
 ) {
     require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");

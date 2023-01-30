@@ -44,7 +44,7 @@ function test_fails_if_insufficient_permissions() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_auth_desc_id, [signature], [0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(alice_auth_desc_id, [signature], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_authenticated_operation(""))
     .run_must_fail();
 }
@@ -58,7 +58,7 @@ function test_it_rejects_empty_messages() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_auth_desc_id, [signature], [0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(alice_auth_desc_id, [signature], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_authenticated_operation(""))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
@@ -79,7 +79,7 @@ function test_it_rejects_wrong_eth_signatures() {
   ];
 
   rell.test.tx()
-    .op(acc.eth_auth(auth_desc_id, [wrong_signature], [0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(auth_desc_id, [wrong_signature], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_authenticated_operation("Some message"))
     .sign(rell.test.keypairs.alice)
     .run_must_fail();
@@ -95,10 +95,9 @@ function test_perform_eth_auth_transaction() {
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
   val alice_acc = alice_acc_desc.account;
-  val counters = [acc_ext.get_ctr_for_external_key(alice_acc_desc_id, external_key)];
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_acc_desc_id, [signature], counters, rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(alice_acc_desc_id, [signature], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
@@ -136,7 +135,7 @@ function test_multisig_external_signature() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
@@ -172,7 +171,7 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
@@ -208,7 +207,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   );
 
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), [signature0, signature1], [0, 0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
@@ -231,9 +230,9 @@ function test_requires_correct_ctr() {
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
 
   rell.test.tx()
-    .op(acc.eth_auth(alice_acc_desc_id, [signature0], [0], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(alice_acc_desc_id, [signature0], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
-    .op(acc.eth_auth(alice_acc_desc_id, [signature1], [1], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(alice_acc_desc_id, [signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();

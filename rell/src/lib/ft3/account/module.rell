@@ -31,11 +31,11 @@ entity account_auth_descriptor {
     auth_type;
     args: byte_array;
     rules: byte_array;
+    mutable ctr: integer;
 }
 
 entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
-    mutable ctr: integer;
 }
 
 // rate limiter
@@ -55,7 +55,8 @@ function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
         account, id,
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes(),
-        rules = auth_descriptor.rules.to_gtv().to_bytes()
+        rules = auth_descriptor.rules.to_gtv().to_bytes(),
+        0
     );
      
     when (auth_descriptor.auth_type) {
@@ -117,13 +118,13 @@ function _add_ft_auth_participant(account, auth_descriptor, account_auth_descrip
     require(op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
     for (participant in participants) {
         require(op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
-        create auth_descriptor_participant(account_auth_descriptor, id = participant, ctr = 0);
+        create auth_descriptor_participant(account_auth_descriptor, id = participant);
     }
 }
 
 function _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor) {
     for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-        create auth_descriptor_participant(account_auth_descriptor, id = participant, ctr = 0);
+        create auth_descriptor_participant(account_auth_descriptor, id = participant);
     }
 }
 
@@ -175,11 +176,12 @@ namespace Unsafe {
             account, id,
             auth_descriptor.auth_type,
             args = auth_descriptor.args.to_gtv().to_bytes(),
-            rules = auth_descriptor.rules.to_gtv().to_bytes()
+            rules = auth_descriptor.rules.to_gtv().to_bytes(),
+            0
         );
         
         for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-            create auth_descriptor_participant(account_auth_descriptor, id = participant, 0);
+            create auth_descriptor_participant(account_auth_descriptor, id = participant);
         }
         
         setup_auth_descriptor_variables(account_auth_descriptor);
