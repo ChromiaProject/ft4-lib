@@ -4,12 +4,10 @@ module;
 import dev_op: ^^.core.dev_op;
 import acc: ^^.account;
 
-function Account(id: byte_array): acc.account{
-	return require(
-		acc.account@?{.id == id},
-		"Account not found"
-	);
-}
+function Account(id: byte_array) = require(
+	acc.account @? { .id == id },
+	"Account '%s' not found".format(id)
+);
 
 /*
  * Can be negative
