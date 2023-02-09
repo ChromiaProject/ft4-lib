@@ -94,11 +94,9 @@ function test_2_participants_in_ad() {
 // Here we cannot get an error back, it'll explode
 function test_bad_ad_missing_data() {
     val adBad = create_BAD_auth_descriptor_missing_data(rell.test.keypairs.alice.pub);
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, adBad).auth_id;
 
-    rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
-        .sign(rell.test.keypairs.alice) 
+    dev_op_account.dev_register_account(adBad)
+        .sign(rell.test.keypairs.alice)
         .run_must_fail(); // Won't get a message back
 }
 

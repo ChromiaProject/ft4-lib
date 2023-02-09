@@ -48,6 +48,11 @@ function _add_auth_descriptor(account, auth_descriptor) {
      val id = auth_descriptor.hash();
      
      analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+     
+    when (auth_descriptor.auth_type) {
+        "S" -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        "M" -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+    }
 
      val account_auth_descriptor = create account_auth_descriptor (
         account, id,
