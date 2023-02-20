@@ -39,11 +39,11 @@ query get_account_by_id(id: byte_array) {
 query get_account_by_auth_descriptor(acc.auth_descriptor) {
     return acc.account @? { .id == auth_descriptor.hash() } ( .id );
 }
-
+/*
 query get_accounts_by_participant_id(id: byte_array) {
     return acc.auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
 }
-
+*/
 query get_accounts_by_auth_descriptor_id(id: byte_array) {
     return acc.account_auth_descriptor @* { id } ( .account.id );
 }

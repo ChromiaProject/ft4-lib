@@ -8,7 +8,7 @@ import {
 import AccountBuilder from "./util/account-builder";
 import TestUser from "./util/test-user";
 import BlockchainUtil from "./util/blockchain-util";
-import { register } from "../client/lib/ft3/user/account-dev-operations";
+import { register } from "../client/lib/ft3/account/account-dev-operations";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let blockchain: Blockchain;

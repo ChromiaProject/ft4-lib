@@ -1,0 +1,213 @@
+import { freeOp, registerOp } from "./account-dev-operations";
+import {
+  addAuthDescriptorOp,
+  deleteAllAuthDescriptorsExcludeOp,
+  deleteAuthDescriptorOp,
+  transferOp,
+} from "./account-operations";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { Account, XferInput, XferOutput, User } from "./types";
+import { getById } from "./account-query-functions";
+import { nop, send } from "../utils";
+import { getId, getSigners } from "./auth-descriptor";
+import { AuthDescriptor } from "./auth-descriptor/types";
+
+export async function registerAccount(
+  newAuthDesc: AuthDescriptor,
+  user: User,
+  session: GtxClient
+): Promise<Account> {
+  const tx = session.newTransaction(getSigners(user.authDescriptor));
+  tx.addOperation(...registerOp(newAuthDesc));
+  await tx.sign(user.signatureProvider);
+  await send(tx);
+  return getById(getId(newAuthDesc), session);
+}
+
+export async function ssoRawTransactionRegister(
+  newAuthDesc: AuthDescriptor,
+  user: User,
+  session: GtxClient
+): Promise<Buffer> {
+  const tx = session.newTransaction(
+    [getSigners(user.authDescriptor), getSigners(newAuthDesc)].flat()
+  );
+  tx.addOperation(...registerOp(user.authDescriptor));
+  tx.addOperation(
+    ...addAuthDescriptorOp(
+      getId(user.authDescriptor),
+      getId(user.authDescriptor),
+      newAuthDesc
+    )
+  );
+  await tx.sign(user.signatureProvider);
+  return tx.encode();
+}
+
+export async function ssoRawTransactionAddAuthDescriptor(
+  accountId: Buffer,
+  newAuthDesc: AuthDescriptor,
+  user: User,
+  session: GtxClient
+): Promise<Buffer> {
+  const tx = await session.newTransaction(
+    [getSigners(user.authDescriptor), getSigners(newAuthDesc)].flat()
+  );
+  tx.addOperation(
+    ...addAuthDescriptorOp(accountId, getId(user.authDescriptor), newAuthDesc)
+  );
+  await tx.sign(user.signatureProvider);
+  return tx.encode();
+}
+
+export async function addAuthDescriptorToAcc(
+  authDescriptor: AuthDescriptor,
+  accountId: Buffer,
+  user: User,
+  session: GtxClient
+): Promise<void> {
+  const tx = await session.newTransaction(getSigners(user.authDescriptor));
+  tx.addOperation(
+    ...addAuthDescriptorOp(
+      accountId,
+      getId(user.authDescriptor),
+      authDescriptor
+    )
+  );
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await send(tx);
+}
+
+export async function deleteAllAuthDescriptorsExclude(
+  authDescriptorId: Buffer,
+  accountId: Buffer,
+  user: User,
+  session: GtxClient
+): Promise<void> {
+  const tx = session.newTransaction(getSigners(user.authDescriptor));
+  tx.addOperation(
+    ...deleteAllAuthDescriptorsExcludeOp(accountId, authDescriptorId)
+  );
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await send(tx);
+}
+
+export async function deleteAuthDescriptor(
+  authDescriptorId: Buffer,
+  accountId: Buffer,
+  user: User,
+  session: GtxClient
+): Promise<void> {
+  const tx = session.newTransaction(getSigners(user.authDescriptor));
+  tx.addOperation(
+    ...deleteAuthDescriptorOp(
+      accountId,
+      getId(user.authDescriptor),
+      authDescriptorId
+    )
+  );
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await send(tx);
+}
+
+export async function transferInputsToOutputs(
+  inputs: XferInput[],
+  outputs: XferOutput[],
+  user: User,
+  session: GtxClient
+): Promise<void> {
+  const tx = session.newTransaction(getSigners(user.authDescriptor));
+  tx.addOperation(...transferOp(inputs, outputs));
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await send(tx);
+}
+
+export async function transfer(
+  fromAccountId: Buffer,
+  toAccountId: Buffer,
+  assetId: Buffer,
+  amount: bigint,
+  user: User,
+  session: GtxClient
+): Promise<void> {
+  const input: XferInput = [
+    fromAccountId,
+    assetId,
+    getId(user.authDescriptor),
+    amount,
+  ];
+
+  const output: XferOutput = [toAccountId, assetId, amount];
+
+  await transferInputsToOutputs([input], [output], user, session);
+}
+
+export async function burnTokens(
+  fromAccountId: Buffer,
+  assetId: Buffer,
+  amount: bigint,
+  user: User,
+  session: GtxClient
+): Promise<void> {
+  const input: XferInput = [
+    fromAccountId,
+    assetId,
+    getId(user.authDescriptor),
+    amount,
+  ];
+
+  await transferInputsToOutputs([input], [], user, session);
+}
+
+export async function freeOperation(
+  accountId: Buffer,
+  user: User,
+  session: GtxClient
+) {
+  const tx = session.newTransaction(getSigners(user.authDescriptor));
+  tx.addOperation(...freeOp(accountId));
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await send(tx);
+}
+/*
+export async function xcTransfer(
+  /*
+    destinationBRID: Buffer,
+    destinationAccountId: Buffer,
+    assetId: Buffer,
+    amount: number
+  * / user: User,
+  session: GtxClient
+): Promise<void> {
+  throw new Error("Not implemented!");
+  /*const tx = await xcTransferOp(
+    destinationBRID,
+    destinationAccountId,
+    assetId,
+    amount
+  );
+  await tx.post();
+  await this.sync();* /
+}
+
+///////////////TO FIX
+/*
+export async function getPaymentHistory(): Promise<any[]> {
+  return await PaymentHistory.getByAccountId(this.id, -1, this.blockchain);
+}
+
+export async function getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
+  if (pageSize < 1) throw new Error("Page size has to be greater than 1");
+  await this.paymentHistorySyncManager.syncAccount(this.id, this.blockchain);
+  return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(
+    this.blockchain.id,
+    this.id,
+    pageSize
+  );
+}
+*/

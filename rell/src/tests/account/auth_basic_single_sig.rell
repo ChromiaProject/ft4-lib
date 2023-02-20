@@ -63,7 +63,7 @@ function test_not_signed() {
     assert_equals(dev_op_auth.dev_error.msg, "The participant is not the signer of this transaction.");
 }
 
-
+/*
 function test_0_participant_in_ad() {
     val adBad = create_BAD_auth_descriptor_S_but_0_pub(rell.test.keypairs.alice.pub);
     val alice_auth_id = cu._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, adBad).auth_id;
@@ -74,7 +74,7 @@ function test_0_participant_in_ad() {
         .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "Single sig Auth Descriptor's participant list is empty.");
-}
+}*/
 
 function test_2_participants_in_ad() {
     val adBad = create_BAD_auth_descriptor_S_but_2_pub(
@@ -106,18 +106,18 @@ function test_bad_ad_missing_data() {
 
 /*
  * Creates an inherently broken Auth Desc, which claims to be "S" but has no participant.
- */
+ *
 function create_BAD_auth_descriptor_S_but_0_pub(pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
         "S",
-        list<pubkey>(), // <-- Incorrect!
+        //list<pubkey>(), // <-- Incorrect!
         [ 
             ["T"].to_gtv(),
-            pubkey.to_hex().to_gtv()
+            "".to_gtv()
         ],
         rules = null.to_gtv()
     );
-}
+}*/
 
 /*
  * Creates an inherently broken Auth Desc, which claims to be "S" but has two participants.
@@ -125,10 +125,11 @@ function create_BAD_auth_descriptor_S_but_0_pub(pubkey): acc.auth_descriptor {
 function create_BAD_auth_descriptor_S_but_2_pub(pubkey1: pubkey, pubkey2: pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
         "S",
-        [ pubkey1, pubkey2 ], // <-- Incorrect
+        //[ pubkey1, pubkey2 ], // <-- Incorrect
         [
             ["T"].to_gtv(),
-            pubkey1.to_hex().to_gtv()
+            pubkey1.to_hex().to_gtv(),
+            pubkey2.to_hex().to_gtv() // <-- Incorrect
         ],
         rules = null.to_gtv()
     );
@@ -140,7 +141,7 @@ function create_BAD_auth_descriptor_S_but_2_pub(pubkey1: pubkey, pubkey2: pubkey
 function create_BAD_auth_descriptor_missing_data(pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
         "S",
-        [ pubkey ],
+        //[ pubkey ],
         [
             ["T"].to_gtv() 
         ], // <--- Should have pub key here

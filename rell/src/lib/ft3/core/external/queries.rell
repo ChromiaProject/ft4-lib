@@ -65,6 +65,7 @@ query get_payment_history(account_id: byte_array, after_block: integer) {
         delta = .delta,
         asset = .asset.name,
         asset_id = .asset.id,
+        asset_brid = .asset.issuing_brid,
         is_input = .is_input,
         timestamp = .transaction.block.timestamp,
         block_height = .transaction.block.block_height,
@@ -72,4 +73,14 @@ query get_payment_history(account_id: byte_array, after_block: integer) {
         tx_rid = .transaction.tx_rid,
         tx_data = .transaction.tx_data
     );
+}
+
+query get_payment_history_paginated(account_id: byte_array, page_cursor: text) {
+    val cursor = core.decode_cursor(page_cursor);
+    val paginated_payments = core.get_paginated_payments(account_id, cursor);
+    return core.make_page(paginated_payments, cursor);
+}
+
+query get_payment_history_size(account_id: byte_array) {
+    return core.payment_history_entry @* { acc.account @ {account_id} } ($).size();
 }

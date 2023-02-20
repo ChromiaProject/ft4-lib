@@ -9,7 +9,7 @@ import {
   op,
 } from "../client/lib/ft3";
 import * as pcl from "postchain-client";
-import { register } from "../client/lib/ft3/user/account-dev-operations";
+import { register } from "../client/lib/ft3/account/account-dev-operations";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import TestUser from "./util/test-user";
 import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
