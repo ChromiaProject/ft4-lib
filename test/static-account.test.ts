@@ -1,12 +1,14 @@
-import { FlagsType } from "../client/lib/ft3/user/account-utils";
-import StaticAccount from "../client/lib/ft3/user/static-account";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
+import {
+  FlagsType,
+  StaticAccount,
+  MutableAccount,
+  Blockchain,
+  SingleSignatureAuthDescriptor,
+  op,
+} from "../client/lib/ft3";
 import TestUser from "./util/test-user";
-import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
 import AccountBuilder from "./util/account-builder";
 import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import { op } from "../client/lib/ft3";
 
 let blockchain: Blockchain;
 

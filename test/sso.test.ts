@@ -1,14 +1,19 @@
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
 import BlockchainUtil from "./util/blockchain-util";
 import TestUser from "./util/test-user";
-import User from "../client/lib/ft3/user/user";
-import { LocalStorageSignatureProvider } from "../client/lib/ft3/user/signature-provider";
-import SingleSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/single-signature-auth-descriptor";
-import { addAuthDescriptor, FlagsType, nop } from "../client/lib/ft3";
-import MutableAccount from "../client/lib/ft3/user/mutable-account";
+import {
+  Blockchain,
+  User,
+  LocalStorageSignatureProvider,
+  SingleSignatureAuthDescriptor,
+  RateLimit,
+  MutableAccount,
+  addAuthDescriptor,
+  FlagsType,
+  nop,
+} from "../client/lib/ft3";
 import SSO from "./util/fake-sso";
-import RateLimit from "../client/lib/ft3/user/rate-limit";
 import { register } from "../client/lib/ft3/user/account-dev-operations";
+import { LocalStorageMock } from "./util/util";
 
 let blockchain: Blockchain;
 
@@ -29,6 +34,7 @@ function createUser(): [User, LocalStorageSignatureProvider] {
 
 describe("SSO", () => {
   beforeAll(async () => {
+    global.localStorage = new LocalStorageMock();
     blockchain = await BlockchainUtil.getDefaultBlockchain();
   });
 

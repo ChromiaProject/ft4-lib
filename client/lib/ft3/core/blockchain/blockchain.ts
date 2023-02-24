@@ -12,16 +12,14 @@ import Operation from "../operation";
 import { op } from "../../user/account-operations";
 
 export default class Blockchain {
-  readonly info: BlockchainInfo;
   readonly connection: ConnectionClient;
   private readonly directoryService: DirectoryService;
+  private info: BlockchainInfo;
 
   constructor(
-    info: BlockchainInfo,
     connection: ConnectionClient,
     directoryService: DirectoryService
   ) {
-    this.info = info;
     this.connection = connection;
     this.directoryService = directoryService;
   }
@@ -44,12 +42,18 @@ export default class Blockchain {
     }
 
     const connection = new ConnectionClient(chainConnectionInfo.url, brid);
-    const info = await BlockchainInfo.getInfo(connection);
-    return new Blockchain(info, connection, directoryService);
+    return new Blockchain(connection, directoryService);
   }
 
   newSession(user: User): BlockchainSession {
     return new BlockchainSession(user, this);
+  }
+
+  async getChainInfo(): Promise<BlockchainInfo> {
+    if (!this.info) {
+      this.info = await BlockchainInfo.getInfo(this.connection);
+    }
+    return this.info;
   }
 
   async getAccountById(id: Buffer): Promise<StaticAccount> {

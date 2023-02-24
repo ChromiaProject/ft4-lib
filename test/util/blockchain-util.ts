@@ -1,12 +1,12 @@
-import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
-import BlockchainInfo from "../../client/lib/ft3/core/blockchain/blockchain-info";
-import ConnectionClient from "../../client/lib/ft3/core/connection-client";
-import RateLimitInfo from "../../client/lib/ft3/core/blockchain/rate-limit-info";
-import Postchain from "../../client/lib/ft3/core/postchain";
-import DirectoryServiceBase from "../../client/lib/ft3/core/blockchain/directory-service-base";
-import ChainConnectionInfo from "../../client/lib/ft3/core/chain-connection-info";
+import {
+  Blockchain,
+  ConnectionClient,
+  Postchain,
+  DirectoryServiceBase,
+  ChainConnectionInfo,
+  Asset,
+} from "../../client/lib/ft3";
 import { generateAssetName, generateId } from "./util";
-import Asset from "../../client/lib/ft3/user/asset";
 import { config } from "dotenv";
 config();
 
@@ -18,10 +18,8 @@ export default class BlockchainUtil {
   }
 
   static getNewBlockchain(): Blockchain {
-    const rateLimit = new RateLimitInfo(false);
     const id = generateId();
     return new Blockchain(
-      new BlockchainInfo("name", "website", "description", rateLimit),
       new ConnectionClient("URL", id.toString("hex")),
       new DirectoryServiceBase([new ChainConnectionInfo(id, "URL")])
     );

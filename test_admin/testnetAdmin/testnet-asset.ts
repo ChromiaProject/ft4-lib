@@ -1,5 +1,4 @@
-import { Asset, Operation } from "../../client/lib/ft3";
-import { Blockchain } from "../../client/lib/ft3";
+import { Asset, Operation, Blockchain } from "../../client/lib/ft3";
 import AdminSignatureProvider from "./admin-signature-provider";
 
 export class TestnetAsset extends Asset {

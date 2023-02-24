@@ -13,7 +13,7 @@
     ],
     "resolveJsonModule": true,
   },
-  "include": ["./client/**/*"],
+  "include": ["./client/**/*", "./test/**/*"],
   "exclude": [
     "node_modules"
   ]

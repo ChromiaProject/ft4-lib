@@ -1,4 +1,5 @@
 import { version } from "../../../package.json";
+import { util } from "postchain-client";
 
 export * from "../cryptoUtils";
 export * from "./user/account-utils";
@@ -23,8 +24,17 @@ export { default as PaymentHistoryStoreMemory } from "./user/payment-history/pay
 export { default as PaymentHistoryStoreLocalStorage } from "./user/payment-history/payment-history-store-local-storage";
 export { default as RateLimit } from "./user/rate-limit";
 export { default as Postchain } from "./core/postchain";
+export { default as SignatureProvider } from "./user/signature-provider";
+export { default as SSO } from "./user/sso";
+export { default as Transaction } from "./core/transaction";
+export { GtvEncodable, GtvEncoded, encodeGtv } from "./core/gtv";
+export { default as TransactionBuilder } from "./core/transaction-builder";
+export * from "./user/signature-provider";
 export * from "./user/sso";
-export * from "./user/transfer";
 export function getClientVersion() {
   return version;
 }
+export function setLogLevel(level: number) {
+  util.setLogLevel(level);
+}
+util.setLogLevel(0);

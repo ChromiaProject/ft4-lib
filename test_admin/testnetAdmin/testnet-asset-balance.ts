@@ -1,6 +1,9 @@
-import { AssetBalance, Operation } from "../../client/lib/ft3";
-import Blockchain from "../../client/lib/ft3/core/blockchain/blockchain";
-import TransactionBuilder from "../../client/lib/ft3/core/transaction-builder";
+import {
+  AssetBalance,
+  Blockchain,
+  TransactionBuilder,
+  Operation,
+} from "../../client/lib/ft3";
 import AdminSignatureProvider from "./admin-signature-provider";
 
 export class TestnetAssetBalance extends AssetBalance {

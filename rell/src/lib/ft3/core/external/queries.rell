@@ -39,13 +39,12 @@ query get_asset_by_name(name) {
 }
 
 query get_asset_by_id(asset_id: byte_array) {
-    return core.asset @ {
+    return core.asset @? {
         .id == asset_id
     }(
         id = .id,
         name = .name,
         issuing_brid = .issuing_brid
-
     );
 }
 
@@ -58,8 +57,10 @@ query get_all_assets() {
 }
 
 query get_payment_history(account_id: byte_array, after_block: integer) {
+    val account = acc.account @? { account_id };
+    if (account == null) return null;
     return core.payment_history_entry @* {
-        acc.account @ { account_id },
+        account,
         .transaction.block.block_height > after_block
     } (
         delta = .delta,
