@@ -1,5 +1,10 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { BufferId } from "../cryptoUtils";
 import { AuthDescriptor } from "./account/auth-descriptor/types";
+import {
+  PaymentHistoryIterator,
+  PaymentHistoryStore,
+} from "./account/payment-history/interfaces";
 import { Account } from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
 
@@ -40,7 +45,7 @@ export interface ftUserSession {
         amount: bigint
       ) => Promise<void>;
       burn: (from: Buffer, asset: Buffer, amount: bigint) => Promise<void>;
-      xcTransfer: () => Promise<void>;
+      //xcTransfer: () => Promise<void>;
     };
     dev: {
       register: (authDescriptor: AuthDescriptor) => Promise<Account>;
@@ -73,6 +78,19 @@ export interface ftQuerySession {
       authDescriptorId: (id: Buffer) => Promise<Account[]>;
       ids: (ids: Buffer[]) => Promise<Account[]>;
       id: (id: Buffer) => Promise<Account>;
+    };
+    paymentHistory: {
+      iterator: (
+        paymentHistoryStore: PaymentHistoryStore
+      ) => PaymentHistoryIterator;
+      storeMemory: (
+        accountId: BufferId,
+        pageSize: number
+      ) => Promise<PaymentHistoryStore>;
+      storeLocal: (
+        accountId: BufferId,
+        pageSize: number
+      ) => Promise<PaymentHistoryStore>;
     };
     isAuthDescriptorValid: (
       accountId: Buffer,

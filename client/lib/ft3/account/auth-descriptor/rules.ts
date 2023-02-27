@@ -22,7 +22,7 @@ function chooseOperator(start: (string | number)[]) {
     lessThan: (value: number) => {
       const current = [...start, RuleOperator.LessThan, value];
       return {
-        only: current,
+        only: Object.freeze(current),
         and: chooseVariable([...current, "and"]),
       };
     },
@@ -30,7 +30,7 @@ function chooseOperator(start: (string | number)[]) {
     lessOrEqual: (value: number) => {
       const current = [...start, RuleOperator.LessOrEqual, value];
       return {
-        only: current,
+        only: Object.freeze(current),
         and: chooseVariable([...current, "and"]),
       };
     },
@@ -38,7 +38,7 @@ function chooseOperator(start: (string | number)[]) {
     equals: (value: number) => {
       const current = [...start, RuleOperator.Equals, value];
       return {
-        only: current,
+        only: Object.freeze(current),
         and: chooseVariable([...current, "and"]),
       };
     },
@@ -46,7 +46,7 @@ function chooseOperator(start: (string | number)[]) {
     greaterOrEqual: (value: number) => {
       const current = [...start, RuleOperator.GreaterOrEqual, value];
       return {
-        only: current,
+        only: Object.freeze(current),
         and: chooseVariable([...current, "and"]),
       };
     },
@@ -54,7 +54,7 @@ function chooseOperator(start: (string | number)[]) {
     greaterThan: (value: number) => {
       const current = [...start, RuleOperator.GreaterThen, value];
       return {
-        only: current,
+        only: Object.freeze(current),
         and: chooseVariable([...current, "and"]),
       };
     },

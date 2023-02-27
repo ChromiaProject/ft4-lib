@@ -57,24 +57,6 @@ query get_all_assets() {
     );
 }
 
-query get_payment_history(account_id: byte_array, after_block: integer) {
-    return core.payment_history_entry @* {
-        acc.account @ { account_id },
-        .transaction.block.block_height > after_block
-    } (
-        delta = .delta,
-        asset = .asset.name,
-        asset_id = .asset.id,
-        asset_brid = .asset.issuing_brid,
-        is_input = .is_input,
-        timestamp = .transaction.block.timestamp,
-        block_height = .transaction.block.block_height,
-        entry_index = .entry_index,
-        tx_rid = .transaction.tx_rid,
-        tx_data = .transaction.tx_data
-    );
-}
-
 query get_payment_history_paginated(account_id: byte_array, page_cursor: text) {
     val cursor = core.decode_cursor(page_cursor);
     val paginated_payments = core.get_paginated_payments(account_id, cursor);

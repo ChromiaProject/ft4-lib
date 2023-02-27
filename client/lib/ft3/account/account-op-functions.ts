@@ -11,6 +11,11 @@ import { getById } from "./account-query-functions";
 import { nop, send } from "../utils";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
+import { createPaymentHistoryIterator } from "./payment-history/payment-history-iterator";
+import {
+  PaymentHistoryIterator,
+  PaymentHistoryStore,
+} from "./payment-history/interfaces";
 
 export async function registerAccount(
   newAuthDesc: AuthDescriptor,
@@ -186,6 +191,13 @@ export async function freeOperation(
   await tx.sign(user.signatureProvider);
   await send(tx);
 }
+
+export function getPaymentHistoryIterator(
+  paymentHistoryStore: PaymentHistoryStore
+): PaymentHistoryIterator {
+  return createPaymentHistoryIterator(paymentHistoryStore);
+}
+
 /*
 export async function xcTransfer(
   /*
@@ -205,21 +217,5 @@ export async function xcTransfer(
   );
   await tx.post();
   await this.sync();* /
-}
-
-///////////////TO FIX
-/*
-export async function getPaymentHistory(): Promise<any[]> {
-  return await PaymentHistory.getByAccountId(this.id, -1, this.blockchain);
-}
-
-export async function getPaymentHistoryIterator(pageSize): Promise<PaymentHistoryIterator> {
-  if (pageSize < 1) throw new Error("Page size has to be greater than 1");
-  await this.paymentHistorySyncManager.syncAccount(this.id, this.blockchain);
-  return this.paymentHistorySyncManager.paymentHistoryStore.getIterator(
-    this.blockchain.id,
-    this.id,
-    pageSize
-  );
 }
 */

@@ -22,7 +22,9 @@ export async function getLastTimestamp(session: GtxClient): Promise<number> {
 }
 
 export async function getChainInfo(session: GtxClient): Promise<ChainInfo> {
-  return await session.query({ type: "ft3.get_blockchain_info" });
+  return Object.freeze(
+    await session.query({ type: "ft3.get_blockchain_info" })
+  );
 }
 
 export async function send(tx: Itransaction): Promise<void> {

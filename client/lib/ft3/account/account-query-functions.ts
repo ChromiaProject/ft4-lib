@@ -64,11 +64,11 @@ async function createAccountObjectFromId(
     getBalancesByAccountId(id, session),
     getAuthDescriptors(id, session),
   ]);
-  return {
+  return Object.freeze({
     balances,
     authDescriptors,
     id,
-  };
+  });
 }
 
 //to be preferred internally since getByIds checks if the accounts exist
@@ -88,6 +88,8 @@ export async function getAuthDescriptors(
   return await session.query(accountAuthDescriptorsQuery(accountId));
 }
 
+//this will be outdated as soon as another tx is sent to the same account:
+//does it make sense for the users to have it? Who needs this info?
 export async function getRateLimit(
   accountId: Buffer,
   session: GtxClient
@@ -96,7 +98,7 @@ export async function getRateLimit(
 
   const chainInfo = await getChainInfo(session);
 
-  return {
+  return Object.freeze({
     points: rateLimit.points,
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
@@ -108,5 +110,5 @@ export async function getRateLimit(
       }
       return null;
     },
-  };
+  });
 }

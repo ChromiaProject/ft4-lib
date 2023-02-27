@@ -11,3 +11,20 @@ export type ChainInfo = {
   rate_limit_recovery_time: number;
   rate_limit_points_at_account_creation: number;
 };
+
+export type ConnectionCallbackParams = {
+  accounts: string[];
+  chainId: number;
+};
+
+export type ExternalWalletConnection = {
+  connectionUri: string;
+  getAccounts: () => string[];
+  signMessage: ({
+    message,
+    account,
+  }: {
+    message: string;
+    account: string;
+  }) => Promise<string>;
+};

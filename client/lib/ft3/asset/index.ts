@@ -15,34 +15,37 @@ export function id(assetName: string, assetBrid: Buffer) {
   return gtvHash([assetName, assetBrid]);
 }
 
-export const assetQuerySession = (pci: GtxClient) => ({
-  asset: {
-    by: {
-      name: (name: string) => getAssetsByName(name, pci),
-      id: (assetId: Buffer) => getAssetById(assetId, pci),
+export const assetQuerySession = (pci: GtxClient) =>
+  Object.freeze({
+    asset: {
+      by: {
+        name: (name: string) => getAssetsByName(name, pci),
+        id: (assetId: Buffer) => getAssetById(assetId, pci),
+      },
+      all: () => getAllAssets(pci),
     },
-    all: () => getAllAssets(pci),
-  },
-  balance: {
-    by: {
-      accountId: (accountId: Buffer) => getBalancesByAccountId(accountId, pci),
-      accountAndAssetId: (accountId: Buffer, assetId: Buffer) =>
-        getBalance(accountId, assetId, pci),
+    balance: {
+      by: {
+        accountId: (accountId: Buffer) =>
+          getBalancesByAccountId(accountId, pci),
+        accountAndAssetId: (accountId: Buffer, assetId: Buffer) =>
+          getBalance(accountId, assetId, pci),
+      },
     },
-  },
-});
+  });
 
-export const assetUserSession = (user: User, pci: GtxClient) => ({
-  asset: {
-    dev: {
-      register: (name: string, brid: Buffer) =>
-        registerAsset(name, brid, user, pci),
+export const assetUserSession = (user: User, pci: GtxClient) =>
+  Object.freeze({
+    asset: {
+      dev: {
+        register: (name: string, brid: Buffer) =>
+          registerAsset(name, brid, user, pci),
+      },
     },
-  },
-  balance: {
-    dev: {
-      give: (assetId: Buffer, accountId: Buffer, amount: AssetAmount) =>
-        giveBalance(assetId, accountId, amount, user, pci),
+    balance: {
+      dev: {
+        give: (assetId: Buffer, accountId: Buffer, amount: AssetAmount) =>
+          giveBalance(assetId, accountId, amount, user, pci),
+      },
     },
-  },
-});
+  });

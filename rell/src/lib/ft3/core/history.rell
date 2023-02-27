@@ -58,7 +58,9 @@ struct pagination_result {
 val MAX_PAGE_SIZE = 100;
 
 function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
+
 function decode_cursor(cursor: text) = page_cursor.from_bytes(byte_array.from_base64(cursor));
+
 function fetch_data_size(page_cursor) = min(MAX_PAGE_SIZE, page_cursor.page_size) + 1;
 
 struct paged_result {
@@ -71,11 +73,13 @@ function null_page() = paged_result(
     data = list<gtv>()
 );
 
+
 function make_page(pagination_results: list<pagination_result>, cursor: page_cursor): paged_result {
     if(empty(pagination_results)) {
          return null_page();
     }
-    // adding +1 should help with next page null situation when current page size is equal to max page size
+    // adding +1 should help with next page null situation when current page size
+    // is equal to max page size
     if(pagination_results.size() < fetch_data_size(cursor)) {
         return paged_result(
             next_cursor = null,

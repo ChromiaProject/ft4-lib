@@ -13,15 +13,15 @@ export enum FlagsType {
   Transfer = "T", // Transfer balance
 }
 
-function hashAuthDescriptor(ad: AuthDescriptor) {
+export function hashAuthDescriptor(ad: AuthDescriptor) {
   return gtvHash(ad);
 }
 
-function getAuthDescriptorId(ad: AuthDescriptor): Buffer {
+export function getAuthDescriptorId(ad: AuthDescriptor): Buffer {
   return gtvHash(ad);
 }
 
-function getAuthDescriptorSigners(ad: AuthDescriptor): Buffer[] {
+export function getAuthDescriptorSigners(ad: AuthDescriptor): Buffer[] {
   const args = ad[1];
   let signers: Buffer[];
   if (args.length === 2) {

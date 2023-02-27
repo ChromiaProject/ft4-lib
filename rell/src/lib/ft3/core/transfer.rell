@@ -21,8 +21,43 @@ function deduct_balance(acc.account, asset, d_amount: integer) {
     update b (amount -= d_amount);
 }
 
-function consume_input(i: xfer_input, idx: integer, assets: map<asset, integer>): payment_history_entry {
+function consume_input (
+   i: xfer_input, 
+   idx: integer, 
+   assets: map<asset, integer>,
+   entries: map<
+      asset, 
+      (
+         list<(
+            amount: integer, 
+            account: acc.account, 
+            entry_index: integer
+         )>, 
+         list<(
+            amount: integer, 
+            account: acc.account, 
+            entry_index: integer
+         )>
+      )
+   >
+) {
       val asset = asset @ { .id == i.asset_id };
+      
+      if (asset not in entries) {
+         entries[asset] = (
+            list<(
+               amount: integer, 
+               account: acc.account, 
+               entry_index: integer
+            )>(), 
+            list<(
+               amount: integer, 
+               account: acc.account, 
+               entry_index: integer
+            )>()
+         );
+      }
+
       val account = acc.account @ { .id == i.account_id };
       acc.auth(
          account, 
@@ -32,21 +67,35 @@ function consume_input(i: xfer_input, idx: integer, assets: map<asset, integer>)
          },
          ["T"]
       );
-      require( i.amount > 0, "Amount should be non 0 positive." );
+      require( i.amount > 0, "Amount in input should be non 0 positive." );
 
       deduct_balance(account, asset, i.amount);
       assets[asset] = i.amount + if (asset in assets) assets[asset] else 0;
-      return create payment_history_entry (
-        account,
-        asset,
-        .delta = i.amount,
-        .op_index = 500, //op_context ???
-        .is_input = true,
-        .entry_index = idx
+      entries[asset][0].add(
+         (amount = i.amount, account = account, entry_index = idx)
       );
 }
 
-function process_transfer_output(o: xfer_output, idx: integer, available_assets: map<asset, integer>): payment_history_entry {
+function process_transfer_output (
+   o: xfer_output, 
+   idx: integer, 
+   available_assets: map<asset, integer>,
+   entries: map<
+      asset, 
+      (
+         list<(
+            amount: integer, 
+            account: acc.account, 
+            entry_index: integer
+         )>, 
+         list<(
+            amount: integer, 
+            account: acc.account, 
+            entry_index: integer
+         )>
+      )
+   >
+) {
       if (o.extra.contains("reg_auth_desc")) {
           val auth_desc = acc.auth_descriptor.from_gtv(o.extra["reg_auth_desc"]);
           require(o.account_id
@@ -55,39 +104,79 @@ function process_transfer_output(o: xfer_output, idx: integer, available_assets:
 
       val target_account = acc.account @ { .id == o.account_id };
       val asset = asset @ { .id == o.asset_id };
-      require(o.amount > 0, "You cannot tx output negative numbers");
+      require(o.amount > 0, "Amount in output should be non 0 positive." );
       require( available_assets[asset] >= o.amount );
       available_assets[asset] -= o.amount;
       require(available_assets[asset] >= 0);
       val balance = ensure_balance(target_account, asset);
       balance.amount += o.amount;
 
-      return create payment_history_entry (
-        .account = target_account,
-        asset,
-        .delta = o.amount,
-
-        .op_index = 500, // something from op_context,
-        .is_input = false,
-        .entry_index = idx
+      entries[asset][1].add(
+         (amount = o.amount, account = target_account, entry_index = idx)
       );
 }
 
 function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
    before_transfer(inputs, outputs);
 
+   val entries = map<
+      asset, 
+      (
+         list<(
+            amount: integer, 
+            account: acc.account, 
+            entry_index: integer
+         )>, 
+         list<(
+            amount: integer, 
+            account: acc.account, 
+            entry_index: integer
+         )>
+      )
+   > ();
+
    val sum_inputs = map<asset, integer>();
    var idx = 0;
    for (i in inputs) {
-      consume_input(i, idx, sum_inputs);
+      consume_input(i, idx, sum_inputs, entries);
       idx += 1;
    }
 
    idx = 0;
    for (o in outputs) {
-      process_transfer_output(o, idx, sum_inputs);
+      process_transfer_output(o, idx, sum_inputs, entries);
       idx += 1;
    }
+
+   for ((asset, v) in entries) {
+      val ins = entries[asset][0] @* {} (.amount, .account.id, .entry_index);
+      val outs = entries[asset][1] @* {} (.amount, .account.id, .entry_index);
+      val args = [ins, outs];
+
+      for (entry in v[0]) {
+         create payment_history_entry(
+            .account = entry.account,
+            .asset = asset,
+            .delta = entry.amount,
+            .op_index = op_context.op_index,
+            .is_input = true,
+            .entry_index = entry.entry_index,
+            .transfer_args = args.to_gtv().to_bytes()
+         );
+      }
+      for (entry in v[1]) {
+         create payment_history_entry(
+            .account = entry.account,
+            .asset = asset,
+            .delta = entry.amount,
+            .op_index = op_context.op_index,
+            .is_input = false,
+            .entry_index = entry.entry_index,
+            .transfer_args = args.to_gtv().to_bytes()
+         );
+      }
+   }
+
    after_transfer(inputs, outputs);
 }
 

@@ -25,26 +25,27 @@ export const createLocalStorageSignatureProvider = (
   const priv = localStorage.getItem("__localSigProvPrivKey");
   let kp: KeyPair;
   if (priv) {
-    if (privKey)
+    if (privKey) {
       throw new Error(
         "privKey was defined, but localStorage had one already in memory. " +
           "Please clear localStorage before setting a new privKey if you're sure " +
           "you want to lose access to the old key pair."
       );
+    }
     kp = makeKeyPair(priv);
   } else {
     kp = makeKeyPair(privKey);
     storeLocalStoragePrivateKey(kp.privKey);
   }
 
-  return {
+  return Object.freeze({
     pubKey: kp.pubKey,
     sign: async (gtx) => signDigest(gtx, ensureBuffer(kp.privKey)),
-  };
+  });
 };
 
-export const localStorageSignatureProvider = {
+export const localStorageSignatureProvider = Object.freeze({
   create: createLocalStorageSignatureProvider,
   isEmpty: isLocalStorageSignatureProviderEmpty,
   clear: clearLocalStorageSignatureProvider,
-};
+});

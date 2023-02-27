@@ -13,21 +13,21 @@ export async function getAssetById(
   session: GtxClient
 ): Promise<Asset> {
   const asset = await session.query(assetByIdQuery(id));
-  return {
+  return Object.freeze({
     name: asset.name,
     id: asset.id,
     brid: asset.issuing_brid,
-  };
+  });
 }
 
 export async function getAllAssets(session: GtxClient): Promise<Asset[]> {
   const assets = await session.query(allAssetsQuery());
   return assets.map(function (a): Asset {
-    return {
+    return Object.freeze({
       name: a.name,
       id: a.id,
       brid: a.issuing_brid,
-    };
+    });
   });
 }
 
@@ -37,11 +37,11 @@ export async function getAssetsByName(
 ): Promise<Asset[]> {
   const assets = await session.query(assetByNameQuery(name));
   return assets.map(function (a): Asset {
-    return {
+    return Object.freeze({
       name: a.name,
       id: a.id,
       brid: a.issuing_brid,
-    };
+    });
   });
 }
 
@@ -51,10 +51,10 @@ export async function getBalancesByAccountId(
 ): Promise<Balance[]> {
   const balances = await session.query(balancesByAccountIdQuery(accountId));
   return balances.map(function (b): Balance {
-    return {
+    return Object.freeze({
       asset: { id: b.id, name: b.name, brid: b.brid },
       amount: b.amount,
-    };
+    });
   });
 }
 
@@ -64,8 +64,8 @@ export async function getBalance(
   session: GtxClient
 ): Promise<Balance> {
   const balance = await session.query(balanceQuery(accountId, assetId));
-  return {
+  return Object.freeze({
     asset: { id: balance.id, name: balance.name, brid: balance.brid },
     amount: balance.amount,
-  };
+  });
 }

@@ -7,24 +7,24 @@ import {
 } from "./types";
 
 export function createSingleSignatureAuthDescriptor(
-  args: SingleSigAuthDescriptorArgs,
+  args: Readonly<SingleSigAuthDescriptorArgs>,
   rules: AuthDescriptorRule | null
-): AuthDescriptor {
-  return [AuthType.single_sig, args, rules];
+): Readonly<AuthDescriptor> {
+  return Object.freeze([AuthType.single_sig, args, rules]);
 }
 
 export function createMultiSignatureAuthDescriptor(
-  args: MultiSigAuthDescriptorArgs,
+  args: Readonly<MultiSigAuthDescriptorArgs>,
   rules: AuthDescriptorRule | null
-): AuthDescriptor {
-  return [AuthType.multi_sig, args, rules];
+): Readonly<AuthDescriptor> {
+  return Object.freeze([AuthType.multi_sig, args, rules]);
 }
 
 export function singleSigArgs(
   flags: string[],
   signerPubKey: Buffer
 ): SingleSigAuthDescriptorArgs {
-  return [[...new Set(flags)], signerPubKey];
+  return Object.freeze([[...new Set(flags)], signerPubKey]);
 }
 
 export function multiSigArgs(
@@ -37,7 +37,11 @@ export function multiSigArgs(
       "Number of required signatures have to be less or equal to number of pubkeys"
     );
   }
-  return [[...new Set(flags)], requiredSignatures, signerPubKeys];
+  return Object.freeze([
+    [...new Set(flags)],
+    requiredSignatures,
+    signerPubKeys,
+  ]);
 }
 
 export const create = {
