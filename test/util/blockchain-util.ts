@@ -1,35 +1,46 @@
-import {
-  Blockchain,
-  ConnectionClient,
-  Postchain,
-  DirectoryServiceBase,
-  ChainConnectionInfo,
-  Asset,
-} from "../../client/lib/ft3";
 import { generateAssetName, generateId } from "./util";
 import { config } from "dotenv";
+import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/interfaces";
+import { gtxClient, restClient } from "postchain-client";
+import {
+  createQuerySession,
+  createUserSession,
+} from "../../client/lib/ft3/ft-session";
+import { getBrid } from "postchain-client/built/src/restclient/restclientutil";
+import { Asset } from "../../client/lib/ft3/asset/types";
+import singleSigUser from "./test-user";
+import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
 config();
 
-export default class BlockchainUtil {
-  static async getDefaultBlockchain(): Promise<Blockchain> {
-    return await new Postchain([
-      process.env.TEST_NODE_URL || "http://localhost:7741",
-    ]).blockchain(0);
-  }
+export async function getQuerySession(): Promise<ftQuerySession> {
+  const url = process.env.TEST_NODE_URL || "http://localhost:7741";
+  const brid = await getBrid(url, 0);
+  const client = gtxClient.createClient(
+    restClient.createRestClient([url], brid),
+    brid,
+    []
+  );
+  return createQuerySession(client);
+}
 
-  static getNewBlockchain(): Blockchain {
-    const id = generateId();
-    return new Blockchain(
-      new ConnectionClient(["URL"], id.toString("hex")),
-      new DirectoryServiceBase([new ChainConnectionInfo(id, ["URL"])])
-    );
-  }
+export async function getUserSession(
+  rules: AuthDescriptorRule | null = null
+): Promise<ftUserSession> {
+  const url = process.env.TEST_NODE_URL || "http://localhost:7741";
+  const brid = await getBrid(url, 0);
+  const client = gtxClient.createClient(
+    restClient.createRestClient([url], brid),
+    brid,
+    []
+  );
+  return createUserSession(client, singleSigUser(rules));
+}
 
-  static async getNewAsset(
-    blockchain: Blockchain,
-    name = generateAssetName(),
-    brid = generateId()
-  ): Promise<Asset> {
-    return await Asset.register(name, brid, blockchain);
-  }
+export async function getNewAsset(
+  userSession: ftUserSession,
+  name = generateAssetName(),
+  brid = generateId()
+): Promise<Asset> {
+  const id = await userSession.asset.dev.register(name, brid);
+  return await userSession.get.asset.by.id(id);
 }

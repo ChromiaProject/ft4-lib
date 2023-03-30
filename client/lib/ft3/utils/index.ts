@@ -27,6 +27,10 @@ export async function getChainInfo(session: GtxClient): Promise<ChainInfo> {
   );
 }
 
+export async function getVersion(session: GtxClient): Promise<string> {
+  return Object.freeze(await session.query({ type: "ft3.get_version" }));
+}
+
 export async function send(tx: Itransaction): Promise<void> {
   return new Promise(function (resolve, reject) {
     tx.send(function (error?) {

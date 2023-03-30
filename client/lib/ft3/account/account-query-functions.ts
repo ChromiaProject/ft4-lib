@@ -14,42 +14,51 @@ import { AuthDescriptor } from "./auth-descriptor/types";
 import { getChainInfo } from "../utils";
 import { getBalancesByAccountId } from "../asset/asset-query-functions";
 
-export async function getByParticipantId(
-  id: Buffer,
+export async function getByParticipantId( //"by pubKey" would be more descriptive?
+  id: BufferId,
   session: GtxClient
 ): Promise<(Account | null)[]> {
-  const accountIds = await session.query(accountsByParticipantIdQuery(id));
+  const accountIds = await session.query(
+    accountsByParticipantIdQuery(ensureBuffer(id))
+  );
   return await createAccountObjectsFromIds(accountIds, session);
 }
 
 export async function getByAuthDescriptorId(
-  id: Buffer,
+  id: BufferId,
   session: GtxClient
 ): Promise<(Account | null)[]> {
-  const accountIds = await session.query(accountsByAuthDescriptorIdQuery(id));
+  const accountIds = await session.query(
+    accountsByAuthDescriptorIdQuery(ensureBuffer(id))
+  );
   return await createAccountObjectsFromIds(accountIds, session);
 }
 
 export async function isAuthDescriptorValid(
-  accountId: Buffer,
-  authDescId: Buffer,
+  accountId: BufferId,
+  authDescId: BufferId,
   session: GtxClient
 ): Promise<boolean> {
-  return await session.query(isAuthDescriptorValidQuery(accountId, authDescId));
+  return await session.query(
+    isAuthDescriptorValidQuery(
+      ensureBuffer(accountId),
+      ensureBuffer(authDescId)
+    )
+  );
 }
 
 export async function getByIds(
-  ids: Buffer[],
+  ids: BufferId[],
   session: GtxClient
 ): Promise<(Account | null)[]> {
   return Promise.all(ids.map((id) => getById(id, session)));
 }
 
 export async function getById(
-  id: Buffer,
+  id: BufferId,
   session: GtxClient
 ): Promise<Account | null> {
-  const accountId = await session.query(accountByIdQuery(id));
+  const accountId = await session.query(accountByIdQuery(ensureBuffer(id)));
   if (!accountId) return null;
   return await createAccountObjectFromId(accountId, session);
 }
@@ -82,19 +91,23 @@ async function createAccountObjectsFromIds(
 }
 
 export async function getAuthDescriptors(
-  accountId: Buffer,
+  accountId: BufferId,
   session: GtxClient
 ): Promise<AuthDescriptor[]> {
-  return await session.query(accountAuthDescriptorsQuery(accountId));
+  return await session.query(
+    accountAuthDescriptorsQuery(ensureBuffer(accountId))
+  );
 }
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
 export async function getRateLimit(
-  accountId: Buffer,
+  accountId: BufferId,
   session: GtxClient
 ): Promise<RateLimit> {
-  const rateLimit = await session.query(getRateLimitQuery(accountId));
+  const rateLimit = await session.query(
+    getRateLimitQuery(ensureBuffer(accountId))
+  );
 
   const chainInfo = await getChainInfo(session);
 

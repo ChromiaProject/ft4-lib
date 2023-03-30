@@ -45,7 +45,7 @@ export function deleteAllAuthDescriptorsExcludeOp(
 export function deleteAuthDescriptorOp(
   accountId: Buffer,
   authDescriptorId: Buffer,
-  deleteAuthDescriptorId
+  deleteAuthDescriptorId: Buffer
 ): Operation {
   return op(
     "ft3.delete_auth_descriptor",

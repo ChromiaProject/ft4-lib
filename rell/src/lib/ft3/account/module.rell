@@ -30,10 +30,9 @@ entity account_auth_descriptor {
     rules: byte_array;
 }
 
-// entity auth_descriptor_participant {
-//     key account_auth_descriptor, id: byte_array;
-// }
-
+entity auth_descriptor_participant {
+    key account_auth_descriptor, id: byte_array;
+}
 
 // rate limiter
 entity rl_state {
@@ -58,7 +57,7 @@ function _add_auth_descriptor(account, auth_descriptor) {
      
      for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
         require(op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
-        //create auth_descriptor_participant(account_auth_descriptor, id = participant);
+        create auth_descriptor_participant(account_auth_descriptor, id = participant);
      }
      
      setup_auth_descriptor_variables(account_auth_descriptor);
@@ -67,7 +66,7 @@ function _add_auth_descriptor(account, auth_descriptor) {
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
     require(auth_descriptor.account.id != auth_descriptor.id, "Can't delete initial auth descriptor");
     delete auth_descriptor_rule_variable @* { auth_descriptor };
-    //delete auth_descriptor_participant @* { auth_descriptor };
+    delete auth_descriptor_participant @* { auth_descriptor };
     delete auth_descriptor;
 }
 
@@ -78,14 +77,12 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
         ad.id != auth_descriptor.id,
         adrv.account_auth_descriptor == ad    
     };
-    /*
     delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
         ad.account == auth_descriptor.account,
         ad.id != auth_descriptor.account.id,
         ad.id != auth_descriptor.id,
         adp.account_auth_descriptor == ad
     };
-    */
     delete account_auth_descriptor @* {
        .account == auth_descriptor.account,
        .id != auth_descriptor.account.id,

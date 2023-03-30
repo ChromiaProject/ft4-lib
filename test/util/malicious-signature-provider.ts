@@ -1,25 +1,17 @@
-import {
-  SignatureProvider,
-  KeyPair,
-  BufferId,
-  Transaction,
-} from "../../client/lib/ft3";
 import { encryption } from "postchain-client";
+import { makeKeyPair } from "postchain-client/built/src/encryption/encryption";
+import { gtvHash } from "postchain-client/built/src/gtv";
+import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
+import { BufferId } from "../../client/lib/cryptoUtils";
 
-export default class MaliciousSignatureProvider implements SignatureProvider {
-  private readonly keyPair: KeyPair;
-
-  constructor(privateKey?: BufferId) {
-    this.keyPair = new KeyPair(privateKey);
-  }
-
-  async sign(transaction: Transaction): Promise<Buffer> {
-    transaction.tx.gtx.operations.push({ opName: "malicious", args: ["code"] });
-    const digestToSign = transaction.getDigestToSign();
-    return encryption.signDigest(digestToSign, this.keyPair.privKey);
-  }
-
-  get pubKey(): Buffer {
-    return this.keyPair.pubKey;
-  }
+export default function maliciousSignatureProvider(
+  priv: BufferId
+): SignatureProvider {
+  return Object.freeze({
+    pubKey: makeKeyPair(priv).pubKey,
+    sign: async () => {
+      const hash = gtvHash({ opName: "malicious", args: ["code"] });
+      return encryption.signDigest(hash, this.keyPair.privKey);
+    },
+  });
 }

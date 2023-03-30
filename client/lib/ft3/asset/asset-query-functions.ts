@@ -1,4 +1,6 @@
+import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { BufferId } from "../../cryptoUtils";
 import {
   balancesByAccountIdQuery,
   assetByIdQuery,
@@ -9,10 +11,10 @@ import {
 import { Asset, Balance } from "./types";
 
 export async function getAssetById(
-  id: Buffer,
+  id: BufferId,
   session: GtxClient
 ): Promise<Asset> {
-  const asset = await session.query(assetByIdQuery(id));
+  const asset = await session.query(assetByIdQuery(ensureBuffer(id)));
   return Object.freeze({
     name: asset.name,
     id: asset.id,
@@ -46,10 +48,12 @@ export async function getAssetsByName(
 }
 
 export async function getBalancesByAccountId(
-  accountId: Buffer,
+  accountId: BufferId,
   session: GtxClient
 ): Promise<Balance[]> {
-  const balances = await session.query(balancesByAccountIdQuery(accountId));
+  const balances = await session.query(
+    balancesByAccountIdQuery(ensureBuffer(accountId))
+  );
   return balances.map(function (b): Balance {
     return Object.freeze({
       asset: { id: b.id, name: b.name, brid: b.brid },
@@ -59,11 +63,13 @@ export async function getBalancesByAccountId(
 }
 
 export async function getBalance(
-  accountId: Buffer,
-  assetId: Buffer,
+  accountId: BufferId,
+  assetId: BufferId,
   session: GtxClient
 ): Promise<Balance> {
-  const balance = await session.query(balanceQuery(accountId, assetId));
+  const balance = await session.query(
+    balanceQuery(ensureBuffer(accountId), ensureBuffer(assetId))
+  );
   return Object.freeze({
     asset: { id: balance.id, name: balance.name, brid: balance.brid },
     amount: balance.amount,

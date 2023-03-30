@@ -7,6 +7,7 @@ import {
   deleteAuthDescriptor,
   freeOperation,
   getPaymentHistoryIterator,
+  givePoints,
   registerAccount,
   ssoRawTransactionAddAuthDescriptor,
   ssoRawTransactionRegister,
@@ -27,10 +28,10 @@ import { User } from "./types";
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
     by: {
-      participantId: (id: Buffer) => getByParticipantId(id, pci),
-      authDescriptorId: (id: Buffer) => getByAuthDescriptorId(id, pci),
-      ids: (ids: Buffer[]) => getByIds(ids, pci),
-      id: (id: Buffer) => getById(id, pci),
+      participantId: (id: BufferId) => getByParticipantId(id, pci),
+      authDescriptorId: (id: BufferId) => getByAuthDescriptorId(id, pci),
+      ids: (ids: BufferId[]) => getByIds(ids, pci),
+      id: (id: BufferId) => getById(id, pci),
     },
     paymentHistory: {
       iterator: getPaymentHistoryIterator,
@@ -39,7 +40,7 @@ export const accountQuerySession = (pci: GtxClient) =>
       storeLocal: (accountId: BufferId, pageSize: number) =>
         ensurePaymentHistoryStoreLocal(accountId, pageSize, pci),
     },
-    isAuthDescriptorValid: (accountId: Buffer, authDescriptorId: Buffer) =>
+    isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(accountId, authDescriptorId, pci),
   });
 
@@ -49,7 +50,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
       ssoRegister: (authDescriptor: AuthDescriptor) =>
         ssoRawTransactionRegister(authDescriptor, user, pci),
       ssoAddAuthDescriptor: (
-        accountId: Buffer,
+        accountId: BufferId,
         authDescriptor: AuthDescriptor
       ) =>
         ssoRawTransactionAddAuthDescriptor(
@@ -60,23 +61,30 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         ),
     },
     authDescriptor: {
-      add: (authDescriptor: AuthDescriptor, accountId: Buffer) =>
+      add: (authDescriptor: AuthDescriptor, accountId: BufferId) =>
         addAuthDescriptorToAcc(authDescriptor, accountId, user, pci),
-      deleteAll: (authDescriptorId: Buffer, accountId: Buffer) =>
+      deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAllAuthDescriptorsExclude(authDescriptorId, accountId, user, pci),
-      delete: (authDescriptorId: Buffer, accountId: Buffer) =>
+      delete: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAuthDescriptor(authDescriptorId, accountId, user, pci),
     },
     token: {
-      transfer: (from: Buffer, to: Buffer, asset: Buffer, amount: bigint) =>
-        transfer(from, to, asset, amount, user, pci),
-      burn: (from: Buffer, asset: Buffer, amount: bigint) =>
+      transfer: (
+        from: BufferId,
+        to: BufferId,
+        asset: BufferId,
+        amount: bigint
+      ) => transfer(from, to, asset, amount, user, pci),
+      burn: (from: BufferId, asset: BufferId, amount: bigint) =>
         burnTokens(from, asset, amount, user, pci),
       //xcTransfer: () => xcTransfer(user, pci),
     },
     dev: {
       register: (authDescriptor: AuthDescriptor) =>
         registerAccount(authDescriptor, user, pci),
-      freeOperation: (accountId: Buffer) => freeOperation(accountId, user, pci),
+      freeOperation: (accountId: BufferId) =>
+        freeOperation(accountId, user, pci),
+      givePoints: (accountId: BufferId, points: number) =>
+        givePoints(accountId, points, user, pci),
     },
   });

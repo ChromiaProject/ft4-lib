@@ -1,36 +1,37 @@
 import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import BlockchainUtil from "./util/blockchain-util";
-import { generateId, LocalStorageMock } from "./util/util";
-import {
-  Asset,
-  Blockchain,
-  PaymentHistorySyncManager,
-  PaymentHistoryStoreLocalStorage,
-} from "../client/lib/ft3";
+import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { Asset } from "../client/lib/ft3/asset/types";
+import { LocalStorageMock } from "./util/util";
+import { getNewAsset, getUserSession } from "./util/blockchain-util";
 
-let blockchain: Blockchain;
+let _ft: ftUserSession;
 let asset: Asset;
 
 describe("Payment history iterator", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
-    blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await BlockchainUtil.getNewAsset(blockchain);
+    _ft = await getUserSession();
+    asset = await getNewAsset(_ft);
   });
 
   it("should have one payment history entry when one transfer is made", async () => {
-    const user = TestUser.singleSig();
+    const user = TestUser();
+    const ft = _ft.changeUser(user);
 
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.signatureProvider])
+    const account1 = await AccountBuilder.account(ft)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
 
-    const account2 = await AccountBuilder.account(blockchain).build();
+    const account2 = await AccountBuilder.account(_ft).build();
 
-    await account1.transfer(account2.id, asset.id, 10);
+    await ft.account.token.transfer(
+      account1.id,
+      account2.id,
+      asset.id,
+      BigInt(10)
+    );
 
     const paymentHistoryIterator = await account1.getPaymentHistoryIterator(5);
     const paymentHistoryEntries = paymentHistoryIterator.next();

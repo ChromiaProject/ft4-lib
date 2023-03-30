@@ -1,4 +1,6 @@
+import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { AuthType } from ".";
+import { BufferId } from "../../../cryptoUtils";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
@@ -7,30 +9,30 @@ import {
 } from "./types";
 
 export function createSingleSignatureAuthDescriptor(
-  args: Readonly<SingleSigAuthDescriptorArgs>,
+  args: SingleSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null
-): Readonly<AuthDescriptor> {
+): AuthDescriptor {
   return Object.freeze([AuthType.single_sig, args, rules]);
 }
 
 export function createMultiSignatureAuthDescriptor(
-  args: Readonly<MultiSigAuthDescriptorArgs>,
+  args: MultiSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null
-): Readonly<AuthDescriptor> {
+): AuthDescriptor {
   return Object.freeze([AuthType.multi_sig, args, rules]);
 }
 
 export function singleSigArgs(
   flags: string[],
-  signerPubKey: Buffer
+  signerPubKey: BufferId
 ): SingleSigAuthDescriptorArgs {
-  return Object.freeze([[...new Set(flags)], signerPubKey]);
+  return Object.freeze([[...new Set(flags)], ensureBuffer(signerPubKey)]);
 }
 
 export function multiSigArgs(
   flags: string[],
   requiredSignatures: number,
-  signerPubKeys: Buffer[]
+  signerPubKeys: BufferId[]
 ): MultiSigAuthDescriptorArgs {
   if (requiredSignatures > signerPubKeys.length) {
     throw new Error(
@@ -40,19 +42,19 @@ export function multiSigArgs(
   return Object.freeze([
     [...new Set(flags)],
     requiredSignatures,
-    signerPubKeys,
+    signerPubKeys.map(ensureBuffer),
   ]);
 }
 
 export const create = {
   singleSig: {
     authDescriptor: createSingleSignatureAuthDescriptor,
-    withArgs: (flags: string[], signerPubKey: Buffer) => {
+    withArgs: (flags: string[], signerPubKey: BufferId) => {
       const args = singleSigArgs(flags, signerPubKey);
       return {
         andRules: (rules: AuthDescriptorRule) =>
           createSingleSignatureAuthDescriptor(args, rules),
-        andNoRules: () => createSingleSignatureAuthDescriptor(args, null),
+        andNoRules: createSingleSignatureAuthDescriptor(args, null),
       };
     },
   },
@@ -61,13 +63,13 @@ export const create = {
     withArgs: (
       flags: string[],
       requiredSignatures: number,
-      signerPubKeys: Buffer[]
+      signerPubKeys: BufferId[]
     ) => {
       const args = multiSigArgs(flags, requiredSignatures, signerPubKeys);
       return {
         andRules: (rules: AuthDescriptorRule) =>
           createMultiSignatureAuthDescriptor(args, rules),
-        andNoRules: () => createMultiSignatureAuthDescriptor(args, null),
+        andNoRules: createMultiSignatureAuthDescriptor(args, null),
       };
     },
   },

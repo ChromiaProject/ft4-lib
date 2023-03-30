@@ -1,34 +1,32 @@
-import {
-  SSO,
-  MutableAccount,
-  Blockchain,
-  User,
-  LocalStorageSignatureProvider,
-} from "../../client/lib/ft3";
+import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
+import { Account, User } from "../../client/lib/ft3/account/types";
+import { ftUserSession } from "../../client/lib/ft3/interfaces";
+import { createLocalStorageSignatureProvider } from "../../client/lib/ft3/utils/local-signature-provider";
+import SSO from "../../client/lib/ft3/utils/sso";
 
 export default class FakeSSO extends SSO {
   accountId: Buffer;
-  signatureProvider: LocalStorageSignatureProvider;
+  signatureProvider: SignatureProvider;
 
   constructor(
-    readonly blockchain: Blockchain,
-    signatureProvider: LocalStorageSignatureProvider | null = new LocalStorageSignatureProvider()
+    readonly session: ftUserSession,
+    signatureProvider: SignatureProvider | null = createLocalStorageSignatureProvider()
   ) {
     super(
-      blockchain,
+      session,
       signatureProvider
         ? signatureProvider
-        : new LocalStorageSignatureProvider()
+        : createLocalStorageSignatureProvider()
     );
     // if it's explicitly null it will not act as if login has been initiated (sso.test.ts: "should throw an error if key pair cannot be found")
     if (signatureProvider) this.tmpSigProv = signatureProvider;
   }
 
-  async autoLogin(): Promise<[MutableAccount, User]> {
+  async autoLogin(): Promise<[Account, User]> {
     return super.autoLogin();
   }
 
-  async finalizeLogin(tx: string): Promise<[MutableAccount, User]> {
+  async finalizeLogin(tx: string): Promise<[Account, User]> {
     return super.finalizeLogin(tx);
   }
 }

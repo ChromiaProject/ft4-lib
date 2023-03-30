@@ -1,4 +1,4 @@
-export type AuthDescriptorRule = string[];
+export type AuthDescriptorRule = readonly string[];
 
 export type AuthDescriptor = readonly [
   authType: string,

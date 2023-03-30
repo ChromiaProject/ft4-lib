@@ -5,21 +5,24 @@ import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
 } from "./account/payment-history/interfaces";
-import { Account } from "./account/types";
+import { Account, User } from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
+import { ChainInfo } from "./utils/types";
 
 export interface ftUserSession {
+  user: User;
+  changeUser: (newUser: User) => ftUserSession;
   get: ftQuerySession;
   asset: {
     dev: {
-      register: (name: string, brid: Buffer) => Promise<void>;
+      register: (name: string, brid: BufferId) => Promise<Buffer>;
     };
   };
   balance: {
     dev: {
       give: (
-        assetId: Buffer,
-        accountId: Buffer,
+        assetid: BufferId,
+        accountid: BufferId,
         amount: AssetAmount
       ) => Promise<void>;
     };
@@ -28,56 +31,71 @@ export interface ftUserSession {
     sso: {
       ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;
       ssoAddAuthDescriptor: (
-        accountId: Buffer,
+        accountid: BufferId,
         authDescriptor: AuthDescriptor
       ) => Promise<Buffer>;
     };
     authDescriptor: {
-      add: (authDescriptor: AuthDescriptor, accountId: Buffer) => Promise<void>;
-      deleteAll: (authDescriptorId: Buffer, accountId: Buffer) => Promise<void>;
-      delete: (authDescriptorId: Buffer, accountId: Buffer) => Promise<void>;
+      add: (
+        authDescriptor: AuthDescriptor,
+        accountid: BufferId
+      ) => Promise<Buffer>;
+      deleteAllExcluding: (
+        authDescriptorid: BufferId,
+        accountid: BufferId
+      ) => Promise<void>;
+      delete: (
+        authDescriptorid: BufferId,
+        accountid: BufferId
+      ) => Promise<void>;
     };
     token: {
       transfer: (
-        from: Buffer,
-        to: Buffer,
-        asset: Buffer,
+        from: BufferId,
+        to: BufferId,
+        asset: BufferId,
         amount: bigint
       ) => Promise<void>;
-      burn: (from: Buffer, asset: Buffer, amount: bigint) => Promise<void>;
+      burn: (from: BufferId, asset: BufferId, amount: bigint) => Promise<void>;
       //xcTransfer: () => Promise<void>;
     };
     dev: {
       register: (authDescriptor: AuthDescriptor) => Promise<Account>;
-      freeOperation: (accountId: Buffer) => Promise<void>;
+      freeOperation: (accountid: BufferId) => Promise<void>;
+      givePoints: (accountId: BufferId, points: number) => Promise<void>;
     };
   };
 }
 
 export interface ftQuerySession {
   gtxClient: GtxClient;
+  createUserSession: (user: User) => ftUserSession;
+  chainInfo: () => Promise<ChainInfo>;
+  version: () => Promise<string>;
+  lastTimestamp: () => Promise<number>;
   asset: {
+    id: (name: string, brid: BufferId) => Buffer;
     by: {
       name: (name: string) => Promise<Asset[]>;
-      id: (assetId: Buffer) => Promise<Asset>;
+      id: (assetId: BufferId) => Promise<Asset>;
     };
     all: () => Promise<Asset[]>;
   };
   balance: {
     by: {
-      accountId: (accountId: Buffer) => Promise<Balance[]>;
+      accountId: (accountid: BufferId) => Promise<Balance[]>;
       accountAndAssetId: (
-        accountId: Buffer,
-        assetId: Buffer
+        accountid: BufferId,
+        assetid: BufferId
       ) => Promise<Balance>;
     };
   };
   account: {
     by: {
-      participantId: (id: Buffer) => Promise<Account[]>;
-      authDescriptorId: (id: Buffer) => Promise<Account[]>;
+      participantId: (id: BufferId) => Promise<Account[]>;
+      authDescriptorId: (id: BufferId) => Promise<Account[]>;
       ids: (ids: Buffer[]) => Promise<Account[]>;
-      id: (id: Buffer) => Promise<Account>;
+      id: (id: BufferId) => Promise<Account>;
     };
     paymentHistory: {
       iterator: (
@@ -93,8 +111,8 @@ export interface ftQuerySession {
       ) => Promise<PaymentHistoryStore>;
     };
     isAuthDescriptorValid: (
-      accountId: Buffer,
-      authDescriptorId: Buffer
+      accountid: BufferId,
+      authDescriptorid: BufferId
     ) => Promise<boolean>;
   };
 }

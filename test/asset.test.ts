@@ -1,25 +1,24 @@
 import { generateAssetName, generateId } from "./util/util";
-import { Asset, Blockchain } from "../client/lib/ft3";
-import BlockchainUtil from "./util/blockchain-util";
-import { gtv } from "postchain-client";
+import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { getNewAsset, getUserSession } from "./util/blockchain-util";
 
-let blockchain: Blockchain;
+let ft: ftUserSession;
 
 describe("Asset", () => {
   beforeAll(async () => {
-    blockchain = await BlockchainUtil.getDefaultBlockchain();
+    ft = await getUserSession();
   });
 
   it("should be successfully registered", async () => {
-    const asset = await BlockchainUtil.getNewAsset(blockchain);
+    const asset = await getNewAsset(ft);
     expect(asset).not.toBeNull();
   });
 
   it("should be returned when queried by name", async () => {
     const assetName = generateAssetName();
-    const asset = await BlockchainUtil.getNewAsset(blockchain, assetName);
+    const asset = await getNewAsset(ft, assetName);
 
-    const expectedAssets = await Asset.getByName(assetName, blockchain);
+    const expectedAssets = await ft.get.asset.by.name(assetName);
 
     expect(expectedAssets.length).toEqual(1);
     expect(expectedAssets[0]).toEqual(asset);
@@ -28,10 +27,10 @@ describe("Asset", () => {
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const brid = generateId();
-    const assetId = gtv.gtvHash([assetName, brid]);
-    await BlockchainUtil.getNewAsset(blockchain, assetName, brid);
+    const assetId = ft.get.asset.id(assetName, brid);
+    await getNewAsset(ft, assetName, brid);
 
-    const expectedAsset = await Asset.getById(assetId, blockchain);
+    const expectedAsset = await ft.get.asset.by.id(assetId);
 
     expect(expectedAsset.name).toEqual(assetName);
     expect(expectedAsset.id).toEqual(assetId);
@@ -39,11 +38,11 @@ describe("Asset", () => {
   });
 
   it("should return all the assets registered", async () => {
-    const asset1 = await BlockchainUtil.getNewAsset(blockchain);
-    const asset2 = await BlockchainUtil.getNewAsset(blockchain);
-    const asset3 = await BlockchainUtil.getNewAsset(blockchain);
+    const asset1 = await getNewAsset(ft);
+    const asset2 = await getNewAsset(ft);
+    const asset3 = await getNewAsset(ft);
 
-    const expectedAssets = await Asset.getAssets(blockchain);
+    const expectedAssets = await ft.get.asset.all();
 
     expect(expectedAssets).toEqual(
       expect.arrayContaining([asset1, asset2, asset3])
