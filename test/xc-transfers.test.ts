@@ -1,3 +1,4 @@
+/* needs heavy refactoring
 import AccountBuilder from "./util/account-builder";
 import { blockchainAccountId, generateId } from "./util/util";
 import { Asset, AssetBalance, Blockchain } from "../client/lib/ft3";
@@ -46,3 +47,4 @@ describe.skip("Cross-chain transfer", () => {
     expect(chainBalance.amount).toEqual(10);
   });
 });
+*/

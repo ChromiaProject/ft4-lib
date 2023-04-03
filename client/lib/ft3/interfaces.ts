@@ -5,7 +5,7 @@ import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
 } from "./account/payment-history/interfaces";
-import { Account, User } from "./account/types";
+import { Account, RateLimit, User } from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
 import { ChainInfo } from "./utils/types";
 
@@ -114,5 +114,6 @@ export interface ftQuerySession {
       accountid: BufferId,
       authDescriptorid: BufferId
     ) => Promise<boolean>;
+    rateLimit: (accountId: BufferId) => Promise<RateLimit>;
   };
 }

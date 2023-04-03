@@ -18,6 +18,7 @@ import {
   getById,
   getByIds,
   getByParticipantId,
+  getRateLimit,
   isAuthDescriptorValid,
 } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -42,6 +43,7 @@ export const accountQuerySession = (pci: GtxClient) =>
     },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(accountId, authDescriptorId, pci),
+    rateLimit: (accountId: BufferId) => getRateLimit(accountId, pci),
   });
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
