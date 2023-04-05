@@ -14,4 +14,4 @@ while getopts 'h' OPTION; do
   esac
 done
 shift "$(($OPTIND -1))"
-npm run test:js "$@" && npm run test:rell
+npm run test:js "$@" -- --exit-on-error && npm run test:rell
