@@ -1,13 +1,13 @@
 import { PaymentHistoryRetriever, PaymentHistoryStore } from "./interfaces";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import {
   paymentHistoryEntryFromJSON,
   paymentHistoryEntryToJSON,
 } from "./payment-history-entry";
 import { PaymentHistoryEntry } from "./types";
+import { formatter } from "postchain-client";
 
 export async function ensurePaymentHistoryStoreLocal(
   accountId: BufferId,
@@ -34,7 +34,7 @@ export async function createNewPaymentHistoryStoreLocal(
   session: GtxClient
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1) throw new Error("Page size must be at least 1");
-  const id = ensureBuffer(accountId);
+  const id = formatter.ensureBuffer(accountId);
 
   const retriever = createPaymentHistoryRetriever(accountId, session);
   const entryCount = await retriever.getTotalCount();
@@ -52,7 +52,7 @@ export async function loadPaymentHistoryStoreLocal(
   session: GtxClient
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1) throw new Error("Page size must be at least 1");
-  const id = ensureBuffer(accountId);
+  const id = formatter.ensureBuffer(accountId);
 
   const retriever = createPaymentHistoryRetriever(accountId, session);
   const key = `FT_LIB_P_H_S_L_${accountId

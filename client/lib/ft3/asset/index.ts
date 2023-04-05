@@ -1,4 +1,3 @@
-import { gtvHash } from "postchain-client/built/src/gtv";
 import {
   getAllAssets,
   getAssetById,
@@ -11,10 +10,10 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { User } from "../account/types";
 import { AssetAmount } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
+import { formatter, gtv } from "postchain-client";
 
 export function id(assetName: string, assetBrid: BufferId) {
-  return gtvHash([assetName, ensureBuffer(assetBrid)]);
+  return gtv.gtvHash([assetName, formatter.ensureBuffer(assetBrid)]);
 }
 
 export const assetQuerySession = (pci: GtxClient) =>

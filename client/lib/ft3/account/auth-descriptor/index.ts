@@ -1,7 +1,7 @@
 import { AuthDescriptor } from "./types";
 import { create } from "./auth-descriptor";
 import { allow } from "./rules";
-import { gtvHash } from "postchain-client/built/src/gtv";
+import { gtv } from "postchain-client";
 
 export enum AuthType {
   single_sig = "S",
@@ -14,11 +14,11 @@ export enum FlagsType {
 }
 
 export function hashAuthDescriptor(ad: AuthDescriptor) {
-  return gtvHash(ad);
+  return gtv.gtvHash(ad);
 }
 
 export function getAuthDescriptorId(ad: AuthDescriptor): Buffer {
-  return gtvHash(ad);
+  return gtv.gtvHash(ad);
 }
 
 export function getAuthDescriptorSigners(ad: AuthDescriptor): Buffer[] {

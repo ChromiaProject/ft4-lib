@@ -1,4 +1,3 @@
-import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
 import {
@@ -9,12 +8,15 @@ import {
   allAssetsQuery,
 } from "./asset-queries";
 import { Asset, Balance } from "./types";
+import { formatter } from "postchain-client";
 
 export async function getAssetById(
   id: BufferId,
   session: GtxClient
 ): Promise<Asset> {
-  const asset = await session.query(assetByIdQuery(ensureBuffer(id)));
+  const asset = await session.query(
+    ...assetByIdQuery(formatter.ensureBuffer(id))
+  );
   return Object.freeze({
     name: asset.name,
     id: asset.id,
@@ -23,7 +25,7 @@ export async function getAssetById(
 }
 
 export async function getAllAssets(session: GtxClient): Promise<Asset[]> {
-  const assets = await session.query(allAssetsQuery());
+  const assets = await session.query(...allAssetsQuery());
   return assets.map(function (a): Asset {
     return Object.freeze({
       name: a.name,
@@ -37,7 +39,7 @@ export async function getAssetsByName(
   name: string,
   session: GtxClient
 ): Promise<Asset[]> {
-  const assets = await session.query(assetByNameQuery(name));
+  const assets = await session.query(...assetByNameQuery(name));
   return assets.map(function (a): Asset {
     return Object.freeze({
       name: a.name,
@@ -52,7 +54,7 @@ export async function getBalancesByAccountId(
   session: GtxClient
 ): Promise<Balance[]> {
   const balances = await session.query(
-    balancesByAccountIdQuery(ensureBuffer(accountId))
+    ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
   );
   return balances.map(function (b): Balance {
     return Object.freeze({
@@ -68,7 +70,10 @@ export async function getBalance(
   session: GtxClient
 ): Promise<Balance> {
   const balance = await session.query(
-    balanceQuery(ensureBuffer(accountId), ensureBuffer(assetId))
+    ...balanceQuery(
+      formatter.ensureBuffer(accountId),
+      formatter.ensureBuffer(assetId)
+    )
   );
   return Object.freeze({
     asset: { id: balance.id, name: balance.name, brid: balance.brid },

@@ -45,7 +45,6 @@ query get_asset_by_id(asset_id: byte_array) {
         id = .id,
         name = .name,
         issuing_brid = .issuing_brid
-
     );
 }
 

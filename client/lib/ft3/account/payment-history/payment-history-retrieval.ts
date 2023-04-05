@@ -1,8 +1,7 @@
 import { PaymentHistoryCursor, PaymentHistoryEntry } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
-import { gtv } from "postchain-client";
+import { formatter, gtv } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
 import { PaymentHistoryRetriever } from "./interfaces";
 
@@ -10,7 +9,7 @@ export function createPaymentHistoryRetriever(
   accountId: BufferId,
   session: GtxClient
 ): PaymentHistoryRetriever {
-  const id = ensureBuffer(accountId);
+  const id = formatter.ensureBuffer(accountId);
 
   return Object.freeze({
     getTotalCount: async (): Promise<number> => {

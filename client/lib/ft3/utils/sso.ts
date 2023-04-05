@@ -99,9 +99,10 @@ export default class SSO {
       return [null, null];
     }
 
-    const authDesc = authDescriptor.create.singleSig
-      .withArgs([FlagsType.Transfer], this.signatureProvider.pubKey)
-      .andNoRules();
+    const authDesc = authDescriptor.create.singleSig.withArgs(
+      [FlagsType.Transfer],
+      this.signatureProvider.pubKey
+    ).andNoRules;
 
     const user: User = {
       signatureProvider: this.signatureProvider,
@@ -161,9 +162,10 @@ export default class SSO {
 
     this.signatureProvider = sigProv;
 
-    const authDesc = authDescriptor.create.singleSig
-      .withArgs([FlagsType.Transfer], sigProv.pubKey)
-      .andNoRules();
+    const authDesc = authDescriptor.create.singleSig.withArgs(
+      [FlagsType.Transfer],
+      sigProv.pubKey
+    ).andNoRules;
 
     const user: User = {
       signatureProvider: sigProv,

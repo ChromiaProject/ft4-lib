@@ -1,12 +1,12 @@
+import { logger } from "postchain-client";
 import { version } from "../../../package.json";
 import { createQuerySession, createUserSession } from "./ft-session";
-import { setLogLevel } from "postchain-client/built/src/logger";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,
-  setLogLevel,
+  setLogLevel: logger.setLogLevel,
   createUserSession,
   createQuerySession,
 });
 
-setLogLevel(0);
+ft.setLogLevel(0);

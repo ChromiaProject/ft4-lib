@@ -1,12 +1,12 @@
-import { ensureBuffer } from "postchain-client/built/src/formatter";
+/* eslint @typescript-eslint/ban-ts-comment: 0 */
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
 import { getAuthDescriptorSigners } from "../account/auth-descriptor";
 import { User } from "../account/types";
-import { send } from "../utils";
 import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
 import { AssetAmount } from "./types";
+import { formatter } from "postchain-client";
 
 export async function registerAsset(
   name: string,
@@ -17,9 +17,10 @@ export async function registerAsset(
   const tx = session.newTransaction(
     getAuthDescriptorSigners(user.authDescriptor)
   );
-  tx.addOperation(...registerAssetOp(name, ensureBuffer(brid)));
+  // @ts-ignore
+  tx.addOperation(...registerAssetOp(name, formatter.ensureBuffer(brid)));
   await tx.sign(user.signatureProvider);
-  await send(tx);
+  await tx.postAndWaitConfirmation();
   return id(name, brid);
 }
 
@@ -33,9 +34,14 @@ export async function giveBalance(
   const tx = session.newTransaction(
     getAuthDescriptorSigners(user.authDescriptor)
   );
+  // @ts-ignore
   tx.addOperation(
-    ...giveBalanceOp(ensureBuffer(assetId), ensureBuffer(accountId), amount)
+    ...giveBalanceOp(
+      formatter.ensureBuffer(assetId),
+      formatter.ensureBuffer(accountId),
+      amount
+    )
   );
   await tx.sign(user.signatureProvider);
-  await send(tx);
+  await tx.postAndWaitConfirmation();
 }

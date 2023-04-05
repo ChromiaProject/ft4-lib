@@ -5,8 +5,7 @@ import {
   PaymentHistoryJSON,
   PaymentHistoryTransferArgs,
 } from "./types";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
-import { gtv } from "postchain-client";
+import { formatter, gtv } from "postchain-client";
 
 export function createPaymentHistoryEntry(
   rowid: string,
@@ -26,7 +25,7 @@ export function createPaymentHistoryEntry(
     list.map((a) => {
       return {
         amount: a.amount,
-        accountId: ensureBuffer(a.accountId),
+        accountId: formatter.ensureBuffer(a.accountId),
       };
     })
   );
@@ -34,15 +33,15 @@ export function createPaymentHistoryEntry(
     rowid: rowid,
     isInput: isInput,
     delta: delta,
-    asset: { name: assetName, id: ensureBuffer(assetId) },
+    asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
     entryIndex: entryIndex,
-    data: ensureBuffer(data),
+    data: formatter.ensureBuffer(data),
     transferInputArgs: txArgs[0],
     transferOutputArgs: txArgs[1],
     timestamp: typeof timestamp === "number" ? new Date(timestamp) : timestamp,
-    transactionId: ensureBuffer(transactionId),
+    transactionId: formatter.ensureBuffer(transactionId),
     blockHeight: blockHeight,
-    //brid: ensureBuffer(brid),
+    //brid: formatter.ensureBuffer(brid),
   });
 }
 
@@ -76,7 +75,7 @@ export function createPaymentHistoryEntryFromResponse(
     list.map((a): PaymentHistoryTransferArgs => {
       return {
         amount: a[0],
-        accountId: ensureBuffer(a[1]),
+        accountId: formatter.ensureBuffer(a[1]),
       };
     })
   );

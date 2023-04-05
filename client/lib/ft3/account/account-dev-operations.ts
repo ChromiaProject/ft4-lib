@@ -4,15 +4,19 @@ import { AuthDescriptor } from "./auth-descriptor/types";
 export function registerOp(authDescriptor: AuthDescriptor): Operation {
   return [
     "ft3.dev_register_account",
-    [authDescriptor[0], [...authDescriptor[1]], [...authDescriptor[2]]],
+    [
+      authDescriptor[0],
+      [...authDescriptor[1]],
+      authDescriptor[2] ? [...authDescriptor[2]] : null,
+    ],
   ];
 }
 
 // one operation that updates the counter of rate limit of the account but does not cost points
 export function freeOp(accountId: Buffer): Operation {
-  return ["ft3.dev_free_op", [accountId]];
+  return ["ft3.dev_free_op", accountId];
 }
 
 export function givePointsOp(accountId: Buffer, points: number): Operation {
-  return ["ft3.dev_give_points", [accountId, points]];
+  return ["ft3.dev_give_points", accountId, points];
 }

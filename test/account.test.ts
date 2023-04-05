@@ -12,7 +12,6 @@ import {
   getAuthDescriptorSigners,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
-import { newSignatureProvider } from "postchain-client/built/src/gtx/gtx";
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
 config();
@@ -30,7 +29,7 @@ async function addAuthDescriptorTo(
 
 let _ft: ftUserSession;
 
-describe("Test the mutable account", () => {
+describe("Test the account", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
   });
@@ -126,9 +125,9 @@ describe("Test the mutable account", () => {
   });
 
   it("should update account if 2 signatures provided", async () => {
-    const sigProv1 = newSignatureProvider(null);
-    const sigProv2 = newSignatureProvider(null);
-    const sigProv3 = newSignatureProvider(null);
+    const sigProv1 = pcl.gtx.newSignatureProvider();
+    const sigProv2 = pcl.gtx.newSignatureProvider();
+    const sigProv3 = pcl.gtx.newSignatureProvider();
 
     const ad = authDescriptor.create.multiSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
@@ -289,7 +288,7 @@ describe("Test the mutable account", () => {
 
     const account = await AccountBuilder.account(ft).withPoints(4).build();
 
-    const sigProv = newSignatureProvider(null);
+    const sigProv = pcl.gtx.newSignatureProvider(null);
     const user2 = {
       signatureProvider: sigProv,
       authDescriptor: authDescriptor.create.singleSig.withArgs(
@@ -322,7 +321,7 @@ describe("Test the mutable account", () => {
       .withPoints(4)
       .build();
 
-    const sigProv2 = newSignatureProvider();
+    const sigProv2 = pcl.gtx.newSignatureProvider();
     const user2 = {
       signatureProvider: sigProv2,
       authDescriptor: authDescriptor.create.singleSig.withArgs(
@@ -331,7 +330,7 @@ describe("Test the mutable account", () => {
       ).andNoRules,
     };
 
-    const sigProv3 = newSignatureProvider();
+    const sigProv3 = pcl.gtx.newSignatureProvider();
     const user3 = {
       signatureProvider: sigProv3,
       authDescriptor: authDescriptor.create.singleSig.withArgs(

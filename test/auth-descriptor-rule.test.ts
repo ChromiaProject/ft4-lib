@@ -12,7 +12,7 @@ let ft: ftUserSession;
 let asset: Asset;
 
 function sourceAccount(user: User): Promise<Account> {
-  return AccountBuilder.account(ft, user)
+  return AccountBuilder.account(ft.changeUser(user))
     .withBalance(asset, 200)
     .withPoints(5)
     .build();

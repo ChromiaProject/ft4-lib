@@ -1,4 +1,4 @@
-import { ensureBuffer } from "postchain-client/built/src/formatter";
+import { formatter } from "postchain-client";
 import { AuthType } from ".";
 import { BufferId } from "../../../cryptoUtils";
 import {
@@ -10,23 +10,26 @@ import {
 
 export function createSingleSignatureAuthDescriptor(
   args: SingleSigAuthDescriptorArgs,
-  rules: AuthDescriptorRule | null
+  rules?: AuthDescriptorRule | null
 ): AuthDescriptor {
-  return Object.freeze([AuthType.single_sig, args, rules]);
+  return Object.freeze([AuthType.single_sig, args, rules ?? null]);
 }
 
 export function createMultiSignatureAuthDescriptor(
   args: MultiSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null
 ): AuthDescriptor {
-  return Object.freeze([AuthType.multi_sig, args, rules]);
+  return Object.freeze([AuthType.multi_sig, args, rules ?? null]);
 }
 
 export function singleSigArgs(
   flags: string[],
   signerPubKey: BufferId
 ): SingleSigAuthDescriptorArgs {
-  return Object.freeze([[...new Set(flags)], ensureBuffer(signerPubKey)]);
+  return Object.freeze([
+    [...new Set(flags)],
+    formatter.ensureBuffer(signerPubKey),
+  ]);
 }
 
 export function multiSigArgs(
@@ -42,7 +45,7 @@ export function multiSigArgs(
   return Object.freeze([
     [...new Set(flags)],
     requiredSignatures,
-    signerPubKeys.map(ensureBuffer),
+    signerPubKeys.map(formatter.ensureBuffer),
   ]);
 }
 
@@ -52,7 +55,7 @@ export const create = {
     withArgs: (flags: string[], signerPubKey: BufferId) => {
       const args = singleSigArgs(flags, signerPubKey);
       return {
-        andRules: (rules: AuthDescriptorRule) =>
+        andRules: (rules?: AuthDescriptorRule) =>
           createSingleSignatureAuthDescriptor(args, rules),
         andNoRules: createSingleSignatureAuthDescriptor(args, null),
       };
@@ -67,7 +70,7 @@ export const create = {
     ) => {
       const args = multiSigArgs(flags, requiredSignatures, signerPubKeys);
       return {
-        andRules: (rules: AuthDescriptorRule) =>
+        andRules: (rules?: AuthDescriptorRule) =>
           createMultiSignatureAuthDescriptor(args, rules),
         andNoRules: createMultiSignatureAuthDescriptor(args, null),
       };

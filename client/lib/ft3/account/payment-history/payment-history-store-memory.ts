@@ -2,8 +2,8 @@ import { PaymentHistoryRetriever, PaymentHistoryStore } from "./interfaces";
 import { PaymentHistoryEntry } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
+import { formatter } from "postchain-client";
 
 export async function createPaymentHistoryStoreMemory(
   accountId: BufferId,
@@ -11,7 +11,7 @@ export async function createPaymentHistoryStoreMemory(
   session: GtxClient
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1) throw new Error("Page size must be at least 1");
-  const id = ensureBuffer(accountId);
+  const id = formatter.ensureBuffer(accountId);
 
   const retriever = createPaymentHistoryRetriever(accountId, session);
   const entryCount = await retriever.getTotalCount();

@@ -11,5 +11,5 @@ export function giveBalanceOp(
   accountId: Buffer,
   amount: AssetAmount
 ): Operation {
-  return op("ft3.dev_give_balance", assetId, accountId, amount);
+  return op("ft3.dev_give_balance", assetId, accountId, Number(amount));
 }

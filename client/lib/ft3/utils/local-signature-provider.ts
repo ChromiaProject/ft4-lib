@@ -1,13 +1,9 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import {
-  makeKeyPair,
-  signDigest,
-} from "postchain-client/built/src/encryption/encryption";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { KeyPair } from "postchain-client/built/src/encryption/types";
+import { encryption, formatter } from "postchain-client";
 
 function storeLocalStoragePrivateKey(privKey?: Buffer | string) {
-  const kp = makeKeyPair(privKey);
+  const kp = encryption.makeKeyPair(privKey);
   localStorage.setItem("__localSigProvPrivKey", kp.privKey.toString("hex"));
 }
 
@@ -32,15 +28,16 @@ export const createLocalStorageSignatureProvider = (
           "you want to lose access to the old key pair."
       );
     }
-    kp = makeKeyPair(priv);
+    kp = encryption.makeKeyPair(priv);
   } else {
-    kp = makeKeyPair(privKey);
+    kp = encryption.makeKeyPair(privKey);
     storeLocalStoragePrivateKey(kp.privKey);
   }
 
   return Object.freeze({
     pubKey: kp.pubKey,
-    sign: async (gtx) => signDigest(gtx, ensureBuffer(kp.privKey)),
+    sign: async (gtx: Buffer) =>
+      encryption.signDigest(gtx, formatter.ensureBuffer(kp.privKey)),
   });
 };
 

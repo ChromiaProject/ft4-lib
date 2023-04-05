@@ -21,9 +21,7 @@ describe("Asset balance", () => {
         { amount: BigInt(20), asset: asset2 },
       ])
       .build();
-
     const assets = await ft.get.balance.by.accountId(account.id);
-
     expect(assets.length).toEqual(2);
   });
 });

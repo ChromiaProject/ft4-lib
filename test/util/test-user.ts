@@ -1,4 +1,4 @@
-import { newSignatureProvider } from "postchain-client/built/src/gtx/gtx";
+import { gtx } from "postchain-client";
 import {
   authDescriptor,
   FlagsType,
@@ -9,7 +9,7 @@ import { User } from "../../client/lib/ft3/account/types";
 export default function singleSigUser(
   rule: AuthDescriptorRule | null = null
 ): User {
-  const signatureProvider = newSignatureProvider(null);
+  const signatureProvider = gtx.newSignatureProvider();
   const singleSigAuthDescriptor = authDescriptor.create.singleSig
     .withArgs([FlagsType.Account, FlagsType.Transfer], signatureProvider.pubKey)
     .andRules(rule);

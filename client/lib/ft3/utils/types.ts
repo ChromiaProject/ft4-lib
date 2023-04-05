@@ -1,6 +1,6 @@
 import { RawGtv } from "postchain-client/built/src/gtv/types";
 
-export type Operation = [string, RawGtv[]];
+export type Operation = [string, ...RawGtv[]];
 
 export type ChainInfo = {
   name: string;
@@ -28,3 +28,5 @@ export type ExternalWalletConnection = {
     account: string;
   }) => Promise<string>;
 };
+
+export type Query = [string, { [property: string]: RawGtv }];

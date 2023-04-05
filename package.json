@@ -38,7 +38,7 @@
   "dependencies": {
     "@walletconnect/client": "^1.8.0",
     "dotenv": "^8.0.0",
-    "postchain-client": "^1.1.1",
+    "postchain-client": "^1.2.0",
     "typescript": "^4.9.0"
   },
   "devDependencies": {

@@ -1,4 +1,3 @@
-import { newSignatureProvider } from "postchain-client/built/src/gtx/gtx";
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { FlagsType } from "../../client/lib/ft3/account/auth-descriptor";
 import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
@@ -6,12 +5,13 @@ import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor
 import { Account } from "../../client/lib/ft3/account/types";
 import { Asset, Balance } from "../../client/lib/ft3/asset/types";
 import { ftUserSession } from "../../client/lib/ft3/interfaces";
+import { gtx } from "postchain-client";
 
 class AccountBuilder {
   private session: ftUserSession;
   private balances: Balance[] = [];
-  private rules: AuthDescriptorRule;
-  private participants: SignatureProvider[] = [newSignatureProvider(null)];
+  private rules: AuthDescriptorRule | null = null;
+  private participants: SignatureProvider[] = [gtx.newSignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points = 0;

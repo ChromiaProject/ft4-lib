@@ -24,7 +24,7 @@ Buffer.prototype.encodeGtv = function (): RawGtv {
 Object.defineProperty(Array.prototype, "encodeGtv", {
   enumerable: false,
   value: function (): RawGtv {
-    return this.map((element) => encodeGtv(element));
+    return this.map((element: GtvCompatible) => encodeGtv(element));
   },
 });
 

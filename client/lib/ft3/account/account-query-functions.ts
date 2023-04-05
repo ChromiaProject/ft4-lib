@@ -9,17 +9,17 @@ import {
 } from "./account-queries";
 import { Account, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { ensureBuffer } from "postchain-client/built/src/formatter";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { getChainInfo } from "../utils";
 import { getBalancesByAccountId } from "../asset/asset-query-functions";
+import { formatter } from "postchain-client";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   id: BufferId,
   session: GtxClient
 ): Promise<(Account | null)[]> {
   const accountIds = await session.query(
-    accountsByParticipantIdQuery(ensureBuffer(id))
+    ...accountsByParticipantIdQuery(formatter.ensureBuffer(id))
   );
   return await createAccountObjectsFromIds(accountIds, session);
 }
@@ -29,7 +29,7 @@ export async function getByAuthDescriptorId(
   session: GtxClient
 ): Promise<(Account | null)[]> {
   const accountIds = await session.query(
-    accountsByAuthDescriptorIdQuery(ensureBuffer(id))
+    ...accountsByAuthDescriptorIdQuery(formatter.ensureBuffer(id))
   );
   return await createAccountObjectsFromIds(accountIds, session);
 }
@@ -40,9 +40,9 @@ export async function isAuthDescriptorValid(
   session: GtxClient
 ): Promise<boolean> {
   return await session.query(
-    isAuthDescriptorValidQuery(
-      ensureBuffer(accountId),
-      ensureBuffer(authDescId)
+    ...isAuthDescriptorValidQuery(
+      formatter.ensureBuffer(accountId),
+      formatter.ensureBuffer(authDescId)
     )
   );
 }
@@ -58,7 +58,9 @@ export async function getById(
   id: BufferId,
   session: GtxClient
 ): Promise<Account | null> {
-  const accountId = await session.query(accountByIdQuery(ensureBuffer(id)));
+  const accountId = await session.query(
+    ...accountByIdQuery(formatter.ensureBuffer(id))
+  );
   if (!accountId) return null;
   return await createAccountObjectFromId(accountId, session);
 }
@@ -68,7 +70,7 @@ async function createAccountObjectFromId(
   accountId: BufferId,
   session: GtxClient
 ): Promise<Account> {
-  const id = ensureBuffer(accountId);
+  const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(id, session),
     getAuthDescriptors(id, session),
@@ -95,7 +97,7 @@ export async function getAuthDescriptors(
   session: GtxClient
 ): Promise<AuthDescriptor[]> {
   return await session.query(
-    accountAuthDescriptorsQuery(ensureBuffer(accountId))
+    ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
 }
 
@@ -106,7 +108,7 @@ export async function getRateLimit(
   session: GtxClient
 ): Promise<RateLimit> {
   const rateLimit = await session.query(
-    getRateLimitQuery(ensureBuffer(accountId))
+    ...getRateLimitQuery(formatter.ensureBuffer(accountId))
   );
 
   const chainInfo = await getChainInfo(session);
