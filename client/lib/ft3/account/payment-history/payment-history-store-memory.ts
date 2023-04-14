@@ -6,14 +6,14 @@ import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { formatter } from "postchain-client";
 
 export async function createPaymentHistoryStoreMemory(
+  session: GtxClient,
   accountId: BufferId,
-  pageSize: number,
-  session: GtxClient
+  pageSize: number
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1) throw new Error("Page size must be at least 1");
   const id = formatter.ensureBuffer(accountId);
 
-  const retriever = createPaymentHistoryRetriever(accountId, session);
+  const retriever = createPaymentHistoryRetriever(session, accountId);
   const entryCount = await retriever.getTotalCount();
   const pageCount = Math.ceil(entryCount / pageSize);
 

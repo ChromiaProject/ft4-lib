@@ -36,10 +36,7 @@ export interface ftUserSession {
       ) => Promise<Buffer>;
     };
     authDescriptor: {
-      add: (
-        authDescriptor: AuthDescriptor,
-        accountid: BufferId
-      ) => Promise<Buffer>;
+      add: (newUser: User, accountId: BufferId) => Promise<void>;
       deleteAllExcluding: (
         authDescriptorid: BufferId,
         accountid: BufferId
@@ -57,7 +54,7 @@ export interface ftUserSession {
         amount: bigint
       ) => Promise<void>;
       burn: (from: BufferId, asset: BufferId, amount: bigint) => Promise<void>;
-      //xcTransfer: () => Promise<void>;
+      xcTransfer: () => Promise<void>;
     };
     dev: {
       register: (authDescriptor: AuthDescriptor) => Promise<Account>;

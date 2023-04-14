@@ -18,13 +18,10 @@ config();
 
 async function addAuthDescriptorTo(
   account: Account,
-  adminUser: User,
-  user: User,
-  ft: ftUserSession
+  newUser: User,
+  adminSession: ftUserSession
 ) {
-  await ft
-    .changeUser(adminUser)
-    .account.authDescriptor.add(user.authDescriptor, account.id);
+  await adminSession.account.authDescriptor.add(newUser, account.id);
 }
 
 let _ft: ftUserSession;
@@ -59,31 +56,41 @@ describe("Test the account", () => {
       user.signatureProvider.pubKey
     ).andNoRules;
 
-    const account = await _ft.account.dev.register(ad);
+    const account = await _ft.changeUser(user).account.dev.register(ad);
 
     expect(account).not.toBeNull();
   });
 
   it("can add new auth descriptor if has account edit rights", async () => {
     const user = testUser();
+    const user2 = {
+      authDescriptor: authDescriptor.create.singleSig.withArgs(
+        [FlagsType.Transfer],
+        user.signatureProvider.pubKey
+      ).andNoRules,
+      signatureProvider: user.signatureProvider,
+    };
     const ft = _ft.changeUser(user);
 
     const account = await AccountBuilder.account(ft).withPoints(1).build();
 
     expect(account).not.toBeNull();
 
-    await ft.account.authDescriptor.add(
-      authDescriptor.create.singleSig.withArgs(
-        [FlagsType.Transfer],
-        user.signatureProvider.pubKey
-      ).andNoRules,
-      account.id
-    );
-    expect(account.authDescriptors.length).toBe(2);
+    await ft.account.authDescriptor.add(user2, account.id);
+    expect(
+      (await ft.get.account.by.id(account.id)).authDescriptors.length
+    ).toBe(2);
   });
 
   it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
     const user = testUser();
+    const user2 = {
+      authDescriptor: authDescriptor.create.singleSig.withArgs(
+        [FlagsType.Transfer],
+        user.signatureProvider.pubKey
+      ).andNoRules,
+      signatureProvider: user.signatureProvider,
+    };
     const ft = _ft.changeUser(user);
 
     const account = await ft.account.dev.register(
@@ -94,15 +101,11 @@ describe("Test the account", () => {
     );
     expect(account).not.toBeNull();
 
-    const promise = ft.account.authDescriptor.add(
-      authDescriptor.create.singleSig.withArgs(
-        [FlagsType.Transfer],
-        user.signatureProvider.pubKey
-      ).andNoRules,
-      account.id
-    );
+    const promise = ft.account.authDescriptor.add(user2, account.id);
     await expect(promise).rejects.toBeInstanceOf(Error);
-    expect(account.authDescriptors.length).toBe(1);
+    expect(
+      (await ft.get.account.by.id(account.id)).authDescriptors.length
+    ).toBe(1);
   });
 
   it("should create new multisig account", async () => {
@@ -166,12 +169,21 @@ describe("Test the account", () => {
 
     const account = await _ft.get.account.by.id(authDescriptor.getId(ad));
 
-    expect(account.authDescriptors.length).toBe(2);
+    expect(
+      (await _ft.get.account.by.id(account.id)).authDescriptors.length
+    ).toBe(2);
   });
 
   it("should fail if only one signature provided", async () => {
     const user1 = testUser();
     const user2 = testUser();
+    const user3 = {
+      authDescriptor: authDescriptor.create.singleSig.withArgs(
+        [FlagsType.Transfer],
+        user1.signatureProvider.pubKey
+      ).andNoRules,
+      signatureProvider: user1.signatureProvider,
+    };
 
     const ad = authDescriptor.create.multiSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
@@ -180,22 +192,18 @@ describe("Test the account", () => {
     ).andNoRules;
 
     const tx = _ft.get.gtxClient.newTransaction(authDescriptor.getSigners(ad));
-    tx.add(...registerOp(ad));
+    tx.addOperation(...registerOp(ad));
     await tx.sign(user1.signatureProvider);
     await tx.sign(user2.signatureProvider);
     await tx.postAndWaitConfirmation();
 
     const account = await _ft.get.account.by.id(authDescriptor.getId(ad));
 
-    const promise = _ft.account.authDescriptor.add(
-      authDescriptor.create.singleSig.withArgs(
-        [FlagsType.Transfer],
-        user1.signatureProvider.pubKey
-      ).andNoRules,
-      account.id
-    );
+    const promise = _ft.account.authDescriptor.add(user3, account.id);
     await expect(promise).rejects.toBeInstanceOf(Error);
-    expect(account.authDescriptors.length).toBe(1);
+    expect(
+      (await _ft.get.account.by.id(account.id)).authDescriptors.length
+    ).toBe(1);
   });
 
   it("should be returned when queried by participant id", async () => {
@@ -221,7 +229,7 @@ describe("Test the account", () => {
 
     const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
 
-    await addAuthDescriptorTo(account2, user2, user1, _ft);
+    await addAuthDescriptorTo(account2, user1, ft2);
 
     const accounts = await _ft.get.account.by.participantId(
       user1.signatureProvider.pubKey
@@ -241,19 +249,16 @@ describe("Test the account", () => {
     expect(account).toEqual(foundAccount);
   });
 
-  it("should have only one auth descriptor after calling deleteAllAuthDescriptorsExclude", async () => {
+  it("should have only one auth descriptor after calling deleteAllExcluding", async () => {
     const user1 = testUser();
     const user2 = testUser();
     const user3 = testUser();
     const ft = _ft.changeUser(user1);
 
-    const account = await AccountBuilder.account(ft)
-      .withParticipants([user1.signatureProvider])
-      .withPoints(4)
-      .build();
+    const account = await AccountBuilder.account(ft).withPoints(4).build();
 
-    await addAuthDescriptorTo(account, user1, user2, _ft);
-    await addAuthDescriptorTo(account, user1, user3, _ft);
+    await addAuthDescriptorTo(account, user2, ft);
+    await addAuthDescriptorTo(account, user3, ft);
 
     await ft.account.authDescriptor.deleteAllExcluding(
       authDescriptor.getId(user1.authDescriptor),
@@ -272,7 +277,7 @@ describe("Test the account", () => {
       getAuthDescriptorSigners(user.authDescriptor)
     );
     tx.addOperation(...op("ft3.dev_register_account", user.authDescriptor));
-    tx.sign(user.signatureProvider);
+    await tx.sign(user.signatureProvider);
     await tx.postAndWaitConfirmation();
 
     const account = await _ft.get.account.by.id(
@@ -288,7 +293,8 @@ describe("Test the account", () => {
 
     const account = await AccountBuilder.account(ft).withPoints(4).build();
 
-    const sigProv = pcl.gtx.newSignatureProvider(null);
+    const sigProv = pcl.gtx.newSignatureProvider();
+
     const user2 = {
       signatureProvider: sigProv,
       authDescriptor: authDescriptor.create.singleSig.withArgs(
@@ -297,18 +303,17 @@ describe("Test the account", () => {
       ).andNoRules,
     };
 
-    await addAuthDescriptorTo(account, user1, user2, ft);
+    await addAuthDescriptorTo(account, user2, ft);
 
-    const ft2 = await _ft.changeUser(user2);
-    let account2 = await ft2.get.account.by.id(account.id);
+    const ft2 = _ft.changeUser(user2);
 
     const promise = ft2.account.authDescriptor.delete(
       authDescriptor.getId(user2.authDescriptor),
-      account2.id
+      account.id
     );
 
     await expect(promise).resolves.not.toThrowError();
-    account2 = await ft.get.account.by.id(account2.id);
+    const account2 = await ft.get.account.by.id(account.id);
     expect(account2.authDescriptors.length).toEqual(1);
   });
 
@@ -339,8 +344,8 @@ describe("Test the account", () => {
       ).andNoRules,
     };
 
-    await addAuthDescriptorTo(account, user1, user2, ft);
-    await addAuthDescriptorTo(account, user1, user3, ft);
+    await addAuthDescriptorTo(account, user2, ft);
+    await addAuthDescriptorTo(account, user3, ft);
 
     const ft3 = ft.changeUser(user3);
     const account2 = await ft3.get.account.by.id(account.id);

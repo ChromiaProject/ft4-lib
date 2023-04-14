@@ -11,8 +11,8 @@ import { Asset, Balance } from "./types";
 import { formatter } from "postchain-client";
 
 export async function getAssetById(
-  id: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  id: BufferId
 ): Promise<Asset> {
   const asset = await session.query(
     ...assetByIdQuery(formatter.ensureBuffer(id))
@@ -36,8 +36,8 @@ export async function getAllAssets(session: GtxClient): Promise<Asset[]> {
 }
 
 export async function getAssetsByName(
-  name: string,
-  session: GtxClient
+  session: GtxClient,
+  name: string
 ): Promise<Asset[]> {
   const assets = await session.query(...assetByNameQuery(name));
   return assets.map(function (a): Asset {
@@ -50,8 +50,8 @@ export async function getAssetsByName(
 }
 
 export async function getBalancesByAccountId(
-  accountId: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  accountId: BufferId
 ): Promise<Balance[]> {
   const balances = await session.query(
     ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
@@ -65,9 +65,9 @@ export async function getBalancesByAccountId(
 }
 
 export async function getBalance(
+  session: GtxClient,
   accountId: BufferId,
-  assetId: BufferId,
-  session: GtxClient
+  assetId: BufferId
 ): Promise<Balance> {
   const balance = await session.query(
     ...balanceQuery(

@@ -15,6 +15,7 @@ class AccountBuilder {
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points = 0;
+  private getUserFromSession = true;
 
   constructor(session: ftUserSession) {
     this.session = session;
@@ -32,6 +33,7 @@ class AccountBuilder {
   }
 
   withParticipants(participants: SignatureProvider[]): AccountBuilder {
+    this.getUserFromSession = false;
     this.participants = participants;
     return this;
   }
@@ -63,10 +65,8 @@ class AccountBuilder {
 
   async build(): Promise<Account> {
     const account = await this.registerAccount();
-
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
-
     return await this.session.get.account.by.id(account.id);
   }
 
@@ -102,7 +102,9 @@ class AccountBuilder {
         "Number of required signatures has to be less than number of participants"
       );
     }
-
+    if (this.getUserFromSession) {
+      return this.session.user.authDescriptor;
+    }
     if (this.participants.length > 1) {
       return create.multiSig
         .withArgs(

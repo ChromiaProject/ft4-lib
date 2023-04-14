@@ -21,17 +21,17 @@ export const assetQuerySession = (pci: GtxClient) =>
     asset: {
       id,
       by: {
-        name: (name: string) => getAssetsByName(name, pci),
-        id: (assetId: BufferId) => getAssetById(assetId, pci),
+        name: (name: string) => getAssetsByName(pci, name),
+        id: (assetId: BufferId) => getAssetById(pci, assetId),
       },
       all: () => getAllAssets(pci),
     },
     balance: {
       by: {
         accountId: (accountId: BufferId) =>
-          getBalancesByAccountId(accountId, pci),
+          getBalancesByAccountId(pci, accountId),
         accountAndAssetId: (accountId: BufferId, assetId: BufferId) =>
-          getBalance(accountId, assetId, pci),
+          getBalance(pci, accountId, assetId),
       },
     },
   });
@@ -41,13 +41,13 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
     asset: {
       dev: {
         register: (name: string, brid: BufferId) =>
-          registerAsset(name, brid, user, pci),
+          registerAsset(user, pci, name, brid),
       },
     },
     balance: {
       dev: {
         give: (assetId: BufferId, accountId: BufferId, amount: AssetAmount) =>
-          giveBalance(assetId, accountId, amount, user, pci),
+          giveBalance(user, pci, assetId, accountId, amount),
       },
     },
   });

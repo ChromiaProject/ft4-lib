@@ -6,14 +6,14 @@ import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
 import { PaymentHistoryRetriever } from "./interfaces";
 
 export function createPaymentHistoryRetriever(
-  accountId: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  accountId: BufferId
 ): PaymentHistoryRetriever {
   const id = formatter.ensureBuffer(accountId);
 
   return Object.freeze({
     getTotalCount: async (): Promise<number> => {
-      return await this.blockchain.query("ft3.get_payment_history_size", {
+      return await session.query("ft3.get_payment_history_size", {
         account_id: id,
       });
     },

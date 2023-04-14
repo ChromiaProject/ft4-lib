@@ -1,7 +1,7 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
 import {
-  addAuthDescriptorToAcc,
+  addAuthDescriptorToAccount,
   burnTokens,
   deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
@@ -12,6 +12,7 @@ import {
   ssoRawTransactionAddAuthDescriptor,
   ssoRawTransactionRegister,
   transfer,
+  xcTransfer,
 } from "./account-op-functions";
 import {
   getByAuthDescriptorId,
@@ -29,46 +30,48 @@ import { User } from "./types";
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
     by: {
-      participantId: (id: BufferId) => getByParticipantId(id, pci),
-      authDescriptorId: (id: BufferId) => getByAuthDescriptorId(id, pci),
-      ids: (ids: BufferId[]) => getByIds(ids, pci),
-      id: (id: BufferId) => getById(id, pci),
+      participantId: (id: BufferId) => getByParticipantId(pci, id),
+      authDescriptorId: (id: BufferId) => getByAuthDescriptorId(pci, id),
+      ids: (ids: BufferId[]) => getByIds(pci, ids),
+      id: (id: BufferId) => getById(pci, id),
     },
     paymentHistory: {
       iterator: getPaymentHistoryIterator,
       storeMemory: (accountId: BufferId, pageSize: number) =>
-        createPaymentHistoryStoreMemory(accountId, pageSize, pci),
+        createPaymentHistoryStoreMemory(pci, accountId, pageSize),
       storeLocal: (accountId: BufferId, pageSize: number) =>
-        ensurePaymentHistoryStoreLocal(accountId, pageSize, pci),
+        ensurePaymentHistoryStoreLocal(pci, pageSize, accountId),
     },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
-      isAuthDescriptorValid(accountId, authDescriptorId, pci),
-    rateLimit: (accountId: BufferId) => getRateLimit(accountId, pci),
+      isAuthDescriptorValid(pci, accountId, authDescriptorId),
+    rateLimit: (accountId: BufferId) => getRateLimit(pci, accountId),
   });
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     sso: {
       ssoRegister: (authDescriptor: AuthDescriptor) =>
-        ssoRawTransactionRegister(authDescriptor, user, pci),
+        ssoRawTransactionRegister(user, pci, authDescriptor),
       ssoAddAuthDescriptor: (
         accountId: BufferId,
         authDescriptor: AuthDescriptor
       ) =>
         ssoRawTransactionAddAuthDescriptor(
-          accountId,
-          authDescriptor,
           user,
-          pci
+          pci,
+          accountId,
+          authDescriptor
         ),
     },
     authDescriptor: {
-      add: (authDescriptor: AuthDescriptor, accountId: BufferId) =>
-        addAuthDescriptorToAcc(authDescriptor, accountId, user, pci),
+      add: (
+        newUser: User,
+        accountId: BufferId //add user? needs refactoring
+      ) => addAuthDescriptorToAccount(user, pci, newUser, accountId),
       deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAllAuthDescriptorsExclude(authDescriptorId, accountId, user, pci),
+        deleteAllAuthDescriptorsExclude(user, pci, authDescriptorId, accountId),
       delete: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAuthDescriptor(authDescriptorId, accountId, user, pci),
+        deleteAuthDescriptor(user, pci, authDescriptorId, accountId),
     },
     token: {
       transfer: (
@@ -76,17 +79,17 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         to: BufferId,
         asset: BufferId,
         amount: bigint
-      ) => transfer(from, to, asset, amount, user, pci),
+      ) => transfer(user, pci, from, to, asset, amount),
       burn: (from: BufferId, asset: BufferId, amount: bigint) =>
-        burnTokens(from, asset, amount, user, pci),
-      //xcTransfer: () => xcTransfer(user, pci),
+        burnTokens(user, pci, from, asset, amount),
+      xcTransfer: () => xcTransfer(user, pci),
     },
     dev: {
       register: (authDescriptor: AuthDescriptor) =>
-        registerAccount(authDescriptor, user, pci),
+        registerAccount(user, pci, authDescriptor),
       freeOperation: (accountId: BufferId) =>
-        freeOperation(accountId, user, pci),
+        freeOperation(user, pci, accountId),
       givePoints: (accountId: BufferId, points: number) =>
-        givePoints(accountId, points, user, pci),
+        givePoints(user, pci, accountId, points),
     },
   });

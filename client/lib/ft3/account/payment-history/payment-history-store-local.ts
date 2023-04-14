@@ -10,33 +10,33 @@ import { PaymentHistoryEntry } from "./types";
 import { formatter } from "postchain-client";
 
 export async function ensurePaymentHistoryStoreLocal(
-  accountId: BufferId,
+  session: GtxClient,
   pageSize: number,
-  session: GtxClient
+  accountId: BufferId
 ): Promise<PaymentHistoryStore> {
   try {
-    return await loadPaymentHistoryStoreLocal(accountId, pageSize, session);
+    return await loadPaymentHistoryStoreLocal(session, accountId, pageSize);
   } catch (error) {
     console.log(`Couldn't load payment history from local storage
     [Reason: ${error.toString()}]
     Creating a new one...`);
     return await createNewPaymentHistoryStoreLocal(
+      session,
       accountId,
-      pageSize,
-      session
+      pageSize
     );
   }
 }
 
 export async function createNewPaymentHistoryStoreLocal(
+  session: GtxClient,
   accountId: BufferId,
-  pageSize: number,
-  session: GtxClient
+  pageSize: number
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1) throw new Error("Page size must be at least 1");
   const id = formatter.ensureBuffer(accountId);
 
-  const retriever = createPaymentHistoryRetriever(accountId, session);
+  const retriever = createPaymentHistoryRetriever(session, accountId);
   const entryCount = await retriever.getTotalCount();
   const pageCount = Math.ceil(entryCount / pageSize);
   const key = `FT_LIB_P_H_S_L_${accountId
@@ -47,14 +47,14 @@ export async function createNewPaymentHistoryStoreLocal(
 }
 
 export async function loadPaymentHistoryStoreLocal(
+  session: GtxClient,
   accountId: BufferId,
-  pageSize: number,
-  session: GtxClient
+  pageSize: number
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1) throw new Error("Page size must be at least 1");
   const id = formatter.ensureBuffer(accountId);
 
-  const retriever = createPaymentHistoryRetriever(accountId, session);
+  const retriever = createPaymentHistoryRetriever(session, accountId);
   const key = `FT_LIB_P_H_S_L_${accountId
     .toString("hex")
     .toUpperCase()}_${retriever.brid.toUpperCase()}`;

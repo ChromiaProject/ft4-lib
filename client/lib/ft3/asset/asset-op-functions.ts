@@ -7,29 +7,31 @@ import { User } from "../account/types";
 import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
 import { AssetAmount } from "./types";
 import { formatter } from "postchain-client";
+import { nop } from "../utils";
 
 export async function registerAsset(
-  name: string,
-  brid: BufferId,
   user: User,
-  session: GtxClient
+  session: GtxClient,
+  name: string,
+  brid: BufferId
 ): Promise<Buffer> {
   const tx = session.newTransaction(
     getAuthDescriptorSigners(user.authDescriptor)
   );
   // @ts-ignore
   tx.addOperation(...registerAssetOp(name, formatter.ensureBuffer(brid)));
+  tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);
   await tx.postAndWaitConfirmation();
   return id(name, brid);
 }
 
 export async function giveBalance(
+  user: User,
+  session: GtxClient,
   assetId: BufferId,
   accountId: BufferId,
-  amount: AssetAmount,
-  user: User,
-  session: GtxClient
+  amount: AssetAmount
 ) {
   const tx = session.newTransaction(
     getAuthDescriptorSigners(user.authDescriptor)
@@ -42,6 +44,7 @@ export async function giveBalance(
       amount
     )
   );
+  tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);
   await tx.postAndWaitConfirmation();
 }

@@ -26,9 +26,9 @@ query get_account_auth_descriptors(id: byte_array) {
     return acc.account_auth_descriptor @* {
         .account.id == id
     } (
-        id = .id,
-        type = .auth_type,
-        args = .args
+        .auth_type,
+        .args,
+        .rules
     );
 }
 

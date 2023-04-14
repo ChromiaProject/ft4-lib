@@ -15,23 +15,50 @@ exitfn () {
 trap "exitfn" 2
 
 EXIT_ON_ERROR=0
-while [[ $# -gt 0 ]]; do
+opt=
+test_string=
+while :; do
     case $1 in
-        --exit-on-error)
-            EXIT_ON_ERROR=1
-            shift
+        --file=?*)
+            opt="$opt --runTestsByPath ${1#*=}"
             ;;
-        -*|--*)
-            echo "Unknown flag $1"
+        --file=)
+            echo 'ERROR: "--file" requires a non-empty option argument.'
             exit 1
             ;;
+        --exit-on-error)
+            EXIT_ON_ERROR=1
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)
+            if [ "$1" ]; then
+              test_string="$test_string$1 "
+            else 
+              break
+            fi
+            ;;
     esac
+    shift
 done
+
+if [ -z "$opt" ]; then
+    opt="test"
+fi
+if [ "$test_string" ]; then
+    opt="$opt -t ${test_string%?}"
+fi
 
 docker-compose -f dockers/jest-test.yml up -d
 if test $? -eq 0
 then
-    npx jest test -t "$@"
+    echo "\n> npx jest " "$opt" "\n"
+    npx jest $opt
     if test $? -eq 0
     then 
         docker-compose -f dockers/jest-test.yml down

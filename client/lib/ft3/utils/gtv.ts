@@ -18,7 +18,7 @@ declare global {
 }
 
 Buffer.prototype.encodeGtv = function (): RawGtv {
-  return this.toString("hex"); //To be removed when rell support comes around
+  return this;
 };
 
 Object.defineProperty(Array.prototype, "encodeGtv", {

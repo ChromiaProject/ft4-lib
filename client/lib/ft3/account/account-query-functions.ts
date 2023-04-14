@@ -15,29 +15,29 @@ import { getBalancesByAccountId } from "../asset/asset-query-functions";
 import { formatter } from "postchain-client";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
-  id: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  id: BufferId
 ): Promise<(Account | null)[]> {
   const accountIds = await session.query(
     ...accountsByParticipantIdQuery(formatter.ensureBuffer(id))
   );
-  return await createAccountObjectsFromIds(accountIds, session);
+  return await createAccountObjectsFromIds(session, accountIds);
 }
 
 export async function getByAuthDescriptorId(
-  id: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  id: BufferId
 ): Promise<(Account | null)[]> {
   const accountIds = await session.query(
     ...accountsByAuthDescriptorIdQuery(formatter.ensureBuffer(id))
   );
-  return await createAccountObjectsFromIds(accountIds, session);
+  return await createAccountObjectsFromIds(session, accountIds);
 }
 
 export async function isAuthDescriptorValid(
+  session: GtxClient,
   accountId: BufferId,
-  authDescId: BufferId,
-  session: GtxClient
+  authDescId: BufferId
 ): Promise<boolean> {
   return await session.query(
     ...isAuthDescriptorValidQuery(
@@ -48,32 +48,32 @@ export async function isAuthDescriptorValid(
 }
 
 export async function getByIds(
-  ids: BufferId[],
-  session: GtxClient
+  session: GtxClient,
+  ids: BufferId[]
 ): Promise<(Account | null)[]> {
-  return Promise.all(ids.map((id) => getById(id, session)));
+  return Promise.all(ids.map((id) => getById(session, id)));
 }
 
 export async function getById(
-  id: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  id: BufferId
 ): Promise<Account | null> {
   const accountId = await session.query(
     ...accountByIdQuery(formatter.ensureBuffer(id))
   );
   if (!accountId) return null;
-  return await createAccountObjectFromId(accountId, session);
+  return await createAccountObjectFromId(session, accountId);
 }
 
 //to be preferred internally since getById checks if the account exists
 async function createAccountObjectFromId(
-  accountId: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  accountId: BufferId
 ): Promise<Account> {
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
-    getBalancesByAccountId(id, session),
-    getAuthDescriptors(id, session),
+    getBalancesByAccountId(session, id),
+    getAuthDescriptors(session, id),
   ]);
   return Object.freeze({
     balances,
@@ -84,17 +84,17 @@ async function createAccountObjectFromId(
 
 //to be preferred internally since getByIds checks if the accounts exist
 async function createAccountObjectsFromIds(
-  accountIds: BufferId[],
-  session: GtxClient
+  session: GtxClient,
+  accountIds: BufferId[]
 ): Promise<Account[]> {
   return await Promise.all(
-    accountIds.map((id) => createAccountObjectFromId(id, session))
+    accountIds.map((id) => createAccountObjectFromId(session, id))
   );
 }
 
 export async function getAuthDescriptors(
-  accountId: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  accountId: BufferId
 ): Promise<AuthDescriptor[]> {
   return await session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
@@ -104,8 +104,8 @@ export async function getAuthDescriptors(
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
 export async function getRateLimit(
-  accountId: BufferId,
-  session: GtxClient
+  session: GtxClient,
+  accountId: BufferId
 ): Promise<RateLimit> {
   const rateLimit = await session.query(
     ...getRateLimitQuery(formatter.ensureBuffer(accountId))

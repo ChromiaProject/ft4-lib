@@ -6,7 +6,6 @@ import { RellOperation } from "postchain-client/built/src/gtx/types";
 import { authDescriptor, FlagsType } from "../account/auth-descriptor";
 import { Account, User } from "../account/types";
 import { ftUserSession } from "../interfaces";
-import { send } from ".";
 import { localStorageSignatureProvider } from "./local-signature-provider";
 
 let vaultUrl = "https://vault-testnet.chromia.com";
@@ -180,7 +179,7 @@ export default class SSO {
 
     validateTransaction(transaction);
 
-    await send(transaction);
+    await transaction.postAndWaitConfirmation();
 
     const accountId = getAccountId(transaction);
 

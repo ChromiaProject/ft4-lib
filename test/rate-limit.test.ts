@@ -26,7 +26,7 @@ describe("Rate Limit", () => {
         name: expect.any(String),
         website: expect.any(String),
         description: expect.any(String),
-        rate_limit_active: true,
+        rate_limit_active: 1,
         rate_limit_max_points: REQUEST_MAX_COUNT,
         rate_limit_recovery_time: RECOVERY_TIME,
         rate_limit_points_at_account_creation: POINTS_AT_ACCOUNT_CREATION,
@@ -72,7 +72,7 @@ describe("Rate Limit", () => {
 
       await expect(
         makeRequests(ft, 4 + POINTS_AT_ACCOUNT_CREATION)
-      ).resolves.toBeUndefined();
+      ).resolves.toBeNull();
       const rateLimit = await ft.get.account.rateLimit(account.id);
       expect(rateLimit.points).toBe(0);
     });
@@ -86,7 +86,7 @@ describe("Rate Limit", () => {
         .build();
       await expect(
         makeRequests(ft, 4 + POINTS_AT_ACCOUNT_CREATION)
-      ).resolves.toBeUndefined();
+      ).resolves.toBeNull();
 
       await expect(makeRequests(ft, 8)).rejects.toBeInstanceOf(Error);
     });
@@ -168,9 +168,10 @@ describe("Rate Limit", () => {
     for (let i = 0; i < requests; i++) {
       users.push(TestUser());
     }
-    const tx = ft.get.gtxClient.newTransaction(
-      users.map((user) => user.signatureProvider.pubKey)
-    );
+    const tx = ft.get.gtxClient.newTransaction([
+      ft.user.signatureProvider.pubKey,
+      ...users.map((user) => user.signatureProvider.pubKey),
+    ]);
     users.forEach((user) => {
       tx.addOperation(
         ...addAuthDescriptorOp(
@@ -184,6 +185,6 @@ describe("Rate Limit", () => {
       [ft.user, ...users].map((user) => tx.sign(user.signatureProvider))
     );
 
-    return tx.post();
+    return tx.postAndWaitConfirmation();
   };
 });

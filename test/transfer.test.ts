@@ -29,7 +29,9 @@ describe("Transfer", () => {
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
-    const account2 = await AccountBuilder.account(_ft).build();
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
 
     await ft.account.token.transfer(
       account1.id,
@@ -61,7 +63,9 @@ describe("Transfer", () => {
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
-    const account2 = await AccountBuilder.account(_ft).build();
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
 
     const promise = ft.account.token.transfer(
       account1.id,
@@ -69,6 +73,7 @@ describe("Transfer", () => {
       asset.id,
       BigInt(10)
     );
+
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
 
@@ -83,7 +88,9 @@ describe("Transfer", () => {
       .withPoints(1)
       .build();
 
-    const account2 = await AccountBuilder.account(_ft).build();
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
 
     const promise = ft.account.token.transfer(
       account1.id,
@@ -116,7 +123,7 @@ describe("Transfer", () => {
     tx.addOperation(...registerOp(authDescriptor));
     await tx.sign(user2.signatureProvider);
     await tx.sign(user3.signatureProvider);
-    await tx.post();
+    await tx.postAndWaitConfirmation();
 
     await ft.account.token.transfer(
       account1.id,

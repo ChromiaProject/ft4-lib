@@ -1,50 +1,50 @@
-/* needs heavy refactoring
 import AccountBuilder from "./util/account-builder";
 import { blockchainAccountId, generateId } from "./util/util";
-import { Asset, AssetBalance, Blockchain } from "../client/lib/ft3";
 import TestUser from "./util/test-user";
-import BlockchainUtil from "./util/blockchain-util";
+import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { Asset } from "../client/lib/ft3/asset/types";
+import { getNewAsset, getUserSession } from "./util/blockchain-util";
 
-let blockchain: Blockchain;
+let _ft: ftUserSession;
 let asset: Asset;
 
 describe.skip("Cross-chain transfer", () => {
   beforeAll(async () => {
-    blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await BlockchainUtil.getNewAsset(blockchain);
+    _ft = await getUserSession();
+    asset = await getNewAsset(_ft);
   });
 
+  /* needs heavy refactoring */
   it("should succeessfully initialize when there's enough balance on the account", async () => {
     const destinationBRID = generateId();
-    const destinationAccountId = generateId();
-    const user = TestUser.singleSig();
+    //const destinationAccountId = generateId();
+    const user = TestUser();
+    const ft = _ft.changeUser(user);
 
-    const account = await AccountBuilder.account(blockchain, user)
+    const account = await AccountBuilder.account(ft)
       .withParticipants([user.signatureProvider])
       .withBalance(asset, 100)
       .withPoints(1)
       .build();
 
-    await account.xcTransfer(
-      destinationBRID,
+    await ft.account.token
+      .xcTransfer
+      /*destinationBRID,
       destinationAccountId,
       asset.id,
-      10
-    );
+      10*/
+      ();
 
-    const accountBalance = await AssetBalance.getByAccountAndAssetId(
+    const accountBalance = await ft.get.balance.by.accountAndAssetId(
       account.id,
-      asset.id,
-      blockchain
+      asset.id
     );
-    const chainBalance = await AssetBalance.getByAccountAndAssetId(
+    const chainBalance = await ft.get.balance.by.accountAndAssetId(
       blockchainAccountId(destinationBRID),
-      asset.id,
-      blockchain
+      asset.id
     );
 
     expect(accountBalance.amount).toEqual(90);
     expect(chainBalance.amount).toEqual(10);
   });
 });
-*/

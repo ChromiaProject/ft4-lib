@@ -26,7 +26,9 @@ describe("Payment history iterator", () => {
       .withPoints(1)
       .build();
 
-    const account2 = await AccountBuilder.account(_ft).build();
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
 
     await ft.account.token.transfer(
       account1.id,
@@ -36,9 +38,9 @@ describe("Payment history iterator", () => {
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
+      ft.get.gtxClient,
       account1.id,
-      5,
-      ft.get.gtxClient
+      5
     );
     const paymentHistoryIterator =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
@@ -51,7 +53,7 @@ describe("Payment history iterator", () => {
 
     //expect(entry.other.length).toEqual(1); entry.other removed as per discussion
     //expect(entry.other.brid).toEqual(blockchain.id); entry no more holds brid
-    expect(entry.isInput).toEqual(false);
+    expect(entry.isInput).toEqual(true);
     expect(entry.transferOutputArgs.length).toEqual(1);
     expect(entry.transferOutputArgs[0].accountId).toEqual(account2.id);
   });
@@ -66,7 +68,9 @@ describe("Payment history iterator", () => {
       .withPoints(2)
       .build();
 
-    const account2 = await AccountBuilder.account(ft).build();
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
 
     await ft.account.token.transfer(
       account1.id,
@@ -82,9 +86,9 @@ describe("Payment history iterator", () => {
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
+      ft.get.gtxClient,
       account1.id,
-      5,
-      ft.get.gtxClient
+      5
     );
     const paymentHistoryIterator =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
@@ -112,9 +116,9 @@ describe("Payment history iterator", () => {
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
+      ft.get.gtxClient,
       account.id,
-      5,
-      ft.get.gtxClient
+      5
     );
     const paymentHistoryIterator =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
@@ -150,7 +154,9 @@ describe("Payment history iterator", () => {
       .withPoints(4)
       .build();
 
-    const account2 = await AccountBuilder.account(ft).build();
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
 
     await ft.account.token.transfer(
       account1.id,
@@ -178,9 +184,9 @@ describe("Payment history iterator", () => {
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
+      ft.get.gtxClient,
       account1.id,
-      2,
-      ft.get.gtxClient
+      2
     );
 
     expect(paymentHistoryStore.getPageCount()).toEqual(2);
@@ -229,7 +235,7 @@ describe("Payment history iterator", () => {
       .withPoints(2)
       .build();
 
-    const account2 = await AccountBuilder.account(blockchain).build();
+    const account2 = await AccountBuilder.account(_ft.changeUser(TestUser())).build();
 
     await ft.account.token.transfer(account1.id, account2.id, asset.id, BigInt(10));
     await account1.xcTransfer(generateId(), generateId(), asset.id, 10);
@@ -254,7 +260,9 @@ describe("Payment history iterator", () => {
         .withPoints(4)
         .build();
 
-      const account2 = await AccountBuilder.account(ft).build();
+      const account2 = await AccountBuilder.account(
+        _ft.changeUser(TestUser())
+      ).build();
 
       await ft.account.token.transfer(
         account1.id,
@@ -282,9 +290,9 @@ describe("Payment history iterator", () => {
       );
 
       const paymentHistoryStore = await createNewPaymentHistoryStoreLocal(
+        ft.get.gtxClient,
         account1.id,
-        2,
-        ft.get.gtxClient
+        2
       );
 
       expect(paymentHistoryStore.getPageCount()).toEqual(2);

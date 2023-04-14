@@ -15,59 +15,69 @@ enum RuleOperator {
 }
 
 export const allow = {
-  ...chooseVariable([]),
+  ...chooseVariable(),
   all: null,
 };
 
-function chooseOperator(start: string[]) {
+function chooseOperator(start: any[], variable: string) {
   return {
     lessThan: (value: number) => {
-      const current = [...start, RuleOperator.LessThan, value.toString()];
+      const current = start
+        ? start.concat([[variable, RuleOperator.LessThan, value]])
+        : [variable, RuleOperator.LessThan, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([...current, "and"]),
+        and: chooseVariable([current, "and"]),
       };
     },
 
     lessOrEqual: (value: number) => {
-      const current = [...start, RuleOperator.LessOrEqual, value.toString()];
+      const current = start
+        ? [start].concat([[variable, RuleOperator.LessOrEqual, value]])
+        : [variable, RuleOperator.LessOrEqual, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([...current, "and"]),
+        and: chooseVariable([current, "and"]),
       };
     },
 
     equals: (value: number) => {
-      const current = [...start, RuleOperator.Equals, value.toString()];
+      const current = start
+        ? start.concat([[variable, RuleOperator.Equals, value]])
+        : [variable, RuleOperator.Equals, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([...current, "and"]),
+        and: chooseVariable([current, "and"]),
       };
     },
 
     greaterOrEqual: (value: number) => {
-      const current = [...start, RuleOperator.GreaterOrEqual, value.toString()];
+      const current = start
+        ? start.concat([[variable, RuleOperator.GreaterOrEqual, value]])
+        : [variable, RuleOperator.GreaterOrEqual, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([...current, "and"]),
+        and: chooseVariable([current, "and"]),
       };
     },
 
     greaterThan: (value: number) => {
-      const current = [...start, RuleOperator.GreaterThen, value.toString()];
+      const current = start
+        ? start.concat([[variable, RuleOperator.GreaterThen, value]])
+        : [variable, RuleOperator.GreaterThen, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([...current, "and"]),
+        and: chooseVariable([current, "and"]),
       };
     },
   };
 }
 
-function chooseVariable(start: string[]) {
+function chooseVariable(start?) {
   return {
-    blockHeight: chooseOperator([...start, RuleVariables.BlockHeight]),
-    blockTime: chooseOperator([...start, RuleVariables.BlockTime]),
-    operationCount: chooseOperator([...start, RuleVariables.OpCount]),
+    blockHeight: chooseOperator(start, RuleVariables.BlockHeight),
+    blockTime: chooseOperator(start, RuleVariables.BlockTime),
+    operationCount: chooseOperator(start, RuleVariables.OpCount),
   };
 }
 

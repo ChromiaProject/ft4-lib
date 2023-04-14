@@ -29,10 +29,12 @@ export function createPaymentHistoryEntry(
       };
     })
   );
+  //eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   return Object.freeze({
     rowid: rowid,
     isInput: isInput,
-    delta: delta,
+    delta: Number(delta), //<-------------NEEDS CHANGE!!!
     asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
     entryIndex: entryIndex,
     data: formatter.ensureBuffer(data),

@@ -2,6 +2,7 @@ import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { Balance } from "../asset/types";
 import { AssetAmount } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
+import { GtvCompatible } from "../utils/gtv";
 
 export type Account = {
   id: Buffer;
@@ -14,13 +15,15 @@ export type XferInput = [
   accountId: Buffer,
   assetId: Buffer,
   authDescriptorId: Buffer,
-  amount: AssetAmount
+  amount: AssetAmount,
+  extra: { [key: string]: GtvCompatible }
 ];
 
 export type XferOutput = [
   accountId: Buffer,
   assetId: Buffer,
-  amount: AssetAmount
+  amount: AssetAmount,
+  extra: { [key: string]: GtvCompatible }
 ];
 
 export type RateLimit = {
