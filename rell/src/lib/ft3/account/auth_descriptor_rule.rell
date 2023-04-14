@@ -159,7 +159,10 @@ function setup_auth_descriptor_variables(account_auth_descriptor) {
  
 function update_variables(account_auth_descriptor, variables: map<text, gtv>) {
 	for ((name, value) in variables) {
-		val variable = auth_descriptor_rule_variable @ { account_auth_descriptor, name };
+		val variable = require(
+			auth_descriptor_rule_variable @? { account_auth_descriptor, name },
+			"No auth descriptor variable found: %s, %s".format(name, integer.from_gtv(value))
+			);
 		val int_value = integer.from_gtv(value);
 		
 		when (name) {
@@ -188,14 +191,14 @@ function variable_value(variable: rule_variable, variables: map<text, gtv>): int
  * Analyze the rules before assigning them to an authenticator descriptor
  */
  function analyze_auth_descriptor_rules(rules: gtv, hop: integer) {
- 	require(hop<3, "too many rules");
+ 	require(hop<3, "Too many rules");
  	val rules_bytes = rules.to_bytes(); 
  	if (rules_bytes == x'a0020500') { // this is "hash(null)" 
 		return;
 	}
 	
  	val params = list<gtv>.from_gtv(rules);
- 	require(params.size() <=3);
+ 	require(params.size() <=3, "Too many params");
  	
  	val operator = text.from_gtv(params[1]);
  	if(operator == "and") {

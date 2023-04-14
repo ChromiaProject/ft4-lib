@@ -39,7 +39,7 @@ query get_asset_by_name(name) {
 }
 
 query get_asset_by_id(asset_id: byte_array) {
-    return core.asset @ {
+    return core.asset @? {
         .id == asset_id
     }(
         id = .id,

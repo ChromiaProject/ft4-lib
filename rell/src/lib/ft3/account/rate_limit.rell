@@ -5,7 +5,10 @@ function rate_limit(account) {
     
     val max_counter = core.my_blockchain_info.rate_limit_max_points;
     val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
-    val stat = rl_state@{account} (.points, .last_update);
+    val stat = require(
+        rl_state@?{account} (.points, .last_update), 
+        "Rate limiter state not found for the account with ID: %s".format(account.id)
+    );
     val delta = op_context.last_block_time - stat.last_update;
     var got_points = 0;
     var update_time = stat.last_update;
@@ -21,7 +24,7 @@ function rate_limit(account) {
         }
     }
     
-    require(stat.points + got_points > 0);
+    require(stat.points + got_points > 0, "Insufficient rate limiter points");
     
     update rl_state @ { account } (
         .points += got_points - 1,

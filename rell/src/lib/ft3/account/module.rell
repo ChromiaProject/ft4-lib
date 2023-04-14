@@ -43,24 +43,16 @@ entity rl_state {
     mutable recovery_time: timestamp;
 }
 
-function _add_auth_descriptor(account, auth_descriptor) {
-     val id = auth_descriptor.hash();
-     
-     analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
 
-     val account_auth_descriptor = create account_auth_descriptor (
-        account, id,
-        auth_descriptor.auth_type,
-        args = auth_descriptor.args.to_gtv().to_bytes(),
-        rules = auth_descriptor.rules.to_gtv().to_bytes()
-     );
-     
-     for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-        require(op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
-        create auth_descriptor_participant(account_auth_descriptor, id = participant);
-     }
-     
-     setup_auth_descriptor_variables(account_auth_descriptor);
+function _add_auth_descriptor(account, auth_descriptor) {
+    require_signed_by_auth_descriptor_participants(auth_descriptor);
+    Unsafe._add_auth_descriptor (account, auth_descriptor);
+}
+
+function require_signed_by_auth_descriptor_participants(auth_descriptor) {
+    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
+       require(op_context.is_signer(participant));
+    }
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
@@ -91,20 +83,8 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
 }
 
 function create_account_with_auth(auth_descriptor): byte_array {
-    require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
-    val id = auth_descriptor.hash();
-    val acc = create account (id);
-    _add_auth_descriptor(
-       acc, auth_descriptor
-    );
-
-    val max_points = core.my_blockchain_info.rate_limit_max_points;
-    val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
-    val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
-    
-    create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
-    
-    return id;
+    require_signed_by_auth_descriptor_participants(auth_descriptor);
+    return Unsafe.create_account_with_auth(auth_descriptor);
 }
 
 function auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
@@ -121,3 +101,47 @@ function account_by_id(id: byte_array) = require(
     account @? { id },
     "Account not found: '%s'".format(id)
 );
+
+namespace Unsafe {
+    //WARNING: doesn't check that the account is being created by the owner(s)
+    function create_account_with_auth(auth_descriptor): byte_array {
+        require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
+        val id = auth_descriptor.hash();
+        val acc = create account (id);
+        _add_auth_descriptor(
+            acc, auth_descriptor
+        );
+        val max_points = core.my_blockchain_info.rate_limit_max_points;
+        val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
+        val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
+        
+        create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+        
+        return id;
+    }
+
+    //WARNING: doesn't check that the auth_descriptor is being added by the participant(s) nor owner(s)
+    function _add_auth_descriptor(account, auth_descriptor) {
+        val id = auth_descriptor.hash();
+        
+        analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+     
+        when (auth_descriptor.auth_type) {
+            "S" -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+            "M" -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        }
+        
+        val account_auth_descriptor = create account_auth_descriptor (
+            account, id,
+            auth_descriptor.auth_type,
+            args = auth_descriptor.args.to_gtv().to_bytes(),
+            rules = auth_descriptor.rules.to_gtv().to_bytes()
+        );
+        
+        for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
+            create auth_descriptor_participant(account_auth_descriptor, id = participant);
+        }
+        
+        setup_auth_descriptor_variables(account_auth_descriptor);
+    }
+}

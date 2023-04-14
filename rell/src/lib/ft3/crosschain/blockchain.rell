@@ -23,5 +23,8 @@ function ensure_blockchain_account(brid: byte_array): acc.account {
 }
 
 function get_blockchain_account(brid: byte_array): acc.account {
-   return acc.account @ { .id == blockchain_account_id(brid) };
+   return require(
+      acc.account @? { .id == blockchain_account_id(brid) },
+      "Account not found"
+   );
 }

@@ -1,0 +1,55 @@
+@test module;
+
+import ^.utils;
+import acc: ^^^.lib.ft3.account;
+import ^^^.lib.ft3.operations.dev_op_account;
+
+val alice = rell.test.keypairs.alice;
+val bob = rell.test.keypairs.bob;
+
+function test_an_account_can_be_created() {
+  val auth_descriptor = utils.create_auth_descriptor(alice.pub);
+  
+  dev_op_account.dev_register_account(auth_descriptor)
+      .sign(alice)
+      .run();
+  
+  assert_equals(acc.account @ {}( .id ), auth_descriptor.hash());
+}
+
+function test_multi_sig_auth_descriptor_can_be_added() {
+  val auth_descriptor = acc.auth_descriptor(
+    "M",
+    [
+        ["T"].to_gtv(),
+        0x2.to_gtv(),
+        [
+          alice.pub.to_hex(),
+          bob.pub.to_hex()
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  dev_op_account.dev_register_account(auth_descriptor)
+      .sign([alice, bob])
+      .run();
+
+  assert_equals(acc.account_auth_descriptor @ {}( .id ), auth_descriptor.hash());
+}
+
+function test_an_invalid_descriptor_can_not_be_added() {
+  val auth_descriptor = acc.auth_descriptor(
+    "M",
+    [
+        ["T"].to_gtv(),
+        alice.pub.to_hex().to_gtv(),
+        bob.pub.to_hex().to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  dev_op_account.dev_register_account(auth_descriptor)
+      .sign([alice, bob])
+      .run_must_fail();
+}
