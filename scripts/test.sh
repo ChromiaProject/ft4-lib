@@ -55,4 +55,4 @@ if [ "$test" ]; then
     opts="$opts ${test%?}"
 fi
 
-npm run test:rell && npm run test:js -- $opts --exit-on-error
+npm run test:js -- $opts --exit-on-error && npm run test:rell
