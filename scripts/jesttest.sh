@@ -19,6 +19,15 @@ opt=
 test_string=
 while :; do
     case $1 in
+        -f|--file)
+            if [ "$2" ]; then
+                opt="$opt --runTestsByPath $2"
+                shift
+            else
+                echo 'ERROR: "--file" requires a non-empty option argument.'
+                exit 1
+            fi
+            ;;
         --file=?*)
             opt="$opt --runTestsByPath ${1#*=}"
             ;;

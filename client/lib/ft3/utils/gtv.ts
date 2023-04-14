@@ -36,6 +36,10 @@ Number.prototype.encodeGtv = function (): RawGtv {
   return this;
 };
 
+BigInt.prototype.encodeGtv = function (): RawGtv {
+  return this;
+};
+
 Boolean.prototype.encodeGtv = function (): RawGtv {
   return this ? 1 : 0;
 };

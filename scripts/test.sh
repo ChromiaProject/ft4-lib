@@ -49,6 +49,7 @@ done
 opts=""
 if [ "$file" ]; then
     opts="--file=$file"
+    echo $opts
 fi
 if [ "$test" ]; then
     opts="$opts ${test%?}"

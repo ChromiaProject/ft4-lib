@@ -8,43 +8,39 @@ import { getAuthDescriptorId } from "../client/lib/ft3/account/auth-descriptor";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft3/account/auth-descriptor/rules";
 
-let ft: ftUserSession;
+let _ft: ftUserSession;
 let asset: Asset;
 
 function sourceAccount(user: User): Promise<Account> {
-  return AccountBuilder.account(ft.changeUser(user))
+  return AccountBuilder.account(_ft.changeUser(user))
     .withBalance(asset, 200)
     .withPoints(5)
     .build();
 }
 
 function destinationAccount(): Promise<Account> {
-  return AccountBuilder.account(ft).build();
+  return AccountBuilder.account(_ft.changeUser(testUser())).build();
 }
 
 async function addAuthDescriptorTo(
   account: Account,
   adminUser: User,
-  user: User,
-  ft: ftUserSession
+  user: User
 ) {
-  await ft
-    .changeUser(adminUser)
-    .account.authDescriptor.add(user.authDescriptor, account.id);
+  await _ft.changeUser(adminUser).account.authDescriptor.add(user, account.id);
 }
 
 async function getUserAndAccountFromAuthDescriptorRule(
-  rule: AuthDescriptorRule,
-  ft: ftUserSession
+  rule: AuthDescriptorRule
 ): Promise<[User, Account]> {
   //to be used when you don't need the admin user
   const user1 = testUser();
   const user2 = testUser(rule);
   const account = await sourceAccount(user1);
 
-  await addAuthDescriptorTo(account, user1, user2, ft);
+  await addAuthDescriptorTo(account, user1, user2);
 
-  const accounts = await ft.get.account.by.authDescriptorId(
+  const accounts = await _ft.get.account.by.authDescriptorId(
     getAuthDescriptorId(user2.authDescriptor)
   );
   if (accounts.length > 1) throw new Error("Found more than one account");
@@ -54,15 +50,17 @@ async function getUserAndAccountFromAuthDescriptorRule(
 
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
-    ft = await getUserSession();
-    asset = await getNewAsset(ft);
+    _ft = await getUserSession();
+    asset = await getNewAsset(_ft);
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.operationCount.lessOrEqual(2).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.operationCount.lessOrEqual(2).only
+      );
+    const ft = _ft.changeUser(limitedUser);
+
     const account2 = await destinationAccount();
 
     const op1Promise = ft.account.token.transfer(
@@ -83,10 +81,12 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when number of called operations is greater than value set by operation count rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.operationCount.lessThan(2).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.operationCount.lessThan(2).only
+      );
+    const ft = _ft.changeUser(limitedUser);
+
     const account2 = await destinationAccount();
 
     const op1Promise = ft.account.token.transfer(
@@ -107,10 +107,12 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockTime.lessThan(Date.now() - 10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockTime.lessThan(Date.now() - 10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
+
     const account2 = await destinationAccount();
 
     const opPromise = ft.account.token.transfer(
@@ -123,10 +125,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current time is less than time defined by 'less than' block time rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockTime.lessThan(Date.now() + 10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockTime.lessThan(Date.now() + 10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -140,10 +143,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current block height is less than value defined by 'less than' block height rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockHeight.lessThan(10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockHeight.lessThan(10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -157,10 +161,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockHeight.lessThan(1).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockHeight.lessThan(1).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -174,10 +179,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockTime.greaterThan(Date.now() + 10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockTime.greaterThan(Date.now() + 10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -191,10 +197,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockTime.greaterThan(Date.now() - 10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockTime.greaterThan(Date.now() - 10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -208,10 +215,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockHeight.greaterThan(10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -225,10 +233,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after block defined by 'greater than' block height rule", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(1).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockHeight.greaterThan(1).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -242,10 +251,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should be able to create complex rules", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -259,10 +269,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(
+        allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only
+      );
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -279,10 +290,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      rules,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(rules);
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -299,10 +309,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
-    const [, account] = await getUserAndAccountFromAuthDescriptorRule(
-      rules,
-      ft
-    );
+    const [limitedUser, account] =
+      await getUserAndAccountFromAuthDescriptorRule(rules);
+    const ft = _ft.changeUser(limitedUser);
 
     const account2 = await destinationAccount();
 
@@ -323,15 +332,14 @@ describe("Auth Descriptor Rule", () => {
     const destAccount = await destinationAccount();
 
     // add expiring auth descriptor to the account
-    await addAuthDescriptorTo(srcAccount1, user1, user2, ft);
+    await addAuthDescriptorTo(srcAccount1, user1, user2);
 
-    // get the same account, but initialized with user2
+    // get the session initialized with user2
     // object which contains expiring auth descriptor
-    const ft2 = ft.changeUser(user2);
-    const srcAccount2 = await ft2.get.account.by.id(srcAccount1.id);
+    const ft2 = _ft.changeUser(user2);
 
     await ft2.account.token.transfer(
-      srcAccount2.id,
+      srcAccount1.id,
       destAccount.id,
       asset.id,
       BigInt(10)
@@ -341,14 +349,16 @@ describe("Auth Descriptor Rule", () => {
     // this operation call will delete it.
     // any other operation, which calls require_auth internally
     // would also delete expired auth descriptor.
-    await ft2.account.token.transfer(
-      srcAccount1.id,
-      destAccount.id,
-      asset.id,
-      BigInt(30)
-    );
+    await _ft
+      .changeUser(user1)
+      .account.token.transfer(
+        srcAccount1.id,
+        destAccount.id,
+        asset.id,
+        BigInt(30)
+      );
 
-    srcAccount1 = await ft.get.account.by.id(srcAccount1.id);
+    srcAccount1 = await _ft.get.account.by.id(srcAccount1.id);
 
     expect(srcAccount1.authDescriptors.length).toEqual(1);
   });
@@ -361,17 +371,16 @@ describe("Auth Descriptor Rule", () => {
     const destAccount = await destinationAccount();
 
     // add expiring auth descriptor to the account
-    await addAuthDescriptorTo(srcAccount1, user1, user2, ft);
+    await addAuthDescriptorTo(srcAccount1, user1, user2);
 
-    // get the same account, but initialized with user2
+    // get the session initialized with user2
     // object which contains expiring auth descriptor
-    const ft2 = ft.changeUser(user2);
-    const srcAccount2 = await ft2.get.account.by.id(srcAccount1.id);
+    const ft2 = _ft.changeUser(user2);
 
     // perform transfer with expiring auth descriptor.
     // auth descriptor didn't expire, because it's only used 1 out of 10 times.
     await ft2.account.token.transfer(
-      srcAccount2.id,
+      srcAccount1.id,
       destAccount.id,
       asset.id,
       BigInt(10)
@@ -385,7 +394,7 @@ describe("Auth Descriptor Rule", () => {
       BigInt(10)
     );
 
-    srcAccount1 = await ft.get.account.by.id(srcAccount1.id);
+    srcAccount1 = await _ft.get.account.by.id(srcAccount1.id);
 
     expect(srcAccount1.authDescriptors.length).toEqual(2);
   });
@@ -398,28 +407,29 @@ describe("Auth Descriptor Rule", () => {
     let srcAccount1 = await sourceAccount(user1);
     const destAccount = await destinationAccount();
 
-    await addAuthDescriptorTo(srcAccount1, user1, user2, ft);
-    await addAuthDescriptorTo(srcAccount1, user1, user3, ft);
+    await addAuthDescriptorTo(srcAccount1, user1, user2);
+    await addAuthDescriptorTo(srcAccount1, user1, user3);
 
-    const ft2 = ft.changeUser(user2);
-    const srcAccount2 = await ft2.get.account.by.id(srcAccount1.id);
+    const ft2 = _ft.changeUser(user2);
 
     await ft2.account.token.transfer(
-      srcAccount2.id,
+      srcAccount1.id,
       destAccount.id,
       asset.id,
       BigInt(50)
     );
 
     // this call will trigger deletion of expired auth descriptor (attached to user2)
-    await ft2.account.token.transfer(
-      srcAccount1.id,
-      destAccount.id,
-      asset.id,
-      BigInt(100)
-    );
+    await _ft
+      .changeUser(user1)
+      .account.token.transfer(
+        srcAccount1.id,
+        destAccount.id,
+        asset.id,
+        BigInt(100)
+      );
 
-    srcAccount1 = await ft.get.account.by.id(srcAccount1.id);
+    srcAccount1 = await _ft.get.account.by.id(srcAccount1.id);
 
     expect(srcAccount1.authDescriptors.length).toEqual(2);
   });
@@ -431,10 +441,10 @@ describe("Auth Descriptor Rule", () => {
 
     let account = await sourceAccount(user1);
 
-    await addAuthDescriptorTo(account, user1, user2, ft);
-    await addAuthDescriptorTo(account, user1, user3, ft);
+    await addAuthDescriptorTo(account, user1, user2);
+    await addAuthDescriptorTo(account, user1, user3);
 
-    account = await ft.get.account.by.id(account.id);
+    account = await _ft.get.account.by.id(account.id);
 
     expect(account.authDescriptors.length).toEqual(3);
   });
@@ -443,18 +453,22 @@ describe("Auth Descriptor Rule", () => {
     const user1 = testUser();
     const user2 = testUser(allow.operationCount.lessOrEqual(1).only);
     const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
-    let account = await sourceAccount(user1);
-    await addAuthDescriptorTo(account, user1, user2, ft);
-    await addAuthDescriptorTo(account, user1, user3, ft);
 
-    await ft.account.authDescriptor.deleteAllExcluding(
-      getAuthDescriptorId(user1.authDescriptor),
-      account.id
-    );
+    let account = await sourceAccount(user1);
+    await addAuthDescriptorTo(account, user1, user2);
+    await addAuthDescriptorTo(account, user1, user3);
+    account = await _ft.get.account.by.id(account.id);
+
+    await _ft
+      .changeUser(user1)
+      .account.authDescriptor.deleteAllExcluding(
+        getAuthDescriptorId(user1.authDescriptor),
+        account.id
+      );
 
     expect(account.authDescriptors.length).toEqual(3);
 
-    account = await ft.get.account.by.id(account.id);
+    account = await _ft.get.account.by.id(account.id);
 
     expect(account.authDescriptors.length).toEqual(1);
   });
@@ -466,10 +480,12 @@ describe("Auth Descriptor Rule", () => {
     const account1 = await sourceAccount(user1);
     await sourceAccount(user2);
 
-    const promise = ft.account.authDescriptor.delete(
-      getAuthDescriptorId(user2.authDescriptor),
-      account1.id
-    );
+    const promise = _ft
+      .changeUser(user1)
+      .account.authDescriptor.delete(
+        getAuthDescriptorId(user2.authDescriptor),
+        account1.id
+      );
     await expect(promise).rejects.toThrowError();
   });
 
@@ -479,13 +495,15 @@ describe("Auth Descriptor Rule", () => {
 
     let account = await sourceAccount(user1);
 
-    await addAuthDescriptorTo(account, user1, user2, ft);
-    await ft.account.authDescriptor.delete(
-      getAuthDescriptorId(user2.authDescriptor),
-      account.id
-    );
+    await addAuthDescriptorTo(account, user1, user2);
+    await _ft
+      .changeUser(user1)
+      .account.authDescriptor.delete(
+        getAuthDescriptorId(user2.authDescriptor),
+        account.id
+      );
 
-    account = await ft.get.account.by.id(account.id);
+    account = await _ft.get.account.by.id(account.id);
     expect(account.authDescriptors.length).toEqual(1);
   });
 
@@ -500,7 +518,7 @@ describe("Auth Descriptor Rule", () => {
     const account = await sourceAccount(user1);
 
     await expect(
-      addAuthDescriptorTo(account, user1, user2, ft)
+      addAuthDescriptorTo(account, user1, user2)
     ).resolves.toBeUndefined();
   });
 
@@ -518,7 +536,7 @@ describe("Auth Descriptor Rule", () => {
     const account = await sourceAccount(user1);
 
     await expect(
-      addAuthDescriptorTo(account, user1, user2, ft)
+      addAuthDescriptorTo(account, user1, user2)
     ).rejects.toThrowError();
   });
 
