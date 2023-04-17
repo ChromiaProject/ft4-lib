@@ -63,7 +63,7 @@ if [ "$test_string" ]; then
     opt="$opt -t ${test_string%?}"
 fi
 
-docker-compose -f dockers/jest-test.yml up -d
+docker-compose -f dockers/jest-test.yml up -d && sleep 15
 if test $? -eq 0
 then
     echo "\n> npx jest " "$opt" "\n"
