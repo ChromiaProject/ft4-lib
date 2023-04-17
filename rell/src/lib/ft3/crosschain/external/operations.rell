@@ -6,7 +6,7 @@ operation link_chain(brid: byte_array) {
 }
 
 operation init_xfer(source: ft3.xfer_input, target: xc.xc_target, hops: list<byte_array>) {
-    ft3.consume_input(source, 0, map<ft3.asset, integer>());
+    //ft3.consume_input(source, 0, map<ft3.asset, integer>());
     val asset = require(
         ft3.asset @? { .id == source.asset_id }, 
         "Asset not found '%s'".format(source.asset_id)

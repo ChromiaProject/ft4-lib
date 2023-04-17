@@ -26,6 +26,7 @@ import { AuthDescriptor } from "./auth-descriptor/types";
 import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
 import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
+import { deriveAccountId } from "./auth-descriptor";
 
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
@@ -45,6 +46,8 @@ export const accountQuerySession = (pci: GtxClient) =>
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),
     rateLimit: (accountId: BufferId) => getRateLimit(pci, accountId),
+    idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) =>
+      deriveAccountId(firstAuthDescriptor),
   });
 
 export const accountUserSession = (user: User, pci: GtxClient) =>

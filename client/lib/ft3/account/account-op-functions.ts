@@ -51,7 +51,7 @@ export async function ssoRawTransactionRegister(
   // @ts-ignore
   tx.addOperation(
     ...addAuthDescriptorOp(
-      authDesc.getId(user.authDescriptor),
+      authDesc.deriveAccountId(user.authDescriptor),
       authDesc.getId(user.authDescriptor),
       newAuthDesc
     )

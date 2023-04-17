@@ -18,7 +18,11 @@ export function hashAuthDescriptor(ad: AuthDescriptor) {
 }
 
 export function getAuthDescriptorId(ad: AuthDescriptor): Buffer {
-  return gtv.gtvHash(ad);
+  return hashAuthDescriptor(ad);
+}
+
+export function deriveAccountId(firstAuthDescriptor: AuthDescriptor): Buffer {
+  return hashAuthDescriptor(firstAuthDescriptor);
 }
 
 export function getAuthDescriptorSigners(ad: AuthDescriptor): Buffer[] {
@@ -37,5 +41,6 @@ export const authDescriptor = {
   allow,
   getSigners: getAuthDescriptorSigners,
   getId: getAuthDescriptorId,
+  deriveAccountId,
   hash: hashAuthDescriptor,
 };

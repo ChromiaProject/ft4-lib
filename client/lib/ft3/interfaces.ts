@@ -112,5 +112,6 @@ export interface ftQuerySession {
       authDescriptorid: BufferId
     ) => Promise<boolean>;
     rateLimit: (accountId: BufferId) => Promise<RateLimit>;
+    idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) => Buffer;
   };
 }
