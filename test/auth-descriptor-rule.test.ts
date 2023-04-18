@@ -4,7 +4,6 @@ import { ftUserSession } from "../client/lib/ft3/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { Account, User } from "../client/lib/ft3/account/types";
 import { AuthDescriptorRule } from "../client/lib/ft3/account/auth-descriptor/types";
-import { getAuthDescriptorId } from "../client/lib/ft3/account/auth-descriptor";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft3/account/auth-descriptor/rules";
 
@@ -41,7 +40,7 @@ async function getUserAndAccountFromAuthDescriptorRule(
   await addAuthDescriptorTo(account, user1, user2);
 
   const accounts = await _ft.get.account.by.authDescriptorId(
-    getAuthDescriptorId(user2.authDescriptor)
+    user2.authDescriptor.id
   );
   if (accounts.length > 1) throw new Error("Found more than one account");
 
@@ -462,7 +461,7 @@ describe("Auth Descriptor Rule", () => {
     await _ft
       .changeUser(user1)
       .account.authDescriptor.deleteAllExcluding(
-        getAuthDescriptorId(user1.authDescriptor),
+        user1.authDescriptor.id,
         account.id
       );
 
@@ -482,10 +481,7 @@ describe("Auth Descriptor Rule", () => {
 
     const promise = _ft
       .changeUser(user1)
-      .account.authDescriptor.delete(
-        getAuthDescriptorId(user2.authDescriptor),
-        account1.id
-      );
+      .account.authDescriptor.delete(user2.authDescriptor.id, account1.id);
     await expect(promise).rejects.toThrowError();
   });
 
@@ -498,10 +494,7 @@ describe("Auth Descriptor Rule", () => {
     await addAuthDescriptorTo(account, user1, user2);
     await _ft
       .changeUser(user1)
-      .account.authDescriptor.delete(
-        getAuthDescriptorId(user2.authDescriptor),
-        account.id
-      );
+      .account.authDescriptor.delete(user2.authDescriptor.id, account.id);
 
     account = await _ft.get.account.by.id(account.id);
     expect(account.authDescriptors.length).toEqual(1);

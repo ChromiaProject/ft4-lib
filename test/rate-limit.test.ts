@@ -1,5 +1,4 @@
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
-import { getAuthDescriptorId } from "../client/lib/ft3/account/auth-descriptor";
 import { User } from "../client/lib/ft3/account/types";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
@@ -175,8 +174,8 @@ describe("Rate Limit", () => {
     users.forEach((user) => {
       tx.addOperation(
         ...addAuthDescriptorOp(
-          getAuthDescriptorId(ft.user.authDescriptor),
-          getAuthDescriptorId(ft.user.authDescriptor),
+          ft.user.authDescriptor.id,
+          ft.user.authDescriptor.id,
           user.authDescriptor
         )
       );

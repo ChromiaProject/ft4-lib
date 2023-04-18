@@ -9,10 +9,11 @@ import {
 } from "./account-queries";
 import { Account, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { AuthDescriptor } from "./auth-descriptor/types";
 import { getChainInfo } from "../utils";
 import { getBalancesByAccountId } from "../asset/asset-query-functions";
 import { formatter } from "postchain-client";
+import { GtvAuthDescriptor } from "./auth-descriptor/types";
+import { authDescriptor as authDesc } from "./auth-descriptor";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -77,7 +78,7 @@ async function createAccountObjectFromId(
   ]);
   return Object.freeze({
     balances,
-    authDescriptors,
+    authDescriptors: authDescriptors.map((ad) => authDesc.fromGtv(ad)),
     id,
   });
 }
@@ -95,7 +96,7 @@ async function createAccountObjectsFromIds(
 export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
-): Promise<AuthDescriptor[]> {
+): Promise<GtvAuthDescriptor[]> {
   return await session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );

@@ -1,9 +1,11 @@
 import { op } from "../utils";
 import { Operation } from "../utils/types";
+import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
 
 export function registerOp(authDescriptor: AuthDescriptor): Operation {
-  return op("ft3.dev_register_account", authDescriptor);
+  const ad = authDesc.toGtv(authDescriptor);
+  return op("ft3.dev_register_account", ...ad);
 }
 
 // one operation that updates the counter of rate limit of the account but does not cost points
