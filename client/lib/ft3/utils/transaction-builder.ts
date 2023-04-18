@@ -73,7 +73,8 @@ export function transactionBuilder(
 
   async function buildSigned(signers: Buffer[] | undefined = undefined) {
     const participants = signers ? signers : user.authDescriptor.signers;
-    return this.build(participants).sign(user.signatureProvider);
+    const tx = await this.build(participants);
+    return await tx.sign(user.signatureProvider);
   }
 
   const context: Partial<TransactionBuilder> = {
