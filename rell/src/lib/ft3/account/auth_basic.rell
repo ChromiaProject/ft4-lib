@@ -108,7 +108,8 @@ function require_auth(account, account_auth_descriptor, required_flags: list<tex
 	val result: u.validation_result = check_auth_args(
        		account_auth_descriptor.auth_type,
        		account_auth_descriptor.args,
-       		auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
+            get_participants(account_auth_descriptor.auth_type, account_auth_descriptor.args),
+       		//auth_descriptor_participant @* { account_auth_descriptor } ( .id ),
        		required_flags
 	);
 
@@ -116,4 +117,16 @@ function require_auth(account, account_auth_descriptor, required_flags: list<tex
 
     update_auth_descriptor_rule_variables(account_auth_descriptor);
     delete_expired_auth_descriptors(account);
+}
+
+function get_participants(a_t: text, args: byte_array): list<byte_array>{
+    var participants: list<byte_array>? = null;
+    if (a_t == "S"){
+        participants = [single_sig_args.from_bytes(args).pubkey];
+    }
+    if (a_t == "M") {
+        participants = multi_sig_args.from_bytes(args).pubkeys;
+    }
+    //TODO: add extendable callback for custom types
+    return require(participants, "Unknown auth_descriptor type"); // or return empty list?
 }

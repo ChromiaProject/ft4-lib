@@ -4,6 +4,7 @@
 .DS_STORE
 .idea/*
 .project
+.vscode/*
 
 db.log
 

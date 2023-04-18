@@ -1,4 +1,4 @@
-import { util, gtv } from "postchain-client";
+import { encryption, gtv } from "postchain-client";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -9,7 +9,7 @@ function generateAssetName(prefix = "CHROMA"): string {
 }
 
 function generateId(): Buffer {
-  return util.hash256(`${generateNumber()}`);
+  return encryption.hash256(Buffer.from(`${generateNumber()}`));
 }
 
 function blockchainAccountId(brid: Buffer) {

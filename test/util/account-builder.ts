@@ -1,39 +1,30 @@
-import {
-  FlagsType,
-  Account,
-  MutableAccount,
-  StaticAccount,
-  SignatureProvider,
-  InMemorySignatureProvider,
-  Asset,
-  User,
-  SingleSignatureAuthDescriptor,
-  MultiSignatureAuthDescriptor,
-  AssetBalance,
-  Blockchain,
-  RateLimit,
-} from "../../client/lib/ft3";
-import TestUser from "./test-user";
+import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
+import { FlagsType } from "../../client/lib/ft3/account/auth-descriptor";
+import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
+import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import { Account } from "../../client/lib/ft3/account/types";
+import { Asset, Balance } from "../../client/lib/ft3/asset/types";
+import { ftUserSession } from "../../client/lib/ft3/interfaces";
+import { gtx } from "postchain-client";
 
 class AccountBuilder {
-  private blockchain: Blockchain;
-  private user: User;
-  private balances: AssetBalance[] = [];
-  private participants: SignatureProvider[] = [new InMemorySignatureProvider()];
+  private session: ftUserSession;
+  private balances: Balance[] = [];
+  private rules: AuthDescriptorRule | null = null;
+  private participants: SignatureProvider[] = [gtx.newSignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points = 0;
+  private getUserFromSession = true;
 
-  constructor(blockchain: Blockchain, user: User = TestUser.singleSig()) {
-    this.blockchain = blockchain;
-    this.participants = [user.signatureProvider];
-    this.user = user;
+  constructor(session: ftUserSession) {
+    this.session = session;
+    this.participants = [session.user.signatureProvider];
   }
 
   /* Public functions */
-
-  static account(blockchain: Blockchain, user?: User): AccountBuilder {
-    return new AccountBuilder(blockchain, user);
+  static account(session: ftUserSession): AccountBuilder {
+    return new AccountBuilder(session);
   }
 
   withAuthFlags(flags: FlagsType[]): AccountBuilder {
@@ -42,16 +33,22 @@ class AccountBuilder {
   }
 
   withParticipants(participants: SignatureProvider[]): AccountBuilder {
+    this.getUserFromSession = false;
     this.participants = participants;
     return this;
   }
 
-  withBalance(asset: Asset, amount: number): AccountBuilder {
-    this.balances.push(new AssetBalance(amount, asset));
+  withRules(rules: AuthDescriptorRule): AccountBuilder {
+    this.rules = rules;
     return this;
   }
 
-  withBalances(balances: AssetBalance[]): AccountBuilder {
+  withBalance(asset: Asset, amount: number | bigint): AccountBuilder {
+    this.balances.push({ amount: BigInt(amount), asset });
+    return this;
+  }
+
+  withBalances(balances: Balance[]): AccountBuilder {
     this.balances = this.balances.concat(balances);
     return this;
   }
@@ -66,51 +63,27 @@ class AccountBuilder {
     return this;
   }
 
-  async build(): Promise<MutableAccount> {
+  async build(): Promise<Account> {
     const account = await this.registerAccount();
-
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
-    await account.sync();
-
-    return account;
-  }
-
-  async buildStatic(): Promise<StaticAccount> {
-    const account = await this.registerStaticAccount();
-
-    await this.addBalanceIfNeeded(account);
-    await this.addPointsIfNeeded(account);
-    await account.sync();
-
-    return account;
+    return await this.session.get.account.by.id(account.id);
   }
 
   /* Private functions */
 
-  private async registerAccount(): Promise<MutableAccount> {
-    return await MutableAccount.register(
-      this.getAuthDescriptor(),
-      this.blockchain.newSession(this.user)
-    );
-  }
-
-  private async registerStaticAccount(): Promise<StaticAccount> {
-    return await StaticAccount.register(
-      this.getAuthDescriptor(),
-      this.blockchain.newSession(this.user)
-    );
+  private async registerAccount(): Promise<Account> {
+    return await this.session.account.dev.register(this.getAuthDescriptor());
   }
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
       await Promise.all(
         this.balances.map(async (balance) => {
-          await AssetBalance.giveBalance(
-            account.id,
+          await this.session.balance.dev.give(
             balance.asset.id,
-            balance.amount,
-            this.blockchain
+            account.id,
+            balance.amount
           );
         })
       );
@@ -119,7 +92,7 @@ class AccountBuilder {
 
   private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
-      await RateLimit.givePoints(account.id, this.points, this.blockchain);
+      await this.session.account.dev.givePoints(account.id, this.points);
     }
   }
 
@@ -129,21 +102,22 @@ class AccountBuilder {
         "Number of required signatures has to be less than number of participants"
       );
     }
-
+    if (this.getUserFromSession) {
+      return this.session.user.authDescriptor;
+    }
     if (this.participants.length > 1) {
-      return new MultiSignatureAuthDescriptor(
-        this.participants.map((participant) => participant.pubKey),
-        this.requiredSignaturesCount,
-        this.flags,
-        this.user.authDescriptor.rule
-      );
+      return create.multiSig
+        .withArgs(
+          this.flags,
+          this.requiredSignaturesCount,
+          this.participants.map((participant) => participant.pubKey)
+        )
+        .andRules(this.rules);
     } else {
       const [participant] = this.participants;
-      return new SingleSignatureAuthDescriptor(
-        participant.pubKey,
-        this.flags,
-        this.user.authDescriptor.rule
-      );
+      return create.singleSig
+        .withArgs(this.flags, participant.pubKey)
+        .andRules(this.rules);
     }
   }
 }

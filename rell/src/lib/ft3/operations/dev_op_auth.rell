@@ -24,7 +24,7 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
           .id == auth_descriptor_id,
           .account == account
     };
-    val participants = acc.auth_descriptor_participant @* { .account_auth_descriptor == acc_auth_desc } ( .id );
+    val participants = acc.get_participants(acc_auth_desc.auth_type, acc_auth_desc.args);//acc.auth_descriptor_participant @* { .account_auth_descriptor == acc_auth_desc } ( .id );
 
     val result = acc.check_auth_args(
        		acc_auth_desc.auth_type,

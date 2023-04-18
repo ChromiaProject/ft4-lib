@@ -8,4 +8,92 @@ import acc: ^.account;
     op_index: integer;
     is_input: boolean;
     entry_index: integer;
+    transfer_args: byte_array;
+}
+
+function extract_data_from_payment_history_list(
+        entries: list<payment_history_entry>
+    ): list<(data:gtv,rowid:rowid)> {
+    return entries @* {} (
+        data = (
+            id = '%d'.format(.rowid),
+            delta = .delta,
+            asset = .asset.name,
+            asset_id = .asset.id,
+            is_input = .is_input,
+            timestamp = .transaction.block.timestamp,
+            block_height = .transaction.block.block_height,
+            entry_index = .entry_index,
+            transfer_args = .transfer_args,
+            tx_rid = .transaction.tx_rid,
+            tx_data = .transaction.tx_data
+        ).to_gtv(),
+        rowid = .rowid
+    );
+}
+
+function get_paginated_payments(account_id: byte_array, page_cursor) {
+    val entries = payment_history_entry @* {
+            acc.account @ { account_id },
+            if(page_cursor.before_rowid??)(.rowid < page_cursor.before_rowid!!) else true
+        } (@sort_desc @omit .rowid, $) limit fetch_data_size(page_cursor);
+    return extract_data_from_payment_history_list(entries) @* {} (
+        pagination_result(
+            data = .data,
+            rowid = .rowid
+        )
+    );
+}
+
+struct page_cursor {
+    page_size: integer;
+    before_rowid: rowid? = null;
+}
+
+struct pagination_result {
+    data: gtv;
+    rowid: rowid;
+}
+
+val MAX_PAGE_SIZE = 100;
+
+function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
+
+function decode_cursor(cursor: text) = page_cursor.from_bytes(byte_array.from_base64(cursor));
+
+function fetch_data_size(page_cursor) = min(MAX_PAGE_SIZE, page_cursor.page_size) + 1;
+
+struct paged_result {
+    next_cursor: text?;
+    data: list<gtv>;
+}
+
+function null_page() = paged_result(
+    next_cursor = null,
+    data = list<gtv>()
+);
+
+
+function make_page(pagination_results: list<pagination_result>, cursor: page_cursor): paged_result {
+    if(empty(pagination_results)) {
+         return null_page();
+    }
+    // adding +1 should help with next page null situation when current page size
+    // is equal to max page size
+    if(pagination_results.size() < fetch_data_size(cursor)) {
+        return paged_result(
+            next_cursor = null,
+            data = pagination_results  @* {} .data
+        );
+    }
+    val paginated_result = pagination_results.sub(0, pagination_results.size()-1);
+    val next_id = pagination_results[pagination_results.size()-2].rowid;
+    val next_cursor = page_cursor(
+        cursor.page_size,
+        next_id
+    );
+    return paged_result(
+        next_cursor = encode_cursor(next_cursor),
+        data = paginated_result  @* {} .data
+    );
 }

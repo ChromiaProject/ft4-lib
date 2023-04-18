@@ -1,40 +1,14 @@
+import { logger } from "postchain-client";
 import { version } from "../../../package.json";
-import { util } from "postchain-client";
+import { createQuerySession, createUserSession } from "./ft-session";
+import { authDescriptor } from "./account/auth-descriptor";
 
-export * from "../cryptoUtils";
-export * from "./user/account-utils";
-export { default as MutableAccount } from "./user/mutable-account";
-export { default as StaticAccount } from "./user/static-account";
-export * from "./user/account-operations";
-export * from "./user/auth-descriptor";
-export { default as User } from "./user/user";
-export { default as ConnectionClient } from "./core/connection-client";
-export { default as AssetBalance } from "./user/asset-balance";
-export { default as Asset } from "./user/asset";
-export { default as BlockchainInfo } from "./core/blockchain/blockchain-info";
-export { default as RateLimitInfo } from "./core/blockchain/rate-limit-info";
-export { default as Blockchain } from "./core/blockchain/blockchain";
-export { default as BlockchainSession } from "./core/blockchain/blockchain-session";
-export { default as DirectoryService } from "./core/blockchain/directory-service";
-export { default as DirectoryServiceBase } from "./core/blockchain/directory-service-base";
-export { default as ChainConnectionInfo } from "./core/chain-connection-info";
-export { default as Operation } from "./core/operation";
-export { default as PaymentHistorySyncManager } from "./user/payment-history/payment-history-sync-manager";
-export { default as PaymentHistoryStoreMemory } from "./user/payment-history/payment-history-store-memory";
-export { default as PaymentHistoryStoreLocalStorage } from "./user/payment-history/payment-history-store-local-storage";
-export { default as RateLimit } from "./user/rate-limit";
-export { default as Postchain } from "./core/postchain";
-export { default as SignatureProvider } from "./user/signature-provider";
-export { default as SSO } from "./user/sso";
-export { default as Transaction } from "./core/transaction";
-export { GtvEncodable, GtvEncoded, encodeGtv } from "./core/gtv";
-export { default as TransactionBuilder } from "./core/transaction-builder";
-export * from "./user/signature-provider";
-export * from "./user/sso";
-export function getClientVersion() {
-  return version;
-}
-export function setLogLevel(level: number) {
-  util.setLogLevel(level);
-}
-util.setLogLevel(0);
+export const ft = Object.freeze({
+  getClientVersion: () => version,
+  setLogLevel: logger.setLogLevel,
+  createUserSession,
+  createQuerySession,
+  authDescriptor,
+});
+
+ft.setLogLevel(0);

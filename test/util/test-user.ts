@@ -1,21 +1,17 @@
+import { gtx } from "postchain-client";
 import {
+  authDescriptor,
   FlagsType,
-  InMemorySignatureProvider,
-  User,
-  SingleSignatureAuthDescriptor,
-} from "../../client/lib/ft3";
-import AuthDescriptorRule from "../../client/lib/ft3/user/auth-descriptor/auth-descriptor-rule";
+} from "../../client/lib/ft3/account/auth-descriptor";
+import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import { User } from "../../client/lib/ft3/account/types";
 
-class TestUser {
-  static singleSig(rule: AuthDescriptorRule | null = null) {
-    const signatureProvider = new InMemorySignatureProvider();
-    const singleSigAuthDescriptor = new SingleSignatureAuthDescriptor(
-      signatureProvider.pubKey,
-      [FlagsType.Account, FlagsType.Transfer],
-      rule
-    );
-    return new User(signatureProvider, singleSigAuthDescriptor);
-  }
+export default function singleSigUser(
+  rule: AuthDescriptorRule | null = null
+): User {
+  const signatureProvider = gtx.newSignatureProvider();
+  const singleSigAuthDescriptor = authDescriptor.create.singleSig
+    .withArgs([FlagsType.Account, FlagsType.Transfer], signatureProvider.pubKey)
+    .andRules(rule);
+  return { signatureProvider, authDescriptor: singleSigAuthDescriptor };
 }
-
-export default TestUser;

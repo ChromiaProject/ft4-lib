@@ -65,10 +65,8 @@ function handle_composed_rule(rule: gtv, variables: map<text, gtv>): boolean {
 	}
 }
 
-
-
 function is_active(account_auth_descriptor): boolean {
-	if (account_auth_descriptor.rules == x'a0020500') {
+	if (account_auth_descriptor.rules == x'a0020500') { //== null
 		return true;
 	}
 	

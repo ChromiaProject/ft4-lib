@@ -5,7 +5,7 @@ import core: ^.core;
 
 struct auth_descriptor {
     auth_type: text;
-    participants: list<byte_array>;
+    //participants: list<byte_array>;
     args: list<gtv>;
     rules: gtv;
 }
@@ -34,7 +34,6 @@ entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
 }
 
-
 // rate limiter
 entity rl_state {
     key account;
@@ -51,7 +50,7 @@ function _add_auth_descriptor(account, auth_descriptor) {
 }
 
 function require_signed_by_auth_descriptor_participants(auth_descriptor) {
-    for (participant in auth_descriptor.participants) {
+    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
        require(op_context.is_signer(participant));
     }
 }
@@ -70,14 +69,12 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
         ad.id != auth_descriptor.id,
         adrv.account_auth_descriptor == ad    
     };
-    
     delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
         ad.account == auth_descriptor.account,
         ad.id != auth_descriptor.account.id,
         ad.id != auth_descriptor.id,
         adp.account_auth_descriptor == ad
     };
-
     delete account_auth_descriptor @* {
        .account == auth_descriptor.account,
        .id != auth_descriptor.account.id,
@@ -141,7 +138,7 @@ namespace Unsafe {
             rules = auth_descriptor.rules.to_gtv().to_bytes()
         );
         
-        for (participant in auth_descriptor.participants) {
+        for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
             create auth_descriptor_participant(account_auth_descriptor, id = participant);
         }
         
