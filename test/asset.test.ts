@@ -1,12 +1,15 @@
 import { generateAssetName, generateId } from "./util/util";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import { createConnection } from "../client/lib/ft3/ft-session";
 
 let ft: ftUserSession;
+let connection: Connection;
 
 describe("Asset", () => {
   beforeAll(async () => {
     ft = await getUserSession();
+    connection = createConnection(ft.get.gtxClient);
   });
 
   it("should be successfully registered", async () => {
@@ -18,7 +21,7 @@ describe("Asset", () => {
     const assetName = generateAssetName();
     const asset = await getNewAsset(ft, assetName);
 
-    const expectedAssets = await ft.get.asset.by.name(assetName);
+    const expectedAssets = await connection.getAssetsByName(assetName);
 
     expect(expectedAssets.length).toEqual(1);
     expect(expectedAssets[0]).toEqual(asset);
@@ -30,7 +33,7 @@ describe("Asset", () => {
     const assetId = ft.get.asset.id(assetName, brid);
     await getNewAsset(ft, assetName, brid);
 
-    const expectedAsset = await ft.get.asset.by.id(assetId);
+    const expectedAsset = await connection.getAssetById(assetId);
 
     expect(expectedAsset.name).toEqual(assetName);
     expect(expectedAsset.id).toEqual(assetId);
@@ -42,7 +45,7 @@ describe("Asset", () => {
     const asset2 = await getNewAsset(ft);
     const asset3 = await getNewAsset(ft);
 
-    const expectedAssets = await ft.get.asset.all();
+    const expectedAssets = await connection.getAllAssets();
 
     expect(expectedAssets).toEqual(
       expect.arrayContaining([asset1, asset2, asset3])

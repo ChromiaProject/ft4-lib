@@ -8,11 +8,14 @@ import {
   allAssetsQuery,
   balancesByAccountId,
   balanceByAccountId,
+  assetById,
+  assetByName,
+  allAssets,
 } from "./asset-queries";
 import { Asset, Balance } from "./types";
 import { formatter } from "postchain-client";
 import { Connection } from "../interfaces";
-import { mapBalance } from "./mappers";
+import { mapAsset, mapAssets, mapBalance, mapBalances } from "./mappers";
 
 export async function getAssetById(
   session: GtxClient,
@@ -85,21 +88,38 @@ export async function getBalance(
   });
 }
 
+export async function _getAssetById(
+  connection: Connection,
+  id: BufferId
+): Promise<Asset> {
+  return await connection.query(assetById(id), mapAsset);
+}
+
+export async function _getAssetsByName(
+  connection: Connection,
+  name: string
+): Promise<Asset[]> {
+  return await connection.query(assetByName(name), mapAssets);
+}
+
+export async function _getAllAssets(connection: Connection): Promise<Asset[]> {
+  return await connection.query(allAssets(), mapAssets);
+}
+
 export async function _getBalanceByAccountId(
   connection: Connection,
   accountId: BufferId,
   assetId: BufferId
 ): Promise<Balance> {
-  const balance = await connection.query(
-    balanceByAccountId(accountId, assetId)
+  return await connection.query(
+    balanceByAccountId(accountId, assetId),
+    mapBalance
   );
-  return mapBalance(balance);
 }
 
 export async function _getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId
 ): Promise<Balance[]> {
-  const balances = await connection.query(balancesByAccountId(accountId));
-  return balances.map(mapBalance);
+  return await connection.query(balancesByAccountId(accountId), mapBalances);
 }

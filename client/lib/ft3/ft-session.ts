@@ -11,6 +11,11 @@ import {
   _getById,
 } from "./account/account-query-functions";
 import { QueryObject } from "./utils/types";
+import {
+  _getAllAssets,
+  _getAssetById,
+  _getAssetsByName,
+} from "./asset/asset-query-functions";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -37,21 +42,33 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
 export function createConnection(client: GtxClient): Connection {
   const connection = Object.freeze({
     client,
-    query: (queryObject: QueryObject) => query(connection, queryObject),
+    query: (queryObject: QueryObject, mapper?: (value: any) => any) =>
+      query(connection, queryObject, mapper),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
       _getByParticipantId(connection, id),
     getAccountsByAuthDescriptorId: (id: BufferId) =>
       _getByAuthDescriptorId(connection, id),
+
+    getAssetById: (id: BufferId) => _getAssetById(connection, id),
+    getAssetsByName: (name: string) => _getAssetsByName(connection, name),
+    getAllAssets: () => _getAllAssets(connection),
   });
 
   return connection;
 }
 
-function query(
+async function query(
   connection: Connection,
-  queryObject: QueryObject
+  queryObject: QueryObject,
+  mapper?: (value: any) => any
 ): Promise<any | null> {
-  return connection.client.query(queryObject.name, queryObject.args);
+  const result = await connection.client.query(
+    queryObject.name,
+    queryObject.args
+  );
+  if (!result) return null;
+
+  return mapper ? mapper(result) : result;
 }
