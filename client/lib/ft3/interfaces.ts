@@ -7,7 +7,8 @@ import {
 } from "./account/payment-history/interfaces";
 import { Account, RateLimit, User } from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
-import { ChainInfo } from "./utils/types";
+import { ChainInfo, IQuery } from "./utils/types";
+import { IAccount } from "./account/types";
 
 export interface ftUserSession {
   user: User;
@@ -92,7 +93,7 @@ export interface ftQuerySession {
       participantId: (id: BufferId) => Promise<Account[]>;
       authDescriptorId: (id: BufferId) => Promise<Account[]>;
       ids: (ids: Buffer[]) => Promise<Account[]>;
-      id: (id: BufferId) => Promise<Account>;
+      id: (id: BufferId) => Promise<Account | null>;
     };
     paymentHistory: {
       iterator: (
@@ -114,4 +115,15 @@ export interface ftQuerySession {
     rateLimit: (accountId: BufferId) => Promise<RateLimit>;
     idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) => Buffer;
   };
+}
+
+export interface Connection {
+  client: GtxClient;
+  query: (query: IQuery) => Promise<any>;
+
+  getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
+  getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
+  getAccountsByAuthDescriptorId: (
+    authDescriptorId: BufferId
+  ) => Promise<IAccount[]>;
 }

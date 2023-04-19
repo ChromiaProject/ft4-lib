@@ -30,3 +30,9 @@ export type ExternalWalletConnection = {
 };
 
 export type Query = [string, { [property: string]: RawGtv }];
+
+// TODO: update IQuery to be type and rename it to Query
+export interface IQuery {
+  name: string;
+  args: { [property: string]: RawGtv };
+}

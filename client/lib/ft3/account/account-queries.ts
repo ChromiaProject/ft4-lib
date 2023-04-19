@@ -1,4 +1,6 @@
-import { Query } from "../utils/types";
+import { formatter } from "postchain-client";
+import { Query, IQuery } from "../utils/types";
+import { BufferId } from "../../cryptoUtils";
 
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
   return ["ft3.get_account_auth_descriptors", { id: accountId }];
@@ -36,4 +38,44 @@ export function getRateLimitQuery(accountId: Buffer): Query {
       account_id: accountId,
     },
   ];
+}
+
+export function accountById(id: BufferId): IQuery {
+  return {
+    name: "ft3.get_account_by_id",
+    args: {
+      id: formatter.ensureBuffer(id),
+    },
+  };
+}
+
+export function accountsByParticipantId(id: BufferId): IQuery {
+  return {
+    name: "ft3.get_accounts_by_participant_id",
+    args: {
+      id: formatter.ensureBuffer(id),
+    },
+  };
+}
+
+export function accountsByAuthDescriptorId(id: BufferId): IQuery {
+  return {
+    name: "ft3.get_accounts_by_auth_descriptor_id",
+    args: {
+      id: formatter.ensureBuffer(id),
+    },
+  };
+}
+
+export function isAuthDescriptorValid(
+  accountId: BufferId,
+  authDescriptorId: BufferId
+): IQuery {
+  return {
+    name: "ft3.is_auth_descriptor_valid",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
+    },
+  };
 }

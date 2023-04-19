@@ -3,6 +3,7 @@ import { Balance } from "../asset/types";
 import { AssetAmount } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
+import { BufferId } from "../../cryptoUtils";
 
 export type Account = {
   id: Buffer;
@@ -36,3 +37,13 @@ export type User = {
   signatureProvider: SignatureProvider;
   authDescriptor: AuthDescriptor;
 };
+
+// TODO: Rename to Account after deleting Account type
+export interface IAccount {
+  id: BufferId;
+  // TODO: Use Page<Balance> type instead
+  getBalances: () => Promise<Balance[]>;
+  isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
+  getRateLimit: () => Promise<RateLimit>;
+  getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
+}

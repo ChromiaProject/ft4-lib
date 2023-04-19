@@ -4,7 +4,7 @@ import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { config } from "dotenv";
 import { Account, User } from "../client/lib/ft3/account/types";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import { getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
@@ -14,6 +14,7 @@ import {
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
+import { createConnection } from "../client/lib/ft3/ft-session";
 config();
 
 async function addAuthDescriptorTo(
@@ -25,10 +26,12 @@ async function addAuthDescriptorTo(
 }
 
 let _ft: ftUserSession;
+let _connection: Connection;
 
 describe("Test the account", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
+    _connection = createConnection(_ft.get.gtxClient);
   });
 
   it("should be in DEV mode", () => {
@@ -212,7 +215,7 @@ describe("Test the account", () => {
 
     await AccountBuilder.account(ft).build();
 
-    const accounts = await ft.get.account.by.participantId(
+    const accounts = await _connection.getAccountsByParticipantId(
       user.signatureProvider.pubKey
     );
 
@@ -231,7 +234,7 @@ describe("Test the account", () => {
 
     await addAuthDescriptorTo(account2, user1, ft2);
 
-    const accounts = await _ft.get.account.by.participantId(
+    const accounts = await _connection.getAccountsByParticipantId(
       user1.signatureProvider.pubKey
     );
 
