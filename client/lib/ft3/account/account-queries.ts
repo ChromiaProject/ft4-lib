@@ -1,5 +1,5 @@
 import { formatter } from "postchain-client";
-import { Query, IQuery } from "../utils/types";
+import { Query, QueryObject } from "../utils/types";
 import { BufferId } from "../../cryptoUtils";
 
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
@@ -40,7 +40,7 @@ export function getRateLimitQuery(accountId: Buffer): Query {
   ];
 }
 
-export function accountById(id: BufferId): IQuery {
+export function accountById(id: BufferId): QueryObject {
   return {
     name: "ft3.get_account_by_id",
     args: {
@@ -49,7 +49,7 @@ export function accountById(id: BufferId): IQuery {
   };
 }
 
-export function accountsByParticipantId(id: BufferId): IQuery {
+export function accountsByParticipantId(id: BufferId): QueryObject {
   return {
     name: "ft3.get_accounts_by_participant_id",
     args: {
@@ -58,7 +58,7 @@ export function accountsByParticipantId(id: BufferId): IQuery {
   };
 }
 
-export function accountsByAuthDescriptorId(id: BufferId): IQuery {
+export function accountsByAuthDescriptorId(id: BufferId): QueryObject {
   return {
     name: "ft3.get_accounts_by_auth_descriptor_id",
     args: {
@@ -70,7 +70,7 @@ export function accountsByAuthDescriptorId(id: BufferId): IQuery {
 export function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId
-): IQuery {
+): QueryObject {
   return {
     name: "ft3.is_auth_descriptor_valid",
     args: {

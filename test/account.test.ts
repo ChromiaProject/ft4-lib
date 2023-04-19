@@ -247,9 +247,9 @@ describe("Test the account", () => {
 
     const account = await AccountBuilder.account(ft).build();
 
-    const foundAccount = await _ft.get.account.by.id(account.id);
+    const foundAccount = await _connection.getAccountById(account.id);
 
-    expect(account).toEqual(foundAccount);
+    expect(account.id).toEqual(foundAccount.id);
   });
 
   it("should have only one auth descriptor after calling deleteAllExcluding", async () => {

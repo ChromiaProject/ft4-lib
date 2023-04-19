@@ -10,7 +10,7 @@ import {
   _getByAuthDescriptorId,
   _getById,
 } from "./account/account-query-functions";
-import { IQuery } from "./utils/types";
+import { QueryObject } from "./utils/types";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -37,7 +37,7 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
 export function createConnection(client: GtxClient): Connection {
   const connection = Object.freeze({
     client,
-    query: (queryObject: IQuery) => query(connection, queryObject),
+    query: (queryObject: QueryObject) => query(connection, queryObject),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
@@ -51,7 +51,7 @@ export function createConnection(client: GtxClient): Connection {
 
 function query(
   connection: Connection,
-  queryObject: IQuery
+  queryObject: QueryObject
 ): Promise<any | null> {
   return connection.client.query(queryObject.name, queryObject.args);
 }

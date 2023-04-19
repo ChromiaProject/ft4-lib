@@ -7,7 +7,7 @@ import {
 } from "./account/payment-history/interfaces";
 import { Account, RateLimit, User } from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
-import { ChainInfo, IQuery } from "./utils/types";
+import { ChainInfo, QueryObject } from "./utils/types";
 import { IAccount } from "./account/types";
 
 export interface ftUserSession {
@@ -119,7 +119,7 @@ export interface ftQuerySession {
 
 export interface Connection {
   client: GtxClient;
-  query: (query: IQuery) => Promise<any>;
+  query: (query: QueryObject) => Promise<any>;
 
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;

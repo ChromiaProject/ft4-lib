@@ -7,6 +7,7 @@ import {
   assetByNameQuery,
   allAssetsQuery,
   balancesByAccountId,
+  balanceByAccountId,
 } from "./asset-queries";
 import { Asset, Balance } from "./types";
 import { formatter } from "postchain-client";
@@ -82,6 +83,17 @@ export async function getBalance(
     asset: { id: balance.id, name: balance.name, brid: balance.brid },
     amount: balance.amount,
   });
+}
+
+export async function _getBalanceByAccountId(
+  connection: Connection,
+  accountId: BufferId,
+  assetId: BufferId
+): Promise<Balance> {
+  const balance = await connection.query(
+    balanceByAccountId(accountId, assetId)
+  );
+  return mapBalance(balance);
 }
 
 export async function _getBalancesByAccountId(

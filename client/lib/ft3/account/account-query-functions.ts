@@ -16,7 +16,8 @@ import { BufferId } from "../../cryptoUtils";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { getChainInfo } from "../utils";
 import {
-  getBalance,
+  _getBalanceByAccountId,
+  _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { formatter } from "postchain-client";
@@ -147,8 +148,8 @@ export function createAccountObject(
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
-      getBalance(connection.client, accountId, assetId),
-    getBalances: () => getBalancesByAccountId(connection.client, accountId),
+      _getBalanceByAccountId(connection, accountId, assetId),
+    getBalances: () => _getBalancesByAccountId(connection, accountId),
   });
 }
 

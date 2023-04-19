@@ -1,6 +1,6 @@
 import { formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
-import { IQuery, Query } from "../utils/types";
+import { QueryObject, Query } from "../utils/types";
 
 export function assetByIdQuery(assetId: Buffer): Query {
   return ["ft3.get_asset_by_id", { asset_id: assetId }];
@@ -28,7 +28,20 @@ export function allAssetsQuery(): Query {
   return ["ft3.get_all_assets", undefined];
 }
 
-export function balancesByAccountId(accountId: BufferId): IQuery {
+export function balanceByAccountId(
+  accountId: BufferId,
+  assetId: BufferId
+): QueryObject {
+  return {
+    name: "ft3.get_asset_balance",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      asset_id: formatter.ensureBuffer(assetId),
+    },
+  };
+}
+
+export function balancesByAccountId(accountId: BufferId): QueryObject {
   return {
     name: "ft3.get_asset_balances",
     args: {
