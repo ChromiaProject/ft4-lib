@@ -144,12 +144,14 @@ export function createAccountObject(
 ): IAccount {
   return Object.freeze({
     id: accountId,
-    isAuthDescriptorValid: (authDescriptorId: BufferId) =>
-      _isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getRateLimit: () => getRateLimit(connection.client, accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
     getBalances: () => _getBalancesByAccountId(connection, accountId),
+    isAuthDescriptorValid: (authDescriptorId: BufferId) =>
+      _isAuthDescriptorValid(connection, accountId, authDescriptorId),
+    // TODO: replace with query function that returns asset descriptor as object not as a tuple
+    getAuthDescriptors: () => getAuthDescriptors(connection.client, accountId),
+    getRateLimit: () => getRateLimit(connection.client, accountId),
   });
 }
 

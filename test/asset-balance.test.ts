@@ -3,6 +3,7 @@ import { createConnection } from "../client/lib/ft3/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import testUser from "./util/test-user";
 
 let ft: ftUserSession;
 let connection: Connection;
@@ -17,6 +18,10 @@ describe("Asset balance", () => {
     asset2 = await getNewAsset(ft);
   });
 
+  beforeEach(() => {
+    ft = ft.changeUser(testUser());
+  });
+
   it("should be returned when queried by account id", async () => {
     const account = await AccountBuilder.account(ft)
       .withBalances([
@@ -25,9 +30,47 @@ describe("Asset balance", () => {
       ])
       .build();
 
-    const account1 = await connection.getAccountById(account.id);
-    const assets = await account1.getBalances();
+    const foundAccount = await connection.getAccountById(account.id);
+    const balances = await foundAccount.getBalances();
 
-    expect(assets.length).toEqual(2);
+    expect(balances).toEqual([
+      {
+        asset: {
+          id: asset1.id,
+          name: asset1.name,
+          brid: asset1.brid,
+        },
+        amount: 10,
+      },
+      {
+        asset: {
+          id: asset2.id,
+          name: asset2.name,
+          brid: asset2.brid,
+        },
+        amount: 20,
+      },
+    ]);
+  });
+
+  it("should return balance for specific asset", async () => {
+    const account = await AccountBuilder.account(ft)
+      .withBalances([
+        { amount: BigInt(40), asset: asset1 },
+        { amount: BigInt(50), asset: asset2 },
+      ])
+      .build();
+
+    const foundAccount = await connection.getAccountById(account.id);
+    const balance = await foundAccount.getBalanceByAssetId(asset2.id);
+
+    expect(balance).toEqual({
+      asset: {
+        id: asset2.id,
+        name: asset2.name,
+        brid: asset2.brid,
+      },
+      amount: 50,
+    });
   });
 });

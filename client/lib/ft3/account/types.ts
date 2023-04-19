@@ -43,7 +43,8 @@ export interface IAccount {
   id: BufferId;
   // TODO: Use Page<Balance> type instead
   getBalances: () => Promise<Balance[]>;
-  isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
-  getRateLimit: () => Promise<RateLimit>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
+  isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
+  getAuthDescriptors: () => Promise<AuthDescriptor[]>;
+  getRateLimit: () => Promise<RateLimit>;
 }

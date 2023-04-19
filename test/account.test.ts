@@ -222,7 +222,7 @@ describe("Test the account", () => {
     expect(accounts.length).toEqual(1);
   });
 
-  it("should return two accounts when account is participant of two accounts", async () => {
+  it("should return two accounts when public key is used in two accounts", async () => {
     const user1 = testUser();
     const user2 = testUser();
     const ft1 = _ft.changeUser(user1);
@@ -250,6 +250,37 @@ describe("Test the account", () => {
     const foundAccount = await _connection.getAccountById(account.id);
 
     expect(account.id).toEqual(foundAccount.id);
+  });
+
+  it("should return account by auth descriptor id", async () => {
+    const user = testUser();
+    const ft = _ft.changeUser(user);
+
+    const account = await AccountBuilder.account(ft).build();
+
+    const accounts = await _connection.getAccountsByAuthDescriptorId(
+      account.id
+    );
+
+    expect(accounts.length).toEqual(1);
+  });
+
+  it("should return two accounts by auth descriptor id when auth descriptor is attached to two accounts", async () => {
+    const user1 = testUser();
+    const user2 = testUser();
+    const ft1 = _ft.changeUser(user1);
+    const ft2 = _ft.changeUser(user2);
+
+    const account1 = await AccountBuilder.account(ft1).build();
+    const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
+
+    await addAuthDescriptorTo(account2, user1, ft2);
+
+    const accounts = await _connection.getAccountsByAuthDescriptorId(
+      account1.id
+    );
+
+    expect(accounts.length).toEqual(2);
   });
 
   it("should have only one auth descriptor after calling deleteAllExcluding", async () => {

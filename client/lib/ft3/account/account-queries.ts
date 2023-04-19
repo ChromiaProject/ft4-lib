@@ -79,3 +79,12 @@ export function isAuthDescriptorValid(
     },
   };
 }
+
+export function accountAuthDescriptors(accountId: BufferId): QueryObject {
+  return {
+    name: "ft3.get_account_auth_descriptors",
+    args: {
+      id: formatter.ensureBuffer(accountId),
+    },
+  };
+}
