@@ -12,7 +12,6 @@ val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96
 function setup_extended_auth() {
   val desc = acc.auth_descriptor(
     acc.auth_type.ES,
-    [ external_key ],
     [
       set(["A"]).to_gtv(),
       external_key.to_gtv()
@@ -108,7 +107,6 @@ function test_multisig_external_signature() {
 
   val desc = acc.auth_descriptor(
     acc.auth_type.EM,
-    [ external_key, second_external_key ],
     [
       set(["A"]).to_gtv(),
       0x2.to_gtv(),
@@ -146,7 +144,6 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
 
   val desc = acc.auth_descriptor(
     acc.auth_type.EM,
-    [ external_key, second_external_key ],
     [
       set(["A"]).to_gtv(),
       0x3.to_gtv(),
@@ -182,7 +179,6 @@ function test_it_rejects_signatures_not_part_of_a_d() {
 
   val desc = acc.auth_descriptor(
     acc.auth_type.EM,
-    [ external_key ],
     [
       set(["A"]).to_gtv(),
       0x1.to_gtv(),
@@ -242,7 +238,6 @@ function test_ft_auth_fails_if_key_invalid() {
   val external_key = rell.test.keypairs.alice;
   val desc = acc.auth_descriptor(
     acc.auth_type.S,
-    [ external_key.pub ],
     [
       ["A"].to_gtv(),
       external_key.pub.to_hex().to_gtv()
@@ -265,7 +260,6 @@ function test_perform_ft_auth_transaction() {
   val external_key = rell.test.keypairs.alice;
   val desc = acc.auth_descriptor(
     acc.auth_type.S,
-    [ external_key.pub ],
     [
       ["A"].to_gtv(),
       external_key.pub.to_hex().to_gtv()
