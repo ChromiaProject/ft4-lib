@@ -42,8 +42,8 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
 export function createConnection(client: GtxClient): Connection {
   const connection = Object.freeze({
     client,
-    query: (queryObject: QueryObject, mapper?: (value: any) => any) =>
-      query(connection, queryObject, mapper),
+    query: <T>(queryObject: QueryObject, mapper?: (value: any) => any) =>
+      query<T>(connection, queryObject, mapper),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
@@ -59,16 +59,16 @@ export function createConnection(client: GtxClient): Connection {
   return connection;
 }
 
-async function query(
+async function query<T>(
   connection: Connection,
   queryObject: QueryObject,
   mapper?: (value: any) => any
-): Promise<any | null> {
+): Promise<T | null> {
   const result = await connection.client.query(
     queryObject.name,
     queryObject.args
   );
   if (!result) return null;
 
-  return mapper ? mapper(result) : result;
+  return mapper ? mapper(result) : (result as T | null);
 }

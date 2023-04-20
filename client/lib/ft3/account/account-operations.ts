@@ -1,6 +1,7 @@
 import { op } from "../utils";
 import { XferInput, XferOutput } from "./types";
 import { Operation } from "../utils/types";
+import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
 
 export function addAuthDescriptorOp(
@@ -12,7 +13,7 @@ export function addAuthDescriptorOp(
     "ft3.add_auth_descriptor",
     accountId,
     authDescriptorId,
-    authDescriptor
+    authDesc.toGtv(authDescriptor)
   );
 }
 

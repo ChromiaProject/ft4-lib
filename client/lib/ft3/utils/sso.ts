@@ -106,6 +106,7 @@ export default class SSO {
     const user: User = {
       signatureProvider: this.signatureProvider,
       authDescriptor: authDesc,
+      keyManagers: [],
     };
 
     const account = await this.session.get.account.by.id(this.accountId);
@@ -127,7 +128,7 @@ export default class SSO {
     const isAuthDescriptorValid =
       await this.session.get.account.isAuthDescriptorValid(
         account.id,
-        authDescriptor.getId(user.authDescriptor)
+        user.authDescriptor.id
       );
 
     if (!isAuthDescriptorValid) {
@@ -169,6 +170,7 @@ export default class SSO {
     const user: User = {
       signatureProvider: sigProv,
       authDescriptor: authDesc,
+      keyManagers: [],
     };
 
     const transaction =
@@ -195,7 +197,7 @@ export default class SSO {
 
     if (account && user) {
       await this.session.account.authDescriptor.delete(
-        authDescriptor.getId(user.authDescriptor),
+        user.authDescriptor.id,
         account.id
       );
     }

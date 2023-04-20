@@ -6,11 +6,9 @@ import {
   deleteAuthDescriptorOp,
   transferOp,
 } from "./account-operations";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { Account, XferInput, XferOutput, User } from "./types";
 import { getById } from "./account-query-functions";
 import { nop } from "../utils";
-import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { createPaymentHistoryIterator } from "./payment-history/payment-history-iterator";
 import {
@@ -19,170 +17,135 @@ import {
 } from "./payment-history/interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { formatter } from "postchain-client";
+import { TransactionBuilder } from "../utils/transaction-builder";
 import { GtvCompatible } from "../utils/gtv";
-import { AssetAmount } from "../asset/types";
+import { deriveAccountId, toGtv } from "./auth-descriptor";
 
 export async function registerAccount(
-  user: User,
-  session: GtxClient,
-  newAuthDesc: AuthDescriptor
+  newAuthDesc: AuthDescriptor,
+  tb: TransactionBuilder
 ): Promise<Account> {
-  const tx = session.newTransaction(authDesc.getSigners(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(...registerOp(newAuthDesc)); //doesn't need nop
-  await tx.sign(user.signatureProvider);
+  const tx = await tb.add(registerOp(newAuthDesc)).buildSigned();
   await tx.postAndWaitConfirmation();
-  return await getById(session, authDesc.getId(newAuthDesc));
+  return getById(tb.session, newAuthDesc.id);
 }
 
 export async function ssoRawTransactionRegister(
-  user: User,
-  session: GtxClient,
-  newAuthDesc: AuthDescriptor
+  newAuthDesc: AuthDescriptor,
+  authDescriptor: AuthDescriptor,
+  tb: TransactionBuilder
 ): Promise<Buffer> {
-  const tx = session.newTransaction(
-    [
-      authDesc.getSigners(user.authDescriptor),
-      authDesc.getSigners(newAuthDesc),
-    ].flat()
-  );
-  // @ts-ignore
-  tx.addOperation(...registerOp(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(
-    ...addAuthDescriptorOp(
-      authDesc.deriveAccountId(user.authDescriptor),
-      authDesc.getId(user.authDescriptor),
-      newAuthDesc
+  const adId = authDescriptor.id;
+  const tx = await tb
+    .add(registerOp(authDescriptor))
+    .add(
+      addAuthDescriptorOp(
+        deriveAccountId(toGtv(authDescriptor)),
+        adId,
+        newAuthDesc
+      )
     )
-  );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+    .buildSigned([...authDescriptor.signers, ...newAuthDesc.signers]);
   return tx.encode();
 }
 
 export async function ssoRawTransactionAddAuthDescriptor(
-  user: User,
-  session: GtxClient,
   accountId: BufferId,
-  newAuthDesc: AuthDescriptor
+  newAuthDesc: AuthDescriptor,
+  tb: TransactionBuilder
 ): Promise<Buffer> {
-  const tx = session.newTransaction(
-    [
-      authDesc.getSigners(user.authDescriptor),
-      authDesc.getSigners(newAuthDesc),
-    ].flat()
-  );
-  // @ts-ignore
-  tx.addOperation(
-    ...addAuthDescriptorOp(
-      formatter.ensureBuffer(accountId),
-      authDesc.getId(user.authDescriptor),
-      newAuthDesc
+  const tx = await tb
+    .add(
+      addAuthDescriptorOp(
+        formatter.ensureBuffer(accountId),
+        tb.user.authDescriptor.id,
+        newAuthDesc
+      )
     )
-  );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+    .add(nop())
+    .buildSigned();
   return tx.encode();
 }
 
 export async function addAuthDescriptorToAccount( //maybe rename to addUserToAccount?
-  user: User,
-  session: GtxClient,
   newUser: User,
-  accountId: BufferId
+  accountId: BufferId,
+  tb: TransactionBuilder
 ): Promise<void> {
-  const tx = session.newTransaction([
-    ...authDesc.getSigners(user.authDescriptor),
-    ...authDesc.getSigners(newUser.authDescriptor),
-  ]);
-  // @ts-ignore
-  tx.addOperation(
-    ...addAuthDescriptorOp(
-      formatter.ensureBuffer(accountId),
-      authDesc.getId(user.authDescriptor),
-      newUser.authDescriptor
+  const tx = await tb
+    .add(
+      addAuthDescriptorOp(
+        formatter.ensureBuffer(accountId),
+        tb.user.authDescriptor.id,
+        newUser.authDescriptor
+      )
     )
-  );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+    .add(nop())
+    .build([
+      ...tb.user.authDescriptor.signers,
+      ...newUser.authDescriptor.signers,
+    ]);
+  await tx.sign(tb.user.signatureProvider);
   await tx.sign(newUser.signatureProvider);
   await tx.postAndWaitConfirmation();
-  return;
 }
 
 export async function deleteAllAuthDescriptorsExclude(
-  user: User,
-  session: GtxClient,
   authDescriptorId: BufferId,
-  accountId: BufferId
+  accountId: BufferId,
+  tb: TransactionBuilder
 ): Promise<void> {
-  const tx = session.newTransaction(authDesc.getSigners(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(
-    ...deleteAllAuthDescriptorsExcludeOp(
-      formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(authDescriptorId)
+  const tx = await tb
+    .add(
+      deleteAllAuthDescriptorsExcludeOp(
+        formatter.ensureBuffer(accountId),
+        formatter.ensureBuffer(authDescriptorId)
+      )
     )
-  );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
 }
 
 export async function deleteAuthDescriptor(
-  user: User,
-  session: GtxClient,
   authDescriptorId: BufferId,
-  accountId: BufferId
+  accountId: BufferId,
+  tb: TransactionBuilder
 ): Promise<void> {
-  const tx = session.newTransaction(authDesc.getSigners(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(
-    ...deleteAuthDescriptorOp(
-      formatter.ensureBuffer(accountId),
-      authDesc.getId(user.authDescriptor),
-      formatter.ensureBuffer(authDescriptorId)
+  const tx = await tb
+    .add(
+      deleteAuthDescriptorOp(
+        formatter.ensureBuffer(accountId),
+        tb.user.authDescriptor.id,
+        formatter.ensureBuffer(authDescriptorId)
+      )
     )
-  );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
 }
 
 export async function transferInputsToOutputs(
-  user: User,
-  session: GtxClient,
   inputs: XferInput[],
-  outputs: XferOutput[]
+  outputs: XferOutput[],
+  tb: TransactionBuilder
 ): Promise<void> {
-  const tx = session.newTransaction(authDesc.getSigners(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(...transferOp(inputs, outputs));
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+  const tx = await tb.add(transferOp(inputs, outputs)).add(nop()).buildSigned();
   await tx.postAndWaitConfirmation();
 }
 
 export async function transfer(
-  user: User,
-  session: GtxClient,
   fromAccountId: BufferId,
   toAccountId: BufferId,
   assetId: BufferId,
-  amount: AssetAmount,
+  amount: bigint,
+  tb: TransactionBuilder,
   extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
   const input: XferInput = [
     formatter.ensureBuffer(fromAccountId),
     formatter.ensureBuffer(assetId),
-    authDesc.getId(user.authDescriptor),
+    tb.user.authDescriptor.id,
     // @ts-ignore
     Number(amount),
     extra ?? {},
@@ -196,55 +159,47 @@ export async function transfer(
     extra ?? {},
   ];
 
-  await transferInputsToOutputs(user, session, [input], [output]);
+  await transferInputsToOutputs([input], [output], tb);
 }
 
 export async function burnTokens(
-  user: User,
-  session: GtxClient,
   fromAccountId: BufferId,
   assetId: BufferId,
-  amount: AssetAmount,
+  amount: bigint,
+  tb: TransactionBuilder,
   extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
   const input: XferInput = [
     formatter.ensureBuffer(fromAccountId),
     formatter.ensureBuffer(assetId),
-    authDesc.getId(user.authDescriptor),
+    tb.user.authDescriptor.id,
     // @ts-ignore
     Number(amount),
     extra ?? {},
   ];
-
-  await transferInputsToOutputs(user, session, [input], []);
+  await transferInputsToOutputs([input], [], tb);
 }
 
 export async function freeOperation(
-  user: User,
-  session: GtxClient,
-  accountId: BufferId
+  accountId: BufferId,
+  tb: TransactionBuilder
 ) {
-  const tx = session.newTransaction(authDesc.getSigners(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(...freeOp(formatter.ensureBuffer(accountId)));
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+  const tx = await tb
+    .add(freeOp(formatter.ensureBuffer(accountId)))
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
 }
 
 export async function givePoints(
-  user: User,
-  session: GtxClient,
   accountId: BufferId,
-  points: number
+  points: number,
+  tb: TransactionBuilder
 ) {
-  const tx = session.newTransaction(authDesc.getSigners(user.authDescriptor));
-  // @ts-ignore
-  tx.addOperation(...givePointsOp(formatter.ensureBuffer(accountId), points));
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+  const tx = await tb
+    .add(givePointsOp(formatter.ensureBuffer(accountId), points))
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
 }
 
@@ -254,16 +209,13 @@ export function getPaymentHistoryIterator(
   return createPaymentHistoryIterator(paymentHistoryStore);
 }
 
-export async function xcTransfer(
+export async function xcTransfer(): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  user: User,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  session: GtxClient /*
-  destinationBRID: BufferId,
+  /*destinationBRID: BufferId,
   destinationAccountId: BufferId,
   assetId: BufferId,
   amount: AssetAmount,*/
-): Promise<void> {
   throw new Error("Not implemented!");
   /*const tx = await xcTransferOp(
     destinationBRID,

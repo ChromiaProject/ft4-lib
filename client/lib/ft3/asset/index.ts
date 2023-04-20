@@ -11,6 +11,7 @@ import { User } from "../account/types";
 import { AssetAmount } from "./types";
 import { BufferId } from "../../cryptoUtils";
 import { formatter, gtv } from "postchain-client";
+import { transactionBuilder } from "../utils/transaction-builder";
 
 export function id(assetName: string, assetBrid: BufferId) {
   return gtv.gtvHash([assetName, formatter.ensureBuffer(assetBrid)]);
@@ -41,13 +42,18 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
     asset: {
       dev: {
         register: (name: string, brid: BufferId) =>
-          registerAsset(user, pci, name, brid),
+          registerAsset(name, brid, transactionBuilder(user, pci)),
       },
     },
     balance: {
       dev: {
         give: (assetId: BufferId, accountId: BufferId, amount: AssetAmount) =>
-          giveBalance(user, pci, assetId, accountId, amount),
+          giveBalance(
+            assetId,
+            accountId,
+            amount,
+            transactionBuilder(user, pci)
+          ),
       },
     },
   });

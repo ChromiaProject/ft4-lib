@@ -31,8 +31,11 @@ export type ExternalWalletConnection = {
 
 export type Query = [string, { [property: string]: RawGtv }];
 
-// TODO: delete when QueryObject gets added to postchain client
 export type QueryObject = {
   name: string;
   args: { [property: string]: RawGtv };
 };
+
+export function freeze<T>(object: T): T {
+  return Object.freeze(object);
+}
