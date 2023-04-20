@@ -159,7 +159,7 @@ export async function _getById(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount | null> {
-  const accountId = await connection.query(accountById(id));
+  const accountId = await connection.query<Buffer>(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
 }
@@ -168,8 +168,9 @@ export async function _getByParticipantId(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount[]> {
-  const accountIds = await connection.query(accountsByParticipantId(id));
-
+  const accountIds = await connection.query<Buffer[]>(
+    accountsByParticipantId(id)
+  );
   return accountIds.map((id) => createAccountObject(connection, id));
 }
 
@@ -177,8 +178,9 @@ export async function _getByAuthDescriptorId(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount[]> {
-  const accountIds = await connection.query(accountsByAuthDescriptorId(id));
-
+  const accountIds = await connection.query<Buffer[]>(
+    accountsByAuthDescriptorId(id)
+  );
   return accountIds.map((id) => createAccountObject(connection, id));
 }
 
@@ -187,7 +189,7 @@ export async function _isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId
 ): Promise<boolean> {
-  return await connection.query(
+  return await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   );
 }

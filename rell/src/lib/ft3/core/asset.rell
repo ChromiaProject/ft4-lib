@@ -25,11 +25,13 @@ function register_asset(name, issuing_brid: byte_array): asset {
    return create asset (id, name, issuing_brid);
 }
 
-function get_asset_balances(account_id: byte_array): list<(id:byte_array,name:text,amount:integer,brid:byte_array)> {
+function get_asset_balances(account_id: byte_array) {
     return balance @* { .account.id == account_id } (
-      id = .asset.id,
-      name = .asset.name,
-      amount = .amount,
-      brid = .asset.issuing_brid
+        asset = (
+            id = .asset.id,
+            name = .asset.name,
+            brid = .asset.issuing_brid
+        ),
+        amount = .amount
     );
 }

@@ -31,7 +31,6 @@ export type ExternalWalletConnection = {
 
 export type Query = [string, { [property: string]: RawGtv }];
 
-// TODO: delete when QueryObject gets added to postchain client
 export type QueryObject = {
   name: string;
   args: { [property: string]: RawGtv };
