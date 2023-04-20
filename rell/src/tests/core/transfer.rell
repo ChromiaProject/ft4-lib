@@ -4,7 +4,6 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.ft3_basic_dev.*;
-import ^^^.lib.ft3.operations.dev_op_balance;
 import ^.utils;
 
 function test_before_transfer_extension_is_called() {
@@ -32,8 +31,9 @@ function test_before_transfer_extension_is_called() {
         )
     ];
 
+    utils.give_balance(asset_id, alice.account_id, 1);
+
     rell.test.tx()
-        .op(dev_op_balance.dev_give_balance(asset_id, alice.account_id, 1))
         .op(ft3.transfer_op.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -68,8 +68,9 @@ function test_after_transfer_extension_is_called() {
         )
     ];
 
+    utils.give_balance(asset_id, alice.account_id, 1);
+
     rell.test.tx()
-        .op(dev_op_balance.dev_give_balance(asset_id, alice.account_id, 1))
         .op(ft3.transfer_op.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();

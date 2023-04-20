@@ -2,40 +2,47 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
-import { getAuthDescriptorSigners } from "../account/auth-descriptor";
+import { authDescriptor } from "../account/auth-descriptor";
 import { User } from "../account/types";
 import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
 import { AssetAmount } from "./types";
 import { formatter } from "postchain-client";
 import { nop } from "../utils";
 
+//-------------------ADMIN OPERATIONS-------------------//
+
 export async function registerAsset(
   user: User,
+  adminUser: User,
   session: GtxClient,
   name: string,
   brid: BufferId
 ): Promise<Buffer> {
-  const tx = session.newTransaction(
-    getAuthDescriptorSigners(user.authDescriptor)
-  );
+  const tx = session.newTransaction([
+    ...authDescriptor.getSigners(user.authDescriptor),
+    ...authDescriptor.getSigners(adminUser.authDescriptor),
+  ]);
   // @ts-ignore
   tx.addOperation(...registerAssetOp(name, formatter.ensureBuffer(brid)));
   tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);
+  await tx.sign(adminUser.signatureProvider);
   await tx.postAndWaitConfirmation();
   return id(name, brid);
 }
 
 export async function giveBalance(
   user: User,
+  adminUser: User,
   session: GtxClient,
   assetId: BufferId,
   accountId: BufferId,
   amount: AssetAmount
 ) {
-  const tx = session.newTransaction(
-    getAuthDescriptorSigners(user.authDescriptor)
-  );
+  const tx = session.newTransaction([
+    ...authDescriptor.getSigners(user.authDescriptor),
+    ...authDescriptor.getSigners(adminUser.authDescriptor),
+  ]);
   // @ts-ignore
   tx.addOperation(
     ...giveBalanceOp(
@@ -46,5 +53,6 @@ export async function giveBalance(
   );
   tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);
+  await tx.sign(adminUser.signatureProvider);
   await tx.postAndWaitConfirmation();
 }

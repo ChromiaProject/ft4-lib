@@ -1,7 +1,7 @@
 @mount('ft3')
 module;
 
-import dev_op: ^^.core.dev_op;
+import ^.dev_op;
 import acc: ^^.account;
 
 function Account(id: byte_array) = require(

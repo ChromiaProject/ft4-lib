@@ -9,6 +9,7 @@ import {
 import { Asset } from "../../client/lib/ft3/asset/types";
 import singleSigUser from "./test-user";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import adminUser from "./admin_user";
 config();
 
 export async function getQuerySession(): Promise<ftQuerySession> {
@@ -40,7 +41,7 @@ export async function getNewAsset(
   name = generateAssetName(),
   brid = generateId()
 ): Promise<Asset> {
-  const id = await userSession.asset.dev.register(name, brid);
+  const id = await userSession.asset.admin.register(adminUser(), name, brid);
   const asset = await userSession.get.asset.by.id(id);
   return asset;
 }

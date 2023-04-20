@@ -2,7 +2,6 @@
 
 import ^.utils;
 import acc: ^^^.lib.ft3.account;
-import ^^^.lib.ft3.operations.dev_op_account;
 
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
@@ -10,9 +9,7 @@ val bob = rell.test.keypairs.bob;
 function test_an_account_can_be_created() {
   val auth_descriptor = utils.create_auth_descriptor(alice.pub);
   
-  dev_op_account.dev_register_account(auth_descriptor)
-      .sign(alice)
-      .run();
+  utils.create_ft3_test_acc(alice);
   
   assert_equals(acc.account @ {}( .id ), auth_descriptor.hash());
 }
@@ -31,9 +28,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
     rules = null.to_gtv()
   );
 
-  dev_op_account.dev_register_account(auth_descriptor)
-      .sign([alice, bob])
-      .run();
+  utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
 
   assert_equals(acc.account_auth_descriptor @ {}( .id ), auth_descriptor.hash());
 }
@@ -49,7 +44,9 @@ function test_an_invalid_descriptor_can_not_be_added() {
     rules = null.to_gtv()
   );
 
-  dev_op_account.dev_register_account(auth_descriptor)
-      .sign([alice, bob])
-      .run_must_fail();
+  assert_fails(
+    //* creates an "uncalled" function, see release notes 0.10.6 section 2 or
+    //https://docs.chromia.com/rell/tests#other-functions example at the end
+    utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
+  );
 }

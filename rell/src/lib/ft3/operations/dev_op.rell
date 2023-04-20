@@ -3,16 +3,17 @@ module;
 import ft3: ^^.core;
 import acc: ^^.account;
 
-object dev_state {
-   mutable allow_dev_ops: boolean = true;
+struct module_args {
+    admin_pub_key: text; 
 }
 
-function require_dev() {
-    require(dev_state.allow_dev_ops, "Developer operations are not allowed!");
+function require_admin() {
+	val adminPubKeyBytes = byte_array(chain_context.args.admin_pub_key);
+	require(op_context.is_signer(adminPubKeyBytes), "Needs to be signed by admin");
 }
 
 function dev_give_points_(account: acc.account, amount: integer) {
-	require_dev();
+	require_admin();
     var state = require(
         acc.rl_state@?{account}, 
         "Rate limiter state not found for the account with ID: %s".format(account.id)

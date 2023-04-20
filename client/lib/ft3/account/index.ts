@@ -87,12 +87,12 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         burnTokens(user, pci, from, asset, amount),
       xcTransfer: () => xcTransfer(user, pci),
     },
-    dev: {
-      register: (authDescriptor: AuthDescriptor) =>
-        registerAccount(user, pci, authDescriptor),
-      freeOperation: (accountId: BufferId) =>
-        freeOperation(user, pci, accountId),
-      givePoints: (accountId: BufferId, points: number) =>
-        givePoints(user, pci, accountId, points),
+    admin: {
+      register: (adminUser, authDescriptor: AuthDescriptor) =>
+        registerAccount(user, adminUser, pci, authDescriptor),
+      freeOperation: (adminUser, accountId: BufferId) =>
+        freeOperation(user, adminUser, pci, accountId),
+      givePoints: (adminUser, accountId: BufferId, points: number) =>
+        givePoints(user, adminUser, pci, accountId, points),
     },
   });

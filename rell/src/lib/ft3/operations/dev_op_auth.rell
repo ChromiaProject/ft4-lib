@@ -1,7 +1,7 @@
 @mount('ft3')
 module;
 
-import dev_op: ^^.core.dev_op;
+import dev_op: ^.dev_op;
 import acc: ^^.account; 
 
 /*
@@ -16,7 +16,7 @@ object dev_error {
  * Only used for testing of authentication mechanics.
  */
 operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>) {
-    dev_op.require_dev();
+    dev_op.require_admin();
 
     val account = acc.account @ { .id == account_id };
 

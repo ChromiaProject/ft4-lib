@@ -6,6 +6,7 @@ import { Account } from "../../client/lib/ft3/account/types";
 import { Asset, Balance } from "../../client/lib/ft3/asset/types";
 import { ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtx } from "postchain-client";
+import admin from "./admin_user";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -73,14 +74,18 @@ class AccountBuilder {
   /* Private functions */
 
   private async registerAccount(): Promise<Account> {
-    return await this.session.account.dev.register(this.getAuthDescriptor());
+    return await this.session.account.admin.register(
+      admin(),
+      this.getAuthDescriptor()
+    );
   }
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
       await Promise.all(
         this.balances.map(async (balance) => {
-          await this.session.balance.dev.give(
+          await this.session.balance.admin.give(
+            admin(),
             balance.asset.id,
             account.id,
             balance.amount
@@ -92,7 +97,11 @@ class AccountBuilder {
 
   private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
-      await this.session.account.dev.givePoints(account.id, this.points);
+      await this.session.account.admin.givePoints(
+        admin(),
+        account.id,
+        this.points
+      );
     }
   }
 

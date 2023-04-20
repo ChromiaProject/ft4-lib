@@ -6,12 +6,14 @@ import {
 import { Asset } from "../client/lib/ft3/asset/types";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
+import adminUser from "./util/admin_user";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let _ft: ftUserSession;
 let asset: Asset;
+const admin = adminUser();
 
 describe("Transfer", () => {
   beforeAll(async () => {
@@ -119,10 +121,14 @@ describe("Transfer", () => {
       [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = ft.get.gtxClient.newTransaction(ad.getSigners(authDescriptor));
+    const tx = ft.get.gtxClient.newTransaction([
+      ...ad.getSigners(authDescriptor),
+      ...ad.getSigners(admin.authDescriptor),
+    ]);
     tx.addOperation(...registerOp(authDescriptor));
     await tx.sign(user2.signatureProvider);
     await tx.sign(user3.signatureProvider);
+    await tx.sign(admin.signatureProvider);
     await tx.postAndWaitConfirmation();
 
     await ft.account.token.transfer(

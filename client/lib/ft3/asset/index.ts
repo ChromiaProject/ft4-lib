@@ -39,15 +39,19 @@ export const assetQuerySession = (pci: GtxClient) =>
 export const assetUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     asset: {
-      dev: {
-        register: (name: string, brid: BufferId) =>
-          registerAsset(user, pci, name, brid),
+      admin: {
+        register: (adminUser: User, name: string, brid: BufferId) =>
+          registerAsset(user, adminUser, pci, name, brid),
       },
     },
     balance: {
-      dev: {
-        give: (assetId: BufferId, accountId: BufferId, amount: AssetAmount) =>
-          giveBalance(user, pci, assetId, accountId, amount),
+      admin: {
+        give: (
+          adminUser: User,
+          assetId: BufferId,
+          accountId: BufferId,
+          amount: AssetAmount
+        ) => giveBalance(user, adminUser, pci, assetId, accountId, amount),
       },
     },
   });

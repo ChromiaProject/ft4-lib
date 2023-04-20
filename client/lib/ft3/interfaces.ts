@@ -14,13 +14,18 @@ export interface ftUserSession {
   changeUser: (newUser: User) => ftUserSession;
   get: ftQuerySession;
   asset: {
-    dev: {
-      register: (name: string, brid: BufferId) => Promise<Buffer>;
+    admin: {
+      register: (
+        adminUser: User,
+        name: string,
+        brid: BufferId
+      ) => Promise<Buffer>;
     };
   };
   balance: {
-    dev: {
+    admin: {
       give: (
+        adminUser: User,
         assetid: BufferId,
         accountid: BufferId,
         amount: AssetAmount
@@ -56,10 +61,17 @@ export interface ftUserSession {
       burn: (from: BufferId, asset: BufferId, amount: bigint) => Promise<void>;
       xcTransfer: () => Promise<void>;
     };
-    dev: {
-      register: (authDescriptor: AuthDescriptor) => Promise<Account>;
-      freeOperation: (accountid: BufferId) => Promise<void>;
-      givePoints: (accountId: BufferId, points: number) => Promise<void>;
+    admin: {
+      register: (
+        adminUser: User,
+        authDescriptor: AuthDescriptor
+      ) => Promise<Account>;
+      freeOperation: (adminUser: User, accountid: BufferId) => Promise<void>;
+      givePoints: (
+        adminUser: User,
+        accountId: BufferId,
+        points: number
+      ) => Promise<void>;
     };
   };
 }

@@ -3,6 +3,7 @@ import { getAuthDescriptorId } from "../client/lib/ft3/account/auth-descriptor";
 import { User } from "../client/lib/ft3/account/types";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
+import adminUser from "./util/admin_user";
 import { getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 
@@ -55,8 +56,8 @@ describe("Rate Limit", () => {
 
       await timeout(20000);
 
-      await ft.account.dev.freeOperation(account.id); // used to make one block
-      await ft.account.dev.freeOperation(account.id); // used to calculate the last block's timestamp (previous block).
+      await ft.account.admin.freeOperation(adminUser(), account.id); // used to make one block
+      await ft.account.admin.freeOperation(adminUser(), account.id); // used to calculate the last block's timestamp (previous block).
       // check the balance
       const rateLimit = await ft.get.account.rateLimit(account.id);
       expect(rateLimit.points).toBe(4 + POINTS_AT_ACCOUNT_CREATION); // 20 seconds / 5s recovery time + points given by default

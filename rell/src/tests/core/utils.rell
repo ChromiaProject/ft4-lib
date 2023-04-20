@@ -2,7 +2,13 @@
 import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.operations.dev_op_account;
 import ^^^.lib.ft3.operations.dev_op_asset;
+import ^^^.lib.ft3.operations.dev_op_balance;
+import ^^^.lib.ft3.operations.dev_op_auth;
 import cu: ^^.core.utils;
+
+struct module_args {
+    admin_priv_key: text; 
+}
 
 struct auth_id {
     account_id: byte_array;
@@ -17,6 +23,7 @@ struct auth_data {
 function create_ft3_test_acc(rell.test.keypair): auth_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
     dev_op_account.dev_register_account(auth_descriptor)
+        .sign(byte_array(chain_context.args.admin_priv_key))
         .sign(keypair)
         .run();
 
@@ -59,10 +66,25 @@ function create_asset(name: text): byte_array {
             name,
             issuing_brid = chain_context.blockchain_rid
         )
-        .sign(rell.test.keypairs.alice)
+        .sign(byte_array(chain_context.args.admin_priv_key))
         .run();
 
     return (name, chain_context.blockchain_rid).hash();
+}
+
+function give_balance(asset_id: byte_array, account_id: byte_array, amount:integer) {
+    rell.test.tx()
+        .op(dev_op_balance.dev_give_balance(asset_id, account_id, amount))
+        .sign(byte_array(chain_context.args.admin_priv_key))
+        .run();
+}
+
+function auth(account_id:byte_array, auth_descriptor_id:byte_array, required_flags:list<text>, keypairs: list<rell.test.keypair>) {
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(account_id, auth_descriptor_id, required_flags))
+        .sign(byte_array(chain_context.args.admin_priv_key))
+        .sign(keypairs)
+        .run();
 }
 
 /*
@@ -83,6 +105,7 @@ function _build_auth_id(auth_desc_id: byte_array) {
  */
 function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): auth_data {
     dev_op_account.dev_register_account(auth_descriptor)
+        .sign(byte_array(chain_context.args.admin_priv_key))
         .sign(keypair)
         .run();
 
@@ -100,6 +123,12 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
  */
 function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): auth_data {
     val op = dev_op_account.dev_register_account(auth_descriptor);
+    val admin_privkey = byte_array(chain_context.args.admin_priv_key);
+    val admin_keypair = rell.test.keypair(
+        priv=admin_privkey, 
+        pub=crypto.privkey_to_pubkey(admin_privkey, true)
+    );
+    keys.add(admin_keypair);
     var tx = _sign_many(op, keys); 
     tx.run();
 
