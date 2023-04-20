@@ -2,6 +2,7 @@ import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import {
   FlagsType,
   getAuthDescriptorSigners,
+  toGtv,
 } from "../../client/lib/ft3/account/auth-descriptor";
 import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
@@ -84,7 +85,7 @@ class AccountBuilder {
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
       const tx = this.session.get.gtxClient.newTransaction(
-        getAuthDescriptorSigners(this.session.user.authDescriptor)
+        getAuthDescriptorSigners(toGtv(this.session.user.authDescriptor))
       );
 
       this.balances.forEach((balance) => {

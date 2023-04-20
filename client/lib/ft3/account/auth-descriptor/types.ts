@@ -9,7 +9,16 @@ type AuthDescriptorAnyRule =
   | AuthDescriptorSimpleRule;
 export type AuthDescriptorRule = AuthDescriptorAnyRule;
 
-export type AuthDescriptor = readonly [
+export type AuthDescriptor = {
+  id: Buffer;
+  authType: string;
+  flags: Set<string>;
+  signaturesRequired: number;
+  signers: Buffer[];
+  rule: AuthDescriptorRule;
+};
+
+export type GtvAuthDescriptor = readonly [
   authType: string,
   args: AuthDescriptorArgs,
   rule: AuthDescriptorRule | null

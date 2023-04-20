@@ -1,50 +1,39 @@
-/* eslint @typescript-eslint/ban-ts-comment: 0 */
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
-import { getAuthDescriptorSigners } from "../account/auth-descriptor";
-import { User } from "../account/types";
+import { TransactionBuilder } from "../utils/transaction-builder";
 import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
 import { AssetAmount } from "./types";
 import { formatter } from "postchain-client";
 import { nop } from "../utils";
 
 export async function registerAsset(
-  user: User,
-  session: GtxClient,
   name: string,
-  brid: BufferId
+  brid: BufferId,
+  tb: TransactionBuilder
 ): Promise<Buffer> {
-  const tx = session.newTransaction(
-    getAuthDescriptorSigners(user.authDescriptor)
-  );
-  // @ts-ignore
-  tx.addOperation(...registerAssetOp(name, formatter.ensureBuffer(brid)));
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+  const tx = await tb
+    .add(registerAssetOp(name, formatter.ensureBuffer(brid)))
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
   return id(name, brid);
 }
 
 export async function giveBalance(
-  user: User,
-  session: GtxClient,
   assetId: BufferId,
   accountId: BufferId,
-  amount: AssetAmount
+  amount: AssetAmount,
+  tb: TransactionBuilder
 ) {
-  const tx = session.newTransaction(
-    getAuthDescriptorSigners(user.authDescriptor)
-  );
-  // @ts-ignore
-  tx.addOperation(
-    ...giveBalanceOp(
-      formatter.ensureBuffer(assetId),
-      formatter.ensureBuffer(accountId),
-      amount
+  const tx = await tb
+    .add(
+      giveBalanceOp(
+        formatter.ensureBuffer(assetId),
+        formatter.ensureBuffer(accountId),
+        amount
+      )
     )
-  );
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
 }

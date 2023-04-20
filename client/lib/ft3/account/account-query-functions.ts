@@ -13,15 +13,16 @@ import {
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { AuthDescriptor } from "./auth-descriptor/types";
 import { getChainInfo } from "../utils";
 import {
   _getBalanceByAccountId,
   _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { formatter } from "postchain-client";
 import { Connection } from "../interfaces";
+import { formatter, gtv } from "postchain-client";
+import { GtvAuthDescriptor } from "./auth-descriptor/types";
+import { authDescriptor as authDesc } from "./auth-descriptor";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -87,7 +88,7 @@ async function createAccountObjectFromId(
   ]);
   return Object.freeze({
     balances,
-    authDescriptors,
+    authDescriptors: authDescriptors.map((ad) => authDesc.fromGtv(ad)),
     id,
   });
 }
@@ -105,10 +106,11 @@ async function createAccountObjectsFromIds(
 export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
-): Promise<AuthDescriptor[]> {
-  return await session.query(
+): Promise<GtvAuthDescriptor[]> {
+  const ads = await session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
+  return ads.map((ad) => [ad.auth_type, gtv.decode(ad.args), ad.rule ?? null]);
 }
 
 //this will be outdated as soon as another tx is sent to the same account:
