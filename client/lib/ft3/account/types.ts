@@ -1,8 +1,8 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { Balance } from "../asset/types";
-import { AssetAmount } from "../asset/types";
+import { Balance, AssetAmount } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
+import { KeyManager } from "./auth/types";
 
 export type Account = {
   id: Buffer;
@@ -34,5 +34,6 @@ export type RateLimit = {
 
 export type User = {
   signatureProvider: SignatureProvider;
+  keyManagers: KeyManager[];
   authDescriptor: AuthDescriptor;
 };

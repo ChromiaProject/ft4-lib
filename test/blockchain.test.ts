@@ -4,8 +4,8 @@ import { ftUserSession } from "../client/lib/ft3/interfaces";
 import { getUserSession } from "./util/blockchain-util";
 import { ChainInfo } from "../client/lib/ft3/utils/types";
 import { ft } from "../client/lib/ft3";
-import { getAuthDescriptorId } from "../client/lib/ft3/account/auth-descriptor";
 import { ssoRawTransactionRegister } from "../client/lib/ft3/account/account-op-functions";
+import { transactionBuilder } from "../client/lib/ft3/utils/transaction-builder";
 
 let ftSession: ftUserSession;
 
@@ -64,18 +64,16 @@ describe("Blockchain", () => {
     const session = ftSession.changeUser(user);
 
     const rawTransaction = await ssoRawTransactionRegister(
-      user,
-      session.get.gtxClient,
-      vault.authDescriptor
+      vault.authDescriptor,
+      user.authDescriptor,
+      transactionBuilder(user, session.get.gtxClient)
     );
 
     await ftSession.get.gtxClient
       .transactionFromRawTransaction(rawTransaction)
       .postAndWaitConfirmation();
 
-    const account = await session.get.account.by.id(
-      getAuthDescriptorId(user.authDescriptor)
-    );
+    const account = await session.get.account.by.id(user.authDescriptor.id);
 
     expect(account).not.toBeNull();
   });

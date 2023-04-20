@@ -1,13 +1,11 @@
-/* eslint @typescript-eslint/ban-ts-comment: 0 */
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
-import { authDescriptor } from "../account/auth-descriptor";
 import { User } from "../account/types";
 import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
 import { AssetAmount } from "./types";
 import { formatter } from "postchain-client";
 import { nop } from "../utils";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 
 //-------------------ADMIN OPERATIONS-------------------//
 
@@ -19,9 +17,10 @@ export async function registerAsset(
   brid: BufferId
 ): Promise<Buffer> {
   const tx = session.newTransaction([
-    ...authDescriptor.getSigners(user.authDescriptor),
-    ...authDescriptor.getSigners(adminUser.authDescriptor),
+    ...user.authDescriptor.signers,
+    ...adminUser.authDescriptor.signers,
   ]);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   tx.addOperation(...registerAssetOp(name, formatter.ensureBuffer(brid)));
   tx.addOperation(...nop());
@@ -40,9 +39,10 @@ export async function giveBalance(
   amount: AssetAmount
 ) {
   const tx = session.newTransaction([
-    ...authDescriptor.getSigners(user.authDescriptor),
-    ...authDescriptor.getSigners(adminUser.authDescriptor),
+    ...user.authDescriptor.signers,
+    ...adminUser.authDescriptor.signers,
   ]);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   tx.addOperation(
     ...giveBalanceOp(

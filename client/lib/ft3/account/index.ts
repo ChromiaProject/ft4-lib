@@ -1,5 +1,6 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
+import { transactionBuilder } from "../utils/transaction-builder";
 import {
   addAuthDescriptorToAccount,
   burnTokens,
@@ -26,7 +27,7 @@ import { AuthDescriptor } from "./auth-descriptor/types";
 import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
 import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
-import { deriveAccountId } from "./auth-descriptor";
+import { deriveAccountId, toGtv } from "./auth-descriptor";
 
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
@@ -47,34 +48,50 @@ export const accountQuerySession = (pci: GtxClient) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),
     rateLimit: (accountId: BufferId) => getRateLimit(pci, accountId),
     idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) =>
-      deriveAccountId(firstAuthDescriptor),
+      deriveAccountId(toGtv(firstAuthDescriptor)),
   });
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     sso: {
       ssoRegister: (authDescriptor: AuthDescriptor) =>
-        ssoRawTransactionRegister(user, pci, authDescriptor),
+        ssoRawTransactionRegister(
+          authDescriptor,
+          user.authDescriptor,
+          transactionBuilder(user, pci)
+        ),
       ssoAddAuthDescriptor: (
         accountId: BufferId,
         authDescriptor: AuthDescriptor
       ) =>
         ssoRawTransactionAddAuthDescriptor(
-          user,
-          pci,
           accountId,
-          authDescriptor
+          authDescriptor,
+          transactionBuilder(user, pci)
         ),
     },
     authDescriptor: {
       add: (
         newUser: User,
         accountId: BufferId //add user? needs refactoring
-      ) => addAuthDescriptorToAccount(user, pci, newUser, accountId),
+      ) =>
+        addAuthDescriptorToAccount(
+          newUser,
+          accountId,
+          transactionBuilder(user, pci)
+        ),
       deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAllAuthDescriptorsExclude(user, pci, authDescriptorId, accountId),
+        deleteAllAuthDescriptorsExclude(
+          authDescriptorId,
+          accountId,
+          transactionBuilder(user, pci)
+        ),
       delete: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAuthDescriptor(user, pci, authDescriptorId, accountId),
+        deleteAuthDescriptor(
+          authDescriptorId,
+          accountId,
+          transactionBuilder(user, pci)
+        ),
     },
     token: {
       transfer: (
@@ -82,10 +99,10 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         to: BufferId,
         asset: BufferId,
         amount: bigint
-      ) => transfer(user, pci, from, to, asset, amount),
+      ) => transfer(from, to, asset, amount, transactionBuilder(user, pci)),
       burn: (from: BufferId, asset: BufferId, amount: bigint) =>
-        burnTokens(user, pci, from, asset, amount),
-      xcTransfer: () => xcTransfer(user, pci),
+        burnTokens(from, asset, amount, transactionBuilder(user, pci)),
+      xcTransfer: () => xcTransfer(),
     },
     admin: {
       register: (adminUser, authDescriptor: AuthDescriptor) =>

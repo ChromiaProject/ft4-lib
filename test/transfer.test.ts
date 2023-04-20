@@ -121,10 +121,9 @@ describe("Transfer", () => {
       [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = ft.get.gtxClient.newTransaction([
-      ...ad.getSigners(authDescriptor),
-      ...ad.getSigners(admin.authDescriptor),
-    ]);
+    const tx = ft.get.gtxClient.newTransaction(
+      authDescriptor.signers.concat(admin.authDescriptor.signers)
+    );
     tx.addOperation(...registerOp(authDescriptor));
     await tx.sign(user2.signatureProvider);
     await tx.sign(user3.signatureProvider);
@@ -133,7 +132,7 @@ describe("Transfer", () => {
 
     await ft.account.token.transfer(
       account1.id,
-      ad.getId(authDescriptor),
+      authDescriptor.id,
       asset.id,
       BigInt(10)
     );
@@ -143,7 +142,7 @@ describe("Transfer", () => {
       asset.id
     );
     const assetBalance2 = await ft.get.balance.by.accountAndAssetId(
-      ad.getId(authDescriptor),
+      authDescriptor.id,
       asset.id
     );
 
