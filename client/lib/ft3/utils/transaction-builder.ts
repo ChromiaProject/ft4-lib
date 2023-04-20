@@ -52,14 +52,16 @@ export function transactionBuilder(
     const txn = client.newTransaction(signers);
     const operations = Promise.all(
       this._operations.map(async (operation: Operation) => {
+        if (operation[0] === "nop") return operation;
+
         let auth_data: AuthData = null;
         try {
           auth_data = await client.query(`${operation[0]}_auth_data`);
         } catch {
-          auth_data = await client.query(`default_auth_data`);
+          auth_data = await client.query(`ft3.default_auth_data`);
         }
         const isUsable = (km: KeyManager) =>
-          !!intersection(km.flags, auth_data.flags).length;
+          !!intersection(auth_data.flags, km.flags).length;
         const manager = user.keyManagers.find(isUsable);
         if (!manager) {
           throw new Error("No keymanager registered to handle this operation");
@@ -67,14 +69,22 @@ export function transactionBuilder(
         return await manager.authorize(operation, auth_data);
       })
     );
-    (await operations).forEach((op: Operation) => txn.addOperation(...op));
+    (await operations).forEach((op: Operation | Operation[]) => {
+      if (Array.isArray(op[0])) {
+        txn.addOperation(...op[0]);
+      } else {
+        const [name, ...args] = op;
+        txn.addOperation(name, ...args);
+      }
+    });
     return txn;
   }
 
   async function buildSigned(signers: Buffer[] | undefined = undefined) {
     const participants = signers ? signers : user.authDescriptor.signers;
     const tx = await this.build(participants);
-    return await tx.sign(user.signatureProvider);
+    await tx.sign(user.signatureProvider);
+    return tx;
   }
 
   const context: Partial<TransactionBuilder> = {
@@ -89,5 +99,5 @@ export function transactionBuilder(
   return context as TransactionBuilder;
 }
 
-const intersection = (a: Set<any>, b: Set<any>) =>
+const intersection = <T>(a: Set<T>, b: Set<T>): T[] =>
   [...a].filter((x) => b.has(x));

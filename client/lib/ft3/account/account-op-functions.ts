@@ -6,7 +6,7 @@ import {
   deleteAuthDescriptorOp,
   transferOp,
 } from "./account-operations";
-import { Account, XferInput, XferOutput } from "./types";
+import { Account, XferInput, XferOutput, User } from "./types";
 import { getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -68,7 +68,7 @@ export async function ssoRawTransactionAddAuthDescriptor(
 }
 
 export async function addAuthDescriptorToAccount( //maybe rename to addUserToAccount?
-  authDescriptor: AuthDescriptor,
+  newUser: User,
   accountId: BufferId,
   tb: TransactionBuilder
 ): Promise<void> {
@@ -77,14 +77,16 @@ export async function addAuthDescriptorToAccount( //maybe rename to addUserToAcc
       addAuthDescriptorOp(
         formatter.ensureBuffer(accountId),
         tb.user.authDescriptor.id,
-        authDescriptor
+        newUser.authDescriptor
       )
     )
     .add(nop())
-    .buildSigned([
+    .build([
       ...tb.user.authDescriptor.signers,
-      ...authDescriptor.signers,
+      ...newUser.authDescriptor.signers,
     ]);
+  await tx.sign(tb.user.signatureProvider);
+  await tx.sign(newUser.signatureProvider);
   await tx.postAndWaitConfirmation();
 }
 
@@ -208,9 +210,9 @@ export function getPaymentHistoryIterator(
 }
 
 export async function xcTransfer(): Promise<void> {
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-/*destinationBRID: BufferId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  /*destinationBRID: BufferId,
   destinationAccountId: BufferId,
   assetId: BufferId,
   amount: AssetAmount,*/

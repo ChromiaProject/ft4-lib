@@ -5,7 +5,6 @@ import core: ^.core;
 
 struct auth_descriptor {
     auth_type: text;
-    //participants: list<byte_array>;
     args: list<gtv>;
     rules: gtv;
 }

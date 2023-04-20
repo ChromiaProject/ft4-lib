@@ -9,6 +9,7 @@ import { getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
   FlagsType,
+  toGtv,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
@@ -280,7 +281,9 @@ describe("Test the account", () => {
     const user = testUser();
 
     const tx = _ft.get.gtxClient.newTransaction(user.authDescriptor.signers);
-    tx.addOperation(...op("ft3.dev_register_account", user.authDescriptor));
+    tx.addOperation(
+      ...op("ft3.dev_register_account", toGtv(user.authDescriptor))
+    );
     await tx.sign(user.signatureProvider);
     await tx.postAndWaitConfirmation();
 

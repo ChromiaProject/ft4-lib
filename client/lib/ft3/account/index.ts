@@ -76,7 +76,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         accountId: BufferId //add user? needs refactoring
       ) =>
         addAuthDescriptorToAccount(
-          newUser.authDescriptor,
+          newUser,
           accountId,
           transactionBuilder(user, pci)
         ),

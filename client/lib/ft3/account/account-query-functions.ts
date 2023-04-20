@@ -11,7 +11,7 @@ import { Account, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
 import { getChainInfo } from "../utils";
 import { getBalancesByAccountId } from "../asset/asset-query-functions";
-import { formatter } from "postchain-client";
+import { formatter, gtv } from "postchain-client";
 import { GtvAuthDescriptor } from "./auth-descriptor/types";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 
@@ -97,9 +97,10 @@ export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
 ): Promise<GtvAuthDescriptor[]> {
-  return await session.query(
+  const ads = await session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
+  return ads.map((ad) => [ad.auth_type, gtv.decode(ad.args), ad.rule ?? null]);
 }
 
 //this will be outdated as soon as another tx is sent to the same account:

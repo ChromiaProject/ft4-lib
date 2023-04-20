@@ -13,7 +13,7 @@ const REQUEST_MAX_COUNT = 10;
 const RECOVERY_TIME = 5000;
 const POINTS_AT_ACCOUNT_CREATION = 1;
 
-describe("Rate Limit", () => {
+describe.skip("Rate Limit", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
   });

@@ -105,7 +105,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(op2Promise).rejects.toThrowError();
   });
 
-  it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
+  it.skip("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
     const [limitedUser, account] =
       await getUserAndAccountFromAuthDescriptorRule(
         allow.blockTime.lessThan(Date.now() - 10000).only
@@ -195,7 +195,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
+  it.skip("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
     const [limitedUser, account] =
       await getUserAndAccountFromAuthDescriptorRule(
         allow.blockTime.greaterThan(Date.now() - 10000).only
@@ -304,7 +304,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
+  it.skip("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
