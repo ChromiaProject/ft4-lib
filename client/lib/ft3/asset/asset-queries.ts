@@ -28,6 +28,31 @@ export function allAssetsQuery(): Query {
   return ["ft3.get_all_assets", undefined];
 }
 
+export function assetById(assetId: BufferId): QueryObject {
+  return {
+    name: "ft3.get_asset_by_id",
+    args: {
+      asset_id: formatter.ensureBuffer(assetId),
+    },
+  };
+}
+
+export function assetByName(name: string): QueryObject {
+  return {
+    name: "ft3.get_asset_by_name",
+    args: {
+      name: name,
+    },
+  };
+}
+
+export function allAssets(): QueryObject {
+  return {
+    name: "ft3.get_all_assets",
+    args: {},
+  };
+}
+
 export function balanceByAccountId(
   accountId: BufferId,
   assetId: BufferId

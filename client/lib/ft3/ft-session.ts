@@ -11,6 +11,11 @@ import {
   _getById,
 } from "./account/account-query-functions";
 import { QueryObject } from "./utils/types";
+import {
+  _getAllAssets,
+  _getAssetById,
+  _getAssetsByName,
+} from "./asset/asset-query-functions";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -44,17 +49,18 @@ export function createConnection(client: GtxClient): Connection {
       _getByParticipantId(connection, id),
     getAccountsByAuthDescriptorId: (id: BufferId) =>
       _getByAuthDescriptorId(connection, id),
+
+    getAssetById: (id: BufferId) => _getAssetById(connection, id),
+    getAssetsByName: (name: string) => _getAssetsByName(connection, name),
+    getAllAssets: () => _getAllAssets(connection),
   });
 
   return connection;
 }
 
-function query<T>(
+async function query<T>(
   connection: Connection,
   queryObject: QueryObject
 ): Promise<T | null> {
-  return connection.client.query(
-    queryObject.name,
-    queryObject.args
-  ) as Promise<T | null>;
+  return await connection.client.query(queryObject.name, queryObject.args);
 }

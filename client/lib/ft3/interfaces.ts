@@ -126,4 +126,8 @@ export interface Connection {
   getAccountsByAuthDescriptorId: (
     authDescriptorId: BufferId
   ) => Promise<IAccount[]>;
+
+  getAssetById: (assetId: BufferId) => Promise<Asset | null>;
+  getAssetsByName: (name: string) => Promise<Asset[]>;
+  getAllAssets: () => Promise<Asset[]>;
 }

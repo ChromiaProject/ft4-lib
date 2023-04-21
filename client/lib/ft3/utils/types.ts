@@ -35,3 +35,7 @@ export type QueryObject = {
   name: string;
   args: { [property: string]: RawGtv };
 };
+
+export function freeze<T>(object: T): T {
+  return Object.freeze(object);
+}

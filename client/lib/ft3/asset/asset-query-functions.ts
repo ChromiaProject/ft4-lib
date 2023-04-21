@@ -8,10 +8,14 @@ import {
   allAssetsQuery,
   balancesByAccountId,
   balanceByAccountId,
+  assetById,
+  assetByName,
+  allAssets,
 } from "./asset-queries";
 import { Asset, Balance } from "./types";
 import { formatter } from "postchain-client";
 import { Connection } from "../interfaces";
+import { freeze } from "../utils/types";
 
 export async function getAssetById(
   session: GtxClient,
@@ -20,22 +24,12 @@ export async function getAssetById(
   const asset = await session.query(
     ...assetByIdQuery(formatter.ensureBuffer(id))
   );
-  return Object.freeze({
-    name: asset.name,
-    id: asset.id,
-    brid: asset.issuing_brid,
-  });
+
+  return freeze(asset);
 }
 
 export async function getAllAssets(session: GtxClient): Promise<Asset[]> {
-  const assets = await session.query(...allAssetsQuery());
-  return assets.map(function (a): Asset {
-    return Object.freeze({
-      name: a.name,
-      id: a.id,
-      brid: a.issuing_brid,
-    });
-  });
+  return await session.query(...allAssetsQuery()).then(freeze);
 }
 
 export async function getAssetsByName(
@@ -43,13 +37,7 @@ export async function getAssetsByName(
   name: string
 ): Promise<Asset[]> {
   const assets = await session.query(...assetByNameQuery(name));
-  return assets.map(function (a): Asset {
-    return Object.freeze({
-      name: a.name,
-      id: a.id,
-      brid: a.issuing_brid,
-    });
-  });
+  return assets.map(freeze);
 }
 
 export async function getBalancesByAccountId(
@@ -59,12 +47,7 @@ export async function getBalancesByAccountId(
   const balances = await session.query(
     ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
   );
-  return balances.map(function (b): Balance {
-    return Object.freeze({
-      asset: { id: b.id, name: b.name, brid: b.brid },
-      amount: b.amount,
-    });
-  });
+  return balances.map(freeze);
 }
 
 export async function getBalance(
@@ -78,10 +61,25 @@ export async function getBalance(
       formatter.ensureBuffer(assetId)
     )
   );
-  return Object.freeze({
-    asset: { id: balance.id, name: balance.name, brid: balance.brid },
-    amount: balance.amount,
-  });
+  return freeze(balance);
+}
+
+export async function _getAssetById(
+  connection: Connection,
+  id: BufferId
+): Promise<Asset> {
+  return await connection.query<Asset>(assetById(id)).then(freeze);
+}
+
+export async function _getAssetsByName(
+  connection: Connection,
+  name: string
+): Promise<Asset[]> {
+  return await connection.query<Asset[]>(assetByName(name));
+}
+
+export async function _getAllAssets(connection: Connection): Promise<Asset[]> {
+  return await connection.query<Asset[]>(allAssets());
 }
 
 export async function _getBalanceByAccountId(
@@ -89,14 +87,16 @@ export async function _getBalanceByAccountId(
   accountId: BufferId,
   assetId: BufferId
 ): Promise<Balance> {
-  return await connection.query<Balance>(
-    balanceByAccountId(accountId, assetId)
-  );
+  return await connection
+    .query<Balance>(balanceByAccountId(accountId, assetId))
+    .then(freeze);
 }
 
 export async function _getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId
 ): Promise<Balance[]> {
-  return await connection.query<Balance[]>(balancesByAccountId(accountId));
+  return await connection
+    .query<Balance[]>(balancesByAccountId(accountId))
+    .then(freeze);
 }
