@@ -4,7 +4,7 @@ module;
 import core: ^.core;
 
 enum auth_type {
-    S, M, E, ES, EM,
+    S, M, ES, EM,
 }
 
 struct auth_descriptor {
@@ -114,7 +114,6 @@ function create_account_with_auth(auth_descriptor): byte_array {
 
 function _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor) {
     val participants = get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
-    require(op_context.get_signers().size() <= participants.size(), "Too many transaction signers");
     require(op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
     for (participant in participants) {
         require(op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
