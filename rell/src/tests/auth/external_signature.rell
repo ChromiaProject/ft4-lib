@@ -28,7 +28,7 @@ function setup_extended_auth() {
 
 
 function test_operation_without_auth_operation() {
-  utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+  utils.create_ft3_test_acc(rell.test.keypairs.alice);
   rell.test.tx()
     .op(dev_op.dev_authenticated_operation(""))
     .run_must_fail();
