@@ -22,10 +22,12 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
         .account.id == account_id,
         .asset.id == asset_id
     } (
-        id = .asset.id,
-        name = .asset.name,
-        amount = .amount,
-        brid = .asset.issuing_brid
+        asset = (
+            id = .asset.id,
+            name = .asset.name,
+            brid = .asset.issuing_brid
+        ),
+        amount = .amount
     );
 }
 

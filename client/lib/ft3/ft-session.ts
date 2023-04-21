@@ -2,8 +2,15 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./account";
 import { User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
-import { ftQuerySession, ftUserSession } from "./interfaces";
+import { ftQuerySession, ftUserSession, Connection } from "./interfaces";
 import { getChainInfo, getLastTimestamp, getVersion } from "./utils";
+import { BufferId } from "../cryptoUtils";
+import {
+  _getByParticipantId,
+  _getByAuthDescriptorId,
+  _getById,
+} from "./account/account-query-functions";
+import { QueryObject } from "./utils/types";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -25,4 +32,29 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
     account: accountQuerySession(pci),
     ...assetQuerySession(pci),
   });
+}
+
+export function createConnection(client: GtxClient): Connection {
+  const connection = Object.freeze({
+    client,
+    query: <T>(queryObject: QueryObject) => query<T>(connection, queryObject),
+
+    getAccountById: (id: BufferId) => _getById(connection, id),
+    getAccountsByParticipantId: (id: BufferId) =>
+      _getByParticipantId(connection, id),
+    getAccountsByAuthDescriptorId: (id: BufferId) =>
+      _getByAuthDescriptorId(connection, id),
+  });
+
+  return connection;
+}
+
+function query<T>(
+  connection: Connection,
+  queryObject: QueryObject
+): Promise<T | null> {
+  return connection.client.query(
+    queryObject.name,
+    queryObject.args
+  ) as Promise<T | null>;
 }

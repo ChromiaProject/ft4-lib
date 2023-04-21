@@ -30,3 +30,8 @@ export type ExternalWalletConnection = {
 };
 
 export type Query = [string, { [property: string]: RawGtv }];
+
+export type QueryObject = {
+  name: string;
+  args: { [property: string]: RawGtv };
+};

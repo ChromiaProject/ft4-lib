@@ -4,7 +4,7 @@ import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { config } from "dotenv";
 import { Account, User } from "../client/lib/ft3/account/types";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import { getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
@@ -14,6 +14,7 @@ import {
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
+import { createConnection } from "../client/lib/ft3/ft-session";
 config();
 
 async function addAuthDescriptorTo(
@@ -25,10 +26,12 @@ async function addAuthDescriptorTo(
 }
 
 let _ft: ftUserSession;
+let _connection: Connection;
 
 describe("Test the account", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
+    _connection = createConnection(_ft.get.gtxClient);
   });
 
   it("should be in DEV mode", () => {
@@ -219,14 +222,14 @@ describe("Test the account", () => {
 
     await AccountBuilder.account(ft).build();
 
-    const accounts = await ft.get.account.by.participantId(
+    const accounts = await _connection.getAccountsByParticipantId(
       user.signatureProvider.pubKey
     );
 
     expect(accounts.length).toEqual(1);
   });
 
-  it("should return two accounts when account is participant of two accounts", async () => {
+  it("should return two accounts when public key is used in two accounts", async () => {
     const user1 = testUser();
     const user2 = testUser();
     const ft1 = _ft.changeUser(user1);
@@ -238,7 +241,7 @@ describe("Test the account", () => {
 
     await addAuthDescriptorTo(account2, user1, ft2);
 
-    const accounts = await _ft.get.account.by.participantId(
+    const accounts = await _connection.getAccountsByParticipantId(
       user1.signatureProvider.pubKey
     );
 
@@ -251,9 +254,40 @@ describe("Test the account", () => {
 
     const account = await AccountBuilder.account(ft).build();
 
-    const foundAccount = await _ft.get.account.by.id(account.id);
+    const foundAccount = await _connection.getAccountById(account.id);
 
-    expect(account).toEqual(foundAccount);
+    expect(account.id).toEqual(foundAccount.id);
+  });
+
+  it("should return account by auth descriptor id", async () => {
+    const user = testUser();
+    const ft = _ft.changeUser(user);
+
+    const account = await AccountBuilder.account(ft).build();
+
+    const accounts = await _connection.getAccountsByAuthDescriptorId(
+      account.id
+    );
+
+    expect(accounts.length).toEqual(1);
+  });
+
+  it("should return two accounts by auth descriptor id when auth descriptor is attached to two accounts", async () => {
+    const user1 = testUser();
+    const user2 = testUser();
+    const ft1 = _ft.changeUser(user1);
+    const ft2 = _ft.changeUser(user2);
+
+    const account1 = await AccountBuilder.account(ft1).build();
+    const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
+
+    await addAuthDescriptorTo(account2, user1, ft2);
+
+    const accounts = await _connection.getAccountsByAuthDescriptorId(
+      account1.id
+    );
+
+    expect(accounts.length).toEqual(2);
   });
 
   it("should have only one auth descriptor after calling deleteAllExcluding", async () => {

@@ -6,9 +6,12 @@ import {
   balanceQuery,
   assetByNameQuery,
   allAssetsQuery,
+  balancesByAccountId,
+  balanceByAccountId,
 } from "./asset-queries";
 import { Asset, Balance } from "./types";
 import { formatter } from "postchain-client";
+import { Connection } from "../interfaces";
 
 export async function getAssetById(
   session: GtxClient,
@@ -79,4 +82,21 @@ export async function getBalance(
     asset: { id: balance.id, name: balance.name, brid: balance.brid },
     amount: balance.amount,
   });
+}
+
+export async function _getBalanceByAccountId(
+  connection: Connection,
+  accountId: BufferId,
+  assetId: BufferId
+): Promise<Balance> {
+  return await connection.query<Balance>(
+    balanceByAccountId(accountId, assetId)
+  );
+}
+
+export async function _getBalancesByAccountId(
+  connection: Connection,
+  accountId: BufferId
+): Promise<Balance[]> {
+  return await connection.query<Balance[]>(balancesByAccountId(accountId));
 }

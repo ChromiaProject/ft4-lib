@@ -1,16 +1,25 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import {
   accountAuthDescriptorsQuery,
+  accountById,
   accountByIdQuery,
+  accountsByAuthDescriptorId,
   accountsByAuthDescriptorIdQuery,
+  accountsByParticipantId,
   accountsByParticipantIdQuery,
   getRateLimitQuery,
   isAuthDescriptorValidQuery,
 } from "./account-queries";
-import { Account, RateLimit } from "./types";
+import * as Query from "./account-queries";
+import { Account, IAccount, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
 import { getChainInfo } from "../utils";
-import { getBalancesByAccountId } from "../asset/asset-query-functions";
+import {
+  _getBalanceByAccountId,
+  _getBalancesByAccountId,
+  getBalancesByAccountId,
+} from "../asset/asset-query-functions";
+import { Connection } from "../interfaces";
 import { formatter, gtv } from "postchain-client";
 import { GtvAuthDescriptor } from "./auth-descriptor/types";
 import { authDescriptor as authDesc } from "./auth-descriptor";
@@ -18,7 +27,7 @@ import { authDescriptor as authDesc } from "./auth-descriptor";
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
   id: BufferId
-): Promise<(Account | null)[]> {
+): Promise<Account[]> {
   const accountIds = await session.query(
     ...accountsByParticipantIdQuery(formatter.ensureBuffer(id))
   );
@@ -28,7 +37,7 @@ export async function getByParticipantId( //"by pubKey" would be more descriptiv
 export async function getByAuthDescriptorId(
   session: GtxClient,
   id: BufferId
-): Promise<(Account | null)[]> {
+): Promise<Account[]> {
   const accountIds = await session.query(
     ...accountsByAuthDescriptorIdQuery(formatter.ensureBuffer(id))
   );
@@ -51,8 +60,9 @@ export async function isAuthDescriptorValid(
 export async function getByIds(
   session: GtxClient,
   ids: BufferId[]
-): Promise<(Account | null)[]> {
-  return Promise.all(ids.map((id) => getById(session, id)));
+): Promise<Account[]> {
+  const accounts = await Promise.all(ids.map((id) => getById(session, id)));
+  return <Account[]>accounts.filter((account) => account != null);
 }
 
 export async function getById(
@@ -128,4 +138,60 @@ export async function getRateLimit(
       return null;
     },
   });
+}
+
+export function createAccountObject(
+  connection: Connection,
+  accountId: BufferId
+): IAccount {
+  return Object.freeze({
+    id: accountId,
+    getBalanceByAssetId: (assetId: BufferId) =>
+      _getBalanceByAccountId(connection, accountId, assetId),
+    getBalances: () => _getBalancesByAccountId(connection, accountId),
+    isAuthDescriptorValid: (authDescriptorId: BufferId) =>
+      _isAuthDescriptorValid(connection, accountId, authDescriptorId),
+    // TODO: replace with query function that returns asset descriptor as object not as a tuple
+    getAuthDescriptors: () => getAuthDescriptors(connection.client, accountId),
+    getRateLimit: () => getRateLimit(connection.client, accountId),
+  });
+}
+
+export async function _getById(
+  connection: Connection,
+  id: BufferId
+): Promise<IAccount | null> {
+  const accountId = await connection.query<Buffer>(accountById(id));
+
+  return accountId && createAccountObject(connection, accountId);
+}
+
+export async function _getByParticipantId(
+  connection: Connection,
+  id: BufferId
+): Promise<IAccount[]> {
+  const accountIds = await connection.query<Buffer[]>(
+    accountsByParticipantId(id)
+  );
+  return accountIds.map((id) => createAccountObject(connection, id));
+}
+
+export async function _getByAuthDescriptorId(
+  connection: Connection,
+  id: BufferId
+): Promise<IAccount[]> {
+  const accountIds = await connection.query<Buffer[]>(
+    accountsByAuthDescriptorId(id)
+  );
+  return accountIds.map((id) => createAccountObject(connection, id));
+}
+
+export async function _isAuthDescriptorValid(
+  connection: Connection,
+  accountId: BufferId,
+  authDescriptorId: BufferId
+): Promise<boolean> {
+  return await connection.query<boolean>(
+    Query.isAuthDescriptorValid(accountId, authDescriptorId)
+  );
 }
