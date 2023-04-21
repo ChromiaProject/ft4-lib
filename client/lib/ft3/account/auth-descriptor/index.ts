@@ -1,11 +1,21 @@
-import { AuthDescriptor, GtvAuthDescriptor } from "./types";
+import { AuthDescriptor, AuthType, GtvAuthDescriptor } from "./types";
 import { create } from "./auth-descriptor";
 import { allow } from "./rules";
 import { gtv } from "postchain-client";
 
-export enum AuthType {
-  single_sig = "S",
-  multi_sig = "M",
+const authTypeSerializationMap = Object.values(AuthType)
+  .map((value, i) => [value, i])
+  .reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {});
+const authTypeDeserializationMap = Object.values(AuthType)
+  .map((value, i) => [i, value])
+  .reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {});
+
+export function serializeAuthType(type: AuthType): number {
+  return authTypeSerializationMap[type];
+}
+
+export function deserializeAuthType(i: number): AuthType {
+  return authTypeDeserializationMap[i];
 }
 
 export enum FlagsType {
@@ -39,27 +49,34 @@ export function getAuthDescriptorSigners(ad: GtvAuthDescriptor): Buffer[] {
 }
 
 export function fromGtv(ad: GtvAuthDescriptor): AuthDescriptor {
+  const authType = deserializeAuthType(ad[0]);
   return {
     id: getAuthDescriptorId(ad),
-    authType: ad[0],
+    authType,
     flags: new Set(ad[1][0]),
-    signaturesRequired: ad[0] === "S" ? 1 : (ad[1][1] as number),
-    signers: ad[0] === "S" ? [ad[1][1] as Buffer] : ad[1][2],
+    signaturesRequired: authType === "S" ? 1 : (ad[1][1] as number),
+    signers: authType === "S" ? [ad[1][1] as Buffer] : ad[1][2],
     rule: ad[2],
   };
 }
 
 export function toGtv(ad: AuthDescriptor): GtvAuthDescriptor {
-  return ad.authType === "S" ? createSingleSigAd(ad) : createMultiSigAd(ad);
+  return ad.authType === "S" || ad.authType === "ES"
+    ? createSingleSigAd(ad)
+    : createMultiSigAd(ad);
 }
 
 function createSingleSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
-  return [ad.authType, [[...ad.flags], ad.signers[0]], ad.rule];
+  return [
+    serializeAuthType(ad.authType as AuthType),
+    [[...ad.flags], ad.signers[0]],
+    ad.rule,
+  ];
 }
 
 function createMultiSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
   return [
-    ad.authType,
+    serializeAuthType(ad.authType as AuthType),
     [[...ad.flags], ad.signaturesRequired, ad.signers],
     ad.rule,
   ];
