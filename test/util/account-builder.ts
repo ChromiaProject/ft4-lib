@@ -6,7 +6,7 @@ import { Account } from "../../client/lib/ft3/account/types";
 import { Asset, Balance } from "../../client/lib/ft3/asset/types";
 import { ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtx } from "postchain-client";
-import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
+import { mintOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
 import { transactionBuilder } from "../../client/lib/ft3/utils/transaction-builder";
 
@@ -87,7 +87,7 @@ class AccountBuilder {
       );
 
       this.balances.forEach((balance) => {
-        tb.add(giveBalanceOp(balance.asset.id, account.id, balance.amount));
+        tb.add(mintOp(balance.asset.id, account.id, balance.amount));
       });
 
       tb.add(nop());

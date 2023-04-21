@@ -1,4 +1,4 @@
-import { generateAssetName, generateId } from "./util";
+import { generateAssetName } from "./util";
 import { config } from "dotenv";
 import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtxClient, restClient, restClientutil } from "postchain-client";
@@ -37,10 +37,9 @@ export async function getUserSession(
 
 export async function getNewAsset(
   userSession: ftUserSession,
-  name = generateAssetName(),
-  brid = generateId()
+  name = generateAssetName()
 ): Promise<Asset> {
-  const id = await userSession.asset.dev.register(name, brid);
+  const id = await userSession.asset.dev.register(name);
   const asset = await userSession.get.asset.by.id(id);
   return asset;
 }

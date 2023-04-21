@@ -16,18 +16,20 @@ export interface ftUserSession {
   get: ftQuerySession;
   asset: {
     dev: {
-      register: (name: string, brid: BufferId) => Promise<Buffer>;
-    };
-  };
-  balance: {
-    dev: {
-      give: (
-        assetid: BufferId,
-        accountid: BufferId,
+      register: (name: string) => Promise<Buffer>;
+      mint: (
+        assetId: BufferId,
+        accountId: BufferId,
+        amount: AssetAmount
+      ) => Promise<void>;
+      burn: (
+        assetId: BufferId,
+        accountId: BufferId,
         amount: AssetAmount
       ) => Promise<void>;
     };
   };
+
   account: {
     sso: {
       ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;

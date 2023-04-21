@@ -17,7 +17,38 @@ describe("Payment history iterator", () => {
     asset = await getNewAsset(_ft);
   });
 
-  it("should have one payment history entry when one transfer is made", async () => {
+  it("should have one payment history entry when tokens are minted", async () => {
+    const user = TestUser();
+    const ft = _ft.changeUser(user);
+
+    const account1 = await AccountBuilder.account(ft)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const paymentHistoryStore = await createPaymentHistoryStoreMemory(
+      ft.get.gtxClient,
+      account1.id,
+      5
+    );
+    const paymentHistoryIterator =
+      _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
+    const paymentHistoryEntries = await paymentHistoryIterator.next();
+
+    expect(paymentHistoryStore.getPageCount()).toEqual(1);
+    expect(paymentHistoryEntries.length).toEqual(1);
+
+    const [entry] = paymentHistoryEntries;
+
+    expect(entry.isInput).toEqual(false);
+    expect(entry.transferInputArgs.length).toEqual(1);
+    //from account should be null
+    expect(entry.transferInputArgs[0].accountId).toEqual(
+      Buffer.from("a0020500", "hex")
+    );
+  });
+
+  it("should have 2 payment history entry when mint and one transfer is made", async () => {
     const user = TestUser();
     const ft = _ft.changeUser(user);
 
@@ -47,10 +78,11 @@ describe("Payment history iterator", () => {
     const paymentHistoryEntries = await paymentHistoryIterator.next();
 
     expect(paymentHistoryStore.getPageCount()).toEqual(1);
-    expect(paymentHistoryEntries.length).toEqual(1);
+    expect(paymentHistoryEntries.length).toEqual(2);
 
-    const [entry] = paymentHistoryEntries;
+    const [entry, mint] = paymentHistoryEntries;
 
+    expect(mint.isInput).toEqual(false);
     //expect(entry.other.length).toEqual(1); entry.other removed as per discussion
     //expect(entry.other.brid).toEqual(blockchain.id); entry no more holds brid
     expect(entry.isInput).toEqual(true);
@@ -58,7 +90,7 @@ describe("Payment history iterator", () => {
     expect(entry.transferOutputArgs[0].accountId).toEqual(account2.id);
   });
 
-  it("should have two payment history entries if two transfers made", async () => {
+  it("should have three payment history entries if mint and two transfers made", async () => {
     const user = TestUser();
     const ft = _ft.changeUser(user);
 
@@ -95,7 +127,7 @@ describe("Payment history iterator", () => {
     const paymentHistoryEntries = await paymentHistoryIterator.next();
 
     expect(paymentHistoryStore.getPageCount()).toEqual(1);
-    expect(paymentHistoryEntries.length).toEqual(2);
+    expect(paymentHistoryEntries.length).toEqual(3);
   });
 
   it("should have two payment history entries when sender and receiver are the same", async () => {
@@ -125,10 +157,11 @@ describe("Payment history iterator", () => {
     const paymentHistoryEntries = await paymentHistoryIterator.next();
 
     expect(paymentHistoryStore.getPageCount()).toEqual(1);
-    expect(paymentHistoryEntries.length).toEqual(2);
+    expect(paymentHistoryEntries.length).toEqual(3);
 
-    const [entry1, entry2] = paymentHistoryEntries;
+    const [entry1, entry2, mint] = paymentHistoryEntries;
 
+    expect(mint.delta).toEqual(200);
     expect(entry1.isInput).toEqual(false);
     //expect(entry1.other.length).toEqual(1);
     //expect(entry1.other[0].brid).toEqual(blockchain.id);
@@ -158,12 +191,6 @@ describe("Payment history iterator", () => {
       _ft.changeUser(TestUser())
     ).build();
 
-    await ft.account.token.transfer(
-      account1.id,
-      account2.id,
-      asset.id,
-      BigInt(10)
-    );
     await ft.account.token.transfer(
       account1.id,
       account2.id,
@@ -295,7 +322,7 @@ describe("Payment history iterator", () => {
         2
       );
 
-      expect(paymentHistoryStore.getPageCount()).toEqual(2);
+      expect(paymentHistoryStore.getPageCount()).toEqual(3);
     });
   });
 });

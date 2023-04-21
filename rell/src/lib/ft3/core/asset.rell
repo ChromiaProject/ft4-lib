@@ -5,6 +5,7 @@ entity asset {
     key id;
     name;
     issuing_brid: byte_array;
+    mutable total_supply: integer;
 }
 
 entity balance {
@@ -20,9 +21,83 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0);
 }
 
-function register_asset(name, issuing_brid: byte_array): asset {
-   val id = (name, issuing_brid).hash();
-   return create asset (id, name, issuing_brid);
+function _mint(acc.account, asset, amount: integer) {
+    require(amount > 0, "Invalid value. Amount must be non-zero positive");
+    require(
+        asset.issuing_brid == chain_context.blockchain_rid,
+        "Only the owner of the asset is allowed to mint"
+    );
+    before_mint(account, asset, amount);
+    val balance = ensure_balance(account, asset);
+    balance.amount += amount;
+
+    asset.total_supply += amount;
+
+    create payment_history_entry(
+        account,
+        asset,
+        .delta = amount,
+        .op_index = op_context.op_index,
+        .is_input = false,
+        .entry_index = 0,
+        transfer_args = [
+            [(
+                amount, 
+                account_id = null.to_gtv().to_bytes(), 
+                entry_index = 0
+            )],
+            [(
+                amount, 
+                account_id = account.id,
+                entry_index = 0
+            )]
+        ].to_gtv().to_bytes()
+    );
+
+    after_mint(account, asset, amount);
+}
+
+function _burn(acc.account, asset, amount: integer) {
+    require(amount > 0, "Invalid value. Amount must be non-zero positive");
+    require(asset.total_supply >= amount, "Invalid value. Amount is greater than total supply");
+    val balance = balance @ {asset, account};
+    require(balance.amount >= amount, "Invalid value. Amount is greater than balance");
+    before_burn(account, asset, amount);
+    balance.amount -= amount;
+    asset.total_supply -= amount;
+    create payment_history_entry (
+        account,
+        asset,
+        .delta = amount,
+        .op_index = op_context.op_index,
+        .is_input = true,
+        .entry_index = 0,
+        transfer_args = [
+            [(
+                amount, 
+                account_id = account.id,
+                entry_index = 0
+            )],
+            [(
+                amount, 
+                account_id = null.to_gtv().to_bytes(), 
+                entry_index = 0
+            )]
+        ].to_gtv().to_bytes()
+    );
+    after_burn(account, asset, amount);
+}
+
+function register_asset (name, issuing_brid: byte_array, total_supply: integer = 0): asset {
+    if (issuing_brid == chain_context.blockchain_rid) {
+        require(
+            total_supply == 0, 
+            "FT3: Can't register a non-crosschain token with a non-zero total supply."+
+            " Use mint to create tokens after registering"
+        );
+    }
+    val id = (name, issuing_brid).hash();
+    return create asset (id, name, issuing_brid, total_supply);
 }
 
 function get_asset_balances(account_id: byte_array) {
@@ -30,8 +105,17 @@ function get_asset_balances(account_id: byte_array) {
         asset = (
             id = .asset.id,
             name = .asset.name,
-            brid = .asset.issuing_brid
+            brid = .asset.issuing_brid,
+            supply = .asset.total_supply
         ),
         amount = .amount
     );
 }
+
+@extendable function before_mint(acc.account, asset, amount: integer);
+
+@extendable function after_mint(acc.account, asset, amount: integer);
+
+@extendable function before_burn(acc.account, asset, amount: integer);
+
+@extendable function after_burn(acc.account, asset, amount: integer);

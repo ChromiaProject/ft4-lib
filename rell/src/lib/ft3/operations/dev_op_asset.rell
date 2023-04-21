@@ -3,16 +3,32 @@ module;
 
 import dev_op: ^^.core.dev_op;
 import ft3: ^^.core;
+import acc: ^^.account;
 
 import xft3: ^^.crosschain;
 
-operation dev_register_asset(name, issuing_brid: byte_array) {
+operation dev_register_asset(name) {
     dev_op.require_dev();
-    ft3.register_asset(name, issuing_brid);
+    ft3.register_asset(name, chain_context.blockchain_rid, 0);
 }
 
-operation dev_register_xc_asset(name, issuing_brid: byte_array, origin_brid: byte_array) {
+operation dev_register_xc_asset(
+    name,
+    issuing_brid: byte_array,
+    origin_brid: byte_array,
+    total_supply: integer = 0
+) {
     dev_op.require_dev();
     val asset = ft3.register_asset(name, issuing_brid);
     create xft3.asset_origin (asset, origin_brid);
+}
+
+operation dev_mint(amount: integer, asset_id: byte_array, account_id: byte_array) {
+    dev_op.require_dev();
+    ft3._mint(acc.account @ { .id==account_id }, ft3.asset @ { .id == asset_id }, amount);
+}
+
+operation dev_burn(amount: integer, asset_id: byte_array, account_id: byte_array) {
+    dev_op.require_dev();
+    ft3._burn(acc.account @ { .id==account_id }, ft3.asset @ { .id == asset_id }, amount);
 }

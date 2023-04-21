@@ -25,7 +25,8 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
         asset = (
             id = .asset.id,
             name = .asset.name,
-            brid = .asset.issuing_brid
+            brid = .asset.issuing_brid,
+            supply = .asset.total_supply
         ),
         amount = .amount
     );
@@ -35,7 +36,8 @@ query get_asset_by_name(name) {
     return core.asset @* { name } (
         id = .id,
         name = .name,
-        brid = .issuing_brid
+        brid = .issuing_brid,
+        supply = .total_supply
     );
 
 }
@@ -46,7 +48,8 @@ query get_asset_by_id(asset_id: byte_array) {
     }(
         id = .id,
         name = .name,
-        brid = .issuing_brid
+        brid = .issuing_brid,
+        supply = .total_supply
     );
 }
 
@@ -54,7 +57,8 @@ query get_all_assets() {
     return core.asset @* {} (
         id = .id,
         name = .name,
-        brid = .issuing_brid
+        brid = .issuing_brid,
+        supply = .total_supply
     );
 }
 

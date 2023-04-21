@@ -12,7 +12,7 @@ function Account(id: byte_array) = require(
 /*
  * Can be negative
  */
-operation dev_give_points(account_id: byte_array, amount: integer){
+operation dev_give_points(amount: integer, account_id: byte_array){
 	val account = Account(account_id);
 	dev_op.dev_give_points_(account, amount);
 }

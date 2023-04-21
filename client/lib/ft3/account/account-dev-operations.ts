@@ -14,5 +14,5 @@ export function freeOp(accountId: Buffer): Operation {
 }
 
 export function givePointsOp(accountId: Buffer, points: number): Operation {
-  return ["ft3.dev_give_points", accountId, points];
+  return ["ft3.dev_give_points", points, accountId];
 }

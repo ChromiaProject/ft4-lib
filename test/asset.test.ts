@@ -1,4 +1,4 @@
-import { generateAssetName, generateId } from "./util/util";
+import { generateAssetName } from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
@@ -29,9 +29,9 @@ describe("Asset", () => {
 
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
-    const brid = generateId();
+    const brid = ft.get.gtxClient.newTransaction([]).gtx.blockchainRID;
     const assetId = ft.get.asset.id(assetName, brid);
-    await getNewAsset(ft, assetName, brid);
+    await getNewAsset(ft, assetName);
 
     const expectedAsset = await connection.getAssetById(assetId);
 

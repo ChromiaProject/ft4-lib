@@ -1,16 +1,17 @@
 @test module;
 import acc: ^^^.lib.ft3.account;
+import ft3: ^^^.lib.ft3.core;
 import ^^^.lib.ft3.operations.dev_op_account;
 import ^^^.lib.ft3.operations.dev_op_asset;
 import cu: ^^.core.utils;
 
-struct auth_id {
-    account_id: byte_array;
-    auth_descriptor_id: byte_array;
+struct auth {
+    account: acc.account;
+    auth_descriptor: acc.auth_descriptor;
 }
 
 struct auth_data {
-    auth_id;
+    auth;
     rell.test.keypair;
 }
 
@@ -22,10 +23,10 @@ function create_ft3_test_acc(rell.test.keypair): auth_data {
 
     val account = acc.account_auth_descriptor @ {
         .id == auth_descriptor.hash()
-    } ( .account.id );
+    } ( .account );
 
     return auth_data(
-        auth_id(account_id = account, auth_descriptor_id = auth_descriptor.hash()),
+        auth(account, auth_descriptor),
         keypair = keypair
     );
 }
@@ -35,10 +36,10 @@ function get_ft3_test_acc(rell.test.keypair): auth_data {
 
     val account = acc.account_auth_descriptor @ {
         .id == auth_descriptor.hash()
-    } ( .account.id );
+    } ( .account );
 
     return auth_data(
-        auth_id(account_id = account, auth_descriptor_id = auth_descriptor.hash()),
+        auth(account, auth_descriptor),
         keypair = keypair
     );
 }
@@ -54,26 +55,34 @@ function create_auth_descriptor(pubkey): acc.auth_descriptor {
         rules = null.to_gtv());
 }
 
-function create_asset(name: text): byte_array {
+function create_asset(name: text): ft3.asset {
     dev_op_asset.dev_register_asset(
-            name,
-            issuing_brid = chain_context.blockchain_rid
+            name
         )
         .sign(rell.test.keypairs.alice)
         .run();
 
-    return (name, chain_context.blockchain_rid).hash();
+    return ft3.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
+}
+
+function mint(ft3.asset, acc.account, amount: integer) {
+    dev_op_asset.dev_mint(
+            amount,
+            asset.id,
+            account.id
+        )
+        .run();
 }
 
 /*
  * Looks up the "account Auth Desc" and uses the found id to build the "auth_id" struct.
  */
-function _build_auth_id(auth_desc_id: byte_array) {
+function _build_auth(acc.auth_descriptor) {
     val account = acc.account_auth_descriptor @ {
-        .id == auth_desc_id 
-    } ( .account.id );
+        .id == auth_descriptor.hash()
+    } ( .account );
 
-    return auth_id(account_id = account, auth_descriptor_id = auth_desc_id);
+    return auth(account, auth_descriptor);
 }
 
 /*
@@ -87,7 +96,7 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
         .run();
 
     return auth_data(
-        _build_auth_id(auth_descriptor.hash()),
+        _build_auth(auth_descriptor),
         keypair = keypair
     ); 
 }
@@ -104,7 +113,7 @@ function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>
     tx.run();
 
     return auth_data(
-        _build_auth_id(auth_descriptor.hash()),
+        _build_auth(auth_descriptor),
         keypair = keys[0] // Doesn't matter much which we use
     ); 
 }

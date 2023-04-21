@@ -1,0 +1,52 @@
+@test
+module;
+import ^^^.main.*;
+import ^^.extensions.*;
+import ^^^.lib.ft3.ft3_basic_dev.*;
+import ^.utils;
+
+function test_before_mint_and_burn_extensions_are_called() {
+    val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth;
+    val asset = utils.create_asset("test");
+    
+    ft3.dev_op_asset.dev_mint(10, asset.id, alice.account.id)
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_equals(asset.total_supply, 10);
+    ft3.dev_op_asset.dev_burn(10, asset.id, alice.account.id)
+        .sign(rell.test.keypairs.alice)
+        .run();
+    assert_equals(asset.total_supply, 0);
+    
+    assert_true(mint_extensions_state.is_before_mint_called);
+    assert_equals(mint_extensions_state.before_mint_arg_asset_id, asset.id);
+    assert_equals(mint_extensions_state.before_mint_arg_account_id, alice.account.id);
+    assert_equals(mint_extensions_state.before_mint_arg_amount, 10);
+    assert_true(burn_extensions_state.is_before_burn_called);
+    assert_equals(burn_extensions_state.before_burn_arg_asset_id, asset.id);
+    assert_equals(burn_extensions_state.before_burn_arg_account_id, alice.account.id);
+    assert_equals(burn_extensions_state.before_burn_arg_amount, 10);
+}
+function test_after_mint_and_burn_extensions_are_called() {
+    val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth;
+    val asset = utils.create_asset("test");
+    ft3.dev_op_asset.dev_mint(10, asset.id, alice.account.id)
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_equals(asset.total_supply, 10);
+    ft3.dev_op_asset.dev_burn(10, asset.id, alice.account.id)
+        .sign(rell.test.keypairs.alice)
+        .run();
+    assert_equals(asset.total_supply, 0);
+    
+    assert_true(mint_extensions_state.is_after_mint_called);
+    assert_equals(mint_extensions_state.after_mint_arg_asset_id, asset.id);
+    assert_equals(mint_extensions_state.after_mint_arg_account_id, alice.account.id);
+    assert_equals(mint_extensions_state.after_mint_arg_amount, 10);
+    assert_true(burn_extensions_state.is_after_burn_called);
+    assert_equals(burn_extensions_state.after_burn_arg_asset_id, asset.id);
+    assert_equals(burn_extensions_state.after_burn_arg_account_id, alice.account.id);
+    assert_equals(burn_extensions_state.after_burn_arg_amount, 10);
+}

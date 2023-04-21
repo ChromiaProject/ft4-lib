@@ -39,6 +39,7 @@ describe("Asset balance", () => {
           id: asset1.id,
           name: asset1.name,
           brid: asset1.brid,
+          supply: 10,
         },
         amount: 10,
       },
@@ -47,6 +48,7 @@ describe("Asset balance", () => {
           id: asset2.id,
           name: asset2.name,
           brid: asset2.brid,
+          supply: 20,
         },
         amount: 20,
       },
@@ -69,6 +71,7 @@ describe("Asset balance", () => {
         id: asset2.id,
         name: asset2.name,
         brid: asset2.brid,
+        supply: 70,
       },
       amount: 50,
     });

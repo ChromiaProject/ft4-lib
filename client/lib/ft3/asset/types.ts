@@ -2,6 +2,7 @@ export type Asset = {
   id: Buffer;
   name: string;
   brid: Buffer;
+  supply: number;
 };
 
 export type Balance = {
