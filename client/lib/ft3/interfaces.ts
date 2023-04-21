@@ -119,10 +119,7 @@ export interface ftQuerySession {
 
 export interface Connection {
   client: GtxClient;
-  query: <T>(
-    query: QueryObject,
-    mapper?: (value: any) => any
-  ) => Promise<T | null>;
+  query: <T>(query: QueryObject) => Promise<T | null>;
 
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
