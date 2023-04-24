@@ -33,7 +33,7 @@ describe("Asset balance", () => {
     const foundAccount = await connection.getAccountById(account.id);
     const balances = await foundAccount.getBalances();
 
-    expect(balances).toContainEqual([
+    expect(balances.sort()).toEqual([
       {
         asset: {
           id: asset1.id,
@@ -50,7 +50,7 @@ describe("Asset balance", () => {
         },
         amount: 20,
       },
-    ]);
+    ].sort());
   });
 
   it("should return balance for specific asset", async () => {
