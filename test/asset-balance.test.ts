@@ -33,7 +33,7 @@ describe("Asset balance", () => {
     const foundAccount = await connection.getAccountById(account.id);
     const balances = await foundAccount.getBalances();
 
-    expect(balances.sort()).toEqual([
+    expect([...balances].sort()).toEqual([
       {
         asset: {
           id: asset1.id,
