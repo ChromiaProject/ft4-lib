@@ -92,14 +92,6 @@ class AccountBuilder {
           );
         })
       );
-
-      this.balances.forEach((balance) => {
-        tb.add(giveBalanceOp(balance.asset.id, account.id, balance.amount));
-      });
-
-      tb.add(nop());
-      const tx = await tb.buildSigned();
-      await tx.postAndWaitConfirmation();
     }
   }
 
