@@ -41,13 +41,21 @@ export function singleSigArgs(
   ]);
 }
 
+export class AuthDescriptorError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "SignatureCountError";
+  }
+}
+
 export function multiSigArgs(
   flags: string[],
   requiredSignatures: number,
   signerPubKeys: BufferId[]
 ): MultiSigAuthDescriptorArgs {
   if (requiredSignatures > signerPubKeys.length) {
-    throw new Error(
+    throw new AuthDescriptorError(
       "Number of required signatures have to be less or equal to number of pubkeys"
     );
   }

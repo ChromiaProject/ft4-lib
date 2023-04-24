@@ -34,3 +34,11 @@ export interface PaymentHistoryIterator {
   fastForward: () => Promise<readonly PaymentHistoryEntry[]>;
   hasMore: () => boolean;
 }
+
+export class PaymentHistoryError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "PaymentHistoryError";
+  }
+}
