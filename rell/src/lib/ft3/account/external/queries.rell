@@ -47,3 +47,6 @@ query get_accounts_by_participant_id(id: byte_array) {
 query get_accounts_by_auth_descriptor_id(id: byte_array) {
     return acc.account_auth_descriptor @* { id } ( .account.id );
 }
+
+query get_ctr_for_auth_descriptor(auth_descriptor_id: byte_array) =
+    acc.account_auth_descriptor @ { .id == auth_descriptor_id }( .ctr );

@@ -1,7 +1,8 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { Balance, AssetAmount } from "../asset/types";
-import { AuthDescriptor } from "./auth-descriptor/types";
+import { AuthDescriptor, GtvAuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
+import { BufferId } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
 
 export type Account = {
@@ -37,3 +38,14 @@ export type User = {
   keyManagers: KeyManager[];
   authDescriptor: AuthDescriptor;
 };
+
+// TODO: Rename to Account after deleting Account type
+export interface IAccount {
+  id: BufferId;
+  // TODO: Use Page<Balance> type instead
+  getBalances: () => Promise<Balance[]>;
+  getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
+  isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
+  getAuthDescriptors: () => Promise<GtvAuthDescriptor[]>;
+  getRateLimit: () => Promise<RateLimit>;
+}

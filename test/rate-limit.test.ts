@@ -1,6 +1,7 @@
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { User } from "../client/lib/ft3/account/types";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { createConnection } from "../client/lib/ft3/ft-session";
+import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import { getUserSession } from "./util/blockchain-util";
@@ -9,6 +10,7 @@ import TestUser from "./util/test-user";
 jest.setTimeout(2000000);
 
 let _ft: ftUserSession;
+let _connection: Connection;
 
 const REQUEST_MAX_COUNT = 10;
 const RECOVERY_TIME = 5000;
@@ -17,6 +19,7 @@ const POINTS_AT_ACCOUNT_CREATION = 1;
 describe.skip("Rate Limit", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
+    _connection = createConnection(_ft.get.gtxClient);
   });
 
   describe("Blockchain request configuration in run.xml", () => {
@@ -42,7 +45,8 @@ describe.skip("Rate Limit", () => {
         .withParticipants([user.signatureProvider])
         .build();
 
-      const rateLimit = await ft.get.account.rateLimit(account.id);
+      const foundAccount = await _connection.getAccountById(account.id);
+      const rateLimit = await foundAccount.getRateLimit();
       expect(rateLimit.points).toBe(POINTS_AT_ACCOUNT_CREATION);
     });
 
@@ -58,7 +62,8 @@ describe.skip("Rate Limit", () => {
       await ft.account.admin.freeOperation(adminUser(), account.id); // used to make one block
       await ft.account.admin.freeOperation(adminUser(), account.id); // used to calculate the last block's timestamp (previous block).
       // check the balance
-      const rateLimit = await ft.get.account.rateLimit(account.id);
+      const foundAccount = await _connection.getAccountById(account.id);
+      const rateLimit = await foundAccount.getRateLimit();
       expect(rateLimit.points).toBe(4 + POINTS_AT_ACCOUNT_CREATION); // 20 seconds / 5s recovery time + points given by default
     });
 
@@ -73,7 +78,8 @@ describe.skip("Rate Limit", () => {
       await expect(
         makeRequests(ft, 4 + POINTS_AT_ACCOUNT_CREATION)
       ).resolves.toBeNull();
-      const rateLimit = await ft.get.account.rateLimit(account.id);
+      const foundAccount = await _connection.getAccountById(account.id);
+      const rateLimit = await foundAccount.getRateLimit();
       expect(rateLimit.points).toBe(0);
     });
 

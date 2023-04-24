@@ -7,7 +7,8 @@ import {
 } from "./account/payment-history/interfaces";
 import { Account, RateLimit, User } from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
-import { ChainInfo } from "./utils/types";
+import { ChainInfo, QueryObject } from "./utils/types";
+import { IAccount } from "./account/types";
 
 export interface ftUserSession {
   user: User;
@@ -104,7 +105,7 @@ export interface ftQuerySession {
       participantId: (id: BufferId) => Promise<Account[]>;
       authDescriptorId: (id: BufferId) => Promise<Account[]>;
       ids: (ids: Buffer[]) => Promise<Account[]>;
-      id: (id: BufferId) => Promise<Account>;
+      id: (id: BufferId) => Promise<Account | null>;
     };
     paymentHistory: {
       iterator: (
@@ -126,4 +127,19 @@ export interface ftQuerySession {
     rateLimit: (accountId: BufferId) => Promise<RateLimit>;
     idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) => Buffer;
   };
+}
+
+export interface Connection {
+  client: GtxClient;
+  query: <T>(query: QueryObject) => Promise<T | null>;
+
+  getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
+  getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
+  getAccountsByAuthDescriptorId: (
+    authDescriptorId: BufferId
+  ) => Promise<IAccount[]>;
+
+  getAssetById: (assetId: BufferId) => Promise<Asset | null>;
+  getAssetsByName: (name: string) => Promise<Asset[]>;
+  getAllAssets: () => Promise<Asset[]>;
 }

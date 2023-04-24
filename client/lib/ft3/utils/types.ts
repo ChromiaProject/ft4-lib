@@ -30,3 +30,12 @@ export type ExternalWalletConnection = {
 };
 
 export type Query = [string, { [property: string]: RawGtv }];
+
+export type QueryObject = {
+  name: string;
+  args: { [property: string]: RawGtv };
+};
+
+export function freeze<T>(object: T): T {
+  return Object.freeze(object);
+}

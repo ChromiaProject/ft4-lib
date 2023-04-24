@@ -52,8 +52,7 @@ function get_ft3_test_acc(rell.test.keypair): auth_data {
 
 function create_auth_descriptor(pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "S",
-        //[ pubkey ],
+        acc.auth_type.S,
         [
             ["T"].to_gtv(),
             pubkey.to_hex().to_gtv()
@@ -148,4 +147,16 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
         i += 1;
     }    
     return tx;
+}
+
+function add_auth_op(rell.test.tx, message: text) {
+    return tx
+        .op(dev_op_auth.dev_authenticated_operation(message))
+        .sign(byte_array(chain_context.args.admin_priv_key));
+}
+
+function perform_large_transfer(rell.test.tx, amount: integer, to_address: text) {
+    return tx
+        .op(dev_op_auth.dev_perform_large_transfer(1000, to_address))
+        .sign(byte_array(chain_context.args.admin_priv_key));
 }

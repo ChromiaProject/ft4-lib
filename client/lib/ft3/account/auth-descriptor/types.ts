@@ -1,3 +1,10 @@
+export enum AuthType {
+  single_sig = "S",
+  multi_sig = "M",
+  external_single_sig = "ES",
+  external_multi_sig = "EM",
+}
+
 export type AuthDescriptorSimpleRule = readonly [string, string, number];
 export type AuthDescriptorCompositeRule = readonly [
   AuthDescriptorAnyRule,
@@ -19,7 +26,7 @@ export type AuthDescriptor = {
 };
 
 export type GtvAuthDescriptor = readonly [
-  authType: string,
+  authType: number,
   args: AuthDescriptorArgs,
   rule: AuthDescriptorRule | null
 ];
