@@ -1,6 +1,8 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { FlagsType } from "../../client/lib/ft3/account/auth-descriptor";
-import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
+import {
+  authDescriptor,
+  FlagsType,
+} from "../../client/lib/ft3/account/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
 import { Account } from "../../client/lib/ft3/account/types";
 import { Asset, Balance } from "../../client/lib/ft3/asset/types";
@@ -112,7 +114,7 @@ class AccountBuilder {
       return this.session.user.authDescriptor;
     }
     if (this.participants.length > 1) {
-      return create.multiSig
+      return authDescriptor.create.multiSig
         .withArgs(
           this.flags,
           this.requiredSignaturesCount,
@@ -121,7 +123,7 @@ class AccountBuilder {
         .andRules(this.rules);
     } else {
       const [participant] = this.participants;
-      return create.singleSig
+      return authDescriptor.create.singleSig
         .withArgs(this.flags, participant.pubKey)
         .andRules(this.rules);
     }

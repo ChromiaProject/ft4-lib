@@ -1,8 +1,6 @@
 import { encryption } from "postchain-client";
 import { ftAuth } from "../client/lib/ft3/authentication/ft";
-import { KeyPair } from "../client/lib/cryptoUtils";
 import { op } from "../client/lib/ft3/utils";
-import { create } from "../client/lib/ft3/account/auth-descriptor/auth-descriptor";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createClient } from "./util/blockchain-util";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
@@ -121,11 +119,7 @@ describe("Authenticator session", () => {
 
   it("should throw an error when there is no key handler that satisfies operation auth requirements", async () => {
     const accountId = encryption.randomBytes(32);
-    const keyPair = new KeyPair();
-    const authDescriptor = create.singleSig.withArgs(
-      ["a"],
-      keyPair.pubKey
-    ).andNoRules;
+    const { keyPair, authDescriptor } = createTestAuthDescriptor(["a"]);
 
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
