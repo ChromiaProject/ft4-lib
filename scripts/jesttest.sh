@@ -67,7 +67,7 @@ docker-compose -f dockers/jest-test.yml up -d && sleep 15
 if test $? -eq 0
 then
     echo "\n> npx jest " "$opt" "\n"
-    npx jest $opt
+    npx jest $opt $@
     if test $? -eq 0
     then 
         docker-compose -f dockers/jest-test.yml down

@@ -12,6 +12,7 @@
       "dom"
     ],
     "resolveJsonModule": true,
+    "types": ["jest"]
   },
   "include": ["./client/**/*", "./test/**/*"],
   "exclude": [
