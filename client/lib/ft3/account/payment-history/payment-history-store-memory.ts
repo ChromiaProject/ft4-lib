@@ -1,4 +1,8 @@
-import { PaymentHistoryRetriever, PaymentHistoryStore } from "./interfaces";
+import {
+  PaymentHistoryRetriever,
+  PaymentHistoryStore,
+  PaymentHistoryError,
+} from "./interfaces";
 import { PaymentHistoryEntry } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
@@ -10,7 +14,8 @@ export async function createPaymentHistoryStoreMemory(
   accountId: BufferId,
   pageSize: number
 ): Promise<PaymentHistoryStore> {
-  if (pageSize < 1) throw new Error("Page size must be at least 1");
+  if (pageSize < 1)
+    throw new PaymentHistoryError("Page size must be at least 1");
   const id = formatter.ensureBuffer(accountId);
 
   const retriever = createPaymentHistoryRetriever(session, accountId);
@@ -44,7 +49,7 @@ function build(
     getEntryCount: () => _entryCount,
     get: async (page: number): Promise<readonly PaymentHistoryEntry[]> => {
       if (page >= _pageCount) {
-        throw new Error(
+        throw new PaymentHistoryError(
           "Page out of bounds. Sync if you want to fetch " +
             "possible new entries"
         );

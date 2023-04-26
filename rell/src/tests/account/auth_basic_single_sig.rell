@@ -103,6 +103,23 @@ function test_bad_ad_missing_data() {
         .run_must_fail(); // Won't get a message back
 }
 
+function test_unsigned_ad_is_rejected() {
+    val keypair = rell.test.keypairs.alice;
+    val adBad = acc.auth_descriptor(
+        acc.auth_type.S,
+        [ keypair.pub ],
+        [
+            ["T"].to_gtv(),
+            keypair.pub.to_hex().to_gtv()
+        ],
+        rules = null.to_gtv()
+    );
+
+    rell.test.tx()
+        .op(dev_op_account.dev_register_account(adBad))
+        .run_must_fail();
+}
+
 // ----- util -----
 
 /*
@@ -110,8 +127,8 @@ function test_bad_ad_missing_data() {
  *
 function create_BAD_auth_descriptor_S_but_0_pub(pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "S",
-        //list<pubkey>(), // <-- Incorrect!
+        acc.auth_type.S,
+        list<pubkey>(), // <-- Incorrect!
         [ 
             ["T"].to_gtv(),
             "".to_gtv()
@@ -125,8 +142,8 @@ function create_BAD_auth_descriptor_S_but_0_pub(pubkey): acc.auth_descriptor {
  *
 function create_BAD_auth_descriptor_S_but_2_pub(pubkey1: pubkey, pubkey2: pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "S",
-        //[ pubkey1, pubkey2 ], // <-- Incorrect
+        acc.auth_type.S,
+        [ pubkey1, pubkey2 ], // <-- Incorrect
         [
             ["T"].to_gtv(),
             pubkey1.to_hex().to_gtv(),
@@ -141,8 +158,8 @@ function create_BAD_auth_descriptor_S_but_2_pub(pubkey1: pubkey, pubkey2: pubkey
  *
 function create_BAD_auth_descriptor_missing_data(pubkey): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "S",
-        //[ pubkey ],
+        acc.auth_type.S,
+        [ pubkey ],
         [
             ["T"].to_gtv() 
         ], // <--- Should have pub key here

@@ -21,3 +21,4 @@ rell/target
 rell/out
 
 yarn.log
+coverage

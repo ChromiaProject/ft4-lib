@@ -1,9 +1,10 @@
 import { formatter } from "postchain-client";
-import { authDescriptor, AuthType } from ".";
+import { authDescriptor, serializeAuthType } from ".";
 import { BufferId } from "../../../cryptoUtils";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
+  AuthType,
   MultiSigAuthDescriptorArgs,
   SingleSigAuthDescriptorArgs,
 } from "./types";
@@ -13,7 +14,11 @@ export function createSingleSignatureAuthDescriptor(
   rules?: AuthDescriptorRule | null
 ): AuthDescriptor {
   return Object.freeze(
-    authDescriptor.fromGtv([AuthType.single_sig, args, rules])
+    authDescriptor.fromGtv([
+      serializeAuthType(AuthType.single_sig),
+      args,
+      rules,
+    ])
   );
 }
 
@@ -22,7 +27,7 @@ export function createMultiSignatureAuthDescriptor(
   rules: AuthDescriptorRule | null
 ): AuthDescriptor {
   return Object.freeze(
-    authDescriptor.fromGtv([AuthType.multi_sig, args, rules])
+    authDescriptor.fromGtv([serializeAuthType(AuthType.multi_sig), args, rules])
   );
 }
 
@@ -36,13 +41,21 @@ export function singleSigArgs(
   ]);
 }
 
+export class AuthDescriptorError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "SignatureCountError";
+  }
+}
+
 export function multiSigArgs(
   flags: string[],
   requiredSignatures: number,
   signerPubKeys: BufferId[]
 ): MultiSigAuthDescriptorArgs {
   if (requiredSignatures > signerPubKeys.length) {
-    throw new Error(
+    throw new AuthDescriptorError(
       "Number of required signatures have to be less or equal to number of pubkeys"
     );
   }

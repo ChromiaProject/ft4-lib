@@ -64,7 +64,9 @@ export function transactionBuilder(
           !!intersection(auth_data.flags, km.flags).length;
         const manager = user.keyManagers.find(isUsable);
         if (!manager) {
-          throw new Error("No keymanager registered to handle this operation");
+          throw new TransactionBuilderError(
+            "No keymanager registered to handle this operation"
+          );
         }
         return await manager.authorize(operation, auth_data);
       })
@@ -97,6 +99,14 @@ export function transactionBuilder(
   context.buildSigned = buildSigned.bind(context);
 
   return context as TransactionBuilder;
+}
+
+export class TransactionBuilderError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "TransactionBuilderError";
+  }
 }
 
 const intersection = <T>(a: Set<T>, b: Set<T>): T[] =>

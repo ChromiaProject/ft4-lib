@@ -9,6 +9,7 @@
   },
   "scripts": {
     "version:rell": "./scripts/version.sh",
+    "test:js-coverage": "./scripts/jesttest.sh -- --coverage",
     "test:js": "./scripts/jesttest.sh",
     "test:rell": "./scripts/relltest.sh",
     "test": "./scripts/test.sh",

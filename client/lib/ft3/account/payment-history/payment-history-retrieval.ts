@@ -3,7 +3,7 @@ import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { formatter, gtv } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
-import { PaymentHistoryRetriever } from "./interfaces";
+import { PaymentHistoryError, PaymentHistoryRetriever } from "./interfaces";
 
 export function createPaymentHistoryRetriever(
   session: GtxClient,
@@ -21,7 +21,8 @@ export function createPaymentHistoryRetriever(
       amount: number,
       lastElementRowid: string | null = null
     ): Promise<[PaymentHistoryEntry[], PaymentHistoryCursor]> => {
-      if (amount > 100) throw new Error("amount needs to be <= 100");
+      if (amount > 100)
+        throw new PaymentHistoryError("amount needs to be <= 100");
       const cursor = gtv.encode([amount, lastElementRowid]).toString("base64");
       const res = await session.query("ft3.get_payment_history_paginated", {
         account_id: id,
