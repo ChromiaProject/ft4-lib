@@ -1,7 +1,7 @@
 import { encryption, gtv } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
-import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
+import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -55,10 +55,10 @@ export function createTestAuthDescriptor(flags: string[] = []): {
   authDescriptor: AuthDescriptor;
 } {
   const keyPair = new KeyPair();
-  const authDescriptor = create.singleSig.withArgs(
+  const descriptor = authDescriptor.create.singleSig.withArgs(
     flags,
     keyPair.pubKey
   ).andNoRules;
 
-  return { keyPair, authDescriptor };
+  return { keyPair, authDescriptor: descriptor };
 }

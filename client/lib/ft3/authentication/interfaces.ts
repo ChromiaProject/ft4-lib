@@ -12,7 +12,9 @@ export interface Authenticator {
 
   createSession(): AuthenticatorSession;
   getAuthRequirements(operation: Operation): Promise<string[]>;
-  getKeyHandlerForOperation(operation: Operation): Promise<KeyHandler | null>;
+  getKeyHandlerForOperation(
+    operation: Operation
+  ): Promise<KeyHandler | undefined>;
 }
 
 export interface KeyHandler {

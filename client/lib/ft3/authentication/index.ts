@@ -39,7 +39,7 @@ async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
   operation: Operation
-): Promise<KeyHandler | null> {
+): Promise<KeyHandler | undefined> {
   const authRequirements = await getAuthRequirements(
     authDataService,
     operation
