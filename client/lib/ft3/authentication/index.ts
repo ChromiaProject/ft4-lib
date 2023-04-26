@@ -61,6 +61,10 @@ function createAuthenticatorSession(
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation
       );
+      if (!keyHandler) {
+        // TODO: replace `operation[0]` with `operation.name` when Operation type is updated
+        throw new Error(`Cannot authenticate operation: ${operation[0]}`);
+      }
       usedKeyHandlers.add(keyHandler);
       return await keyHandler.authenticate(authenticator.accountId, operation);
     },
