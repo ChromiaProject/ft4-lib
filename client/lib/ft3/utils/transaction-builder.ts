@@ -6,7 +6,7 @@ import { Operation } from "./types";
 import { Authenticator, KeyHandler } from "../authentication/interfaces";
 
 export type TransactionBuilder = {
-  _operations: Operation[];
+  _operations: [Operation, Authenticator][];
   _keyhandlersUsed: KeyHandler[];
   /**
    * Adds an operation to include in the final transaction
@@ -14,6 +14,26 @@ export type TransactionBuilder = {
    * @returns an instance of the transaction builder object
    */
   add: (operation: Operation) => TransactionBuilder;
+  /**
+   * Adds an operation to include in the final transaction
+   * the operation will be authenticated using the provided
+   * authenticator, and if `buildSigned` is called, the authenticator
+   * will also be used to sign the transaction.
+   * @param operation the operation to add
+   * @param authenticator the authenticator to use for this and only this operation
+   * @returns an instance of the transaction builder object
+   */
+  addWithAuthenticator: (
+    operation: Operation,
+    authenticator: Authenticator
+  ) => TransactionBuilder;
+  /**
+   * Add key handlers that will also be included as signers to this operation
+   * if `buildSigned` is called, the key handlers will also sign the transaction
+   * @param keyHandlers the key handlers to use for signing
+   * @returns an instance of the transaction builder object
+   */
+  addSigners: (...keyHandlers: KeyHandler[]) => TransactionBuilder;
   /**
    * Builds an unsigned transaction containgin the previously added
    * transactions, as well as any authhorization operations as needed.
@@ -43,19 +63,19 @@ export function transactionBuilder(
   client: GtxClient
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
-    this._operations.push(operation);
+    this._operations.push([operation, authenticator]);
     return this;
   }
 
   async function build(signers: Buffer[] = []) {
     const txn = client.newTransaction(signers);
     const operations = Promise.all(
-      this._operations.map(async (operation: Operation) => {
+      this._operations.map(async (tuple: [Operation, Authenticator]) => {
+        const [operation, authenticator] = tuple;
         if (operation[0] === "nop") return operation;
-        const authData = await authenticator.getAuthRequirements(operation);
 
-        const keyHandler = authenticator.keyHandlers.find((kh) =>
-          kh.satisfiesAuthRequirements(authData)
+        const keyHandler = await authenticator.getKeyHandlerForOperation(
+          operation
         );
         if (!keyHandler) {
           throw new Error("No keyhandler registered to handle this operation");
@@ -87,6 +107,19 @@ export function transactionBuilder(
     return tx;
   }
 
+  function addSigners(...signers: KeyHandler[]): TransactionBuilder {
+    signers.forEach((signer) => this._keyhandlersUsed.push(signer));
+    return this;
+  }
+
+  function addWithAuthenticator(
+    operation: Operation,
+    authenticator: Authenticator
+  ): TransactionBuilder {
+    this._operations.push([operation, authenticator]);
+    return this;
+  }
+
   const context: Partial<TransactionBuilder> = {
     _operations: [],
     _keyhandlersUsed: [],
@@ -95,6 +128,8 @@ export function transactionBuilder(
   context.add = add.bind(context);
   context.build = build.bind(context);
   context.buildSigned = buildSigned.bind(context);
+  context.addSigners = addSigners.bind(context);
+  context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
   return context as TransactionBuilder;
 }
