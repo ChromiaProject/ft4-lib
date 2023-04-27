@@ -17,7 +17,7 @@ export type TransactionBuilder = {
   /**
    * Adds an operation to include in the final transaction
    * the operation will be authenticated using the provided
-   * authenticator, and if `buildSigned` is called, the authenticator
+   * authenticator, and if `build` is called, the authenticator
    * will also be used to sign the transaction.
    * @param operation the operation to add
    * @param authenticator the authenticator to use for this and only this operation
@@ -29,26 +29,26 @@ export type TransactionBuilder = {
   ) => TransactionBuilder;
   /**
    * Add key handlers that will also be included as signers to this operation
-   * if `buildSigned` is called, the key handlers will also sign the transaction
+   * if `build` is called, the key handlers will also sign the transaction
    * @param keyHandlers the key handlers to use for signing
    * @returns an instance of the transaction builder object
    */
   addSigners: (...keyHandlers: KeyHandler[]) => TransactionBuilder;
   /**
-   * Builds an unsigned transaction containgin the previously added
-   * transactions, as well as any authhorization operations as needed.
+   * Builds a transaction the same way as `buildUnsigned` and also signs it
+   * using the same key handlers that were used to authorize the operations,
+   * as well as any explicitly added key handlers.
    * @param signers array of participants that should sign this transaction
    * @returns A promised containing the unsigned transaction
    */
-  build: (signers?: Buffer[]) => Promise<Itransaction>;
+  build: () => Promise<Itransaction>;
   /**
-   * Builds a transaction and also signs it using the default signature provided.
-   * If the optional parameter `signers` is not provided, the default participants
-   * will be used.
+   * Builds an unsigned transaction containgin the previously added
+   * transactions, as well as any authhorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
    */
-  buildSigned: (signers?: Buffer[]) => Promise<Itransaction>;
+  buildUnsigned: () => Promise<Itransaction>;
   session: GtxClient;
 };
 
@@ -67,9 +67,26 @@ export function transactionBuilder(
     return this;
   }
 
-  async function build(signers: Buffer[] = []) {
-    const txn = client.newTransaction(signers);
-    const operations = Promise.all(
+  function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
+    return keyHandlers.map((handler) => handler.keyStore.pubKey);
+  }
+
+  async function buildUnsigned() {
+    const operations = await authenticateOperations();
+    const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
+    operations.forEach((op: Operation | Operation[]) => {
+      if (Array.isArray(op[0])) {
+        txn.addOperation(...op[0]);
+      } else {
+        const [name, ...args] = op;
+        txn.addOperation(name, ...args);
+      }
+    });
+    return txn;
+  }
+
+  async function authenticateOperations(): Promise<Operation[]> {
+    return await Promise.all(
       this._operations.map(async (tuple: [Operation, Authenticator]) => {
         const [operation, authenticator] = tuple;
         if (operation[0] === "nop") return operation;
@@ -87,22 +104,10 @@ export function transactionBuilder(
         );
       })
     );
-    (await operations).forEach((op: Operation | Operation[]) => {
-      if (Array.isArray(op[0])) {
-        txn.addOperation(...op[0]);
-      } else {
-        const [name, ...args] = op;
-        txn.addOperation(name, ...args);
-      }
-    });
-    return txn;
   }
 
-  async function buildSigned() {
-    const participants = this._keyhandlersUsed.map(
-      (handler) => handler.keyStore.pubKey
-    );
-    const tx = await this.build(participants);
+  async function build() {
+    const tx = await this.buildUnsigned();
     this._keyhandlersUsed.forEach((handler: KeyHandler) => handler.sign(tx));
     return tx;
   }
@@ -127,7 +132,7 @@ export function transactionBuilder(
   };
   context.add = add.bind(context);
   context.build = build.bind(context);
-  context.buildSigned = buildSigned.bind(context);
+  context.buildUnsigned = buildUnsigned.bind(context);
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
