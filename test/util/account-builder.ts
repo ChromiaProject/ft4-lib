@@ -10,7 +10,7 @@ import { ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtx } from "postchain-client";
 import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
-import { transactionBuilder } from "../../client/lib/ft3/utils/transaction-builder";
+import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -83,7 +83,7 @@ class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const tb = transactionBuilder(
+      const tb = legacyTransactionBuilder(
         this.session.user,
         this.session.get.gtxClient
       );

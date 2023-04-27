@@ -2,18 +2,18 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
+import { AuthData, KeyManager } from "../account/auth/types";
+import { User } from "../account/types";
 import { Operation } from "./types";
-import { Authenticator, KeyHandler } from "../authentication/interfaces";
 
-export type TransactionBuilder = {
+export type LegacyTransactionBuilder = {
   _operations: Operation[];
-  _keyhandlersUsed: KeyHandler[];
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
    * @returns an instance of the transaction builder object
    */
-  add: (operation: Operation) => TransactionBuilder;
+  add: (operation: Operation) => LegacyTransactionBuilder;
   /**
    * Builds an unsigned transaction containgin the previously added
    * transactions, as well as any authhorization operations as needed.
@@ -29,20 +29,22 @@ export type TransactionBuilder = {
    * @returns A promise containing the signed transaction
    */
   buildSigned: (signers?: Buffer[]) => Promise<Itransaction>;
+  user: User;
   session: GtxClient;
 };
 
 /**
+ * @deprecated
  * Creates a new TransactionBuilder instance
  * @param user object that holds authentication information for the transaction
  * @param client object that holds connection info for the transaction
  * @returns a TransactionBuilder instance
  */
-export function transactionBuilder(
-  authenticator: Authenticator,
+export function legacyTransactionBuilder(
+  user: User,
   client: GtxClient
-): TransactionBuilder {
-  function add(operation: Operation): TransactionBuilder {
+): LegacyTransactionBuilder {
+  function add(operation: Operation): LegacyTransactionBuilder {
     this._operations.push(operation);
     return this;
   }
@@ -52,19 +54,22 @@ export function transactionBuilder(
     const operations = Promise.all(
       this._operations.map(async (operation: Operation) => {
         if (operation[0] === "nop") return operation;
-        const authData = await authenticator.getAuthRequirements(operation);
 
-        const keyHandler = authenticator.keyHandlers.find((kh) =>
-          kh.satisfiesAuthRequirements(authData)
-        );
-        if (!keyHandler) {
-          throw new Error("No keyhandler registered to handle this operation");
+        let auth_data: AuthData = null;
+        try {
+          auth_data = await client.query(`${operation[0]}_auth_data`);
+        } catch {
+          auth_data = await client.query(`ft3.default_auth_data`);
         }
-        this._keyhandlersUsed.push(keyHandler);
-        return await keyHandler.authenticate(
-          authenticator.accountId,
-          operation
-        );
+        const isUsable = (km: KeyManager) =>
+          !!intersection(auth_data.flags, km.flags).length;
+        const manager = user.keyManagers.find(isUsable);
+        if (!manager) {
+          throw new TransactionBuilderError(
+            "No keymanager registered to handle this operation"
+          );
+        }
+        return await manager.authorize(operation, auth_data);
       })
     );
     (await operations).forEach((op: Operation | Operation[]) => {
@@ -78,23 +83,32 @@ export function transactionBuilder(
     return txn;
   }
 
-  async function buildSigned() {
-    const participants = this._keyhandlersUsed.map(
-      (handler) => handler.keyStore.pubKey
-    );
+  async function buildSigned(signers: Buffer[] | undefined = undefined) {
+    const participants = signers ? signers : user.authDescriptor.signers;
     const tx = await this.build(participants);
-    this._keyhandlersUsed.forEach((handler: KeyHandler) => handler.sign(tx));
+    await tx.sign(user.signatureProvider);
     return tx;
   }
 
-  const context: Partial<TransactionBuilder> = {
+  const context: Partial<LegacyTransactionBuilder> = {
     _operations: [],
-    _keyhandlersUsed: [],
     session: client,
+    user,
   };
   context.add = add.bind(context);
   context.build = build.bind(context);
   context.buildSigned = buildSigned.bind(context);
 
-  return context as TransactionBuilder;
+  return context as LegacyTransactionBuilder;
 }
+
+export class TransactionBuilderError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "TransactionBuilderError";
+  }
+}
+
+const intersection = <T>(a: Set<T>, b: Set<T>): T[] =>
+  [...a].filter((x) => b.has(x));
