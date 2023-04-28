@@ -15,7 +15,7 @@ pipelines:
             - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
             - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
             - apt update
-            - apt install default-jre
+            - apt install default-jre -y
             - apt install chr
             - npm install docker
             - npm test
