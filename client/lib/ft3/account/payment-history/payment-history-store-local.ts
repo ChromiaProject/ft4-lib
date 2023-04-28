@@ -1,4 +1,8 @@
-import { PaymentHistoryRetriever, PaymentHistoryStore } from "./interfaces";
+import {
+  PaymentHistoryError,
+  PaymentHistoryRetriever,
+  PaymentHistoryStore,
+} from "./interfaces";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
@@ -33,7 +37,8 @@ export async function createNewPaymentHistoryStoreLocal(
   accountId: BufferId,
   pageSize: number
 ): Promise<PaymentHistoryStore> {
-  if (pageSize < 1) throw new Error("Page size must be at least 1");
+  if (pageSize < 1)
+    throw new PaymentHistoryError("Page size must be at least 1");
   const id = formatter.ensureBuffer(accountId);
 
   const retriever = createPaymentHistoryRetriever(session, accountId);
@@ -51,7 +56,8 @@ export async function loadPaymentHistoryStoreLocal(
   accountId: BufferId,
   pageSize: number
 ): Promise<PaymentHistoryStore> {
-  if (pageSize < 1) throw new Error("Page size must be at least 1");
+  if (pageSize < 1)
+    throw new PaymentHistoryError("Page size must be at least 1");
   const id = formatter.ensureBuffer(accountId);
 
   const retriever = createPaymentHistoryRetriever(session, accountId);
@@ -60,7 +66,7 @@ export async function loadPaymentHistoryStoreLocal(
     .toUpperCase()}_${retriever.brid.toUpperCase()}`;
 
   const data = JSON.parse(localStorage.getItem(key));
-  if (!data) throw new Error("Cached payment history not found!");
+  if (!data) throw new PaymentHistoryError("Cached payment history not found!");
   const [jsonEntries, oldEntryCount] = data;
   let entries = jsonEntries.map((e) => paymentHistoryEntryFromJSON(e));
   const toAdd = await loadNewerEntries(retriever, oldEntryCount, entries);
@@ -111,7 +117,7 @@ function build(
     getEntryCount: () => entryCount,
     get: async (page: number): Promise<readonly PaymentHistoryEntry[]> => {
       if (page >= pageCount) {
-        throw new Error(
+        throw new PaymentHistoryError(
           "Page out of bounds. Sync if you want to fetch " +
             "possible new entries"
         );
@@ -175,7 +181,7 @@ async function loadNewerEntries(
     let toAdd = [];
     while (!done) {
       if (newEntriesAmount < 0) {
-        throw new Error(
+        throw new PaymentHistoryError(
           "Unexpected error: local payment history might be corrupted"
         );
       }

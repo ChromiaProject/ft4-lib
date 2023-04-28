@@ -1,0 +1,18 @@
+blockchains:
+  ft3_jest_test: #Name of the blockchain
+    module: main #Entrypoint to the project
+    moduleArgs:
+      lib.ft3.core:
+        my_blockchain_name: test
+        my_blockchain_website: test_website
+        my_blockchain_description: test_description
+        rate_limit_active: 1
+        rate_limit_max_points: 10
+        rate_limit_recovery_time: 5000
+        rate_limit_points_at_account_creation: 1
+
+compile:
+  source: ../rell/src
+
+database:
+  host: jdbc:postgresql://localhost/postchain

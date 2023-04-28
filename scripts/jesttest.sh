@@ -91,7 +91,7 @@ done
 
 
 echo "> npx jest " "$opt" "\n"
-npx jest $opt
+npx jest $opt $@
 if test $? -eq 0
 then 
     docker stop postchain > /dev/null

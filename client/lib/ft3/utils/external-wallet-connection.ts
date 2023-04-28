@@ -47,8 +47,18 @@ export const createExternalWalletConnection = async (
     }): Promise<string> => {
       const msgParams = [message, account];
       if (!_connector)
-        throw new Error("Connector is undefined. Did you disconnect?");
+        throw new WalletConnectError(
+          "Connector is undefined. Did you disconnect?"
+        );
       return await _connector.signPersonalMessage(msgParams);
     },
   });
 };
+
+export class WalletConnectError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "WalletConnectError";
+  }
+}

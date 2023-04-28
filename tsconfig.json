@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "module": "commonjs",
     "outDir": "./dist",
     "sourceMap": true,
@@ -12,6 +12,7 @@
       "dom"
     ],
     "resolveJsonModule": true,
+    "types": ["jest"]
   },
   "include": ["./client/**/*", "./test/**/*"],
   "exclude": [

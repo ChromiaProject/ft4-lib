@@ -22,7 +22,7 @@ export const createLocalStorageSignatureProvider = (
   let kp: KeyPair;
   if (priv) {
     if (privKey) {
-      throw new Error(
+      throw new SignatureProviderError(
         "privKey was defined, but localStorage had one already in memory. " +
           "Please clear localStorage before setting a new privKey if you're sure " +
           "you want to lose access to the old key pair."
@@ -46,3 +46,11 @@ export const localStorageSignatureProvider = Object.freeze({
   isEmpty: isLocalStorageSignatureProviderEmpty,
   clear: clearLocalStorageSignatureProvider,
 });
+
+export class SignatureProviderError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "SignatureProviderError";
+  }
+}
