@@ -1,8 +1,5 @@
 image: node:18
 
-options:
-  docker: true
-
 pipelines:
   pull-requests:
     '**':
@@ -18,7 +15,16 @@ pipelines:
             - apt install default-jre -y
             - apt install chr
             - npm install docker
-            - npm test
+            - npm test:pipeline
 
           services:
-            - docker
+            - postgres
+
+definitions: 
+  services: 
+    postgres: 
+      image: postgres 
+      variables: 
+        POSTGRES_DB: 'postchain' 
+        POSTGRES_USER: 'postchain'
+        POSTGRES_PASSWORD: 'postchain'

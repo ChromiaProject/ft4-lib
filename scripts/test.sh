@@ -1,6 +1,7 @@
 #!/bin/sh
 file=
 test=
+nodocker=
 
 while :; do
     case $1 in
@@ -27,6 +28,10 @@ while :; do
         --file=)
               echo 'ERROR: "--file" requires a non-empty option argument.'
               exit 1
+              ;;
+        --no-docker)
+              echo 'skipping docker build'
+              nodocker="--no-docker"
               ;;
         --)
             shift
@@ -55,4 +60,4 @@ if [ "$test" ]; then
     opts="$opts ${test%?}"
 fi
 
-npm run test:js -- $opts --exit-on-error && npm run test:rell
+npm run test:js -- $opts $nodocker --exit-on-error && npm run test:rell -- $nodocker

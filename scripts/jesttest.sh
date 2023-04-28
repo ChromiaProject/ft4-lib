@@ -21,6 +21,7 @@ prc=
 EXIT_ON_ERROR=0
 opt=
 test_string=
+docker=true
 while :; do
     case $1 in
         -f|--file)
@@ -42,6 +43,10 @@ while :; do
         --exit-on-error)
             EXIT_ON_ERROR=1
             ;;
+        --no-docker)
+              echo 'skipping docker build'
+              nodocker=false
+              ;;
         --)
             shift
             break
@@ -67,10 +72,12 @@ if [ "$test_string" ]; then
     opt="$opt -t ${test_string%?}"
 fi
 
-docker run --name postchain -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
-    --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
-    --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
-    -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null
+if $nodocker; then
+    docker run --name postchain -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
+        --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
+        --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
+        -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null;
+fi
 
 echo -n "Building and running postchain node..."
     chr build -s configs/jest-test.yml > /dev/null

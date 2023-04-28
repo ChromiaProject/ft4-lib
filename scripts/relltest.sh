@@ -15,10 +15,33 @@ exitfn () {
 
 trap "exitfn" 2
 
-docker run --name postchain -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
-    --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
-    --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
-    -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null
+docker=true
+while :; do
+    case $1 in
+        --no-docker)
+              echo 'skipping docker build'
+              nodocker=false
+              ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)
+            break
+            ;;
+    esac
+    shift
+done
+
+if $nodocker; then
+    docker run --name postchain -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
+        --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
+        --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
+        -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null
+fi
 
 chr test -s configs/rell-test.yml --use-db
 
