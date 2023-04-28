@@ -41,7 +41,7 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
 }
 operation dev_create_eth_account(auth_desc: acc.auth_descriptor) {
   dev_op.require_dev();
-  acc.create_account_with_eth_auth(auth_desc);
+  acc.create_account_with_auth(auth_desc);
 }
 
 operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
@@ -49,19 +49,19 @@ operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
   acc.create_account_with_auth(auth_desc);
 }
 
-operation dev_authenticated_operation() {
+operation dev_authenticated_operation(message_temaplate: text) {
   dev_op.require_dev();
-  require(acc.authenticate(set<text>(["A"]), [""]));
+  require(acc.authenticate(set<text>(["A"]), message_temaplate));
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
   dev_op.require_dev();
-  acc._add_auth_descriptor(account, desc);
+  acc.add_auth_descriptor_to_account(account, desc);
 }
 
 operation create_eth_account(auth_desc: acc.auth_descriptor) {
   dev_op.require_dev();
-  acc.create_account_with_eth_auth(auth_desc);
+  acc.create_account_with_auth(auth_desc);
 }
 
 operation create_ft4_account(auth_desc: acc.auth_descriptor) {
@@ -70,21 +70,10 @@ operation create_ft4_account(auth_desc: acc.auth_descriptor) {
 }
 
 operation dev_perform_large_transfer(
-  message_template: text,
-  from: acc.account,
-  to: text,
-  amount: integer
+  amount: integer,
+  to: text
 ) {
   dev_op.require_dev();
-  val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
-  val ctrs = list<integer>.from_gtv(previous_op.args[2]);
-
-  var messages = list<text>();
-  for (ctr in ctrs) {
-    val args = [amount.to_text(), "0x" + to, ctr.to_text()];
-    messages.add(message_template.format(amount.to_text(), "0x" + to, ctr.to_text()));
-  }
-  require(acc.authenticate(set(["A"]), messages));
+  val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {2}";
+  require(acc.authenticate(set(["A"]), msg_template));
 }
-
-

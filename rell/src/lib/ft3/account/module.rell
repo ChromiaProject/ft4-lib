@@ -3,8 +3,12 @@ module;
 
 import core: ^.core;
 
+enum auth_type {
+    S, M, ES, EM,
+}
+
 struct auth_descriptor {
-    auth_type: text;
+    auth_type;
     args: list<gtv>;
     rules: gtv;
 }
@@ -24,14 +28,14 @@ entity account_auth_descriptor {
     id: byte_array;
     key account, id;
     index id;
-    auth_type: text;
+    auth_type;
     args: byte_array;
     rules: byte_array;
+    mutable ctr: integer;
 }
 
 entity auth_descriptor_participant {
     key account_auth_descriptor, id: byte_array;
-    mutable ctr: integer;
 }
 
 // rate limiter
@@ -44,24 +48,24 @@ entity rl_state {
 }
 
 
-function _add_auth_descriptor(account, auth_descriptor): byte_array {
-    require_signed_by_auth_descriptor_participants(auth_descriptor);
-    val id = Unsafe._add_auth_descriptor (account, auth_descriptor);
+function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
+    val id = auth_descriptor.hash();
 
-     val account_auth_descriptor = create account_auth_descriptor (
+    val account_auth_descriptor = create account_auth_descriptor (
         account, id,
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes(),
-        rules = auth_descriptor.rules.to_gtv().to_bytes()
-     );
+        rules = auth_descriptor.rules.to_gtv().to_bytes(),
+        0
+    );
+     
+    when (auth_descriptor.auth_type) {
+        S, M -> _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor);
+        ES, EM -> _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor);
+    }
+     
      setup_auth_descriptor_variables(account_auth_descriptor);
      return id;
-}
-
-function require_signed_by_auth_descriptor_participants(auth_descriptor) {
-    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-       require(op_context.is_signer(participant));
-    }
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
@@ -92,35 +96,35 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
 }
 
 function create_account_with_auth(auth_descriptor): byte_array {
-    require_signed_by_auth_descriptor_participants(auth_descriptor);
-    return Unsafe.create_account_with_auth(auth_descriptor);
-}
-
-function create_account_with_eth_auth(auth_descriptor): byte_array {
     require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
-    val acc_id = auth_descriptor.hash();
-    val account = create account (acc_id);
-
+    
     val id = auth_descriptor.hash();
-     
-     analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
-     
-     val account_auth_descriptor = create account_auth_descriptor (
-        account, id,
-        auth_descriptor.auth_type,
-        args = auth_descriptor.args.to_gtv().to_bytes(),
-        rules = auth_descriptor.rules.to_gtv().to_bytes()
-     );
-     
-    setup_auth_descriptor_variables(account_auth_descriptor);
+    val acc = create account (id);
+
+    add_auth_descriptor_to_account(acc, auth_descriptor);
 
     val max_points = core.my_blockchain_info.rate_limit_max_points;
     val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
     val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
     
-    create rl_state(account, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
-
+    create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+    
     return id;
+}
+
+function _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor) {
+    val participants = get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
+    require(op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
+    for (participant in participants) {
+        require(op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
+        create auth_descriptor_participant(account_auth_descriptor, id = participant);
+    }
+}
+
+function _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor) {
+    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
+        create auth_descriptor_participant(account_auth_descriptor, id = participant);
+    }
 }
 
 function auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
@@ -163,19 +167,20 @@ namespace Unsafe {
         analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
      
         when (auth_descriptor.auth_type) {
-            "S" -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-            "M" -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+            S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+            M -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
         }
         
         val account_auth_descriptor = create account_auth_descriptor (
             account, id,
             auth_descriptor.auth_type,
             args = auth_descriptor.args.to_gtv().to_bytes(),
-            rules = auth_descriptor.rules.to_gtv().to_bytes()
+            rules = auth_descriptor.rules.to_gtv().to_bytes(),
+            0
         );
         
         for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-            create auth_descriptor_participant(account_auth_descriptor, id = participant, 0);
+            create auth_descriptor_participant(account_auth_descriptor, id = participant);
         }
         
         setup_auth_descriptor_variables(account_auth_descriptor);

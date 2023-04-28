@@ -21,14 +21,13 @@ function required_flags() = ["T"];
 
 function test_multi_sig_valid_1_of_1() {
     val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice, rell.test.keypairs.bob], 
+        [rell.test.keypairs.alice], 
         good_ad_1_of_1()
     ).auth_id;
 
     rell.test.tx()
         .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice) 
-        .sign(rell.test.keypairs.bob) 
         .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "valid");
@@ -128,8 +127,7 @@ function good_ad_3_of_3() = create_auth_descriptor_M_3_pub(
 function create_auth_descriptor_M_1_pub(pubkey): acc.auth_descriptor {
     val number_of_sigs = 1;
     return acc.auth_descriptor(
-        "M",
-        [ pubkey ],
+        acc.auth_type.M,
         [
             ["T"].to_gtv(),
             number_of_sigs.to_gtv(), 
@@ -143,8 +141,7 @@ function create_auth_descriptor_M_1_pub(pubkey): acc.auth_descriptor {
  */
 function create_auth_descriptor_M_2_pub(pubkey1: pubkey, pubkey2: pubkey, required_signs: integer): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "M",
-        [ pubkey1, pubkey2 ],
+        acc.auth_type.M,
         [
             ["T"].to_gtv(),
             required_signs.to_gtv(), 
@@ -158,8 +155,7 @@ function create_auth_descriptor_M_2_pub(pubkey1: pubkey, pubkey2: pubkey, requir
  */
 function create_auth_descriptor_M_3_pub(pubkey1: pubkey, pubkey2: pubkey, pubkey3: pubkey, required_signs: integer): acc.auth_descriptor {
     return acc.auth_descriptor(
-        "M",
-        [ pubkey1, pubkey2, pubkey3 ],
+        acc.auth_type.M,
         [
             ["T"].to_gtv(),
             required_signs.to_gtv(), 

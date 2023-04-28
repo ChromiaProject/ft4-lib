@@ -1,9 +1,10 @@
 import { formatter } from "postchain-client";
-import { authDescriptor, AuthType } from ".";
+import { authDescriptor, serializeAuthType } from ".";
 import { BufferId } from "../../../cryptoUtils";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
+  AuthType,
   MultiSigAuthDescriptorArgs,
   SingleSigAuthDescriptorArgs,
 } from "./types";
@@ -13,7 +14,11 @@ export function createSingleSignatureAuthDescriptor(
   rules?: AuthDescriptorRule | null
 ): AuthDescriptor {
   return Object.freeze(
-    authDescriptor.fromGtv([AuthType.single_sig, args, rules])
+    authDescriptor.fromGtv([
+      serializeAuthType(AuthType.single_sig),
+      args,
+      rules,
+    ])
   );
 }
 
@@ -22,7 +27,7 @@ export function createMultiSignatureAuthDescriptor(
   rules: AuthDescriptorRule | null
 ): AuthDescriptor {
   return Object.freeze(
-    authDescriptor.fromGtv([AuthType.multi_sig, args, rules])
+    authDescriptor.fromGtv([serializeAuthType(AuthType.multi_sig), args, rules])
   );
 }
 
