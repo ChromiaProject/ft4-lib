@@ -11,7 +11,7 @@ function test_before_transfer_extension_is_called() {
     val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
     val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", 1);
 
     val inputs = [
         core.xfer_input(
@@ -47,7 +47,7 @@ function test_after_transfer_extension_is_called() {
     val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
     val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", 1);
 
     val inputs = [
         core.xfer_input(

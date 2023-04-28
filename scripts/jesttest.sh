@@ -81,16 +81,16 @@ prc=$!
 
 echo "done!\n"
 i=0
-max=15
+max=3
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( 15 - $i )) \r"
+    echo -n "Waiting to start tests... $(( $max - $i )) \r"
     true $(( i=i+1 ))
     sleep 1
 done
 
 
-echo "> npx jest " "$opt" "\n"
+echo "> npx jest" "$opt" "\n"
 npx jest $opt $@
 if test $? -eq 0
 then 

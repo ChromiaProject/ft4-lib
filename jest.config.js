@@ -16,5 +16,9 @@ module.exports = {
     ],
     "setupFilesAfterEnv": [
         "<rootDir>/jest.setup.js"
-    ]
+    ],
+    // https://github.com/jestjs/jest/issues/11617
+    // faster, but loses error messages
+    // "workerThreads": true
+    // "maxWorkers": 1,
 };

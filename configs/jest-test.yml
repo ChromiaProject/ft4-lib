@@ -13,6 +13,7 @@ blockchains:
 
 compile:
   source: ../rell/src
+  target: ../rell/out
 
 database:
   host: jdbc:postgresql://localhost/postchain

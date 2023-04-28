@@ -20,6 +20,7 @@ import { formatter } from "postchain-client";
 import { TransactionBuilder } from "../utils/transaction-builder";
 import { GtvCompatible } from "../utils/gtv";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { Amount } from "../asset/interfaces";
 
 export async function registerAccount(
   newAuthDesc: AuthDescriptor,
@@ -138,24 +139,23 @@ export async function transfer(
   fromAccountId: BufferId,
   toAccountId: BufferId,
   assetId: BufferId,
-  amount: bigint,
+  amount: Amount,
   tb: TransactionBuilder,
   extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
+  //if we want to check that amount has the correct decimals, do it here
   const input: XferInput = [
     formatter.ensureBuffer(fromAccountId),
     formatter.ensureBuffer(assetId),
     tb.user.authDescriptor.id,
-    // @ts-ignore
-    Number(amount),
+    amount.value,
     extra ?? {},
   ];
 
   const output: XferOutput = [
     formatter.ensureBuffer(toAccountId),
     formatter.ensureBuffer(assetId),
-    // @ts-ignore
-    Number(amount),
+    amount.value,
     extra ?? {},
   ];
 
@@ -165,16 +165,16 @@ export async function transfer(
 export async function burnTokens(
   fromAccountId: BufferId,
   assetId: BufferId,
-  amount: bigint,
+  amount: Amount,
   tb: TransactionBuilder,
   extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
+  //if we want to check that amount has the correct decimals, do it here
   const input: XferInput = [
     formatter.ensureBuffer(fromAccountId),
     formatter.ensureBuffer(assetId),
     tb.user.authDescriptor.id,
-    // @ts-ignore
-    Number(amount),
+    amount.value,
     extra ?? {},
   ];
   await transferInputsToOutputs([input], [], tb);
@@ -215,7 +215,7 @@ export async function xcTransfer(): Promise<void> {
   /*destinationBRID: BufferId,
   destinationAccountId: BufferId,
   assetId: BufferId,
-  amount: AssetAmount,*/
+  amount: Amount,*/
   throw new Error("Not implemented!");
   /*const tx = await xcTransferOp(
     destinationBRID,

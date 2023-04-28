@@ -28,6 +28,7 @@ import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-histor
 import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { Amount } from "../asset/interfaces";
 
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
@@ -98,9 +99,9 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         from: BufferId,
         to: BufferId,
         asset: BufferId,
-        amount: bigint
+        amount: Amount
       ) => transfer(from, to, asset, amount, transactionBuilder(user, pci)),
-      burn: (from: BufferId, asset: BufferId, amount: bigint) =>
+      burn: (from: BufferId, asset: BufferId, amount: Amount) =>
         burnTokens(from, asset, amount, transactionBuilder(user, pci)),
       xcTransfer: () => xcTransfer(),
     },

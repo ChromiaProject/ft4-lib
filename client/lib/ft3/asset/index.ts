@@ -8,7 +8,7 @@ import {
 import { giveBalance, registerAsset } from "./asset-op-functions";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { User } from "../account/types";
-import { AssetAmount } from "./types";
+import { Amount } from "./interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { formatter, gtv } from "postchain-client";
 import { transactionBuilder } from "../utils/transaction-builder";
@@ -41,13 +41,13 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     asset: {
       dev: {
-        register: (name: string, brid: BufferId) =>
-          registerAsset(name, brid, transactionBuilder(user, pci)),
+        register: (name: string, decimals: number, brid: BufferId) =>
+          registerAsset(name, decimals, brid, transactionBuilder(user, pci)),
       },
     },
     balance: {
       dev: {
-        give: (assetId: BufferId, accountId: BufferId, amount: AssetAmount) =>
+        give: (assetId: BufferId, accountId: BufferId, amount: Amount) =>
           giveBalance(
             assetId,
             accountId,

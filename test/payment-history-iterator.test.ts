@@ -6,6 +6,7 @@ import { LocalStorageMock } from "./util/util";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payment-history/payment-history-store-memory";
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
+import { amount } from "../client/lib/ft3/asset/amount";
 
 let _ft: ftUserSession;
 let asset: Asset;
@@ -34,7 +35,7 @@ describe("Payment history iterator", () => {
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      amount.create(10, asset.decimals)
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
@@ -76,13 +77,13 @@ describe("Payment history iterator", () => {
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      amount.create(10, asset.decimals)
     );
     await ft.account.token.transfer(
       account1.id,
       account2.id,
       asset.id,
-      BigInt(11)
+      amount.create(11, asset.decimals)
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
@@ -112,7 +113,7 @@ describe("Payment history iterator", () => {
       account.id,
       account.id,
       asset.id,
-      BigInt(20)
+      amount.create(20, asset.decimals)
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
@@ -162,25 +163,25 @@ describe("Payment history iterator", () => {
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      amount.create(10, asset.decimals)
     );
     await ft.account.token.transfer(
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      amount.create(10, asset.decimals)
     );
     await ft.account.token.transfer(
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      amount.create(10, asset.decimals)
     );
     await ft.account.token.transfer(
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      amount.create(10, asset.decimals)
     );
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
@@ -237,7 +238,7 @@ describe("Payment history iterator", () => {
 
     const account2 = await AccountBuilder.account(_ft.changeUser(TestUser())).build();
 
-    await ft.account.token.transfer(account1.id, account2.id, asset.id, BigInt(10));
+    await ft.account.token.transfer(account1.id, account2.id, asset.id, amount.create(10, asset.decimals));
     await account1.xcTransfer(generateId(), generateId(), asset.id, 10);
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(account1.id, 5, ft.get.gtxClient)
@@ -268,25 +269,25 @@ describe("Payment history iterator", () => {
         account1.id,
         account2.id,
         asset.id,
-        BigInt(10)
+        amount.create(10, asset.decimals)
       );
       await ft.account.token.transfer(
         account1.id,
         account2.id,
         asset.id,
-        BigInt(10)
+        amount.create(10, asset.decimals)
       );
       await ft.account.token.transfer(
         account1.id,
         account2.id,
         asset.id,
-        BigInt(10)
+        amount.create(10, asset.decimals)
       );
       await ft.account.token.transfer(
         account1.id,
         account2.id,
         asset.id,
-        BigInt(10)
+        amount.create(10, asset.decimals)
       );
 
       const paymentHistoryStore = await createNewPaymentHistoryStoreLocal(

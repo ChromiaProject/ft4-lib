@@ -1,3 +1,5 @@
+import { Amount } from "../../asset/interfaces";
+
 export type PaymentHistoryTransferArgs = {
   amount: number;
   accountId: Buffer;
@@ -6,6 +8,7 @@ export type PaymentHistoryTransferArgs = {
 export type PaymentHistoryEntryResponse = [
   id: string,
   delta: bigint,
+  decimals: number,
   asset: string,
   asset_id: Buffer,
   is_input: number,
@@ -20,7 +23,7 @@ export type PaymentHistoryEntryResponse = [
 export type PaymentHistoryEntry = {
   rowid: string;
   isInput: boolean;
-  delta: bigint;
+  delta: Amount;
   asset: AssetInfo;
   entryIndex: number;
   data: Buffer;
@@ -42,7 +45,8 @@ export type PaymentHistoryCursor = [number?, string?];
 export type PaymentHistoryJSON = {
   rowid: string;
   isInput: boolean;
-  delta: bigint;
+  delta: string;
+  decimals: number;
   assetName: string;
   assetId: string;
   entryIndex: number;

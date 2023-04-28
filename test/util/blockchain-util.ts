@@ -38,9 +38,10 @@ export async function getUserSession(
 export async function getNewAsset(
   userSession: ftUserSession,
   name = generateAssetName(),
+  decimals = 0,
   brid = generateId()
 ): Promise<Asset> {
-  const id = await userSession.asset.dev.register(name, brid);
+  const id = await userSession.asset.dev.register(name, decimals, brid);
   const asset = await userSession.get.asset.by.id(id);
   return asset;
 }

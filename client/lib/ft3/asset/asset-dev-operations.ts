@@ -1,15 +1,19 @@
 import { op } from "../utils";
 import { Operation } from "../utils/types";
-import { AssetAmount } from "./types";
+import { Amount } from "../asset/interfaces";
 
-export function registerAssetOp(name: string, brid: Buffer): Operation {
-  return op("ft3.dev_register_asset", name, brid);
+export function registerAssetOp(
+  name: string,
+  decimals: number,
+  brid: Buffer
+): Operation {
+  return op("ft3.dev_register_asset", name, decimals, brid);
 }
 
 export function giveBalanceOp(
   assetId: Buffer,
   accountId: Buffer,
-  amount: AssetAmount
+  amount: Amount
 ): Operation {
-  return op("ft3.dev_give_balance", assetId, accountId, Number(amount));
+  return op("ft3.dev_give_balance", assetId, accountId, amount.value);
 }
