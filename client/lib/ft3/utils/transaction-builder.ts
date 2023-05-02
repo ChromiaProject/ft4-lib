@@ -80,7 +80,7 @@ export function transactionBuilder(
     const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
     operations
       .flat()
-      .forEach(([name, args]: [string, RawGtv[]]) =>
+      .forEach(([name, ...args]: [string, RawGtv[]]) =>
         txn.addOperation(name, ...args)
       );
     return txn;

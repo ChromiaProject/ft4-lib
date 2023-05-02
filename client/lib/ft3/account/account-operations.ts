@@ -23,7 +23,7 @@ export function transferOp(
   inputs: XferInput[],
   outputs: XferOutput[]
 ): Operation {
-  return op("ft3.transfer", [inputs, outputs]);
+  return op("ft3.transfer", inputs, outputs);
 }
 
 export function xcTransferOp /*
@@ -59,11 +59,12 @@ export function deleteAuthDescriptorOp(
 }
 
 export function addAuthDescriptorV2(authDescriptor: AuthDescriptor): Operation {
-  return op("ft3.add_auth_descriptor_v2", [authDesc.toGtv(authDescriptor)]);
+  return op("ft3.add_auth_descriptor_v2", authDesc.toGtv(authDescriptor));
 }
 
 export function deleteAuthDescriptorV2(authDescriptorId: BufferId): Operation {
-  return op("ft3.delete_auth_descriptor_v2", [
-    formatter.ensureBuffer(authDescriptorId),
-  ]);
+  return op(
+    "ft3.delete_auth_descriptor_v2",
+    formatter.ensureBuffer(authDescriptorId)
+  );
 }

@@ -8,9 +8,7 @@ export function ftAuth(
 ): Operation {
   return [
     "ft.ft_auth",
-    [
-      formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(authDesriptorId),
-    ],
+    formatter.ensureBuffer(accountId),
+    formatter.ensureBuffer(authDesriptorId),
   ];
 }
