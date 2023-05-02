@@ -15,6 +15,17 @@ operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byt
     );
 }
 
+operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
+    // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
+
+    val auth_data = delete_auth_descriptor_auth_data();
+    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
+
+    acc._delete_auth_descriptor(
+        acc.auth_descriptor_by_id(account, auth_descriptor_id)
+    );    
+}
+
 operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
     val account =  acc.account_by_id(account_id);
     val auth_descriptor = acc.auth_descriptor_by_id(account, auth_descriptor_id);
@@ -26,5 +37,11 @@ operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descr
 operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_desc: acc.auth_descriptor) {
     val account = acc.account_by_id(account_id);
     acc.auth(account, acc.auth_descriptor_by_id(account, auth_id), ["A"]);
+    acc.add_auth_descriptor_to_account(account, new_desc);
+}
+
+operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
+    val auth_data = add_auth_descriptor_auth_data();
+    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
     acc.add_auth_descriptor_to_account(account, new_desc);
 }

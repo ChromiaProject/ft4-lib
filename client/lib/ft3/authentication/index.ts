@@ -32,6 +32,8 @@ async function getAuthRequirements(
   operation: Operation
 ): Promise<string[]> {
   const authData = await authDataService.getAuthData(operation);
+  console.log(authData);
+  console.log(operation[0]);
   return authData.flags;
 }
 
@@ -57,6 +59,14 @@ function createAuthenticatorSession(
   return Object.freeze({
     authenticator,
     getUsedKeyHandlers: () => new Set(usedKeyHandlers),
+    getSigners: () => {
+      let signers = new Set<Buffer>();
+      usedKeyHandlers.forEach(
+        ({ authDescriptor }) =>
+          (signers = new Set([...authDescriptor.signers, ...signers]))
+      );
+      return signers;
+    },
     authenticate: async (operation: Operation) => {
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation

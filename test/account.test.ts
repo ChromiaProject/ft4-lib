@@ -1,6 +1,6 @@
 import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
-import testUser from "./util/test-user";
+import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { config } from "dotenv";
 import { Account, User } from "../client/lib/ft3/account/types";
@@ -12,9 +12,15 @@ import {
   toGtv,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
-import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
+import {
+  addAuthDescriptorOp,
+  createAuthenticatedAccount,
+} from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
 import { createConnection } from "../client/lib/ft3/ft-session";
+import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createAuthenicator } from "../client/lib/ft3/authentication";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 config();
 
 async function addAuthDescriptorTo(
@@ -230,8 +236,10 @@ describe("Test the account", () => {
   });
 
   it("should return two accounts when public key is used in two accounts", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+    const keyPair1 = new KeyPair();
+    const keyPair2 = new KeyPair();
+    const user1 = newSingleSigUser(keyPair1);
+    const user2 = newSingleSigUser(keyPair2);
     const ft1 = _ft.changeUser(user1);
     const ft2 = _ft.changeUser(user2);
 
@@ -239,7 +247,26 @@ describe("Test the account", () => {
 
     const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
 
-    await addAuthDescriptorTo(account2, user1, ft2);
+    const authDataService = createFakeAuthDataService({
+      "ft3.add_auth_descriptor_v2": { flags: ["A"] },
+    });
+    const keyHandler2 = createInMemoryFTKeyStore(keyPair2).createKeyHandler(
+      user2.authDescriptor
+    );
+    const authenticator2 = createAuthenicator(
+      account2.id,
+      [keyHandler2],
+      authDataService
+    );
+
+    const authenticatedAccount = createAuthenticatedAccount(
+      _connection,
+      authenticator2
+    );
+    await authenticatedAccount.addAuthDescriptor(
+      user1.authDescriptor,
+      keyPair1
+    );
 
     const accounts = await _connection.getAccountsByParticipantId(
       user1.signatureProvider.pubKey
@@ -358,7 +385,8 @@ describe("Test the account", () => {
   });
 
   it("shouldn't be possible for auth descriptor to delete other auth descriptor without admin flag", async () => {
-    const user1 = testUser();
+    const keyPair1 = new KeyPair();
+    const user1 = newSingleSigUser(keyPair1);
     const ft = _ft.changeUser(user1);
 
     const account = await AccountBuilder.account(ft)
@@ -366,35 +394,54 @@ describe("Test the account", () => {
       .withPoints(4)
       .build();
 
-    const sigProv2 = pcl.gtx.newSignatureProvider();
-    const user2 = {
-      keyManagers: user1.keyManagers,
-      signatureProvider: sigProv2,
-      authDescriptor: authDescriptor.create.singleSig.withArgs(
-        [FlagsType.Transfer],
-        sigProv2.pubKey
-      ).andNoRules,
-    };
+    const authDataService = createFakeAuthDataService({
+      "ft3.add_auth_descriptor_v2": { flags: ["A"] },
+    });
+    const keyHandler = createInMemoryFTKeyStore(keyPair1).createKeyHandler(
+      user1.authDescriptor
+    );
+    const authenticator = createAuthenicator(
+      account.id,
+      [keyHandler],
+      authDataService
+    );
 
-    const sigProv3 = pcl.gtx.newSignatureProvider();
-    const user3 = {
-      signatureProvider: sigProv3,
-      keyManagers: user1.keyManagers,
-      authDescriptor: authDescriptor.create.singleSig.withArgs(
-        [FlagsType.Transfer],
-        sigProv3.pubKey
-      ).andNoRules,
-    };
+    const authenticatedAccount = createAuthenticatedAccount(
+      _connection,
+      authenticator
+    );
 
-    await addAuthDescriptorTo(account, user2, ft);
-    await addAuthDescriptorTo(account, user3, ft);
+    const keyPair2 = new KeyPair();
+    const authDescriptor2 = authDescriptor.create.singleSig.withArgs(
+      [FlagsType.Transfer],
+      keyPair2.pubKey
+    ).andNoRules;
 
-    const ft3 = ft.changeUser(user3);
-    const account2 = await ft3.get.account.by.id(account.id);
+    await authenticatedAccount.addAuthDescriptor(authDescriptor2, keyPair2);
 
-    const promise = ft3.account.authDescriptor.delete(
-      user2.authDescriptor.id,
-      account2.id
+    const keyPair3 = new KeyPair();
+    const authDescriptor3 = authDescriptor.create.singleSig.withArgs(
+      [FlagsType.Transfer],
+      keyPair3.pubKey
+    ).andNoRules;
+
+    await authenticatedAccount.addAuthDescriptor(authDescriptor3, keyPair3);
+
+    const keyHandler3 =
+      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+    const authenticator3 = createAuthenicator(
+      account.id,
+      [keyHandler3],
+      authDataService
+    );
+
+    const authenticatedAccount3 = createAuthenticatedAccount(
+      _connection,
+      authenticator3
+    );
+
+    const promise = authenticatedAccount3.deleteAuthDescriptor(
+      authDescriptor2.id
     );
 
     await expect(promise).rejects.toThrowError();

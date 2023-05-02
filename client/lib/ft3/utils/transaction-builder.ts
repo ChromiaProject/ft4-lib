@@ -4,6 +4,7 @@ import {
 } from "postchain-client/built/src/gtx/interfaces";
 import { Operation } from "./types";
 import { Authenticator, KeyHandler } from "../authentication/interfaces";
+import { RawGtv } from "postchain-client/built/src/gtv/types";
 
 export type TransactionBuilder = {
   _operations: [Operation, Authenticator][];
@@ -63,6 +64,7 @@ export function transactionBuilder(
   client: GtxClient
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
+    console.log(this);
     this._operations.push([operation, authenticator]);
     return this;
   }
@@ -72,24 +74,27 @@ export function transactionBuilder(
   }
 
   async function buildUnsigned() {
-    const operations = await authenticateOperations();
+    const operations = await authenticateOperations(
+      this._operations,
+      this._keyhandlersUsed
+    );
     const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
-    operations.forEach((op: Operation | Operation[]) => {
-      if (Array.isArray(op[0])) {
-        txn.addOperation(...op[0]);
-      } else {
-        const [name, ...args] = op;
-        txn.addOperation(name, ...args);
-      }
-    });
+    operations
+      .flat()
+      .forEach(([name, args]: [string, RawGtv[]]) =>
+        txn.addOperation(name, ...args)
+      );
     return txn;
   }
 
-  async function authenticateOperations(): Promise<Operation[]> {
+  async function authenticateOperations(
+    operations: [Operation, Authenticator][],
+    keyHandlersUsed: KeyHandler[]
+  ): Promise<Operation[][]> {
     return await Promise.all(
-      this._operations.map(async (tuple: [Operation, Authenticator]) => {
+      operations.map(async (tuple: [Operation, Authenticator]) => {
         const [operation, authenticator] = tuple;
-        if (operation[0] === "nop") return operation;
+        if (operation[0] === "nop") return [operation];
 
         const keyHandler = await authenticator.getKeyHandlerForOperation(
           operation
@@ -97,7 +102,7 @@ export function transactionBuilder(
         if (!keyHandler) {
           throw new Error("No keyhandler registered to handle this operation");
         }
-        this._keyhandlersUsed.push(keyHandler);
+        keyHandlersUsed.push(keyHandler);
         return await keyHandler.authenticate(
           authenticator.accountId,
           operation

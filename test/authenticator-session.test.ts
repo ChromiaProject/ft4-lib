@@ -136,4 +136,44 @@ describe("Authenticator session", () => {
       authenticatorSession.authenticate(op("foo"))
     ).rejects.toBeInstanceOf(Error);
   });
+
+  it("should get list of signers", async () => {
+    const accountId = encryption.randomBytes(32);
+    const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
+      createTestAuthDescriptor(["a"]);
+    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
+      createTestAuthDescriptor(["b"]);
+    const { keyPair: keyPair3, authDescriptor: authDescriptor3 } =
+      createTestAuthDescriptor(["f"]);
+
+    const keyHandler1 =
+      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+    const keyHandler2 =
+      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+    const keyHandler3 =
+      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+
+    const authDataService = createFakeAuthDataService({
+      foo: { flags: ["f"] },
+      bar: { flags: ["b"] },
+    });
+
+    const authenticatorSession = createAuthenicator(
+      accountId,
+      [keyHandler1, keyHandler2, keyHandler3],
+      authDataService
+    ).createSession();
+
+    await authenticatorSession.authenticate(op("foo"));
+    await authenticatorSession.authenticate(op("bar"));
+
+    const signers = authenticatorSession.getSigners();
+
+    expect(signers).toEqual(
+      new Set<Buffer>([
+        ...keyHandler2.authDescriptor.signers,
+        ...keyHandler3.authDescriptor.signers,
+      ])
+    );
+  });
 });
