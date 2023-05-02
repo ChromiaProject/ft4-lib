@@ -1,6 +1,11 @@
 import acc: ^^.account;
 import core: ^^.core;
 
+query delete_auth_descriptor_auth_data() = core.auth_data(
+    ["A"], 
+    "Do you want to delete auth descriptor from account %s? Nonce: %s"
+);
+
 operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
     val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
 
@@ -38,6 +43,11 @@ operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descr
 
     acc._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
+
+query add_auth_descriptor_auth_data() = core.auth_data(
+    ["A"], 
+    "Do you want to add auth descriptor to account %s? Nonce: %s"
+);
 
 operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_desc: acc.auth_descriptor) {
     val account = acc.account_by_id(account_id);
