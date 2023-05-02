@@ -10,8 +10,3 @@ struct module_args {
     rate_limit_recovery_time: integer;
     rate_limit_points_at_account_creation: integer;    
 }
-
-struct auth_data {
-    flags: list<text>;
-    message: text;
-}
