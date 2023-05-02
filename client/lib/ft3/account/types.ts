@@ -56,4 +56,16 @@ export interface IAuthenticatedAccount extends IAccount {
     keyPair: KeyPair
   ) => Promise<void>;
   deleteAuthDescriptor: (authDescriptorId: BufferId) => Promise<void>;
+  transfer: (
+    receiverId: BufferId,
+    assetId: BufferId,
+    amount: AssetAmount
+  ) => Promise<void>;
+  xcTransfer: (
+    brid: BufferId,
+    receiverId: BufferId,
+    assetId: BufferId,
+    amount: AssetAmount
+  ) => Promise<void>;
+  burn: (assetId: BufferId, amount: AssetAmount) => Promise<void>;
 }

@@ -32,8 +32,6 @@ async function getAuthRequirements(
   operation: Operation
 ): Promise<string[]> {
   const authData = await authDataService.getAuthData(operation);
-  console.log(authData);
-  console.log(operation[0]);
   return authData.flags;
 }
 

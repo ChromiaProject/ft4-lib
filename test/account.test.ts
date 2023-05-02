@@ -12,15 +12,13 @@ import {
   toGtv,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
-import {
-  addAuthDescriptorOp,
-  createAuthenticatedAccount,
-} from "../client/lib/ft3/account/account-operations";
+import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
 import { createConnection } from "../client/lib/ft3/ft-session";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
 config();
 
 async function addAuthDescriptorTo(

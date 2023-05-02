@@ -64,7 +64,6 @@ export function transactionBuilder(
   client: GtxClient
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
-    console.log(this);
     this._operations.push([operation, authenticator]);
     return this;
   }

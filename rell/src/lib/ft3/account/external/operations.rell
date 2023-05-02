@@ -15,10 +15,15 @@ operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byt
     );
 }
 
+query delete_auth_descriptor_v2_auth_data() = core.auth_data(
+    ["A"], 
+    "Do you want to delete auth descriptor from account %s? Nonce: %s"
+);
+
 operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
 
-    val auth_data = delete_auth_descriptor_auth_data();
+    val auth_data = delete_auth_descriptor_v2_auth_data();
     val account = acc.authenticate(set(auth_data.flags), auth_data.message);
 
     acc._delete_auth_descriptor(
@@ -40,8 +45,13 @@ operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_d
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
 
+query add_auth_descriptor_v2_auth_data() = core.auth_data(
+    ["A"], 
+    "Do you want to add auth descriptor to account %s? Nonce: %s"
+);
+
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
-    val auth_data = add_auth_descriptor_auth_data();
+    val auth_data = add_auth_descriptor_v2_auth_data();
     val account = acc.authenticate(set(auth_data.flags), auth_data.message);
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
