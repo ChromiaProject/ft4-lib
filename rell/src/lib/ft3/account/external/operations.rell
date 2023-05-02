@@ -50,7 +50,7 @@ operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descr
     acc._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
 
-query add_auth_descriptor_auth_data() = core.auth_data(
+query add_auth_descriptor_auth_data() = auth.auth_data(
     ["A"], 
     "Do you want to add auth descriptor to account %s? Nonce: %s"
 );
