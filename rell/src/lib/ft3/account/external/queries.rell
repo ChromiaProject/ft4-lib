@@ -32,6 +32,18 @@ query get_account_auth_descriptors(id: byte_array) {
     );
 }
 
+query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
+    return (ad: acc.account_auth_descriptor, p: acc.auth_descriptor_participant) @* {
+        ad.account.id == account_id,
+        p.id == participant_id,
+        ad == p.account_auth_descriptor
+    } (
+        type = ad.auth_type,
+        args = ad.args,
+        rules = ad.rules
+    );
+}
+
 query get_account_by_id(id: byte_array) {
     return acc.account @? { id } ( .id );
 }

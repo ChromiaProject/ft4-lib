@@ -1,21 +1,35 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./account";
-import { User } from "./account/types";
+import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
-import { ftQuerySession, ftUserSession, Connection } from "./interfaces";
+import {
+  ftQuerySession,
+  ftUserSession,
+  Connection,
+  Session,
+} from "./interfaces";
 import { getChainInfo, getLastTimestamp, getVersion } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
   _getByAuthDescriptorId,
   _getById,
+  createAccountObject,
 } from "./account/account-query-functions";
-import { QueryObject } from "./utils/types";
+import { Operation, QueryObject } from "./utils/types";
 import {
   _getAllAssets,
   _getAssetById,
   _getAssetsByName,
 } from "./asset/asset-query-functions";
+import { createAuthenticatedAccount } from "./account/account-op-functions";
+import { transactionBuilder } from "./utils/transaction-builder";
+import {
+  AuthDataService,
+  Authenticator,
+  KeyStore,
+} from "./authentication/interfaces";
+import { createAuthenicator } from "./authentication";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -58,9 +72,72 @@ export function createConnection(client: GtxClient): Connection {
   return connection;
 }
 
+export function createSession(
+  connection: Connection,
+  authenticator: Authenticator
+): Session {
+  return Object.freeze({
+    account: createAuthenticatedAccount(connection, authenticator),
+    transactionBuilder: () =>
+      transactionBuilder(authenticator, connection.client),
+    call: (...operations: Operation[]) =>
+      call(connection, authenticator, ...operations),
+    ...connection,
+  });
+}
+
 async function query<T>(
   connection: Connection,
   queryObject: QueryObject
 ): Promise<T | null> {
   return await connection.client.query(queryObject.name, queryObject.args);
+}
+
+export async function call(
+  connection: Connection,
+  authenticator: Authenticator,
+  ...operations: Operation[]
+): Promise<void> {
+  const tb = transactionBuilder(authenticator, connection.client);
+  operations.forEach((operation: Operation) => tb.add(operation));
+  const tx = await tb.build();
+  return tx.postAndWaitConfirmation();
+}
+
+export type KeyStoreInteractor = {
+  getAccounts(): Promise<IAccount[]>;
+  getSession(accountId: BufferId): Promise<Session>;
+};
+
+export function createAuthDataService(): AuthDataService {
+  return Object.freeze({
+    // eslint-disable-next-line
+    getAuthData: (operation: Operation) => Promise.resolve({ flags: ["T"] }),
+  });
+}
+
+export function createKeyStoreInteractor(
+  client: GtxClient,
+  keyStore: KeyStore
+): KeyStoreInteractor {
+  const connection = createConnection(client);
+  return Object.freeze({
+    getAccounts: async () => connection.getAccountsByParticipantId(keyStore.id),
+    getSession: async (accountId: Buffer) => {
+      const account = createAccountObject(connection, accountId);
+      const authDescriptors = await account.getAuthDescriptorsByParticipantId(
+        keyStore.id
+      );
+      const keyHandlers = authDescriptors.map((authDescriptor) =>
+        keyStore.createKeyHandler(authDescriptor)
+      );
+      const authenticator = createAuthenicator(
+        accountId,
+        keyHandlers,
+        createAuthDataService()
+      );
+
+      return createSession(connection, authenticator);
+    },
+  });
 }

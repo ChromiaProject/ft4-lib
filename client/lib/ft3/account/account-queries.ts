@@ -88,3 +88,16 @@ export function accountAuthDescriptors(accountId: BufferId): QueryObject {
     },
   };
 }
+
+export function accountAuthDescriptorsByParticipantId(
+  accountId: BufferId,
+  participantId: BufferId
+): QueryObject {
+  return {
+    name: "ft3.get_account_auth_descriptors_by_participant_id",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      participant_id: formatter.ensureBuffer(participantId),
+    },
+  };
+}
