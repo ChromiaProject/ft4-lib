@@ -314,4 +314,39 @@ describe("Asset amount", () => {
     expect(second.dividedBy(3).times(4).toString()).toBe("1.332");
     expect(secondNegative.dividedBy(3).times(4).toString()).toBe("-1.332");
   });
+
+  it("should compare properly with no decimals", async () => {
+    const first = amount.create(1, 0);
+    const firstCopy = amount.create("1", 0);
+    const firstNegative = amount.create(-1, 0);
+    expect(first.gt(firstNegative)).toBe(true);
+    expect(first.lt(firstNegative)).toBe(false);
+    expect(first.eq(firstNegative)).toBe(false);
+    expect(first.gte(firstNegative)).toBe(true);
+    expect(first.lte(firstNegative)).toBe(false);
+    expect(first.eq(firstCopy)).toBe(true);
+  });
+
+  it("should compare properly with decimals", async () => {
+    const second = amount.create(1, 3);
+    const secondCopy = amount.create("1", 3);
+    const third = amount.create(1.5, 3);
+    console.log(second.toString(), third.toString());
+    expect(second.gt(third)).toBe(false);
+    expect(second.lt(third)).toBe(true);
+    expect(second.eq(third)).toBe(false);
+    expect(second.gte(third)).toBe(false);
+    expect(second.lte(third)).toBe(true);
+    expect(second.eq(secondCopy)).toBe(true);
+  });
+
+  it("should not compare different decimal amounts", async () => {
+    const first = amount.create(1, 0);
+    const second = amount.create(1, 3);
+    expect(() => first.gt(second)).toThrow(AmountDecimalsError);
+    expect(() => first.lt(second)).toThrow(AmountDecimalsError);
+    expect(() => first.eq(second)).toThrow(AmountDecimalsError);
+    expect(() => first.gte(second)).toThrow(AmountDecimalsError);
+    expect(() => first.lte(second)).toThrow(AmountDecimalsError);
+  });
 });
