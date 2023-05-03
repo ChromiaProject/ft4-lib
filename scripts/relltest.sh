@@ -20,7 +20,7 @@ while :; do
     case $1 in
         --no-docker)
               echo 'skipping docker build'
-              nodocker=false
+              docker=false
               ;;
         --)
             shift
@@ -36,7 +36,7 @@ while :; do
     shift
 done
 
-if $nodocker; then
+if $docker; then
     docker run --name postchain -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
         --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
         --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
