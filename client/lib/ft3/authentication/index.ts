@@ -6,7 +6,7 @@ import {
   AuthenticatorSession,
   KeyHandler,
 } from "./interfaces";
-import { Operation } from "../utils/types";
+import { Operation, QueryObject } from "../utils/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 
 export function createAuthenicator(
@@ -84,3 +84,15 @@ function createAuthenticatorSession(
     },
   });
 }
+
+export function authDataQuery(operation: Operation): QueryObject {
+  return {
+    name: `${operation[0]}_auth_data`,
+    args: {},
+  };
+}
+
+export const defaultFTAuthData: QueryObject = {
+  name: `ft3.default_auth_data`,
+  args: {},
+};

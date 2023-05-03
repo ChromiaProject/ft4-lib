@@ -25,11 +25,16 @@ import {
 import { createAuthenticatedAccount } from "./account/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
 import {
+  AuthData,
   AuthDataService,
   Authenticator,
   KeyStore,
 } from "./authentication/interfaces";
-import { createAuthenicator } from "./authentication";
+import {
+  authDataQuery,
+  createAuthenicator,
+  defaultFTAuthData,
+} from "./authentication";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -109,10 +114,26 @@ export type KeyStoreInteractor = {
   getSession(accountId: BufferId): Promise<Session>;
 };
 
-export function createAuthDataService(): AuthDataService {
+// TODO: Improve error handling
+// Use `rell.get_app_structure` to get exposed queries (FT3-99)
+export function createAuthDataService(connection: Connection): AuthDataService {
   return Object.freeze({
-    // eslint-disable-next-line
-    getAuthData: (operation: Operation) => Promise.resolve({ flags: ["T"] }),
+    getAuthData: async (operation: Operation) => {
+      let authData = null;
+      try {
+        authData = await connection.query<AuthData>(authDataQuery(operation));
+      } catch {
+        try {
+          authData = await connection.query<AuthData>(defaultFTAuthData);
+        } catch {
+          authData = {
+            flags: [],
+            message: "",
+          };
+        }
+      }
+      return authData;
+    },
   });
 }
 
@@ -134,7 +155,7 @@ export function createKeyStoreInteractor(
       const authenticator = createAuthenicator(
         accountId,
         keyHandlers,
-        createAuthDataService()
+        createAuthDataService(connection)
       );
 
       return createSession(connection, authenticator);

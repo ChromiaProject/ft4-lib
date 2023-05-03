@@ -1,27 +1,22 @@
 import TestUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { ftUserSession } from "../client/lib/ft3/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { LocalStorageMock } from "./util/util";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payment-history/payment-history-store-memory";
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
-import { createConnection } from "../client/lib/ft3/ft-session";
-import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
+import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 
 let _ft: ftUserSession;
-let connection: Connection;
 let asset: Asset;
 
 describe("Payment history iterator", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
     _ft = await getUserSession();
-    connection = createConnection(_ft.get.gtxClient);
     asset = await getNewAsset(_ft);
   });
 
@@ -39,25 +34,12 @@ describe("Payment history iterator", () => {
       _ft.changeUser(TestUser())
     ).build();
 
-    const authDataService = createFakeAuthDataService({
-      "ft3.transfer": { flags: ["T"] },
-    });
+    const session = await createKeyStoreInteractor(
+      _ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair)
+    ).getSession(account1.id);
 
-    const keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(
-      user.authDescriptor
-    );
-    const authenticator = createAuthenicator(
-      account1.id,
-      [keyHandler],
-      authDataService
-    );
-
-    const authenticatedAccount = createAuthenticatedAccount(
-      connection,
-      authenticator
-    );
-
-    await authenticatedAccount.transfer(account2.id, asset.id, BigInt(10));
+    await session.account.transfer(account2.id, asset.id, BigInt(10));
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
       ft.get.gtxClient,
