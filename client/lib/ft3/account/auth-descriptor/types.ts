@@ -48,6 +48,6 @@ export type AuthDescriptorArgs =
 
 export type RawAuthDescriptor = {
   type: string;
-  args: Buffer;
-  rules: Buffer | null;
+  args: AuthDescriptorArgs;
+  rules: AuthDescriptorRule | null;
 };

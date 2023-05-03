@@ -92,9 +92,9 @@ export function mapAuthDescriptor(raw: RawAuthDescriptor): AuthDescriptor {
   return Object.freeze(
     fromGtv([
       serializeAuthType(type as AuthType),
-      gtv.decode(args),
-      rules ? gtv.decode(rules) : null,
-    ] as unknown as GtvAuthDescriptor)
+      args,
+      rules,
+    ] as GtvAuthDescriptor)
   );
 }
 

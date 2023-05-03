@@ -39,8 +39,8 @@ query get_account_auth_descriptors_by_participant_id(account_id: byte_array, par
         ad == p.account_auth_descriptor
     } (
         type = ad.auth_type,
-        args = ad.args,
-        rules = ad.rules
+        args = gtv.from_bytes(ad.args),
+        rules = gtv.from_bytes(ad.rules)
     );
 }
 
