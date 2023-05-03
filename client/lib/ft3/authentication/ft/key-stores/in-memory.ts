@@ -1,23 +1,26 @@
+import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
 import { KeyStore } from "../../interfaces";
 import { createFTKeyHandler } from "../key-handler";
-import { encryption } from "postchain-client";
+import { gtx } from "postchain-client";
 
-export function createInMemoryFTKeyStore(keyPair: KeyPair): KeyStore {
+export function createInMemoryFTKeyStore(
+  keyHolder: KeyPair | SignatureProvider
+): KeyStore {
+  const signatureProvider =
+    "privKey" in keyHolder ? gtx.newSignatureProvider(keyHolder) : keyHolder;
+
   const keyStore = Object.freeze({
-    id: keyPair.pubKey,
-    pubKey: keyPair.pubKey,
+    id: signatureProvider.pubKey,
+    pubKey: signatureProvider.pubKey,
     // Would it be better to receive transaction?
     // If transaction is signed on a different device, it would make sense to be able to display
     // transaction details, so user knows what is being signed.
-    sign: (digestToSign: Buffer) => sign(digestToSign, keyPair),
+    sign: (digestToSign: Buffer) => signatureProvider.sign(digestToSign),
     createKeyHandler: (authDescriptor: AuthDescriptor) =>
       createFTKeyHandler(authDescriptor, keyStore),
   });
-  return keyStore;
-}
 
-async function sign(digestToSign: Buffer, keyPair: KeyPair): Promise<Buffer> {
-  return encryption.signDigest(digestToSign, keyPair.privKey);
+  return keyStore;
 }
