@@ -22,8 +22,6 @@ export interface KeyHandler {
   keyStore: KeyStore;
 
   satisfiesAuthRequirements(flags: string[]): boolean;
-
-  // Does it have to be async?
   authenticate(accountId: BufferId, operation: Operation): Promise<Operation[]>;
   sign(transaction: Itransaction): Promise<void>;
 }
