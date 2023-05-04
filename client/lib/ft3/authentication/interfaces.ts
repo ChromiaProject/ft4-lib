@@ -11,7 +11,7 @@ export interface Authenticator {
   keyHandlers: KeyHandler[];
 
   createSession(): AuthenticatorSession;
-  getAuthRequirements(operation: Operation): Promise<string[]>;
+  getAuthRequirements(operation: Operation): Promise<AuthData>;
   getKeyHandlerForOperation(
     operation: Operation
   ): Promise<KeyHandler | undefined>;

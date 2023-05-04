@@ -1,6 +1,7 @@
 import { formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
+  AuthData,
   AuthDataService,
   Authenticator,
   AuthenticatorSession,
@@ -30,9 +31,9 @@ export function createAuthenicator(
 async function getAuthRequirements(
   authDataService: AuthDataService,
   operation: Operation
-): Promise<string[]> {
+): Promise<AuthData> {
   const authData = await authDataService.getAuthData(operation);
-  return authData.flags;
+  return authData;
 }
 
 async function getKeyHandlerForOperation(
@@ -45,7 +46,7 @@ async function getKeyHandlerForOperation(
     operation
   );
   return keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(authRequirements)
+    keyHandler.satisfiesAuthRequirements(authRequirements.flags)
   );
 }
 
@@ -69,10 +70,11 @@ function createAuthenticatorSession(
       return await keyHandler.authenticate(authenticator.accountId, operation);
     },
     sign: async (transaction: Itransaction) => {
-      await Array.from(usedKeyHandlers).map((keyHandler) =>
-        keyHandler.sign(transaction)
+      await Promise.all(
+        Array.from(usedKeyHandlers).map((keyHandler) =>
+          keyHandler.sign(transaction)
+        )
       );
-      return;
     },
   });
 }
