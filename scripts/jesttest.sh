@@ -88,7 +88,7 @@ prc=$!
 
 echo "done!\n"
 i=0
-max=3
+max=30
 while [ $i -lt $max ]
 do
     echo -n "Waiting to start tests... $(( $max - $i )) \r"
