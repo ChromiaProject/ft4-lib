@@ -10,7 +10,7 @@ export class AmountInputError extends Error {
   constructor(msg?) {
     super(msg);
     this.message = msg;
-    this.name = "SignatureCountError";
+    this.name = "AmountInputError";
   }
 }
 
@@ -18,7 +18,7 @@ export class AmountOutOfRangeError extends Error {
   constructor(msg?) {
     super(msg);
     this.message = msg;
-    this.name = "SignatureCountError";
+    this.name = "AmountOutOfRangeError";
   }
 }
 
@@ -26,7 +26,7 @@ export class AmountDecimalsError extends Error {
   constructor(msg?) {
     super(msg);
     this.message = msg;
-    this.name = "SignatureCountError";
+    this.name = "AmountDecimalsError";
   }
 }
 
