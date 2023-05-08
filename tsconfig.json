@@ -12,7 +12,13 @@
       "dom"
     ],
     "resolveJsonModule": true,
-    "types": ["jest"]
+    "types": ["jest"],
+    "paths": {
+      "/*": [
+        "./client/lib/*",
+        "./test/*",
+      ]
+    }
   },
   "include": ["./client/**/*", "./test/**/*"],
   "exclude": [

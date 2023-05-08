@@ -2,12 +2,21 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { Operation } from "./types";
-import { Authenticator, KeyHandler } from "../authentication/interfaces";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { Operation } from "/ft3/utils/types";
+import { Authenticator, KeyHandler } from "/ft3/authentication/interfaces";
+
+type OpAuthPair = [Operation, Authenticator];
+
+export class AuthorizationError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "AuthorizationError";
+  }
+}
 
 export type TransactionBuilder = {
-  _operations: [Operation, Authenticator][];
+  _operations: OpAuthPair[];
   _keyhandlersUsed: KeyHandler[];
   /**
    * Adds an operation to include in the final transaction
@@ -50,6 +59,14 @@ export type TransactionBuilder = {
    * @returns A promise containing the signed transaction
    */
   buildUnsigned: () => Promise<Itransaction>;
+  /**
+   * A function to extract the keyhandlers used to build a transaction,
+   * and thus should be the ones signing the transaction when
+   * `buildUnsigned` was called instead of `build`.
+   * @returns an array containing the keyhandlers used to build the transaction,
+   * and which consequently should sign the transaction.
+   */
+  keyHandlersUsed: () => KeyHandler[];
   session: GtxClient;
 };
 
@@ -69,28 +86,32 @@ export function transactionBuilder(
   }
 
   function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
-    return keyHandlers.map((handler) => handler.keyStore.pubKey);
+    return keyHandlers
+      .filter((handler) => handler.keyStore)
+      .map((handler) => handler.keyStore.pubKey);
   }
 
   async function buildUnsigned() {
-    const operations = await authenticateOperations(
-      this._operations,
-      this._keyhandlersUsed
+    const [operations, keyHandlers] = await authenticateOperations(
+      this._operations
     );
+    keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
-    operations
-      .flat()
-      .forEach(([name, ...args]: [string, RawGtv[]]) =>
-        txn.addOperation(name, ...args)
-      );
+    const addOperation = (op: Operation) => {
+      const [name, ...args] = op;
+      txn.addOperation(name, ...args);
+    };
+    operations.forEach((op: Operation | Operation[]) => {
+      isOperation(op) ? addOperation(op) : op.forEach(addOperation);
+    });
     return txn;
   }
 
   async function authenticateOperations(
-    operations: [Operation, Authenticator][],
-    keyHandlersUsed: KeyHandler[]
-  ): Promise<Operation[][]> {
-    return await Promise.all(
+    operations: OpAuthPair[]
+  ): Promise<[Operation[], KeyHandler[]]> {
+    const keyHandlers = [];
+    const nested = await Promise.all(
       operations.map(async (tuple: [Operation, Authenticator]) => {
         const [operation, authenticator] = tuple;
         if (operation[0] === "nop") return [operation];
@@ -99,15 +120,24 @@ export function transactionBuilder(
           operation
         );
         if (!keyHandler) {
-          throw new Error("No keyhandler registered to handle this operation");
+          throw new AuthorizationError(
+            "No keyhandler registered to handle this operation"
+          );
         }
-        keyHandlersUsed.push(keyHandler);
+        keyHandlers.push(keyHandler);
         return await keyHandler.authenticate(
           authenticator.accountId,
           operation
         );
       })
     );
+    let opsToReturn = [];
+    nested.forEach((item) => {
+      opsToReturn = isOperation(item)
+        ? [...opsToReturn, item]
+        : opsToReturn.concat(item);
+    });
+    return [opsToReturn, keyHandlers];
   }
 
   async function build() {
@@ -141,4 +171,8 @@ export function transactionBuilder(
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
   return context as TransactionBuilder;
+}
+
+function isOperation(op: Operation | Operation[]): op is Operation {
+  return typeof op[0] === "string";
 }

@@ -1,4 +1,4 @@
-import { KeyPair } from "../../../../cryptoUtils";
+import { KeyPair } from "postchain-client/built/src/encryption/types";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
 import { KeyStore } from "../../interfaces";
 import { createFTKeyHandler } from "../key-handler";
