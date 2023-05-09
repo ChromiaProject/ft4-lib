@@ -132,8 +132,9 @@ function test_multisig_external_signature() {
     v=28
   );
 
+  val auth_descriptor_id = desc.hash();
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
@@ -167,8 +168,9 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
     v=28
   );
 
+  val auth_descriptor_id = desc.hash();
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
@@ -202,8 +204,9 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     v=28
   );
 
+  val auth_descriptor_id = desc.hash();
   rell.test.tx()
-    .op(acc.eth_auth(desc.hash(), desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub))
+    .op(acc.eth_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1], rell.test.keypairs.alice.pub))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail();
@@ -249,8 +252,9 @@ function test_ft_auth_fails_if_key_invalid() {
     .sign(external_key.priv)
     .run();
 
+  val auth_descriptor_id = desc.hash();
   rell.test.tx()
-    .op(acc.ft_auth(desc.hash(), desc.hash()))
+    .op(acc.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.bob.priv)
     .run_must_fail();
@@ -271,8 +275,9 @@ function test_perform_ft_auth_transaction() {
     .sign(external_key.priv)
     .run();
 
+  val auth_descriptor_id = desc.hash();
   rell.test.tx()
-    .op(acc.ft_auth(desc.hash(), desc.hash()))
+    .op(acc.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(external_key.priv)
     .run();

@@ -11,7 +11,7 @@ export interface Authenticator {
   keyHandlers: KeyHandler[];
 
   createSession(): AuthenticatorSession;
-  getAuthRequirements(operation: Operation): Promise<string[]>;
+  getAuthRequirements(operation: Operation): Promise<AuthData>;
   getKeyHandlerForOperation(
     operation: Operation
   ): Promise<KeyHandler | undefined>;
@@ -22,8 +22,6 @@ export interface KeyHandler {
   keyStore: KeyStore;
 
   satisfiesAuthRequirements(flags: string[]): boolean;
-
-  // Does it have to be async?
   authenticate(accountId: BufferId, operation: Operation): Promise<Operation[]>;
   sign(transaction: Itransaction): Promise<void>;
 }
