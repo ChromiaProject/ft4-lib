@@ -33,7 +33,7 @@ export async function signMessage(
   signer: ethers.Signer
 ): Promise<Signature> {
   const signature = await signer.signMessage(message);
-  const { r, s, v } = ethers.Signature.from(signature);
+  const { r, s, v } = ethers.utils.splitSignature(signature);
   return {
     r: Buffer.from(r.slice(2), "hex"),
     s: Buffer.from(s.slice(2), "hex"),
