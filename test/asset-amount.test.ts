@@ -88,6 +88,7 @@ describe("Asset amount", () => {
     expect(() => amount.create("0b011011", 1)).toThrow(AmountInputError);
     expect(() => amount.create(10, -1)).toThrow(AmountDecimalsError);
     expect(() => amount.create(2, 77)).toThrow(AmountOutOfRangeError);
+    expect(() => amount.create(1, 78)).toThrow(AmountOutOfRangeError);
     const outOfBounds = BigInt("0x1" + "0".repeat(64));
     expect(() => amount.create(outOfBounds, 0)).toThrow(AmountOutOfRangeError);
   });

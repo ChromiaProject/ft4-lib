@@ -7,7 +7,7 @@ type AnyAssetAmount = AssetAmountBareBones | Amount;
 export const MAX = BigInt("0x" + "f".repeat(64)); //2^256-1 (16^64) = 2^(4*64)
 
 export class AmountInputError extends Error {
-  constructor(msg?) {
+  constructor(msg?: string) {
     super(msg);
     this.message = msg;
     this.name = "AmountInputError";
@@ -15,7 +15,7 @@ export class AmountInputError extends Error {
 }
 
 export class AmountOutOfRangeError extends Error {
-  constructor(msg?) {
+  constructor(msg?: string) {
     super(msg);
     this.message = msg;
     this.name = "AmountOutOfRangeError";
@@ -23,7 +23,7 @@ export class AmountOutOfRangeError extends Error {
 }
 
 export class AmountDecimalsError extends Error {
-  constructor(msg?) {
+  constructor(msg?: string) {
     super(msg);
     this.message = msg;
     this.name = "AmountDecimalsError";

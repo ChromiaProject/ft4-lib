@@ -22,7 +22,7 @@ function ensure_balance(acc.account, asset): balance {
 }
 
 function register_asset(name, decimals: integer, issuing_brid: byte_array): asset {
-    require(decimals >= 0 and decimals < 79, "decimals must be between 0 and 79");
+    require(decimals >= 0 and decimals < 79, "decimals must be between 0 and 78 (included)");
     val id = (name, issuing_brid).hash();
     return create asset (id, name, decimals, issuing_brid);
 }
