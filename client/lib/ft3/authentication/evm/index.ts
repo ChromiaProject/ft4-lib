@@ -7,17 +7,21 @@ import { ethers } from "ethers";
 export function evmAuth(
   accountId: BufferId,
   authDesriptorId: BufferId,
-  signature: Signature[]
+  signatures: Signature[]
 ): Operation {
   return [
     "ft.evm_auth",
     formatter.ensureBuffer(accountId),
     formatter.ensureBuffer(authDesriptorId),
-    signature,
+    signatures.map(({ r, s, v }) => [r, s, v]),
   ];
 }
 
-export type Signature = [Buffer, Buffer, number];
+export type Signature = {
+  r: Buffer;
+  s: Buffer;
+  v: number;
+};
 
 export interface EVMKeyStore extends KeyStore {
   address: Buffer;
@@ -30,5 +34,9 @@ export async function signMessage(
 ): Promise<Signature> {
   const signature = await signer.signMessage(message);
   const { r, s, v } = ethers.Signature.from(signature);
-  return [Buffer.from(r.slice(2), "hex"), Buffer.from(s.slice(2), "hex"), v];
+  return {
+    r: Buffer.from(r.slice(2), "hex"),
+    s: Buffer.from(s.slice(2), "hex"),
+    v,
+  };
 }
