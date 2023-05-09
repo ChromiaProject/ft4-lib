@@ -1,4 +1,7 @@
 import { encryption, gtv } from "postchain-client";
+import { KeyPair } from "../../client/lib/cryptoUtils";
+import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
+import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -46,3 +49,16 @@ class LocalStorageMock implements Storage {
 }
 
 export { generateAssetName, generateId, blockchainAccountId, LocalStorageMock };
+
+export function createTestAuthDescriptor(flags: string[] = []): {
+  keyPair: KeyPair;
+  authDescriptor: AuthDescriptor;
+} {
+  const keyPair = new KeyPair();
+  const descriptor = authDescriptor.create.singleSig.withArgs(
+    flags,
+    keyPair.pubKey
+  ).andNoRules;
+
+  return { keyPair, authDescriptor: descriptor };
+}

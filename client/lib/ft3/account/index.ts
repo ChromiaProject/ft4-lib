@@ -1,6 +1,6 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
-import { transactionBuilder } from "../utils/transaction-builder";
+import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {
   addAuthDescriptorToAccount,
   burnTokens,
@@ -59,7 +59,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         ssoRawTransactionRegister(
           authDescriptor,
           user.authDescriptor,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
       ssoAddAuthDescriptor: (
         accountId: BufferId,
@@ -68,7 +68,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         ssoRawTransactionAddAuthDescriptor(
           accountId,
           authDescriptor,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
     },
     authDescriptor: {
@@ -79,19 +79,19 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         addAuthDescriptorToAccount(
           newUser,
           accountId,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
       deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAllAuthDescriptorsExclude(
           authDescriptorId,
           accountId,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
       delete: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAuthDescriptor(
           authDescriptorId,
           accountId,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
     },
     token: {
@@ -100,17 +100,18 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         to: BufferId,
         asset: BufferId,
         amount: Amount
-      ) => transfer(from, to, asset, amount, transactionBuilder(user, pci)),
+      ) =>
+        transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
       burn: (from: BufferId, asset: BufferId, amount: Amount) =>
-        burnTokens(from, asset, amount, transactionBuilder(user, pci)),
+        burnTokens(from, asset, amount, legacyTransactionBuilder(user, pci)),
       xcTransfer: () => xcTransfer(),
     },
     dev: {
       register: (authDescriptor: AuthDescriptor) =>
-        registerAccount(authDescriptor, transactionBuilder(user, pci)),
+        registerAccount(authDescriptor, legacyTransactionBuilder(user, pci)),
       freeOperation: (accountId: BufferId) =>
-        freeOperation(accountId, transactionBuilder(user, pci)),
+        freeOperation(accountId, legacyTransactionBuilder(user, pci)),
       givePoints: (accountId: BufferId, points: number) =>
-        givePoints(accountId, points, transactionBuilder(user, pci)),
+        givePoints(accountId, points, legacyTransactionBuilder(user, pci)),
     },
   });

@@ -5,7 +5,7 @@ import { getUserSession } from "./util/blockchain-util";
 import { ChainInfo } from "../client/lib/ft3/utils/types";
 import { ft } from "../client/lib/ft3";
 import { ssoRawTransactionRegister } from "../client/lib/ft3/account/account-op-functions";
-import { transactionBuilder } from "../client/lib/ft3/utils/transaction-builder";
+import { legacyTransactionBuilder } from "../client/lib/ft3/utils/transaction-builder-old";
 
 let ftSession: ftUserSession;
 
@@ -66,7 +66,7 @@ describe("Blockchain", () => {
     const rawTransaction = await ssoRawTransactionRegister(
       vault.authDescriptor,
       user.authDescriptor,
-      transactionBuilder(user, session.get.gtxClient)
+      legacyTransactionBuilder(user, session.get.gtxClient)
     );
 
     await ftSession.get.gtxClient

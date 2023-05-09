@@ -1,6 +1,8 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { FlagsType } from "../../client/lib/ft3/account/auth-descriptor";
-import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
+import {
+  authDescriptor,
+  FlagsType,
+} from "../../client/lib/ft3/account/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
 import { Account } from "../../client/lib/ft3/account/types";
 import {
@@ -12,7 +14,7 @@ import { ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtx } from "postchain-client";
 import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
-import { transactionBuilder } from "../../client/lib/ft3/utils/transaction-builder";
+import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
 import { amount } from "../../client/lib/ft3/asset/amount";
 
 class AccountBuilder {
@@ -96,7 +98,7 @@ class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const tb = transactionBuilder(
+      const tb = legacyTransactionBuilder(
         this.session.user,
         this.session.get.gtxClient
       );
@@ -127,7 +129,7 @@ class AccountBuilder {
       return this.session.user.authDescriptor;
     }
     if (this.participants.length > 1) {
-      return create.multiSig
+      return authDescriptor.create.multiSig
         .withArgs(
           this.flags,
           this.requiredSignaturesCount,
@@ -136,7 +138,7 @@ class AccountBuilder {
         .andRules(this.rules);
     } else {
       const [participant] = this.participants;
-      return create.singleSig
+      return authDescriptor.create.singleSig
         .withArgs(this.flags, participant.pubKey)
         .andRules(this.rules);
     }
