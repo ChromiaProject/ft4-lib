@@ -34,6 +34,7 @@ import {
   authDataQuery,
   createAuthenicator,
   defaultFTAuthData,
+  nonce,
 } from "./authentication";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
@@ -134,6 +135,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       }
       return authData;
     },
+    getNonce: async (authDescriptorId: BufferId) =>
+      connection.query<number>(nonce(authDescriptorId)),
   });
 }
 

@@ -15,7 +15,9 @@ describe("Authenticator session", () => {
 
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const authDataService = createFakeAuthDataService({ foo: { flags: [] } });
+    const authDataService = createFakeAuthDataService({
+      foo: { flags: [], message: "" },
+    });
     const authenticatorSession = createAuthenicator(
       accountId,
       [keyHandler],
@@ -36,7 +38,9 @@ describe("Authenticator session", () => {
 
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const authDataService = createFakeAuthDataService({ foo: { flags: [] } });
+    const authDataService = createFakeAuthDataService({
+      foo: { flags: [], message: "" },
+    });
     const authenticatorSession = createAuthenicator(
       accountId,
       [keyHandler],
@@ -68,7 +72,7 @@ describe("Authenticator session", () => {
       createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
 
     const authDataService = createFakeAuthDataService({
-      foo: { flags: ["f"] },
+      foo: { flags: ["f"], message: "" },
     });
     const authenticator = createAuthenicator(
       accountId,
@@ -97,8 +101,8 @@ describe("Authenticator session", () => {
       createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
 
     const authDataService = createFakeAuthDataService({
-      foo: { flags: ["f"] },
-      bar: { flags: ["a"] },
+      foo: { flags: ["f"], message: "" },
+      bar: { flags: ["a"], message: "" },
     });
 
     const authenticatorSession = createAuthenicator(
@@ -124,7 +128,7 @@ describe("Authenticator session", () => {
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
-      foo: { flags: ["b"] },
+      foo: { flags: ["b"], message: "" },
     });
     const authenticatorSession = createAuthenicator(
       accountId,
@@ -154,8 +158,8 @@ describe("Authenticator session", () => {
       createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
 
     const authDataService = createFakeAuthDataService({
-      foo: { flags: ["f"] },
-      bar: { flags: ["b"] },
+      foo: { flags: ["f"], message: "" },
+      bar: { flags: ["b"], message: "" },
     });
 
     const authenticatorSession = createAuthenicator(

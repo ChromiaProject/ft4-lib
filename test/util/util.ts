@@ -2,6 +2,7 @@ import { encryption, gtv } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
 import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -61,4 +62,10 @@ export function createTestAuthDescriptor(flags: string[] = []): {
   ).andNoRules;
 
   return { keyPair, authDescriptor: descriptor };
+}
+
+export async function createAccount(client: GtxClient, ad: AuthDescriptor) {
+  const tx = client.newTransaction([]);
+  tx.addOperation("ft3.register_account_test", authDescriptor.toGtv(ad) as any);
+  await tx.postAndWaitConfirmation();
 }
