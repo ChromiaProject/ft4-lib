@@ -332,7 +332,6 @@ describe("Asset amount", () => {
     const second = amount.create(1, 3);
     const secondCopy = amount.create("1", 3);
     const third = amount.create(1.5, 3);
-    console.log(second.toString(), third.toString());
     expect(second.gt(third)).toBe(false);
     expect(second.lt(third)).toBe(true);
     expect(second.eq(third)).toBe(false);

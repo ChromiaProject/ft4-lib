@@ -13,7 +13,6 @@ import { Authenticator, KeyHandler } from "/ft3/authentication/interfaces";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { transferOp } from "/ft3/account/account-operations";
 import { XferInput, XferOutput } from "/ft3/account/types";
-import { AssetAmount } from "/ft3/asset/types";
 import { AuthDescriptor } from "/ft3/account/auth-descriptor/types";
 import { FlagsType } from "/ft3/account/auth-descriptor";
 import { registerOp } from "/ft3/account/account-dev-operations";
@@ -50,13 +49,13 @@ describe("Transaction Builder", () => {
       authenticator.accountId,
       Buffer.alloc(32),
       authDescriptor.id,
-      10 as unknown as AssetAmount,
+      BigInt(10),
       {},
     ];
     const output: XferOutput = [
       Buffer.alloc(32),
       Buffer.alloc(32),
-      10 as unknown as AssetAmount,
+      BigInt(10),
       {},
     ];
 
@@ -84,13 +83,13 @@ describe("Transaction Builder", () => {
       authenticator.accountId,
       Buffer.alloc(32),
       authDescriptor.id,
-      10 as unknown as AssetAmount,
+      BigInt(10),
       {},
     ];
     const output: XferOutput = [
       Buffer.alloc(32),
       Buffer.alloc(32),
-      10 as unknown as AssetAmount,
+      BigInt(10),
       {},
     ];
 
