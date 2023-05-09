@@ -4,19 +4,20 @@ import { authDescriptor } from "../client/lib/ft3/account/auth-descriptor";
 import { createInMemoryEVMKeyStore } from "../client/lib/ft3/authentication/evm/key-stores/in-memory";
 import { op } from "../client/lib/ft3/utils";
 import { evmAuth } from "../client/lib/ft3/authentication/evm";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
-import { getUserSession } from "./util/blockchain-util";
 import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 import { transactionBuilder } from "../client/lib/ft3/utils/transaction-builder";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAccount } from "./util/util";
 import { ethers } from "ethers";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { createClient } from "./util/blockchain-util";
 
-describe("EVM", () => {
-  let _ft: ftUserSession;
+describe("EVM key handler", () => {
+  let client: GtxClient;
+
   beforeAll(async () => {
-    _ft = await getUserSession();
+    client = await createClient();
   });
 
   it("should sign message", async () => {
@@ -46,15 +47,21 @@ describe("EVM", () => {
     const keyStore = createInMemoryEVMKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [],
-      keyStore.id
+      keyStore.address
     ).andNoRules;
     const keyHandler = keyStore.createKeyHandler(ad);
-    const operations = await keyHandler.authenticate(accountId, op("foo"), {
+    const authData = {
       flags: [],
       message: "Message to sign",
-    });
+    };
 
-    const signature = await keyStore.signMessage("Message to sign");
+    const operations = await keyHandler.authenticate(
+      accountId,
+      op("foo"),
+      authData
+    );
+
+    const signature = await keyStore.signMessage(authData.message);
     expect(operations).toEqual([
       evmAuth(accountId, ad.id, [signature]),
       op("foo"),
@@ -68,7 +75,7 @@ describe("EVM", () => {
     const keyStore = createInMemoryEVMKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyPair.pubKey
+      keyStore.address
     ).andNoRules;
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
@@ -78,15 +85,18 @@ describe("EVM", () => {
       [keyStore.createKeyHandler(ad)],
       authService
     );
-    const tb = transactionBuilder(authenticator, _ft.get.gtxClient);
 
-    const tx = await tb.add(op("foo")).add(op("foo")).build();
     const signature1 = await keyStore.signMessage(
       message.replace("{nonce}", "0")
     );
     const signature2 = await keyStore.signMessage(
       message.replace("{nonce}", "1")
     );
+
+    const tx = await transactionBuilder(authenticator, client)
+      .add(op("foo"))
+      .add(op("foo"))
+      .build();
 
     expect(tx.gtx.operations).toEqual([
       {
@@ -108,19 +118,18 @@ describe("EVM", () => {
     ]);
   });
 
-  it("add FT auth descriptor", async () => {
+  it("should add FT auth descriptor", async () => {
     const keyPair = new KeyPair();
     const keyStore = createInMemoryEVMKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
       keyStore.address
     ).andNoRules;
-    await createAccount(_ft.get.gtxClient, ad);
+    await createAccount(client, ad);
 
-    const session = await createKeyStoreInteractor(
-      _ft.get.gtxClient,
-      keyStore
-    ).getSession(ad.id);
+    const session = await createKeyStoreInteractor(client, keyStore).getSession(
+      ad.id
+    );
 
     const keyPair2 = new KeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
