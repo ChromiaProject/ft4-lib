@@ -89,10 +89,11 @@ function createAuthenticatorSession(
       );
     },
     sign: async (transaction: Itransaction) => {
-      await Array.from(usedKeyHandlers).map((keyHandler) =>
-        keyHandler.sign(transaction)
+      await Promise.all(
+        Array.from(usedKeyHandlers).map((keyHandler) =>
+          keyHandler.sign(transaction)
+        )
       );
-      return;
     },
   });
 }

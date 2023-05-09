@@ -26,6 +26,7 @@ export interface KeyHandler {
     operation: Operation,
     authData: AuthData
   ): Promise<Operation[]>;
+
   sign(transaction: Itransaction): Promise<void>;
 
   // FIXME

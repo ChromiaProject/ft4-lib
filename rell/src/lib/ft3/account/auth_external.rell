@@ -49,7 +49,6 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     
     validated_args.account_auth_descriptor.ctr += 1;
     
-    // FIXME
     return validated_args.account;
 }
 

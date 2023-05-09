@@ -2,12 +2,21 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { Operation } from "./types";
-import { Authenticator, KeyHandler } from "../authentication/interfaces";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { Operation } from "/ft3/utils/types";
+import { Authenticator, KeyHandler } from "/ft3/authentication/interfaces";
+
+type OpAuthPair = [Operation, Authenticator];
+
+export class AuthorizationError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "AuthorizationError";
+  }
+}
 
 export type TransactionBuilder = {
-  _operations: [Operation, Authenticator][];
+  _operations: OpAuthPair[];
   _keyhandlersUsed: KeyHandler[];
   /**
    * Adds an operation to include in the final transaction
@@ -50,6 +59,14 @@ export type TransactionBuilder = {
    * @returns A promise containing the signed transaction
    */
   buildUnsigned: () => Promise<Itransaction>;
+  /**
+   * A function to extract the keyhandlers used to build a transaction,
+   * and thus should be the ones signing the transaction when
+   * `buildUnsigned` was called instead of `build`.
+   * @returns an array containing the keyhandlers used to build the transaction,
+   * and which consequently should sign the transaction.
+   */
+  keyHandlersUsed: () => KeyHandler[];
   session: GtxClient;
 };
 
@@ -76,36 +93,44 @@ export function transactionBuilder(
   }
 
   async function buildUnsigned() {
-    const operations = await authenticateOperations(
-      this._operations,
-      this._keyhandlersUsed
+    const [operations, keyHandlers] = await authenticateOperations(
+      this._operations
     );
+    keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
-    operations
-      .flat()
-      .forEach(([name, ...args]: [string, RawGtv[]]) =>
-        txn.addOperation(name, ...args)
-      );
+    const addOperation = (op: Operation) => {
+      const [name, ...args] = op;
+      txn.addOperation(name, ...args);
+    };
+    operations.forEach((op: Operation | Operation[]) => {
+      isOperation(op) ? addOperation(op) : op.forEach(addOperation);
+    });
     return txn;
   }
 
   async function authenticateOperations(
-    operations: [Operation, Authenticator][],
-    keyHandlersUsed: KeyHandler[]
-  ): Promise<Operation[][]> {
-    const processedOperations: Operation[][] = [];
+    operations: OpAuthPair[]
+  ): Promise<[Operation[], KeyHandler[]]> {
+    const keyHandlers = [];
     const nonces = new Map<Buffer, number>();
+    const processedOperations: Operation[][] = [];
     for (const tuple of operations) {
       const [operation, authenticator] = tuple;
-      if (operation[0] === "nop") processedOperations.push([operation]);
+      if (operation[0] === "nop") {
+        processedOperations.push([operation]);
+        continue;
+      }
 
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation
       );
+
       if (!keyHandler) {
-        throw new Error("No keyhandler registered to handle this operation");
+        throw new AuthorizationError(
+          "No keyhandler registered to handle this operation"
+        );
       }
-      keyHandlersUsed.push(keyHandler);
+      keyHandlers.push(keyHandler);
       if (!nonces.has(keyHandler.authDescriptor.id)) {
         nonces.set(
           keyHandler.authDescriptor.id,
@@ -125,7 +150,7 @@ export function transactionBuilder(
           message,
         }
       );
-      // keep track of nonce in corresponding key handler?
+      // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {
         if (op[0] === "ft.evm_auth") {
           nonces.set(keyHandler.authDescriptor.id, nonce + 1);
@@ -133,7 +158,13 @@ export function transactionBuilder(
       });
       processedOperations.push(ops);
     }
-    return processedOperations;
+    let opsToReturn = [];
+    processedOperations.forEach((item) => {
+      opsToReturn = isOperation(item)
+        ? [...opsToReturn, item]
+        : opsToReturn.concat(item);
+    });
+    return [opsToReturn, keyHandlers];
   }
 
   async function build() {
@@ -169,4 +200,8 @@ export function transactionBuilder(
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
   return context as TransactionBuilder;
+}
+
+function isOperation(op: Operation | Operation[]): op is Operation {
+  return typeof op[0] === "string";
 }
