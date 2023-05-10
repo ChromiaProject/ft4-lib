@@ -1,4 +1,20 @@
 #!/bin/sh
+forceexit(){
+    echo
+    echo 'Remember to run "npm run stop-postchain:demo"!'
+    exit 2
+}
+
+exitfn () {
+    trap "forceexit" 2
+    echo; echo 'Stopping docker, hit Ctrl+C to force quit'
+    docker stop postchain_demo  > /dev/null 
+    docker rm postchain_demo > /dev/null
+    exit 2
+}
+
+trap "exitfn" 2
+
 docker run --name postchain_demo -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
     --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
     --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain_demo \

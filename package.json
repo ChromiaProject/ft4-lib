@@ -16,6 +16,7 @@
     "test:pipeline": "./scripts/test.sh --no-docker",
     "stop-postchain:jest": "docker stop postchain_test; docker rm postchain_test",
     "stop-postchain:demo": "docker stop postchain_demo; docker rm postchain_demo",
+    "stop-postchain:rell": "docker stop postchain; docker rm postchain",
     "start-postchain:demo": "./scripts/rundemo.sh",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc",

@@ -2,7 +2,7 @@
 forceexit(){
     echo
     if $docker; then
-        echo 'Remember to run "docker stop postchain_test"!'
+        echo 'Remember to run "npm run stop-postchain:jest"!'
     fi
     echo "You'll also need to kill the chr node, running on pid: $prc"
     exit 2

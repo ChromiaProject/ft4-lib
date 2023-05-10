@@ -1,7 +1,7 @@
 #!/bin/sh
 forceexit(){
     echo
-    echo 'Remember to run "docker stop postchain && docker rm postchain"!'
+    echo 'Remember to run "npm run stop-postchain:rell"!'
     exit 2
 }
 
