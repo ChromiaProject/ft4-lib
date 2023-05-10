@@ -1,5 +1,5 @@
 blockchains:
-  ft3_jest_test: #Name of the blockchain
+  ft3_rell_test: #Name of the blockchain
     module: tests.core.app_module #Entrypoint to the project
 
 compile:

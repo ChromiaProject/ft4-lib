@@ -1,8 +1,8 @@
 import { Amount } from "./interfaces";
 import { DecimalFormat, SupportedNumber } from "./types";
 
-type AssetAmountBareBones = { value: bigint; decimals: number };
-type AnyAssetAmount = AssetAmountBareBones | Amount;
+type RawAmount = { value: bigint; decimals: number };
+type AnyAssetAmount = RawAmount | Amount;
 
 export const MAX = BigInt("0x" + "f".repeat(64)); //2^256-1 (16^64) = 2^(4*64)
 
@@ -41,7 +41,7 @@ export const amount = {
   stringify,
 };
 
-function buildAmountObject(amount: AssetAmountBareBones): Amount {
+function buildAmountObject(amount: RawAmount): Amount {
   return Object.freeze({
     value: amount.value,
     decimals: amount.decimals,
@@ -90,7 +90,7 @@ export function createAmount(num: SupportedNumber, decimals?: number): Amount {
   if (decimals !== undefined && (decimals < 0 || !Number.isInteger(decimals))) {
     throw new AmountDecimalsError("Decimals must be a positive integer number");
   }
-  const amount: AssetAmountBareBones = { value: BigInt(0), decimals: 0 };
+  const amount: RawAmount = { value: BigInt(0), decimals: 0 };
   if (typeof num === "string" || typeof num === "number") {
     let _num = num.toString();
     if (!_num.match(/^-?\d*\.?\d*$/))

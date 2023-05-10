@@ -1,5 +1,5 @@
 blockchains:
-  ft3_jest_test: #Name of the blockchain
+  ft3_demo: #Name of the blockchain
     module: main #Entrypoint to the project
     moduleArgs:
       lib.ft3.core:
@@ -13,6 +13,4 @@ blockchains:
 
 compile:
   source: ../rell/src
-
-database:
-  host: jdbc:postgresql://localhost/postchain
+  target: ../rell/out
