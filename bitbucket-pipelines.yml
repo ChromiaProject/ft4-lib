@@ -24,6 +24,6 @@ definitions:
     postgres: 
       image: postgres 
       variables: 
-        POSTGRES_DB: 'postchain' 
+        POSTGRES_DB: 'postchain_test' 
         POSTGRES_USER: 'postchain'
         POSTGRES_PASSWORD: 'postchain'
