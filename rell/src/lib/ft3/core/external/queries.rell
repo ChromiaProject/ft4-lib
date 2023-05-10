@@ -58,10 +58,9 @@ query get_all_assets() {
     );
 }
 
-query get_payment_history_paginated(account_id: byte_array, page_cursor: text) {
-    val cursor = core.decode_cursor(page_cursor);
-    val paginated_payments = core.get_paginated_payments(account_id, cursor);
-    return core.make_page(paginated_payments, cursor);
+query get_payment_history_paginated(filter: core.filter, page_size: integer, before_rowid: rowid) {
+    val paginated_payments = core.get_paginated_payments(filter, page_size, before_rowid);
+    return core.make_page(paginated_payments, page_size, before_rowid);
 }
 
 query get_payment_history_size(account_id: byte_array) {

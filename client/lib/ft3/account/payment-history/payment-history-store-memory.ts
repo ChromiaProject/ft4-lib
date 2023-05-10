@@ -3,7 +3,7 @@ import {
   PaymentHistoryStore,
   PaymentHistoryError,
 } from "./interfaces";
-import { PaymentHistoryEntry } from "./types";
+import { PaymentHistoryEntry, PaymentHistoryType } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
@@ -12,7 +12,8 @@ import { formatter } from "postchain-client";
 export async function createPaymentHistoryStoreMemory(
   session: GtxClient,
   accountId: BufferId,
-  pageSize: number
+  pageSize: number,
+  type: PaymentHistoryType | null
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1)
     throw new PaymentHistoryError("Page size must be at least 1");
@@ -22,17 +23,18 @@ export async function createPaymentHistoryStoreMemory(
   const entryCount = await retriever.getTotalCount();
   const pageCount = Math.ceil(entryCount / pageSize);
 
-  return build(id, pageSize, pageCount, entryCount, [], retriever, null);
+  return build(id, pageSize, pageCount, type, entryCount, [], retriever, 0);
 }
 
 function build(
   accountId: Buffer,
   pageSize: number,
   pageCount: number,
+  type: PaymentHistoryType | null,
   entryCount: number,
   entries: PaymentHistoryEntry[],
   retriever: PaymentHistoryRetriever,
-  lastElementRowid: string | null
+  lastElementRowid: number
 ): PaymentHistoryStore {
   let _pageSize = pageSize;
   const _pageCount = pageCount;
@@ -61,10 +63,12 @@ function build(
           // Use fewer queries: ask for all missing elements
           // (chain will return up to 100)
           (page + 1) * _pageSize - _entries.length,
+          type,
           _lastElementRowid
         );
+        if (!data.length) break;
         _entries = _entries.concat(data);
-        _lastElementRowid = next[1];
+        _lastElementRowid = next;
       }
       return Object.freeze(
         _entries.slice(page * _pageSize, firstIndexInNextPage)
@@ -84,14 +88,16 @@ function build(
         const tmpLastElementRowid = _lastElementRowid;
         while (!done) {
           const [entries, next] = await retriever.retrieve(
-            newEntriesAmount + 1
+            newEntriesAmount + 1,
+            type
           );
-          _lastElementRowid = next[1];
+          _lastElementRowid = next;
+          if (!entries.length) done = true;
 
           const idxOfFirst = entries.findIndex((entry) => {
             return entry.rowid === oldFirst.rowid;
           });
-          if (idxOfFirst != -1) {
+          if (idxOfFirst !== -1) {
             done = true;
             toAdd = toAdd.concat(entries.slice(0, idxOfFirst));
           } else {
@@ -104,6 +110,7 @@ function build(
           accountId,
           _pageSize,
           Math.ceil(newCount / _pageSize),
+          type,
           newCount,
           _entries,
           retriever,

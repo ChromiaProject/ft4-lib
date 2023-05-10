@@ -1,7 +1,7 @@
-import { PaymentHistoryCursor, PaymentHistoryEntry } from "./types";
+import { PaymentHistoryEntry, PaymentHistoryType } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { formatter, gtv } from "postchain-client";
+import { formatter } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
 import { PaymentHistoryError, PaymentHistoryRetriever } from "./interfaces";
 
@@ -19,22 +19,19 @@ export function createPaymentHistoryRetriever(
     },
     retrieve: async (
       amount: number,
-      lastElementRowid: string | null = null
-    ): Promise<[PaymentHistoryEntry[], PaymentHistoryCursor]> => {
+      type: PaymentHistoryType | null,
+      lastElementRowid = 0
+    ): Promise<[PaymentHistoryEntry[], number?]> => {
       if (amount > 100)
         throw new PaymentHistoryError("amount needs to be <= 100");
-      const cursor = gtv.encode([amount, lastElementRowid]).toString("base64");
       const res = await session.query("ft3.get_payment_history_paginated", {
-        account_id: id,
-        page_cursor: cursor,
+        filter: [id, type],
+        page_size: amount,
+        before_rowid: lastElementRowid,
       });
       return [
         res.data.map((d) => createPaymentHistoryEntryFromResponse(d)),
-        res.next_cursor
-          ? <PaymentHistoryCursor>(
-              gtv.decode(Buffer.from(res.next_cursor, "base64"))
-            )
-          : [null, null],
+        res.next_cursor || null,
       ];
     },
     brid: session.newTransaction([]).gtx.blockchainRID.toString("hex"),

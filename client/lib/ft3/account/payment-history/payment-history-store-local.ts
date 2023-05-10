@@ -10,16 +10,22 @@ import {
   paymentHistoryEntryFromJSON,
   paymentHistoryEntryToJSON,
 } from "./payment-history-entry";
-import { PaymentHistoryEntry } from "./types";
+import { PaymentHistoryEntry, PaymentHistoryType } from "./types";
 import { formatter } from "postchain-client";
 
 export async function ensurePaymentHistoryStoreLocal(
   session: GtxClient,
   pageSize: number,
-  accountId: BufferId
+  accountId: BufferId,
+  type: PaymentHistoryType | null
 ): Promise<PaymentHistoryStore> {
   try {
-    return await loadPaymentHistoryStoreLocal(session, accountId, pageSize);
+    return await loadPaymentHistoryStoreLocal(
+      session,
+      accountId,
+      pageSize,
+      type
+    );
   } catch (error) {
     console.log(`Couldn't load payment history from local storage
     [Reason: ${error.toString()}]
@@ -27,7 +33,8 @@ export async function ensurePaymentHistoryStoreLocal(
     return await createNewPaymentHistoryStoreLocal(
       session,
       accountId,
-      pageSize
+      pageSize,
+      type
     );
   }
 }
@@ -35,7 +42,8 @@ export async function ensurePaymentHistoryStoreLocal(
 export async function createNewPaymentHistoryStoreLocal(
   session: GtxClient,
   accountId: BufferId,
-  pageSize: number
+  pageSize: number,
+  type: PaymentHistoryType | null
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1)
     throw new PaymentHistoryError("Page size must be at least 1");
@@ -48,13 +56,24 @@ export async function createNewPaymentHistoryStoreLocal(
     .toString("hex")
     .toUpperCase()}_${retriever.brid.toUpperCase()}`;
   localStorage.removeItem(key);
-  return build(id, pageSize, pageCount, entryCount, [], retriever, null, key);
+  return build(
+    id,
+    pageSize,
+    pageCount,
+    type,
+    entryCount,
+    [],
+    retriever,
+    0,
+    key
+  );
 }
 
 export async function loadPaymentHistoryStoreLocal(
   session: GtxClient,
   accountId: BufferId,
-  pageSize: number
+  pageSize: number,
+  type: PaymentHistoryType | null
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1)
     throw new PaymentHistoryError("Page size must be at least 1");
@@ -78,6 +97,7 @@ export async function loadPaymentHistoryStoreLocal(
     id,
     pageSize,
     pageCount,
+    type,
     entryCount,
     entries,
     retriever,
@@ -90,10 +110,11 @@ function build(
   accountId: Buffer,
   pageSize: number,
   pageCount: number,
+  type: PaymentHistoryType | null,
   entryCount: number,
   _entries: PaymentHistoryEntry[],
   retriever: PaymentHistoryRetriever,
-  _lastElementRowid: string | null,
+  _lastElementRowid: number,
   localStorageKey: string
 ): PaymentHistoryStore {
   let entries = _entries;
@@ -129,6 +150,7 @@ function build(
           // Use fewer queries: ask for all missing elements
           // (chain will return up to 100)
           (page + 1) * pageSize - entries.length,
+          null,
           lastElementRowid
         );
         entries = entries.concat(data);
@@ -154,6 +176,7 @@ function build(
         accountId,
         pageSize,
         Math.ceil(entryCount / pageSize),
+        type,
         entryCount,
         entries,
         retriever,
@@ -175,7 +198,7 @@ async function loadNewerEntries(
   const newCount = await retriever.getTotalCount();
   let newEntriesAmount = newCount - oldCount;
   if (oldEntries.length > 0) {
-    let lastElementRowid: string | null = null;
+    let lastElementRowid = 0;
     const oldFirst = oldEntries[0];
     let done = false;
     let toAdd = [];
@@ -187,6 +210,7 @@ async function loadNewerEntries(
       }
       const [entries, next] = await retriever.retrieve(
         newEntriesAmount + 1,
+        null,
         lastElementRowid
       );
       lastElementRowid = next[1];
