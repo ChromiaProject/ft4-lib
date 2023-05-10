@@ -143,7 +143,7 @@ export function checkValueInRange(val: bigint) {
  *
  * @returns The amount as string
  */
-function stringify(amount: AnyAssetAmount): string {
+export function stringify(amount: AnyAssetAmount): string {
   let s = amount.value.toString();
   let negative = false;
   if (s.startsWith("-")) {
@@ -174,7 +174,7 @@ function stringify(amount: AnyAssetAmount): string {
  * mixed, 3-digits: 1.00e+18, 1.23e+3, 345, 12.0, 1.45e-1, 1.15e-2 !!NOT 0.01!!
  *
  */
-function format(
+export function format(
   amount: AnyAssetAmount,
   which: DecimalFormat,
   digits: number,
@@ -210,7 +210,7 @@ function format(
   }
 }
 
-function toScientific(
+export function toScientific(
   amount: AnyAssetAmount,
   digits: number,
   removeTrailingZeroes = false
@@ -220,7 +220,7 @@ function toScientific(
   else return formatted;
 }
 
-function toFixedDecimals(
+export function toFixedDecimals(
   amount: AnyAssetAmount,
   digits: number,
   removeTrailingZeroes = false,
@@ -248,24 +248,30 @@ function toFixedDecimals(
   } else return int; //never remove trailing zeroes
 }
 
-function sum(amount: AnyAssetAmount, other: SupportedNumber): Amount {
+export function sum(amount: AnyAssetAmount, other: SupportedNumber): Amount {
   const o = requireSameDecimals(amount, other);
   const resultVal = amount.value + o.value;
   return createAmount(resultVal, amount.decimals);
 }
 
-function sub(amount: AnyAssetAmount, other: SupportedNumber): Amount {
+export function sub(amount: AnyAssetAmount, other: SupportedNumber): Amount {
   if (typeof other !== "object") return sum(amount, -other);
   return sum(amount, createAmount(-other.value, other.decimals));
 }
 
-function mul(amount: AnyAssetAmount, other: string | number | bigint): Amount {
+export function mul(
+  amount: AnyAssetAmount,
+  other: string | number | bigint
+): Amount {
   const _other = BigInt(other);
   const resultVal = amount.value * _other;
   return createAmount(resultVal, amount.decimals);
 }
 
-function div(amount: AnyAssetAmount, other: string | number | bigint): Amount {
+export function div(
+  amount: AnyAssetAmount,
+  other: string | number | bigint
+): Amount {
   const _other = BigInt(other);
   if (!_other)
     throw new AmountInputError("AssetAmount: invalid divisor (" + other + ")");
@@ -275,27 +281,27 @@ function div(amount: AnyAssetAmount, other: string | number | bigint): Amount {
 
 //Comparisons
 
-function eq(amount: AnyAssetAmount, other: SupportedNumber): boolean {
+export function eq(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   const o = requireSameDecimals(amount, other);
   return amount.value === o.value;
 }
 
-function gt(amount: AnyAssetAmount, other: SupportedNumber): boolean {
+export function gt(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   const o = requireSameDecimals(amount, other);
   return amount.value > o.value;
 }
 
-function lt(amount: AnyAssetAmount, other: SupportedNumber): boolean {
+export function lt(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   const o = requireSameDecimals(amount, other);
   return amount.value < o.value;
 }
 
-function gte(amount: AnyAssetAmount, other: SupportedNumber): boolean {
+export function gte(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   const o = requireSameDecimals(amount, other);
   return amount.value >= o.value;
 }
 
-function lte(amount: AnyAssetAmount, other: SupportedNumber): boolean {
+export function lte(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   const o = requireSameDecimals(amount, other);
   return amount.value <= o.value;
 }

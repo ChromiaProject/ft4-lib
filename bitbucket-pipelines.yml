@@ -14,6 +14,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
+            - npm install
             - npm run test:pipeline
 
           services:
