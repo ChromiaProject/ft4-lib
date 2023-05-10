@@ -7,13 +7,7 @@ compile:
 
 test: #Not default
   modules: #List of the test modules in your project
-    - tests.account.auth_basic_multi_sig
-    - tests.account.auth_basic_single_sig
-    - tests.auth.external_signature
-    - tests.core.basic
-    - tests.core.payment_history
-    - tests.core.transfer
-    - tests.core.utils
+    - tests
   moduleArgs:
     lib.ft3.core:
       my_blockchain_name: test
