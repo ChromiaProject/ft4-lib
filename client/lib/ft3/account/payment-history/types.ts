@@ -38,8 +38,8 @@ export type AssetInfo = {
 };
 
 export enum PaymentHistoryType {
-  SENT = 0,
-  RECEIVED = 1,
+  Sent = 0,
+  Received = 1,
 }
 
 export type PaymentHistoryFilter = [Buffer, PaymentHistoryType?];

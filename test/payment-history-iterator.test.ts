@@ -217,7 +217,7 @@ describe("Payment history iterator", () => {
       ft.get.gtxClient,
       account1.id,
       5,
-      PaymentHistoryType.SENT
+      PaymentHistoryType.Sent
     );
     const paymentHistoryIterator =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
@@ -252,7 +252,7 @@ describe("Payment history iterator", () => {
       ft.get.gtxClient,
       account1.id,
       5,
-      PaymentHistoryType.RECEIVED
+      PaymentHistoryType.Received
     );
     const paymentHistoryIterator1 =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore1);
@@ -265,7 +265,7 @@ describe("Payment history iterator", () => {
       ft.get.gtxClient,
       account2.id,
       5,
-      PaymentHistoryType.RECEIVED
+      PaymentHistoryType.Received
     );
     const paymentHistoryIterator2 =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore2);
