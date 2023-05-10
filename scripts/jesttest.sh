@@ -1,7 +1,9 @@
 #!/bin/sh
 forceexit(){
     echo
-    echo 'Remember to run "docker stop postchain"!'
+    if $docker; then
+        echo 'Remember to run "docker stop postchain"!'
+    fi
     echo "You'll also need to kill the chr node, running on pid: $prc"
     exit 2
 }
@@ -9,8 +11,10 @@ forceexit(){
 exitfn () {
     trap "forceexit" 2
     echo; echo 'Stopping docker, hit Ctrl+C to force quit'
-    docker stop postchain > /dev/null
-    docker rm postchain > /dev/null
+    if $docker; then
+        docker stop postchain  > /dev/null 
+        docker rm postchain > /dev/null
+    fi
     kill $prc
     exit 2
 }
@@ -101,12 +105,16 @@ echo "> npx jest" "$opt" "\n"
 npx jest $opt $@
 if test $? -eq 0
 then 
-    docker stop postchain > /dev/null
-    docker rm postchain > /dev/null
+    if $docker; then
+        docker stop postchain  > /dev/null 
+        docker rm postchain > /dev/null
+    fi
     kill $prc
 else
-    docker stop postchain > /dev/null
-    docker rm postchain > /dev/null
+    if $docker; then
+        docker stop postchain  > /dev/null 
+        docker rm postchain > /dev/null
+    fi
     kill $prc
     if [ "$EXIT_ON_ERROR" -eq 1 ]; then
         exit 1

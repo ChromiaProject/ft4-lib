@@ -45,5 +45,7 @@ fi
 
 chr test -s configs/rell-test.yml --use-db
 
-docker stop postchain  > /dev/null 
-docker rm postchain > /dev/null
+if $docker; then
+    docker stop postchain  > /dev/null 
+    docker rm postchain > /dev/null
+fi
