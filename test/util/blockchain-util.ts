@@ -12,7 +12,7 @@ import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor
 config();
 
 export async function createClient(nodeUrl?: string) {
-  const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7741";
+  const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
   const brid = await restClientutil.getBrid(url, 0);
   return gtxClient.createClient(
     restClient.createRestClient([url], brid),
