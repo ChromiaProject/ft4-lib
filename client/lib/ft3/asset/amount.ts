@@ -4,7 +4,8 @@ import { DecimalFormat, SupportedNumber } from "./types";
 type RawAmount = { value: bigint; decimals: number };
 type AnyAssetAmount = RawAmount | Amount;
 
-export const MAX = BigInt("0x" + "f".repeat(64)); //2^256-1 (16^64) = 2^(4*64)
+//(2^256)-1 = (2^(4*64))-1 = (16^64)-1
+export const MAX = BigInt("0x" + "f".repeat(64));
 
 export class AmountInputError extends Error {
   constructor(msg?: string) {
