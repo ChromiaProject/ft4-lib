@@ -27,7 +27,7 @@ import { BufferId, KeyPair } from "../../cryptoUtils";
 import { formatter } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { GtvCompatible } from "../utils/gtv";
-import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { FlagsType, deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../interfaces";
 import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
@@ -304,7 +304,7 @@ async function _transfer(
 ): Promise<void> {
   // FIXME: will be removed when 1-to-1 transfer operation is added
   const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(["T"])
+    keyHandler.satisfiesAuthRequirements([FlagsType.Transfer])
   );
   const input: XferInput = [
     authenticator.accountId,
