@@ -118,7 +118,7 @@ export function createAmount(num: SupportedNumber, decimals?: number): Amount {
   } else {
     if (decimals !== num.decimals && decimals !== undefined)
       throw new AmountDecimalsError(
-        "Incompatible arguments: decimals, num.decimals"
+        `Incompatible arguments: decimals (${decimals}), num.decimals (${num.decimals})`
       );
     checkValueInRange(num.value);
     amount.value = num.value;
