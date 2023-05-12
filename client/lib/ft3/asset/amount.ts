@@ -31,17 +31,6 @@ export class AmountDecimalsError extends Error {
   }
 }
 
-export const amount = {
-  MAX,
-  create: createAmount,
-  sum,
-  sub,
-  mul,
-  div,
-  format,
-  stringify,
-};
-
 function buildAmountObject(amount: RawAmount): Amount {
   return Object.freeze({
     value: amount.value,
