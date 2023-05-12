@@ -10,6 +10,10 @@ import {
 import { Operation, QueryObject } from "../utils/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 
+export * from "./evm";
+export * from "./ft";
+export * from "./interfaces";
+
 export function createAuthenicator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],

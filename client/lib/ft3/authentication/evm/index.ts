@@ -4,6 +4,8 @@ import { Operation } from "../../utils/types";
 import { KeyStore } from "../interfaces";
 import { ethers } from "ethers";
 
+export * from "/ft3/authentication/evm/key-stores";
+
 export function evmAuth(
   accountId: BufferId,
   authDesriptorId: BufferId,

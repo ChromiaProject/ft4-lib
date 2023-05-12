@@ -19,7 +19,7 @@
     "stop-postchain:rell": "docker-compose -f dockers/rell-test.yml down",
     "stop-postchain:demo": "docker-compose -f dockers/demo.yml down",
     "start": "node index.js",
-    "build": "shx rm -rf dist && tsc",
+    "build": "shx rm -rf dist && tsc --project tsconfig.dist.json && tsc-alias",
     "prepublish": "npm run build",
     "prepare": "husky install"
   },
@@ -58,6 +58,7 @@
     "prettier": "2.7.0",
     "shx": "^0.3.2",
     "ts-jest": "^29.0.0",
+    "tsc-alias": "^1.8.6",
     "tslint": "^5.18.0"
   }
 }

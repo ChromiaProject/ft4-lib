@@ -29,6 +29,11 @@ import { createPaymentHistoryStoreMemory } from "./payment-history/payment-histo
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 
+export * from "./auth";
+export * from "./auth-descriptor";
+export * from "./payment-history";
+export * from "./types";
+
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
     by: {

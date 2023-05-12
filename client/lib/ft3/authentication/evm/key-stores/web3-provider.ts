@@ -7,6 +7,7 @@ export async function createWeb3ProviderEVMKeyStore(
   externalProvider: ethers.providers.ExternalProvider
 ): Promise<EVMKeyStore> {
   const provider = new ethers.providers.Web3Provider(externalProvider);
+  await provider.send("eth_requestAccounts", []);
   const signer = await provider.getSigner();
   const ethAddress = await signer.getAddress();
   const address = Buffer.from(ethAddress.slice(2), "hex");
