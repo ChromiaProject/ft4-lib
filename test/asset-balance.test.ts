@@ -1,4 +1,4 @@
-import { amount } from "../client/lib/ft3/asset/amount";
+import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Amount } from "../client/lib/ft3/asset/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { createConnection } from "../client/lib/ft3/ft-session";
@@ -58,7 +58,7 @@ describe("Asset balance", () => {
           decimals: asset1.decimals,
           brid: asset1.brid,
         },
-        amount: makeAmountBareBones(amount.create(10, asset1.decimals)),
+        amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
       },
       {
         asset: {
@@ -67,7 +67,7 @@ describe("Asset balance", () => {
           decimals: asset2.decimals,
           brid: asset2.brid,
         },
-        amount: makeAmountBareBones(amount.create(20, asset2.decimals)),
+        amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
       },
     ]);
   });

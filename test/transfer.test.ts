@@ -3,7 +3,7 @@ import {
   authDescriptor as ad,
   FlagsType,
 } from "../client/lib/ft3/account/auth-descriptor";
-import { amount } from "../client/lib/ft3/asset/amount";
+import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
@@ -38,7 +38,7 @@ describe("Transfer", () => {
       account1.id,
       account2.id,
       asset.id,
-      amount.create(10, asset.decimals)
+      createAmount(10, asset.decimals)
     );
 
     const assetBalance1 = await ft.get.balance.by.accountAndAssetId(
@@ -50,10 +50,10 @@ describe("Transfer", () => {
       asset.id
     );
 
-    expect(assetBalance1.amount.eq(amount.create(190, asset.decimals))).toBe(
+    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
       true
     );
-    expect(assetBalance2.amount.eq(amount.create(10, asset.decimals))).toBe(
+    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
       true
     );
   });
@@ -76,7 +76,7 @@ describe("Transfer", () => {
       account1.id,
       account2.id,
       asset.id,
-      amount.create(10, asset.decimals)
+      createAmount(10, asset.decimals)
     );
 
     await expect(promise).rejects.toBeInstanceOf(Error);
@@ -101,7 +101,7 @@ describe("Transfer", () => {
       account1.id,
       account2.id,
       asset.id,
-      amount.create(10, asset.decimals)
+      createAmount(10, asset.decimals)
     );
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
@@ -134,7 +134,7 @@ describe("Transfer", () => {
       account1.id,
       authDescriptor.id,
       asset.id,
-      amount.create(10, asset.decimals)
+      createAmount(10, asset.decimals)
     );
 
     const assetBalance1 = await ft.get.balance.by.accountAndAssetId(
@@ -146,10 +146,10 @@ describe("Transfer", () => {
       asset.id
     );
 
-    expect(assetBalance1.amount.eq(amount.create(190, asset.decimals))).toBe(
+    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
       true
     );
-    expect(assetBalance2.amount.eq(amount.create(10, asset.decimals))).toBe(
+    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
       true
     );
   });
@@ -167,7 +167,7 @@ describe("Transfer", () => {
     await ft.account.token.burn(
       account.id,
       asset.id,
-      amount.create(10, asset.decimals)
+      createAmount(10, asset.decimals)
     );
 
     const assetBalance = await ft.get.balance.by.accountAndAssetId(
@@ -175,7 +175,7 @@ describe("Transfer", () => {
       asset.id
     );
 
-    expect(assetBalance.amount.eq(amount.create(190, asset.decimals))).toBe(
+    expect(assetBalance.amount.eq(createAmount(190, asset.decimals))).toBe(
       true
     );
   });

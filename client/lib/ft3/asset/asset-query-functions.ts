@@ -16,7 +16,7 @@ import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
 import { Connection } from "../interfaces";
 import { freeze } from "../utils/types";
-import { amount } from "./amount";
+import { createAmount } from "./amount";
 
 export async function getAssetById(
   session: GtxClient,
@@ -105,6 +105,6 @@ export async function _getBalancesByAccountId(
 function createBalanceObject(balance: BalanceResponse): Balance {
   return freeze({
     asset: balance.asset,
-    amount: amount.create(balance.amount, balance.asset.decimals),
+    amount: createAmount(balance.amount, balance.asset.decimals),
   });
 }

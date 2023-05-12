@@ -2,50 +2,51 @@ import {
   AmountDecimalsError,
   AmountInputError,
   AmountOutOfRangeError,
-  amount,
+  createAmount,
+  stringify,
 } from "../client/lib/ft3/asset/amount";
 import { DecimalFormat } from "../client/lib/ft3/asset/types";
 
 describe("Asset amount", () => {
   const amounts = [
     [
-      amount.create(1, 1),
-      amount.create(-25.36, 0),
-      amount.create(1e5, 5),
-      amount.create(-42.42, 5),
-      amount.create(-42.42, 1),
-      amount.create(-42.42),
-      amount.create(42),
-      amount.create(0.13, 4),
-      amount.create(0.02, 3),
-      amount.create(2, 15),
-      amount.create(0xa0, 1),
+      createAmount(1, 1),
+      createAmount(-25.36, 0),
+      createAmount(1e5, 5),
+      createAmount(-42.42, 5),
+      createAmount(-42.42, 1),
+      createAmount(-42.42),
+      createAmount(42),
+      createAmount(0.13, 4),
+      createAmount(0.02, 3),
+      createAmount(2, 15),
+      createAmount(0xa0, 1),
     ],
     [
-      amount.create("1", 1),
-      amount.create("-25.36", 0),
-      amount.create("100000", 5),
-      amount.create("-42.42", 5),
-      amount.create("-42.42", 1),
-      amount.create("-42.42"),
-      amount.create("42"),
-      amount.create("0.13", 4),
-      amount.create(".02", 3),
-      amount.create("2", 15),
-      amount.create("160", 1),
+      createAmount("1", 1),
+      createAmount("-25.36", 0),
+      createAmount("100000", 5),
+      createAmount("-42.42", 5),
+      createAmount("-42.42", 1),
+      createAmount("-42.42"),
+      createAmount("42"),
+      createAmount("0.13", 4),
+      createAmount(".02", 3),
+      createAmount("2", 15),
+      createAmount("160", 1),
     ],
     [
-      amount.create(BigInt("10"), 1),
-      amount.create(BigInt(-25), 0),
-      amount.create(BigInt("10000000000"), 5),
-      amount.create(BigInt("-4242000"), 5),
-      amount.create(BigInt("-424"), 1),
-      amount.create(BigInt("-4242"), 2),
-      amount.create(BigInt("0x2a")),
-      amount.create(BigInt("1300"), 4),
-      amount.create(BigInt("0b10100"), 3),
-      amount.create(BigInt("2000000000000000"), 15),
-      amount.create(BigInt("0x640"), 1),
+      createAmount(BigInt("10"), 1),
+      createAmount(BigInt(-25), 0),
+      createAmount(BigInt("10000000000"), 5),
+      createAmount(BigInt("-4242000"), 5),
+      createAmount(BigInt("-424"), 1),
+      createAmount(BigInt("-4242"), 2),
+      createAmount(BigInt("0x2a")),
+      createAmount(BigInt("1300"), 4),
+      createAmount(BigInt("0b10100"), 3),
+      createAmount(BigInt("2000000000000000"), 15),
+      createAmount(BigInt("0x640"), 1),
     ],
   ];
   it.each(amounts)("should correctly build instances", async (...numbers) => {
@@ -65,7 +66,7 @@ describe("Asset amount", () => {
       BigInt("2" + "0".repeat(15)),
       BigInt(1600),
     ]);
-    expect(numbers.map(amount.stringify)).toEqual([
+    expect(numbers.map(stringify)).toEqual([
       "1",
       "-25",
       "100000",
@@ -81,26 +82,26 @@ describe("Asset amount", () => {
   });
 
   it("should fail building instances with wrong parameters", async () => {
-    expect(() => amount.create("something", 1)).toThrow(AmountInputError);
-    expect(() => amount.create("1.4.5", 10)).toThrow(AmountInputError);
-    expect(() => amount.create("0xaefdaf", 1)).toThrow(AmountInputError);
-    expect(() => amount.create("0o167234", 1)).toThrow(AmountInputError);
-    expect(() => amount.create("0b011011", 1)).toThrow(AmountInputError);
-    expect(() => amount.create(10, -1)).toThrow(AmountDecimalsError);
-    expect(() => amount.create(2, 77)).toThrow(AmountOutOfRangeError);
-    expect(() => amount.create(1, 78)).toThrow(AmountOutOfRangeError);
+    expect(() => createAmount("something", 1)).toThrow(AmountInputError);
+    expect(() => createAmount("1.4.5", 10)).toThrow(AmountInputError);
+    expect(() => createAmount("0xaefdaf", 1)).toThrow(AmountInputError);
+    expect(() => createAmount("0o167234", 1)).toThrow(AmountInputError);
+    expect(() => createAmount("0b011011", 1)).toThrow(AmountInputError);
+    expect(() => createAmount(10, -1)).toThrow(AmountDecimalsError);
+    expect(() => createAmount(2, 77)).toThrow(AmountOutOfRangeError);
+    expect(() => createAmount(1, 78)).toThrow(AmountOutOfRangeError);
     const outOfBounds = BigInt("0x1" + "0".repeat(64));
-    expect(() => amount.create(outOfBounds, 0)).toThrow(AmountOutOfRangeError);
+    expect(() => createAmount(outOfBounds, 0)).toThrow(AmountOutOfRangeError);
   });
 
   it("should format correctly in fixedDecimal format", async () => {
     const amounts = [
-      amount.create(1234567890, 1),
-      amount.create(12.123456789, 20),
-      amount.create("1234567890.12345678901", 20),
-      amount.create(1.00000000001, 20),
-      amount.create("0.00000000001", 20),
-      amount.create("10000000000.1", 20),
+      createAmount(1234567890, 1),
+      createAmount(12.123456789, 20),
+      createAmount("1234567890.12345678901", 20),
+      createAmount(1.00000000001, 20),
+      createAmount("0.00000000001", 20),
+      createAmount("10000000000.1", 20),
     ];
 
     expect(
@@ -151,12 +152,12 @@ describe("Asset amount", () => {
 
   it("should format correctly in scientific format", async () => {
     const amounts = [
-      amount.create(1234567890, 1),
-      amount.create(12.123456789, 20),
-      amount.create("11234567890.12345678901", 20),
-      amount.create(1.00000000001, 20),
-      amount.create("0.00000000001", 20),
-      amount.create("10000000000.1", 20),
+      createAmount(1234567890, 1),
+      createAmount(12.123456789, 20),
+      createAmount("11234567890.12345678901", 20),
+      createAmount(1.00000000001, 20),
+      createAmount("0.00000000001", 20),
+      createAmount("10000000000.1", 20),
     ];
 
     expect(
@@ -196,12 +197,12 @@ describe("Asset amount", () => {
 
   it("should format correctly in mixed format", async () => {
     const amounts = [
-      amount.create(1234567890, 1),
-      amount.create(12.123456789, 20),
-      amount.create("11234567890.12345678901", 20),
-      amount.create(1.00000000001, 20),
-      amount.create("0.00000000001", 20),
-      amount.create("10000000000.1", 20),
+      createAmount(1234567890, 1),
+      createAmount(12.123456789, 20),
+      createAmount("11234567890.12345678901", 20),
+      createAmount(1.00000000001, 20),
+      createAmount("0.00000000001", 20),
+      createAmount("10000000000.1", 20),
     ];
 
     expect(amounts.map((num) => num.format(DecimalFormat.mixed, 4))).toEqual([
@@ -231,10 +232,10 @@ describe("Asset amount", () => {
   });
 
   it("should add correctly", async () => {
-    const first = amount.create(100, 0);
-    const second = amount.create(10, 0);
-    const secondNegative = amount.create(-10, 0);
-    const incompatible = amount.create(1000, 1);
+    const first = createAmount(100, 0);
+    const second = createAmount(10, 0);
+    const secondNegative = createAmount(-10, 0);
+    const incompatible = createAmount(1000, 1);
 
     expect(first.plus(second).toString()).toEqual("110");
     expect(first.plus(secondNegative).toString()).toEqual("90");
@@ -248,10 +249,10 @@ describe("Asset amount", () => {
   });
 
   it("should subtract correctly", async () => {
-    const first = amount.create(100, 10);
-    const second = amount.create(10, 10);
-    const secondNegative = amount.create(-10, 10);
-    const incompatible = amount.create(1000, 1);
+    const first = createAmount(100, 10);
+    const second = createAmount(10, 10);
+    const secondNegative = createAmount(-10, 10);
+    const incompatible = createAmount(1000, 1);
 
     expect(first.minus(second).toString()).toEqual("90");
     expect(first.minus(secondNegative).toString()).toEqual("110");
@@ -265,8 +266,8 @@ describe("Asset amount", () => {
   });
 
   it("should multiply correctly", async () => {
-    const first = amount.create(100, 10);
-    const firstNegative = amount.create(-100, 10);
+    const first = createAmount(100, 10);
+    const firstNegative = createAmount(-100, 10);
 
     expect(first.times(2).toString()).toEqual("200");
     expect(first.times(-2).toString()).toEqual("-200");
@@ -277,8 +278,8 @@ describe("Asset amount", () => {
   });
 
   it("should divide correctly", async () => {
-    const first = amount.create(100, 0);
-    const firstNegative = amount.create(-100, 0);
+    const first = createAmount(100, 0);
+    const firstNegative = createAmount(-100, 0);
 
     expect(first.dividedBy(2).toString()).toEqual("50");
     expect(first.dividedBy(-2).toString()).toEqual("-50");
@@ -292,8 +293,8 @@ describe("Asset amount", () => {
   });
 
   it("should throw when out of bounds (2^256)", async () => {
-    const first = amount.create(1, 77);
-    const firstNegative = amount.create(-1, 77);
+    const first = createAmount(1, 77);
+    const firstNegative = createAmount(-1, 77);
 
     expect(() => first.plus(first)).toThrow(AmountOutOfRangeError);
     expect(() => firstNegative.plus(firstNegative)).toThrow(
@@ -306,10 +307,10 @@ describe("Asset amount", () => {
   });
 
   it("should behave like integers", async () => {
-    const first = amount.create(1, 0);
-    const firstNegative = amount.create(-1, 0);
-    const second = amount.create(1, 3);
-    const secondNegative = amount.create(-1, 3);
+    const first = createAmount(1, 0);
+    const firstNegative = createAmount(-1, 0);
+    const second = createAmount(1, 3);
+    const secondNegative = createAmount(-1, 3);
     expect(first.dividedBy(3).times(4).toString()).toBe("0");
     expect(firstNegative.dividedBy(3).times(4).toString()).toBe("0");
     expect(second.dividedBy(3).times(4).toString()).toBe("1.332");
@@ -317,9 +318,9 @@ describe("Asset amount", () => {
   });
 
   it("should compare properly with no decimals", async () => {
-    const first = amount.create(1, 0);
-    const firstCopy = amount.create("1", 0);
-    const firstNegative = amount.create(-1, 0);
+    const first = createAmount(1, 0);
+    const firstCopy = createAmount("1", 0);
+    const firstNegative = createAmount(-1, 0);
     expect(first.gt(firstNegative)).toBe(true);
     expect(first.lt(firstNegative)).toBe(false);
     expect(first.eq(firstNegative)).toBe(false);
@@ -329,9 +330,9 @@ describe("Asset amount", () => {
   });
 
   it("should compare properly with decimals", async () => {
-    const second = amount.create(1, 3);
-    const secondCopy = amount.create("1", 3);
-    const third = amount.create(1.5, 3);
+    const second = createAmount(1, 3);
+    const secondCopy = createAmount("1", 3);
+    const third = createAmount(1.5, 3);
     expect(second.gt(third)).toBe(false);
     expect(second.lt(third)).toBe(true);
     expect(second.eq(third)).toBe(false);
@@ -341,8 +342,8 @@ describe("Asset amount", () => {
   });
 
   it("should not compare different decimal amounts", async () => {
-    const first = amount.create(1, 0);
-    const second = amount.create(1, 3);
+    const first = createAmount(1, 0);
+    const second = createAmount(1, 3);
     expect(() => first.gt(second)).toThrow(AmountDecimalsError);
     expect(() => first.lt(second)).toThrow(AmountDecimalsError);
     expect(() => first.eq(second)).toThrow(AmountDecimalsError);

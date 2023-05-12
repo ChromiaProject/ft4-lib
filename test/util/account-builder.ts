@@ -15,7 +15,7 @@ import { gtx } from "postchain-client";
 import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
 import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
-import { amount } from "../../client/lib/ft3/asset/amount";
+import { createAmount } from "../../client/lib/ft3/asset/amount";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -55,7 +55,7 @@ class AccountBuilder {
 
   withBalance(asset: Asset, _amount: SupportedNumber): AccountBuilder {
     this.balances.push({
-      amount: amount.create(_amount, asset.decimals),
+      amount: createAmount(_amount, asset.decimals),
       asset,
     });
     return this;
@@ -66,7 +66,7 @@ class AccountBuilder {
   ): AccountBuilder {
     this.balances = this.balances.concat(
       balances.map((b) => ({
-        amount: amount.create(b.amount, b.asset.decimals),
+        amount: createAmount(b.amount, b.asset.decimals),
         asset: b.asset,
       }))
     );
