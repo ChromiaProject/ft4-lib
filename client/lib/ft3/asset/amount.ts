@@ -72,8 +72,8 @@ function buildAmountObject(amount: RawAmount): Amount {
  * to be referring to the smallest divisor. See the example below.
  *
  * @example
- * createAmount(1, 2) // returns 100
- * createAmount("1", 2) // returns 100
+ * createAmount(1, 2) // returns 1.00
+ * createAmount("1", 2) // returns 1.00
  * createAmount(1n, 2) // returns 0.01
  */
 export function createAmount(num: SupportedNumber, decimals?: number): Amount {
