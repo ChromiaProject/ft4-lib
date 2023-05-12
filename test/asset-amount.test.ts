@@ -3,6 +3,7 @@ import {
   AmountInputError,
   AmountOutOfRangeError,
   createAmount,
+  createAmountFromBalance,
   stringify,
 } from "../client/lib/ft3/asset/amount";
 import { DecimalFormat } from "../client/lib/ft3/asset/types";
@@ -36,17 +37,17 @@ describe("Asset amount", () => {
       createAmount("160", 1),
     ],
     [
-      createAmount(BigInt("10"), 1),
-      createAmount(BigInt(-25), 0),
-      createAmount(BigInt("10000000000"), 5),
-      createAmount(BigInt("-4242000"), 5),
-      createAmount(BigInt("-424"), 1),
-      createAmount(BigInt("-4242"), 2),
-      createAmount(BigInt("0x2a")),
-      createAmount(BigInt("1300"), 4),
-      createAmount(BigInt("0b10100"), 3),
-      createAmount(BigInt("2000000000000000"), 15),
-      createAmount(BigInt("0x640"), 1),
+      createAmountFromBalance(BigInt("10"), 1),
+      createAmountFromBalance(BigInt(-25), 0),
+      createAmountFromBalance(BigInt("10000000000"), 5),
+      createAmountFromBalance(BigInt("-4242000"), 5),
+      createAmountFromBalance(BigInt("-424"), 1),
+      createAmountFromBalance(BigInt("-4242"), 2),
+      createAmountFromBalance(BigInt("0x2a")),
+      createAmountFromBalance(BigInt("1300"), 4),
+      createAmountFromBalance(BigInt("0b10100"), 3),
+      createAmountFromBalance(BigInt("2000000000000000"), 15),
+      createAmountFromBalance(BigInt("0x640"), 1),
     ],
   ];
   it.each(amounts)("should correctly build instances", async (...numbers) => {
@@ -91,7 +92,9 @@ describe("Asset amount", () => {
     expect(() => createAmount(2, 77)).toThrow(AmountOutOfRangeError);
     expect(() => createAmount(1, 78)).toThrow(AmountOutOfRangeError);
     const outOfBounds = BigInt("0x1" + "0".repeat(64));
-    expect(() => createAmount(outOfBounds, 0)).toThrow(AmountOutOfRangeError);
+    expect(() => createAmountFromBalance(outOfBounds, 0)).toThrow(
+      AmountOutOfRangeError
+    );
   });
 
   it("should format correctly in fixedDecimal format", async () => {

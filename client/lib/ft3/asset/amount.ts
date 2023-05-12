@@ -68,15 +68,18 @@ function buildAmountObject(amount: RawAmount): Amount {
  * @param decimals - The desired number of decimal digits.
  *
  * @returns An asset amount with the specified value, and decimal digits added to it if needed.
- * For compatibility with blockchain return values, BigInts input values are considered
- * to be referring to the smallest divisor. See the example below.
+ * Be careful with blockchain return values! They are generally represented as integers,
+ * removing the decimal point. If you want to use (num: 1000, decimals: 3) to represent
+ * 1.000, you should use createAmountFromBalance(1000, 3) instead
  *
  * @example
  * createAmount(1, 2) // returns 1.00
  * createAmount("1", 2) // returns 1.00
- * createAmount(1n, 2) // returns 0.01
  */
-export function createAmount(num: SupportedNumber, decimals?: number): Amount {
+export function createAmount(
+  num: Exclude<SupportedNumber, bigint>,
+  decimals?: number
+): Amount {
   if (decimals !== undefined && (decimals < 0 || !Number.isInteger(decimals))) {
     throw new AmountDecimalsError("Decimals must be a positive integer number");
   }
@@ -100,10 +103,6 @@ export function createAmount(num: SupportedNumber, decimals?: number): Amount {
     }
     checkValueInRange(value);
     amount.value = value;
-  } else if (typeof num === "bigint") {
-    checkValueInRange(num);
-    amount.value = num;
-    amount.decimals = decimals || 0;
   } else {
     if (decimals !== num.decimals && decimals !== undefined)
       throw new AmountDecimalsError(
@@ -114,6 +113,32 @@ export function createAmount(num: SupportedNumber, decimals?: number): Amount {
     amount.decimals = num.decimals;
   }
   return buildAmountObject(amount);
+}
+
+/**
+ * Returns a new asset amount.
+ *
+ * @param num - The desired value for the amount, specified as smallest divisor.
+ * @param decimals - The desired number of decimal digits.
+ *
+ * @returns An asset amount with the specified value, and a decimal point added to it if needed.
+ * In this function, 1 is always the smallest non-zero amount that can be represented.
+ * If you want to convert user input to amounts, you'll probably want to use createAmount
+ * instead.
+ *
+ * @example
+ * createAmount(1, 2) // returns 0.01
+ * createAmount(100, 2) // returns 1.00
+ */
+export function createAmountFromBalance(
+  num: bigint,
+  decimals?: number
+): Amount {
+  if (decimals !== undefined && (decimals < 0 || !Number.isInteger(decimals))) {
+    throw new AmountDecimalsError("Decimals must be a positive integer number");
+  }
+  checkValueInRange(num);
+  return buildAmountObject({ value: num, decimals: decimals || 0 });
 }
 
 /**
@@ -241,12 +266,12 @@ export function toFixedDecimals(
 export function sum(amount: AnyAssetAmount, other: SupportedNumber): Amount {
   const o = requireSameDecimals(amount, other);
   const resultVal = amount.value + o.value;
-  return createAmount(resultVal, amount.decimals);
+  return createAmountFromBalance(resultVal, amount.decimals);
 }
 
 export function sub(amount: AnyAssetAmount, other: SupportedNumber): Amount {
   if (typeof other !== "object") return sum(amount, -other);
-  return sum(amount, createAmount(-other.value, other.decimals));
+  return sum(amount, createAmountFromBalance(-other.value, other.decimals));
 }
 
 export function mul(
@@ -255,7 +280,7 @@ export function mul(
 ): Amount {
   const _other = BigInt(other);
   const resultVal = amount.value * _other;
-  return createAmount(resultVal, amount.decimals);
+  return createAmountFromBalance(resultVal, amount.decimals);
 }
 
 export function div(
@@ -266,7 +291,7 @@ export function div(
   if (!_other)
     throw new AmountInputError("AssetAmount: invalid divisor (" + other + ")");
   const resultVal = amount.value / _other;
-  return createAmount(resultVal, amount.decimals);
+  return createAmountFromBalance(resultVal, amount.decimals);
 }
 
 //Comparisons
@@ -302,6 +327,8 @@ function requireSameDecimals(
   amount: AnyAssetAmount,
   other: SupportedNumber
 ): Amount {
+  if (typeof other === "bigint")
+    return createAmountFromBalance(other, amount.decimals);
   try {
     return createAmount(other, amount.decimals);
   } catch (e) {

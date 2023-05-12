@@ -5,7 +5,7 @@ import {
   PaymentHistoryJSON,
   PaymentHistoryTransferArgs,
 } from "./types";
-import { createAmount } from "../../asset/amount";
+import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
 
 export function createPaymentHistoryEntry(
@@ -36,7 +36,7 @@ export function createPaymentHistoryEntry(
   return Object.freeze({
     rowid: rowid,
     isInput: isInput,
-    delta: createAmount(delta, decimals),
+    delta: createAmountFromBalance(delta, decimals),
     asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
     entryIndex: entryIndex,
     data: formatter.ensureBuffer(data),

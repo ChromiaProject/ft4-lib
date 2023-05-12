@@ -53,7 +53,10 @@ class AccountBuilder {
     return this;
   }
 
-  withBalance(asset: Asset, _amount: SupportedNumber): AccountBuilder {
+  withBalance(
+    asset: Asset,
+    _amount: Exclude<SupportedNumber, bigint>
+  ): AccountBuilder {
     this.balances.push({
       amount: createAmount(_amount, asset.decimals),
       asset,
@@ -62,7 +65,7 @@ class AccountBuilder {
   }
 
   withBalances(
-    balances: { amount: SupportedNumber; asset: Asset }[]
+    balances: { amount: Exclude<SupportedNumber, bigint>; asset: Asset }[]
   ): AccountBuilder {
     this.balances = this.balances.concat(
       balances.map((b) => ({
