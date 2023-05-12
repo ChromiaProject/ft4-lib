@@ -62,7 +62,7 @@ function test_an_asset_can_be_created() {
 }
 
 function test_an_invalid_asset_cannot_be_created() {
-  var error = utils.create_asset_tx("e", -1).run_must_fail();
-  assert_true(utils.create_asset_tx("f", 79).run_must_fail().message == error.message);
-  assert_true(error.message.ends_with("Decimals must be between 0 and 78 (included)"));
+  val error = "Decimals must be between 0 and 78 (included)";
+  utils.assert_error(utils.create_asset_tx("e", -1), error);
+  utils.assert_error(utils.create_asset_tx("f", 79), error);
 }
