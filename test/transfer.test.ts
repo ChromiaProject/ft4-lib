@@ -1,29 +1,24 @@
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
-import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
 import {
   authDescriptor as ad,
   FlagsType,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { Asset } from "../client/lib/ft3/asset/types";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createConnection } from "../client/lib/ft3/ft-session";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
+import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import TestUser, { newSingleSigUser } from "./util/test-user";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let _ft: ftUserSession;
-let connection: Connection;
 let asset: Asset;
 
 describe("Transfer", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    connection = createConnection(_ft.get.gtxClient);
     asset = await getNewAsset(_ft);
   });
 
@@ -164,28 +159,12 @@ describe("Transfer", () => {
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
-    const authDataService = createFakeAuthDataService({
-      "ft3.transfer": { flags: ["T"] },
-    });
-
-    const keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(
-      user.authDescriptor
-    );
-    const authenticator = createAuthenicator(
-      account.id,
-      [keyHandler],
-      authDataService
-    );
-
-    const authenticatedAccount = createAuthenticatedAccount(
-      connection,
-      authenticator
-    );
-
-    await authenticatedAccount.burn(asset.id, BigInt(10));
-    const assetBalance = await authenticatedAccount.getBalanceByAssetId(
-      asset.id
-    );
+    const session = await createKeyStoreInteractor(
+      ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair)
+    ).getSession(account.id);
+    await session.account.burn(asset.id, BigInt(10));
+    const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
     expect(assetBalance.amount).toEqual(190);
   });

@@ -33,7 +33,7 @@ import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-mem
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/interfaces";
 import { AssetAmount } from "../asset/types";
-import { Operation } from "../utils/types";
+import { call } from "../ft-session";
 
 export async function registerAccount(
   newAuthDesc: AuthDescriptor,
@@ -246,7 +246,7 @@ export function createAuthenticatedAccount(
   authenticator: Authenticator
 ): IAuthenticatedAccount {
   return {
-    ...createAccountObject(connection, authenticator.accountId),
+    authenticator,
     addAuthDescriptor: (authDescriptor: AuthDescriptor, keyPair: KeyPair) =>
       _addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
@@ -262,6 +262,7 @@ export function createAuthenticatedAccount(
       _xcTransfer(connection, authenticator, brid, receiverId, assetId, amount),
     burn: (assetId: BufferId, amount: AssetAmount) =>
       _burn(connection, authenticator, assetId, amount),
+    ...createAccountObject(connection, authenticator.accountId),
   };
 }
 
@@ -354,15 +355,4 @@ async function _burn(
     {},
   ];
   return call(connection, authenticator, transferOp([input], []));
-}
-
-async function call(
-  connection: Connection,
-  authenticator: Authenticator,
-  ...operations: Operation[]
-): Promise<void> {
-  const tb = transactionBuilder(authenticator, connection.client);
-  operations.forEach((operation: Operation) => tb.add(operation));
-  const tx = await tb.build();
-  return tx.postAndWaitConfirmation();
 }

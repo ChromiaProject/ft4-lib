@@ -4,6 +4,7 @@ import { AuthDescriptor, GtvAuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
 import { BufferId, KeyPair } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
+import { Authenticator } from "../authentication/interfaces";
 
 export type Account = {
   id: Buffer;
@@ -45,12 +46,16 @@ export interface IAccount {
   // TODO: Use Page<Balance> type instead
   getBalances: () => Promise<Balance[]>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
-  isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
+  isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: () => Promise<GtvAuthDescriptor[]>;
+  getAuthDescriptorsByParticipantId: (
+    partiticipantId: BufferId
+  ) => Promise<AuthDescriptor[]>;
   getRateLimit: () => Promise<RateLimit>;
 }
 
 export interface IAuthenticatedAccount extends IAccount {
+  authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
     keyPair: KeyPair

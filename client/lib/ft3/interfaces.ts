@@ -5,10 +5,16 @@ import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
 } from "./account/payment-history/interfaces";
-import { Account, RateLimit, User } from "./account/types";
+import {
+  Account,
+  RateLimit,
+  User,
+  IAuthenticatedAccount,
+} from "./account/types";
 import { Asset, AssetAmount, Balance } from "./asset/types";
-import { ChainInfo, QueryObject } from "./utils/types";
+import { ChainInfo, QueryObject, Operation } from "./utils/types";
 import { IAccount } from "./account/types";
+import { TransactionBuilder } from "./utils/transaction-builder";
 
 export interface ftUserSession {
   user: User;
@@ -130,4 +136,10 @@ export interface Connection {
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetsByName: (name: string) => Promise<Asset[]>;
   getAllAssets: () => Promise<Asset[]>;
+}
+
+export interface Session extends Connection {
+  account: IAuthenticatedAccount;
+  call: (...operations: Operation[]) => Promise<void>;
+  transactionBuilder: () => TransactionBuilder;
 }

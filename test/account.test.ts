@@ -14,10 +14,13 @@ import {
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
-import { createConnection } from "../client/lib/ft3/ft-session";
+import {
+  createAuthDataService,
+  createConnection,
+  createKeyStoreInteractor,
+} from "../client/lib/ft3/ft-session";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
 config();
 
@@ -245,28 +248,15 @@ describe("Test the account", () => {
 
     const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
 
-    const authDataService = createFakeAuthDataService({
-      "ft3.add_auth_descriptor_v2": { flags: ["A"] },
-    });
-    const keyHandler2 = createInMemoryFTKeyStore(keyPair2).createKeyHandler(
-      user2.authDescriptor
+    const { getSession } = createKeyStoreInteractor(
+      _ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair2)
     );
-    const authenticator2 = createAuthenicator(
-      account2.id,
-      [keyHandler2],
-      authDataService
-    );
+    const session = await getSession(account2.id);
 
-    const authenticatedAccount = createAuthenticatedAccount(
-      _connection,
-      authenticator2
-    );
-    await authenticatedAccount.addAuthDescriptor(
-      user1.authDescriptor,
-      keyPair1
-    );
+    await session.account.addAuthDescriptor(user1.authDescriptor, keyPair1);
 
-    const accounts = await _connection.getAccountsByParticipantId(
+    const accounts = await session.getAccountsByParticipantId(
       user1.signatureProvider.pubKey
     );
 
@@ -392,22 +382,11 @@ describe("Test the account", () => {
       .withPoints(4)
       .build();
 
-    const authDataService = createFakeAuthDataService({
-      "ft3.add_auth_descriptor_v2": { flags: ["A"] },
-    });
-    const keyHandler = createInMemoryFTKeyStore(keyPair1).createKeyHandler(
-      user1.authDescriptor
+    const { getSession } = createKeyStoreInteractor(
+      ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair1)
     );
-    const authenticator = createAuthenicator(
-      account.id,
-      [keyHandler],
-      authDataService
-    );
-
-    const authenticatedAccount = createAuthenticatedAccount(
-      _connection,
-      authenticator
-    );
+    const session = await getSession(account.id);
 
     const keyPair2 = new KeyPair();
     const authDescriptor2 = authDescriptor.create.singleSig.withArgs(
@@ -415,7 +394,7 @@ describe("Test the account", () => {
       keyPair2.pubKey
     ).andNoRules;
 
-    await authenticatedAccount.addAuthDescriptor(authDescriptor2, keyPair2);
+    await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
 
     const keyPair3 = new KeyPair();
     const authDescriptor3 = authDescriptor.create.singleSig.withArgs(
@@ -423,14 +402,14 @@ describe("Test the account", () => {
       keyPair3.pubKey
     ).andNoRules;
 
-    await authenticatedAccount.addAuthDescriptor(authDescriptor3, keyPair3);
+    await session.account.addAuthDescriptor(authDescriptor3, keyPair3);
 
     const keyHandler3 =
       createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
     const authenticator3 = createAuthenicator(
       account.id,
       [keyHandler3],
-      authDataService
+      createAuthDataService(_connection)
     );
 
     const authenticatedAccount3 = createAuthenticatedAccount(
