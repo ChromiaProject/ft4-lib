@@ -80,8 +80,13 @@ export function createAmount(
   num: Exclude<SupportedNumber, bigint>,
   decimals?: number
 ): Amount {
-  if (decimals !== undefined && (decimals < 0 || !Number.isInteger(decimals))) {
-    throw new AmountDecimalsError("Decimals must be a positive integer number");
+  if (
+    decimals !== undefined &&
+    (decimals < 0 || !Number.isInteger(decimals) || decimals > 78)
+  ) {
+    throw new AmountDecimalsError(
+      "Decimals must be an integer number between 0 and 78 (inclusive)"
+    );
   }
   const amount: RawAmount = { value: BigInt(0), decimals: 0 };
   if (typeof num === "string" || typeof num === "number") {
@@ -134,8 +139,13 @@ export function createAmountFromBalance(
   num: bigint,
   decimals?: number
 ): Amount {
-  if (decimals !== undefined && (decimals < 0 || !Number.isInteger(decimals))) {
-    throw new AmountDecimalsError("Decimals must be a positive integer number");
+  if (
+    decimals !== undefined &&
+    (decimals < 0 || !Number.isInteger(decimals) || decimals > 78)
+  ) {
+    throw new AmountDecimalsError(
+      "Decimals must be an integer number between 0 and 78 (inclusive)"
+    );
   }
   checkValueInRange(num);
   return buildAmountObject({ value: num, decimals: decimals || 0 });

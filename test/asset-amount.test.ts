@@ -91,6 +91,7 @@ describe("Asset amount", () => {
     expect(() => createAmount(10, -1)).toThrow(AmountDecimalsError);
     expect(() => createAmount(2, 77)).toThrow(AmountOutOfRangeError);
     expect(() => createAmount(1, 78)).toThrow(AmountOutOfRangeError);
+    expect(() => createAmount(0.1, 79)).toThrow(AmountDecimalsError);
     const outOfBounds = BigInt("0x1" + "0".repeat(64));
     expect(() => createAmountFromBalance(outOfBounds, 0)).toThrow(
       AmountOutOfRangeError
