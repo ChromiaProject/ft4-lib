@@ -114,7 +114,7 @@ export function transactionBuilder(
     const nested = await Promise.all(
       operations.map(async (tuple: [Operation, Authenticator]) => {
         const [operation, authenticator] = tuple;
-        if (operation[0] === "nop") return operation;
+        if (operation[0] === "nop") return [operation];
 
         const keyHandler = await authenticator.getKeyHandlerForOperation(
           operation

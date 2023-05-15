@@ -1,0 +1,5 @@
+
+struct auth_data {
+    flags: list<text>;
+    message: text;
+}

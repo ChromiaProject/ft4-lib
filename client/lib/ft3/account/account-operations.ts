@@ -3,6 +3,8 @@ import { XferInput, XferOutput } from "./types";
 import { Operation } from "../utils/types";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
+import { BufferId } from "../../cryptoUtils";
+import { formatter } from "postchain-client";
 
 export function addAuthDescriptorOp(
   accountId: Buffer,
@@ -53,5 +55,16 @@ export function deleteAuthDescriptorOp(
     accountId,
     authDescriptorId,
     deleteAuthDescriptorId
+  );
+}
+
+export function addAuthDescriptorV2(authDescriptor: AuthDescriptor): Operation {
+  return op("ft3.add_auth_descriptor_v2", authDesc.toGtv(authDescriptor));
+}
+
+export function deleteAuthDescriptorV2(authDescriptorId: BufferId): Operation {
+  return op(
+    "ft3.delete_auth_descriptor_v2",
+    formatter.ensureBuffer(authDescriptorId)
   );
 }
