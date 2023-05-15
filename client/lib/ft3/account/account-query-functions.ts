@@ -23,6 +23,11 @@ import { Connection } from "../interfaces";
 import { formatter, gtv } from "postchain-client";
 import { GtvAuthDescriptor } from "./auth-descriptor/types";
 import { authDescriptor as authDesc } from "./auth-descriptor";
+import {
+  PaymentHistoryCursor,
+  PaymentHistoryFilter,
+} from "./payment-history/types";
+import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -144,6 +149,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
+  const retriever = createPaymentHistoryRetriever(connection.client, accountId);
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -154,6 +160,18 @@ export function createAccountObject(
     // TODO: replace with query function that returns asset descriptor as object not as a tuple
     getAuthDescriptors: () => getAuthDescriptors(connection.client, accountId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
+    getTransferHistory: async (
+      limit = 100,
+      filter: PaymentHistoryFilter = {},
+      cursor: PaymentHistoryCursor | null = null
+    ) => {
+      const ret = await retriever.retrieve(
+        limit,
+        filter.paymentHistoryType,
+        cursor?.[1] || null
+      );
+      return ret[0];
+    },
   });
 }
 

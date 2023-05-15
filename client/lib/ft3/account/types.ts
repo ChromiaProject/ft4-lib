@@ -4,6 +4,11 @@ import { AuthDescriptor, GtvAuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
 import { BufferId } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
+import {
+  PaymentHistoryCursor,
+  PaymentHistoryEntry,
+  PaymentHistoryFilter,
+} from "./payment-history/types";
 
 export type Account = {
   id: Buffer;
@@ -48,4 +53,9 @@ export interface IAccount {
   isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
   getAuthDescriptors: () => Promise<GtvAuthDescriptor[]>;
   getRateLimit: () => Promise<RateLimit>;
+  getTransferHistory: (
+    limit?: number,
+    filter?: PaymentHistoryFilter,
+    cursor?: PaymentHistoryCursor | null
+  ) => Promise<PaymentHistoryEntry[]>;
 }

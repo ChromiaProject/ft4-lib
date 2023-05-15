@@ -7,6 +7,7 @@ import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payment-history/payment-history-store-memory";
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
 import { PaymentHistoryType } from "/ft3/account/payment-history/types";
+import { createConnection } from "/ft3/ft-session";
 
 let _ft: ftUserSession;
 let asset: Asset;
@@ -274,6 +275,32 @@ describe("Payment history iterator", () => {
     expect(paymentHistoryStore2.getPageCount()).toEqual(1);
     expect(paymentHistoryEntries2.length).toEqual(1);
     expect(paymentHistoryEntries2[0].isInput).toEqual(false);
+  });
+
+  it("is possible to get payment history from via the IAccount interface", async () => {
+    const user = TestUser();
+    const ft = _ft.changeUser(user);
+
+    const account1 = await AccountBuilder.account(ft)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).build();
+
+    await ft.account.token.transfer(
+      account1.id,
+      account2.id,
+      asset.id,
+      BigInt(10)
+    );
+
+    const connection = createConnection(_ft.get.gtxClient);
+    const foundAccount = await connection.getAccountById(account1.id);
+    const history = await foundAccount.getTransferHistory();
+    expect(history.length).toStrictEqual(1);
   });
 
   it.skip("should have one payment history entries if one crosschain transfer is made", async () => {
