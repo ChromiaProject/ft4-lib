@@ -10,21 +10,25 @@ import {
   paymentHistoryEntryFromJSON,
   paymentHistoryEntryToJSON,
 } from "./payment-history-entry";
-import { PaymentHistoryEntry, PaymentHistoryType } from "./types";
+import {
+  PaymentHistoryCursor,
+  PaymentHistoryEntry,
+  PaymentHistoryFilter,
+} from "./types";
 import { formatter } from "postchain-client";
 
 export async function ensurePaymentHistoryStoreLocal(
   session: GtxClient,
   pageSize: number,
   accountId: BufferId,
-  type: PaymentHistoryType | null
+  filter: PaymentHistoryFilter | null
 ): Promise<PaymentHistoryStore> {
   try {
     return await loadPaymentHistoryStoreLocal(
       session,
       accountId,
       pageSize,
-      type
+      filter
     );
   } catch (error) {
     console.log(`Couldn't load payment history from local storage
@@ -34,7 +38,7 @@ export async function ensurePaymentHistoryStoreLocal(
       session,
       accountId,
       pageSize,
-      type
+      filter
     );
   }
 }
@@ -43,7 +47,7 @@ export async function createNewPaymentHistoryStoreLocal(
   session: GtxClient,
   accountId: BufferId,
   pageSize: number,
-  type: PaymentHistoryType | null
+  filter: PaymentHistoryFilter | null
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1)
     throw new PaymentHistoryError("Page size must be at least 1");
@@ -60,7 +64,7 @@ export async function createNewPaymentHistoryStoreLocal(
     id,
     pageSize,
     pageCount,
-    type,
+    filter,
     entryCount,
     [],
     retriever,
@@ -73,7 +77,7 @@ export async function loadPaymentHistoryStoreLocal(
   session: GtxClient,
   accountId: BufferId,
   pageSize: number,
-  type: PaymentHistoryType | null
+  filter: PaymentHistoryFilter | null
 ): Promise<PaymentHistoryStore> {
   if (pageSize < 1)
     throw new PaymentHistoryError("Page size must be at least 1");
@@ -97,7 +101,7 @@ export async function loadPaymentHistoryStoreLocal(
     id,
     pageSize,
     pageCount,
-    type,
+    filter,
     entryCount,
     entries,
     retriever,
@@ -110,15 +114,15 @@ function build(
   accountId: Buffer,
   pageSize: number,
   pageCount: number,
-  type: PaymentHistoryType | null,
+  filter: PaymentHistoryFilter | null,
   entryCount: number,
   _entries: PaymentHistoryEntry[],
   retriever: PaymentHistoryRetriever,
-  _lastElementRowid: string | null,
+  _nextCursor: string | null,
   localStorageKey: string
 ): PaymentHistoryStore {
   let entries = _entries;
-  let lastElementRowid = _lastElementRowid;
+  let nextCursor = _nextCursor;
   function storeEntries() {
     localStorage.setItem(
       localStorageKey,
@@ -146,16 +150,16 @@ function build(
 
       const firstIndexInNextPage = (page + 1) * pageSize;
       while (entries.length < Math.min(firstIndexInNextPage, entryCount)) {
-        const [data, next] = await retriever.retrieve(
+        const { data, nextCursor: cursor } = await retriever.retrieve(
           // Use fewer queries: ask for all missing elements
           // (chain will return up to 100)
           (page + 1) * pageSize - entries.length,
           null,
-          lastElementRowid
+          nextCursor
         );
         entries = entries.concat(data);
         storeEntries();
-        lastElementRowid = next[1];
+        nextCursor = cursor;
       }
       return Object.freeze(
         entries.slice(page * pageSize, firstIndexInNextPage)
@@ -176,11 +180,11 @@ function build(
         accountId,
         pageSize,
         Math.ceil(entryCount / pageSize),
-        type,
+        filter,
         entryCount,
         entries,
         retriever,
-        lastElementRowid,
+        nextCursor,
         localStorageKey
       );
     },
@@ -198,7 +202,7 @@ async function loadNewerEntries(
   const newCount = await retriever.getTotalCount();
   let newEntriesAmount = newCount - oldCount;
   if (oldEntries.length > 0) {
-    let lastElementRowid: string | null = null;
+    let nextCursor: PaymentHistoryCursor | null = null;
     const oldFirst = oldEntries[0];
     let done = false;
     let toAdd = [];
@@ -208,22 +212,22 @@ async function loadNewerEntries(
           "Unexpected error: local payment history might be corrupted"
         );
       }
-      const [entries, next] = await retriever.retrieve(
+      const { data, nextCursor: cursor } = await retriever.retrieve(
         newEntriesAmount + 1,
         null,
-        lastElementRowid
+        nextCursor
       );
-      lastElementRowid = next[1];
+      nextCursor = cursor;
 
-      const idxOfFirst = entries.findIndex((entry) => {
+      const idxOfFirst = data.findIndex((entry) => {
         return entry.rowid === oldFirst.rowid;
       });
       if (idxOfFirst != -1) {
         done = true;
-        toAdd = toAdd.concat(entries.slice(0, idxOfFirst));
+        toAdd = toAdd.concat(data.slice(0, idxOfFirst));
       } else {
-        toAdd = toAdd.concat(entries);
-        newEntriesAmount -= entries.length;
+        toAdd = toAdd.concat(data);
+        newEntriesAmount -= data.length;
       }
     }
     return Object.freeze(toAdd);

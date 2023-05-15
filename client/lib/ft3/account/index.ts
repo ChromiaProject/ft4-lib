@@ -28,7 +28,7 @@ import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-histor
 import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
-import { PaymentHistoryType } from "./payment-history/types";
+import { PaymentHistoryFilter } from "./payment-history/types";
 
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
@@ -43,13 +43,13 @@ export const accountQuerySession = (pci: GtxClient) =>
       storeMemory: (
         accountId: BufferId,
         pageSize: number,
-        type: PaymentHistoryType | null = null
-      ) => createPaymentHistoryStoreMemory(pci, accountId, pageSize, type),
+        filter: PaymentHistoryFilter | null = null
+      ) => createPaymentHistoryStoreMemory(pci, accountId, pageSize, filter),
       storeLocal: (
         accountId: BufferId,
         pageSize: number,
-        type: PaymentHistoryType | null = null
-      ) => ensurePaymentHistoryStoreLocal(pci, pageSize, accountId, type),
+        filter: PaymentHistoryFilter | null = null
+      ) => ensurePaymentHistoryStoreLocal(pci, pageSize, accountId, filter),
     },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),

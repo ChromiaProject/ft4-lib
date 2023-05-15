@@ -57,8 +57,8 @@ function test_history() {
     assert_equals(response_small, expected);
     assert_equals(ft3.transfer_op.get_payment_history_size(alice.account_id), 1);
     assert_equals(response_big, expected);
-    assert_true(response_small.data.size() == 1);
-    assert_true(response_big.data.size() == 1);
+    assert_true(response_small!!.data.size() == 1);
+    assert_true(response_big!!.data.size() == 1);
 }
 
 function test_history_pagination() {
@@ -177,8 +177,8 @@ function test_history_filtering() {
         .run();
 
     val cursor = core.encode_cursor(core.page_cursor());
-    assert_equals(ft3.transfer_op.get_payment_history_paginated(alice.account_id, core.filter(core.transfer_type.SENT), 10, cursor).data.size(), 1);
-    assert_equals(ft3.transfer_op.get_payment_history_paginated(alice.account_id, core.filter(core.transfer_type.RECEIVED), 10, cursor).data.size(), 0);
-    assert_equals(ft3.transfer_op.get_payment_history_paginated(bob.account_id, core.filter(core.transfer_type.SENT), 10, cursor).data.size(), 0);
-    assert_equals(ft3.transfer_op.get_payment_history_paginated(bob.account_id, core.filter(core.transfer_type.RECEIVED), 10, cursor).data.size(), 1);
+    assert_equals(ft3.transfer_op.get_payment_history_paginated(alice.account_id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft3.transfer_op.get_payment_history_paginated(alice.account_id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 0);
+    assert_equals(ft3.transfer_op.get_payment_history_paginated(bob.account_id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 0);
+    assert_equals(ft3.transfer_op.get_payment_history_paginated(bob.account_id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
 }

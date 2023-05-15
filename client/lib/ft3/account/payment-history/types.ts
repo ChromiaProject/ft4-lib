@@ -32,12 +32,17 @@ export type PaymentHistoryEntry = {
   //brid: Buffer;
 };
 
+export type TransferHistoryResponse = {
+  data: PaymentHistoryEntry[];
+  nextCursor: PaymentHistoryCursor | null;
+};
+
 export type AssetInfo = {
   name: string;
   id: Buffer;
 };
 
-export type PaymentHistoryCursor = [number?, string?];
+export type PaymentHistoryCursor = string;
 
 export enum PaymentHistoryType {
   Sent = 0,

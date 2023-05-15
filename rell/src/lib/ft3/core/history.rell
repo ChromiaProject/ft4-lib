@@ -1,4 +1,5 @@
 import acc: ^.account;
+import ^.core;
 
 @log entity payment_history_entry {
     index acc.account, asset;
@@ -32,12 +33,19 @@ function extract_data_from_payment_history_list(
     );
 }
 
-function get_paginated_payments(account_id: byte_array, filter, page_size: integer, page_cursor) {
+function get_paginated_payments(acc.account, filter, page_size: integer, page_cursor: text?) {
+    var before_rowid: rowid? = null;
+    if (page_cursor??) {
+        val cursor = core.decode_cursor(page_cursor);
+        before_rowid = cursor.before_rowid;
+    }
+
     val entries = payment_history_entry @* {
-            acc.account @ { account_id },
-            if (filter.transfer_type == null) true else if (filter.transfer_type!! == transfer_type.SENT)(.is_input == true) else (.is_input == false), 
-            if(page_cursor.before_rowid??)(.rowid < page_cursor.before_rowid!!) else true
-        } (@sort_desc @omit .rowid, $) limit fetch_data_size(page_size);
+        account,
+        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent), 
+        if (before_rowid??) (.rowid < before_rowid) else true
+    } (@sort_desc $) limit fetch_data_size(page_size);
+    
     return extract_data_from_payment_history_list(entries) @* {} (
         pagination_result(
             data = .data,
@@ -56,8 +64,8 @@ struct pagination_result {
 }
 
 enum transfer_type {
-    SENT,
-    RECEIVED,
+    sent,
+    received,
 }
 
 struct filter {
@@ -83,8 +91,8 @@ function null_page() = paged_result(
 );
 
 
-function make_page(pagination_results: list<pagination_result>, page_size: integer, cursor: page_cursor): paged_result {
-    if(empty(pagination_results)) {
+function make_page(pagination_results: list<pagination_result>, page_size: integer): paged_result {
+    if (empty(pagination_results)) {
          return null_page();
     }
     // adding +1 should help with next page null situation when current page size

@@ -1,7 +1,8 @@
 import {
   PaymentHistoryCursor,
   PaymentHistoryEntry,
-  PaymentHistoryType,
+  PaymentHistoryFilter,
+  TransferHistoryResponse,
 } from "./types";
 
 export interface PaymentHistoryStore {
@@ -20,9 +21,9 @@ export interface PaymentHistoryRetriever {
   getTotalCount: () => Promise<number>;
   retrieve: (
     amount: number,
-    type: PaymentHistoryType | null,
-    lastElementRowid?: string | null
-  ) => Promise<readonly [PaymentHistoryEntry[], PaymentHistoryCursor]>;
+    filter: PaymentHistoryFilter | null,
+    cursor: PaymentHistoryCursor | null
+  ) => Promise<TransferHistoryResponse>;
   brid: string;
 }
 

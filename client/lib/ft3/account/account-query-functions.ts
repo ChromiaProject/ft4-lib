@@ -175,12 +175,7 @@ export function createAccountObject(
       filter: PaymentHistoryFilter = {},
       cursor: PaymentHistoryCursor | null = null
     ) => {
-      const ret = await retriever.retrieve(
-        limit,
-        filter.paymentHistoryType,
-        cursor?.[1] || null
-      );
-      return ret[0];
+      return retriever.retrieve(limit, filter, cursor);
     },
   });
 }

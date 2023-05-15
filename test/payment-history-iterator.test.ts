@@ -222,7 +222,9 @@ describe("Payment history iterator", () => {
       ft.get.gtxClient,
       account1.id,
       5,
-      PaymentHistoryType.Sent
+      {
+        paymentHistoryType: PaymentHistoryType.Sent,
+      }
     );
     const paymentHistoryIterator =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
@@ -257,7 +259,9 @@ describe("Payment history iterator", () => {
       ft.get.gtxClient,
       account1.id,
       5,
-      PaymentHistoryType.Received
+      {
+        paymentHistoryType: PaymentHistoryType.Received,
+      }
     );
     const paymentHistoryIterator1 =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore1);
@@ -270,7 +274,9 @@ describe("Payment history iterator", () => {
       ft.get.gtxClient,
       account2.id,
       5,
-      PaymentHistoryType.Received
+      {
+        paymentHistoryType: PaymentHistoryType.Received,
+      }
     );
     const paymentHistoryIterator2 =
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore2);
@@ -304,7 +310,7 @@ describe("Payment history iterator", () => {
     const connection = createConnection(_ft.get.gtxClient);
     const foundAccount = await connection.getAccountById(account1.id);
     const history = await foundAccount.getTransferHistory();
-    expect(history.length).toStrictEqual(1);
+    expect(history.data.length).toStrictEqual(1);
   });
 
   it.skip("should have one payment history entries if one crosschain transfer is made", async () => {

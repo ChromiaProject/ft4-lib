@@ -6,8 +6,8 @@ import { BufferId, KeyPair } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
 import {
   PaymentHistoryCursor,
-  PaymentHistoryEntry,
   PaymentHistoryFilter,
+  TransferHistoryResponse,
 } from "./payment-history/types";
 import { Authenticator } from "../authentication/interfaces";
 
@@ -61,7 +61,7 @@ export interface IAccount {
     limit?: number,
     filter?: PaymentHistoryFilter,
     cursor?: PaymentHistoryCursor | null
-  ) => Promise<PaymentHistoryEntry[]>;
+  ) => Promise<TransferHistoryResponse>;
 }
 
 export interface IAuthenticatedAccount extends IAccount {
