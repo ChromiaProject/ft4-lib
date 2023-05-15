@@ -1,4 +1,4 @@
-import TestUser from "./util/test-user";
+import TestUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
@@ -8,6 +8,9 @@ import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payme
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
 import { PaymentHistoryType } from "/ft3/account/payment-history/types";
 import { createConnection } from "/ft3/ft-session";
+import { KeyPair } from "../client/lib/cryptoUtils";
+import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 
 let _ft: ftUserSession;
 let asset: Asset;
@@ -20,7 +23,8 @@ describe("Payment history iterator", () => {
   });
 
   it("should have one payment history entry when one transfer is made", async () => {
-    const user = TestUser();
+    const keyPair = new KeyPair();
+    const user = newSingleSigUser(keyPair);
     const ft = _ft.changeUser(user);
 
     const account1 = await AccountBuilder.account(ft)
@@ -32,12 +36,12 @@ describe("Payment history iterator", () => {
       _ft.changeUser(TestUser())
     ).build();
 
-    await ft.account.token.transfer(
-      account1.id,
-      account2.id,
-      asset.id,
-      BigInt(10)
-    );
+    const session = await createKeyStoreInteractor(
+      _ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair)
+    ).getSession(account1.id);
+
+    await session.account.transfer(account2.id, asset.id, BigInt(10));
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
       ft.get.gtxClient,

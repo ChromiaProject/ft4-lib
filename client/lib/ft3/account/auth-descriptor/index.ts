@@ -1,4 +1,9 @@
-import { AuthDescriptor, AuthType, GtvAuthDescriptor } from "./types";
+import {
+  AuthDescriptor,
+  AuthType,
+  GtvAuthDescriptor,
+  RawAuthDescriptor,
+} from "./types";
 import { create } from "./auth-descriptor";
 import { allow } from "./rules";
 import { gtv } from "postchain-client";
@@ -80,6 +85,21 @@ function createMultiSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
     [[...ad.flags], ad.signaturesRequired, ad.signers],
     ad.rule,
   ];
+}
+
+export function mapAuthDescriptor(raw: RawAuthDescriptor): AuthDescriptor {
+  const { type, args, rules } = raw;
+  return Object.freeze(
+    fromGtv([
+      serializeAuthType(type as AuthType),
+      args,
+      rules,
+    ] as GtvAuthDescriptor)
+  );
+}
+
+export function mapAuthDescriptors(raw: RawAuthDescriptor[]): AuthDescriptor[] {
+  return raw.map(mapAuthDescriptor);
 }
 
 export const authDescriptor = {

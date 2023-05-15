@@ -35,6 +35,7 @@ export interface KeyStore extends SignatureProvider {
 export interface AuthenticatorSession {
   authenticator: Authenticator;
   getUsedKeyHandlers(): Set<KeyHandler>;
+  getSigners(): Set<Buffer>;
   authenticate(operation: Operation): Promise<Operation[]>;
   sign(transaction: Itransaction): Promise<void>;
 }

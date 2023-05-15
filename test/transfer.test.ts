@@ -1,13 +1,16 @@
+import { KeyPair } from "../client/lib/cryptoUtils";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import {
   authDescriptor as ad,
   FlagsType,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { Asset } from "../client/lib/ft3/asset/types";
+import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
-import TestUser from "./util/test-user";
+import TestUser, { newSingleSigUser } from "./util/test-user";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let _ft: ftUserSession;
@@ -146,7 +149,8 @@ describe("Transfer", () => {
   });
 
   it("should succeed burning tokens", async () => {
-    const user = TestUser();
+    const keyPair = new KeyPair();
+    const user = newSingleSigUser(keyPair);
     const ft = _ft.changeUser(user);
 
     const account = await AccountBuilder.account(ft)
@@ -155,12 +159,12 @@ describe("Transfer", () => {
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
-    await ft.account.token.burn(account.id, asset.id, BigInt(10));
-
-    const assetBalance = await ft.get.balance.by.accountAndAssetId(
-      account.id,
-      asset.id
-    );
+    const session = await createKeyStoreInteractor(
+      ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair)
+    ).getSession(account.id);
+    await session.account.burn(asset.id, BigInt(10));
+    const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
     expect(assetBalance.amount).toEqual(190);
   });

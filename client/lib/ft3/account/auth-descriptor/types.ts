@@ -45,3 +45,9 @@ export type SingleSigAuthDescriptorArgs = readonly [
 export type AuthDescriptorArgs =
   | SingleSigAuthDescriptorArgs
   | MultiSigAuthDescriptorArgs;
+
+export type RawAuthDescriptor = {
+  type: string;
+  args: AuthDescriptorArgs;
+  rules: AuthDescriptorRule | null;
+};
