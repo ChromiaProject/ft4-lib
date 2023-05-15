@@ -64,7 +64,7 @@ export async function createNewPaymentHistoryStoreLocal(
     entryCount,
     [],
     retriever,
-    0,
+    null,
     key
   );
 }
@@ -114,7 +114,7 @@ function build(
   entryCount: number,
   _entries: PaymentHistoryEntry[],
   retriever: PaymentHistoryRetriever,
-  _lastElementRowid: number,
+  _lastElementRowid: string | null,
   localStorageKey: string
 ): PaymentHistoryStore {
   let entries = _entries;
@@ -198,7 +198,7 @@ async function loadNewerEntries(
   const newCount = await retriever.getTotalCount();
   let newEntriesAmount = newCount - oldCount;
   if (oldEntries.length > 0) {
-    let lastElementRowid = 0;
+    let lastElementRowid: string | null = null;
     const oldFirst = oldEntries[0];
     let done = false;
     let toAdd = [];

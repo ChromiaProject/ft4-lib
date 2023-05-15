@@ -32,11 +32,11 @@ function extract_data_from_payment_history_list(
     );
 }
 
-function get_paginated_payments(filter, page_size: integer, before_rowid: rowid) {
+function get_paginated_payments(account_id: byte_array, filter, page_size: integer, page_cursor) {
     val entries = payment_history_entry @* {
-            acc.account @ { filter.account_id },
+            acc.account @ { account_id },
             if (filter.transfer_type == null) true else if (filter.transfer_type!! == transfer_type.SENT)(.is_input == true) else (.is_input == false), 
-            if(before_rowid > rowid(0))(.rowid < before_rowid) else true
+            if(page_cursor.before_rowid??)(.rowid < page_cursor.before_rowid!!) else true
         } (@sort_desc @omit .rowid, $) limit fetch_data_size(page_size);
     return extract_data_from_payment_history_list(entries) @* {} (
         pagination_result(
@@ -47,7 +47,6 @@ function get_paginated_payments(filter, page_size: integer, before_rowid: rowid)
 }
 
 struct page_cursor {
-    page_size: integer;
     before_rowid: rowid? = null;
 }
 
@@ -62,26 +61,29 @@ enum transfer_type {
 }
 
 struct filter {
-    account_id: byte_array;
     transfer_type?;
 }
 
 val MAX_PAGE_SIZE = 100;
 
+function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
+
+function decode_cursor(cursor: text) = page_cursor.from_bytes(byte_array.from_base64(cursor));
+
 function fetch_data_size(page_size: integer) = min(MAX_PAGE_SIZE, page_size) + 1;
 
 struct paged_result {
-    next_rowid: rowid?;
+    next_cursor: text?;
     data: list<gtv>;
 }
 
 function null_page() = paged_result(
-    next_rowid = null,
+    next_cursor = null,
     data = list<gtv>()
 );
 
 
-function make_page(pagination_results: list<pagination_result>, page_size: integer, before_rowid: rowid): paged_result {
+function make_page(pagination_results: list<pagination_result>, page_size: integer, cursor: page_cursor): paged_result {
     if(empty(pagination_results)) {
          return null_page();
     }
@@ -89,15 +91,17 @@ function make_page(pagination_results: list<pagination_result>, page_size: integ
     // is equal to max page size
     if(pagination_results.size() < fetch_data_size(page_size)) {
         return paged_result(
-            next_rowid = null,
+            next_cursor = null,
             data = pagination_results  @* {} .data
         );
     }
     val paginated_result = pagination_results.sub(0, pagination_results.size()-1);
     val next_id = pagination_results[pagination_results.size()-2].rowid;
- 
+    val next_cursor = page_cursor(
+        next_id
+    );
     return paged_result(
-        next_rowid = next_id,
+        next_cursor = encode_cursor(next_cursor),
         data = paginated_result  @* {} .data
     );
 }

@@ -23,7 +23,7 @@ export async function createPaymentHistoryStoreMemory(
   const entryCount = await retriever.getTotalCount();
   const pageCount = Math.ceil(entryCount / pageSize);
 
-  return build(id, pageSize, pageCount, type, entryCount, [], retriever, 0);
+  return build(id, pageSize, pageCount, type, entryCount, [], retriever, null);
 }
 
 function build(
@@ -34,7 +34,7 @@ function build(
   entryCount: number,
   entries: PaymentHistoryEntry[],
   retriever: PaymentHistoryRetriever,
-  lastElementRowid: number
+  lastElementRowid: string | null
 ): PaymentHistoryStore {
   let _pageSize = pageSize;
   const _pageCount = pageCount;
@@ -68,7 +68,7 @@ function build(
         );
         if (!data.length) break;
         _entries = _entries.concat(data);
-        _lastElementRowid = next;
+        _lastElementRowid = next[1];
       }
       return Object.freeze(
         _entries.slice(page * _pageSize, firstIndexInNextPage)
@@ -91,7 +91,7 @@ function build(
             newEntriesAmount + 1,
             type
           );
-          _lastElementRowid = next;
+          _lastElementRowid = next[1];
           if (!entries.length) done = true;
 
           const idxOfFirst = entries.findIndex((entry) => {

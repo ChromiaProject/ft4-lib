@@ -37,12 +37,16 @@ export type AssetInfo = {
   id: Buffer;
 };
 
+export type PaymentHistoryCursor = [number?, string?];
+
 export enum PaymentHistoryType {
   Sent = 0,
   Received = 1,
 }
 
-export type PaymentHistoryFilter = [Buffer, PaymentHistoryType?];
+export type PaymentHistoryFilter = {
+  paymentHistoryType?: PaymentHistoryType;
+};
 
 export type PaymentHistoryJSON = {
   rowid: string;
