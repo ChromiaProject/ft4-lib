@@ -13,7 +13,7 @@ function test_history() {
     val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
     val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", 5);
 
     val inputs = [
         core.xfer_input(
@@ -65,7 +65,7 @@ function test_history_pagination() {
     val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
     val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", 0);
 
     val inputs = [
         core.xfer_input(
@@ -112,7 +112,7 @@ function test_history_pagination() {
     assert_true(expected_result.size() == 2);
     assert_equals(response, expected);
     //vvv entry index, checks if they're ordered LIFO vvv
-    assert_equals(list<gtv>.from_gtv(expected_data[0])[7], (1).to_gtv());
+    assert_equals(list<gtv>.from_gtv(expected_data[0])[8], (1).to_gtv());
 
     response = ft3.transfer_op.get_payment_history_paginated(alice.account_id, filter, 2, next_cursor);
     expected_result = core.extract_data_from_payment_history_list(

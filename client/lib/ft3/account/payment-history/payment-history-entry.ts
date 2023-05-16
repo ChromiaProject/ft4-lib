@@ -5,12 +5,14 @@ import {
   PaymentHistoryJSON,
   PaymentHistoryTransferArgs,
 } from "./types";
+import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
 
 export function createPaymentHistoryEntry(
   rowid: string,
   isInput: boolean,
   delta: bigint,
+  decimals: number,
   assetName: string,
   assetId: BufferId,
   entryIndex: number,
@@ -34,7 +36,7 @@ export function createPaymentHistoryEntry(
   return Object.freeze({
     rowid: rowid,
     isInput: isInput,
-    delta: Number(delta), //<-------------NEEDS CHANGE!!!
+    delta: createAmountFromBalance(delta, decimals),
     asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
     entryIndex: entryIndex,
     data: formatter.ensureBuffer(data),
@@ -60,6 +62,7 @@ export function createPaymentHistoryEntryFromResponse(
   const [
     rowid,
     delta,
+    decimals,
     asset_name,
     asset_id,
     is_input,
@@ -86,6 +89,7 @@ export function createPaymentHistoryEntryFromResponse(
     rowid,
     is_input === 1,
     delta,
+    decimals,
     asset_name,
     asset_id,
     entry_index,
@@ -124,7 +128,8 @@ export function paymentHistoryEntryToJSON(phe: PaymentHistoryEntry): string {
   return JSON.stringify({
     rowid,
     isInput,
-    delta,
+    delta: delta.value.toString(),
+    decimals: delta.decimals,
     assetName: asset.name,
     assetId: asset.id.toString("hex"),
     entryIndex,
@@ -144,6 +149,7 @@ export function paymentHistoryEntryFromJSON(
     rowid,
     isInput,
     delta,
+    decimals,
     assetName,
     assetId,
     entryIndex,
@@ -156,7 +162,8 @@ export function paymentHistoryEntryFromJSON(
   return createPaymentHistoryEntry(
     rowid,
     isInput,
-    delta,
+    BigInt(delta),
+    decimals,
     assetName,
     assetId,
     entryIndex,

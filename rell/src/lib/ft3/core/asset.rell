@@ -4,12 +4,13 @@ entity asset {
     id: byte_array;
     key id;
     name;
+    decimals: integer;
     issuing_brid: byte_array;
 }
 
 entity balance {
     key acc.account, asset;
-    mutable amount: integer = 0;
+    mutable amount: big_integer = 0L;
 }
 
 function ensure_balance(acc.account, asset): balance {
@@ -17,12 +18,13 @@ function ensure_balance(acc.account, asset): balance {
     if (balance != null) {
        return balance;
     }
-    else return create balance(account, asset, amount = 0);
+    else return create balance(account, asset, amount = 0L);
 }
 
-function register_asset(name, issuing_brid: byte_array): asset {
-   val id = (name, issuing_brid).hash();
-   return create asset (id, name, issuing_brid);
+function register_asset(name, decimals: integer, issuing_brid: byte_array): asset {
+    require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
+    val id = (name, issuing_brid).hash();
+    return create asset (id, name, decimals, issuing_brid);
 }
 
 function get_asset_balances(account_id: byte_array) {
@@ -30,6 +32,7 @@ function get_asset_balances(account_id: byte_array) {
         asset = (
             id = .asset.id,
             name = .asset.name,
+            decimals = .asset.decimals,
             brid = .asset.issuing_brid
         ),
         amount = .amount

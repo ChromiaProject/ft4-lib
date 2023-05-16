@@ -25,6 +25,7 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
         asset = (
             id = .asset.id,
             name = .asset.name,
+            decimals = .asset.decimals,
             brid = .asset.issuing_brid
         ),
         amount = .amount
@@ -35,6 +36,7 @@ query get_asset_by_name(name) {
     return core.asset @* { name } (
         id = .id,
         name = .name,
+        decimals = .decimals,
         brid = .issuing_brid
     );
 
@@ -46,6 +48,7 @@ query get_asset_by_id(asset_id: byte_array) {
     }(
         id = .id,
         name = .name,
+        decimals = .decimals,
         brid = .issuing_brid
     );
 }
@@ -54,6 +57,7 @@ query get_all_assets() {
     return core.asset @* {} (
         id = .id,
         name = .name,
+        decimals = .decimals,
         brid = .issuing_brid
     );
 }

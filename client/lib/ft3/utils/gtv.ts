@@ -15,6 +15,7 @@ declare global {
   interface Buffer extends GtvCompatible {}
   interface Boolean extends GtvCompatible {}
   interface Object extends GtvCompatible {}
+  interface BigInt extends GtvCompatible {}
 }
 
 Buffer.prototype.encodeGtv = function (): RawGtv {

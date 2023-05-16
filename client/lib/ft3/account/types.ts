@@ -1,5 +1,5 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { Balance, AssetAmount } from "../asset/types";
+import { Balance } from "../asset/types";
 import { AuthDescriptor, GtvAuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
 import { BufferId, KeyPair } from "../../cryptoUtils";
@@ -10,6 +10,7 @@ import {
   TransferHistoryResponse,
 } from "./payment-history/types";
 import { Authenticator } from "../authentication/interfaces";
+import { Amount } from "../asset/interfaces";
 
 export type Account = {
   id: Buffer;
@@ -22,14 +23,14 @@ export type XferInput = [
   accountId: Buffer,
   assetId: Buffer,
   authDescriptorId: Buffer,
-  amount: AssetAmount,
+  amount: bigint,
   extra: { [key: string]: GtvCompatible }
 ];
 
 export type XferOutput = [
   accountId: Buffer,
   assetId: Buffer,
-  amount: AssetAmount,
+  amount: bigint,
   extra: { [key: string]: GtvCompatible }
 ];
 
@@ -74,13 +75,13 @@ export interface IAuthenticatedAccount extends IAccount {
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
-    amount: AssetAmount
+    amount: Amount
   ) => Promise<void>;
   xcTransfer: (
     brid: BufferId,
     receiverId: BufferId,
     assetId: BufferId,
-    amount: AssetAmount
+    amount: Amount
   ) => Promise<void>;
-  burn: (assetId: BufferId, amount: AssetAmount) => Promise<void>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<void>;
 }

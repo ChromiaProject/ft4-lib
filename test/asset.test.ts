@@ -31,12 +31,13 @@ describe("Asset", () => {
     const assetName = generateAssetName();
     const brid = generateId();
     const assetId = ft.get.asset.id(assetName, brid);
-    await getNewAsset(ft, assetName, brid);
+    await getNewAsset(ft, assetName, 3, brid);
 
     const expectedAsset = await connection.getAssetById(assetId);
 
     expect(expectedAsset.name).toEqual(assetName);
     expect(expectedAsset.id).toEqual(assetId);
+    expect(expectedAsset.decimals).toEqual(3);
     expect(expectedAsset.brid).toEqual(brid);
   });
 

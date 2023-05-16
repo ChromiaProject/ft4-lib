@@ -4,6 +4,7 @@ import {
   authDescriptor as ad,
   FlagsType,
 } from "../client/lib/ft3/account/auth-descriptor";
+import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
@@ -19,7 +20,7 @@ let asset: Asset;
 describe("Transfer", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    asset = await getNewAsset(_ft);
+    asset = await getNewAsset(_ft, undefined, 5);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {
@@ -40,7 +41,7 @@ describe("Transfer", () => {
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
 
     const assetBalance1 = await ft.get.balance.by.accountAndAssetId(
@@ -52,8 +53,12 @@ describe("Transfer", () => {
       asset.id
     );
 
-    expect(assetBalance1.amount).toEqual(190);
-    expect(assetBalance2.amount).toEqual(10);
+    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
+      true
+    );
+    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
+      true
+    );
   });
 
   it("should fail when balance is lower than amount to transfer", async () => {
@@ -74,7 +79,7 @@ describe("Transfer", () => {
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
 
     await expect(promise).rejects.toBeInstanceOf(Error);
@@ -99,7 +104,7 @@ describe("Transfer", () => {
       account1.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
@@ -132,7 +137,7 @@ describe("Transfer", () => {
       account1.id,
       authDescriptor.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
 
     const assetBalance1 = await ft.get.balance.by.accountAndAssetId(
@@ -144,8 +149,12 @@ describe("Transfer", () => {
       asset.id
     );
 
-    expect(assetBalance1.amount).toEqual(190);
-    expect(assetBalance2.amount).toEqual(10);
+    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
+      true
+    );
+    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
+      true
+    );
   });
 
   it("should succeed burning tokens", async () => {
@@ -163,9 +172,11 @@ describe("Transfer", () => {
       ft.get.gtxClient,
       createInMemoryFTKeyStore(keyPair)
     ).getSession(account.id);
-    await session.account.burn(asset.id, BigInt(10));
+    await session.account.burn(asset.id, createAmount(10, asset.decimals));
     const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
-    expect(assetBalance.amount).toEqual(190);
+    expect(
+      assetBalance.amount.eq(createAmount(190, asset.decimals))
+    ).toBeTruthy();
   });
 });
