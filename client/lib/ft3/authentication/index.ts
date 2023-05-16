@@ -10,6 +10,10 @@ import {
 import { Operation, QueryObject } from "../utils/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 
+export * from "./evm";
+export * from "./ft";
+export * from "./interfaces";
+
 export function createAuthenicator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
@@ -23,6 +27,8 @@ export function createAuthenicator(
       getAuthRequirements(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
+    getNonce: (authDescriptorId: BufferId) =>
+      authDataService.getNonce(authDescriptorId),
   });
 
   return authenticator;
@@ -32,8 +38,7 @@ async function getAuthRequirements(
   authDataService: AuthDataService,
   operation: Operation
 ): Promise<AuthData> {
-  const authData = await authDataService.getAuthData(operation);
-  return authData;
+  return authDataService.getAuthData(operation);
 }
 
 async function getKeyHandlerForOperation(
@@ -61,8 +66,11 @@ function createAuthenticatorSession(
     getSigners: () => {
       let signers = new Set<Buffer>();
       usedKeyHandlers.forEach(
-        ({ authDescriptor }) =>
-          (signers = new Set([...authDescriptor.signers, ...signers]))
+        (keyHandler) =>
+          (signers = new Set([
+            ...keyHandler.authDescriptor.signers,
+            ...signers,
+          ]))
       );
       return signers;
     },
@@ -75,7 +83,14 @@ function createAuthenticatorSession(
         throw new Error(`Cannot authenticate operation: ${operation[0]}`);
       }
       usedKeyHandlers.add(keyHandler);
-      return await keyHandler.authenticate(authenticator.accountId, operation);
+      // `getKeyHandlerForOperation` internally calls `getAuthRequirements`
+      // Find a way to make only one call
+      const authData = await authenticator.getAuthRequirements(operation);
+      return await keyHandler.authenticate(
+        authenticator.accountId,
+        operation,
+        authData
+      );
     },
     sign: async (transaction: Itransaction) => {
       await Promise.all(
@@ -98,3 +113,12 @@ export const defaultFTAuthData: QueryObject = {
   name: `ft3.default_auth_data`,
   args: {},
 };
+
+export function nonce(authDescriptorId: BufferId): QueryObject {
+  return {
+    name: "ft3.get_ctr_for_auth_descriptor",
+    args: {
+      auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
+    },
+  };
+}

@@ -74,6 +74,6 @@ operation dev_perform_large_transfer(
   to: text
 ) {
   dev_op.require_dev();
-  val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {2}";
+  val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {nonce}";
   acc.authenticate(set(["A"]), msg_template);
 }

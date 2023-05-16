@@ -32,8 +32,8 @@ describe("Transaction Builder", () => {
 
     keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(ad);
     const authDataService = createFakeAuthDataService({
-      ["ft3.transfer"]: { flags: [FlagsType.Transfer] },
-      ["ft3.dev_register_account"]: { flags: [FlagsType.Account] },
+      ["ft3.transfer"]: { flags: [FlagsType.Transfer], message: "" },
+      ["ft3.dev_register_account"]: { flags: [FlagsType.Account], message: "" },
     });
     authenticator = createAuthenicator(
       accountId,
@@ -135,7 +135,8 @@ describe("Transaction Builder", () => {
       .add(operation)
       .addSigners(keyHandler)
       .build();
-    expect(tx.gtx.signers).toStrictEqual([keyHandler.keyStore.pubKey]);
+    console.log(tx.gtx.signers);
+    expect(tx.gtx.signers).toStrictEqual(keyHandler.getSigners());
     expect(tx.gtx.signatures).toBeDefined();
   });
 
@@ -153,14 +154,18 @@ describe("Transaction Builder", () => {
           Promise.resolve(operation)
         ),
       sign: jest.fn(),
+      getSigners: jest.fn(),
     };
     const authenticatorMock: Authenticator = {
       accountId: Buffer.alloc(32),
       keyHandlers: [keyHandlerMock],
 
       createSession: jest.fn(),
-      getAuthRequirements: jest.fn(),
+      getAuthRequirements: jest
+        .fn()
+        .mockReturnValue({ flags: [], message: "" }),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
+      getNonce: jest.fn(),
     };
     await transactionBuilder(authenticator, client)
       .addWithAuthenticator(registerOp(authDescriptor), authenticatorMock)

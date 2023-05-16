@@ -12,7 +12,10 @@ describe("FT key handler", () => {
 
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const operations = await keyHandler.authenticate(accountId, op("foo"));
+    const operations = await keyHandler.authenticate(accountId, op("foo"), {
+      flags: [],
+      message: "",
+    });
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),

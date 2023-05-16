@@ -1,7 +1,4 @@
-import {
-  Itransaction,
-  SignatureProvider,
-} from "postchain-client/built/src/gtx/interfaces";
+import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { AuthDescriptor } from "../account/auth-descriptor/types";
 import { Operation } from "../utils/types";
@@ -15,6 +12,7 @@ export interface Authenticator {
   getKeyHandlerForOperation(
     operation: Operation
   ): Promise<KeyHandler | undefined>;
+  getNonce(authDescriptorId: BufferId): Promise<number>;
 }
 
 export interface KeyHandler {
@@ -22,16 +20,25 @@ export interface KeyHandler {
   keyStore: KeyStore;
 
   satisfiesAuthRequirements(flags: string[]): boolean;
-  authenticate(accountId: BufferId, operation: Operation): Promise<Operation[]>;
+
+  authenticate(
+    accountId: BufferId,
+    operation: Operation,
+    authData: AuthData
+  ): Promise<Operation[]>;
+
   sign(transaction: Itransaction): Promise<void>;
+
+  // FIXME
+  getSigners(): Buffer[] | null;
 }
 
-export interface KeyStore extends SignatureProvider {
+export interface KeyStore {
   id: Buffer;
-  pubKey: Buffer;
+  // when false, signing is performed without user interaction
+  isInteractive: boolean;
   createKeyHandler(authDescriptor: AuthDescriptor): KeyHandler;
 }
-
 export interface AuthenticatorSession {
   authenticator: Authenticator;
   getUsedKeyHandlers(): Set<KeyHandler>;
@@ -42,8 +49,11 @@ export interface AuthenticatorSession {
 
 export interface AuthDataService {
   getAuthData(operation: Operation): Promise<AuthData>;
+  // TODO: add account id argument
+  getNonce(authDescriptorId: BufferId): Promise<number>;
 }
 
 export type AuthData = {
   flags: string[];
+  message: string;
 };

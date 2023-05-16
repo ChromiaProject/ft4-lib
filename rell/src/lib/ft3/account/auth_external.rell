@@ -1,6 +1,6 @@
 struct signature {
-    r: text;
-    s: text;
+    r: byte_array;
+    s: byte_array;
     v: integer;
 }
 
@@ -25,12 +25,12 @@ function authenticate(required_flags: set<text>, message_template: text): accoun
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
-        previous_op.name in ["ft.eth_auth", "ft.ft_auth"],
+        previous_op.name in ["ft.evm_auth", "ft.ft_auth"],
         "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
     );
 
     val account = when (previous_op.name) {
-        "ft.eth_auth" -> _validate_eth_signature(previous_op.args, required_flags, message_template);
+        "ft.evm_auth" -> _validate_eth_signature(previous_op.args, required_flags, message_template);
         "ft.ft_auth" -> _validate_ft4_signature(previous_op.args, required_flags);
         else -> null;
     };
@@ -44,7 +44,7 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     val message = _create_message(message_template, op_args, validated_args.account_auth_descriptor.ctr);
 
     var recovered_keys = 
-        if (validated_args.account_auth_descriptor.auth_type == auth_type.ES) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
+        if (validated_args.account_auth_descriptor.auth_type in [auth_type.ES, auth_type.S]) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
         else _recover_multiple_eth_keys(message, validated_args.signatures, validated_args.account_auth_descriptor);
     
     validated_args.account_auth_descriptor.ctr += 1;
@@ -53,15 +53,16 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
 }
 
 function _create_message(message_template: text, args: list<gtv>, ctr: integer): text {
+    require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
     var message = message_template;
     for (i in range(args.size())) {
         message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
     }
-    return message.replace("{%d}".format(args.size()), ctr.to_text().replace("\"", ""));
+    return message.replace("{nonce}", ctr.to_text().replace("\"", ""));
 }
 
 function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): eth_auth_args {
-    require(auth_args.size() == 4, "Incorrect number of arguments to auth operation");
+    require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
 
     val account_id = byte_array.from_gtv(auth_args[0]);
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
@@ -109,8 +110,8 @@ function _recover_eth_key(message: text, signature, auth_descriptor_id: byte_arr
 
     val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
     val eth_pubkey = eth_ecrecover(
-        byte_array.from_hex(signature.r),
-        byte_array.from_hex(signature.s),
+        signature.r,
+        signature.s,
         signature.v - 27,
         msg_hash
     );
@@ -146,13 +147,12 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
     return account;
 }
 
-operation eth_auth(
+operation evm_auth(
     account_id: byte_array,
     auth_descriptor_id: byte_array,
-    signatures: list<signature>,
-    disposable_key: pubkey
+    signatures: list<signature>
 ) {
-    require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
+    // require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
 }
 
 operation ft_auth(

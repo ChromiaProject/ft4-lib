@@ -14,6 +14,7 @@ export function createInMemoryFTKeyStore(
   const keyStore = Object.freeze({
     id: signatureProvider.pubKey,
     pubKey: signatureProvider.pubKey,
+    isInteractive: false,
     // Would it be better to receive transaction?
     // If transaction is signed on a different device, it would make sense to be able to display
     // transaction details, so user knows what is being signed.

@@ -87,8 +87,9 @@ export function transactionBuilder(
 
   function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
     return keyHandlers
-      .filter((handler) => handler.keyStore)
-      .map((handler) => handler.keyStore.pubKey);
+      .map((handler) => handler.getSigners())
+      .filter((pubKey) => pubKey)
+      .flat();
   }
 
   async function buildUnsigned() {
@@ -111,28 +112,54 @@ export function transactionBuilder(
     operations: OpAuthPair[]
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers = [];
-    const nested = await Promise.all(
-      operations.map(async (tuple: [Operation, Authenticator]) => {
-        const [operation, authenticator] = tuple;
-        if (operation[0] === "nop") return [operation];
+    const nonces = new Map<Buffer, number>();
+    const processedOperations: Operation[][] = [];
+    for (const tuple of operations) {
+      const [operation, authenticator] = tuple;
+      if (operation[0] === "nop") {
+        processedOperations.push([operation]);
+        continue;
+      }
 
-        const keyHandler = await authenticator.getKeyHandlerForOperation(
-          operation
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation
+      );
+
+      if (!keyHandler) {
+        throw new AuthorizationError(
+          "No keyhandler registered to handle this operation"
         );
-        if (!keyHandler) {
-          throw new AuthorizationError(
-            "No keyhandler registered to handle this operation"
-          );
+      }
+      keyHandlers.push(keyHandler);
+      if (!nonces.has(keyHandler.authDescriptor.id)) {
+        nonces.set(
+          keyHandler.authDescriptor.id,
+          await authenticator.getNonce(keyHandler.authDescriptor.id)
+        );
+      }
+      const nonce = nonces.get(keyHandler.authDescriptor.id);
+      // FIXME `getKeyHandlerForOperation` already calls `getAuthRequirements`
+      // See if we can avoid making two calls? Perhaps it will not be a problem when we start to cache data
+      const authData = await authenticator.getAuthRequirements(operation);
+      const message = authData.message.replace("{nonce}", `${nonce}`);
+      const ops = await keyHandler.authenticate(
+        authenticator.accountId,
+        operation,
+        {
+          flags: authData.flags,
+          message,
         }
-        keyHandlers.push(keyHandler);
-        return await keyHandler.authenticate(
-          authenticator.accountId,
-          operation
-        );
-      })
-    );
+      );
+      // consider keeping nonce value in corresponding key handler
+      ops.forEach((op) => {
+        if (op[0] === "ft.evm_auth") {
+          nonces.set(keyHandler.authDescriptor.id, nonce + 1);
+        }
+      });
+      processedOperations.push(ops);
+    }
     let opsToReturn = [];
-    nested.forEach((item) => {
+    processedOperations.forEach((item) => {
       opsToReturn = isOperation(item)
         ? [...opsToReturn, item]
         : opsToReturn.concat(item);
@@ -142,7 +169,9 @@ export function transactionBuilder(
 
   async function build() {
     const tx = await this.buildUnsigned();
-    this._keyhandlersUsed.forEach((handler: KeyHandler) => handler.sign(tx));
+    await Promise.all(
+      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx))
+    );
     return tx;
   }
 

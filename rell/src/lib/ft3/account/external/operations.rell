@@ -63,7 +63,7 @@ operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_d
 
 query add_auth_descriptor_v2_auth_data() = auth.auth_data(
     ["A"], 
-    "Do you want to add auth descriptor to account %s? Nonce: %s"
+    "Do you want to add auth descriptor to account %s? Nonce: {nonce}"
 );
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
