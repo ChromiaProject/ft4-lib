@@ -7,7 +7,7 @@ import {
   AuthenticatorSession,
   KeyHandler,
 } from "./interfaces";
-import { Operation } from "../utils/types";
+import { Operation, QueryObject } from "../utils/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 
 export function createAuthenicator(
@@ -58,6 +58,14 @@ function createAuthenticatorSession(
   return Object.freeze({
     authenticator,
     getUsedKeyHandlers: () => new Set(usedKeyHandlers),
+    getSigners: () => {
+      let signers = new Set<Buffer>();
+      usedKeyHandlers.forEach(
+        ({ authDescriptor }) =>
+          (signers = new Set([...authDescriptor.signers, ...signers]))
+      );
+      return signers;
+    },
     authenticate: async (operation: Operation) => {
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation
@@ -78,3 +86,15 @@ function createAuthenticatorSession(
     },
   });
 }
+
+export function authDataQuery(operation: Operation): QueryObject {
+  return {
+    name: `${operation[0]}_auth_data`,
+    args: {},
+  };
+}
+
+export const defaultFTAuthData: QueryObject = {
+  name: `ft3.default_auth_data`,
+  args: {},
+};

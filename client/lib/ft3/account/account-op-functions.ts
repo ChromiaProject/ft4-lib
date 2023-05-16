@@ -2,12 +2,20 @@
 import { freeOp, givePointsOp, registerOp } from "./account-dev-operations";
 import {
   addAuthDescriptorOp,
+  addAuthDescriptorV2,
   deleteAllAuthDescriptorsExcludeOp,
   deleteAuthDescriptorOp,
+  deleteAuthDescriptorV2,
   transferOp,
 } from "./account-operations";
-import { Account, XferInput, XferOutput, User } from "./types";
-import { getById } from "./account-query-functions";
+import {
+  Account,
+  XferInput,
+  XferOutput,
+  User,
+  IAuthenticatedAccount,
+} from "./types";
+import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { createPaymentHistoryIterator } from "./payment-history/payment-history-iterator";
@@ -15,12 +23,17 @@ import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
 } from "./payment-history/interfaces";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId, KeyPair } from "../../cryptoUtils";
 import { formatter } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { GtvCompatible } from "../utils/gtv";
-import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Amount } from "../asset/interfaces";
+import { FlagsType, deriveAccountId, toGtv } from "./auth-descriptor";
+import { Connection } from "../interfaces";
+import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
+import { transactionBuilder } from "../utils/transaction-builder";
+import { Authenticator } from "../authentication/interfaces";
+import { call } from "../ft-session";
 
 export async function registerAccount(
   newAuthDesc: AuthDescriptor,
@@ -225,4 +238,120 @@ export async function xcTransfer(): Promise<void> {
   );
   await tx.post();
   await this.sync();*/
+}
+
+export function createAuthenticatedAccount(
+  connection: Connection,
+  authenticator: Authenticator
+): IAuthenticatedAccount {
+  return {
+    authenticator,
+    addAuthDescriptor: (authDescriptor: AuthDescriptor, keyPair: KeyPair) =>
+      _addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
+    deleteAuthDescriptor: (authDescriptorId: BufferId) =>
+      _deleteAuthDescriptor(connection, authenticator, authDescriptorId),
+    transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
+      _transfer(connection, authenticator, receiverId, assetId, amount),
+    xcTransfer: (
+      brid: BufferId,
+      receiverId: BufferId,
+      assetId: BufferId,
+      amount: Amount
+    ) =>
+      _xcTransfer(connection, authenticator, brid, receiverId, assetId, amount),
+    burn: (assetId: BufferId, amount: Amount) =>
+      _burn(connection, authenticator, assetId, amount),
+    ...createAccountObject(connection, authenticator.accountId),
+  };
+}
+
+async function _addAuthDescriptor(
+  connection: Connection,
+  authenticator: Authenticator,
+  authDescriptor: AuthDescriptor,
+  keyPair: KeyPair
+): Promise<void> {
+  const tb = transactionBuilder(authenticator, connection.client);
+
+  const tx = await tb
+    .add(addAuthDescriptorV2(authDescriptor))
+    .addSigners(
+      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor)
+    )
+    .build();
+
+  return tx.postAndWaitConfirmation();
+}
+
+async function _deleteAuthDescriptor(
+  connection: Connection,
+  authenticator: Authenticator,
+  authDescriptorId: BufferId
+): Promise<void> {
+  return call(
+    connection,
+    authenticator,
+    deleteAuthDescriptorV2(authDescriptorId)
+  );
+}
+
+async function _transfer(
+  connection: Connection,
+  authenticator: Authenticator,
+  receiverId: BufferId,
+  assetId: BufferId,
+  amount: Amount
+): Promise<void> {
+  // FIXME: will be removed when 1-to-1 transfer operation is added
+  const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
+    keyHandler.satisfiesAuthRequirements([FlagsType.Transfer])
+  );
+  const input: XferInput = [
+    authenticator.accountId,
+    formatter.ensureBuffer(assetId),
+    keyHandler.authDescriptor.id,
+    amount.value,
+    {},
+  ];
+  const output: XferOutput = [
+    formatter.ensureBuffer(receiverId),
+    formatter.ensureBuffer(assetId),
+    amount.value,
+    {},
+  ];
+  return call(connection, authenticator, transferOp([input], [output]));
+}
+
+/* eslint-disable */
+// @ts-ignore
+async function _xcTransfer(
+  connection: Connection,
+  authenticator: Authenticator,
+  brid: BufferId,
+  receiverId: BufferId,
+  assetId: BufferId,
+  amount: Amount
+): Promise<void> {
+  throw new Error("Not implemented!");
+}
+/* eslint-enable */
+
+async function _burn(
+  connection: Connection,
+  authenticator: Authenticator,
+  assetId: BufferId,
+  amount: Amount
+) {
+  // FIXME: will be removed when 1-to-1 transfer operation is added
+  const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
+    keyHandler.satisfiesAuthRequirements(["T"])
+  );
+  const input: XferInput = [
+    authenticator.accountId,
+    formatter.ensureBuffer(assetId),
+    keyHandler.authDescriptor.id,
+    amount.value,
+    {},
+  ];
+  return call(connection, authenticator, transferOp([input], []));
 }

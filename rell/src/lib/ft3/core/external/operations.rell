@@ -1,5 +1,8 @@
-import ft3: ^^.core;
+import ^^.core;
+import ^^.auth;
 
-operation transfer(inputs: list<ft3.xfer_input>, outputs: list<ft3.xfer_output>) {
-    ft3._transfer(inputs, outputs);
+query transfer_auth_data() = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
+
+operation transfer(inputs: list<core.xfer_input>, outputs: list<core.xfer_output>) {
+    core._transfer(inputs, outputs);
 }

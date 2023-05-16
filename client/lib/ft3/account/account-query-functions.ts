@@ -9,6 +9,7 @@ import {
   accountsByParticipantIdQuery,
   getRateLimitQuery,
   isAuthDescriptorValidQuery,
+  accountAuthDescriptorsByParticipantId,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -21,8 +22,20 @@ import {
 } from "../asset/asset-query-functions";
 import { Connection } from "../interfaces";
 import { formatter, gtv } from "postchain-client";
-import { GtvAuthDescriptor } from "./auth-descriptor/types";
-import { authDescriptor as authDesc } from "./auth-descriptor";
+import {
+  PaymentHistoryCursor,
+  PaymentHistoryFilter,
+} from "./payment-history/types";
+import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
+import {
+  GtvAuthDescriptor,
+  AuthDescriptor,
+  RawAuthDescriptor,
+} from "./auth-descriptor/types";
+import {
+  authDescriptor as authDesc,
+  mapAuthDescriptors,
+} from "./auth-descriptor";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -144,6 +157,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
+  const retriever = createPaymentHistoryRetriever(connection.client, accountId);
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -153,7 +167,16 @@ export function createAccountObject(
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
     // TODO: replace with query function that returns asset descriptor as object not as a tuple
     getAuthDescriptors: () => getAuthDescriptors(connection.client, accountId),
+    getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
+      getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
+    getTransferHistory: async (
+      limit = 100,
+      filter: PaymentHistoryFilter = {},
+      cursor: PaymentHistoryCursor | null = null
+    ) => {
+      return retriever.retrieve(limit, filter, cursor);
+    },
   });
 }
 
@@ -194,4 +217,16 @@ export async function _isAuthDescriptorValid(
   return await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   );
+}
+
+export async function getAuthDescriptorsByParticipantId(
+  connection: Connection,
+  accountId: BufferId,
+  participantId: BufferId
+): Promise<AuthDescriptor[]> {
+  return connection
+    .query<RawAuthDescriptor[]>(
+      accountAuthDescriptorsByParticipantId(accountId, participantId)
+    )
+    .then(mapAuthDescriptors);
 }

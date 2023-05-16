@@ -4,18 +4,28 @@ import {
   FlagsType,
 } from "../../client/lib/ft3/account/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
-import { Account } from "../../client/lib/ft3/account/types";
 import {
   Asset,
   Balance,
   SupportedNumber,
 } from "../../client/lib/ft3/asset/types";
+import {
+  Account,
+  IAuthenticatedAccount,
+} from "../../client/lib/ft3/account/types";
 import { ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtx } from "postchain-client";
 import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
 import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
 import { createAmount } from "../../client/lib/ft3/asset/amount";
+import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
+import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createAuthenicator } from "../../client/lib/ft3/authentication";
+import {
+  createAuthDataService,
+  createConnection,
+} from "../../client/lib/ft3/ft-session";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -91,6 +101,24 @@ class AccountBuilder {
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return await this.session.get.account.by.id(account.id);
+  }
+
+  async buildAuthenticated(): Promise<IAuthenticatedAccount> {
+    const account = await this.registerAccount();
+    await this.addBalanceIfNeeded(account);
+    await this.addPointsIfNeeded(account);
+    const connection = createConnection(this.session.get.gtxClient);
+    const { signatureProvider, authDescriptor } = this.session.user;
+    const keyHandler =
+      createInMemoryFTKeyStore(signatureProvider).createKeyHandler(
+        authDescriptor
+      );
+    const authenticator = createAuthenicator(
+      account.id,
+      [keyHandler],
+      createAuthDataService(connection)
+    );
+    return createAuthenticatedAccount(connection, authenticator);
   }
 
   /* Private functions */

@@ -1,3 +1,4 @@
+import { KeyPair } from "../client/lib/cryptoUtils";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import {
   authDescriptor as ad,
@@ -5,10 +6,12 @@ import {
 } from "../client/lib/ft3/account/auth-descriptor";
 import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Asset } from "../client/lib/ft3/asset/types";
+import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import AccountBuilder from "./util/account-builder";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
-import TestUser from "./util/test-user";
+import TestUser, { newSingleSigUser } from "./util/test-user";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let _ft: ftUserSession;
@@ -155,7 +158,8 @@ describe("Transfer", () => {
   });
 
   it("should succeed burning tokens", async () => {
-    const user = TestUser();
+    const keyPair = new KeyPair();
+    const user = newSingleSigUser(keyPair);
     const ft = _ft.changeUser(user);
 
     const account = await AccountBuilder.account(ft)
@@ -164,19 +168,15 @@ describe("Transfer", () => {
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
       .build();
 
-    await ft.account.token.burn(
-      account.id,
-      asset.id,
-      createAmount(10, asset.decimals)
-    );
+    const session = await createKeyStoreInteractor(
+      ft.get.gtxClient,
+      createInMemoryFTKeyStore(keyPair)
+    ).getSession(account.id);
+    await session.account.burn(asset.id, createAmount(10, asset.decimals));
+    const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
-    const assetBalance = await ft.get.balance.by.accountAndAssetId(
-      account.id,
-      asset.id
-    );
-
-    expect(assetBalance.amount.eq(createAmount(190, asset.decimals))).toBe(
-      true
-    );
+    expect(
+      assetBalance.amount.eq(createAmount(190, asset.decimals))
+    ).toBeTruthy();
   });
 });

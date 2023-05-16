@@ -7,15 +7,23 @@ import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor
 import { User } from "../../client/lib/ft3/account/types";
 import { KeyManager } from "../../client/lib/ft3/account/auth/types";
 import { Operation } from "../../client/lib/ft3/utils/types";
+import { KeyPair } from "../../client/lib/cryptoUtils";
 
 export default function singleSigUser(
+  rule: AuthDescriptorRule | null = null
+): User {
+  return newSingleSigUser(new KeyPair(), rule);
+}
+
+export function newSingleSigUser(
+  keyPair: KeyPair,
   rule: AuthDescriptorRule | null = null
 ): User {
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),
     authorize: (operation: Operation) => Promise.resolve([operation]),
   };
-  const signatureProvider = { ...gtx.newSignatureProvider(), ...km };
+  const signatureProvider = { ...gtx.newSignatureProvider(keyPair), ...km };
   const keymanager: KeyManager = {
     ...km,
     pubKey: Buffer.from(

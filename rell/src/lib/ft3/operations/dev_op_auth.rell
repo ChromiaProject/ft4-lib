@@ -51,7 +51,7 @@ operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
 
 operation dev_authenticated_operation(message_temaplate: text) {
   dev_op.require_dev();
-  require(acc.authenticate(set<text>(["A"]), message_temaplate));
+  acc.authenticate(set<text>(["A"]), message_temaplate);
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
@@ -75,5 +75,5 @@ operation dev_perform_large_transfer(
 ) {
   dev_op.require_dev();
   val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {2}";
-  require(acc.authenticate(set(["A"]), msg_template));
+  acc.authenticate(set(["A"]), msg_template);
 }
