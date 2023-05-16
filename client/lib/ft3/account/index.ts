@@ -28,6 +28,8 @@ import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-histor
 import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { Amount } from "../asset/interfaces";
+import { PaymentHistoryFilter } from "./payment-history/types";
 
 export * from "./auth";
 export * from "./auth-descriptor";
@@ -44,10 +46,16 @@ export const accountQuerySession = (pci: GtxClient) =>
     },
     paymentHistory: {
       iterator: getPaymentHistoryIterator,
-      storeMemory: (accountId: BufferId, pageSize: number) =>
-        createPaymentHistoryStoreMemory(pci, accountId, pageSize),
-      storeLocal: (accountId: BufferId, pageSize: number) =>
-        ensurePaymentHistoryStoreLocal(pci, pageSize, accountId),
+      storeMemory: (
+        accountId: BufferId,
+        pageSize: number,
+        filter: PaymentHistoryFilter | null = null
+      ) => createPaymentHistoryStoreMemory(pci, accountId, pageSize, filter),
+      storeLocal: (
+        accountId: BufferId,
+        pageSize: number,
+        filter: PaymentHistoryFilter | null = null
+      ) => ensurePaymentHistoryStoreLocal(pci, pageSize, accountId, filter),
     },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),
@@ -103,10 +111,10 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         from: BufferId,
         to: BufferId,
         asset: BufferId,
-        amount: bigint
+        amount: Amount
       ) =>
         transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
-      burn: (from: BufferId, asset: BufferId, amount: bigint) =>
+      burn: (from: BufferId, asset: BufferId, amount: Amount) =>
         burnTokens(from, asset, amount, legacyTransactionBuilder(user, pci)),
       xcTransfer: () => xcTransfer(),
     },

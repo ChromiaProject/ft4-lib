@@ -23,6 +23,11 @@ import {
 import { Connection } from "../interfaces";
 import { formatter, gtv } from "postchain-client";
 import {
+  PaymentHistoryCursor,
+  PaymentHistoryFilter,
+} from "./payment-history/types";
+import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
+import {
   GtvAuthDescriptor,
   AuthDescriptor,
   RawAuthDescriptor,
@@ -152,6 +157,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
+  const retriever = createPaymentHistoryRetriever(connection.client, accountId);
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -164,6 +170,13 @@ export function createAccountObject(
     getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
       getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
+    getTransferHistory: async (
+      limit = 100,
+      filter: PaymentHistoryFilter = {},
+      cursor: PaymentHistoryCursor | null = null
+    ) => {
+      return retriever.retrieve(limit, filter, cursor);
+    },
   });
 }
 

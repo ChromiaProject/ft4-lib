@@ -5,13 +5,14 @@ import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
 } from "./account/payment-history/interfaces";
+import { Amount } from "./asset/interfaces";
 import {
   Account,
   RateLimit,
   User,
   IAuthenticatedAccount,
 } from "./account/types";
-import { Asset, AssetAmount, Balance } from "./asset/types";
+import { Asset, Balance } from "./asset/types";
 import { ChainInfo, QueryObject, Operation } from "./utils/types";
 import { IAccount } from "./account/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
@@ -22,7 +23,11 @@ export interface ftUserSession {
   get: ftQuerySession;
   asset: {
     dev: {
-      register: (name: string, brid: BufferId) => Promise<Buffer>;
+      register: (
+        name: string,
+        decimals: number,
+        brid: BufferId
+      ) => Promise<Buffer>;
     };
   };
   balance: {
@@ -30,7 +35,7 @@ export interface ftUserSession {
       give: (
         assetid: BufferId,
         accountid: BufferId,
-        amount: AssetAmount
+        amount: Amount
       ) => Promise<void>;
     };
   };
@@ -58,9 +63,9 @@ export interface ftUserSession {
         from: BufferId,
         to: BufferId,
         asset: BufferId,
-        amount: bigint
+        amount: Amount
       ) => Promise<void>;
-      burn: (from: BufferId, asset: BufferId, amount: bigint) => Promise<void>;
+      burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
       xcTransfer: () => Promise<void>;
     };
     dev: {

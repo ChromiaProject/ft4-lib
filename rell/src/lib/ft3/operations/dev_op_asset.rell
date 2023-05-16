@@ -6,13 +6,13 @@ import ft3: ^^.core;
 
 import xft3: ^^.crosschain;
 
-operation dev_register_asset(name, issuing_brid: byte_array) {
+operation dev_register_asset(name, decimals: integer, issuing_brid: byte_array) {
     dev_op.require_dev();
-    ft3.register_asset(name, issuing_brid);
+    ft3.register_asset(name, decimals, issuing_brid);
 }
 
-operation dev_register_xc_asset(name, issuing_brid: byte_array, origin_brid: byte_array) {
+operation dev_register_xc_asset(name, decimals: integer, issuing_brid: byte_array, origin_brid: byte_array) {
     dev_op.require_dev();
-    val asset = ft3.register_asset(name, issuing_brid);
+    val asset = ft3.register_asset(name, decimals, issuing_brid);
     create xft3.asset_origin (asset, origin_brid);
 }

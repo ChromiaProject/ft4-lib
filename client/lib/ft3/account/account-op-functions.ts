@@ -27,12 +27,12 @@ import { BufferId, KeyPair } from "../../cryptoUtils";
 import { formatter } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { GtvCompatible } from "../utils/gtv";
-import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { Amount } from "../asset/interfaces";
+import { FlagsType, deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../interfaces";
 import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/interfaces";
-import { AssetAmount } from "../asset/types";
 import { call } from "../ft-session";
 
 export async function registerAccount(
@@ -152,24 +152,23 @@ export async function transfer(
   fromAccountId: BufferId,
   toAccountId: BufferId,
   assetId: BufferId,
-  amount: bigint,
+  amount: Amount,
   tb: LegacyTransactionBuilder,
   extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
+  //if we want to check that amount has the correct decimals, do it here
   const input: XferInput = [
     formatter.ensureBuffer(fromAccountId),
     formatter.ensureBuffer(assetId),
     tb.user.authDescriptor.id,
-    // @ts-ignore
-    Number(amount),
+    amount.value,
     extra ?? {},
   ];
 
   const output: XferOutput = [
     formatter.ensureBuffer(toAccountId),
     formatter.ensureBuffer(assetId),
-    // @ts-ignore
-    Number(amount),
+    amount.value,
     extra ?? {},
   ];
 
@@ -179,16 +178,16 @@ export async function transfer(
 export async function burnTokens(
   fromAccountId: BufferId,
   assetId: BufferId,
-  amount: bigint,
+  amount: Amount,
   tb: LegacyTransactionBuilder,
   extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
+  //if we want to check that amount has the correct decimals, do it here
   const input: XferInput = [
     formatter.ensureBuffer(fromAccountId),
     formatter.ensureBuffer(assetId),
     tb.user.authDescriptor.id,
-    // @ts-ignore
-    Number(amount),
+    amount.value,
     extra ?? {},
   ];
   await transferInputsToOutputs([input], [], tb);
@@ -229,7 +228,7 @@ export async function xcTransfer(): Promise<void> {
   /*destinationBRID: BufferId,
   destinationAccountId: BufferId,
   assetId: BufferId,
-  amount: AssetAmount,*/
+  amount: Amount,*/
   throw new Error("Not implemented!");
   /*const tx = await xcTransferOp(
     destinationBRID,
@@ -251,16 +250,16 @@ export function createAuthenticatedAccount(
       _addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
       _deleteAuthDescriptor(connection, authenticator, authDescriptorId),
-    transfer: (receiverId: BufferId, assetId: BufferId, amount: AssetAmount) =>
+    transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
       _transfer(connection, authenticator, receiverId, assetId, amount),
     xcTransfer: (
       brid: BufferId,
       receiverId: BufferId,
       assetId: BufferId,
-      amount: AssetAmount
+      amount: Amount
     ) =>
       _xcTransfer(connection, authenticator, brid, receiverId, assetId, amount),
-    burn: (assetId: BufferId, amount: AssetAmount) =>
+    burn: (assetId: BufferId, amount: Amount) =>
       _burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
   };
@@ -301,23 +300,23 @@ async function _transfer(
   authenticator: Authenticator,
   receiverId: BufferId,
   assetId: BufferId,
-  amount: AssetAmount
+  amount: Amount
 ): Promise<void> {
   // FIXME: will be removed when 1-to-1 transfer operation is added
   const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(["T"])
+    keyHandler.satisfiesAuthRequirements([FlagsType.Transfer])
   );
   const input: XferInput = [
     authenticator.accountId,
     formatter.ensureBuffer(assetId),
     keyHandler.authDescriptor.id,
-    amount,
+    amount.value,
     {},
   ];
   const output: XferOutput = [
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),
-    amount,
+    amount.value,
     {},
   ];
   return call(connection, authenticator, transferOp([input], [output]));
@@ -331,7 +330,7 @@ async function _xcTransfer(
   brid: BufferId,
   receiverId: BufferId,
   assetId: BufferId,
-  amount: AssetAmount
+  amount: Amount
 ): Promise<void> {
   throw new Error("Not implemented!");
 }
@@ -341,7 +340,7 @@ async function _burn(
   connection: Connection,
   authenticator: Authenticator,
   assetId: BufferId,
-  amount: AssetAmount
+  amount: Amount
 ) {
   // FIXME: will be removed when 1-to-1 transfer operation is added
   const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
@@ -351,7 +350,7 @@ async function _burn(
     authenticator.accountId,
     formatter.ensureBuffer(assetId),
     keyHandler.authDescriptor.id,
-    amount,
+    amount.value,
     {},
   ];
   return call(connection, authenticator, transferOp([input], []));

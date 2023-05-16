@@ -5,15 +5,20 @@ import {
 } from "../../client/lib/ft3/account/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
 import {
+  Asset,
+  Balance,
+  SupportedNumber,
+} from "../../client/lib/ft3/asset/types";
+import {
   Account,
   IAuthenticatedAccount,
 } from "../../client/lib/ft3/account/types";
-import { Asset, Balance } from "../../client/lib/ft3/asset/types";
 import { ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtx } from "postchain-client";
 import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
 import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
+import { createAmount } from "../../client/lib/ft3/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
 import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../../client/lib/ft3/authentication";
@@ -58,13 +63,26 @@ class AccountBuilder {
     return this;
   }
 
-  withBalance(asset: Asset, amount: number | bigint): AccountBuilder {
-    this.balances.push({ amount: BigInt(amount), asset });
+  withBalance(
+    asset: Asset,
+    _amount: Exclude<SupportedNumber, bigint>
+  ): AccountBuilder {
+    this.balances.push({
+      amount: createAmount(_amount, asset.decimals),
+      asset,
+    });
     return this;
   }
 
-  withBalances(balances: Balance[]): AccountBuilder {
-    this.balances = this.balances.concat(balances);
+  withBalances(
+    balances: { amount: Exclude<SupportedNumber, bigint>; asset: Asset }[]
+  ): AccountBuilder {
+    this.balances = this.balances.concat(
+      balances.map((b) => ({
+        amount: createAmount(b.amount, b.asset.decimals),
+        asset: b.asset,
+      }))
+    );
     return this;
   }
 
