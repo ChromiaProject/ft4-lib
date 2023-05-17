@@ -22,7 +22,7 @@ import {
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { Connection } from "../interfaces";
-import { formatter, gtv } from "postchain-client";
+import { formatter } from "postchain-client";
 import {
   PaymentHistoryCursor,
   PaymentHistoryFilter,
@@ -121,10 +121,9 @@ export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
 ): Promise<GtvAuthDescriptor[]> {
-  const ads = await session.query(
+  return session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
-  return ads.map((ad) => [ad.auth_type, gtv.decode(ad.args), ad.rule ?? null]);
 }
 
 //this will be outdated as soon as another tx is sent to the same account:
