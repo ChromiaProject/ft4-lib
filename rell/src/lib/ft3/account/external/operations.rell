@@ -67,7 +67,7 @@ query add_auth_descriptor_v2_auth_data(gtv) {
 
     return auth.auth_data(
         ["A"], 
-        "Do you want to add auth descriptor\nwith flags\n%s\to account\n{account_id}? Nonce: {nonce}".format(flags)
+        "Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}?\n\nNonce: {nonce}".format(flags)
     );
 } 
 
