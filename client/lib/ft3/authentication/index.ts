@@ -103,9 +103,10 @@ function createAuthenticatorSession(
 }
 
 export function authDataQuery(operation: Operation): QueryObject {
+  const [opName, ...args] = operation;
   return {
-    name: `${operation[0]}_auth_data`,
-    args: {},
+    name: `${opName}_auth_data`,
+    args: { gtv: args },
   };
 }
 
