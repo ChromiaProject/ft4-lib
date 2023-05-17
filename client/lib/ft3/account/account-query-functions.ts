@@ -9,6 +9,7 @@ import {
   accountsByParticipantIdQuery,
   getRateLimitQuery,
   isAuthDescriptorValidQuery,
+  accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
 } from "./account-queries";
 import * as Query from "./account-queries";
@@ -165,8 +166,7 @@ export function createAccountObject(
     getBalances: () => _getBalancesByAccountId(connection, accountId),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    // TODO: replace with query function that returns asset descriptor as object not as a tuple
-    getAuthDescriptors: () => getAuthDescriptors(connection.client, accountId),
+    getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
     getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
       getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
@@ -217,6 +217,17 @@ export async function _isAuthDescriptorValid(
   return await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   );
+}
+
+export async function _getAuthDescriptors(
+  connection: Connection,
+  accountId: BufferId
+): Promise<AuthDescriptor[]> {
+  return connection
+    .query<RawAuthDescriptor[]>(
+      accountAuthDescriptors(formatter.ensureBuffer(accountId))
+    )
+    .then(mapAuthDescriptors);
 }
 
 export async function getAuthDescriptorsByParticipantId(

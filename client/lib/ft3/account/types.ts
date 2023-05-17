@@ -1,6 +1,6 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { Balance } from "../asset/types";
-import { AuthDescriptor, GtvAuthDescriptor } from "./auth-descriptor/types";
+import { AuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
 import { BufferId, KeyPair } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
@@ -53,7 +53,7 @@ export interface IAccount {
   getBalances: () => Promise<Balance[]>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
-  getAuthDescriptors: () => Promise<GtvAuthDescriptor[]>;
+  getAuthDescriptors: () => Promise<AuthDescriptor[]>;
   getAuthDescriptorsByParticipantId: (
     partiticipantId: BufferId
   ) => Promise<AuthDescriptor[]>;
