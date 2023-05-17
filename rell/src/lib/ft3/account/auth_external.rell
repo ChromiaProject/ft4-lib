@@ -41,7 +41,7 @@ function authenticate(required_flags: set<text>, message_template: text): accoun
 function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, message_template: text): account {
     val validated_args = _validate_eth_arguments(auth_args, required_flags);
     val op_args = op_context.get_all_operations()[op_context.op_index].args;
-    val message = _create_message(message_template, op_args, validated_args.account_auth_descriptor.ctr);
+    val message = _create_message(validated_args, message_template, op_args, validated_args.account_auth_descriptor.ctr);
 
     var recovered_keys = 
         if (validated_args.account_auth_descriptor.auth_type in [auth_type.ES, auth_type.S]) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
@@ -52,13 +52,19 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     return validated_args.account;
 }
 
-function _create_message(message_template: text, args: list<gtv>, ctr: integer): text {
+function _create_message(eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
     var message = message_template;
+    
+    // TODO: check if this is still needed
     for (i in range(args.size())) {
         message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
     }
-    return message.replace("{nonce}", ctr.to_text().replace("\"", ""));
+    
+    return message
+        .replace("{account_id}", eth_auth_args.account.id.to_hex())
+        .replace("{auth_descriptor_id}", eth_auth_args.account_auth_descriptor.id.to_hex())
+        .replace("{nonce}", ctr.to_text().replace("\"", ""));
 }
 
 function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): eth_auth_args {

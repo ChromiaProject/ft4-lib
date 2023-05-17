@@ -61,13 +61,20 @@ operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_d
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
 
-query add_auth_descriptor_v2_auth_data() = auth.auth_data(
-    ["A"], 
-    "Do you want to add auth descriptor to account %s? Nonce: {nonce}"
-);
+query add_auth_descriptor_v2_auth_data(gtv) {
+    val params = struct<add_auth_descriptor_v2>.from_gtv(gtv);
+    val flags = params.new_desc.args[0];
+
+    return auth.auth_data(
+        ["A"], 
+        "Do you want to add auth descriptor\nwith flags\n%s\to account\n{account_id}? Nonce: {nonce}".format(flags)
+    );
+} 
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
-    val auth_data = add_auth_descriptor_v2_auth_data();
+    val auth_data = add_auth_descriptor_v2_auth_data(args());
     val account = acc.authenticate(set(auth_data.flags), auth_data.message);
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
+
+function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();

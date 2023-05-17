@@ -4,6 +4,7 @@ import { AuthData, KeyHandler, KeyStore } from "../interfaces";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 import { EVMKeyStore, evmAuth } from ".";
+import { formatter } from "postchain-client";
 
 export function createEVMKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -32,7 +33,13 @@ async function authenticate(
   authData: AuthData,
   keyStore: EVMKeyStore
 ): Promise<Operation[]> {
-  const signature = await keyStore.signMessage(authData.message);
+  const message = authData.message
+    .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
+    .replace(
+      "{auth_descriptor_id}",
+      formatter.ensureBuffer(authDescriptorId).toString("hex")
+    );
+  const signature = await keyStore.signMessage(message);
   return [evmAuth(accountId, authDescriptorId, [signature]), operation];
 }
 
