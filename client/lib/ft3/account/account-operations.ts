@@ -5,6 +5,7 @@ import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "../../cryptoUtils";
 import { formatter } from "postchain-client";
+import { Amount } from "../asset/interfaces";
 
 export function addAuthDescriptorOp(
   accountId: Buffer,
@@ -55,6 +56,19 @@ export function deleteAuthDescriptorOp(
     accountId,
     authDescriptorId,
     deleteAuthDescriptorId
+  );
+}
+
+export function transferV2(
+  receiverId: BufferId,
+  assetId: BufferId,
+  amount: Amount
+) {
+  return op(
+    "ft3.transfer_one",
+    formatter.ensureBuffer(receiverId),
+    formatter.ensureBuffer(assetId),
+    amount.value
   );
 }
 

@@ -3,3 +3,5 @@ struct auth_data {
     flags: list<text>;
     message: text;
 }
+
+function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
