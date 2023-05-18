@@ -8,7 +8,7 @@ import {
   Connection,
   Session,
 } from "./interfaces";
-import { getChainInfo, getLastTimestamp, getVersion } from "./utils";
+import { getChainInfo, getLastTimestamp, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -87,6 +87,8 @@ export function createSession(
     transactionBuilder: () =>
       transactionBuilder(authenticator, connection.client),
     call: (...operations: Operation[]) =>
+      call(connection, authenticator, ...operations, nop()),
+    callWithoutNop: (...operations: Operation[]) =>
       call(connection, authenticator, ...operations),
     ...connection,
   });
