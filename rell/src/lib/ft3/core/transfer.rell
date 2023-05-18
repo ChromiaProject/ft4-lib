@@ -184,6 +184,36 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
    after_transfer(inputs, outputs);
 }
 
+function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
+   val args = [
+      [(amount, from.id, 0)],
+      [(amount, to.id, 0)]
+   ];
+
+   deduct_balance(from, asset, amount);
+   create payment_history_entry(
+      .account = from,
+      .asset = asset,
+      .delta = amount,
+      .op_index = op_context.op_index,
+      .is_input = true,
+      .entry_index = 0,
+      .transfer_args = args.to_gtv().to_bytes()
+   );
+   val receiver_balance = ensure_balance(to, asset);
+   receiver_balance.amount += amount;
+
+   create payment_history_entry(
+      .account = to,
+      .asset = asset,
+      .delta = amount,
+      .op_index = op_context.op_index,
+      .is_input = false,
+      .entry_index = 0,
+      .transfer_args = args.to_gtv().to_bytes()
+   );
+}
+
 @extendable function before_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
 
 @extendable function after_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
