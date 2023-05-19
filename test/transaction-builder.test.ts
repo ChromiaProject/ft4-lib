@@ -135,7 +135,6 @@ describe("Transaction Builder", () => {
       .add(operation)
       .addSigners(keyHandler)
       .build();
-    console.log(tx.gtx.signers);
     expect(tx.gtx.signers).toStrictEqual(keyHandler.getSigners());
     expect(tx.gtx.signatures).toBeDefined();
   });

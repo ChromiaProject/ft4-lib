@@ -33,10 +33,8 @@ import {
   AuthDescriptor,
   RawAuthDescriptor,
 } from "./auth-descriptor/types";
-import {
-  authDescriptor as authDesc,
-  mapAuthDescriptors,
-} from "./auth-descriptor";
+import { mapAuthDescriptors } from "./auth-descriptor";
+import { createConnection } from "../ft-session";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -98,11 +96,11 @@ async function createAccountObjectFromId(
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(session, id),
-    getAuthDescriptors(session, id),
+    _getAuthDescriptors(createConnection(session), id),
   ]);
   return Object.freeze({
     balances,
-    authDescriptors: authDescriptors.map((ad) => authDesc.fromGtv(ad)),
+    authDescriptors,
     id,
   });
 }
