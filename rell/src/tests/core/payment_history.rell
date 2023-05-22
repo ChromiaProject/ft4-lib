@@ -149,7 +149,7 @@ function test_history_filtering() {
     val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
     val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", 9);
 
     val inputs = [
         core.xfer_input(
