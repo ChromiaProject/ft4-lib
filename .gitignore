@@ -5,6 +5,8 @@
 .idea/*
 .project
 .vscode/*
+.secret
+.pmc
 
 db.log
 
