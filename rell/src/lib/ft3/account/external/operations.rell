@@ -21,15 +21,6 @@ operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byt
     );
 }
 
-query delete_auth_descriptor_v2_auth_data(gtv) {
-    val params = struct<delete_auth_descriptor_v2>.from_gtv(gtv);
-
-    return auth.auth_data(
-        ["A"], 
-        "Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id)
-    );
-} 
-
 function delete_auth_descriptor_message(gtv) {
     val params = struct<delete_auth_descriptor_v2>.from_gtv(gtv);
     return "Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id);
@@ -44,9 +35,7 @@ function () = auth.auth(
 
 operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
-
-    val auth_data = delete_auth_descriptor_v2_auth_data(auth.args());
-    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
+    val account = acc.authenticateV2();
 
     acc._delete_auth_descriptor(
         acc.auth_descriptor_by_id(account, auth_descriptor_id)
@@ -77,16 +66,6 @@ operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_d
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
 
-query add_auth_descriptor_v2_auth_data(gtv) {
-    val params = struct<add_auth_descriptor_v2>.from_gtv(gtv);
-    val flags = params.new_desc.args[0];
-
-    return auth.auth_data(
-        ["A"], 
-        "Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}\n\nNonce: {nonce}".format(flags)
-    );
-} 
-
 function add_auth_descriptor_message(gtv) {
     val params = struct<add_auth_descriptor_v2>.from_gtv(gtv);
     val flags = params.new_desc.args[0];
@@ -102,7 +81,6 @@ function () = auth.auth(
 );
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
-    val auth_data = add_auth_descriptor_v2_auth_data(auth.args());
-    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
+    val account = acc.authenticateV2();
     acc.add_auth_descriptor_to_account(account, new_desc);
 }

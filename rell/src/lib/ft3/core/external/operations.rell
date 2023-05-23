@@ -7,17 +7,6 @@ operation transfer(inputs: list<core.xfer_input>, outputs: list<core.xfer_output
     core._transfer(inputs, outputs);
 }
 
-query transfer_one_auth_data(gtv) {
-    val params = struct<transfer_one>.from_gtv(gtv);
-    val asset = core.Asset(params.asset_id);
-
-    return auth.auth_data(
-        flags = ["T"],
-        message = "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
-            .format(params.amount, asset.name, params.receiver_id)
-    );
-}
-
 function transfer_message(gtv) {
     val params = struct<transfer_one>.from_gtv(gtv);
     val asset = core.Asset(params.asset_id);
@@ -34,12 +23,6 @@ function () = auth.auth(
 );
 
 operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
-    print(auth.auth_handler().keys());
     val account = acc.authenticateV2();
     core.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
-}
-
-query get_auth_handler_keys() {
-    print(auth.auth_handler().keys());
-    return auth.auth_handler().keys();
 }

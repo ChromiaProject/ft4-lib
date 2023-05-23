@@ -143,6 +143,15 @@ function account_by_id(id: byte_array) = require(
     "Account not found: '%s'".format(id)
 );
 
+function single_sig_auth_descriptor(pubkey, flags: set<text>) = auth_descriptor(
+    auth_type = auth_type.S,
+    args = [
+        flags.to_gtv(),
+        pubkey.to_gtv()
+    ],
+    null.to_gtv()
+);
+
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth(auth_descriptor): byte_array {
