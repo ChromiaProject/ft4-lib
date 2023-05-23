@@ -30,6 +30,18 @@ query delete_auth_descriptor_v2_auth_data(gtv) {
     );
 } 
 
+function delete_auth_descriptor_message(gtv) {
+    val params = struct<delete_auth_descriptor_v2>.from_gtv(gtv);
+    return "Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id);
+}
+
+@extend(auth.auth_handler)
+function () = auth.auth(
+    scope = "ft3.delete_auth_descriptor_v2",
+    flags = ["A"],
+    formatter = delete_auth_descriptor_message(*)
+);
+
 operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
 
@@ -74,6 +86,20 @@ query add_auth_descriptor_v2_auth_data(gtv) {
         "Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}\n\nNonce: {nonce}".format(flags)
     );
 } 
+
+function add_auth_descriptor_message(gtv) {
+    val params = struct<add_auth_descriptor_v2>.from_gtv(gtv);
+    val flags = params.new_desc.args[0];
+
+    return "Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}\n\nNonce: {nonce}".format(flags);
+}
+
+@extend(auth.auth_handler)
+function () = auth.auth(
+    scope = "ft3.add_auth_descriptor_v2",
+    flags = ["A"],
+    formatter = add_auth_descriptor_message(*)
+);
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
     val auth_data = add_auth_descriptor_v2_auth_data(auth.args());

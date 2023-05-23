@@ -6,6 +6,33 @@ struct auth_data {
     message: text;
 }
 
+struct _auth_handler {
+    flags: list<text>;
+    message_formatter: ((gtv) -> text)? = null;
+}
+
+@extendable 
+function auth_handler(): map<name, _auth_handler>;
+
+query get_auth_flags(op_name: name) = get_auth_handler(op_name).flags;
+query get_auth_message_template(op_name: name, args: gtv) {
+    val formatter = get_auth_handler(op_name).message_formatter;
+
+    return if (formatter??) formatter(args) else generate_auth_message_template(chain_context.blockchain_rid, gtx_operation(
+        name = op_name,
+        args = list<gtv>.from_gtv(args)
+    ));
+}
+
+function get_auth_handler(op_name: name) {
+    val auth_handlers = auth_handler();
+    return auth_handlers[op_name];
+}
+
+function auth(scope: text, flags: list<text>, formatter: ((gtv) -> text)? = null) {
+    return [scope: _auth_handler(flags, formatter)];
+} 
+
 function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
 
 struct signature {

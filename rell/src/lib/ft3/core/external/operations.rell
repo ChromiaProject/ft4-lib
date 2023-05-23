@@ -18,9 +18,28 @@ query transfer_one_auth_data(gtv) {
     );
 }
 
-operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
-    val auth_data = transfer_one_auth_data(auth.args());
-    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
+function transfer_message(gtv) {
+    val params = struct<transfer_one>.from_gtv(gtv);
+    val asset = core.Asset(params.asset_id);
 
+    return "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
+        .format(params.amount, asset.name, params.receiver_id);
+}
+
+@extend(auth.auth_handler)
+function () = auth.auth(
+    scope = "ft3.transfer_one",
+    flags = ["T"],
+    formatter = transfer_message(*)
+);
+
+operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
+    print(auth.auth_handler().keys());
+    val account = acc.authenticateV2();
     core.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
+}
+
+query get_auth_handler_keys() {
+    print(auth.auth_handler().keys());
+    return auth.auth_handler().keys();
 }

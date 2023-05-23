@@ -1,6 +1,7 @@
 @test
 module;
 
+import ^^^.lib.ft3.auth;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.ft3_basic_dev.*;
@@ -141,6 +142,10 @@ function test_transfer_succeeds_when_enough_balance() {
     assert_equals(core.ensure_balance(bob.account, asset).amount, 3);
 }
 
+function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() {
+    assert_true(false);
+}
+
 function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val alice = utils.evm_register_alice();
     val bob = utils.register_bob();
@@ -156,7 +161,22 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
         ].to_gtv()
     );
 
+    print(auth.auth_handler().keys());
+    print(ft3.transfer_op.get_auth_handler_keys());
+    val receiver_id = bob.account.id;
+    val asset_id = asset.id;
+    val amount = 5L;
+
     val message = utils.create_auth_message(auth_data.message, alice);
+    // val message2 = auth.get_auth_message_template(
+    //     "ft3.transfer_one", 
+    //     [
+    //         receiver_id.to_gtv(), 
+    //         asset_id.to_gtv(), 
+    //         amount.to_gtv()
+    //     ].to_gtv()
+    // );
+
     val signature = utils.metamask_sign(message, alice.keypair.priv);
 
     rell.test.tx()
