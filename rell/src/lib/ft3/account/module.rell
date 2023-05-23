@@ -1,7 +1,8 @@
 @mount('ft')
 module;
 
-import core: ^.core;
+import ^.core;
+import ^.auth;
 
 enum auth_type {
     S, M, ES, EM,
@@ -127,7 +128,7 @@ function _add_eth_auth_participant(account, auth_descriptor, account_auth_descri
     }
 }
 
-function auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
+function _auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
     rate_limit(account);
     require_auth(account, auth_descriptor, required_flags);
 }

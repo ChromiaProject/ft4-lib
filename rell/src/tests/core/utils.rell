@@ -1,20 +1,26 @@
 @test module;
 import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.operations.dev_op_account;
+import ^^^.lib.ft3.operations.dev_op_balance;
 import ^^^.lib.ft3.operations.dev_op_asset;
-import cu: ^^.core.utils;
+import ^^^.lib.ft3.core;
+import ^^^.lib.ft3.auth;
 
-struct auth_id {
-    account_id: byte_array;
+struct account_data {
+    acc.account;
     auth_descriptor_id: byte_array;
-}
-
-struct auth_data {
-    auth_id;
     rell.test.keypair;
 }
 
-function create_ft3_test_acc(rell.test.keypair): auth_data {
+function register_alice() = create_test_account(rell.test.keypairs.alice);
+function register_bob() = create_test_account(rell.test.keypairs.bob);
+function register_eve() = create_test_account(rell.test.keypairs.eve);
+function register_trudy() = create_test_account(rell.test.keypairs.trudy);
+
+function evm_register_alice() = create_evm_auth_test_account(rell.test.keypairs.alice);
+function evm_register_bob() = create_evm_auth_test_account(rell.test.keypairs.bob);
+
+function create_test_account(rell.test.keypair): account_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
     dev_op_account.dev_register_account(auth_descriptor)
         .sign(keypair)
@@ -22,38 +28,58 @@ function create_ft3_test_acc(rell.test.keypair): auth_data {
 
     val account = acc.account_auth_descriptor @ {
         .id == auth_descriptor.hash()
-    } ( .account.id );
+    } ( .account );
 
-    return auth_data(
-        auth_id(account_id = account, auth_descriptor_id = auth_descriptor.hash()),
+    return account_data(
+        account = account, 
+        auth_descriptor_id = auth_descriptor.hash(),
         keypair = keypair
     );
 }
 
-function get_ft3_test_acc(rell.test.keypair): auth_data {
+function create_evm_auth_test_account(rell.test.keypair): account_data {
+    val address = eth_address_from_pubkey(crypto.privkey_to_pubkey(keypair.priv).sub(1));
+    val auth_descriptor = create_auth_descriptor(address);
+    dev_op_account.register_account_test(auth_descriptor)
+        .sign(keypair)
+        .run();
+
+    val account = acc.account_auth_descriptor @ {
+        .id == auth_descriptor.hash()
+    } ( .account );
+
+    return account_data(
+        account = account, 
+        auth_descriptor_id = auth_descriptor.hash(),
+        keypair = keypair
+    );
+}
+
+function get_ft3_test_acc(rell.test.keypair): account_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
 
     val account = acc.account_auth_descriptor @ {
         .id == auth_descriptor.hash()
-    } ( .account.id );
+    } ( .account );
 
-    return auth_data(
-        auth_id(account_id = account, auth_descriptor_id = auth_descriptor.hash()),
+    return account_data(
+        account = account, 
+        auth_descriptor_id = auth_descriptor.hash(),
         keypair = keypair
     );
 }
 
-function create_auth_descriptor(pubkey): acc.auth_descriptor {
+function create_auth_descriptor(participant_id: byte_array): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.S,
         [
             ["T"].to_gtv(),
-            pubkey.to_hex().to_gtv()
+            participant_id.to_hex().to_gtv()
         ],
         rules = null.to_gtv());
 }
 
-function create_asset(name: text, decimals: integer): byte_array {
+function create_asset(name: text, decimals: integer) {
     dev_op_asset.dev_register_asset(
             name,
             decimals,
@@ -62,7 +88,7 @@ function create_asset(name: text, decimals: integer): byte_array {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    return (name, chain_context.blockchain_rid).hash();
+    return core.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
 }
 
 function create_asset_tx(name: text, decimals: integer): rell.test.tx {
@@ -79,28 +105,23 @@ function assert_error(rell.test.tx, error_message: text) {
 }
 
 /*
- * Looks up the "account Auth Desc" and uses the found id to build the "auth_id" struct.
- */
-function _build_auth_id(auth_desc_id: byte_array) {
-    val account = acc.account_auth_descriptor @ {
-        .id == auth_desc_id 
-    } ( .account.id );
-
-    return auth_id(account_id = account, auth_descriptor_id = auth_desc_id);
-}
-
-/*
  * Creates a single sig Auth Desc.
  *
- * returns "auth_data"
+ * returns "account_data"
  */
-function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): auth_data {
+function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): account_data {
     dev_op_account.dev_register_account(auth_descriptor)
         .sign(keypair)
         .run();
+    
+    val auth_descriptor_id = auth_descriptor.hash();
+    val account = acc.account_auth_descriptor @ {
+        .id == auth_descriptor_id 
+    } .account;
 
-    return auth_data(
-        _build_auth_id(auth_descriptor.hash()),
+    return account_data(
+        account,
+        auth_descriptor_id,
         keypair = keypair
     ); 
 }
@@ -109,27 +130,63 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
 /*
  * Creates a multi sig Auth Desc.
  *
- * returns "auth_data"
+ * returns "account_data"
  */
-function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): auth_data {
+function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): account_data {
     val op = dev_op_account.dev_register_account(auth_descriptor);
     var tx = _sign_many(op, keys); 
     tx.run();
 
-    return auth_data(
-        _build_auth_id(auth_descriptor.hash()),
+    val auth_descriptor_id = auth_descriptor.hash();
+    val account = acc.account_auth_descriptor @ {
+        .id == auth_descriptor_id 
+    } .account;
+
+    return account_data(
+        account,
+        auth_descriptor_id,
         keypair = keys[0] // Doesn't matter much which we use
     ); 
 }
 
 function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
-    var tx: rell.test.tx = op.sign(keys[0]); // Yeah, it's ugly but it was hard to get the types right.
-    var i = 0;
-    for (k in keys) {
-        if (i > 0) {
-            tx = tx.sign(k);
-        }
-        i += 1;
-    }    
+    val tx = rell.test.tx(op);
+    keys @* {} (tx.sign($));
     return tx;
 }
+
+function mint_to_account(account_data, core.asset, amount: big_integer) {
+    dev_op_balance.dev_give_balance(asset.id, account_data.account.id, amount)
+        .sign(rell.test.keypairs.alice)
+        .run();
+}
+
+function create_auth_message(auth.auth_data, account_data) {
+    val nonce = acc.account_auth_descriptor @ { 
+        account_data.account,
+        .id == account_data.auth_descriptor_id
+    }.ctr;
+
+    return auth_data.message
+        .replace("{account_id}", account_data.account.id.to_hex())
+        .replace("{auth_descriptor_id}", account_data.auth_descriptor_id.to_hex())
+        .replace("{nonce}", nonce.to_text());
+}
+
+function metamask_sign(message: text, privkey: byte_array) {
+    val hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
+    return eth_sign(hash, privkey);
+}
+
+function eth_sign(hash: byte_array, privkey: byte_array) {
+    val (r, s, rec_id) = crypto.eth_sign(hash, privkey);
+    return auth.signature(
+        r = r,
+        s = s,
+        v = 27 + rec_id
+    );
+}
+
+function eth_hex_address_from_pubkey(pubkey) = "0x" + eth_address_from_pubkey(pubkey).to_hex();
+
+function eth_address_from_pubkey(pubkey) = keccak256(pubkey).sub(12);

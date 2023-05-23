@@ -1,3 +1,5 @@
+@mount('ft')
+module;
 
 struct auth_data {
     flags: list<text>;
@@ -5,3 +7,23 @@ struct auth_data {
 }
 
 function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
+
+struct signature {
+    r: byte_array;
+    s: byte_array;
+    v: integer;
+}
+
+operation evm_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array,
+    signatures: list<signature>
+) {
+    // require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
+}
+
+operation ft_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array
+) {}
+

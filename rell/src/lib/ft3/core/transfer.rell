@@ -15,10 +15,10 @@ struct xfer_output {
    extra: map<text, gtv>;
 }
 
-function deduct_balance(acc.account, asset, d_amount: big_integer) {
-    val b = balance @ { account, asset };
-    require( b.amount >= d_amount, "Balance is too low");
-    update b (amount -= d_amount);
+function deduct_balance(acc.account, asset, amount: big_integer) {
+    val balance = balance @ { account, asset };
+    require(balance.amount >= amount, "Balance is too low");
+    balance.amount -= amount;
 }
 
 function consume_input (
@@ -59,7 +59,7 @@ function consume_input (
       }
 
       val account = acc.account @ { .id == i.account_id };
-      acc.auth(
+      acc._auth(
          account, 
          acc.account_auth_descriptor @ { 
             .id == i.auth_descriptor_id, 
@@ -185,10 +185,15 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
 }
 
 function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
+   require(amount > 0, "Expected amount greater than 0. Fround %d".format(amount));
+   require(from != to, "Sender and reciver have to be different");
+
    val args = [
       [(amount, from.id, 0)],
       [(amount, to.id, 0)]
    ];
+
+   before_transfer_one(from, to, asset, amount);
 
    deduct_balance(from, asset, amount);
    create payment_history_entry(
@@ -200,9 +205,8 @@ function transfer_one(from: acc.account, to: acc.account, core.asset, amount: bi
       .entry_index = 0,
       .transfer_args = args.to_gtv().to_bytes()
    );
-   val receiver_balance = ensure_balance(to, asset);
-   receiver_balance.amount += amount;
-
+   
+   ensure_balance(to, asset).amount += amount;
    create payment_history_entry(
       .account = to,
       .asset = asset,
@@ -212,7 +216,13 @@ function transfer_one(from: acc.account, to: acc.account, core.asset, amount: bi
       .entry_index = 0,
       .transfer_args = args.to_gtv().to_bytes()
    );
+
+   after_transfer_one(from, to, asset, amount);
 }
+
+@extendable function before_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
+
+@extendable function after_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
 
 @extendable function before_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
 

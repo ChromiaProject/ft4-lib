@@ -2,7 +2,7 @@
 @test
 module;
 
-import cu: ^^.core.utils;
+import ^^.core.utils;
 import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.operations.dev_op_auth;
@@ -20,10 +20,10 @@ import ^^^.lib.ft3.operations.dev_op_account;
 function required_flags() = ["T"];  
 
 function test_happy_valid() {
-    val alice_auth_id = cu.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+    val alice = utils.register_alice();
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -31,11 +31,11 @@ function test_happy_valid() {
 }
 
 function test_invalid_required_flags() {
-    val alice_auth_id = cu.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+    val alice = utils.register_alice();
 
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, bad_required_flags))
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -43,10 +43,10 @@ function test_invalid_required_flags() {
 }
 
 function test_invalid_single_signer() {
-    val alice_auth_id = cu.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+    val alice = utils.register_alice();
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.bob) // <---- We sign with wrong user "Bob"
         .run();
     
@@ -54,10 +54,10 @@ function test_invalid_single_signer() {
 }
 
 function test_not_signed() {
-    val alice_auth_id = cu.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
+    val alice = utils.register_alice();
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .run(); // <--- No signing at all
 
     assert_equals(dev_op_auth.dev_error.msg, "The participant is not the signer of this transaction.");
