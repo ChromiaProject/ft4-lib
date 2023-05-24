@@ -186,7 +186,7 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
 
 function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
    require(amount > 0, "Expected amount greater than 0. Found %d".format(amount));
-   require(from != to, "Sender and reciver have to be different");
+   require(from != to, "Sender and receiver have to be different");
 
    val args = [
       [(amount, from.id, 0)],
