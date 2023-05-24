@@ -184,46 +184,40 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
    after_transfer(inputs, outputs);
 }
 
-function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
-   require(amount > 0, "Expected amount greater than 0. Fround %d".format(amount));
-   require(from != to, "Sender and reciver have to be different");
+namespace Unsafe {
+   function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
+      require(amount > 0, "Expected amount greater than 0. Fround %d".format(amount));
+      require(from != to, "Sender and reciver have to be different");
 
-   val args = [
-      [(amount, from.id, 0)],
-      [(amount, to.id, 0)]
-   ];
+      val args = [
+         [(amount, from.id, 0)],
+         [(amount, to.id, 0)]
+      ];
 
-   before_transfer_one(from, to, asset, amount);
+      before_transfer_one(from, to, asset, amount);
 
-   deduct_balance(from, asset, amount);
-   create payment_history_entry(
-      .account = from,
-      .asset = asset,
-      .delta = amount,
-      .op_index = op_context.op_index,
-      .is_input = true,
-      .entry_index = 0,
-      .transfer_args = args.to_gtv().to_bytes()
-   );
-   
-   ensure_balance(to, asset).amount += amount;
-   create payment_history_entry(
-      .account = to,
-      .asset = asset,
-      .delta = amount,
-      .op_index = op_context.op_index,
-      .is_input = false,
-      .entry_index = 0,
-      .transfer_args = args.to_gtv().to_bytes()
-   );
+      deduct_balance(from, asset, amount);
+      create payment_history_entry(
+         .account = from,
+         .asset = asset,
+         .delta = amount,
+         .op_index = op_context.op_index,
+         .is_input = true,
+         .entry_index = 0,
+         .transfer_args = args.to_gtv().to_bytes()
+      );
+      
+      ensure_balance(to, asset).amount += amount;
+      create payment_history_entry(
+         .account = to,
+         .asset = asset,
+         .delta = amount,
+         .op_index = op_context.op_index,
+         .is_input = false,
+         .entry_index = 0,
+         .transfer_args = args.to_gtv().to_bytes()
+      );
 
-   after_transfer_one(from, to, asset, amount);
+      after_transfer_one(from, to, asset, amount);
+   }
 }
-
-@extendable function before_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
-
-@extendable function after_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
-
-@extendable function before_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
-
-@extendable function after_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);

@@ -22,5 +22,5 @@ operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: bi
     val auth_data = transfer_one_auth_data(auth.args());
     val account = acc.authenticate(set(auth_data.flags), auth_data.message);
 
-    core.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
+    core.Unsafe.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
 }

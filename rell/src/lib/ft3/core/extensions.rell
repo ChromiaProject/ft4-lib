@@ -1,0 +1,8 @@
+
+@extendable function before_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
+
+@extendable function after_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
+
+@extendable function before_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
+
+@extendable function after_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
