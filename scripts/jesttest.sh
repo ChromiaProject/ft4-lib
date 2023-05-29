@@ -102,7 +102,9 @@ done
 
 
 echo "> npx jest" "$opt" "\n"
-npx jest $opt $@
+npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts && \
+    npx jest -maxWorkers=1 --testPathPattern=payment-history-iterator.test.ts
+
 if test $? -eq 0
 then 
     if $docker; then
