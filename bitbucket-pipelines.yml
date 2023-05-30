@@ -28,3 +28,4 @@ definitions:
         POSTGRES_DB: 'postchain_test' 
         POSTGRES_USER: 'postchain'
         POSTGRES_PASSWORD: 'postchain'
+        POSTGRES_INITDB_ARGS: '--lc-collate=C.UTF-8 --lc-type=C.UTF-8'
