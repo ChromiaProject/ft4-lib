@@ -77,9 +77,9 @@ if [ "$test_string" ]; then
 fi
 
 if $docker; then
-    docker run --name postchain_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
+    docker run --name ft4_jest_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
         --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
-        --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain_test \
+        --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain \
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null;
 fi
 
@@ -108,14 +108,14 @@ npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts && \
 if test $? -eq 0
 then 
     if $docker; then
-        docker stop postchain_test  > /dev/null 
-        docker rm postchain_test > /dev/null
+        docker stop ft4_jest_test  > /dev/null 
+        docker rm ft4_jest_test > /dev/null
     fi
     kill $prc
 else
     if $docker; then
-        docker stop postchain_test  > /dev/null 
-        docker rm postchain_test > /dev/null
+        docker stop ft4_jest_test  > /dev/null 
+        docker rm ft4_jest_test > /dev/null
     fi
     kill $prc
     if [ "$EXIT_ON_ERROR" -eq 1 ]; then
