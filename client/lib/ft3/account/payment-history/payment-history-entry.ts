@@ -75,12 +75,10 @@ export function createPaymentHistoryEntryFromResponse(
   const args = (<[bigint, string][][]>(
     gtv.decode(Buffer.from(transfer_args, "hex"))
   )).map((list) =>
-    list.map(
-      (a): PaymentHistoryTransferArgs => ({
-        amount: a[0],
-        accountId: formatter.ensureBuffer(a[1]),
-      })
-    )
+    list.map((a) => ({
+      amount: a[0],
+      accountId: formatter.ensureBuffer(a[1]),
+    }))
   );
 
   return createPaymentHistoryEntry(
