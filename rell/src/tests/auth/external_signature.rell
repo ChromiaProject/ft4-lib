@@ -413,7 +413,7 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
   var message = "Invalid message template. Nonce: {nonce}";
   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 
-  val tx = rell.test.tx()
+  rell.test.tx()
     .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
     // Operation internally calls authenticate but doesn't pass auth message template
     .op(test_operations.operation_without_auth_message_template(
@@ -424,7 +424,6 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
       x"abcdef",
       "text value",
       null
-    ));
-
-    utils.assert_error(tx, "Invalid signature");
+    ))
+    .run_must_fail("Invalid signature");
 }

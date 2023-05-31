@@ -3,10 +3,10 @@ import ^^.core;
 import ^^.auth;
 
 
-query default_auth_data() = auth.auth_data(list<text>(), "");
+query default_auth_data(gtv) = auth.auth_data(list<text>(), "");
 
-query dev_register_account_auth_data() = auth.auth_data(["A"], "Do you want to create a new account for key %s? Nonce: %s");
-query dev_give_points_auth_data() = auth.auth_data(["A"], "Do you want to give %s points to account %s? Nonce: %s");
-query dev_give_balance_auth_data() = auth.auth_data(["A"], "Do you want to give balance %s to account %s? Nonce: %s");
-query dev_register_asset_auth_data() = auth.auth_data(["A"], "Do you want to register the asset %s? Nonce: %s");
-query dev_free_op_auth_data() = auth.auth_data(["A"], "");
+query dev_register_account_auth_data(gtv) = auth.auth_data(["A"], "Do you want to create a new account for key %s? Nonce: %s");
+query dev_give_points_auth_data(gtv) = auth.auth_data(["A"], "Do you want to give %s points to account %s? Nonce: %s");
+query dev_give_balance_auth_data(gtv) = auth.auth_data(["A"], "Do you want to give balance %s to account %s? Nonce: %s");
+query dev_register_asset_auth_data(gtv) = auth.auth_data(["A"], "Do you want to register the asset %s? Nonce: %s");
+query dev_free_op_auth_data(gtv) = auth.auth_data(["A"], "");

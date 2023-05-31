@@ -2,7 +2,7 @@ import acc: ^^.account;
 import ^^.core;
 import ^^.auth;
 
-query delete_auth_descriptor_auth_data() = auth.auth_data(
+query delete_auth_descriptor_auth_data(gtv) = auth.auth_data(
     ["A"], 
     "Do you want to delete auth descriptor from account %s? Nonce: %s"
 );
@@ -42,7 +42,7 @@ operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     );    
 }
 
-query delete_all_auth_descriptors_exclude_auth_data() = auth.auth_data(
+query delete_all_auth_descriptors_exclude_auth_data(gtv) = auth.auth_data(
     ["A"], 
     "Do you want to delete all auth descriptors from account %s? Nonce: %s"
 );
@@ -55,7 +55,7 @@ operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descr
     acc._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
 
-query add_auth_descriptor_auth_data() = auth.auth_data(
+query add_auth_descriptor_auth_data(gtv) = auth.auth_data(
     ["A"], 
     "Do you want to add auth descriptor to account %s? Nonce: %s"
 );

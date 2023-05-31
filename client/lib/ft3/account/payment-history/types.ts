@@ -1,7 +1,7 @@
 import { Amount } from "../../asset/interfaces";
 
 export type PaymentHistoryTransferArgs = {
-  amount: bigint;
+  amount: Amount;
   accountId: Buffer;
 };
 

@@ -100,10 +100,6 @@ function create_asset_tx(name: text, decimals: integer): rell.test.tx {
         .sign(rell.test.keypairs.alice);
 }
 
-function assert_error(rell.test.tx, error_message: text) {
-  assert_true(tx.run_must_fail().message.ends_with(error_message));
-}
-
 /*
  * Creates a single sig Auth Desc.
  *
