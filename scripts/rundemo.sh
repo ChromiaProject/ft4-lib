@@ -8,16 +8,16 @@ forceexit(){
 exitfn () {
     trap "forceexit" 2
     echo; echo 'Stopping docker, hit Ctrl+C to force quit'
-    docker stop postchain_demo  > /dev/null 
-    docker rm postchain_demo > /dev/null
+    docker stop ft4_demo  > /dev/null 
+    docker rm ft4_demo > /dev/null
     exit 2
 }
 
 trap "exitfn" 2
 
-docker run --name postchain_demo -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
+docker run --name ft4_demo -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
     --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
-    --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain_demo \
+    --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain \
     -e POSTGRES_PASSWORD=postchain -p 5433:5432 -d postgres > /dev/null;
 
 

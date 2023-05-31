@@ -1,7 +1,7 @@
 import ^^.core;
 import ^^.auth;
 
-query transfer_auth_data() = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
+query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
 
 operation transfer(inputs: list<core.xfer_input>, outputs: list<core.xfer_output>) {
     core._transfer(inputs, outputs);
@@ -22,5 +22,5 @@ operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: bi
     val auth_data = transfer_one_auth_data(auth.args());
     val account = acc.authenticate(set(auth_data.flags), auth_data.message);
 
-    core.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
+    core.Unsafe.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
 }
