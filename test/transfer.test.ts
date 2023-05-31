@@ -20,7 +20,7 @@ let asset: Asset;
 describe("Transfer", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    asset = await getNewAsset(_ft, undefined, 5);
+    asset = await getNewAsset(_ft, undefined, undefined, 5);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {

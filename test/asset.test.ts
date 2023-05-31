@@ -1,4 +1,8 @@
-import { generateAssetName, generateId } from "./util/util";
+import {
+  generateAssetName,
+  generateAssetSymbol,
+  generateId,
+} from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
@@ -29,9 +33,10 @@ describe("Asset", () => {
 
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
+    const assetSymbol = generateAssetSymbol();
     const brid = generateId();
     const assetId = ft.get.asset.id(assetName, brid);
-    await getNewAsset(ft, assetName, 3, brid);
+    await getNewAsset(ft, assetName, assetSymbol, 3, brid);
 
     const expectedAsset = await connection.getAssetById(assetId);
 

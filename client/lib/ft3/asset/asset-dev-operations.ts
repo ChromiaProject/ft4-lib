@@ -4,10 +4,12 @@ import { Amount } from "../asset/interfaces";
 
 export function registerAssetOp(
   name: string,
+  symbol: string,
   decimals: number,
-  brid: Buffer
+  brid: Buffer,
+  iconUrl: string
 ): Operation {
-  return op("ft3.dev_register_asset", name, decimals, brid);
+  return op("ft3.dev_register_asset", name, symbol, decimals, brid, iconUrl);
 }
 
 export function giveBalanceOp(

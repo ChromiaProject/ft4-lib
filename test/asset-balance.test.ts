@@ -27,7 +27,7 @@ describe("Asset balance", () => {
     ft = await getUserSession();
     connection = createConnection(ft.get.gtxClient);
     asset1 = await getNewAsset(ft);
-    asset2 = await getNewAsset(ft, undefined, 5);
+    asset2 = await getNewAsset(ft, undefined, undefined, 5);
   });
 
   beforeEach(() => {

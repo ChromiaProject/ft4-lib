@@ -41,11 +41,19 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     asset: {
       dev: {
-        register: (name: string, decimals: number, brid: BufferId) =>
+        register: (
+          name: string,
+          symbol: string,
+          decimals: number,
+          brid: BufferId,
+          iconUrl: string
+        ) =>
           registerAsset(
             name,
+            symbol,
             decimals,
             brid,
+            iconUrl,
             legacyTransactionBuilder(user, pci)
           ),
       },

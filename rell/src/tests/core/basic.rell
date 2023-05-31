@@ -55,14 +55,14 @@ function test_an_invalid_descriptor_can_not_be_added() {
 }
 
 function test_an_asset_can_be_created() {
-  utils.create_asset("a", 0);
-  utils.create_asset("b", 1);
-  utils.create_asset("c", 50);
-  utils.create_asset("d", 78);
+  utils.create_asset("a", "a", 0);
+  utils.create_asset("b", "b", 1);
+  utils.create_asset("c", "c", 50);
+  utils.create_asset("d", "d", 78);
 }
 
 function test_an_invalid_asset_cannot_be_created() {
   val error = "Decimals must be between 0 and 78 (included)";
-  utils.assert_error(utils.create_asset_tx("e", -1), error);
-  utils.assert_error(utils.create_asset_tx("f", 79), error);
+  utils.assert_error(utils.create_asset_tx("e", "e", -1), error);
+  utils.assert_error(utils.create_asset_tx("f", "f", 79), error);
 }

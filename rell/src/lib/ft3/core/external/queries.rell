@@ -36,8 +36,10 @@ query get_asset_by_name(name) {
     return core.asset @* { name } (
         id = .id,
         name = .name,
+        symbol = .symbol,
         decimals = .decimals,
-        brid = .issuing_brid
+        brid = .issuing_brid,
+        icon_url = .icon_url
     );
 
 }
@@ -48,17 +50,21 @@ query get_asset_by_id(asset_id: byte_array) {
     }(
         id = .id,
         name = .name,
+        symbol = .symbol,
         decimals = .decimals,
-        brid = .issuing_brid
+        brid = .issuing_brid,
+        icon_url = .icon_url
     );
 }
 
 query get_all_assets() {
     return core.asset @* {} (
         id = .id,
+        symbol = .symbol,
         name = .name,
         decimals = .decimals,
-        brid = .issuing_brid
+        brid = .issuing_brid,
+        icon_url = .icon_url
     );
 }
 

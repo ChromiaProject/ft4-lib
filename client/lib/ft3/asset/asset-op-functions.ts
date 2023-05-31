@@ -8,12 +8,22 @@ import { nop } from "../utils";
 
 export async function registerAsset(
   name: string,
+  symbol: string,
   decimals: number,
   brid: BufferId,
+  iconUrl: string,
   tb: LegacyTransactionBuilder
 ): Promise<Buffer> {
   const tx = await tb
-    .add(registerAssetOp(name, decimals, formatter.ensureBuffer(brid)))
+    .add(
+      registerAssetOp(
+        name,
+        symbol,
+        decimals,
+        formatter.ensureBuffer(brid),
+        iconUrl
+      )
+    )
     .add(nop())
     .buildSigned();
   await tx.postAndWaitConfirmation();
