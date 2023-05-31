@@ -70,7 +70,7 @@ while :; do
 done
 
 if [ -z "$opt" ]; then
-    opt="test"
+    opt=""
 fi
 if [ "$test_string" ]; then
     opt="$opt -t ${test_string%?}"
@@ -101,9 +101,9 @@ do
 done
 
 
-echo "> npx jest" "$opt" "\n"
-npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts && \
-    npx jest -maxWorkers=1 --testPathPattern=payment-history-iterator.test.ts
+echo "> Starting jest tests with options: " "$opt" "\n"
+npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts $opt && \
+    npx jest -maxWorkers=1 --testPathPattern=payment-history-iterator.test.ts $opt
 
 if test $? -eq 0
 then 
