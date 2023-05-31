@@ -102,8 +102,9 @@ done
 
 
 echo "> Starting jest tests with options: " "$opt" "\n"
-npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts $opt && \
-    npx jest -maxWorkers=1 --testPathPattern=payment-history-iterator.test.ts $opt
+npx jest -maxWorkers=1 --testPathPattern=payment-history-iterator.test.ts $opt && \
+    npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts $opt
+
 
 if test $? -eq 0
 then 

@@ -27,3 +27,19 @@ operation ft_auth(
     auth_descriptor_id: byte_array
 ) {}
 
+// Creates message from operation name and arguments.
+// It is used when `evm_auth` is used to authenticate the user, 
+// but auth message is not specified for the operation.
+function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
+    var message = "Please sign the message to call\noperation:\n- %s\n\n".format(op.name);
+
+    if (op.args.size() > 0) {
+        var arguments = "with arguments:\n";
+        for (arg in op.args) {
+            arguments = arguments + "- %s\n".format(arg).replace("\"", "");
+        }
+        message = message + arguments + "\n";
+    }
+    
+    return message + "Nonce: {nonce}";
+}

@@ -114,12 +114,10 @@ export function paymentHistoryEntryToJSON(phe: PaymentHistoryEntry): string {
     //brid,
   } = phe;
   const txArgs = [transferInputArgs, transferOutputArgs].map((list) =>
-    list.map((a) => {
-      return {
-        amount: a.amount,
-        accountId: a.accountId.toString("hex"),
-      };
-    })
+    list.map((a) => ({
+      amount: a.amount,
+      accountId: a.accountId.toString("hex"),
+    }))
   );
   return JSON.stringify({
     rowid,

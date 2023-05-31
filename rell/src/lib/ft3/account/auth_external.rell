@@ -15,7 +15,7 @@ function Account(id: byte_array) = require(
     "Account not found: %s".format(id)
 );
 
-function authenticate(required_flags: set<text>, message_template: text): account {
+function authenticate(required_flags: set<text>, message_template: text? = null): account {
     require(op_context.op_index > 0, "Expected at least two operations");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
@@ -25,7 +25,7 @@ function authenticate(required_flags: set<text>, message_template: text): accoun
     );
 
     val account = when (previous_op.name) {
-        "ft.evm_auth" -> _validate_eth_signature(previous_op.args, required_flags, message_template);
+        "ft.evm_auth" -> _validate_eth_signature(previous_op, required_flags, message_template);
         "ft.ft_auth" -> _validate_ft4_signature(previous_op.args, required_flags);
         else -> null;
     };
@@ -33,10 +33,16 @@ function authenticate(required_flags: set<text>, message_template: text): accoun
     return require(account, "Invalid auth operation: %s".format(previous_op.name));
 }
 
-function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, message_template: text): account {
-    val validated_args = _validate_eth_arguments(auth_args, required_flags);
-    val op_args = op_context.get_all_operations()[op_context.op_index].args;
-    val message = _create_message(validated_args, message_template, op_args, validated_args.account_auth_descriptor.ctr);
+function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<text>, auth_message_template: text?): account {
+    val validated_args = _validate_eth_arguments(auth_op.args, required_flags);
+    val op_to_auth = op_context.get_all_operations()[op_context.op_index];
+    val template = auth_message_template ?: auth.generate_auth_message_template(chain_context.blockchain_rid, op_to_auth);
+    val message = create_message_from_template(
+        validated_args, 
+        template, 
+        op_to_auth.args, 
+        validated_args.account_auth_descriptor.ctr
+    );
 
     var recovered_keys = 
         if (validated_args.account_auth_descriptor.auth_type in [auth_type.ES, auth_type.S]) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
@@ -47,7 +53,7 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     return validated_args.account;
 }
 
-function _create_message(eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
+function create_message_from_template(eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
     var message = message_template;
     
