@@ -57,7 +57,9 @@ export function legacyTransactionBuilder(
 
         let auth_data: AuthData = null;
         try {
-          auth_data = await client.query(`${operation[0]}_auth_data`);
+          auth_data = await client.query(`${operation[0]}_auth_data`, {
+            gtv: operation[1],
+          });
         } catch {
           auth_data = await client.query(`ft3.default_auth_data`);
         }
