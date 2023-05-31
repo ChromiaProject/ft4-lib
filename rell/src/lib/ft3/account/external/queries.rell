@@ -26,9 +26,9 @@ query get_account_auth_descriptors(id: byte_array) {
     return acc.account_auth_descriptor @* {
         .account.id == id
     } (
-        .auth_type,
-        .args,
-        .rules
+        type = .auth_type,
+        args = gtv.from_bytes(.args),
+        rules = gtv.from_bytes(.rules)
     );
 }
 

@@ -146,5 +146,6 @@ export interface Connection {
 export interface Session extends Connection {
   account: IAuthenticatedAccount;
   call: (...operations: Operation[]) => Promise<void>;
+  callWithoutNop: (...operations: Operation[]) => Promise<void>;
   transactionBuilder: () => TransactionBuilder;
 }

@@ -7,6 +7,7 @@ import {
   deleteAuthDescriptorOp,
   deleteAuthDescriptorV2,
   transferOp,
+  transferV2,
 } from "./account-operations";
 import {
   Account,
@@ -28,7 +29,7 @@ import { formatter } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { GtvCompatible } from "../utils/gtv";
 import { Amount } from "../asset/interfaces";
-import { FlagsType, deriveAccountId, toGtv } from "./auth-descriptor";
+import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../interfaces";
 import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
@@ -302,24 +303,11 @@ async function _transfer(
   assetId: BufferId,
   amount: Amount
 ): Promise<void> {
-  // FIXME: will be removed when 1-to-1 transfer operation is added
-  const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements([FlagsType.Transfer])
+  return call(
+    connection,
+    authenticator,
+    transferV2(receiverId, assetId, amount)
   );
-  const input: XferInput = [
-    authenticator.accountId,
-    formatter.ensureBuffer(assetId),
-    keyHandler.authDescriptor.id,
-    amount.value,
-    {},
-  ];
-  const output: XferOutput = [
-    formatter.ensureBuffer(receiverId),
-    formatter.ensureBuffer(assetId),
-    amount.value,
-    {},
-  ];
-  return call(connection, authenticator, transferOp([input], [output]));
 }
 
 /* eslint-disable */

@@ -316,6 +316,18 @@ describe("Payment history iterator", () => {
     const foundAccount = await connection.getAccountById(account1.id);
     const history = await foundAccount.getTransferHistory();
     expect(history.data.length).toStrictEqual(1);
+    expect(history.data[0].transferInputArgs.length).toBe(1);
+    expect(history.data[0].transferInputArgs[0].accountId).toEqual(account1.id);
+    expect(history.data[0].transferInputArgs[0].amount.value).toEqual(
+      createAmount(10, asset.decimals).value
+    );
+    expect(history.data[0].transferOutputArgs.length).toBe(1);
+    expect(history.data[0].transferOutputArgs[0].accountId).toEqual(
+      account2.id
+    );
+    expect(history.data[0].transferOutputArgs[0].amount.value).toEqual(
+      createAmount(10, asset.decimals).value
+    );
   });
 
   it.skip("should have one payment history entries if one crosschain transfer is made", async () => {

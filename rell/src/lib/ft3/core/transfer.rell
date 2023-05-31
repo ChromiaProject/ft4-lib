@@ -15,10 +15,10 @@ struct xfer_output {
    extra: map<text, gtv>;
 }
 
-function deduct_balance(acc.account, asset, d_amount: big_integer) {
-    val b = balance @ { account, asset };
-    require( b.amount >= d_amount, "Balance is too low");
-    update b (amount -= d_amount);
+function deduct_balance(acc.account, asset, amount: big_integer) {
+    val balance = balance @ { account, asset };
+    require(balance.amount >= amount, "Balance is too low");
+    balance.amount -= amount;
 }
 
 function consume_input (
@@ -59,7 +59,7 @@ function consume_input (
       }
 
       val account = acc.account @ { .id == i.account_id };
-      acc.auth(
+      acc._auth(
          account, 
          acc.account_auth_descriptor @ { 
             .id == i.auth_descriptor_id, 
@@ -184,6 +184,40 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
    after_transfer(inputs, outputs);
 }
 
-@extendable function before_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
+namespace Unsafe {
+   function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
+      require(amount > 0, "Expected amount greater than 0. Fround %d".format(amount));
+      require(from != to, "Sender and reciver have to be different");
 
-@extendable function after_transfer(inputs: list<xfer_input>, outputs: list<xfer_output>);
+      val args = [
+         [(amount, from.id, 0)],
+         [(amount, to.id, 0)]
+      ];
+
+      before_transfer_one(from, to, asset, amount);
+
+      deduct_balance(from, asset, amount);
+      create payment_history_entry(
+         .account = from,
+         .asset = asset,
+         .delta = amount,
+         .op_index = op_context.op_index,
+         .is_input = true,
+         .entry_index = 0,
+         .transfer_args = args.to_gtv().to_bytes()
+      );
+      
+      ensure_balance(to, asset).amount += amount;
+      create payment_history_entry(
+         .account = to,
+         .asset = asset,
+         .delta = amount,
+         .op_index = op_context.op_index,
+         .is_input = false,
+         .entry_index = 0,
+         .transfer_args = args.to_gtv().to_bytes()
+      );
+
+      after_transfer_one(from, to, asset, amount);
+   }
+}

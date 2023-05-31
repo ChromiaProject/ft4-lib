@@ -1,12 +1,16 @@
 import acc: ^.account;
 
 entity asset {
-    id: byte_array;
-    key id;
+    key id: byte_array;
     name;
     decimals: integer;
     issuing_brid: byte_array;
 }
+
+function Asset(id: byte_array) = require(
+    asset @? { id },
+    "Asset <%s> not found".format(id)
+);
 
 entity balance {
     key acc.account, asset;

@@ -17,19 +17,17 @@ export function createPaymentHistoryEntry(
   assetId: BufferId,
   entryIndex: number,
   data: Buffer | string,
-  transferArgs: { amount: number; accountId: BufferId }[][],
+  transferArgs: { amount: bigint; accountId: BufferId }[][],
   timestamp: Date | number,
   transactionId: BufferId,
   blockHeight: number
   //brid: BufferId
 ): PaymentHistoryEntry {
   const txArgs = transferArgs.map((list) =>
-    list.map((a) => {
-      return {
-        amount: a.amount,
-        accountId: formatter.ensureBuffer(a.accountId),
-      };
-    })
+    list.map((a) => ({
+      amount: createAmountFromBalance(a.amount, decimals),
+      accountId: formatter.ensureBuffer(a.accountId),
+    }))
   );
   //eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -74,15 +72,13 @@ export function createPaymentHistoryEntryFromResponse(
     tx_data,
   ] = responseEntry;
 
-  const args = (<[number, string][][]>(
+  const args = (<[bigint, string][][]>(
     gtv.decode(Buffer.from(transfer_args, "hex"))
   )).map((list) =>
-    list.map((a): PaymentHistoryTransferArgs => {
-      return {
-        amount: a[0],
-        accountId: formatter.ensureBuffer(a[1]),
-      };
-    })
+    list.map((a) => ({
+      amount: a[0],
+      accountId: formatter.ensureBuffer(a[1]),
+    }))
   );
 
   return createPaymentHistoryEntry(

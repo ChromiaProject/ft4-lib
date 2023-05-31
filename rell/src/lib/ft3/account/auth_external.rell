@@ -1,13 +1,8 @@
-struct signature {
-    r: byte_array;
-    s: byte_array;
-    v: integer;
-}
 
 struct eth_auth_args {
     account;
     account_auth_descriptor;
-    signatures: list<signature>;
+    signatures: list<auth.signature>;
 }
 
 function AuthDescriptor(id: byte_array) = require(
@@ -41,7 +36,7 @@ function authenticate(required_flags: set<text>, message_template: text): accoun
 function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>, message_template: text): account {
     val validated_args = _validate_eth_arguments(auth_args, required_flags);
     val op_args = op_context.get_all_operations()[op_context.op_index].args;
-    val message = _create_message(message_template, op_args, validated_args.account_auth_descriptor.ctr);
+    val message = _create_message(validated_args, message_template, op_args, validated_args.account_auth_descriptor.ctr);
 
     var recovered_keys = 
         if (validated_args.account_auth_descriptor.auth_type in [auth_type.ES, auth_type.S]) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
@@ -52,13 +47,19 @@ function _validate_eth_signature(auth_args: list<gtv>, required_flags: set<text>
     return validated_args.account;
 }
 
-function _create_message(message_template: text, args: list<gtv>, ctr: integer): text {
+function _create_message(eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
     var message = message_template;
+    
+    // TODO: check if this is still needed
     for (i in range(args.size())) {
         message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
     }
-    return message.replace("{nonce}", ctr.to_text().replace("\"", ""));
+    
+    return message
+        .replace("{account_id}", eth_auth_args.account.id.to_hex())
+        .replace("{auth_descriptor_id}", eth_auth_args.account_auth_descriptor.id.to_hex())
+        .replace("{nonce}", ctr.to_text().replace("\"", ""));
 }
 
 function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): eth_auth_args {
@@ -66,7 +67,7 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
 
     val account_id = byte_array.from_gtv(auth_args[0]);
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
-    val signatures = list<signature>.from_gtv(auth_args[2]);
+    val signatures = list<auth.signature>.from_gtv(auth_args[2]);
 
     val account = Account(account_id);
     
@@ -87,7 +88,7 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     return eth_auth_args(account, auth_descriptor, signatures);
 }
 
-function _recover_multiple_eth_keys(message: text, signatures: list<signature>, account_auth_descriptor) {
+function _recover_multiple_eth_keys(message: text, signatures: list<auth.signature>, account_auth_descriptor) {
     var recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
         recovered_keys.add(
@@ -105,7 +106,7 @@ function _recover_multiple_eth_keys(message: text, signatures: list<signature>, 
     return recovered_keys;
 }
 
-function _recover_eth_key(message: text, signature, auth_descriptor_id: byte_array) {
+function _recover_eth_key(message: text, auth.signature, auth_descriptor_id: byte_array) {
     require(message != "", "Empty messages are not allowed");
 
     val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
@@ -146,17 +147,3 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
 
     return account;
 }
-
-operation evm_auth(
-    account_id: byte_array,
-    auth_descriptor_id: byte_array,
-    signatures: list<signature>
-) {
-    // require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
-}
-
-operation ft_auth(
-    account_id: byte_array,
-    auth_descriptor_id: byte_array
-) {}
-
