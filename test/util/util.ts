@@ -12,6 +12,10 @@ function generateAssetName(prefix = "CHROMA"): string {
   return prefix + "_" + generateNumber();
 }
 
+function generateAssetSymbol(): string {
+  return `C${generateNumber()}`;
+}
+
 function generateId(): Buffer {
   return encryption.hash256(Buffer.from(`${generateNumber()}`));
 }
@@ -49,7 +53,13 @@ class LocalStorageMock implements Storage {
   }
 }
 
-export { generateAssetName, generateId, blockchainAccountId, LocalStorageMock };
+export {
+  generateAssetName,
+  generateAssetSymbol,
+  generateId,
+  blockchainAccountId,
+  LocalStorageMock,
+};
 
 export function createTestAuthDescriptor(flags: string[] = []): {
   keyPair: KeyPair;

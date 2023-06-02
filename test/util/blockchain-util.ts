@@ -1,4 +1,4 @@
-import { generateAssetName, generateId } from "./util";
+import { generateAssetName, generateAssetSymbol, generateId } from "./util";
 import { config } from "dotenv";
 import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/interfaces";
 import { gtxClient, restClient, restClientutil } from "postchain-client";
@@ -36,10 +36,18 @@ export async function getUserSession(
 export async function getNewAsset(
   userSession: ftUserSession,
   name = generateAssetName(),
+  symbol = generateAssetSymbol(),
   decimals = 0,
-  brid = generateId()
+  brid = generateId(),
+  iconUrl = ""
 ): Promise<Asset> {
-  const id = await userSession.asset.dev.register(name, decimals, brid);
+  const id = await userSession.asset.dev.register(
+    name,
+    symbol,
+    decimals,
+    brid,
+    iconUrl
+  );
   const asset = await userSession.get.asset.by.id(id);
   return asset;
 }

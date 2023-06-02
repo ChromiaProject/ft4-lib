@@ -3,8 +3,10 @@ import acc: ^.account;
 entity asset {
     key id: byte_array;
     name;
+    symbol: text;
     decimals: integer;
     issuing_brid: byte_array;
+    icon_url: text;
 }
 
 function Asset(id: byte_array) = require(
@@ -25,10 +27,10 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0L);
 }
 
-function register_asset(name, decimals: integer, issuing_brid: byte_array): asset {
+function register_asset(name, symbol: text, decimals: integer, issuing_brid: byte_array, icon_url: text): asset {
     require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
     val id = (name, issuing_brid).hash();
-    return create asset (id, name, decimals, issuing_brid);
+    return create asset (id, name, symbol, decimals, issuing_brid, icon_url);
 }
 
 function get_asset_balances(account_id: byte_array) {

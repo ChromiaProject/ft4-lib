@@ -10,11 +10,11 @@ import {
   Account,
   RateLimit,
   User,
+  IAccount,
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
 import { ChainInfo, QueryObject, Operation } from "./utils/types";
-import { IAccount } from "./account/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
 export interface ftUserSession {
@@ -25,8 +25,10 @@ export interface ftUserSession {
     dev: {
       register: (
         name: string,
+        symbol: string,
         decimals: number,
-        brid: BufferId
+        brid: BufferId,
+        iconUrl: string
       ) => Promise<Buffer>;
     };
   };

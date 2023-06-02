@@ -76,18 +76,21 @@ if [ "$test_string" ]; then
     opt="$opt -t ${test_string%?}"
 fi
 
+rm -rf logs
+mkdir logs
+
 if $docker; then
     docker run --name ft4_jest_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
         --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
-        --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain \
-        -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null;
+        --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain_test \
+        -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > ./logs/postgres.log;
 fi
 
 echo -n "Building and running postchain node..."
     chr build -s configs/jest-test.yml > /dev/null
 
 chr node start -s configs/jest-test.yml --wipe \
-    -np rell/config/jest-test/node-config.properties > /dev/null &
+    -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
 prc=$!
 
 echo "done!\n"

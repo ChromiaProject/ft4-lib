@@ -79,11 +79,13 @@ function create_auth_descriptor(participant_id: byte_array): acc.auth_descriptor
         rules = null.to_gtv());
 }
 
-function create_asset(name: text, decimals: integer) {
+function create_asset(name: text, symbol: text, decimals: integer) {
     dev_op_asset.dev_register_asset(
             name,
+            symbol,
             decimals,
-            issuing_brid = chain_context.blockchain_rid
+            issuing_brid = chain_context.blockchain_rid,
+            icon_url=""
         )
         .sign(rell.test.keypairs.alice)
         .run();
@@ -91,11 +93,13 @@ function create_asset(name: text, decimals: integer) {
     return core.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
 }
 
-function create_asset_tx(name: text, decimals: integer): rell.test.tx {
+function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test.tx {
     return dev_op_asset.dev_register_asset(
             name,
+            symbol,
             decimals,
-            issuing_brid = chain_context.blockchain_rid
+            issuing_brid = chain_context.blockchain_rid,
+            icon_url=""
         )
         .sign(rell.test.keypairs.alice);
 }
