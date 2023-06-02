@@ -10,6 +10,10 @@ export function createFakeAuthDataService(data: {
 }): AuthDataService {
   return {
     getAuthData: (operation: Operation) => Promise.resolve(data[operation[0]]),
+    getAuthFlags: (operation: Operation) =>
+      Promise.resolve(data[operation[0]].flags),
+    getAuthMessageTemplate: (operation: Operation) =>
+      Promise.resolve(data[operation[0]].message),
     // eslint-disable-next-line
     getNonce: (authDescriptorId: BufferId) => Promise.resolve(0),
   };

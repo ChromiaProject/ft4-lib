@@ -1,0 +1,13 @@
+
+operation evm_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array,
+    signatures: list<signature>
+) {
+    // require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
+}
+
+operation ft_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array
+) {}

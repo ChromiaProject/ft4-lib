@@ -158,11 +158,12 @@ describe("Transaction Builder", () => {
     const authenticatorMock: Authenticator = {
       accountId: Buffer.alloc(32),
       keyHandlers: [keyHandlerMock],
-
+      authDataService: createFakeAuthDataService({}),
       createSession: jest.fn(),
       getAuthRequirements: jest
         .fn()
         .mockReturnValue({ flags: [], message: "" }),
+      getAuthFlags: jest.fn().mockReturnValue([]),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
       getNonce: jest.fn(),
     };

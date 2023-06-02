@@ -32,6 +32,8 @@ import {
 } from "./authentication/interfaces";
 import {
   authDataQuery,
+  authFlags,
+  authMessageTemplate,
   createAuthenicator,
   defaultFTAuthData,
   nonce,
@@ -136,6 +138,12 @@ export function createAuthDataService(connection: Connection): AuthDataService {
         }
       }
       return authData;
+    },
+    getAuthFlags: async (operation: Operation) => {
+      return await connection.query<string[]>(authFlags(operation));
+    },
+    getAuthMessageTemplate: async (operation: Operation) => {
+      return await connection.query<string>(authMessageTemplate(operation));
     },
     getNonce: async (authDescriptorId: BufferId) =>
       connection.query<number>(nonce(authDescriptorId)),

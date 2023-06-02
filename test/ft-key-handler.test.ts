@@ -4,6 +4,7 @@ import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/ke
 import { op } from "../client/lib/ft3/utils";
 import { ftAuth } from "../client/lib/ft3/authentication/ft";
 import { createClient } from "./util/blockchain-util";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -12,10 +13,12 @@ describe("FT key handler", () => {
 
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const operations = await keyHandler.authenticate(accountId, op("foo"), {
-      flags: [],
-      message: "",
-    });
+    const operations = await keyHandler.authenticate(
+      accountId,
+      op("foo"),
+      0,
+      createFakeAuthDataService({})
+    );
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),

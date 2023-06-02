@@ -6,9 +6,11 @@ import { Operation } from "../utils/types";
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
-
+  // TODO: check if authDataService can be removed
+  authDataService: AuthDataService;
   createSession(): AuthenticatorSession;
   getAuthRequirements(operation: Operation): Promise<AuthData>;
+  getAuthFlags(operation: Operation): Promise<string[]>;
   getKeyHandlerForOperation(
     operation: Operation
   ): Promise<KeyHandler | undefined>;
@@ -24,7 +26,8 @@ export interface KeyHandler {
   authenticate(
     accountId: BufferId,
     operation: Operation,
-    authData: AuthData
+    nonce: number,
+    authDataService: AuthDataService
   ): Promise<Operation[]>;
 
   sign(transaction: Itransaction): Promise<void>;
@@ -49,6 +52,8 @@ export interface AuthenticatorSession {
 
 export interface AuthDataService {
   getAuthData(operation: Operation): Promise<AuthData>;
+  getAuthFlags(operation: Operation): Promise<string[]>;
+  getAuthMessageTemplate(operation: Operation): Promise<string>;
   // TODO: add account id argument
   getNonce(authDescriptorId: BufferId): Promise<number>;
 }

@@ -1,6 +1,6 @@
 import { BufferId } from "../../../cryptoUtils";
 import { Operation } from "../../utils/types";
-import { KeyHandler, KeyStore } from "../interfaces";
+import { AuthDataService, KeyHandler, KeyStore } from "../interfaces";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
 import {
   Itransaction,
@@ -17,8 +17,14 @@ export function createFTKeyHandler(
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
       satisfiesAuthRequirements(authDescriptor, requiredFlags),
-    authenticate: (accountId: BufferId, operation: Operation) =>
-      authenticate(accountId, authDescriptor.id, operation),
+    authenticate: (
+      accountId: BufferId,
+      operation: Operation,
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
+      nonce: number,
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
+      authDataService: AuthDataService
+    ) => authenticate(accountId, authDescriptor.id, operation),
     sign: (transaction: Itransaction) => sign(transaction, keyStore),
     getSigners: () => authDescriptor.signers,
   });

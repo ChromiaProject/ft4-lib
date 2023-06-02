@@ -138,17 +138,11 @@ export function transactionBuilder(
         );
       }
       const nonce = nonces.get(keyHandler.authDescriptor.id);
-      // FIXME `getKeyHandlerForOperation` already calls `getAuthRequirements`
-      // See if we can avoid making two calls? Perhaps it will not be a problem when we start to cache data
-      const authData = await authenticator.getAuthRequirements(operation);
-      const message = authData.message.replace("{nonce}", `${nonce}`);
       const ops = await keyHandler.authenticate(
         authenticator.accountId,
         operation,
-        {
-          flags: authData.flags,
-          message,
-        }
+        nonce,
+        authenticator.authDataService
       );
       // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {

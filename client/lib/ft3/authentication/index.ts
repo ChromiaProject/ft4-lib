@@ -21,10 +21,14 @@ export function createAuthenicator(
 ): Authenticator {
   const authenticator = Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
+    authDataService,
     keyHandlers,
-    createSession: () => createAuthenticatorSession(authenticator),
+    createSession: () =>
+      createAuthenticatorSession(authenticator, authDataService),
     getAuthRequirements: (operation: Operation) =>
       getAuthRequirements(authDataService, operation),
+    getAuthFlags: (operation: Operation) =>
+      getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
@@ -41,22 +45,28 @@ async function getAuthRequirements(
   return authDataService.getAuthData(operation);
 }
 
+async function getAuthFlags(
+  authDataService: AuthDataService,
+  operation: Operation
+): Promise<string[]> {
+  return await authDataService.getAuthFlags(operation);
+}
+
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
   operation: Operation
 ): Promise<KeyHandler | undefined> {
-  const authRequirements = await getAuthRequirements(
-    authDataService,
-    operation
-  );
+  const flags = await getAuthFlags(authDataService, operation);
+
   return keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(authRequirements.flags)
+    keyHandler.satisfiesAuthRequirements(flags)
   );
 }
 
 function createAuthenticatorSession(
-  authenticator: Authenticator
+  authenticator: Authenticator,
+  authDataService: AuthDataService
 ): AuthenticatorSession {
   const usedKeyHandlers = new Set<KeyHandler>();
 
@@ -83,13 +93,12 @@ function createAuthenticatorSession(
         throw new Error(`Cannot authenticate operation: ${operation[0]}`);
       }
       usedKeyHandlers.add(keyHandler);
-      // `getKeyHandlerForOperation` internally calls `getAuthRequirements`
-      // Find a way to make only one call
-      const authData = await authenticator.getAuthRequirements(operation);
       return await keyHandler.authenticate(
         authenticator.accountId,
         operation,
-        authData
+        // FIXME!!!!!!!!!!!!!!!!!!!
+        0,
+        authDataService
       );
     },
     sign: async (transaction: Itransaction) => {
@@ -114,6 +123,26 @@ export const defaultFTAuthData: QueryObject = {
   name: `ft3.default_auth_data`,
   args: {},
 };
+
+export function authFlags(operation: Operation): QueryObject {
+  return {
+    name: "ft.get_auth_flags",
+    args: {
+      op_name: operation[0],
+    },
+  };
+}
+
+export function authMessageTemplate(operation: Operation): QueryObject {
+  return {
+    name: "ft.get_auth_message_template",
+    args: {
+      op_name: operation[0],
+      // TODO: check if putting operation[1] inside an array could cause issues
+      op_args: [operation[1]],
+    },
+  };
+}
 
 export function nonce(authDescriptorId: BufferId): QueryObject {
   return {

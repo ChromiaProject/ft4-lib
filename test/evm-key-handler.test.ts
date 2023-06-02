@@ -58,7 +58,10 @@ describe("EVM key handler", () => {
     const operations = await keyHandler.authenticate(
       accountId,
       op("foo"),
-      authData
+      0,
+      createFakeAuthDataService({
+        foo: authData,
+      })
     );
 
     const signature = await keyStore.signMessage(authData.message);
