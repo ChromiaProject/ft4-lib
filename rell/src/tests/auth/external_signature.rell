@@ -368,7 +368,7 @@ function test_auth_message_is_correctly_generated_with_big_integer_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nNonce: {nonce}"
   );
 }
 
@@ -388,7 +388,7 @@ function test_operation_without_auth_message_template_can_be_evm_authenticated()
   val alice = utils.evm_register_alice();
 
   var message = "Please sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
-  message = message + "- 10\n- 100\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
+  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
 
   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 

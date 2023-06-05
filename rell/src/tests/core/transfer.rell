@@ -84,7 +84,7 @@ function test_transfer_fails_when_insufficient_balance() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset = utils.create_asset("test", 1);
+    val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
     val tx = rell.test.tx()
@@ -99,7 +99,7 @@ function test_transfer_fails_when_balance_is_negative() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset = utils.create_asset("test", 1);
+    val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
     val tx = rell.test.tx()
@@ -113,7 +113,7 @@ function test_transfer_fails_when_balance_is_negative() {
 function test_transfer_fails_when_sender_is_same_as_receiver() {
     val alice = utils.register_alice();
 
-    val asset = utils.create_asset("test", 1);
+    val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
     val tx = rell.test.tx()
@@ -128,7 +128,7 @@ function test_transfer_succeeds_when_enough_balance() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset = utils.create_asset("test", 1);
+    val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
@@ -145,7 +145,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val alice = utils.evm_register_alice();
     val bob = utils.register_bob();
 
-    val asset = utils.create_asset("test", 1);
+    val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 15);
 
     val auth_data = ft3.transfer_op.transfer_one_auth_data(
@@ -172,7 +172,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
     val alice = utils.evm_register_alice();
     val bob = utils.evm_register_bob();
 
-    val asset = utils.create_asset("test", 1);
+    val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 15);
 
     val auth_data = ft3.transfer_op.transfer_one_auth_data(
@@ -197,7 +197,7 @@ function test_before_transfer_one_extension_is_called() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset = utils.create_asset("CHR", 9);
+    val asset = utils.create_asset("chroma", "CHR", 9);
     utils.mint_to_account(alice, asset, 100);
 
     rell.test.tx()
@@ -217,7 +217,7 @@ function test_after_transfer_one_extension_is_called() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset = utils.create_asset("TEST", 3);
+    val asset = utils.create_asset("test", "TEST", 3);
     utils.mint_to_account(alice, asset, 20);
 
     rell.test.tx()

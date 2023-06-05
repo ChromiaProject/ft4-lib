@@ -65,7 +65,7 @@ function test_history_pagination() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 0);
+    val asset_id = utils.create_asset("test", "t", 0).id;
 
     val inputs = [
         core.xfer_input(
@@ -149,7 +149,7 @@ function test_history_filtering() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 0);
+    val asset_id = utils.create_asset("test", "t", 0).id;
 
     val inputs = [
         core.xfer_input(

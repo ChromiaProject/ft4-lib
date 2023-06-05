@@ -60,4 +60,12 @@ if [ "$test" ]; then
     opts="$opts ${test%?}"
 fi
 
-npm run test:js -- $opts $nodocker --exit-on-error && npm run test:rell -- $nodocker
+npm run test:js -- $opts $nodocker
+exit_js=$?
+
+npm run test:rell -- $nodocker
+exit_rell=$?
+
+if [ $exit_js -ne 0 -o $exit_rell -ne 0 ] ; then
+    return 1 || exit 1;
+fi
