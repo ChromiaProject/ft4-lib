@@ -368,7 +368,7 @@ function test_auth_message_is_correctly_generated_with_big_integer_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nNonce: {nonce}"
   );
 }
 
