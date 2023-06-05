@@ -174,6 +174,8 @@ export function createAccountObject(
     ) => {
       return retriever.retrieve(limit, filter, cursor);
     },
+    getTransferHistoryEntry: async (rowid: number) =>
+      retriever.retrieveSingle(rowid),
   });
 }
 

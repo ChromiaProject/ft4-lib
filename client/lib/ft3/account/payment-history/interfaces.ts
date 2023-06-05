@@ -24,6 +24,7 @@ export interface PaymentHistoryRetriever {
     filter: PaymentHistoryFilter | null,
     cursor: PaymentHistoryCursor | null
   ) => Promise<TransferHistoryResponse>;
+  retrieveSingle: (rowid: number) => Promise<PaymentHistoryEntry | null>;
   brid: string;
 }
 
