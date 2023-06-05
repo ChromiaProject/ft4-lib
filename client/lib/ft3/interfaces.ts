@@ -14,7 +14,7 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { ChainInfo, QueryObject, Operation } from "./utils/types";
+import { Config, QueryObject, Operation } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
 export interface ftUserSession {
@@ -81,7 +81,7 @@ export interface ftUserSession {
 export interface ftQuerySession {
   gtxClient: GtxClient;
   createUserSession: (user: User) => ftUserSession;
-  chainInfo: () => Promise<ChainInfo>;
+  config: () => Promise<Config>;
   version: () => Promise<string>;
   lastTimestamp: () => Promise<number>;
   asset: {

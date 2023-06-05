@@ -2,7 +2,7 @@ import testUser from "./util/test-user";
 import { version } from "../package.json";
 import { ftUserSession } from "../client/lib/ft3/interfaces";
 import { getUserSession } from "./util/blockchain-util";
-import { ChainInfo } from "../client/lib/ft3/utils/types";
+import { Config } from "../client/lib/ft3/utils/types";
 import { ft } from "../client/lib/ft3";
 import { ssoRawTransactionRegister } from "../client/lib/ft3/account/account-op-functions";
 import { legacyTransactionBuilder } from "../client/lib/ft3/utils/transaction-builder-old";
@@ -14,12 +14,9 @@ describe("Blockchain", () => {
     ftSession = await getUserSession();
   });
   it("should provide info", async () => {
-    const info = await ftSession.get.chainInfo();
+    const config = await ftSession.get.config();
 
-    expect(info).toEqual(<ChainInfo>{
-      name: "test",
-      website: "test_website",
-      description: "test_description",
+    expect(config).toEqual(<Config>{
       rate_limit_active: 1,
       rate_limit_max_points: 10,
       rate_limit_recovery_time: 5000,

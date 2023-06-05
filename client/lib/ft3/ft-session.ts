@@ -8,7 +8,7 @@ import {
   Connection,
   Session,
 } from "./interfaces";
-import { getChainInfo, getLastTimestamp, getVersion, nop } from "./utils";
+import { getConfig, getLastTimestamp, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -51,7 +51,7 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
   return Object.freeze({
     gtxClient: pci,
     createUserSession: (user: User) => createUserSession(pci, user),
-    chainInfo: () => getChainInfo(pci),
+    config: () => getConfig(pci),
     version: () => getVersion(pci),
     lastTimestamp: () => getLastTimestamp(pci),
     account: accountQuerySession(pci),
