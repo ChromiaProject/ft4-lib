@@ -83,7 +83,6 @@ export interface ftQuerySession {
   createUserSession: (user: User) => ftUserSession;
   config: () => Promise<Config>;
   version: () => Promise<string>;
-  lastTimestamp: () => Promise<number>;
   asset: {
     id: (name: string, brid: BufferId) => Buffer;
     by: {
@@ -133,6 +132,8 @@ export interface ftQuerySession {
 export interface Connection {
   client: GtxClient;
   query: <T>(query: QueryObject) => Promise<T | null>;
+  getConfig: () => Promise<Config>;
+  getVersion: () => Promise<string>;
 
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;

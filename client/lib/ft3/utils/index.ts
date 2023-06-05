@@ -14,10 +14,6 @@ export function op(
   return [name, ...args.map((a) => encodeGtv(a))];
 }
 
-export async function getLastTimestamp(session: GtxClient): Promise<number> {
-  return await session.query("ft3.get_last_timestamp");
-}
-
 export async function getConfig(session: GtxClient): Promise<Config> {
   return Object.freeze(await session.query("ft3.get_config"));
 }

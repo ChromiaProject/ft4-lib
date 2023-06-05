@@ -11,10 +11,6 @@ query get_account_rate_limit_last_update(account_id: byte_array) {
     );
 }
 
-query get_last_timestamp(): integer {
-    return (block @ { .timestamp>0 } ( @sort_desc .timestamp ) limit 1);
-}
-
 query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
     return acc.is_valid(acc.account_auth_descriptor @ {
         .account.id == account_id,

@@ -8,7 +8,7 @@ import {
   Connection,
   Session,
 } from "./interfaces";
-import { getConfig, getLastTimestamp, getVersion, nop } from "./utils";
+import { getConfig, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -53,7 +53,6 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
     createUserSession: (user: User) => createUserSession(pci, user),
     config: () => getConfig(pci),
     version: () => getVersion(pci),
-    lastTimestamp: () => getLastTimestamp(pci),
     account: accountQuerySession(pci),
     ...assetQuerySession(pci),
   });
@@ -63,6 +62,8 @@ export function createConnection(client: GtxClient): Connection {
   const connection = Object.freeze({
     client,
     query: <T>(queryObject: QueryObject) => query<T>(connection, queryObject),
+    getConfig: () => getConfig(client),
+    getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
