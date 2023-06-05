@@ -27,7 +27,7 @@ describe("EVM key handler", () => {
     const walletSignedMessage = await new ethers.Wallet(
       keyPair.privKey.toString("hex")
     ).signMessage(message);
-    const { r, s, v } = ethers.utils.splitSignature(walletSignedMessage);
+    const { r, s, v } = ethers.Signature.from(walletSignedMessage);
     const expectedSignature = {
       r: Buffer.from(r.slice(2), "hex"),
       s: Buffer.from(s.slice(2), "hex"),
