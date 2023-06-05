@@ -16,16 +16,12 @@ exitfn () {
 trap "exitfn" 2
 
 docker=true
-EXIT_ON_ERROR=0
 while :; do
     case $1 in
         --no-docker)
               echo 'skipping docker build'
               docker=false
               ;;
-        --exit-on-error)
-            EXIT_ON_ERROR=1
-            ;;
         --)
             shift
             break
@@ -48,19 +44,11 @@ if $docker; then
 fi
 
 chr test -s configs/rell-test.yml --use-db
+return_code=$?
 
-if test $? -eq 0
-then 
-    if $docker; then
-        docker stop postchain  > /dev/null 
-        docker rm postchain > /dev/null
-    fi
-else
-    if $docker; then
-        docker stop postchain  > /dev/null 
-        docker rm postchain > /dev/null
-    fi
-    if [ "$EXIT_ON_ERROR" -eq 1 ]; then
-        exit 1
-    fi
+if $docker; then
+    docker stop ft4_jest_test  > /dev/null 
+    docker rm ft4_jest_test > /dev/null
 fi
+
+return $return_code || exit $return_code
