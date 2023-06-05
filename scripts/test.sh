@@ -61,14 +61,11 @@ if [ "$test" ]; then
 fi
 
 npm run test:js -- $opts $nodocker
-return_code=$?
+exit_js=$?
 
 npm run test:rell -- $nodocker
-other_code=$?
+exit_rell=$?
 
-if test $return_code -eq 0
-then 
-    return_code=$other_code
+if [ $exit_js -ne 0 -o $exit_rell -ne 0 ] ; then
+    return 1 || exit 1;
 fi
-
-return $return_code || exit $return_code
