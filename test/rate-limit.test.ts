@@ -23,7 +23,7 @@ describe.skip("Rate Limit", () => {
 
   describe("Blockchain request configuration in run.xml", () => {
     it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
-      const info = await _ft.get.config();
+      const info = await _connection.getConfig();
       expect(info).toEqual({
         rate_limit_active: 1,
         rate_limit_max_points: REQUEST_MAX_COUNT,
