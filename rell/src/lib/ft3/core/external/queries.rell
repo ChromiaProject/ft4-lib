@@ -81,7 +81,6 @@ query get_payment_history_size(account_id: byte_array) {
 }
 
 query get_single_payment_history_entry(rowid) {
-    val entry = core.payment_history_entry @ { .rowid == rowid };
-    val (data, _) = core.extract_data_from_payment_history_list([entry])[0];
-    return data;
+    val entry = core.payment_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry).to_gtv();
 }
