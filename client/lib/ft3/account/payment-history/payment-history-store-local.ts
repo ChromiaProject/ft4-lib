@@ -12,7 +12,7 @@ import {
 } from "./payment-history-entry";
 import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { formatter } from "postchain-client";
-import { PageCursor } from "/ft3/interfaces.internal";
+import { PageCursor } from "/ft3/types";
 
 export async function ensurePaymentHistoryStoreLocal(
   session: GtxClient,

@@ -3,7 +3,7 @@ import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Account, User } from "../client/lib/ft3/account/types";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,

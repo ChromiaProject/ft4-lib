@@ -11,7 +11,7 @@ import {
 } from "./payment-history/types";
 import { Authenticator } from "../authentication/interfaces";
 import { Amount } from "../asset/interfaces";
-import { PageCursor } from "../interfaces.internal";
+import { PageCursor } from "../types";
 
 export type Account = {
   id: Buffer;

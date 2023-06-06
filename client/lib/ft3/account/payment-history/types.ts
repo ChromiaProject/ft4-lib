@@ -1,5 +1,5 @@
 import { Amount } from "../../asset/interfaces";
-import { PageCursor } from "/ft3/interfaces.internal";
+import { PageCursor } from "/ft3/types";
 
 export type PaymentHistoryTransferArgs = {
   amount: Amount;

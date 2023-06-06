@@ -8,7 +8,7 @@ import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { formatter } from "postchain-client";
-import { PageCursor } from "/ft3/interfaces.internal";
+import { PageCursor } from "/ft3/types";
 
 export async function createPaymentHistoryStoreMemory(
   session: GtxClient,

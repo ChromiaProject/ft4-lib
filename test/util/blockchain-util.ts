@@ -1,5 +1,5 @@
 import { generateAssetName, generateAssetSymbol, generateId } from "./util";
-import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/interfaces";
+import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/types";
 import { gtxClient, restClient, restClientutil } from "postchain-client";
 import {
   createQuerySession,

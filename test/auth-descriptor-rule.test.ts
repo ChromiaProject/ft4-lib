@@ -1,6 +1,6 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { ftUserSession } from "../client/lib/ft3/types";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { Account, User } from "../client/lib/ft3/account/types";
 import { AuthDescriptorRule } from "../client/lib/ft3/account/auth-descriptor/types";

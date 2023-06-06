@@ -1,6 +1,6 @@
 import TestUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { ftUserSession } from "../client/lib/ft3/types";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { LocalStorageMock } from "./util/util";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";

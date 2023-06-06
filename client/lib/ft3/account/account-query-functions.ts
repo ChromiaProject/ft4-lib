@@ -21,7 +21,7 @@ import {
   _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection } from "../interfaces";
+import { Connection, PageCursor } from "../types";
 import { formatter } from "postchain-client";
 import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
@@ -32,7 +32,6 @@ import {
 } from "./auth-descriptor/types";
 import { mapAuthDescriptors } from "./auth-descriptor";
 import { createConnection } from "../ft-session";
-import { PageCursor } from "../interfaces.internal";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,

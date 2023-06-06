@@ -1,6 +1,6 @@
 import testUser from "./util/test-user";
 import { version } from "../package.json";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { ftUserSession } from "../client/lib/ft3/types";
 import { getUserSession } from "./util/blockchain-util";
 import { ChainInfo } from "../client/lib/ft3/utils/types";
 import { ft } from "../client/lib/ft3";
