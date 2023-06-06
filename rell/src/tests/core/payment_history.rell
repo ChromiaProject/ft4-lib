@@ -216,20 +216,20 @@ function test_single_payment_history_entry() {
     
     val entry = core.payment_history_entry @* {}[0];
     assert_equals(
-    ft3.transfer_op.get_single_payment_history_entry(entry.rowid),
-    (
-        id = '%d'.format(entry.rowid),
-        delta = entry.delta,
-        decimals = entry.asset.decimals,
-        asset = entry.asset.name,
-        asset_id = entry.asset.id,
-        is_input = entry.is_input,
-        timestamp = entry.transaction.block.timestamp,
-        block_height = entry.transaction.block.block_height,
-        entry_index = entry.entry_index,
-        transfer_args = entry.transfer_args,
-        tx_rid = entry.transaction.tx_rid,
-        tx_data = entry.transaction.tx_data
-    )
+        ft3.transfer_op.get_single_payment_history_entry(entry.rowid),
+        (
+            id = '%d'.format(entry.rowid),
+            delta = entry.delta,
+            decimals = entry.asset.decimals,
+            asset = entry.asset.name,
+            asset_id = entry.asset.id,
+            is_input = entry.is_input,
+            timestamp = entry.transaction.block.timestamp,
+            block_height = entry.transaction.block.block_height,
+            entry_index = entry.entry_index,
+            transfer_args = entry.transfer_args,
+            tx_rid = entry.transaction.tx_rid,
+            tx_data = entry.transaction.tx_data
+        ).to_gtv()
     );
 }
