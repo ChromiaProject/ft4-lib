@@ -5,13 +5,13 @@ import { GtvCompatible } from "../utils/gtv";
 import { BufferId, KeyPair } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
 import {
-  PaymentHistoryCursor,
-  PaymentHistoryEntry,
   PaymentHistoryFilter,
   TransferHistoryResponse,
+  PaymentHistoryEntry,
 } from "./payment-history/types";
 import { Authenticator } from "../authentication/interfaces";
 import { Amount } from "../asset/interfaces";
+import { PageCursor } from "../interfaces.internal";
 
 export type Account = {
   id: Buffer;
@@ -62,7 +62,7 @@ export interface IAccount {
   getTransferHistory: (
     limit?: number,
     filter?: PaymentHistoryFilter,
-    cursor?: PaymentHistoryCursor | null
+    cursor?: PageCursor | null
   ) => Promise<TransferHistoryResponse>;
   getTransferHistoryEntry: (
     rowid: number

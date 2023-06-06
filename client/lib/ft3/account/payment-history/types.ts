@@ -1,4 +1,5 @@
 import { Amount } from "../../asset/interfaces";
+import { PageCursor } from "/ft3/interfaces.internal";
 
 export type PaymentHistoryTransferArgs = {
   amount: Amount;
@@ -37,15 +38,13 @@ export type PaymentHistoryEntry = {
 
 export type TransferHistoryResponse = {
   data: PaymentHistoryEntry[];
-  nextCursor: PaymentHistoryCursor | null;
+  nextCursor: PageCursor | null;
 };
 
 export type AssetInfo = {
   name: string;
   id: Buffer;
 };
-
-export type PaymentHistoryCursor = string;
 
 export enum PaymentHistoryType {
   Sent = 0,

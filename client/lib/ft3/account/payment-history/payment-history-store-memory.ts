@@ -3,15 +3,12 @@ import {
   PaymentHistoryStore,
   PaymentHistoryError,
 } from "./interfaces";
-import {
-  PaymentHistoryCursor,
-  PaymentHistoryEntry,
-  PaymentHistoryFilter,
-} from "./types";
+import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { formatter } from "postchain-client";
+import { PageCursor } from "/ft3/interfaces.internal";
 
 export async function createPaymentHistoryStoreMemory(
   session: GtxClient,
@@ -47,7 +44,7 @@ function build(
   entryCount: number,
   entries: PaymentHistoryEntry[],
   retriever: PaymentHistoryRetriever,
-  nextCursor: PaymentHistoryCursor | null
+  nextCursor: PageCursor | null
 ): PaymentHistoryStore {
   let _pageSize = pageSize;
   const _pageCount = pageCount;
