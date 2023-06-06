@@ -1,20 +1,18 @@
-import testUser from "./util/test-user";
 import { version } from "../package.json";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
-import { getUserSession } from "./util/blockchain-util";
+import { Connection } from "../client/lib/ft3/interfaces";
+import { createClient } from "./util/blockchain-util";
 import { Config } from "../client/lib/ft3/utils/types";
 import { ft } from "../client/lib/ft3";
-import { ssoRawTransactionRegister } from "../client/lib/ft3/account/account-op-functions";
-import { legacyTransactionBuilder } from "../client/lib/ft3/utils/transaction-builder-old";
+import { createConnection } from "/ft3/ft-session";
 
-let ftSession: ftUserSession;
+let connection: Connection;
 
 describe("Blockchain", () => {
   beforeAll(async () => {
-    ftSession = await getUserSession();
+    connection = createConnection(await createClient());
   });
   it("should provide info", async () => {
-    const config = await ftSession.get.config();
+    const config = await connection.getConfig();
 
     expect(config).toEqual(<Config>{
       rate_limit_active: 1,
@@ -25,7 +23,7 @@ describe("Blockchain", () => {
   });
 
   it("should provide ft3 rell-side version number", async () => {
-    const info = await ftSession.get.version();
+    const info = await connection.getVersion();
 
     expect(info).toEqual("4.0.0r");
 
@@ -55,9 +53,9 @@ describe("Blockchain", () => {
   });
 
   it.skip("should successfully post raw transactions", async () => {
+    /*
     const user = testUser();
     const vault = testUser();
-
     const session = ftSession.changeUser(user);
 
     const rawTransaction = await ssoRawTransactionRegister(
@@ -73,5 +71,6 @@ describe("Blockchain", () => {
     const account = await session.get.account.by.id(user.authDescriptor.id);
 
     expect(account).not.toBeNull();
+    */
   });
 });
