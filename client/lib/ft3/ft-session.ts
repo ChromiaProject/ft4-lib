@@ -24,13 +24,17 @@ import {
   AuthDataService,
   Authenticator,
   KeyStore,
-} from "./authentication/interfaces";
+} from "./authentication/types";
 import {
   authDataQuery,
   createAuthenicator,
   defaultFTAuthData,
   nonce,
 } from "./authentication";
+import {
+  LoginManger,
+  createLoginManager,
+} from "./authentication/login-manager";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -110,6 +114,7 @@ export async function call(
 export type KeyStoreInteractor = {
   getAccounts(): Promise<IAccount[]>;
   getSession(accountId: BufferId): Promise<Session>;
+  getLoginManager(): LoginManger;
 };
 
 // TODO: Improve error handling
@@ -160,5 +165,6 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
+    getLoginManager: () => createLoginManager(connection, keyStore),
   });
 }

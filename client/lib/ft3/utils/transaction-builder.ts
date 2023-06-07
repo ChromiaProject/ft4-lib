@@ -3,7 +3,7 @@ import {
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
 import { Operation } from "/ft3/utils/types";
-import { Authenticator, KeyHandler } from "/ft3/authentication/interfaces";
+import { Authenticator, KeyHandler } from "../authentication/types";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -127,7 +127,7 @@ export function transactionBuilder(
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          "No keyhandler registered to handle this operation"
+          `No keyhandler registered to handle operation <${operation[0]}>`
         );
       }
       keyHandlers.push(keyHandler);

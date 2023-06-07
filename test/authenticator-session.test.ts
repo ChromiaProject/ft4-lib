@@ -5,7 +5,7 @@ import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/ke
 import { createClient } from "./util/blockchain-util";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { KeyHandler } from "../client/lib/ft3/authentication/interfaces";
+import { KeyHandler } from "../client/lib/ft3/authentication/types";
 import { createTestAuthDescriptor } from "./util/util";
 
 describe("Authenticator session", () => {

@@ -33,7 +33,7 @@ import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../types";
 import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
-import { Authenticator } from "../authentication/interfaces";
+import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
 
 export async function registerAccount(

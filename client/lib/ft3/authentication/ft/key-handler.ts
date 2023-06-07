@@ -1,6 +1,6 @@
 import { BufferId } from "../../../cryptoUtils";
 import { Operation } from "../../utils/types";
-import { KeyHandler, KeyStore } from "../interfaces";
+import { KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
 import {
   Itransaction,

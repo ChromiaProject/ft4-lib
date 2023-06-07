@@ -1,7 +1,7 @@
 import { formatter } from "postchain-client";
 import { BufferId } from "../../../cryptoUtils";
 import { Operation } from "../../utils/types";
-import { KeyStore } from "../interfaces";
+import { KeyStore } from "../types";
 import { ethers } from "ethers";
 
 export * from "/ft3/authentication/evm/key-stores";

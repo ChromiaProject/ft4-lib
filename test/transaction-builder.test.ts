@@ -9,7 +9,10 @@ import {
 } from "/ft3/utils/transaction-builder";
 import { createClient } from "/util/blockchain-util";
 import { nop } from "/ft3/utils";
-import { Authenticator, KeyHandler } from "/ft3/authentication/interfaces";
+import {
+  Authenticator,
+  KeyHandler,
+} from "../client/lib/ft3/authentication/types";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { transferOp } from "/ft3/account/account-operations";
 import { XferInput, XferOutput } from "/ft3/account/types";

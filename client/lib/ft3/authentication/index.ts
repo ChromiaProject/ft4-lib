@@ -6,13 +6,13 @@ import {
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
-} from "./interfaces";
+} from "./types";
 import { Operation, QueryObject } from "../utils/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 
 export * from "./evm";
 export * from "./ft";
-export * from "./interfaces";
+export * from "./types";
 
 export function createAuthenicator(
   accountId: BufferId,
@@ -45,14 +45,29 @@ async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
   operation: Operation
-): Promise<KeyHandler | undefined> {
+): Promise<KeyHandler | null> {
   const authRequirements = await getAuthRequirements(
     authDataService,
     operation
   );
-  return keyHandlers.find((keyHandler) =>
+
+  const handlers = keyHandlers.filter((keyHandler) =>
     keyHandler.satisfiesAuthRequirements(authRequirements.flags)
   );
+
+  const nonInteractiveHandlers = handlers.filter(
+    (keyHandler) => !keyHandler.keyStore.isInteractive
+  );
+
+  if (nonInteractiveHandlers.length !== 0) {
+    return nonInteractiveHandlers[0];
+  }
+
+  if (handlers.length !== 0) {
+    return handlers[0];
+  }
+
+  return null;
 }
 
 function createAuthenticatorSession(

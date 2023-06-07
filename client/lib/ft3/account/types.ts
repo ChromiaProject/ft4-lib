@@ -9,7 +9,7 @@ import {
   TransferHistoryResponse,
   PaymentHistoryEntry,
 } from "./payment-history/types";
-import { Authenticator } from "../authentication/interfaces";
+import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
 import { PageCursor } from "../types";
 

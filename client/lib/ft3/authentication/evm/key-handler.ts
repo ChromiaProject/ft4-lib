@@ -1,6 +1,6 @@
 import { BufferId } from "../../../cryptoUtils";
 import { Operation } from "../../utils/types";
-import { AuthData, KeyHandler, KeyStore } from "../interfaces";
+import { AuthData, KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 import { EVMKeyStore, evmAuth } from ".";
