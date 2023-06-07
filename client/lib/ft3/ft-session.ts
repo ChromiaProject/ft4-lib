@@ -46,8 +46,6 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
   return Object.freeze({
     gtxClient: pci,
     createUserSession: (user: User) => createUserSession(pci, user),
-    config: () => getConfig(pci),
-    version: () => getVersion(pci),
     account: accountQuerySession(pci),
     ...assetQuerySession(pci),
   });
