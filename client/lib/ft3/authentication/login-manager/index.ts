@@ -46,11 +46,22 @@ export function createLoginManager(
 
       const session = createSession(connection, authenticator);
 
+      let flags;
+      if (options.flags) {
+        flags = options.flags;
+      } else {
+        const authDataService = createAuthDataService(connection);
+        const loginConfig = await authDataService.getLoginConfig(
+          options.configName
+        );
+        flags = loginConfig.flags;
+      }
+
       const keyPair = new KeyPair();
       const ks = createInMemoryFTKeyStore(keyPair);
 
       const ad = authDescriptor.create.singleSig.withArgs(
-        options.flags || [],
+        flags,
         keyPair.pubKey
       ).andNoRules;
       const disposableKeyHandler = ks.createKeyHandler(ad);

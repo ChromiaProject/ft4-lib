@@ -12,5 +12,7 @@ export function createFakeAuthDataService(data: {
     getAuthData: (operation: Operation) => Promise.resolve(data[operation[0]]),
     // eslint-disable-next-line
     getNonce: (authDescriptorId: BufferId) => Promise.resolve(0),
+    // eslint-disable-next-line
+    getLoginConfig: (configName: string) => Promise.resolve({ flags: [] }),
   };
 }

@@ -3,8 +3,20 @@ import { Session } from "/ft3/types";
 
 export type LoginOptions = {
   accountId: BufferId;
-  flags?: string[];
-};
+} & (
+  | {
+      configName: string;
+      flags?: never;
+    }
+  | {
+      configName?: never;
+      flags: string[];
+    }
+  | {
+      configName?: never;
+      flags?: never;
+    }
+);
 
 export type LoginManger = {
   login: (options: LoginOptions) => Promise<Session>;

@@ -24,11 +24,13 @@ import {
   AuthDataService,
   Authenticator,
   KeyStore,
+  LoginConfig,
 } from "./authentication/types";
 import {
   authDataQuery,
   createAuthenicator,
   defaultFTAuthData,
+  loginConfig,
   nonce,
 } from "./authentication";
 import {
@@ -139,6 +141,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getNonce: async (authDescriptorId: BufferId) =>
       connection.query<number>(nonce(authDescriptorId)),
+    getLoginConfig: async (configName: string | null = null) =>
+      connection.query<LoginConfig>(loginConfig(configName)),
   });
 }
 

@@ -43,3 +43,20 @@ function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
     
     return message + "Nonce: {nonce}";
 }
+
+val DEFAULT_LOGIN_CONFIG = "default";
+
+query get_login_config(name? = null) {
+    val configs = login_config();
+
+    if (empty(name)) return configs[DEFAULT_LOGIN_CONFIG];
+    if (name in configs) return configs[name];
+    return configs[DEFAULT_LOGIN_CONFIG];
+}
+
+struct _login_config {
+    flags: list<text>;
+}
+
+@extendable
+function login_config(): map<name, _login_config> = [DEFAULT_LOGIN_CONFIG:_login_config(flags = [])];
