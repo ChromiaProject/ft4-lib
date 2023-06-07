@@ -1,6 +1,6 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
-import { transactionBuilder } from "../utils/transaction-builder";
+import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {
   addAuthDescriptorToAccount,
   burnTokens,
@@ -28,6 +28,13 @@ import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-histor
 import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { Amount } from "../asset/interfaces";
+import { PaymentHistoryFilter } from "./payment-history/types";
+
+export * from "./auth";
+export * from "./auth-descriptor";
+export * from "./payment-history";
+export * from "./types";
 
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
@@ -39,10 +46,16 @@ export const accountQuerySession = (pci: GtxClient) =>
     },
     paymentHistory: {
       iterator: getPaymentHistoryIterator,
-      storeMemory: (accountId: BufferId, pageSize: number) =>
-        createPaymentHistoryStoreMemory(pci, accountId, pageSize),
-      storeLocal: (accountId: BufferId, pageSize: number) =>
-        ensurePaymentHistoryStoreLocal(pci, pageSize, accountId),
+      storeMemory: (
+        accountId: BufferId,
+        pageSize: number,
+        filter: PaymentHistoryFilter | null = null
+      ) => createPaymentHistoryStoreMemory(pci, accountId, pageSize, filter),
+      storeLocal: (
+        accountId: BufferId,
+        pageSize: number,
+        filter: PaymentHistoryFilter | null = null
+      ) => ensurePaymentHistoryStoreLocal(pci, pageSize, accountId, filter),
     },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),
@@ -58,7 +71,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         ssoRawTransactionRegister(
           authDescriptor,
           user.authDescriptor,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
       ssoAddAuthDescriptor: (
         accountId: BufferId,
@@ -67,7 +80,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         ssoRawTransactionAddAuthDescriptor(
           accountId,
           authDescriptor,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
     },
     authDescriptor: {
@@ -78,19 +91,19 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         addAuthDescriptorToAccount(
           newUser,
           accountId,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
       deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAllAuthDescriptorsExclude(
           authDescriptorId,
           accountId,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
       delete: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAuthDescriptor(
           authDescriptorId,
           accountId,
-          transactionBuilder(user, pci)
+          legacyTransactionBuilder(user, pci)
         ),
     },
     token: {
@@ -98,18 +111,19 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         from: BufferId,
         to: BufferId,
         asset: BufferId,
-        amount: bigint
-      ) => transfer(from, to, asset, amount, transactionBuilder(user, pci)),
-      burn: (from: BufferId, asset: BufferId, amount: bigint) =>
-        burnTokens(from, asset, amount, transactionBuilder(user, pci)),
+        amount: Amount
+      ) =>
+        transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
+      burn: (from: BufferId, asset: BufferId, amount: Amount) =>
+        burnTokens(from, asset, amount, legacyTransactionBuilder(user, pci)),
       xcTransfer: () => xcTransfer(),
     },
     dev: {
       register: (authDescriptor: AuthDescriptor) =>
-        registerAccount(authDescriptor, transactionBuilder(user, pci)),
+        registerAccount(authDescriptor, legacyTransactionBuilder(user, pci)),
       freeOperation: (accountId: BufferId) =>
-        freeOperation(accountId, transactionBuilder(user, pci)),
+        freeOperation(accountId, legacyTransactionBuilder(user, pci)),
       givePoints: (accountId: BufferId, points: number) =>
-        givePoints(accountId, points, transactionBuilder(user, pci)),
+        givePoints(accountId, points, legacyTransactionBuilder(user, pci)),
     },
   });

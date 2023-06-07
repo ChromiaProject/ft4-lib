@@ -1,4 +1,9 @@
-import { PaymentHistoryCursor, PaymentHistoryEntry } from "./types";
+import {
+  PaymentHistoryEntry,
+  PaymentHistoryFilter,
+  TransferHistoryResponse,
+} from "./types";
+import { PageCursor } from "/ft3/types";
 
 export interface PaymentHistoryStore {
   accountId: Buffer;
@@ -16,8 +21,10 @@ export interface PaymentHistoryRetriever {
   getTotalCount: () => Promise<number>;
   retrieve: (
     amount: number,
-    lastElementRowid?: string | null
-  ) => Promise<readonly [PaymentHistoryEntry[], PaymentHistoryCursor]>;
+    filter: PaymentHistoryFilter | null,
+    cursor: PageCursor | null
+  ) => Promise<TransferHistoryResponse>;
+  retrieveSingle: (rowid: number) => Promise<PaymentHistoryEntry | null>;
   brid: string;
 }
 
@@ -33,4 +40,12 @@ export interface PaymentHistoryIterator {
   next: () => Promise<readonly PaymentHistoryEntry[]>;
   fastForward: () => Promise<readonly PaymentHistoryEntry[]>;
   hasMore: () => boolean;
+}
+
+export class PaymentHistoryError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "PaymentHistoryError";
+  }
 }

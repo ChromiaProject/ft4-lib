@@ -8,10 +8,10 @@ import {
 import { mint, burn, registerAsset } from "./asset-op-functions";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { User } from "../account/types";
-import { AssetAmount } from "./types";
+import { Amount } from "./interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { formatter, gtv } from "postchain-client";
-import { transactionBuilder } from "../utils/transaction-builder";
+import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 
 export function id(assetName: string, assetBrid: BufferId) {
   return gtv.gtvHash([assetName, formatter.ensureBuffer(assetBrid)]);
@@ -41,12 +41,25 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     asset: {
       dev: {
-        register: (name: string) =>
-          registerAsset(name, transactionBuilder(user, pci)),
-        mint: (assetId: BufferId, accountId: BufferId, amount: AssetAmount) =>
-          mint(assetId, accountId, amount, transactionBuilder(user, pci)),
-        burn: (assetId: BufferId, accountId: BufferId, amount: AssetAmount) =>
-          burn(assetId, accountId, amount, transactionBuilder(user, pci)),
+        register: (
+          name: string,
+          symbol: string,
+          decimals: number,
+          brid: BufferId,
+          iconUrl: string
+        ) =>
+          registerAsset(
+            name,
+            symbol,
+            decimals,
+            brid,
+            iconUrl,
+            legacyTransactionBuilder(user, pci)
+          ),
+        mint: (assetId: BufferId, accountId: BufferId, amount: Amount) =>
+          mint(assetId, accountId, amount, legacyTransactionBuilder(user, pci)),
+        burn: (assetId: BufferId, accountId: BufferId, amount: Amount) =>
+          burn(assetId, accountId, amount, legacyTransactionBuilder(user, pci)),
       },
     },
   });

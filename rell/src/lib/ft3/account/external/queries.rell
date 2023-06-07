@@ -26,9 +26,21 @@ query get_account_auth_descriptors(id: byte_array) {
     return acc.account_auth_descriptor @* {
         .account.id == id
     } (
-        .auth_type,
-        .args,
-        .rules
+        type = .auth_type,
+        args = gtv.from_bytes(.args),
+        rules = gtv.from_bytes(.rules)
+    );
+}
+
+query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
+    return (ad: acc.account_auth_descriptor, p: acc.auth_descriptor_participant) @* {
+        ad.account.id == account_id,
+        p.id == participant_id,
+        ad == p.account_auth_descriptor
+    } (
+        type = ad.auth_type,
+        args = gtv.from_bytes(ad.args),
+        rules = gtv.from_bytes(ad.rules)
     );
 }
 

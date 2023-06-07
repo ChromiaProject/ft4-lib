@@ -1,16 +1,23 @@
 import acc: ^.account;
 
 entity asset {
-    id: byte_array;
-    key id;
+    key id: byte_array;
     name;
+    symbol: text;
+    decimals: integer;
     issuing_brid: byte_array;
+    icon_url: text;
     mutable total_supply: integer;
 }
 
+function Asset(id: byte_array) = require(
+    asset @? { id },
+    "Asset <%s> not found".format(id)
+);
+
 entity balance {
     key acc.account, asset;
-    mutable amount: integer = 0;
+    mutable amount: big_integer = 0L;
 }
 
 function ensure_balance(acc.account, asset): balance {
@@ -18,7 +25,7 @@ function ensure_balance(acc.account, asset): balance {
     if (balance != null) {
        return balance;
     }
-    else return create balance(account, asset, amount = 0);
+    else return create balance(account, asset, amount = 0L);
 }
 
 function _mint(acc.account, asset, amount: integer) {
@@ -60,6 +67,10 @@ function _mint(acc.account, asset, amount: integer) {
 function _burn(acc.account, asset, amount: integer) {
     require(amount > 0, "Invalid value. Amount must be non-zero positive");
     require(asset.total_supply >= amount, "Invalid value. Amount is greater than total supply");
+    require(
+        asset.issuing_brid == chain_context.blockchain_rid,
+        "Assets can only be burned on issuing chain"
+    );
     val balance = balance @ {asset, account};
     require(balance.amount >= amount, "Invalid value. Amount is greater than balance");
     before_burn(account, asset, amount);
@@ -88,16 +99,15 @@ function _burn(acc.account, asset, amount: integer) {
     after_burn(account, asset, amount);
 }
 
-function register_asset (name, issuing_brid: byte_array, total_supply: integer = 0): asset {
-    if (issuing_brid == chain_context.blockchain_rid) {
-        require(
-            total_supply == 0, 
-            "FT3: Can't register a non-crosschain token with a non-zero total supply."+
-            " Use mint to create tokens after registering"
-        );
-    }
+function register_asset(
+    name,
+    symbol: text,
+    decimals: integer,
+    icon_url: text,
+    ): asset {
+    require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
     val id = (name, issuing_brid).hash();
-    return create asset (id, name, issuing_brid, total_supply);
+    return create asset (id, name, chain_context.blockchain_rid, 0);
 }
 
 function get_asset_balances(account_id: byte_array) {
@@ -105,6 +115,7 @@ function get_asset_balances(account_id: byte_array) {
         asset = (
             id = .asset.id,
             name = .asset.name,
+            decimals = .asset.decimals,
             brid = .asset.issuing_brid,
             supply = .asset.total_supply
         ),

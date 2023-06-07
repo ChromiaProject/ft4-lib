@@ -9,6 +9,8 @@ import {
   accountsByParticipantIdQuery,
   getRateLimitQuery,
   isAuthDescriptorValidQuery,
+  accountAuthDescriptors,
+  accountAuthDescriptorsByParticipantId,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -19,10 +21,17 @@ import {
   _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection } from "../interfaces";
-import { formatter, gtv } from "postchain-client";
-import { GtvAuthDescriptor } from "./auth-descriptor/types";
-import { authDescriptor as authDesc } from "./auth-descriptor";
+import { Connection, PageCursor } from "../types";
+import { formatter } from "postchain-client";
+import { PaymentHistoryFilter } from "./payment-history/types";
+import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
+import {
+  GtvAuthDescriptor,
+  AuthDescriptor,
+  RawAuthDescriptor,
+} from "./auth-descriptor/types";
+import { mapAuthDescriptors } from "./auth-descriptor";
+import { createConnection } from "../ft-session";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -84,11 +93,11 @@ async function createAccountObjectFromId(
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(session, id),
-    getAuthDescriptors(session, id),
+    _getAuthDescriptors(createConnection(session), id),
   ]);
   return Object.freeze({
     balances,
-    authDescriptors: authDescriptors.map((ad) => authDesc.fromGtv(ad)),
+    authDescriptors,
     id,
   });
 }
@@ -107,10 +116,9 @@ export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
 ): Promise<GtvAuthDescriptor[]> {
-  const ads = await session.query(
+  return session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
-  return ads.map((ad) => [ad.auth_type, gtv.decode(ad.args), ad.rule ?? null]);
 }
 
 //this will be outdated as soon as another tx is sent to the same account:
@@ -144,6 +152,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
+  const retriever = createPaymentHistoryRetriever(connection.client, accountId);
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -151,9 +160,19 @@ export function createAccountObject(
     getBalances: () => _getBalancesByAccountId(connection, accountId),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    // TODO: replace with query function that returns asset descriptor as object not as a tuple
-    getAuthDescriptors: () => getAuthDescriptors(connection.client, accountId),
+    getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
+    getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
+      getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
+    getTransferHistory: async (
+      limit = 100,
+      filter: PaymentHistoryFilter = {},
+      cursor: PageCursor | null = null
+    ) => {
+      return retriever.retrieve(limit, filter, cursor);
+    },
+    getTransferHistoryEntry: async (rowid: number) =>
+      retriever.retrieveSingle(rowid),
   });
 }
 
@@ -194,4 +213,27 @@ export async function _isAuthDescriptorValid(
   return await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   );
+}
+
+export async function _getAuthDescriptors(
+  connection: Connection,
+  accountId: BufferId
+): Promise<AuthDescriptor[]> {
+  return connection
+    .query<RawAuthDescriptor[]>(
+      accountAuthDescriptors(formatter.ensureBuffer(accountId))
+    )
+    .then(mapAuthDescriptors);
+}
+
+export async function getAuthDescriptorsByParticipantId(
+  connection: Connection,
+  accountId: BufferId,
+  participantId: BufferId
+): Promise<AuthDescriptor[]> {
+  return connection
+    .query<RawAuthDescriptor[]>(
+      accountAuthDescriptorsByParticipantId(accountId, participantId)
+    )
+    .then(mapAuthDescriptors);
 }

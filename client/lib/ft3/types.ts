@@ -5,27 +5,50 @@ import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
 } from "./account/payment-history/interfaces";
-import { Account, RateLimit, User } from "./account/types";
-import { Asset, AssetAmount, Balance } from "./asset/types";
-import { ChainInfo, QueryObject } from "./utils/types";
-import { IAccount } from "./account/types";
+import { Amount } from "./asset/interfaces";
+import {
+  Account,
+  RateLimit,
+  User,
+  IAccount,
+  IAuthenticatedAccount,
+} from "./account/types";
+import { Asset, Balance } from "./asset/types";
+import { ChainInfo, QueryObject, Operation } from "./utils/types";
+import { TransactionBuilder } from "./utils/transaction-builder";
 
+export type PageCursor = string;
 export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;
   get: ftQuerySession;
   asset: {
     dev: {
-      register: (name: string) => Promise<Buffer>;
+      register: (
+        name: string,
+        symbol: string,
+        decimals: number,
+        brid: BufferId,
+        iconUrl: string
+      ) => Promise<Buffer>;
       mint: (
         assetId: BufferId,
         accountId: BufferId,
-        amount: AssetAmount
+        amount: Amount
       ) => Promise<void>;
       burn: (
         assetId: BufferId,
         accountId: BufferId,
-        amount: AssetAmount
+        amount: Amount
+      ) => Promise<Buffer>;
+    };
+  };
+  balance: {
+    dev: {
+      give: (
+        assetid: BufferId,
+        accountid: BufferId,
+        amount: Amount
       ) => Promise<void>;
     };
   };
@@ -54,9 +77,9 @@ export interface ftUserSession {
         from: BufferId,
         to: BufferId,
         asset: BufferId,
-        amount: bigint
+        amount: Amount
       ) => Promise<void>;
-      burn: (from: BufferId, asset: BufferId, amount: bigint) => Promise<void>;
+      burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
       xcTransfer: () => Promise<void>;
     };
     dev: {
@@ -132,4 +155,11 @@ export interface Connection {
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetsByName: (name: string) => Promise<Asset[]>;
   getAllAssets: () => Promise<Asset[]>;
+}
+
+export interface Session extends Connection {
+  account: IAuthenticatedAccount;
+  call: (...operations: Operation[]) => Promise<void>;
+  callWithoutNop: (...operations: Operation[]) => Promise<void>;
+  transactionBuilder: () => TransactionBuilder;
 }

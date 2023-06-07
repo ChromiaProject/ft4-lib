@@ -1,11 +1,12 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { ftUserSession } from "../client/lib/ft3/types";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { Account, User } from "../client/lib/ft3/account/types";
 import { AuthDescriptorRule } from "../client/lib/ft3/account/auth-descriptor/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft3/account/auth-descriptor/rules";
+import { createAmount } from "../client/lib/ft3/asset/amount";
 
 let _ft: ftUserSession;
 let asset: Asset;
@@ -66,7 +67,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(op1Promise).resolves.not.toThrowError();
 
@@ -74,7 +75,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(20)
+      createAmount(20, asset.decimals)
     );
     await expect(op2Promise).resolves.not.toThrowError();
   });
@@ -92,7 +93,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(op1Promise).resolves.not.toThrowError();
 
@@ -100,7 +101,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(20)
+      createAmount(20, asset.decimals)
     );
     await expect(op2Promise).rejects.toThrowError();
   });
@@ -118,7 +119,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).rejects.toThrowError();
   });
@@ -136,7 +137,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).resolves.not.toThrowError();
   });
@@ -154,7 +155,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).resolves.not.toThrowError();
   });
@@ -172,7 +173,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).rejects.toThrowError();
   });
@@ -190,7 +191,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).rejects.toThrowError();
   });
@@ -208,7 +209,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).resolves.not.toThrowError();
   });
@@ -226,7 +227,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).rejects.toThrowError();
   });
@@ -244,7 +245,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).resolves.not.toThrowError();
   });
@@ -262,7 +263,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).resolves.not.toThrowError();
   });
@@ -280,7 +281,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).rejects.toThrowError();
   });
@@ -299,7 +300,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).rejects.toThrowError();
   });
@@ -318,7 +319,7 @@ describe("Auth Descriptor Rule", () => {
       account.id,
       account2.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
     await expect(opPromise).resolves.not.toThrowError();
   });
@@ -341,7 +342,7 @@ describe("Auth Descriptor Rule", () => {
       srcAccount1.id,
       destAccount.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
 
     // account descriptor used by user2 object has expired.
@@ -354,7 +355,7 @@ describe("Auth Descriptor Rule", () => {
         srcAccount1.id,
         destAccount.id,
         asset.id,
-        BigInt(30)
+        createAmount(30, asset.decimals)
       );
 
     srcAccount1 = await _ft.get.account.by.id(srcAccount1.id);
@@ -382,7 +383,7 @@ describe("Auth Descriptor Rule", () => {
       srcAccount1.id,
       destAccount.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
 
     // perform transfer using auth descriptor without rules
@@ -390,7 +391,7 @@ describe("Auth Descriptor Rule", () => {
       srcAccount1.id,
       destAccount.id,
       asset.id,
-      BigInt(10)
+      createAmount(10, asset.decimals)
     );
 
     srcAccount1 = await _ft.get.account.by.id(srcAccount1.id);
@@ -415,7 +416,7 @@ describe("Auth Descriptor Rule", () => {
       srcAccount1.id,
       destAccount.id,
       asset.id,
-      BigInt(50)
+      createAmount(50, asset.decimals)
     );
 
     // this call will trigger deletion of expired auth descriptor (attached to user2)
@@ -425,7 +426,7 @@ describe("Auth Descriptor Rule", () => {
         srcAccount1.id,
         destAccount.id,
         asset.id,
-        BigInt(100)
+        createAmount(100, asset.decimals)
       );
 
     srcAccount1 = await _ft.get.account.by.id(srcAccount1.id);

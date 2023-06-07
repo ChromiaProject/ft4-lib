@@ -1,14 +1,31 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { FlagsType } from "../../client/lib/ft3/account/auth-descriptor";
-import { create } from "../../client/lib/ft3/account/auth-descriptor/auth-descriptor";
+import {
+  authDescriptor,
+  FlagsType,
+} from "../../client/lib/ft3/account/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
-import { Account } from "../../client/lib/ft3/account/types";
-import { Asset, Balance } from "../../client/lib/ft3/asset/types";
-import { ftUserSession } from "../../client/lib/ft3/interfaces";
+import {
+  Asset,
+  Balance,
+  SupportedNumber,
+} from "../../client/lib/ft3/asset/types";
+import {
+  Account,
+  IAuthenticatedAccount,
+} from "../../client/lib/ft3/account/types";
+import { ftUserSession } from "../../client/lib/ft3/types";
 import { gtx } from "postchain-client";
 import { mintOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
-import { transactionBuilder } from "../../client/lib/ft3/utils/transaction-builder";
+import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
+import { createAmount } from "../../client/lib/ft3/asset/amount";
+import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
+import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createAuthenicator } from "../../client/lib/ft3/authentication";
+import {
+  createAuthDataService,
+  createConnection,
+} from "../../client/lib/ft3/ft-session";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -46,13 +63,26 @@ class AccountBuilder {
     return this;
   }
 
-  withBalance(asset: Asset, amount: number | bigint): AccountBuilder {
-    this.balances.push({ amount: BigInt(amount), asset });
+  withBalance(
+    asset: Asset,
+    _amount: Exclude<SupportedNumber, bigint>
+  ): AccountBuilder {
+    this.balances.push({
+      amount: createAmount(_amount, asset.decimals),
+      asset,
+    });
     return this;
   }
 
-  withBalances(balances: Balance[]): AccountBuilder {
-    this.balances = this.balances.concat(balances);
+  withBalances(
+    balances: { amount: Exclude<SupportedNumber, bigint>; asset: Asset }[]
+  ): AccountBuilder {
+    this.balances = this.balances.concat(
+      balances.map((b) => ({
+        amount: createAmount(b.amount, b.asset.decimals),
+        asset: b.asset,
+      }))
+    );
     return this;
   }
 
@@ -73,6 +103,24 @@ class AccountBuilder {
     return await this.session.get.account.by.id(account.id);
   }
 
+  async buildAuthenticated(): Promise<IAuthenticatedAccount> {
+    const account = await this.registerAccount();
+    await this.addBalanceIfNeeded(account);
+    await this.addPointsIfNeeded(account);
+    const connection = createConnection(this.session.get.gtxClient);
+    const { signatureProvider, authDescriptor } = this.session.user;
+    const keyHandler =
+      createInMemoryFTKeyStore(signatureProvider).createKeyHandler(
+        authDescriptor
+      );
+    const authenticator = createAuthenicator(
+      account.id,
+      [keyHandler],
+      createAuthDataService(connection)
+    );
+    return createAuthenticatedAccount(connection, authenticator);
+  }
+
   /* Private functions */
 
   private async registerAccount(): Promise<Account> {
@@ -81,7 +129,7 @@ class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const tb = transactionBuilder(
+      const tb = legacyTransactionBuilder(
         this.session.user,
         this.session.get.gtxClient
       );
@@ -112,7 +160,7 @@ class AccountBuilder {
       return this.session.user.authDescriptor;
     }
     if (this.participants.length > 1) {
-      return create.multiSig
+      return authDescriptor.create.multiSig
         .withArgs(
           this.flags,
           this.requiredSignaturesCount,
@@ -121,7 +169,7 @@ class AccountBuilder {
         .andRules(this.rules);
     } else {
       const [participant] = this.participants;
-      return create.singleSig
+      return authDescriptor.create.singleSig
         .withArgs(this.flags, participant.pubKey)
         .andRules(this.rules);
     }

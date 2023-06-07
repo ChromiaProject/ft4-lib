@@ -5,36 +5,36 @@ import {
   PaymentHistoryJSON,
   PaymentHistoryTransferArgs,
 } from "./types";
+import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
 
 export function createPaymentHistoryEntry(
   rowid: string,
   isInput: boolean,
   delta: bigint,
+  decimals: number,
   assetName: string,
   assetId: BufferId,
   entryIndex: number,
   data: Buffer | string,
-  transferArgs: { amount: number; accountId: BufferId }[][],
+  transferArgs: { amount: bigint; accountId: BufferId }[][],
   timestamp: Date | number,
   transactionId: BufferId,
   blockHeight: number
   //brid: BufferId
 ): PaymentHistoryEntry {
   const txArgs = transferArgs.map((list) =>
-    list.map((a) => {
-      return {
-        amount: a.amount,
-        accountId: formatter.ensureBuffer(a.accountId),
-      };
-    })
+    list.map((a) => ({
+      amount: createAmountFromBalance(a.amount, decimals),
+      accountId: formatter.ensureBuffer(a.accountId),
+    }))
   );
   //eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return Object.freeze({
     rowid: rowid,
     isInput: isInput,
-    delta: Number(delta), //<-------------NEEDS CHANGE!!!
+    delta: createAmountFromBalance(delta, decimals),
     asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
     entryIndex: entryIndex,
     data: formatter.ensureBuffer(data),
@@ -60,6 +60,7 @@ export function createPaymentHistoryEntryFromResponse(
   const [
     rowid,
     delta,
+    decimals,
     asset_name,
     asset_id,
     is_input,
@@ -71,21 +72,20 @@ export function createPaymentHistoryEntryFromResponse(
     tx_data,
   ] = responseEntry;
 
-  const args = (<[number, string][][]>(
+  const args = (<[bigint, string][][]>(
     gtv.decode(Buffer.from(transfer_args, "hex"))
   )).map((list) =>
-    list.map((a): PaymentHistoryTransferArgs => {
-      return {
-        amount: a[0],
-        accountId: formatter.ensureBuffer(a[1]),
-      };
-    })
+    list.map((a) => ({
+      amount: a[0],
+      accountId: formatter.ensureBuffer(a[1]),
+    }))
   );
 
   return createPaymentHistoryEntry(
     rowid,
     is_input === 1,
     delta,
+    decimals,
     asset_name,
     asset_id,
     entry_index,
@@ -114,17 +114,16 @@ export function paymentHistoryEntryToJSON(phe: PaymentHistoryEntry): string {
     //brid,
   } = phe;
   const txArgs = [transferInputArgs, transferOutputArgs].map((list) =>
-    list.map((a) => {
-      return {
-        amount: a.amount,
-        accountId: a.accountId.toString("hex"),
-      };
-    })
+    list.map((a) => ({
+      amount: a.amount,
+      accountId: a.accountId.toString("hex"),
+    }))
   );
   return JSON.stringify({
     rowid,
     isInput,
-    delta,
+    delta: delta.value.toString(),
+    decimals: delta.decimals,
     assetName: asset.name,
     assetId: asset.id.toString("hex"),
     entryIndex,
@@ -144,6 +143,7 @@ export function paymentHistoryEntryFromJSON(
     rowid,
     isInput,
     delta,
+    decimals,
     assetName,
     assetId,
     entryIndex,
@@ -156,7 +156,8 @@ export function paymentHistoryEntryFromJSON(
   return createPaymentHistoryEntry(
     rowid,
     isInput,
-    delta,
+    BigInt(delta),
+    decimals,
     assetName,
     assetId,
     entryIndex,

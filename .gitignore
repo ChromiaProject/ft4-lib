@@ -5,6 +5,8 @@
 .idea/*
 .project
 .vscode/*
+.secret
+.pmc
 
 db.log
 
@@ -21,3 +23,4 @@ rell/target
 rell/out
 
 yarn.log
+coverage

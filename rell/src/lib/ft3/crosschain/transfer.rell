@@ -5,7 +5,7 @@ struct xc_target {
     extra: map<text, gtv>;
 }
 
-function add_to_blockchain_balance(brid: byte_array, ft3.asset, amount: integer) {
+function add_to_blockchain_balance(brid: byte_array, ft3.asset, amount: big_integer) {
     require(
         chain_context.blockchain_rid != brid,
         "Cannot add to own account"

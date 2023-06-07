@@ -101,7 +101,7 @@ operation apply_xfer(
         xc.add_to_blockchain_balance(next_hop, asset, source.amount);
     } else {
         // final hop -- send money to recipient account
-        val available_assets = map<ft3.asset, integer>();
+        val available_assets = map<ft3.asset, big_integer>();
         available_assets[asset] = source.amount;
         val target = init_args.target;
         /*ft3.process_transfer_output(

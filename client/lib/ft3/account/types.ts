@@ -1,9 +1,17 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { Balance, AssetAmount } from "../asset/types";
-import { AuthDescriptor, GtvAuthDescriptor } from "./auth-descriptor/types";
+import { Balance } from "../asset/types";
+import { AuthDescriptor } from "./auth-descriptor/types";
 import { GtvCompatible } from "../utils/gtv";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId, KeyPair } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
+import {
+  PaymentHistoryFilter,
+  TransferHistoryResponse,
+  PaymentHistoryEntry,
+} from "./payment-history/types";
+import { Authenticator } from "../authentication/interfaces";
+import { Amount } from "../asset/interfaces";
+import { PageCursor } from "../types";
 
 export type Account = {
   id: Buffer;
@@ -16,14 +24,14 @@ export type XferInput = [
   accountId: Buffer,
   assetId: Buffer,
   authDescriptorId: Buffer,
-  amount: AssetAmount,
+  amount: bigint,
   extra: { [key: string]: GtvCompatible }
 ];
 
 export type XferOutput = [
   accountId: Buffer,
   assetId: Buffer,
-  amount: AssetAmount,
+  amount: bigint,
   extra: { [key: string]: GtvCompatible }
 ];
 
@@ -45,7 +53,39 @@ export interface IAccount {
   // TODO: Use Page<Balance> type instead
   getBalances: () => Promise<Balance[]>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
-  isAuthDescriptorValid: (authDescriptorId) => Promise<boolean>;
-  getAuthDescriptors: () => Promise<GtvAuthDescriptor[]>;
+  isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
+  getAuthDescriptors: () => Promise<AuthDescriptor[]>;
+  getAuthDescriptorsByParticipantId: (
+    partiticipantId: BufferId
+  ) => Promise<AuthDescriptor[]>;
   getRateLimit: () => Promise<RateLimit>;
+  getTransferHistory: (
+    limit?: number,
+    filter?: PaymentHistoryFilter,
+    cursor?: PageCursor | null
+  ) => Promise<TransferHistoryResponse>;
+  getTransferHistoryEntry: (
+    rowid: number
+  ) => Promise<PaymentHistoryEntry | null>;
+}
+
+export interface IAuthenticatedAccount extends IAccount {
+  authenticator: Authenticator;
+  addAuthDescriptor: (
+    authDescriptor: AuthDescriptor,
+    keyPair: KeyPair
+  ) => Promise<void>;
+  deleteAuthDescriptor: (authDescriptorId: BufferId) => Promise<void>;
+  transfer: (
+    receiverId: BufferId,
+    assetId: BufferId,
+    amount: Amount
+  ) => Promise<void>;
+  xcTransfer: (
+    brid: BufferId,
+    receiverId: BufferId,
+    assetId: BufferId,
+    amount: Amount
+  ) => Promise<void>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<void>;
 }
