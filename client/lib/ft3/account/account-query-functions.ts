@@ -21,12 +21,9 @@ import {
   _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection } from "../interfaces";
+import { Connection, PageCursor } from "../types";
 import { formatter } from "postchain-client";
-import {
-  PaymentHistoryCursor,
-  PaymentHistoryFilter,
-} from "./payment-history/types";
+import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
 import {
   GtvAuthDescriptor,
@@ -170,10 +167,12 @@ export function createAccountObject(
     getTransferHistory: async (
       limit = 100,
       filter: PaymentHistoryFilter = {},
-      cursor: PaymentHistoryCursor | null = null
+      cursor: PageCursor | null = null
     ) => {
       return retriever.retrieve(limit, filter, cursor);
     },
+    getTransferHistoryEntry: async (rowid: number) =>
+      retriever.retrieveSingle(rowid),
   });
 }
 

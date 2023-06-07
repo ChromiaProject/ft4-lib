@@ -182,3 +182,54 @@ function test_history_filtering() {
     assert_equals(ft3.transfer_op.get_payment_history_paginated(bob.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 0);
     assert_equals(ft3.transfer_op.get_payment_history_paginated(bob.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
 }
+
+function test_single_payment_history_entry() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_id = utils.create_asset("test", "t", 0).id;
+
+    val inputs = [
+        core.xfer_input(
+            account_id = alice.account.id,
+            asset_id,
+            auth_descriptor_id = alice.auth_descriptor_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    val outputs = [
+        core.xfer_output(
+            account_id = bob.account.id, 
+            asset_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    rell.test.tx()
+        .op(dev_op_balance.dev_give_balance(asset_id, alice.account.id, 5))
+        .op(ft3.transfer_op.transfer(inputs, outputs))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    val entry = core.payment_history_entry @* {}[0];
+    assert_equals(
+        ft3.transfer_op.get_single_payment_history_entry(entry.rowid),
+        (
+            id = '%d'.format(entry.rowid),
+            delta = entry.delta,
+            decimals = entry.asset.decimals,
+            asset = entry.asset.name,
+            asset_id = entry.asset.id,
+            is_input = entry.is_input,
+            timestamp = entry.transaction.block.timestamp,
+            block_height = entry.transaction.block.block_height,
+            entry_index = entry.entry_index,
+            transfer_args = entry.transfer_args,
+            tx_rid = entry.transaction.tx_rid,
+            tx_data = entry.transaction.tx_data
+        ).to_gtv()
+    );
+}

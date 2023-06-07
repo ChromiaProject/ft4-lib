@@ -1,7 +1,7 @@
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { User } from "../client/lib/ft3/account/types";
 import { createConnection } from "../client/lib/ft3/ft-session";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
 import { getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";

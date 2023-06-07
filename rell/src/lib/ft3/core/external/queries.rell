@@ -76,3 +76,8 @@ query get_payment_history_paginated(account_id: byte_array, filter: core.filter,
 query get_payment_history_size(account_id: byte_array) {
     return core.payment_history_entry @* { acc.account @ {account_id} } ($).size();
 }
+
+query get_single_payment_history_entry(rowid) {
+    val entry = core.payment_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry).to_gtv();
+}

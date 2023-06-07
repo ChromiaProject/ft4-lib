@@ -16,21 +16,25 @@ function extract_data_from_payment_history_list(
         entries: list<payment_history_entry>
     ): list<(data:gtv,rowid:rowid)> {
     return entries @* {} (
-        data = (
-            id = '%d'.format(.rowid),
-            delta = .delta,
-            decimals = .asset.decimals,
-            asset = .asset.name,
-            asset_id = .asset.id,
-            is_input = .is_input,
-            timestamp = .transaction.block.timestamp,
-            block_height = .transaction.block.block_height,
-            entry_index = .entry_index,
-            transfer_args = .transfer_args,
-            tx_rid = .transaction.tx_rid,
-            tx_data = .transaction.tx_data
-        ).to_gtv(),
+        data = extract_data_from_payment_history_entry($).to_gtv(),
         rowid = .rowid
+    );
+}
+
+function extract_data_from_payment_history_entry(entry: payment_history_entry) {
+    return (
+        id = '%d'.format(entry.rowid),
+        delta = entry.delta,
+        decimals = entry.asset.decimals,
+        asset = entry.asset.name,
+        asset_id = entry.asset.id,
+        is_input = entry.is_input,
+        timestamp = entry.transaction.block.timestamp,
+        block_height = entry.transaction.block.block_height,
+        entry_index = entry.entry_index,
+        transfer_args = entry.transfer_args,
+        tx_rid = entry.transaction.tx_rid,
+        tx_data = entry.transaction.tx_data
     );
 }
 

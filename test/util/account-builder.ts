@@ -13,7 +13,7 @@ import {
   Account,
   IAuthenticatedAccount,
 } from "../../client/lib/ft3/account/types";
-import { ftUserSession } from "../../client/lib/ft3/interfaces";
+import { ftUserSession } from "../../client/lib/ft3/types";
 import { gtx } from "postchain-client";
 import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";

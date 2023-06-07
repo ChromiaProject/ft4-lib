@@ -17,6 +17,7 @@ import { Asset, Balance } from "./asset/types";
 import { Config, QueryObject, Operation } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
+export type PageCursor = string;
 export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;

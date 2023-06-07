@@ -2,7 +2,7 @@ import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Amount } from "../client/lib/ft3/asset/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { createConnection } from "../client/lib/ft3/ft-session";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import testUser from "./util/test-user";

@@ -2,9 +2,8 @@ import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { config } from "dotenv";
 import { Account, User } from "../client/lib/ft3/account/types";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
@@ -22,7 +21,6 @@ import {
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
-config();
 
 async function addAuthDescriptorTo(
   account: Account,

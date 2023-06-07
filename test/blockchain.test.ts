@@ -1,5 +1,5 @@
 import { version } from "../package.json";
-import { Connection } from "../client/lib/ft3/interfaces";
+import { Connection } from "../client/lib/ft3/types";
 import { createClient } from "./util/blockchain-util";
 import { Config } from "../client/lib/ft3/utils/types";
 import { ft } from "../client/lib/ft3";

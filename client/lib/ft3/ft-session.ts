@@ -2,12 +2,7 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./account";
 import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
-import {
-  ftQuerySession,
-  ftUserSession,
-  Connection,
-  Session,
-} from "./interfaces";
+import { ftQuerySession, ftUserSession, Connection, Session } from "./types";
 import { getConfig, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {

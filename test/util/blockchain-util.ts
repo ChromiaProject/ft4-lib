@@ -1,6 +1,5 @@
 import { generateAssetName, generateAssetSymbol, generateId } from "./util";
-import { config } from "dotenv";
-import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/interfaces";
+import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/types";
 import { gtxClient, restClient, restClientutil } from "postchain-client";
 import {
   createQuerySession,
@@ -9,7 +8,6 @@ import {
 import { Asset } from "../../client/lib/ft3/asset/types";
 import singleSigUser from "./test-user";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
-config();
 
 export async function createClient(nodeUrl?: string) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
