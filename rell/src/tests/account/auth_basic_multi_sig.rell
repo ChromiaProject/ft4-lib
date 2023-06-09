@@ -23,7 +23,7 @@ function test_multi_sig_valid_1_of_1() {
     val alice = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice], 
         good_ad_1_of_1()
-    ).auth;
+    );
 
     rell.test.tx()
         .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
@@ -37,10 +37,14 @@ function test_multi_sig_valid_2_of_2_signs() {
     val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob], 
         good_ad_2_of_2()
-    ).auth;
+    );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor.hash(), required_flags()))
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            required_flags()
+        ))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .run();
@@ -52,10 +56,14 @@ function test_multi_sig_valid_1_of_2_signs() {
     val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob], 
         good_ad_1_of_2() // <-- Only one required
-    ).auth;
+    );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor.hash(), required_flags()))
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            required_flags()
+        ))
         .sign(rell.test.keypairs.bob) // <-- Omitting Alice should work
         .run();
 
@@ -66,10 +74,13 @@ function test_multi_sig_valid_3_of_3_signs() {
     val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob, rell.test.keypairs.trudy], 
         good_ad_3_of_3()
-    ).auth;
+    );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor.hash(), required_flags()))
+        .op(dev_op_auth.dev_auth(account_data.account.id,
+        account_data.auth_descriptor_id,
+        required_flags()
+    ))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .sign(rell.test.keypairs.trudy)
@@ -83,11 +94,15 @@ function test_multi_sig_wrong_required_flags() {
     val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob], 
         good_ad_2_of_2()
-    ).auth;
+    );
 
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor.hash(), bad_required_flags))
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            bad_required_flags
+        ))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .run();

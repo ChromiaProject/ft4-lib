@@ -9,7 +9,7 @@ import xft3: ^^.crosschain;
 
 operation dev_register_asset(name, symbol: text, decimals: integer, icon_url: text) {
     dev_op.require_dev();
-    ft3.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url, 0);
+    ft3.Unsafe.register_asset(name, symbol, decimals, icon_url);
 }
 
 operation dev_register_xc_asset(
@@ -20,12 +20,17 @@ operation dev_register_xc_asset(
     icon_url: text,
     total_supply: integer = 0
 ) {
+    require(false, "Feature not implemented yet.");
     dev_op.require_dev();
-    val asset = ft3.register_asset(name, symbol, decimals, issuing_brid, icon_url);
+    val asset = ft3.Unsafe.register_asset(name, symbol, decimals, icon_url);
     create xft3.asset_origin (asset, origin_brid);
 }
 
-operation dev_mint(amount: integer, asset_id: byte_array, account_id: byte_array) {
+operation dev_mint(account_id: byte_array, asset_id: byte_array, amount: big_integer) {
     dev_op.require_dev();
-    ft3._mint(acc.account @ { .id==account_id }, ft3.asset @ { .id == asset_id }, amount);
+    ft3.Unsafe.mint(
+        acc.account @ { .id==account_id },
+        ft3.asset @ { .id == asset_id },
+        amount
+    );
 }

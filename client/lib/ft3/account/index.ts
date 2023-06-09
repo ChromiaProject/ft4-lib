@@ -115,7 +115,7 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
       ) =>
         transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
       burn: (from: BufferId, asset: BufferId, amount: Amount) =>
-        burnTokens(from, asset, amount, legacyTransactionBuilder(user, pci)),
+        burnTokens(asset, amount, legacyTransactionBuilder(user, pci)),
       xcTransfer: () => xcTransfer(),
     },
     dev: {

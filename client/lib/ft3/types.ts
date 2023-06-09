@@ -36,20 +36,6 @@ export interface ftUserSession {
         accountId: BufferId,
         amount: Amount
       ) => Promise<void>;
-      burn: (
-        assetId: BufferId,
-        accountId: BufferId,
-        amount: Amount
-      ) => Promise<Buffer>;
-    };
-  };
-  balance: {
-    dev: {
-      give: (
-        assetid: BufferId,
-        accountid: BufferId,
-        amount: Amount
-      ) => Promise<void>;
     };
   };
 

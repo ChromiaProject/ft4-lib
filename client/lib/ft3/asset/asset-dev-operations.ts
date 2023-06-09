@@ -13,17 +13,9 @@ export function registerAssetOp(
 }
 
 export function mintOp(
-  assetId: Buffer,
   accountId: Buffer,
+  assetId: Buffer,
   amount: Amount
 ): Operation {
-  return op("ft3.dev_mint", Number(amount), assetId, accountId);
-}
-
-export function burnOp(
-  assetId: Buffer,
-  accountId: Buffer,
-  amount: Amount
-): Operation {
-  return op("ft3.dev_burn", Number(amount), assetId, accountId);
+  return op("ft3.dev_mint", Number(amount), assetId);
 }

@@ -5,7 +5,7 @@ import {
   getBalance,
   getBalancesByAccountId,
 } from "./asset-query-functions";
-import { mint, burn, registerAsset } from "./asset-op-functions";
+import { mint, registerAsset } from "./asset-op-functions";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { User } from "../account/types";
 import { Amount } from "./interfaces";
@@ -58,8 +58,6 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
           ),
         mint: (assetId: BufferId, accountId: BufferId, amount: Amount) =>
           mint(assetId, accountId, amount, legacyTransactionBuilder(user, pci)),
-        burn: (assetId: BufferId, accountId: BufferId, amount: Amount) =>
-          burn(assetId, accountId, amount, legacyTransactionBuilder(user, pci)),
       },
     },
   });
