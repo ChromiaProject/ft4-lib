@@ -34,7 +34,7 @@ describe("Asset", () => {
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = generateId();
+    const brid = connection.client.newTransaction([]).gtx.blockchainRID;
     const assetId = ft.get.asset.id(assetName, brid);
     await getNewAsset(ft, assetName, assetSymbol, 3);
 

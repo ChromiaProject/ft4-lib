@@ -411,13 +411,7 @@ describe("Payment history", () => {
           asset.id,
           createAmount(10, asset.decimals)
         );
-        await ft.account.token.transfer(
-          account1.id,
-          account2.id,
-          asset.id,
-          createAmount(10, asset.decimals)
-        );
-
+        
         const paymentHistoryStore = await createNewPaymentHistoryStoreLocal(
           ft.get.gtxClient,
           account1.id,
