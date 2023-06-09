@@ -60,7 +60,7 @@ describe("Payment history", () => {
       const paymentHistoryEntries = await paymentHistoryIterator.next();
 
       expect(paymentHistoryStore.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries.length).toEqual(1);
+      expect(paymentHistoryEntries.length).toEqual(2);
 
       const [entry] = paymentHistoryEntries;
 

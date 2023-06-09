@@ -1,4 +1,4 @@
-import { generateAssetName, generateAssetSymbol, generateId } from "./util";
+import { generateAssetName, generateAssetSymbol } from "./util";
 import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/types";
 import { gtxClient, restClient, restClientutil } from "postchain-client";
 import {
@@ -36,14 +36,12 @@ export async function getNewAsset(
   name = generateAssetName(),
   symbol = generateAssetSymbol(),
   decimals = 0,
-  brid = generateId(),
   iconUrl = ""
 ): Promise<Asset> {
   const id = await userSession.asset.dev.register(
     name,
     symbol,
     decimals,
-    brid,
     iconUrl
   );
   const asset = await userSession.get.asset.by.id(id);

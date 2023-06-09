@@ -10,22 +10,15 @@ export async function registerAsset(
   name: string,
   symbol: string,
   decimals: number,
-  brid: BufferId,
   iconUrl: string,
   tb: LegacyTransactionBuilder
 ): Promise<Buffer> {
   const tx = await tb
-    .add(
-      registerAssetOp(
-        name,
-        symbol,
-        decimals,
-        formatter.ensureBuffer(brid),
-        iconUrl
-      )
-    )
+    .add(registerAssetOp(name, symbol, decimals, iconUrl))
     .add(nop())
     .buildSigned();
+
+  const brid = tx.gtx.blockchainRID;
   await tx.postAndWaitConfirmation();
   return id(name, brid);
 }

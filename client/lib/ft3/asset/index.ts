@@ -45,19 +45,17 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
           name: string,
           symbol: string,
           decimals: number,
-          brid: BufferId,
           iconUrl: string
         ) =>
           registerAsset(
             name,
             symbol,
             decimals,
-            brid,
             iconUrl,
             legacyTransactionBuilder(user, pci)
           ),
         mint: (assetId: BufferId, accountId: BufferId, amount: Amount) =>
-          mint(assetId, accountId, amount, legacyTransactionBuilder(user, pci)),
+          mint(accountId, assetId, amount, legacyTransactionBuilder(user, pci)),
       },
     },
   });

@@ -28,7 +28,6 @@ export interface ftUserSession {
         name: string,
         symbol: string,
         decimals: number,
-        brid: BufferId,
         iconUrl: string
       ) => Promise<Buffer>;
       mint: (

@@ -135,7 +135,7 @@ class AccountBuilder {
       );
 
       this.balances.forEach((balance) => {
-        tb.add(mintOp(balance.asset.id, account.id, balance.amount));
+        tb.add(mintOp(account.id, balance.asset.id, balance.amount));
       });
 
       tb.add(nop());

@@ -36,7 +36,7 @@ describe("Asset", () => {
     const assetSymbol = generateAssetSymbol();
     const brid = generateId();
     const assetId = ft.get.asset.id(assetName, brid);
-    await getNewAsset(ft, assetName, assetSymbol, 3, brid);
+    await getNewAsset(ft, assetName, assetSymbol, 3);
 
     const expectedAsset = await connection.getAssetById(assetId);
 
