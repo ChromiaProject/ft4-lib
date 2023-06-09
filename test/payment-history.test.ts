@@ -24,7 +24,7 @@ describe("Payment history", () => {
     asset = await getNewAsset(_ft);
   });
   describe("Payment history iterator", () => {
-    it("should have one payment history entry when one transfer is made", async () => {
+    it("should have two payment history entry when mint + transfer is made", async () => {
       const keyPair = new KeyPair();
       const user = newSingleSigUser(keyPair);
       const ft = _ft.changeUser(user);
@@ -69,7 +69,7 @@ describe("Payment history", () => {
       expect(entry.transferOutputArgs[0].accountId).toEqual(account2.id);
     });
 
-    it("should have two payment history entries if two transfers made", async () => {
+    it("should have three payment history entries if mint + two transfers made", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
 
@@ -107,10 +107,10 @@ describe("Payment history", () => {
       const paymentHistoryEntries = await paymentHistoryIterator.next();
 
       expect(paymentHistoryStore.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries.length).toEqual(2);
+      expect(paymentHistoryEntries.length).toEqual(3);
     });
 
-    it("should have two payment history entries when sender and receiver are the same", async () => {
+    it("should have three payment history entries when mint + transfer to self", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
 
@@ -138,7 +138,7 @@ describe("Payment history", () => {
       const paymentHistoryEntries = await paymentHistoryIterator.next();
 
       expect(paymentHistoryStore.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries.length).toEqual(2);
+      expect(paymentHistoryEntries.length).toEqual(3);
 
       const [entry1, entry2] = paymentHistoryEntries;
 
@@ -169,18 +169,6 @@ describe("Payment history", () => {
         _ft.changeUser(TestUser())
       ).build();
 
-      await ft.account.token.transfer(
-        account1.id,
-        account2.id,
-        asset.id,
-        createAmount(10, asset.decimals)
-      );
-      await ft.account.token.transfer(
-        account1.id,
-        account2.id,
-        asset.id,
-        createAmount(10, asset.decimals)
-      );
       await ft.account.token.transfer(
         account1.id,
         account2.id,
@@ -241,7 +229,7 @@ describe("Payment history", () => {
       expect(paymentHistoryEntries[0].isInput).toEqual(true);
     });
 
-    it("returns only recieved transactions if that is specified", async () => {
+    it("returns only received transactions if that is specified", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
 
@@ -274,7 +262,7 @@ describe("Payment history", () => {
       const paymentHistoryEntries1 = await paymentHistoryIterator1.next();
 
       expect(paymentHistoryStore1.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries1.length).toEqual(0);
+      expect(paymentHistoryEntries1.length).toEqual(1);
 
       const paymentHistoryStore2 = await createPaymentHistoryStoreMemory(
         ft.get.gtxClient,
@@ -316,7 +304,7 @@ describe("Payment history", () => {
       const connection = createConnection(_ft.get.gtxClient);
       const foundAccount = await connection.getAccountById(account1.id);
       const history = await foundAccount.getTransferHistory();
-      expect(history.data.length).toStrictEqual(1);
+      expect(history.data.length).toStrictEqual(2);
       expect(history.data[0].transferInputArgs.length).toBe(1);
       expect(history.data[0].transferInputArgs[0].accountId).toEqual(
         account1.id
