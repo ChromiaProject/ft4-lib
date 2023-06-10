@@ -192,95 +192,6 @@ describe("Payment history", () => {
       expect(paymentHistoryStore.getPageCount()).toEqual(2);
     });
 
-    it("returns only sent transactions if that is specified", async () => {
-      const user = TestUser();
-      const ft = _ft.changeUser(user);
-
-      const account1 = await AccountBuilder.account(ft)
-        .withBalance(asset, 200)
-        .withPoints(1)
-        .build();
-
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
-
-      await ft.account.token.transfer(
-        account1.id,
-        account2.id,
-        asset.id,
-        createAmount(10, asset.decimals)
-      );
-
-      const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
-        account1.id,
-        5,
-        {
-          paymentHistoryType: PaymentHistoryType.Sent,
-        }
-      );
-      const paymentHistoryIterator =
-        _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
-      const paymentHistoryEntries = await paymentHistoryIterator.next();
-
-      expect(paymentHistoryStore.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries.length).toEqual(1);
-      expect(paymentHistoryEntries[0].isInput).toEqual(true);
-    });
-
-    it("returns only received transactions if that is specified", async () => {
-      const user = TestUser();
-      const ft = _ft.changeUser(user);
-
-      const account1 = await AccountBuilder.account(ft)
-        .withBalance(asset, 200)
-        .withPoints(1)
-        .build();
-
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
-
-      await ft.account.token.transfer(
-        account1.id,
-        account2.id,
-        asset.id,
-        createAmount(10, asset.decimals)
-      );
-
-      const paymentHistoryStore1 = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
-        account1.id,
-        5,
-        {
-          paymentHistoryType: PaymentHistoryType.Received,
-        }
-      );
-      const paymentHistoryIterator1 =
-        _ft.get.account.paymentHistory.iterator(paymentHistoryStore1);
-      const paymentHistoryEntries1 = await paymentHistoryIterator1.next();
-
-      expect(paymentHistoryStore1.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries1.length).toEqual(1);
-
-      const paymentHistoryStore2 = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
-        account2.id,
-        5,
-        {
-          paymentHistoryType: PaymentHistoryType.Received,
-        }
-      );
-      const paymentHistoryIterator2 =
-        _ft.get.account.paymentHistory.iterator(paymentHistoryStore2);
-      const paymentHistoryEntries2 = await paymentHistoryIterator2.next();
-
-      expect(paymentHistoryStore2.getPageCount()).toEqual(1);
-      expect(paymentHistoryEntries2.length).toEqual(1);
-      expect(paymentHistoryEntries2[0].isInput).toEqual(false);
-    });
-
     it("is possible to get payment history from via the IAccount interface", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
@@ -411,7 +322,7 @@ describe("Payment history", () => {
           asset.id,
           createAmount(10, asset.decimals)
         );
-        
+
         const paymentHistoryStore = await createNewPaymentHistoryStoreLocal(
           ft.get.gtxClient,
           account1.id,
@@ -422,6 +333,82 @@ describe("Payment history", () => {
         expect(paymentHistoryStore.getPageCount()).toEqual(2);
       });
     });
+  });
+
+  it("returns only sent transactions if that is specified", async () => {
+    const account1 = await AccountBuilder.account(_ft.changeUser(TestUser()))
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .buildAuthenticated();
+
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).buildAuthenticated();
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(5, asset.decimals)
+    );
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(10, asset.decimals)
+    );
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(15, asset.decimals)
+    );
+
+    await account2.transfer(
+      account1.id,
+      asset.id,
+      createAmount(15, asset.decimals)
+    );
+
+    const transferHistory = await account1.getTransferHistory(10, {
+      paymentHistoryType: PaymentHistoryType.Sent,
+    });
+
+    expect(transferHistory.data.length).toEqual(3);
+  });
+
+  it("returns only received transactions if that is specified", async () => {
+    const account1 = await AccountBuilder.account(_ft.changeUser(TestUser()))
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .buildAuthenticated();
+
+    const account2 = await AccountBuilder.account(
+      _ft.changeUser(TestUser())
+    ).buildAuthenticated();
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(10, asset.decimals)
+    );
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(15, asset.decimals)
+    );
+
+    await account2.transfer(
+      account1.id,
+      asset.id,
+      createAmount(20, asset.decimals)
+    );
+
+    const transferHistory = await account2.getTransferHistory(5, {
+      paymentHistoryType: PaymentHistoryType.Received,
+    });
+
+    expect(transferHistory.data.length).toEqual(2);
   });
 
   it("fetches a payment history entry by rowid", async () => {
