@@ -104,9 +104,9 @@ function create_account_with_auth(auth_descriptor): byte_array {
 
     add_auth_descriptor_to_account(acc, auth_descriptor);
 
-    val max_points = core.my_blockchain_info.rate_limit_max_points;
-    val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
-    val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
+    val max_points = core.config.rate_limit_max_points;
+    val recovery_time = core.config.rate_limit_recovery_time;
+    val points_at_start = core.config.rate_limit_points_at_account_creation;
     
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
@@ -152,9 +152,9 @@ namespace Unsafe {
         _add_auth_descriptor(
             acc, auth_descriptor
         );
-        val max_points = core.my_blockchain_info.rate_limit_max_points;
-        val recovery_time = core.my_blockchain_info.rate_limit_recovery_time;
-        val points_at_start = core.my_blockchain_info.rate_limit_points_at_account_creation;
+        val max_points = core.config.rate_limit_max_points;
+        val recovery_time = core.config.rate_limit_recovery_time;
+        val points_at_start = core.config.rate_limit_points_at_account_creation;
         
         create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
         

@@ -14,7 +14,7 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { ChainInfo, QueryObject, Operation } from "./utils/types";
+import { Config, QueryObject, Operation } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
 export type PageCursor = string;
@@ -78,9 +78,6 @@ export interface ftUserSession {
 export interface ftQuerySession {
   gtxClient: GtxClient;
   createUserSession: (user: User) => ftUserSession;
-  chainInfo: () => Promise<ChainInfo>;
-  version: () => Promise<string>;
-  lastTimestamp: () => Promise<number>;
   asset: {
     id: (name: string, brid: BufferId) => Buffer;
     by: {
@@ -130,6 +127,8 @@ export interface ftQuerySession {
 export interface Connection {
   client: GtxClient;
   query: <T>(query: QueryObject) => Promise<T | null>;
+  getConfig: () => Promise<Config>;
+  getVersion: () => Promise<string>;
 
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
