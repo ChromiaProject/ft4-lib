@@ -27,6 +27,13 @@ export function transferOp(
   return op("ft3.transfer", inputs, outputs);
 }
 
+export function burnOp(
+  assetId: Buffer,
+  amount: Amount
+): Operation {
+  return op("ft3.burn", assetId, Number(amount));
+}
+
 export function xcTransferOp /*
   source: GtvCompatible,
   target: GtvCompatible,

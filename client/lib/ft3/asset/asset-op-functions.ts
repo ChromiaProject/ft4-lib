@@ -1,7 +1,7 @@
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
-import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
+import { mintOp, registerAssetOp } from "./asset-dev-operations";
 import { Amount } from "../asset/interfaces";
 import { formatter } from "postchain-client";
 import { nop } from "../utils";
@@ -10,37 +10,30 @@ export async function registerAsset(
   name: string,
   symbol: string,
   decimals: number,
-  brid: BufferId,
   iconUrl: string,
   tb: LegacyTransactionBuilder
 ): Promise<Buffer> {
   const tx = await tb
-    .add(
-      registerAssetOp(
-        name,
-        symbol,
-        decimals,
-        formatter.ensureBuffer(brid),
-        iconUrl
-      )
-    )
+    .add(registerAssetOp(name, symbol, decimals, iconUrl))
     .add(nop())
     .buildSigned();
+
+  const brid = tx.gtx.blockchainRID;
   await tx.postAndWaitConfirmation();
   return id(name, brid);
 }
 
-export async function giveBalance(
-  assetId: BufferId,
+export async function mint(
   accountId: BufferId,
+  assetId: BufferId,
   amount: Amount,
   tb: LegacyTransactionBuilder
 ) {
   const tx = await tb
     .add(
-      giveBalanceOp(
-        formatter.ensureBuffer(assetId),
+      mintOp(
         formatter.ensureBuffer(accountId),
+        formatter.ensureBuffer(assetId),
         amount
       )
     )

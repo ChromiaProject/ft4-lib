@@ -40,7 +40,11 @@ function test_multi_sig_valid_2_of_2_signs() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            required_flags()
+        ))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .run();
@@ -55,7 +59,11 @@ function test_multi_sig_valid_1_of_2_signs() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            required_flags()
+        ))
         .sign(rell.test.keypairs.bob) // <-- Omitting Alice should work
         .run();
 
@@ -69,7 +77,10 @@ function test_multi_sig_valid_3_of_3_signs() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(account_data.account.id,
+        account_data.auth_descriptor_id,
+        required_flags()
+    ))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .sign(rell.test.keypairs.trudy)
@@ -87,7 +98,11 @@ function test_multi_sig_wrong_required_flags() {
 
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id, account_data.auth_descriptor_id, bad_required_flags))
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            bad_required_flags
+        ))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .run();

@@ -26,7 +26,8 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
             id = .asset.id,
             name = .asset.name,
             decimals = .asset.decimals,
-            brid = .asset.issuing_brid
+            brid = .asset.issuing_brid,
+            supply = .asset.total_supply
         ),
         amount = .amount
     );
@@ -39,7 +40,8 @@ query get_asset_by_name(name) {
         symbol = .symbol,
         decimals = .decimals,
         brid = .issuing_brid,
-        icon_url = .icon_url
+        icon_url = .icon_url,
+        supply = .total_supply
     );
 
 }
@@ -53,7 +55,8 @@ query get_asset_by_id(asset_id: byte_array) {
         symbol = .symbol,
         decimals = .decimals,
         brid = .issuing_brid,
-        icon_url = .icon_url
+        icon_url = .icon_url,
+        supply = .total_supply
     );
 }
 
@@ -64,7 +67,8 @@ query get_all_assets() {
         name = .name,
         decimals = .decimals,
         brid = .issuing_brid,
-        icon_url = .icon_url
+        icon_url = .icon_url,
+        supply = .total_supply
     );
 }
 

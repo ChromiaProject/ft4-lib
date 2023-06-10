@@ -1,8 +1,9 @@
 /* eslint @typescript-eslint/ban-ts-comment: 0 */
-import { freeOp, givePointsOp, registerOp } from "./account-dev-operations";
+import { freeOp, addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
   addAuthDescriptorOp,
   addAuthDescriptorV2,
+  burnOp,
   deleteAllAuthDescriptorsExcludeOp,
   deleteAuthDescriptorOp,
   deleteAuthDescriptorV2,
@@ -177,21 +178,21 @@ export async function transfer(
 }
 
 export async function burnTokens(
-  fromAccountId: BufferId,
   assetId: BufferId,
   amount: Amount,
   tb: LegacyTransactionBuilder,
-  extra?: { [key: string]: GtvCompatible }
 ): Promise<void> {
   //if we want to check that amount has the correct decimals, do it here
-  const input: XferInput = [
-    formatter.ensureBuffer(fromAccountId),
-    formatter.ensureBuffer(assetId),
-    tb.user.authDescriptor.id,
-    amount.value,
-    extra ?? {},
-  ];
-  await transferInputsToOutputs([input], [], tb);
+  const tx = await tb
+    .add(
+      burnOp(
+        formatter.ensureBuffer(assetId),
+        amount
+      )
+    )
+    .add(nop())
+    .buildSigned();
+  await tx.postAndWaitConfirmation();
 }
 
 export async function freeOperation(
@@ -211,7 +212,7 @@ export async function givePoints(
   tb: LegacyTransactionBuilder
 ) {
   const tx = await tb
-    .add(givePointsOp(formatter.ensureBuffer(accountId), points))
+    .add(addRateLimitPointsOp(formatter.ensureBuffer(accountId), points))
     .add(nop())
     .buildSigned();
   await tx.postAndWaitConfirmation();

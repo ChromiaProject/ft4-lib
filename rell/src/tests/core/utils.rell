@@ -1,9 +1,8 @@
 @test module;
 import acc: ^^^.lib.ft3.account;
-import ^^^.lib.ft3.operations.dev_op_account;
-import ^^^.lib.ft3.operations.dev_op_balance;
-import ^^^.lib.ft3.operations.dev_op_asset;
 import ^^^.lib.ft3.core;
+import ^^^.lib.ft3.operations.dev_op_account;
+import ^^^.lib.ft3.operations.dev_op_asset;
 import ^^^.lib.ft3.auth;
 
 struct account_data {
@@ -63,9 +62,9 @@ function get_ft3_test_acc(rell.test.keypair): account_data {
     } ( .account );
 
     return account_data(
-        account = account, 
+        account, 
         auth_descriptor_id = auth_descriptor.hash(),
-        keypair = keypair
+        keypair
     );
 }
 
@@ -84,7 +83,6 @@ function create_asset(name: text, symbol: text, decimals: integer) {
             name,
             symbol,
             decimals,
-            issuing_brid = chain_context.blockchain_rid,
             icon_url=""
         )
         .sign(rell.test.keypairs.alice)
@@ -93,12 +91,20 @@ function create_asset(name: text, symbol: text, decimals: integer) {
     return core.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
 }
 
+function mint(core.asset, acc.account, amount: big_integer) {
+    dev_op_asset.dev_mint(
+            account.id,
+            asset.id,
+            amount
+        )
+        .run();
+}
+
 function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test.tx {
     return dev_op_asset.dev_register_asset(
             name,
             symbol,
             decimals,
-            issuing_brid = chain_context.blockchain_rid,
             icon_url=""
         )
         .sign(rell.test.keypairs.alice);
@@ -160,7 +166,7 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
 }
 
 function mint_to_account(account_data, core.asset, amount: big_integer) {
-    dev_op_balance.dev_give_balance(asset.id, account_data.account.id, amount)
+    dev_op_asset.dev_mint(account_data.account.id, asset.id, amount)
         .sign(rell.test.keypairs.alice)
         .run();
 }

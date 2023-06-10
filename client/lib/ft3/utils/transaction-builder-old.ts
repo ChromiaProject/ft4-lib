@@ -2,7 +2,7 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { AuthData, KeyManager } from "../account/auth/types";
+import { AuthData } from "../account/auth/types";
 import { User } from "../account/types";
 import { Operation } from "./types";
 
@@ -55,20 +55,11 @@ export function legacyTransactionBuilder(
       this._operations.map(async (operation: Operation) => {
         if (operation[0] === "nop") return operation;
 
-        let auth_data: AuthData = null;
-        try {
-          auth_data = await client.query(`${operation[0]}_auth_data`, {
-            gtv: operation[1],
-          });
-        } catch {
-          auth_data = await client.query(`ft3.default_auth_data`);
-        }
-        const isUsable = (km: KeyManager) =>
-          !!intersection(auth_data.flags, km.flags).length;
-        const manager = user.keyManagers.find(isUsable);
+        const auth_data: AuthData = null;
+        const manager = user.keyManagers[0];
         if (!manager) {
           throw new TransactionBuilderError(
-            "No keymanager registered to handle this operation"
+            `No keymanager registered to handle <${operation[0]}> operation`
           );
         }
         return await manager.authorize(operation, auth_data);
@@ -111,6 +102,3 @@ export class TransactionBuilderError extends Error {
     this.name = "TransactionBuilderError";
   }
 }
-
-const intersection = <T>(a: Set<T>, b: Set<T>): T[] =>
-  [...a].filter((x) => b.has(x));

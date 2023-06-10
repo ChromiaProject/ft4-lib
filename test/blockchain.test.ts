@@ -35,28 +35,6 @@ describe("Blockchain", () => {
     expect(ft.getClientVersion()).toEqual(version);
   });
 
-  it.skip("should be able to link other chain", async () => {
-    //const brid = generateId();
-    // await ftSession.linkChain(brid);
-    // await expect(ftSession.isLinkedWithChain(brid)).resolves.toEqual(true);
-  });
-
-  it.skip("should be able to link multiple chains", async () => {
-    //const brid1 = generateId();
-    //const brid2 = generateId();
-    // await ftSession.linkChain(brid1);
-    // await ftSession.linkChain(brid2);
-    // const linkedChains = await ftSession.getLinkedChainBRIDs();
-    // expect(linkedChains).toContainEqual(brid1);
-    // expect(linkedChains).toContainEqual(brid2);
-  });
-
-  it.skip("should return false when isLinkedWithChain is called for unknown chain id", async () => {
-    // await expect(ftSession.isLinkedWithChain(generateId())).resolves.toEqual(
-    //   false
-    // );
-  });
-
   it.skip("should successfully post raw transactions", async () => {
     const user = testUser();
     const vault = testUser();

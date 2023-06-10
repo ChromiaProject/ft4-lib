@@ -57,6 +57,7 @@ describe("Asset balance", () => {
           name: asset1.name,
           decimals: asset1.decimals,
           brid: asset1.brid,
+          supply: BigInt(10),
         },
         amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
       },
@@ -66,6 +67,7 @@ describe("Asset balance", () => {
           name: asset2.name,
           decimals: asset2.decimals,
           brid: asset2.brid,
+          supply: BigInt("20" + "0".repeat(asset2.decimals)),
         },
         amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
       },
@@ -92,9 +94,10 @@ describe("Asset balance", () => {
         name: asset2.name,
         decimals: asset2.decimals,
         brid: asset2.brid,
+        supply: BigInt(70 + "0".repeat(asset2.decimals)),
       },
       amount: {
-        value: BigInt("50" + "0".repeat(asset2.decimals)),
+        value: BigInt(50 + "0".repeat(asset2.decimals)),
         decimals: asset2.decimals,
       },
     });

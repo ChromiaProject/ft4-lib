@@ -4,7 +4,7 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.ft3_basic_dev.*;
-import ^^^.lib.ft3.operations.dev_op_balance;
+import ^^^.lib.ft3.operations.dev_op_asset;
 import ^^^.lib.ft3.auth;
 import ^.utils;
 
@@ -12,12 +12,12 @@ function test_before_transfer_extension_is_called() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 1).id;
+    val asset = utils.create_asset("test", "t", 1);
 
     val inputs = [
         core.xfer_input(
             account_id = alice.account.id,
-            asset_id,
+            asset_id = asset.id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
             extra = map()
@@ -27,15 +27,17 @@ function test_before_transfer_extension_is_called() {
     val outputs = [
         core.xfer_output(
             account_id = bob.account.id, 
-            asset_id,
+            asset_id = asset.id,
             amount = 1,
             extra = map()
         )
     ];
 
+    utils.mint(asset, alice.account, 1);
+
     rell.test.tx()
-        .op(dev_op_balance.dev_give_balance(asset_id, alice.account.id, 1))
-        .op(ft3.transfer_op.transfer(inputs, outputs))
+        .op(dev_op_asset.dev_mint(alice.account.id, asset.id, 1L))
+        .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -48,12 +50,12 @@ function test_after_transfer_extension_is_called() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 1).id;
+    val asset = utils.create_asset("test", "t", 1);
 
     val inputs = [
         core.xfer_input(
             account_id = alice.account.id, 
-            asset_id, 
+            asset_id = asset.id, 
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
             extra = map()
@@ -63,15 +65,17 @@ function test_after_transfer_extension_is_called() {
     val outputs = [
         core.xfer_output(
             account_id = bob.account.id, 
-            asset_id,
+            asset_id = asset.id,
             amount = 1,
             extra = map()
         )
     ];
 
+    utils.mint(asset, alice.account, 1);
+
     rell.test.tx()
-        .op(dev_op_balance.dev_give_balance(asset_id, alice.account.id, 1))
-        .op(ft3.transfer_op.transfer(inputs, outputs))
+        .op(dev_op_asset.dev_mint(alice.account.id, asset.id, 1))
+        .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -89,7 +93,7 @@ function test_transfer_fails_when_insufficient_balance() {
 
     val tx = rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, 11))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 11))
         .sign(alice.keypair);
 
     utils.assert_error(tx, "Balance is too low");
@@ -104,7 +108,7 @@ function test_transfer_fails_when_balance_is_negative() {
 
     val tx = rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, -1))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, -1))
         .sign(alice.keypair);
 
     utils.assert_error(tx, "Expected amount greater than 0. Found -1");
@@ -118,7 +122,7 @@ function test_transfer_fails_when_sender_is_same_as_receiver() {
 
     val tx = rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.transfer_op.transfer_one(alice.account.id, asset.id, 5))
+        .op(ft3.core_ext.transfer_one(alice.account.id, asset.id, 5))
         .sign(alice.keypair);
 
     utils.assert_error(tx, "Sender and reciver have to be different");
@@ -133,7 +137,7 @@ function test_transfer_succeeds_when_enough_balance() {
 
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, 3))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 3))
         .sign(alice.keypair)
         .run();
 
@@ -148,7 +152,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 15);
 
-    val auth_data = ft3.transfer_op.transfer_one_auth_data(
+    val auth_data = ft3.core_ext.transfer_one_auth_data(
         [
             bob.account.id.to_gtv(), 
             asset.id.to_gtv(), 
@@ -161,7 +165,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
 
     rell.test.tx()
         .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, 5))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 5))
         .run();
 
     assert_equals(core.ensure_balance(alice.account, asset).amount, 10);
@@ -175,7 +179,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 15);
 
-    val auth_data = ft3.transfer_op.transfer_one_auth_data(
+    val auth_data = ft3.core_ext.transfer_one_auth_data(
         [
             bob.account.id.to_gtv(), 
             asset.id.to_gtv(), 
@@ -188,7 +192,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
 
     val tx = rell.test.tx()
         .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, 10));
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 10));
 
     utils.assert_error(tx, "Invalid signature");
 }
@@ -202,7 +206,7 @@ function test_before_transfer_one_extension_is_called() {
 
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, 50))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 50))
         .sign(alice.keypair)
         .run();
 
@@ -222,7 +226,7 @@ function test_after_transfer_one_extension_is_called() {
 
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.transfer_op.transfer_one(bob.account.id, asset.id, 15))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 15))
         .sign(alice.keypair)
         .run();
 

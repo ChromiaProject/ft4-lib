@@ -13,6 +13,6 @@ export function freeOp(accountId: Buffer): Operation {
   return ["ft3.dev_free_op", accountId];
 }
 
-export function givePointsOp(accountId: Buffer, points: number): Operation {
-  return ["ft3.dev_give_points", accountId, points];
+export function addRateLimitPointsOp(accountId: Buffer, points: number): Operation {
+  return ["ft3.dev_add_rate_limit_points", accountId, points];
 }

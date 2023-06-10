@@ -15,7 +15,7 @@ import {
 } from "../../client/lib/ft3/account/types";
 import { ftUserSession } from "../../client/lib/ft3/types";
 import { gtx } from "postchain-client";
-import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
+import { mintOp } from "../../client/lib/ft3/asset/asset-dev-operations";
 import { nop } from "../../client/lib/ft3/utils";
 import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
 import { createAmount } from "../../client/lib/ft3/asset/amount";
@@ -135,7 +135,7 @@ class AccountBuilder {
       );
 
       this.balances.forEach((balance) => {
-        tb.add(giveBalanceOp(balance.asset.id, account.id, balance.amount));
+        tb.add(mintOp(account.id, balance.asset.id, balance.amount));
       });
 
       tb.add(nop());

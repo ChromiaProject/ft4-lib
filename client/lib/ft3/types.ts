@@ -28,20 +28,16 @@ export interface ftUserSession {
         name: string,
         symbol: string,
         decimals: number,
-        brid: BufferId,
         iconUrl: string
       ) => Promise<Buffer>;
-    };
-  };
-  balance: {
-    dev: {
-      give: (
-        assetid: BufferId,
-        accountid: BufferId,
+      mint: (
+        assetId: BufferId,
+        accountId: BufferId,
         amount: Amount
       ) => Promise<void>;
     };
   };
+
   account: {
     sso: {
       ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;

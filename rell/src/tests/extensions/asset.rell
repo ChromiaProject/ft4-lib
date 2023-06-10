@@ -1,0 +1,54 @@
+import ^^.lib.ft3.core;
+import acc: ^^.lib.ft3.account;
+
+object mint_extensions_state {
+    mutable is_before_mint_called: boolean = false;
+    mutable before_mint_arg_asset_id: byte_array = x"";
+    mutable before_mint_arg_account_id: byte_array = x"";
+    mutable before_mint_arg_amount: big_integer = 0L;
+    
+    mutable is_after_mint_called: boolean = false;
+    mutable after_mint_arg_asset_id: byte_array = x"";
+    mutable after_mint_arg_account_id: byte_array = x"";
+    mutable after_mint_arg_amount: big_integer = 0L;
+}
+
+@extend(core.before_mint) function(acc.account, core.asset, amount: big_integer) {
+    mint_extensions_state.is_before_mint_called = true;
+    mint_extensions_state.before_mint_arg_asset_id = asset.id;
+    mint_extensions_state.before_mint_arg_account_id = account.id;
+    mint_extensions_state.before_mint_arg_amount = amount;
+}
+
+@extend(core.after_mint) function(acc.account, core.asset, amount: big_integer) {
+    mint_extensions_state.is_after_mint_called = true;
+    mint_extensions_state.after_mint_arg_asset_id = asset.id;
+    mint_extensions_state.after_mint_arg_account_id = account.id;
+    mint_extensions_state.after_mint_arg_amount = amount;    
+}
+
+object burn_extensions_state {
+    mutable is_before_burn_called: boolean = false;
+    mutable before_burn_arg_asset_id: byte_array = x"";
+    mutable before_burn_arg_account_id: byte_array = x"";
+    mutable before_burn_arg_amount: big_integer = 0L;
+    
+    mutable is_after_burn_called: boolean = false;
+    mutable after_burn_arg_asset_id: byte_array = x"";
+    mutable after_burn_arg_account_id: byte_array = x"";
+    mutable after_burn_arg_amount: big_integer = 0L;
+}
+
+@extend(core.before_burn) function(acc.account, core.asset, amount: big_integer) {
+    burn_extensions_state.is_before_burn_called = true;
+    burn_extensions_state.before_burn_arg_asset_id = asset.id;
+    burn_extensions_state.before_burn_arg_account_id = account.id;
+    burn_extensions_state.before_burn_arg_amount = amount;
+}
+
+@extend(core.after_burn) function(acc.account, core.asset, amount: big_integer) {
+    burn_extensions_state.is_after_burn_called = true;
+    burn_extensions_state.after_burn_arg_asset_id = asset.id;
+    burn_extensions_state.after_burn_arg_account_id = account.id;
+    burn_extensions_state.after_burn_arg_amount = amount;    
+}
