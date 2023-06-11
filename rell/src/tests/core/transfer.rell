@@ -32,7 +32,7 @@ function test_before_transfer_extension_is_called() {
         )
     ];
 
-    utils.mint(asset, alice.account, 1);
+    utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
         .op(ft3.core_ext.transfer(inputs, outputs))
@@ -69,7 +69,7 @@ function test_after_transfer_extension_is_called() {
         )
     ];
 
-    utils.mint(asset, alice.account, 1);
+    utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
         .op(ft3.core_ext.transfer(inputs, outputs))

@@ -27,8 +27,8 @@ export function transferOp(
   return op("ft3.transfer", inputs, outputs);
 }
 
-export function burnOp(assetId: Buffer, amount: Amount): Operation {
-  return op("ft3.burn", assetId, Number(amount));
+export function burnOp(assetId: BufferId, amount: Amount): Operation {
+  return op("ft3.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
 
 export function xcTransferOp /*

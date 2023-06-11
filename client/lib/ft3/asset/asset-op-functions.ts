@@ -37,8 +37,8 @@ export async function mint(
   user: User,
   adminUser: User,
   session: GtxClient,
-  assetId: BufferId,
   accountId: BufferId,
+  assetId: BufferId,
   amount: Amount
 ) {
   const tx = session.newTransaction([

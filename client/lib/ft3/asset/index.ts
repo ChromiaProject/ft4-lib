@@ -54,10 +54,10 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
       admin: {
         mint: (
           adminUser: User,
-          assetId: BufferId,
           accountId: BufferId,
+          assetId: BufferId,
           amount: Amount
-        ) => mint(user, adminUser, pci, assetId, accountId, amount),
+        ) => mint(user, adminUser, pci, accountId, assetId, amount),
       },
     },
   });

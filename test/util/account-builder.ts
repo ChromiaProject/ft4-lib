@@ -134,8 +134,8 @@ class AccountBuilder {
         this.balances.map(async (balance) => {
           await this.session.balance.admin.mint(
             admin(),
-            balance.asset.id,
             account.id,
+            balance.asset.id,
             balance.amount
           );
         })

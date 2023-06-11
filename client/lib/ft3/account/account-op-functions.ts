@@ -175,10 +175,7 @@ export async function burnTokens(
   tb: LegacyTransactionBuilder
 ): Promise<void> {
   //if we want to check that amount has the correct decimals, do it here
-  const tx = await tb
-    .add(burnOp(formatter.ensureBuffer(assetId), amount))
-    .add(nop())
-    .buildSigned();
+  const tx = await tb.add(burnOp(assetId, amount)).add(nop()).buildSigned();
   await tx.postAndWaitConfirmation();
 }
 

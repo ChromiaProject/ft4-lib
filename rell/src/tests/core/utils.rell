@@ -94,13 +94,6 @@ function create_asset(name: text, symbol: text, decimals: integer) {
     return core.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
 }
 
-function give_balance(asset_id: byte_array, account_id: byte_array, amount: big_integer) {
-    rell.test.tx()
-        .op(admin.mint(account_id, asset_id, amount))
-        .sign(byte_array(chain_context.args.admin_priv_key))
-        .run();
-}
-
 function _auth(account_id:byte_array, auth_descriptor_id:byte_array, required_flags:list<text>, keypairs: list<rell.test.keypair>) {
     rell.test.tx()
         .op(dev_op_auth.dev_auth(account_id, auth_descriptor_id, required_flags))
@@ -109,7 +102,7 @@ function _auth(account_id:byte_array, auth_descriptor_id:byte_array, required_fl
         .run();
 }
 
-function mint(core.asset, acc.account, amount: big_integer) {
+function mint(acc.account, core.asset, amount: big_integer) {
     admin.mint(
         account.id,
         asset.id,
