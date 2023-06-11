@@ -2,10 +2,7 @@ import { RawGtv } from "postchain-client/built/src/gtv/types";
 
 export type Operation = [string, ...RawGtv[]];
 
-export type ChainInfo = {
-  name: string;
-  website: string;
-  description: string;
+export type Config = {
   rate_limit_active: 0 | 1;
   rate_limit_max_points: number;
   rate_limit_recovery_time: number;

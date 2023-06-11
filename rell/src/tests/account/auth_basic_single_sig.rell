@@ -6,7 +6,6 @@ import ^^.core.utils;
 import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.operations.dev_op_auth;
-import ^^^.lib.ft3.operations.dev_op_account;
 
 /*
  * We aim to unit test the basic authentication rules (e.g. the number of signatures and required flags).
@@ -34,6 +33,7 @@ function test_invalid_required_flags() {
     val alice = utils.register_alice();
 
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
+
     rell.test.tx()
         .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
         .sign(rell.test.keypairs.alice)
@@ -71,10 +71,10 @@ function test_not_signed() {
 /*
 function test_0_participant_in_ad() {
     val adBad = create_BAD_auth_descriptor_S_but_0_pub(rell.test.keypairs.alice.pub);
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, adBad).auth_id;
+    val alice_auth_id = cu._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, adBad).auth;
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(alice_auth_id.account.id, alice_auth_id.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice) 
         .run();
 
@@ -86,10 +86,10 @@ function test_2_participants_in_ad() {
         rell.test.keypairs.alice.pub, 
         rell.test.keypairs.bob.pub
     );
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig([rell.test.keypairs.alice, rell.test.keypairs.bob], adBad).auth_id;
+    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig([rell.test.keypairs.alice, rell.test.keypairs.bob], adBad).auth;
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice_auth_id.account_id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .op(dev_op_auth.dev_auth(alice_auth_id.account.id, alice_auth_id.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice) 
         .run_must_fail(); 
 }

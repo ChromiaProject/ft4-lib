@@ -14,7 +14,7 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { ChainInfo, QueryObject, Operation } from "./utils/types";
+import { Config, QueryObject, Operation } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
 export type PageCursor = string;
@@ -23,25 +23,27 @@ export interface ftUserSession {
   changeUser: (newUser: User) => ftUserSession;
   get: ftQuerySession;
   asset: {
-    dev: {
+    admin: {
       register: (
+        adminUser: User,
         name: string,
         symbol: string,
         decimals: number,
-        brid: BufferId,
         iconUrl: string
       ) => Promise<Buffer>;
     };
   };
   balance: {
-    dev: {
-      give: (
+    admin: {
+      mint: (
+        adminUser: User,
         assetid: BufferId,
         accountid: BufferId,
         amount: Amount
       ) => Promise<void>;
     };
   };
+
   account: {
     sso: {
       ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;
@@ -71,10 +73,16 @@ export interface ftUserSession {
       burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
       xcTransfer: () => Promise<void>;
     };
-    dev: {
-      register: (authDescriptor: AuthDescriptor) => Promise<Account>;
-      freeOperation: (accountid: BufferId) => Promise<void>;
-      givePoints: (accountId: BufferId, points: number) => Promise<void>;
+    admin: {
+      register: (
+        adminUser: User,
+        authDescriptor: AuthDescriptor
+      ) => Promise<Account>;
+      givePoints: (
+        adminUser: User,
+        accountId: BufferId,
+        points: number
+      ) => Promise<void>;
     };
   };
 }
@@ -82,9 +90,6 @@ export interface ftUserSession {
 export interface ftQuerySession {
   gtxClient: GtxClient;
   createUserSession: (user: User) => ftUserSession;
-  chainInfo: () => Promise<ChainInfo>;
-  version: () => Promise<string>;
-  lastTimestamp: () => Promise<number>;
   asset: {
     id: (name: string, brid: BufferId) => Buffer;
     by: {
@@ -134,6 +139,8 @@ export interface ftQuerySession {
 export interface Connection {
   client: GtxClient;
   query: <T>(query: QueryObject) => Promise<T | null>;
+  getConfig: () => Promise<Config>;
+  getVersion: () => Promise<string>;
 
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;

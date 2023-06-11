@@ -2,7 +2,7 @@
 
 import ^.utils;
 import acc: ^^^.lib.ft3.account;
-import ^^^.lib.ft3.operations.dev_op_account;
+import ^^^.lib.ft3.admin;
 
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
@@ -10,9 +10,7 @@ val bob = rell.test.keypairs.bob;
 function test_an_account_can_be_created() {
   val auth_descriptor = utils.create_auth_descriptor(alice.pub);
   
-  dev_op_account.dev_register_account(auth_descriptor)
-      .sign(alice)
-      .run();
+  utils.create_test_account(alice);
   
   assert_equals(acc.account @ {}( .id ), auth_descriptor.hash());
 }
@@ -31,9 +29,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
     rules = null.to_gtv()
   );
 
-  dev_op_account.dev_register_account(auth_descriptor)
-      .sign([alice, bob])
-      .run();
+  utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
 
   assert_equals(acc.account_auth_descriptor @ {}( .id ), auth_descriptor.hash());
 }
@@ -49,9 +45,11 @@ function test_an_invalid_descriptor_can_not_be_added() {
     rules = null.to_gtv()
   );
 
-  dev_op_account.dev_register_account(auth_descriptor)
-      .sign([alice, bob])
-      .run_must_fail();
+  assert_fails(
+    //* creates an "uncalled" function, see release notes 0.10.6 section 2 or
+    //https://docs.chromia.com/rell/tests#other-functions example at the end
+    utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
+  );
 }
 
 function test_an_asset_can_be_created() {
@@ -63,6 +61,6 @@ function test_an_asset_can_be_created() {
 
 function test_an_invalid_asset_cannot_be_created() {
   val error = "Decimals must be between 0 and 78 (included)";
-  utils.assert_error(utils.create_asset_tx("e", "e", -1), error);
-  utils.assert_error(utils.create_asset_tx("f", "f", 79), error);
+  admin.register_asset("e", "e", -1, "").sign(utils.admin_priv_key()).run_must_fail(error);
+  admin.register_asset("f", "f", 79, "").sign(utils.admin_priv_key()).run_must_fail(error);
 }

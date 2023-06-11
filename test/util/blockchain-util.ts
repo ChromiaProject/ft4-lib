@@ -1,4 +1,4 @@
-import { generateAssetName, generateAssetSymbol, generateId } from "./util";
+import { generateAssetName, generateAssetSymbol } from "./util";
 import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/types";
 import { gtxClient, restClient, restClientutil } from "postchain-client";
 import {
@@ -8,6 +8,7 @@ import {
 import { Asset } from "../../client/lib/ft3/asset/types";
 import singleSigUser from "./test-user";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import adminUser from "./admin_user";
 
 export async function createClient(nodeUrl?: string) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
@@ -36,14 +37,13 @@ export async function getNewAsset(
   name = generateAssetName(),
   symbol = generateAssetSymbol(),
   decimals = 0,
-  brid = generateId(),
   iconUrl = ""
 ): Promise<Asset> {
-  const id = await userSession.asset.dev.register(
+  const id = await userSession.asset.admin.register(
+    adminUser(),
     name,
     symbol,
     decimals,
-    brid,
     iconUrl
   );
   const asset = await userSession.get.asset.by.id(id);

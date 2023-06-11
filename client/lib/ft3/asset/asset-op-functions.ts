@@ -1,50 +1,61 @@
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
-import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
-import { giveBalanceOp, registerAssetOp } from "./asset-dev-operations";
+import { User } from "../account/types";
+import { mintOp, registerAssetOp } from "./asset-dev-operations";
 import { Amount } from "../asset/interfaces";
 import { formatter } from "postchain-client";
 import { nop } from "../utils";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+
+//-------------------ADMIN OPERATIONS-------------------//
 
 export async function registerAsset(
+  user: User,
+  adminUser: User,
+  session: GtxClient,
   name: string,
   symbol: string,
   decimals: number,
-  brid: BufferId,
-  iconUrl: string,
-  tb: LegacyTransactionBuilder
+  iconUrl: string
 ): Promise<Buffer> {
-  const tx = await tb
-    .add(
-      registerAssetOp(
-        name,
-        symbol,
-        decimals,
-        formatter.ensureBuffer(brid),
-        iconUrl
-      )
-    )
-    .add(nop())
-    .buildSigned();
+  const tx = session.newTransaction([
+    ...user.authDescriptor.signers,
+    ...adminUser.authDescriptor.signers,
+  ]);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  tx.addOperation(...registerAssetOp(name, symbol, decimals, iconUrl));
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await tx.sign(adminUser.signatureProvider);
   await tx.postAndWaitConfirmation();
+  const brid = tx.gtx.blockchainRID;
   return id(name, brid);
 }
 
-export async function giveBalance(
-  assetId: BufferId,
+export async function mint(
+  user: User,
+  adminUser: User,
+  session: GtxClient,
   accountId: BufferId,
-  amount: Amount,
-  tb: LegacyTransactionBuilder
+  assetId: BufferId,
+  amount: Amount
 ) {
-  const tx = await tb
-    .add(
-      giveBalanceOp(
-        formatter.ensureBuffer(assetId),
-        formatter.ensureBuffer(accountId),
-        amount
-      )
+  const tx = session.newTransaction([
+    ...user.authDescriptor.signers,
+    ...adminUser.authDescriptor.signers,
+  ]);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  tx.addOperation(
+    ...mintOp(
+      formatter.ensureBuffer(accountId),
+      formatter.ensureBuffer(assetId),
+      amount
     )
-    .add(nop())
-    .buildSigned();
+  );
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await tx.sign(adminUser.signatureProvider);
   await tx.postAndWaitConfirmation();
 }

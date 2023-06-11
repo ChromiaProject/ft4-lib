@@ -3,12 +3,8 @@ import acc: ^.account;
 
 
 entity asset_origin {
-    key ft3.asset;
-    origin_brid: byte_array;
-}
-
-entity linked_chain {
-    key brid: byte_array;
+   key ft3.asset;
+   origin_brid: byte_array;
 }
 
 function blockchain_account_id(brid: byte_array): byte_array {

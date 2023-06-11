@@ -43,33 +43,37 @@ describe("Asset balance", () => {
       .build();
 
     const foundAccount = await connection.getAccountById(account.id);
-    const balances = await foundAccount.getBalances();
+    const balances = await foundAccount!.getBalances();
 
     expect(
       balances.map((b) => ({
         asset: b.asset,
         amount: makeAmountBareBones(b.amount),
       }))
-    ).toEqual([
-      {
-        asset: {
-          id: asset1.id,
-          name: asset1.name,
-          decimals: asset1.decimals,
-          brid: asset1.brid,
+    ).toEqual(
+      [
+        {
+          asset: {
+            id: asset1.id,
+            name: asset1.name,
+            decimals: asset1.decimals,
+            brid: asset1.brid,
+            supply: BigInt(10),
+          },
+          amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
         },
-        amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
-      },
-      {
-        asset: {
-          id: asset2.id,
-          name: asset2.name,
-          decimals: asset2.decimals,
-          brid: asset2.brid,
+        {
+          asset: {
+            id: asset2.id,
+            name: asset2.name,
+            decimals: asset2.decimals,
+            brid: asset2.brid,
+            supply: BigInt("20" + "0".repeat(asset2.decimals)),
+          },
+          amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
         },
-        amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
-      },
-    ]);
+      ].sort()
+    );
   });
 
   it("should return balance for specific asset", async () => {
@@ -81,7 +85,7 @@ describe("Asset balance", () => {
       .build();
 
     const foundAccount = await connection.getAccountById(account.id);
-    const balance = await foundAccount.getBalanceByAssetId(asset2.id);
+    const balance = await foundAccount!.getBalanceByAssetId(asset2.id);
 
     expect({
       asset: balance.asset,
@@ -92,9 +96,10 @@ describe("Asset balance", () => {
         name: asset2.name,
         decimals: asset2.decimals,
         brid: asset2.brid,
+        supply: BigInt(70 + "0".repeat(asset2.decimals)),
       },
       amount: {
-        value: BigInt("50" + "0".repeat(asset2.decimals)),
+        value: BigInt(50 + "0".repeat(asset2.decimals)),
         decimals: asset2.decimals,
       },
     });

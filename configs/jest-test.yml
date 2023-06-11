@@ -3,13 +3,13 @@ blockchains:
     module: main #Entrypoint to the project
     moduleArgs:
       lib.ft3.core:
-        my_blockchain_name: test
-        my_blockchain_website: test_website
-        my_blockchain_description: test_description
         rate_limit_active: 1
         rate_limit_max_points: 10
         rate_limit_recovery_time: 5000
         rate_limit_points_at_account_creation: 1
+
+      lib.ft3.admin:
+        admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
 
 compile:
   source: ../rell/src

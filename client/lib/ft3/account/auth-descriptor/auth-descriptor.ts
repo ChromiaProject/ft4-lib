@@ -12,7 +12,7 @@ import {
 export function createSingleSignatureAuthDescriptor(
   type: AuthType.single_sig | AuthType.external_single_sig,
   args: SingleSigAuthDescriptorArgs,
-  rules?: AuthDescriptorRule | null
+  rules: AuthDescriptorRule | null
 ): AuthDescriptor {
   return Object.freeze(
     authDescriptor.fromGtv([serializeAuthType(type), args, rules])
@@ -72,7 +72,7 @@ function signleSigObj(
     withArgs: (flags: string[], signerPubKey: BufferId) => {
       const args = singleSigArgs(flags, signerPubKey);
       return {
-        andRules: (rules?: AuthDescriptorRule) =>
+        andRules: (rules: AuthDescriptorRule | null) =>
           createSingleSignatureAuthDescriptor(type, args, rules),
         andNoRules: createSingleSignatureAuthDescriptor(type, args, null),
       };
@@ -90,7 +90,7 @@ function multiSigObj(type: AuthType.multi_sig | AuthType.external_multi_sig) {
     ) => {
       const args = multiSigArgs(flags, requiredSignatures, signerPubKeys);
       return {
-        andRules: (rules?: AuthDescriptorRule) =>
+        andRules: (rules: AuthDescriptorRule | null) =>
           createMultiSignatureAuthDescriptor(type, args, rules),
         andNoRules: createMultiSignatureAuthDescriptor(type, args, null),
       };

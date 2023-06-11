@@ -3,6 +3,7 @@ import { User } from "../client/lib/ft3/account/types";
 import { createConnection } from "../client/lib/ft3/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
+import adminUser from "./util/admin_user";
 import { getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 
@@ -23,11 +24,8 @@ describe.skip("Rate Limit", () => {
 
   describe("Blockchain request configuration in run.xml", () => {
     it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
-      const info = await _ft.get.chainInfo();
+      const info = await _connection.getConfig();
       expect(info).toEqual({
-        name: expect.any(String),
-        website: expect.any(String),
-        description: expect.any(String),
         rate_limit_active: 1,
         rate_limit_max_points: REQUEST_MAX_COUNT,
         rate_limit_recovery_time: RECOVERY_TIME,
@@ -45,7 +43,7 @@ describe.skip("Rate Limit", () => {
         .build();
 
       const foundAccount = await _connection.getAccountById(account.id);
-      const rateLimit = await foundAccount.getRateLimit();
+      const rateLimit = await foundAccount!.getRateLimit();
       expect(rateLimit.points).toBe(POINTS_AT_ACCOUNT_CREATION);
     });
 
@@ -58,11 +56,11 @@ describe.skip("Rate Limit", () => {
 
       await timeout(20000);
 
-      await ft.account.dev.freeOperation(account.id); // used to make one block
-      await ft.account.dev.freeOperation(account.id); // used to calculate the last block's timestamp (previous block).
+      await ft.account.admin.givePoints(adminUser(), account.id, 1); // used to make one block
+      await ft.account.admin.givePoints(adminUser(), account.id, 1); // used to calculate the last block's timestamp (previous block).
       // check the balance
       const foundAccount = await _connection.getAccountById(account.id);
-      const rateLimit = await foundAccount.getRateLimit();
+      const rateLimit = await foundAccount!.getRateLimit();
       expect(rateLimit.points).toBe(4 + POINTS_AT_ACCOUNT_CREATION); // 20 seconds / 5s recovery time + points given by default
     });
 
@@ -78,7 +76,7 @@ describe.skip("Rate Limit", () => {
         makeRequests(ft, 4 + POINTS_AT_ACCOUNT_CREATION)
       ).resolves.toBeNull();
       const foundAccount = await _connection.getAccountById(account.id);
-      const rateLimit = await foundAccount.getRateLimit();
+      const rateLimit = await foundAccount!.getRateLimit();
       expect(rateLimit.points).toBe(0);
     });
 

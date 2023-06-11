@@ -1,30 +1,30 @@
 import { encryption } from "postchain-client";
-import { createTestAuthDescriptor } from "/util/util";
-import { createInMemoryFTKeyStore } from "/ft3/authentication/ft/key-stores/in-memory";
-import { createFakeAuthDataService } from "/util/fake-auth-data-service";
-import { createAuthenicator } from "/ft3/authentication";
+import { createTestAuthDescriptor } from "./util/util";
+import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createAuthenicator } from "../client/lib/ft3/authentication";
 import {
   AuthorizationError,
   transactionBuilder,
-} from "/ft3/utils/transaction-builder";
-import { createClient } from "/util/blockchain-util";
-import { nop } from "/ft3/utils";
+} from "../client/lib/ft3/utils/transaction-builder";
+import { createClient } from "./util/blockchain-util";
+import { nop } from "../client/lib/ft3/utils";
 import {
   Authenticator,
   KeyHandler,
 } from "../client/lib/ft3/authentication/types";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { transferOp } from "/ft3/account/account-operations";
-import { XferInput, XferOutput } from "/ft3/account/types";
-import { AuthDescriptor } from "/ft3/account/auth-descriptor/types";
-import { FlagsType } from "/ft3/account/auth-descriptor";
-import { registerOp } from "/ft3/account/account-dev-operations";
+import { transferOp } from "../client/lib/ft3/account/account-operations";
+import { XferInput, XferOutput } from "../client/lib/ft3/account/types";
+import { AuthDescriptor } from "../client/lib/ft3/account/auth-descriptor/types";
+import { FlagsType } from "../client/lib/ft3/account/auth-descriptor";
+import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 
 describe("Transaction Builder", () => {
-  let authenticator: Authenticator = null;
-  let client: GtxClient = null;
-  let authDescriptor: AuthDescriptor = null;
-  let keyHandler: KeyHandler = null;
+  let authenticator: Authenticator;
+  let client: GtxClient;
+  let authDescriptor: AuthDescriptor;
+  let keyHandler: KeyHandler;
 
   beforeEach(async () => {
     const accountId = encryption.randomBytes(32);
@@ -36,7 +36,10 @@ describe("Transaction Builder", () => {
     keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(ad);
     const authDataService = createFakeAuthDataService({
       ["ft3.transfer"]: { flags: [FlagsType.Transfer], message: "" },
-      ["ft3.dev_register_account"]: { flags: [FlagsType.Account], message: "" },
+      ["ft4.admin.register_account"]: {
+        flags: [FlagsType.Account],
+        message: "",
+      },
     });
     authenticator = createAuthenicator(
       accountId,

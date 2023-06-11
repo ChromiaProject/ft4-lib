@@ -1,8 +1,9 @@
 /* eslint @typescript-eslint/ban-ts-comment: 0 */
-import { freeOp, givePointsOp, registerOp } from "./account-dev-operations";
+import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
   addAuthDescriptorOp,
   addAuthDescriptorV2,
+  burnOp,
   deleteAllAuthDescriptorsExcludeOp,
   deleteAuthDescriptorOp,
   deleteAuthDescriptorV2,
@@ -30,20 +31,12 @@ import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { GtvCompatible } from "../utils/gtv";
 import { Amount } from "../asset/interfaces";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
+import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { Connection } from "../types";
 import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
-
-export async function registerAccount(
-  newAuthDesc: AuthDescriptor,
-  tb: LegacyTransactionBuilder
-): Promise<Account> {
-  const tx = await tb.add(registerOp(newAuthDesc)).buildSigned();
-  await tx.postAndWaitConfirmation();
-  return getById(tb.session, newAuthDesc.id);
-}
 
 export async function ssoRawTransactionRegister(
   newAuthDesc: AuthDescriptor,
@@ -177,43 +170,12 @@ export async function transfer(
 }
 
 export async function burnTokens(
-  fromAccountId: BufferId,
   assetId: BufferId,
   amount: Amount,
-  tb: LegacyTransactionBuilder,
-  extra?: { [key: string]: GtvCompatible }
+  tb: LegacyTransactionBuilder
 ): Promise<void> {
   //if we want to check that amount has the correct decimals, do it here
-  const input: XferInput = [
-    formatter.ensureBuffer(fromAccountId),
-    formatter.ensureBuffer(assetId),
-    tb.user.authDescriptor.id,
-    amount.value,
-    extra ?? {},
-  ];
-  await transferInputsToOutputs([input], [], tb);
-}
-
-export async function freeOperation(
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-) {
-  const tx = await tb
-    .add(freeOp(formatter.ensureBuffer(accountId)))
-    .add(nop())
-    .buildSigned();
-  await tx.postAndWaitConfirmation();
-}
-
-export async function givePoints(
-  accountId: BufferId,
-  points: number,
-  tb: LegacyTransactionBuilder
-) {
-  const tx = await tb
-    .add(givePointsOp(formatter.ensureBuffer(accountId), points))
-    .add(nop())
-    .buildSigned();
+  const tx = await tb.add(burnOp(assetId, amount)).add(nop()).buildSigned();
   await tx.postAndWaitConfirmation();
 }
 
@@ -239,6 +201,48 @@ export async function xcTransfer(): Promise<void> {
   );
   await tx.post();
   await this.sync();*/
+}
+
+//-------------------ADMIN OPERATIONS-------------------//
+
+export async function registerAccount(
+  user: User,
+  adminUser: User,
+  session: GtxClient,
+  newAuthDesc: AuthDescriptor
+): Promise<Account> {
+  const tx = session.newTransaction([
+    ...user.authDescriptor.signers,
+    ...adminUser.authDescriptor.signers,
+  ]);
+  // @ts-ignore
+  tx.addOperation(...registerOp(newAuthDesc)); //doesn't need nop
+  await tx.sign(user.signatureProvider);
+  await tx.sign(adminUser.signatureProvider);
+  await tx.postAndWaitConfirmation();
+  return <Account>await getById(session, newAuthDesc.id);
+}
+
+export async function givePoints(
+  user: User,
+  adminUser: User,
+  session: GtxClient,
+  accountId: BufferId,
+  points: number
+) {
+  const tx = session.newTransaction([
+    ...user.authDescriptor.signers,
+    ...adminUser.authDescriptor.signers,
+  ]);
+  // @ts-ignore
+  tx.addOperation(
+    ...addRateLimitPointsOp(formatter.ensureBuffer(accountId), points)
+  );
+  // @ts-ignore
+  tx.addOperation(...nop());
+  await tx.sign(user.signatureProvider);
+  await tx.sign(adminUser.signatureProvider);
+  await tx.postAndWaitConfirmation();
 }
 
 export function createAuthenticatedAccount(
@@ -281,7 +285,8 @@ async function _addAuthDescriptor(
     )
     .build();
 
-  return tx.postAndWaitConfirmation();
+  await tx.postAndWaitConfirmation();
+  return;
 }
 
 async function _deleteAuthDescriptor(
@@ -337,7 +342,7 @@ async function _burn(
   const input: XferInput = [
     authenticator.accountId,
     formatter.ensureBuffer(assetId),
-    keyHandler.authDescriptor.id,
+    keyHandler!.authDescriptor.id,
     amount.value,
     {},
   ];
