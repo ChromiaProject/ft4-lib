@@ -94,14 +94,6 @@ function create_asset(name: text, symbol: text, decimals: integer) {
     return core.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
 }
 
-function _auth(account_id:byte_array, auth_descriptor_id:byte_array, required_flags:list<text>, keypairs: list<rell.test.keypair>) {
-    rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_id, auth_descriptor_id, required_flags))
-        .sign(byte_array(chain_context.args.admin_priv_key))
-        .sign(keypairs)
-        .run();
-}
-
 function mint(acc.account, core.asset, amount: big_integer) {
     admin.mint(
         account.id,

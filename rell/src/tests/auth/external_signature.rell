@@ -64,10 +64,6 @@ function test_it_rejects_empty_messages() {
 }
 
 function test_it_rejects_wrong_eth_signatures() {
-  // val auth_desc_id = setup_extended_auth(rell.test.keypairs.alice);
-  // val wrong_signature = acc.signature(
-  //   r="e49d73012d42d33388fba929de5b423ebc7cec6b7b01a05459785f4d1f8f87ba",
-  //   s="6ae3ee3dbc393f2d8ed49c4effa480c3832989d46eac2ca141d1b2069b88fcf3",
   val auth_desc_id = setup_extended_auth(rell.test.keypairs.alice);
   val wrong_signature = auth.signature(
     r=x"e49d73012d42d33388fba929de5b423ebc7cec6b7b01a05459785f4d1f8f87ba",
@@ -80,10 +76,6 @@ function test_it_rejects_wrong_eth_signatures() {
     [0].to_gtv(),
     rell.test.keypairs.alice.pub.to_gtv()
   ];
-
-  // val tx = rell.test.tx()
-  //   .op(acc.eth_auth(auth_desc_id, [wrong_signature], rell.test.keypairs.alice.pub));
-  // utils.add_auth_op(tx, "Some message")
 
   rell.test.tx()
     .op(auth.evm_auth(auth_desc_id, auth_desc_id, [wrong_signature]))
@@ -101,11 +93,7 @@ function test_perform_eth_auth_transaction() {
   );
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
-  val alice_acc = alice_acc_desc.account;
-
-  // val tx = rell.test.tx()
-  //   .op(acc.eth_auth(alice_acc_desc_id, [signature], rell.test.keypairs.alice.pub));
-  // utils.perform_large_transfer(tx, 1000, to_addr)    
+  val alice_acc = alice_acc_desc.account;  
 
   rell.test.tx()
     .op(auth.evm_auth(alice_acc_desc_id, alice_acc_desc_id, [signature]))
@@ -142,10 +130,6 @@ function test_multisig_external_signature() {
     v=28
   );
 
-  // val tx = rell.test.tx()
-  //   .op(acc.eth_auth(desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub));
-  // utils.perform_large_transfer(tx, 1000, to_addr)
-
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
@@ -179,10 +163,6 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
     s=x"6ae3ee3dbc393f2d8ed49c4effa480c3832989d46eac2ca141d1b2069b88fcf3",
     v=28
   );
-
-  // val tx = rell.test.tx()
-  //   .op(acc.eth_auth(desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub));
-  // utils.perform_large_transfer(tx, 1000, to_addr)
 
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
@@ -218,10 +198,6 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     v=28
   );
 
-  // val tx = rell.test.tx()
-  //   .op(acc.eth_auth(desc.hash(), [signature0, signature1], rell.test.keypairs.alice.pub));
-  // utils.perform_large_transfer(tx, 1000, to_addr)
-
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
@@ -246,12 +222,6 @@ function test_requires_correct_ctr() {
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
 
-  // val tx = rell.test.tx()
-  //   .op(acc.eth_auth(alice_acc_desc_id, [signature0], rell.test.keypairs.alice.pub))
-  //   .op(dev_op.dev_perform_large_transfer(1000, to_addr))
-  //   .op(acc.eth_auth(alice_acc_desc_id, [signature1], rell.test.keypairs.alice.pub));
-  // utils.perform_large_transfer(tx, 1000, to_addr)
-
   rell.test.tx()
     .op(auth.evm_auth(alice_acc_desc_id, alice_acc_desc_id, [signature0]))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
@@ -271,13 +241,6 @@ function test_ft_auth_fails_if_key_invalid() {
     ],
     rules = null.to_gtv()
   );
-
-  // utils._create_test_acc_from_auth_desc_single_sig(external_key, desc);
-  
-  // val tx = rell.test.tx()
-  //   .op(acc.ft_auth(desc.hash()));
-  // utils.perform_large_transfer(tx, 1000, to_addr)
-  //   .sign(rell.test.keypairs.bob)
 
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
