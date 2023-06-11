@@ -52,7 +52,10 @@ export function getAuthDescriptorSigners(ad: GtvAuthDescriptor): Buffer[] {
     signers = [args[1]];
   } else if (args.length === 3) {
     signers = args[2];
+  } else {
+    signers = [];
   }
+
   return signers;
 }
 
@@ -65,8 +68,10 @@ export function fromGtv(ad: GtvAuthDescriptor): AuthDescriptor {
     signaturesRequired:
       authType === "S" || authType == "ES" ? 1 : (ad[1][1] as number),
     signers:
-      authType === "S" || authType == "ES" ? [ad[1][1] as Buffer] : ad[1][2],
-    rule: ad[2],
+      (authType === "S" || authType == "ES"
+        ? [ad[1][1] as Buffer]
+        : ad[1][2]) || [],
+    rule: ad[2]!,
   };
 }
 

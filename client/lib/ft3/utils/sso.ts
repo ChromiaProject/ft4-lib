@@ -11,7 +11,7 @@ import { localStorageSignatureProvider } from "./local-signature-provider";
 let vaultUrl = "https://vault-testnet.chromia.com";
 
 const Operations = {
-  register: "ft3.dev_register_account",
+  register: "ft4.admin.register_account",
   addAuthDescriptor: "ft3.add_auth_descriptor",
 };
 

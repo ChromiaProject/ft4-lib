@@ -1,8 +1,4 @@
-import {
-  generateAssetName,
-  generateAssetSymbol,
-  generateId,
-} from "./util/util";
+import { generateAssetName, generateAssetSymbol } from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
@@ -38,7 +34,7 @@ describe("Asset", () => {
     const assetId = ft.get.asset.id(assetName, brid);
     await getNewAsset(ft, assetName, assetSymbol, 3);
 
-    const expectedAsset = await connection.getAssetById(assetId);
+    const expectedAsset = (await connection.getAssetById(assetId))!;
 
     expect(expectedAsset.name).toEqual(assetName);
     expect(expectedAsset.id).toEqual(assetId);

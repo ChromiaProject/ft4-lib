@@ -7,12 +7,12 @@ import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payment-history/payment-history-store-memory";
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
 import { createAmount } from "../client/lib/ft3/asset/amount";
-import { PaymentHistoryType } from "/ft3/account/payment-history/types";
-import { createConnection } from "/ft3/ft-session";
+import { PaymentHistoryType } from "../client/lib/ft3/account/payment-history/types";
+import { createConnection } from "../client/lib/ft3/ft-session";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
-import { createPaymentHistoryRetriever } from "/ft3/account/payment-history/payment-history-retrieval";
+import { createPaymentHistoryRetriever } from "../client/lib/ft3/account/payment-history/payment-history-retrieval";
 
 let _ft: ftUserSession;
 let asset: Asset;
@@ -214,7 +214,7 @@ describe("Payment history", () => {
 
       const connection = createConnection(_ft.get.gtxClient);
       const foundAccount = await connection.getAccountById(account1.id);
-      const history = await foundAccount.getTransferHistory();
+      const history = await foundAccount!.getTransferHistory();
       expect(history.data.length).toStrictEqual(2);
       expect(history.data[0].transferInputArgs.length).toBe(1);
       expect(history.data[0].transferInputArgs[0].accountId).toEqual(
@@ -486,9 +486,9 @@ describe("Payment history", () => {
       _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
     const paymentHistoryEntries = await paymentHistoryIterator.next();
 
-    const entry = await foundAccount.getTransferHistoryEntry(
+    const entry = await foundAccount!.getTransferHistoryEntry(
       parseInt(paymentHistoryEntries[0].rowid, 10)
     );
-    expect(entry.rowid).toBe(paymentHistoryEntries[0].rowid);
+    expect(entry!.rowid).toBe(paymentHistoryEntries[0].rowid);
   });
 });

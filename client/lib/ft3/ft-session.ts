@@ -103,7 +103,8 @@ export async function call(
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
-  return tx.postAndWaitConfirmation();
+  await tx.postAndWaitConfirmation();
+  return;
 }
 
 export type KeyStoreInteractor = {
@@ -116,7 +117,7 @@ export type KeyStoreInteractor = {
 export function createAuthDataService(connection: Connection): AuthDataService {
   return Object.freeze({
     getAuthData: async (operation: Operation) => {
-      let authData = null;
+      let authData: AuthData | null;
       try {
         authData = await connection.query<AuthData>(authDataQuery(operation));
       } catch {
@@ -129,7 +130,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
           };
         }
       }
-      return authData;
+      return authData!;
     },
     getNonce: async (authDescriptorId: BufferId) =>
       connection.query<number>(nonce(authDescriptorId)),

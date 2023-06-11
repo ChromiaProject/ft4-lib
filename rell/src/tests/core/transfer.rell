@@ -4,7 +4,6 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.ft3_basic_dev.*;
-import ^^^.lib.ft3.operations.dev_op_asset;
 import ^^^.lib.ft3.auth;
 import ^.utils;
 
@@ -33,10 +32,9 @@ function test_before_transfer_extension_is_called() {
         )
     ];
 
-    utils.mint(asset, alice.account, 1);
+    utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(dev_op_asset.dev_mint(alice.account.id, asset.id, 1L))
         .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -71,10 +69,9 @@ function test_after_transfer_extension_is_called() {
         )
     ];
 
-    utils.mint(asset, alice.account, 1);
+    utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(dev_op_asset.dev_mint(alice.account.id, asset.id, 1))
         .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();

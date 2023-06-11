@@ -10,7 +10,6 @@ export const MAX = BigInt("0x" + "f".repeat(64));
 export class AmountInputError extends Error {
   constructor(msg?: string) {
     super(msg);
-    this.message = msg;
     this.name = "AmountInputError";
   }
 }
@@ -18,7 +17,6 @@ export class AmountInputError extends Error {
 export class AmountOutOfRangeError extends Error {
   constructor(msg?: string) {
     super(msg);
-    this.message = msg;
     this.name = "AmountOutOfRangeError";
   }
 }
@@ -26,7 +24,6 @@ export class AmountOutOfRangeError extends Error {
 export class AmountDecimalsError extends Error {
   constructor(msg?: string) {
     super(msg);
-    this.message = msg;
     this.name = "AmountDecimalsError";
   }
 }

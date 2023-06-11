@@ -2,9 +2,9 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { AuthData } from "../account/auth/types";
 import { User } from "../account/types";
 import { Operation } from "./types";
+import { FlagsType } from "../account";
 
 export type LegacyTransactionBuilder = {
   _operations: Operation[];
@@ -55,7 +55,7 @@ export function legacyTransactionBuilder(
       this._operations.map(async (operation: Operation) => {
         if (operation[0] === "nop") return operation;
 
-        const auth_data: AuthData = null;
+        const auth_data = { flags: new Set<FlagsType>(), message: "" };
         const manager = user.keyManagers[0];
         if (!manager) {
           throw new TransactionBuilderError(

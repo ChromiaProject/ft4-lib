@@ -3,7 +3,7 @@ import {
   PaymentHistoryFilter,
   TransferHistoryResponse,
 } from "./types";
-import { PageCursor } from "/ft3/types";
+import { PageCursor } from "../../types";
 
 export interface PaymentHistoryStore {
   accountId: Buffer;

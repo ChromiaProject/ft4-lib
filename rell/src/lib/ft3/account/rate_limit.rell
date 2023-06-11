@@ -31,3 +31,11 @@ function rate_limit(account) {
         .last_update = update_time
     );
 }
+
+function add_rate_limit_points(account, amount: integer) {
+    var state = require(
+        rl_state@?{account}, 
+        "Rate limiter state not found for the account with ID: %s".format(account.id)
+    );
+	state.points += amount;
+}

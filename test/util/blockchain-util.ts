@@ -8,6 +8,7 @@ import {
 import { Asset } from "../../client/lib/ft3/asset/types";
 import singleSigUser from "./test-user";
 import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import adminUser from "./admin_user";
 
 export async function createClient(nodeUrl?: string) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
@@ -38,7 +39,8 @@ export async function getNewAsset(
   decimals = 0,
   iconUrl = ""
 ): Promise<Asset> {
-  const id = await userSession.asset.dev.register(
+  const id = await userSession.asset.admin.register(
+    adminUser(),
     name,
     symbol,
     decimals,

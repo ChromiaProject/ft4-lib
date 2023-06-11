@@ -8,7 +8,7 @@ export function registerAssetOp(
   decimals: number,
   iconUrl: string
 ): Operation {
-  return op("ft3.dev_register_asset", name, symbol, decimals, iconUrl);
+  return op("ft4.admin.register_asset", name, symbol, decimals, iconUrl);
 }
 
 export function mintOp(
@@ -16,5 +16,5 @@ export function mintOp(
   assetId: Buffer,
   amount: Amount
 ): Operation {
-  return op("ft3.dev_mint", accountId, assetId, amount.value);
+  return op("ft4.admin.mint", accountId, assetId, amount.value);
 }

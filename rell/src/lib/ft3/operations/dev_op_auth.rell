@@ -1,7 +1,7 @@
 @mount('ft3')
 module;
 
-import dev_op: ^^.core.dev_op;
+import ^^.admin;
 import acc: ^^.account; 
 
 /*
@@ -16,15 +16,13 @@ object dev_error {
  * Only used for testing of authentication mechanics.
  */
 operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>) {
-    dev_op.require_dev();
-
     val account = acc.account @ { .id == account_id };
 
     val acc_auth_desc = acc.account_auth_descriptor @ {
           .id == auth_descriptor_id,
           .account == account
     };
-    val participants = acc.get_participants(acc_auth_desc.auth_type, acc_auth_desc.args);//acc.auth_descriptor_participant @* { .account_auth_descriptor == acc_auth_desc } ( .id );
+    val participants = acc.get_participants(acc_auth_desc.auth_type, acc_auth_desc.args);
 
     val result = acc.check_auth_args(
        		acc_auth_desc.auth_type,
@@ -39,41 +37,22 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
         dev_error.msg = result.error!!;
     }
 }
-operation dev_create_eth_account(auth_desc: acc.auth_descriptor) {
-  dev_op.require_dev();
-  acc.create_account_with_auth(auth_desc);
-}
 
-operation dev_create_ft4_account(auth_desc: acc.auth_descriptor) {
-  dev_op.require_dev();
-  acc.create_account_with_auth(auth_desc);
-}
-
-operation dev_authenticated_operation(message_temaplate: text) {
-  dev_op.require_dev();
-  acc.authenticate(set<text>(["A"]), message_temaplate);
+operation dev_authenticated_operation(message_template: text) {
+  admin.require_admin();
+  // require(acc.authenticate(set<text>(["A"]), message_template));
+  acc.authenticate(set<text>(["A"]), message_template);
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
-  dev_op.require_dev();
+  admin.require_admin();
   acc.add_auth_descriptor_to_account(account, desc);
-}
-
-operation create_eth_account(auth_desc: acc.auth_descriptor) {
-  dev_op.require_dev();
-  acc.create_account_with_auth(auth_desc);
-}
-
-operation create_ft4_account(auth_desc: acc.auth_descriptor) {
-  dev_op.require_dev();
-  acc.create_account_with_auth(auth_desc);
 }
 
 operation dev_perform_large_transfer(
   amount: integer,
   to: text
 ) {
-  dev_op.require_dev();
   val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {nonce}";
   acc.authenticate(set(["A"]), msg_template);
 }

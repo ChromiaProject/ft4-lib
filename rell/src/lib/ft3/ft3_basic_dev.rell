@@ -5,14 +5,9 @@ namespace ft3 {
     import acc_ext: ^.account.external;
     import core: ^.ft3_basic_dev;
     import core_ext: ^.core.external;
-//	import ^.crosschain;
-//	import ^.crosschain.operations;
-
     import ^.operations.dev_op_account;
-    import ^.operations.dev_op_asset;
     import ^.operations.dev_op_auth;
     import ^.operations.dev_op_auth;
-    import ^.operations.dev_op_rate_limit;
     import ^.version;
 }
 

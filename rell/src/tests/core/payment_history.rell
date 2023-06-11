@@ -5,7 +5,6 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
 import ^^^.lib.ft3.ft3_basic_dev.*;
-import ^^^.lib.ft3.operations.dev_op_asset;
 import acc: ^^^.lib.ft3.account;
 import ^.utils;
 
@@ -13,12 +12,12 @@ function test_history() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 5).id;
+    val asset = utils.create_asset("test", "t", 5);
 
     val inputs = [
         core.xfer_input(
             account_id = alice.account.id,
-            asset_id,
+            asset_id = asset.id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
             extra = map()
@@ -28,14 +27,15 @@ function test_history() {
     val outputs = [
         core.xfer_output(
             account_id = bob.account.id, 
-            asset_id,
+            asset_id = asset.id,
             amount = 1,
             extra = map()
         )
     ];
 
+    utils.mint(alice.account, asset, 1);
+
     rell.test.tx()
-        .op(dev_op_asset.dev_mint(alice.account.id, asset_id, 1L))
         .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -65,12 +65,12 @@ function test_history_pagination() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 0).id;
+    val asset = utils.create_asset("test", "t", 0);
 
     val inputs = [
         core.xfer_input(
             account_id = alice.account.id,
-            asset_id,
+            asset_id = asset.id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
             extra = map()
@@ -80,13 +80,13 @@ function test_history_pagination() {
     val outputs = [
         core.xfer_output(
             account_id = bob.account.id, 
-            asset_id,
+            asset_id = asset.id,
             amount = 1,
             extra = map()
         )
     ];
 
-    utils.mint(core.asset @ { .id == asset_id }, alice.account, 5L); //adds one entry to the history
+    utils.mint(alice.account, asset, 5L); //adds one entry to the history
 
     rell.test.tx()
         .op(ft3.core_ext.transfer(inputs, outputs))
@@ -150,12 +150,12 @@ function test_history_filtering() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 0).id;
+    val asset = utils.create_asset("test", "t", 0);
 
     val inputs = [
         core.xfer_input(
             account_id = alice.account.id,
-            asset_id,
+            asset_id = asset.id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
             extra = map()
@@ -165,14 +165,15 @@ function test_history_filtering() {
     val outputs = [
         core.xfer_output(
             account_id = bob.account.id, 
-            asset_id,
+            asset_id = asset.id,
             amount = 1,
             extra = map()
         )
     ];
 
+    utils.mint(alice.account, asset, 5L);
+
     rell.test.tx()
-        .op(dev_op_asset.dev_mint(alice.account.id, asset_id, 5L))
         .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -188,12 +189,12 @@ function test_single_payment_history_entry() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test", "t", 0).id;
+    val asset = utils.create_asset("test", "t", 0);
 
     val inputs = [
         core.xfer_input(
             account_id = alice.account.id,
-            asset_id,
+            asset_id = asset.id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
             extra = map()
@@ -203,14 +204,15 @@ function test_single_payment_history_entry() {
     val outputs = [
         core.xfer_output(
             account_id = bob.account.id, 
-            asset_id,
+            asset_id = asset.id,
             amount = 1,
             extra = map()
         )
     ];
 
+    utils.mint(alice.account, asset, 5L);
+
     rell.test.tx()
-        .op(dev_op_asset.dev_mint(alice.account.id, asset_id, 5L))
         .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();

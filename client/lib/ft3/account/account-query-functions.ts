@@ -189,9 +189,9 @@ export async function _getByParticipantId(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount[]> {
-  const accountIds = await connection.query<Buffer[]>(
-    accountsByParticipantId(id)
-  );
+  const accountIds =
+    (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
+
   return accountIds.map((id) => createAccountObject(connection, id));
 }
 
@@ -199,9 +199,8 @@ export async function _getByAuthDescriptorId(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount[]> {
-  const accountIds = await connection.query<Buffer[]>(
-    accountsByAuthDescriptorId(id)
-  );
+  const accountIds =
+    (await connection.query<Buffer[]>(accountsByAuthDescriptorId(id))) ?? [];
   return accountIds.map((id) => createAccountObject(connection, id));
 }
 
@@ -210,9 +209,9 @@ export async function _isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId
 ): Promise<boolean> {
-  return await connection.query<boolean>(
+  return (await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
-  );
+  ))!;
 }
 
 export async function _getAuthDescriptors(
@@ -223,7 +222,9 @@ export async function _getAuthDescriptors(
     .query<RawAuthDescriptor[]>(
       accountAuthDescriptors(formatter.ensureBuffer(accountId))
     )
-    .then(mapAuthDescriptors);
+    .then((authDescriptors) =>
+      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
+    );
 }
 
 export async function getAuthDescriptorsByParticipantId(
@@ -235,5 +236,7 @@ export async function getAuthDescriptorsByParticipantId(
     .query<RawAuthDescriptor[]>(
       accountAuthDescriptorsByParticipantId(accountId, participantId)
     )
-    .then(mapAuthDescriptors);
+    .then((authDescriptors) =>
+      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
+    );
 }
