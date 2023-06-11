@@ -24,11 +24,8 @@ describe.skip("Rate Limit", () => {
 
   describe("Blockchain request configuration in run.xml", () => {
     it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
-      const info = await _ft.get.chainInfo();
+      const info = await _connection.getConfig();
       expect(info).toEqual({
-        name: expect.any(String),
-        website: expect.any(String),
-        description: expect.any(String),
         rate_limit_active: 1,
         rate_limit_max_points: REQUEST_MAX_COUNT,
         rate_limit_recovery_time: RECOVERY_TIME,

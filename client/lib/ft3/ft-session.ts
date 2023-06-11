@@ -3,7 +3,7 @@ import { accountQuerySession, accountUserSession } from "./account";
 import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
 import { ftQuerySession, ftUserSession, Connection, Session } from "./types";
-import { getChainInfo, getLastTimestamp, getVersion, nop } from "./utils";
+import { getConfig, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -46,9 +46,6 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
   return Object.freeze({
     gtxClient: pci,
     createUserSession: (user: User) => createUserSession(pci, user),
-    chainInfo: () => getChainInfo(pci),
-    version: () => getVersion(pci),
-    lastTimestamp: () => getLastTimestamp(pci),
     account: accountQuerySession(pci),
     ...assetQuerySession(pci),
   });
@@ -58,6 +55,8 @@ export function createConnection(client: GtxClient): Connection {
   const connection = Object.freeze({
     client,
     query: <T>(queryObject: QueryObject) => query<T>(connection, queryObject),
+    getConfig: () => getConfig(client),
+    getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>

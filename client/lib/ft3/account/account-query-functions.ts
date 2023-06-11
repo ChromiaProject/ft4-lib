@@ -15,7 +15,7 @@ import {
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { getChainInfo } from "../utils";
+import { getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
   _getBalancesByAccountId,
@@ -131,7 +131,7 @@ export async function getRateLimit(
     ...getRateLimitQuery(formatter.ensureBuffer(accountId))
   );
 
-  const chainInfo = await getChainInfo(session);
+  const chainInfo = await getConfig(session);
 
   return Object.freeze({
     points: rateLimit.points,

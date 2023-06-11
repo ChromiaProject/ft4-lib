@@ -1,15 +1,12 @@
 import ^^.core;
 import acc: ^^.account;
 
-query get_blockchain_info() {
+query get_config() {
     return (
-        name = core.my_blockchain_info.name,
-        website = core.my_blockchain_info.website,
-        description = core.my_blockchain_info.description,
-        rate_limit_active = core.my_blockchain_info.rate_limit_active,
-        rate_limit_max_points = core.my_blockchain_info.rate_limit_max_points,
-        rate_limit_recovery_time = core.my_blockchain_info.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = core.my_blockchain_info.rate_limit_points_at_account_creation
+        rate_limit_active = core.config.rate_limit_active,
+        rate_limit_max_points = core.config.rate_limit_max_points,
+        rate_limit_recovery_time = core.config.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = core.config.rate_limit_points_at_account_creation
     );
 }
 
