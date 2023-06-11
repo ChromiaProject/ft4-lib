@@ -5,7 +5,6 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
 import ^^^.lib.ft3.ft3_basic_dev.*;
-import ^^^.lib.ft3.operations.dev_op_asset;
 import acc: ^^^.lib.ft3.account;
 import ^.utils;
 

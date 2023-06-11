@@ -2,7 +2,6 @@ module;
 
 namespace ft3 {
     import ^.core;
-    import ^.operations.dev_op;
     import ^.crosschain;
     import ^.version;
 }

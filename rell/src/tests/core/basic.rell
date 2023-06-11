@@ -3,7 +3,6 @@
 import ^.utils;
 import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.admin;
-import ^^^.lib.ft3.operations.dev_op_asset;
 
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;

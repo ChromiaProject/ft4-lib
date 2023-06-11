@@ -1,7 +1,6 @@
 @mount('ft3')
 module;
 
-import dev_op: ^.dev_op;
 import acc: ^^.account; 
 
 // TODO: move to tests directory

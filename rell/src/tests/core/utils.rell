@@ -3,7 +3,6 @@ import acc: ^^^.lib.ft3.account;
 import ^^^.lib.ft3.core;
 import ^^^.lib.ft3.admin;
 import ^^^.lib.ft3.operations.dev_op_account;
-import ^^^.lib.ft3.operations.dev_op_asset;
 import ^^^.lib.ft3.operations.dev_op_auth;
 import cu: ^^.core.utils;
 
