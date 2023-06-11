@@ -2,6 +2,7 @@
 
 import ^.utils;
 import acc: ^^^.lib.ft3.account;
+import ^^^.lib.ft3.admin;
 import ^^^.lib.ft3.operations.dev_op_asset;
 
 val alice = rell.test.keypairs.alice;
@@ -61,6 +62,6 @@ function test_an_asset_can_be_created() {
 
 function test_an_invalid_asset_cannot_be_created() {
   val error = "Decimals must be between 0 and 78 (included)";
-  dev_op_asset.dev_register_asset("e", "e", -1, "").sign(utils.admin_priv_key()).run_must_fail(error);
-  dev_op_asset.dev_register_asset("f", "f", 79, "").sign(utils.admin_priv_key()).run_must_fail(error);
+  admin.register_asset("e", "e", -1, "").sign(utils.admin_priv_key()).run_must_fail(error);
+  admin.register_asset("f", "f", 79, "").sign(utils.admin_priv_key()).run_must_fail(error);
 }

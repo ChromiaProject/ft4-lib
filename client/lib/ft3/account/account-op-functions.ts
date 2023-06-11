@@ -1,9 +1,5 @@
 /* eslint @typescript-eslint/ban-ts-comment: 0 */
-import {
-  freeOp,
-  addRateLimitPointsOp,
-  registerOp,
-} from "./account-dev-operations";
+import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
   addAuthDescriptorOp,
   addAuthDescriptorV2,
@@ -245,25 +241,6 @@ export async function givePoints(
   tx.addOperation(
     ...addRateLimitPointsOp(formatter.ensureBuffer(accountId), points)
   );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
-  await tx.sign(adminUser.signatureProvider);
-  await tx.postAndWaitConfirmation();
-}
-
-export async function freeOperation(
-  user: User,
-  adminUser: User,
-  session: GtxClient,
-  accountId: BufferId
-) {
-  const tx = session.newTransaction([
-    ...user.authDescriptor.signers,
-    ...adminUser.authDescriptor.signers,
-  ]);
-  // @ts-ignore
-  tx.addOperation(...freeOp(formatter.ensureBuffer(accountId)));
   // @ts-ignore
   tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);

@@ -78,7 +78,6 @@ export interface ftUserSession {
         adminUser: User,
         authDescriptor: AuthDescriptor
       ) => Promise<Account>;
-      freeOperation: (adminUser: User, accountid: BufferId) => Promise<void>;
       givePoints: (
         adminUser: User,
         accountId: BufferId,

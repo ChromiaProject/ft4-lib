@@ -343,7 +343,7 @@ describe("Test the account", () => {
       user.authDescriptor.signers.concat(admin.authDescriptor.signers)
     );
     tx.addOperation(
-      ...op("ft3.dev_register_account", toGtv(user.authDescriptor))
+      ...op("ft4.admin.register_account", toGtv(user.authDescriptor))
     );
     await tx.sign(user.signatureProvider);
     await tx.sign(admin.signatureProvider);

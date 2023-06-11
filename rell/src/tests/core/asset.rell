@@ -3,6 +3,7 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.ft3_basic_dev.*;
+import ^^^.lib.ft3.admin;
 import ^^^.lib.ft3.auth;
 import ^.utils;
 
@@ -10,7 +11,7 @@ function test_before_mint_and_burn_extensions_are_called() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    ft3.dev_op_asset.dev_mint(alice.account.id, asset.id, 10L)
+    admin.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     
@@ -35,7 +36,7 @@ function test_before_mint_and_burn_extensions_are_called() {
 function test_after_mint_and_burn_extensions_are_called() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset = utils.create_asset("test", "TST", 0);
-    ft3.dev_op_asset.dev_mint(alice.account.id, asset.id, 10L)
+    admin.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     

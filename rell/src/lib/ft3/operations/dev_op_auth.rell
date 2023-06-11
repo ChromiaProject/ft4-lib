@@ -1,7 +1,7 @@
 @mount('ft3')
 module;
 
-import dev_op: ^.dev_op;
+import ^^.admin;
 import acc: ^^.account; 
 
 /*
@@ -39,13 +39,13 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
 }
 
 operation dev_authenticated_operation(message_template: text) {
-  dev_op.require_admin();
+  admin.require_admin();
   // require(acc.authenticate(set<text>(["A"]), message_template));
   acc.authenticate(set<text>(["A"]), message_template);
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
-  dev_op.require_admin();
+  admin.require_admin();
   acc.add_auth_descriptor_to_account(account, desc);
 }
 

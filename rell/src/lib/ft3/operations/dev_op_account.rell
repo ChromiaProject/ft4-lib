@@ -4,12 +4,6 @@ module;
 import dev_op: ^.dev_op;
 import acc: ^^.account; 
 
-
-operation dev_register_account(acc.auth_descriptor) {
-    dev_op.require_admin();
-    acc.create_account_with_auth(auth_descriptor);
-}
-
 // TODO: move to tests directory
 operation register_account_test(acc.auth_descriptor) {
     acc.Unsafe.create_account_with_auth(auth_descriptor);
