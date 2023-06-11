@@ -1,0 +1,45 @@
+@mount('ft')
+module;
+
+struct auth_data {
+    flags: list<text>;
+    message: text;
+}
+
+function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
+
+struct signature {
+    r: byte_array;
+    s: byte_array;
+    v: integer;
+}
+
+operation evm_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array,
+    signatures: list<signature>
+) {
+    // require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
+}
+
+operation ft_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array
+) {}
+
+// Creates message from operation name and arguments.
+// It is used when `evm_auth` is used to authenticate the user, 
+// but auth message is not specified for the operation.
+function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
+    var message = "Please sign the message to call\noperation:\n- %s\n\n".format(op.name);
+
+    if (op.args.size() > 0) {
+        var arguments = "with arguments:\n";
+        for (arg in op.args) {
+            arguments = arguments + "- %s\n".format(arg).replace("\"", "");
+        }
+        message = message + arguments + "\n";
+    }
+    
+    return message + "Nonce: {nonce}";
+}

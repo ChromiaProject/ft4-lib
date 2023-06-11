@@ -1,0 +1,24 @@
+blockchains:
+  ft_deploy: #Name of the blockchain
+    module: main #Entrypoint to the project
+    moduleArgs:
+      lib.ft3.core:
+        my_blockchain_name: test
+        my_blockchain_website: test_website
+        my_blockchain_description: test_description
+        rate_limit_active: 1
+        rate_limit_max_points: 10
+        rate_limit_recovery_time: 5000
+        rate_limit_points_at_account_creation: 1
+
+compile:
+  source: ../rell/src
+  target: ../rell/out
+
+deployments:
+  devnet1: #Deployment Target name
+    url: https://node0.devnet1.chromia.dev:7740
+    brid: x"43B6185404EA6CB51FC179748B78B2295A1B20F267826807F905B691FC4BD1D0"
+    container: ft
+    chains:
+      ft_deploy: x"700107A024E4EC1FAE17D4A8FCCEE797D90436735C8E51DCF82093D4FE046B70"

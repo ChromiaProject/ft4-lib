@@ -2,12 +2,22 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { AuthData, KeyManager } from "../account/auth/types";
-import { User } from "../account/types";
 import { Operation } from "./types";
+import { Authenticator, KeyHandler } from "../authentication/interfaces";
+
+type OpAuthPair = [Operation, Authenticator];
+
+export class AuthorizationError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "AuthorizationError";
+  }
+}
 
 export type TransactionBuilder = {
-  _operations: Operation[];
+  _operations: OpAuthPair[];
+  _keyhandlersUsed: KeyHandler[];
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
@@ -15,21 +25,48 @@ export type TransactionBuilder = {
    */
   add: (operation: Operation) => TransactionBuilder;
   /**
-   * Builds an unsigned transaction containgin the previously added
-   * transactions, as well as any authhorization operations as needed.
+   * Adds an operation to include in the final transaction
+   * the operation will be authenticated using the provided
+   * authenticator, and if `build` is called, the authenticator
+   * will also be used to sign the transaction.
+   * @param operation the operation to add
+   * @param authenticator the authenticator to use for this and only this operation
+   * @returns an instance of the transaction builder object
+   */
+  addWithAuthenticator: (
+    operation: Operation,
+    authenticator: Authenticator
+  ) => TransactionBuilder;
+  /**
+   * Add key handlers that will also be included as signers to this operation
+   * if `build` is called, the key handlers will also sign the transaction
+   * @param keyHandlers the key handlers to use for signing
+   * @returns an instance of the transaction builder object
+   */
+  addSigners: (...keyHandlers: KeyHandler[]) => TransactionBuilder;
+  /**
+   * Builds a transaction the same way as `buildUnsigned` and also signs it
+   * using the same key handlers that were used to authorize the operations,
+   * as well as any explicitly added key handlers.
    * @param signers array of participants that should sign this transaction
    * @returns A promised containing the unsigned transaction
    */
-  build: (signers?: Buffer[]) => Promise<Itransaction>;
+  build: () => Promise<Itransaction>;
   /**
-   * Builds a transaction and also signs it using the default signature provided.
-   * If the optional parameter `signers` is not provided, the default participants
-   * will be used.
+   * Builds an unsigned transaction containgin the previously added
+   * transactions, as well as any authhorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
    */
-  buildSigned: (signers?: Buffer[]) => Promise<Itransaction>;
-  user: User;
+  buildUnsigned: () => Promise<Itransaction>;
+  /**
+   * A function to extract the keyhandlers used to build a transaction,
+   * and thus should be the ones signing the transaction when
+   * `buildUnsigned` was called instead of `build`.
+   * @returns an array containing the keyhandlers used to build the transaction,
+   * and which consequently should sign the transaction.
+   */
+  keyHandlersUsed: () => KeyHandler[];
   session: GtxClient;
 };
 
@@ -40,64 +77,131 @@ export type TransactionBuilder = {
  * @returns a TransactionBuilder instance
  */
 export function transactionBuilder(
-  user: User,
+  authenticator: Authenticator,
   client: GtxClient
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
-    this._operations.push(operation);
+    this._operations.push([operation, authenticator]);
     return this;
   }
 
-  async function build(signers: Buffer[] = []) {
-    const txn = client.newTransaction(signers);
-    const operations = Promise.all(
-      this._operations.map(async (operation: Operation) => {
-        if (operation[0] === "nop") return operation;
+  function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
+    return keyHandlers
+      .map((handler) => handler.getSigners())
+      .filter((pubKey) => pubKey)
+      .flat();
+  }
 
-        let auth_data: AuthData = null;
-        try {
-          auth_data = await client.query(`${operation[0]}_auth_data`);
-        } catch {
-          auth_data = await client.query(`ft3.default_auth_data`);
-        }
-        const isUsable = (km: KeyManager) =>
-          !!intersection(auth_data.flags, km.flags).length;
-        const manager = user.keyManagers.find(isUsable);
-        if (!manager) {
-          throw new Error("No keymanager registered to handle this operation");
-        }
-        return await manager.authorize(operation, auth_data);
-      })
+  async function buildUnsigned() {
+    const [operations, keyHandlers] = await authenticateOperations(
+      this._operations
     );
-    (await operations).forEach((op: Operation | Operation[]) => {
-      if (Array.isArray(op[0])) {
-        txn.addOperation(...op[0]);
-      } else {
-        const [name, ...args] = op;
-        txn.addOperation(name, ...args);
-      }
+    keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
+    const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
+    const addOperation = (op: Operation) => {
+      const [name, ...args] = op;
+      txn.addOperation(name, ...args);
+    };
+    operations.forEach((op: Operation | Operation[]) => {
+      isOperation(op) ? addOperation(op) : op.forEach(addOperation);
     });
     return txn;
   }
 
-  async function buildSigned(signers: Buffer[] | undefined = undefined) {
-    const participants = signers ? signers : user.authDescriptor.signers;
-    const tx = await this.build(participants);
-    await tx.sign(user.signatureProvider);
+  async function authenticateOperations(
+    operations: OpAuthPair[]
+  ): Promise<[Operation[], KeyHandler[]]> {
+    const keyHandlers: KeyHandler[] = [];
+    const nonces = new Map<Buffer, number>();
+    const processedOperations: Operation[][] = [];
+    for (const tuple of operations) {
+      const [operation, authenticator] = tuple;
+      if (operation[0] === "nop") {
+        processedOperations.push([operation]);
+        continue;
+      }
+
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation
+      );
+
+      if (!keyHandler) {
+        throw new AuthorizationError(
+          "No keyhandler registered to handle this operation"
+        );
+      }
+      keyHandlers.push(keyHandler);
+      if (!nonces.has(keyHandler.authDescriptor.id)) {
+        nonces.set(
+          keyHandler.authDescriptor.id,
+          (await authenticator.getNonce(keyHandler.authDescriptor.id))!
+        );
+      }
+      const nonce = nonces.get(keyHandler.authDescriptor.id)!;
+      // FIXME `getKeyHandlerForOperation` already calls `getAuthRequirements`
+      // See if we can avoid making two calls? Perhaps it will not be a problem when we start to cache data
+      const authData = await authenticator.getAuthRequirements(operation);
+      const message = authData.message.replace("{nonce}", `${nonce}`);
+      const ops = await keyHandler.authenticate(
+        authenticator.accountId,
+        operation,
+        {
+          flags: authData.flags,
+          message,
+        }
+      );
+      // consider keeping nonce value in corresponding key handler
+      ops.forEach((op) => {
+        if (op[0] === "ft.evm_auth") {
+          nonces.set(keyHandler.authDescriptor.id, nonce + 1);
+        }
+      });
+      processedOperations.push(ops);
+    }
+    let opsToReturn: Operation[] = [];
+    processedOperations.forEach((item) => {
+      opsToReturn = isOperation(item)
+        ? [...opsToReturn, item]
+        : opsToReturn.concat(item);
+    });
+    return [opsToReturn, keyHandlers];
+  }
+
+  async function build() {
+    const tx = await this.buildUnsigned();
+    await Promise.all(
+      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx))
+    );
     return tx;
+  }
+
+  function addSigners(...signers: KeyHandler[]): TransactionBuilder {
+    signers.forEach((signer) => this._keyhandlersUsed.push(signer));
+    return this;
+  }
+
+  function addWithAuthenticator(
+    operation: Operation,
+    authenticator: Authenticator
+  ): TransactionBuilder {
+    this._operations.push([operation, authenticator]);
+    return this;
   }
 
   const context: Partial<TransactionBuilder> = {
     _operations: [],
+    _keyhandlersUsed: [],
     session: client,
-    user,
   };
   context.add = add.bind(context);
   context.build = build.bind(context);
-  context.buildSigned = buildSigned.bind(context);
+  context.buildUnsigned = buildUnsigned.bind(context);
+  context.addSigners = addSigners.bind(context);
+  context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
   return context as TransactionBuilder;
 }
 
-const intersection = <T>(a: Set<T>, b: Set<T>): T[] =>
-  [...a].filter((x) => b.has(x));
+function isOperation(op: Operation | Operation[]): op is Operation {
+  return typeof op[0] === "string";
+}

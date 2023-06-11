@@ -5,10 +5,10 @@ import {
   getBalance,
   getBalancesByAccountId,
 } from "./asset-query-functions";
-import { giveBalance, registerAsset } from "./asset-op-functions";
+import { mint, registerAsset } from "./asset-op-functions";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { User } from "../account/types";
-import { AssetAmount } from "./types";
+import { Amount } from "./interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { formatter, gtv } from "postchain-client";
 
@@ -40,18 +40,24 @@ export const assetUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     asset: {
       admin: {
-        register: (adminUser: User, name: string, brid: BufferId) =>
-          registerAsset(user, adminUser, pci, name, brid),
+        register: (
+          adminUser: User,
+          name: string,
+          symbol: string,
+          decimals: number,
+          iconUrl: string
+        ) =>
+          registerAsset(user, adminUser, pci, name, symbol, decimals, iconUrl),
       },
     },
     balance: {
       admin: {
-        give: (
+        mint: (
           adminUser: User,
           assetId: BufferId,
           accountId: BufferId,
-          amount: AssetAmount
-        ) => giveBalance(user, adminUser, pci, assetId, accountId, amount),
+          amount: Amount
+        ) => mint(user, adminUser, pci, assetId, accountId, amount),
       },
     },
   });

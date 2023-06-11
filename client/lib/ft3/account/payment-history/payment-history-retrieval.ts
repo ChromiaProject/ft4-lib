@@ -1,9 +1,9 @@
-import { PaymentHistoryCursor, PaymentHistoryEntry } from "./types";
+import { PaymentHistoryFilter, TransferHistoryResponse } from "./types";
 import { BufferId } from "../../../cryptoUtils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { formatter, gtv } from "postchain-client";
+import { formatter } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
-import { PaymentHistoryRetriever } from "./interfaces";
+import { PaymentHistoryError, PaymentHistoryRetriever } from "./interfaces";
 
 export function createPaymentHistoryRetriever(
   session: GtxClient,
@@ -19,22 +19,27 @@ export function createPaymentHistoryRetriever(
     },
     retrieve: async (
       amount: number,
-      lastElementRowid: string | null = null
-    ): Promise<[PaymentHistoryEntry[], PaymentHistoryCursor]> => {
-      if (amount > 100) throw new Error("amount needs to be <= 100");
-      const cursor = gtv.encode([amount, lastElementRowid]).toString("base64");
+      filter: PaymentHistoryFilter | null,
+      cursor: string | null = null
+    ): Promise<TransferHistoryResponse> => {
+      if (amount > 100)
+        throw new PaymentHistoryError("amount needs to be <= 100");
+
       const res = await session.query("ft3.get_payment_history_paginated", {
         account_id: id,
+        filter: [filter?.paymentHistoryType],
+        page_size: amount,
         page_cursor: cursor,
       });
-      return [
-        res.data.map((d) => createPaymentHistoryEntryFromResponse(d)),
-        res.next_cursor
-          ? <PaymentHistoryCursor>(
-              gtv.decode(Buffer.from(res.next_cursor, "base64"))
-            )
-          : [null, null],
-      ];
+      return {
+        data: res.data.map((d) => createPaymentHistoryEntryFromResponse(d)),
+        nextCursor: res.next_cursor,
+      };
+    },
+    retrieveSingle: async (rowid: number) => {
+      return createPaymentHistoryEntryFromResponse(
+        await session.query("ft3.get_single_payment_history_entry", { rowid })
+      );
     },
     brid: session.newTransaction([]).gtx.blockchainRID.toString("hex"),
   });

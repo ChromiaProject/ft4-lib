@@ -15,6 +15,7 @@ declare global {
   interface Buffer extends GtvCompatible {}
   interface Boolean extends GtvCompatible {}
   interface Object extends GtvCompatible {}
+  interface BigInt extends GtvCompatible {}
 }
 
 Buffer.prototype.encodeGtv = function (): RawGtv {
@@ -29,15 +30,15 @@ Object.defineProperty(Array.prototype, "encodeGtv", {
 });
 
 String.prototype.encodeGtv = function (): RawGtv {
-  return this;
+  return this.valueOf();
 };
 
 Number.prototype.encodeGtv = function (): RawGtv {
-  return this;
+  return this.valueOf();
 };
 
 BigInt.prototype.encodeGtv = function (): RawGtv {
-  return this;
+  return this.valueOf();
 };
 
 Boolean.prototype.encodeGtv = function (): RawGtv {

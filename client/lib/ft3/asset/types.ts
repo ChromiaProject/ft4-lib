@@ -1,15 +1,27 @@
+import { Amount } from "./interfaces";
+
 export type Asset = {
   id: Buffer;
   name: string;
+  decimals: number;
   brid: Buffer;
+  supply: bigint;
 };
 
 export type Balance = {
   asset: Asset;
-  amount: AssetAmount;
+  amount: Amount;
 };
 
-export type AssetAmount = bigint; /*{
-    value: bigint;
-    //decimals: number; To implement after PR is merged
-} */
+export type BalanceResponse = {
+  asset: Asset;
+  amount: bigint;
+};
+
+export enum DecimalFormat {
+  scientific = "S",
+  fixedDecimals = "F",
+  mixed = "M",
+}
+
+export type SupportedNumber = string | number | bigint | Amount;

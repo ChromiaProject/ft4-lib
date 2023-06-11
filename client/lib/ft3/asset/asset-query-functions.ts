@@ -12,10 +12,11 @@ import {
   assetByName,
   allAssets,
 } from "./asset-queries";
-import { Asset, Balance } from "./types";
+import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
-import { Connection } from "../interfaces";
+import { Connection } from "../types";
 import { freeze } from "../utils/types";
+import { createAmountFromBalance } from "./amount";
 
 export async function getAssetById(
   session: GtxClient,
@@ -47,7 +48,7 @@ export async function getBalancesByAccountId(
   const balances = await session.query(
     ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
   );
-  return balances.map(freeze);
+  return balances.map(createBalanceObject);
 }
 
 export async function getBalance(
@@ -61,7 +62,7 @@ export async function getBalance(
       formatter.ensureBuffer(assetId)
     )
   );
-  return freeze(balance);
+  return createBalanceObject(balance);
 }
 
 export async function _getAssetById(
@@ -88,8 +89,8 @@ export async function _getBalanceByAccountId(
   assetId: BufferId
 ): Promise<Balance> {
   return await connection
-    .query<Balance>(balanceByAccountId(accountId, assetId))
-    .then(freeze);
+    .query<BalanceResponse>(balanceByAccountId(accountId, assetId))
+    .then(createBalanceObject);
 }
 
 export async function _getBalancesByAccountId(
@@ -97,6 +98,13 @@ export async function _getBalancesByAccountId(
   accountId: BufferId
 ): Promise<Balance[]> {
   return await connection
-    .query<Balance[]>(balancesByAccountId(accountId))
-    .then(freeze);
+    .query<BalanceResponse[]>(balancesByAccountId(accountId))
+    .then((balances) => balances.map(createBalanceObject));
+}
+
+function createBalanceObject(balance: BalanceResponse): Balance {
+  return freeze({
+    asset: balance.asset,
+    amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
+  });
 }

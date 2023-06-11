@@ -1,11 +1,15 @@
+import { Amount } from "../../asset/interfaces";
+import { PageCursor } from "../../types";
+
 export type PaymentHistoryTransferArgs = {
-  amount: number;
+  amount: Amount;
   accountId: Buffer;
 };
 
 export type PaymentHistoryEntryResponse = [
   id: string,
   delta: bigint,
+  decimals: number,
   asset: string,
   asset_id: Buffer,
   is_input: number,
@@ -20,7 +24,7 @@ export type PaymentHistoryEntryResponse = [
 export type PaymentHistoryEntry = {
   rowid: string;
   isInput: boolean;
-  delta: bigint;
+  delta: Amount;
   asset: AssetInfo;
   entryIndex: number;
   data: Buffer;
@@ -32,17 +36,30 @@ export type PaymentHistoryEntry = {
   //brid: Buffer;
 };
 
+export type TransferHistoryResponse = {
+  data: PaymentHistoryEntry[];
+  nextCursor: PageCursor | null;
+};
+
 export type AssetInfo = {
   name: string;
   id: Buffer;
 };
 
-export type PaymentHistoryCursor = [number?, string?];
+export enum PaymentHistoryType {
+  Sent = 0,
+  Received = 1,
+}
+
+export type PaymentHistoryFilter = {
+  paymentHistoryType?: PaymentHistoryType;
+};
 
 export type PaymentHistoryJSON = {
   rowid: string;
   isInput: boolean;
-  delta: bigint;
+  delta: string;
+  decimals: number;
   assetName: string;
   assetId: string;
   entryIndex: number;

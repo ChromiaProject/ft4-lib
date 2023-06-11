@@ -5,18 +5,19 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft3.core;
 import ^^^.lib.ft3.ft3_basic_dev.*;
+import ^^^.lib.ft3.operations.dev_op_asset;
 import acc: ^^^.lib.ft3.account;
 import ^.utils;
 
 function test_history() {
-    val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
-    val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", "t", 5).id;
 
     val inputs = [
         core.xfer_input(
-            account_id = alice.account_id,
+            account_id = alice.account.id,
             asset_id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
@@ -26,28 +27,28 @@ function test_history() {
 
     val outputs = [
         core.xfer_output(
-            account_id = bob.account_id, 
+            account_id = bob.account.id, 
             asset_id,
             amount = 1,
             extra = map()
         )
     ];
 
-    utils.give_balance(asset_id, alice.account_id, 1);
+    utils.give_balance(asset_id, alice.account.id, 1);
 
     rell.test.tx()
-        .op(ft3.transfer_op.transfer(inputs, outputs))
+        .op(ft3.core_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
-    
-    val start_cursor_small = core.encode_cursor(core.page_cursor(10));
-    val start_cursor_big = core.encode_cursor(core.page_cursor(110));
-    val response_small = ft3.transfer_op.get_payment_history_paginated(alice.account_id, start_cursor_small);
-    val response_big = ft3.transfer_op.get_payment_history_paginated(alice.account_id, start_cursor_big);
+
+    val filter = core.filter(null);
+    val start_cursor = core.encode_cursor(core.page_cursor());
+    val response_small = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 10, start_cursor);
+    val response_big = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 110, start_cursor);
     val expected_data = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
-                acc.account @ { .id == alice.account_id }
-            }
+                acc.account @ { .id == alice.account.id }
+            } (@sort_desc @omit .rowid, $) limit 2
         ) @* {} (.data);
     val expected = core.paged_result(
         next_cursor = null, 
@@ -55,21 +56,21 @@ function test_history() {
     );
     
     assert_equals(response_small, expected);
-    assert_equals(ft3.transfer_op.get_payment_history_size(alice.account_id), 1);
+    assert_equals(ft3.core_ext.get_payment_history_size(alice.account.id), 2);
     assert_equals(response_big, expected);
-    assert_true(response_small.data.size() == 1);
-    assert_true(response_big.data.size() == 1);
+    assert_true(response_small!!.data.size() == 2);
+    assert_true(response_big!!.data.size() == 2);
 }
 
 function test_history_pagination() {
-    val alice = utils.create_ft3_test_acc(rell.test.keypairs.alice).auth_id;
-    val bob = utils.create_ft3_test_acc(rell.test.keypairs.bob).auth_id;
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
 
-    val asset_id = utils.create_asset("test");
+    val asset_id = utils.create_asset("test", "t", 0).id;
 
     val inputs = [
         core.xfer_input(
-            account_id = alice.account_id,
+            account_id = alice.account.id,
             asset_id,
             auth_descriptor_id = alice.auth_descriptor_id,
             amount = 1,
@@ -79,67 +80,61 @@ function test_history_pagination() {
 
     val outputs = [
         core.xfer_output(
-            account_id = bob.account_id, 
+            account_id = bob.account.id, 
             asset_id,
             amount = 1,
             extra = map()
         )
     ];
 
-    utils.give_balance(asset_id, alice.account_id, 5);
+    utils.mint(core.asset @ { .id == asset_id }, alice.account, 5L); //adds one entry to the history
 
     rell.test.tx()
-        .op(ft3.transfer_op.transfer(inputs, outputs))
-        .op(ft3.transfer_op.transfer(inputs, outputs))
-        .op(ft3.transfer_op.transfer(inputs, outputs))
-        .op(ft3.transfer_op.transfer([inputs[0], inputs[0]], outputs))
+        .op(ft3.core_ext.transfer(inputs, outputs))
+        .op(ft3.core_ext.transfer([inputs[0], inputs[0], inputs[0]], outputs))
         .sign(rell.test.keypairs.alice)
         .run();
     
-    val start_cursor = core.encode_cursor(core.page_cursor(2));
-    var response = ft3.transfer_op.get_payment_history_paginated(alice.account_id, start_cursor);
+    val filter = core.filter(null);
+    var response = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 2, core.encode_cursor(core.page_cursor()));
     var expected_result = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
-                acc.account @ { .id == alice.account_id }
+                acc.account @ { .id == alice.account.id }
             } (@sort_desc @omit .rowid, $) limit 2
         );
     var expected_data = expected_result @* {} (.data);
-    var last_rowid = expected_result[1].rowid;
-    var next_cursor = core.encode_cursor(
-        core.page_cursor(page_size = 2, before_rowid = last_rowid)
-    );
+    var next_cursor = core.encode_cursor(core.page_cursor(expected_result[1].rowid));
     var expected = core.paged_result(
-        next_cursor = next_cursor, 
+        next_cursor = next_cursor,
         data = expected_data
     );
     
     assert_true(expected_result.size() == 2);
     assert_equals(response, expected);
     //vvv entry index, checks if they're ordered LIFO vvv
-    assert_equals(list<gtv>.from_gtv(expected_data[0])[7], (1).to_gtv());
+    assert_equals(list<gtv>.from_gtv(expected_data[0])[8], (2).to_gtv());
 
-    response = ft3.transfer_op.get_payment_history_paginated(alice.account_id, next_cursor);
+    response = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 2, next_cursor);
     expected_result = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
-                acc.account @ { .id == alice.account_id }
+                acc.account @ { .id == alice.account.id }
             } (@sort_desc @omit .rowid, $) offset 2 limit 2
         );
     expected_data = expected_result @* {} (.data);
-    last_rowid = expected_result[1].rowid;
-    next_cursor = core.encode_cursor(
-        core.page_cursor(page_size = 2, before_rowid = last_rowid)
-    );
+    next_cursor = core.encode_cursor(core.page_cursor(expected_result[1].rowid));;
     expected = core.paged_result(
-        next_cursor = next_cursor, 
+        next_cursor = next_cursor,
         data = expected_data
     );
     assert_equals(expected_result.size(), 2);
     assert_equals(response, expected);
+    assert_equals(list<gtv>.from_gtv(expected_data[0])[8], (0).to_gtv());
+    assert_equals(list<gtv>.from_gtv(expected_data[1])[8], (0).to_gtv());
 
-    response = ft3.transfer_op.get_payment_history_paginated(alice.account_id, next_cursor);
+    response = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 2, next_cursor);
     expected_result = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
-                acc.account @ { .id == alice.account_id }
+                acc.account @ { .id == alice.account.id }
             } (@sort_desc @omit .rowid, $) offset 4 limit 2
         );
     expected_data = expected_result @* {} (.data);
@@ -149,5 +144,96 @@ function test_history_pagination() {
     );
     assert_true(expected_result.size() == 1);
     assert_equals(response, expected);
-    assert_equals(ft3.transfer_op.get_payment_history_size(alice.account_id), 5);
+    assert_equals(ft3.core_ext.get_payment_history_size(alice.account.id), 5);
+}
+
+function test_history_filtering() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_id = utils.create_asset("test", "t", 0).id;
+
+    val inputs = [
+        core.xfer_input(
+            account_id = alice.account.id,
+            asset_id,
+            auth_descriptor_id = alice.auth_descriptor_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    val outputs = [
+        core.xfer_output(
+            account_id = bob.account.id, 
+            asset_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    utils.give_balance(asset_id, alice.account.id, 5L);
+
+    rell.test.tx()
+        .op(ft3.core_ext.transfer(inputs, outputs))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val cursor = core.encode_cursor(core.page_cursor());
+    assert_equals(ft3.core_ext.get_payment_history_paginated(alice.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft3.core_ext.get_payment_history_paginated(alice.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft3.core_ext.get_payment_history_paginated(bob.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 0);
+    assert_equals(ft3.core_ext.get_payment_history_paginated(bob.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
+}
+
+function test_single_payment_history_entry() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_id = utils.create_asset("test", "t", 0).id;
+
+    val inputs = [
+        core.xfer_input(
+            account_id = alice.account.id,
+            asset_id,
+            auth_descriptor_id = alice.auth_descriptor_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    val outputs = [
+        core.xfer_output(
+            account_id = bob.account.id, 
+            asset_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    utils.give_balance(asset_id, alice.account.id, 5L);
+
+    rell.test.tx()
+        .op(ft3.core_ext.transfer(inputs, outputs))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    val entry = core.payment_history_entry @* {}[0];
+    assert_equals(
+        ft3.core_ext.get_single_payment_history_entry(entry.rowid),
+        (
+            id = '%d'.format(entry.rowid),
+            delta = entry.delta,
+            decimals = entry.asset.decimals,
+            asset = entry.asset.name,
+            asset_id = entry.asset.id,
+            is_input = entry.is_input,
+            timestamp = entry.transaction.block.timestamp,
+            block_height = entry.transaction.block.block_height,
+            entry_index = entry.entry_index,
+            transfer_args = entry.transfer_args,
+            tx_rid = entry.transaction.tx_rid,
+            tx_data = entry.transaction.tx_data
+        ).to_gtv()
+    );
 }

@@ -1,7 +1,15 @@
-import { AuthDescriptor, AuthType, GtvAuthDescriptor } from "./types";
+import {
+  AuthDescriptor,
+  AuthType,
+  GtvAuthDescriptor,
+  RawAuthDescriptor,
+} from "./types";
 import { create } from "./auth-descriptor";
 import { allow } from "./rules";
 import { gtv } from "postchain-client";
+
+export * from "./types";
+export * from "./auth-descriptor";
 
 const authTypeSerializationMap = Object.values(AuthType)
   .map((value, i) => [value, i])
@@ -44,7 +52,10 @@ export function getAuthDescriptorSigners(ad: GtvAuthDescriptor): Buffer[] {
     signers = [args[1]];
   } else if (args.length === 3) {
     signers = args[2];
+  } else {
+    signers = [];
   }
+
   return signers;
 }
 
@@ -54,9 +65,13 @@ export function fromGtv(ad: GtvAuthDescriptor): AuthDescriptor {
     id: getAuthDescriptorId(ad),
     authType,
     flags: new Set(ad[1][0]),
-    signaturesRequired: authType === "S" ? 1 : (ad[1][1] as number),
-    signers: authType === "S" ? [ad[1][1] as Buffer] : ad[1][2],
-    rule: ad[2],
+    signaturesRequired:
+      authType === "S" || authType == "ES" ? 1 : (ad[1][1] as number),
+    signers:
+      (authType === "S" || authType == "ES"
+        ? [ad[1][1] as Buffer]
+        : ad[1][2]) || [],
+    rule: ad[2]!,
   };
 }
 
@@ -80,6 +95,21 @@ function createMultiSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
     [[...ad.flags], ad.signaturesRequired, ad.signers],
     ad.rule,
   ];
+}
+
+export function mapAuthDescriptor(raw: RawAuthDescriptor): AuthDescriptor {
+  const { type, args, rules } = raw;
+  return Object.freeze(
+    fromGtv([
+      serializeAuthType(type as AuthType),
+      args,
+      rules,
+    ] as GtvAuthDescriptor)
+  );
+}
+
+export function mapAuthDescriptors(raw: RawAuthDescriptor[]): AuthDescriptor[] {
+  return raw.map(mapAuthDescriptor);
 }
 
 export const authDescriptor = {

@@ -5,7 +5,7 @@ import {
 import { RellOperation } from "postchain-client/built/src/gtx/types";
 import { authDescriptor, FlagsType } from "../account/auth-descriptor";
 import { Account, User } from "../account/types";
-import { ftUserSession } from "../interfaces";
+import { ftUserSession } from "../types";
 import { localStorageSignatureProvider } from "./local-signature-provider";
 
 let vaultUrl = "https://vault-testnet.chromia.com";
@@ -17,7 +17,7 @@ const Operations = {
 
 function assert(condition: boolean, error: string) {
   if (!condition) {
-    throw new Error(error);
+    throw new SSOError(error);
   }
 }
 
@@ -28,7 +28,7 @@ function getAccountId(transaction: Itransaction): Buffer {
   } else if (operations.length === 2) {
     return Buffer.from(<string>operations[1].args[0], "hex");
   } else {
-    throw new Error("Invalid sso transaction");
+    throw new SSOError("Invalid sso transaction");
   }
 }
 
@@ -54,7 +54,7 @@ function validateTransaction(transaction: Itransaction) {
     validateRegisterAccountOperation(operations[0]);
     validateAddAuthDescriptorOperation(operations[1]);
   } else {
-    throw new Error(
+    throw new SSOError(
       `Invalid operation count. Found ${operations.length} operations in sso transaction`
     );
   }
@@ -157,7 +157,7 @@ export default class SSO {
     this.tmpSigProv = undefined;
 
     if (!sigProv) {
-      throw new Error("Error loading public key");
+      throw new SSOError("Error loading public key");
     }
 
     this.signatureProvider = sigProv;
@@ -203,5 +203,13 @@ export default class SSO {
     }
 
     this.clear();
+  }
+}
+
+export class SSOError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "SSOError";
   }
 }

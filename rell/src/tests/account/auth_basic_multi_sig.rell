@@ -19,84 +19,92 @@ function required_flags() = ["T"];
 
 
 function test_multi_sig_valid_1_of_1() {
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
+    val alice = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice], 
         good_ad_1_of_1()
-    ).auth_id;
+    );
 
-    cu.auth(
-        alice_auth_id.account_id, 
-        alice_auth_id.auth_descriptor_id, 
-        required_flags(),
-        [rell.test.keypairs.alice]
-    ); 
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .sign(rell.test.keypairs.alice) 
+        .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "valid");
 }
 
 function test_multi_sig_valid_2_of_2_signs() {
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
+    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob], 
         good_ad_2_of_2()
-    ).auth_id;
+    );
 
-    cu.auth(
-        alice_auth_id.account_id, 
-        alice_auth_id.auth_descriptor_id, 
-        required_flags(),
-        [rell.test.keypairs.alice, rell.test.keypairs.bob]
-    ); 
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            required_flags()
+        ))
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
+        .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "valid");
 }
 
 function test_multi_sig_valid_1_of_2_signs() {
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
+    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob], 
         good_ad_1_of_2() // <-- Only one required
-    ).auth_id;
+    );
 
-    
-    cu.auth(
-        alice_auth_id.account_id, 
-        alice_auth_id.auth_descriptor_id, 
-        required_flags(),
-        [rell.test.keypairs.bob] // <-- Omitting Alice should work
-    ); 
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            required_flags()
+        ))
+        .sign(rell.test.keypairs.bob) // <-- Omitting Alice should work
+        .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "valid");
 }
 
 function test_multi_sig_valid_3_of_3_signs() {
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
+    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob, rell.test.keypairs.trudy], 
         good_ad_3_of_3()
-    ).auth_id;
-
-    cu.auth(
-        alice_auth_id.account_id, 
-        alice_auth_id.auth_descriptor_id, 
-        required_flags(),
-        [rell.test.keypairs.alice, rell.test.keypairs.bob, rell.test.keypairs.trudy]
     );
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(account_data.account.id,
+        account_data.auth_descriptor_id,
+        required_flags()
+    ))
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
+        .sign(rell.test.keypairs.trudy)
+        .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "valid");
 }
 
 function test_multi_sig_wrong_required_flags() {
-    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig(
+    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
         [rell.test.keypairs.alice, rell.test.keypairs.bob], 
         good_ad_2_of_2()
-    ).auth_id;
+    );
 
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
-    
-    cu.auth(
-        alice_auth_id.account_id, 
-        alice_auth_id.auth_descriptor_id, 
-        bad_required_flags,
-        [rell.test.keypairs.alice, rell.test.keypairs.bob]
-    ); 
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(
+            account_data.account.id,
+            account_data.auth_descriptor_id,
+            bad_required_flags
+        ))
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
+        .run();
 
     assert_equals(dev_op_auth.dev_error.msg, "Some required flags [A] are missing on the (multi sig) Auth Descriptor.");
 }
