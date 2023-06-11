@@ -6,16 +6,15 @@ export function registerAssetOp(
   name: string,
   symbol: string,
   decimals: number,
-  brid: Buffer,
   iconUrl: string
 ): Operation {
-  return op("ft3.dev_register_asset", name, symbol, decimals, brid, iconUrl);
+  return op("ft4.admin.register_asset", name, symbol, decimals, iconUrl);
 }
 
-export function giveBalanceOp(
-  assetId: Buffer,
+export function mintOp(
   accountId: Buffer,
+  assetId: Buffer,
   amount: Amount
 ): Operation {
-  return op("ft3.dev_give_balance", assetId, accountId, amount.value);
+  return op("ft4.admin.mint", accountId, assetId, amount.value);
 }

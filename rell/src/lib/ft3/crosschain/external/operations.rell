@@ -1,10 +1,6 @@
 import ft3: ^^.core;
 import xc: ^;
 
-operation link_chain(brid: byte_array) {
-    create xc.linked_chain(brid);
-}
-
 operation init_xfer(source: ft3.xfer_input, target: xc.xc_target, hops: list<byte_array>) {
     //ft3.consume_input(source, 0, map<ft3.asset, integer>());
     val asset = require(

@@ -4,7 +4,7 @@ import { Operation } from "../../utils/types";
 import { KeyStore } from "../interfaces";
 import { ethers } from "ethers";
 
-export * from "/ft3/authentication/evm/key-stores";
+export * from "./key-stores";
 
 export function evmAuth(
   accountId: BufferId,
@@ -35,7 +35,7 @@ export async function signMessage(
   signer: ethers.Signer
 ): Promise<Signature> {
   const signature = await signer.signMessage(message);
-  const { r, s, v } = ethers.utils.splitSignature(signature);
+  const { r, s, v } = ethers.Signature.from(signature);
   return {
     r: Buffer.from(r.slice(2), "hex"),
     s: Buffer.from(s.slice(2), "hex"),

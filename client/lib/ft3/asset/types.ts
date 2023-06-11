@@ -5,6 +5,7 @@ export type Asset = {
   name: string;
   decimals: number;
   brid: Buffer;
+  supply: bigint;
 };
 
 export type Balance = {

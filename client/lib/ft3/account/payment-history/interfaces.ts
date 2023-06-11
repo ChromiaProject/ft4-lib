@@ -1,9 +1,9 @@
 import {
-  PaymentHistoryCursor,
   PaymentHistoryEntry,
   PaymentHistoryFilter,
   TransferHistoryResponse,
 } from "./types";
+import { PageCursor } from "../../types";
 
 export interface PaymentHistoryStore {
   accountId: Buffer;
@@ -22,8 +22,9 @@ export interface PaymentHistoryRetriever {
   retrieve: (
     amount: number,
     filter: PaymentHistoryFilter | null,
-    cursor: PaymentHistoryCursor | null
+    cursor: PageCursor | null
   ) => Promise<TransferHistoryResponse>;
+  retrieveSingle: (rowid: number) => Promise<PaymentHistoryEntry | null>;
   brid: string;
 }
 

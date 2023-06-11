@@ -15,18 +15,15 @@ import {
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { getChainInfo } from "../utils";
+import { getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
   _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection } from "../interfaces";
+import { Connection, PageCursor } from "../types";
 import { formatter } from "postchain-client";
-import {
-  PaymentHistoryCursor,
-  PaymentHistoryFilter,
-} from "./payment-history/types";
+import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
 import {
   GtvAuthDescriptor,
@@ -134,7 +131,7 @@ export async function getRateLimit(
     ...getRateLimitQuery(formatter.ensureBuffer(accountId))
   );
 
-  const chainInfo = await getChainInfo(session);
+  const chainInfo = await getConfig(session);
 
   return Object.freeze({
     points: rateLimit.points,
@@ -170,10 +167,12 @@ export function createAccountObject(
     getTransferHistory: async (
       limit = 100,
       filter: PaymentHistoryFilter = {},
-      cursor: PaymentHistoryCursor | null = null
+      cursor: PageCursor | null = null
     ) => {
       return retriever.retrieve(limit, filter, cursor);
     },
+    getTransferHistoryEntry: async (rowid: number) =>
+      retriever.retrieveSingle(rowid),
   });
 }
 
@@ -190,9 +189,9 @@ export async function _getByParticipantId(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount[]> {
-  const accountIds = await connection.query<Buffer[]>(
-    accountsByParticipantId(id)
-  );
+  const accountIds =
+    (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
+
   return accountIds.map((id) => createAccountObject(connection, id));
 }
 
@@ -200,9 +199,8 @@ export async function _getByAuthDescriptorId(
   connection: Connection,
   id: BufferId
 ): Promise<IAccount[]> {
-  const accountIds = await connection.query<Buffer[]>(
-    accountsByAuthDescriptorId(id)
-  );
+  const accountIds =
+    (await connection.query<Buffer[]>(accountsByAuthDescriptorId(id))) ?? [];
   return accountIds.map((id) => createAccountObject(connection, id));
 }
 
@@ -211,9 +209,9 @@ export async function _isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId
 ): Promise<boolean> {
-  return await connection.query<boolean>(
+  return (await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
-  );
+  ))!;
 }
 
 export async function _getAuthDescriptors(
@@ -224,7 +222,9 @@ export async function _getAuthDescriptors(
     .query<RawAuthDescriptor[]>(
       accountAuthDescriptors(formatter.ensureBuffer(accountId))
     )
-    .then(mapAuthDescriptors);
+    .then((authDescriptors) =>
+      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
+    );
 }
 
 export async function getAuthDescriptorsByParticipantId(
@@ -236,5 +236,7 @@ export async function getAuthDescriptorsByParticipantId(
     .query<RawAuthDescriptor[]>(
       accountAuthDescriptorsByParticipantId(accountId, participantId)
     )
-    .then(mapAuthDescriptors);
+    .then((authDescriptors) =>
+      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
+    );
 }

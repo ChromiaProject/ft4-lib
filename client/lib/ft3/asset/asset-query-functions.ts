@@ -14,7 +14,7 @@ import {
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
-import { Connection } from "../interfaces";
+import { Connection } from "../types";
 import { freeze } from "../utils/types";
 import { createAmountFromBalance } from "./amount";
 

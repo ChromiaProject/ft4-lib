@@ -1,15 +1,12 @@
 import ^^.core;
 import acc: ^^.account;
 
-query get_blockchain_info() {
+query get_config() {
     return (
-        name = core.my_blockchain_info.name,
-        website = core.my_blockchain_info.website,
-        description = core.my_blockchain_info.description,
-        rate_limit_active = core.my_blockchain_info.rate_limit_active,
-        rate_limit_max_points = core.my_blockchain_info.rate_limit_max_points,
-        rate_limit_recovery_time = core.my_blockchain_info.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = core.my_blockchain_info.rate_limit_points_at_account_creation
+        rate_limit_active = core.config.rate_limit_active,
+        rate_limit_max_points = core.config.rate_limit_max_points,
+        rate_limit_recovery_time = core.config.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = core.config.rate_limit_points_at_account_creation
     );
 }
 
@@ -26,7 +23,8 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
             id = .asset.id,
             name = .asset.name,
             decimals = .asset.decimals,
-            brid = .asset.issuing_brid
+            brid = .asset.issuing_brid,
+            supply = .asset.total_supply
         ),
         amount = .amount
     );
@@ -39,7 +37,8 @@ query get_asset_by_name(name) {
         symbol = .symbol,
         decimals = .decimals,
         brid = .issuing_brid,
-        icon_url = .icon_url
+        icon_url = .icon_url,
+        supply = .total_supply
     );
 
 }
@@ -53,7 +52,8 @@ query get_asset_by_id(asset_id: byte_array) {
         symbol = .symbol,
         decimals = .decimals,
         brid = .issuing_brid,
-        icon_url = .icon_url
+        icon_url = .icon_url,
+        supply = .total_supply
     );
 }
 
@@ -64,7 +64,8 @@ query get_all_assets() {
         name = .name,
         decimals = .decimals,
         brid = .issuing_brid,
-        icon_url = .icon_url
+        icon_url = .icon_url,
+        supply = .total_supply
     );
 }
 
@@ -78,4 +79,9 @@ query get_payment_history_paginated(account_id: byte_array, filter: core.filter,
 
 query get_payment_history_size(account_id: byte_array) {
     return core.payment_history_entry @* { acc.account @ {account_id} } ($).size();
+}
+
+query get_single_payment_history_entry(rowid) {
+    val entry = core.payment_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry).to_gtv();
 }

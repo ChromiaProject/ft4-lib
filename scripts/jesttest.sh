@@ -22,7 +22,6 @@ exitfn () {
 trap "exitfn" 2
 
 prc=
-EXIT_ON_ERROR=0
 opt=
 test_string=
 docker=true
@@ -43,9 +42,6 @@ while :; do
         --file=)
             echo 'ERROR: "--file" requires a non-empty option argument.'
             exit 1
-            ;;
-        --exit-on-error)
-            EXIT_ON_ERROR=1
             ;;
         --no-docker)
               echo 'skipping docker build'
@@ -105,25 +101,12 @@ done
 
 
 echo "> Starting jest tests with options: " "$opt" "\n"
-npx jest -maxWorkers=1 --testPathPattern=payment-history-iterator.test.ts $opt && \
-    npx jest --testPathIgnorePatterns=payment-history-iterator.test.ts $opt
+npx jest -maxWorkers=1 --testPathPattern=payment-history.test.ts $opt && \
+    npx jest --testPathIgnorePatterns=payment-history.test.ts $opt
 
-
-if test $? -eq 0
-then 
-    if $docker; then
-        docker stop ft4_jest_test  > /dev/null 
-        docker rm ft4_jest_test > /dev/null
-    fi
-    kill $prc
-else
-    if $docker; then
-        docker stop ft4_jest_test  > /dev/null 
-        docker rm ft4_jest_test > /dev/null
-    fi
-    kill $prc
-    if [ "$EXIT_ON_ERROR" -eq 1 ]; then
-        exit 1
-    fi
+if $docker; then
+    docker stop ft4_jest_test  > /dev/null 
+    docker rm ft4_jest_test > /dev/null
 fi
-
+kill $prc
+return $return_code || exit $return_code

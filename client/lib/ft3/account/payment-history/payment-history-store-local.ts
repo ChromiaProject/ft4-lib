@@ -10,12 +10,9 @@ import {
   paymentHistoryEntryFromJSON,
   paymentHistoryEntryToJSON,
 } from "./payment-history-entry";
-import {
-  PaymentHistoryCursor,
-  PaymentHistoryEntry,
-  PaymentHistoryFilter,
-} from "./types";
+import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { formatter } from "postchain-client";
+import { PageCursor } from "/ft3/types";
 
 export async function ensurePaymentHistoryStoreLocal(
   session: GtxClient,
@@ -202,7 +199,7 @@ async function loadNewerEntries(
   const newCount = await retriever.getTotalCount();
   let newEntriesAmount = newCount - oldCount;
   if (oldEntries.length > 0) {
-    let nextCursor: PaymentHistoryCursor | null = null;
+    let nextCursor: PageCursor | null = null;
     const oldFirst = oldEntries[0];
     let done = false;
     let toAdd = [];

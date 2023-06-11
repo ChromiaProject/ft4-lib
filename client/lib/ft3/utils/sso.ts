@@ -5,13 +5,13 @@ import {
 import { RellOperation } from "postchain-client/built/src/gtx/types";
 import { authDescriptor, FlagsType } from "../account/auth-descriptor";
 import { Account, User } from "../account/types";
-import { ftUserSession } from "../interfaces";
+import { ftUserSession } from "../types";
 import { localStorageSignatureProvider } from "./local-signature-provider";
 
 let vaultUrl = "https://vault-testnet.chromia.com";
 
 const Operations = {
-  register: "ft3.dev_register_account",
+  register: "ft4.admin.register_account",
   addAuthDescriptor: "ft3.add_auth_descriptor",
 };
 

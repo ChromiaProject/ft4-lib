@@ -14,7 +14,7 @@ export interface Authenticator {
   getKeyHandlerForOperation(
     operation: Operation
   ): Promise<KeyHandler | undefined>;
-  getNonce(authDescriptorId: BufferId): Promise<number>;
+  getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
 
 export interface KeyHandler {
@@ -33,7 +33,7 @@ export interface KeyHandler {
   sign(transaction: Itransaction): Promise<void>;
 
   // FIXME
-  getSigners(): Buffer[] | null;
+  getSigners(): Buffer[];
 }
 
 export interface KeyStore {
@@ -55,7 +55,7 @@ export interface AuthDataService {
   getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   // TODO: add account id argument
-  getNonce(authDescriptorId: BufferId): Promise<number>;
+  getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
 
 export type AuthData = {

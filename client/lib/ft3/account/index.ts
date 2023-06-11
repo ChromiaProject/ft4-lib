@@ -6,7 +6,6 @@ import {
   burnTokens,
   deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
-  freeOperation,
   getPaymentHistoryIterator,
   givePoints,
   registerAccount,
@@ -115,15 +114,13 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
       ) =>
         transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
       burn: (from: BufferId, asset: BufferId, amount: Amount) =>
-        burnTokens(from, asset, amount, legacyTransactionBuilder(user, pci)),
+        burnTokens(asset, amount, legacyTransactionBuilder(user, pci)),
       xcTransfer: () => xcTransfer(),
     },
-    dev: {
-      register: (authDescriptor: AuthDescriptor) =>
-        registerAccount(authDescriptor, legacyTransactionBuilder(user, pci)),
-      freeOperation: (accountId: BufferId) =>
-        freeOperation(accountId, legacyTransactionBuilder(user, pci)),
-      givePoints: (accountId: BufferId, points: number) =>
-        givePoints(accountId, points, legacyTransactionBuilder(user, pci)),
+    admin: {
+      register: (adminUser, authDescriptor: AuthDescriptor) =>
+        registerAccount(user, adminUser, pci, authDescriptor),
+      givePoints: (adminUser, accountId: BufferId, points: number) =>
+        givePoints(user, adminUser, pci, accountId, points),
     },
   });

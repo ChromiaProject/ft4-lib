@@ -3,7 +3,7 @@ import { FlagsType } from "../client/lib/ft3/account/auth-descriptor";
 import { authDescriptor } from "../client/lib/ft3/account/auth-descriptor";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
-import { ftUserSession } from "../client/lib/ft3/interfaces";
+import { ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
 import { getUserSession } from "./util/blockchain-util";
 import { newSingleSigUser } from "./util/test-user";

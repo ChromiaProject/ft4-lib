@@ -2,8 +2,8 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { Operation } from "/ft3/utils/types";
-import { Authenticator, KeyHandler } from "/ft3/authentication/interfaces";
+import { Operation } from "./types";
+import { Authenticator, KeyHandler } from "../authentication/interfaces";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -111,7 +111,7 @@ export function transactionBuilder(
   async function authenticateOperations(
     operations: OpAuthPair[]
   ): Promise<[Operation[], KeyHandler[]]> {
-    const keyHandlers = [];
+    const keyHandlers: KeyHandler[] = [];
     const nonces = new Map<Buffer, number>();
     const processedOperations: Operation[][] = [];
     for (const tuple of operations) {
@@ -134,9 +134,10 @@ export function transactionBuilder(
       if (!nonces.has(keyHandler.authDescriptor.id)) {
         nonces.set(
           keyHandler.authDescriptor.id,
-          await authenticator.getNonce(keyHandler.authDescriptor.id)
+          (await authenticator.getNonce(keyHandler.authDescriptor.id))!
         );
       }
+
       const nonce = nonces.get(keyHandler.authDescriptor.id);
       const ops = await keyHandler.authenticate(
         authenticator.accountId,
@@ -152,7 +153,7 @@ export function transactionBuilder(
       });
       processedOperations.push(ops);
     }
-    let opsToReturn = [];
+    let opsToReturn: Operation[] = [];
     processedOperations.forEach((item) => {
       opsToReturn = isOperation(item)
         ? [...opsToReturn, item]

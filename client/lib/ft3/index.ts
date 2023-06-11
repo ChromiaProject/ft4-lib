@@ -7,13 +7,8 @@ import {
 } from "./ft-session";
 
 // Export public interfaces
-import { KeyStore, createWeb3ProviderEVMKeyStore } from "/ft3/authentication";
-import {
-  AuthDescriptor,
-  FlagsType,
-  IAccount,
-  authDescriptor,
-} from "/ft3/account";
+import { KeyStore, createWeb3ProviderEVMKeyStore } from "./authentication";
+import { AuthDescriptor, FlagsType, IAccount, authDescriptor } from "./account";
 
 export {
   KeyStore,

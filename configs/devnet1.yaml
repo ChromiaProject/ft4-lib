@@ -3,9 +3,6 @@ blockchains:
     module: main #Entrypoint to the project
     moduleArgs:
       lib.ft3.core:
-        my_blockchain_name: test
-        my_blockchain_website: test_website
-        my_blockchain_description: test_description
         rate_limit_active: 1
         rate_limit_max_points: 10
         rate_limit_recovery_time: 5000
@@ -21,4 +18,4 @@ deployments:
     brid: x"43B6185404EA6CB51FC179748B78B2295A1B20F267826807F905B691FC4BD1D0"
     container: ft
     chains:
-      ft_deploy: x"CB5F9543C949AAFD8D967C02306465BED83263C9A460DC79C425C0D9DB35ACE9"
+      ft_deploy: x"700107A024E4EC1FAE17D4A8FCCEE797D90436735C8E51DCF82093D4FE046B70"

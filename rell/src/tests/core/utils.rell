@@ -1,9 +1,15 @@
 @test module;
 import acc: ^^^.lib.ft3.account;
-import ^^^.lib.ft3.operations.dev_op_account;
-import ^^^.lib.ft3.operations.dev_op_balance;
-import ^^^.lib.ft3.operations.dev_op_asset;
 import ^^^.lib.ft3.core;
+import ^^^.lib.ft3.admin;
+import ^^^.lib.ft3.operations.dev_op_account;
+import ^^^.lib.ft3.operations.dev_op_auth;
+import cu: ^^.core.utils;
+
+struct module_args {
+    admin_priv_key: text; 
+}
+
 import ^^^.lib.ft3.auth;
 
 struct account_data {
@@ -22,10 +28,8 @@ function evm_register_bob() = create_evm_auth_test_account(rell.test.keypairs.bo
 
 function create_test_account(rell.test.keypair): account_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
-    dev_op_account.dev_register_account(auth_descriptor)
-        .sign(keypair)
-        .run();
 
+    create_test_account_with_auth_descriptor(auth_descriptor, keypair);
     val account = acc.account_auth_descriptor @ {
         .id == auth_descriptor.hash()
     } ( .account );
@@ -35,6 +39,18 @@ function create_test_account(rell.test.keypair): account_data {
         auth_descriptor_id = auth_descriptor.hash(),
         keypair = keypair
     );
+}
+
+function admin_priv_key() = byte_array(chain_context.args.admin_priv_key);
+
+function create_test_account_with_auth_descriptor(
+    acc.auth_descriptor, 
+    user_keypair: rell.test.keypair
+) {
+    admin.register_account(auth_descriptor)
+        .sign(byte_array(chain_context.args.admin_priv_key))
+        .sign(user_keypair)
+        .run();
 }
 
 function create_evm_auth_test_account(rell.test.keypair): account_data {
@@ -43,20 +59,6 @@ function create_evm_auth_test_account(rell.test.keypair): account_data {
     dev_op_account.register_account_test(auth_descriptor)
         .sign(keypair)
         .run();
-
-    val account = acc.account_auth_descriptor @ {
-        .id == auth_descriptor.hash()
-    } ( .account );
-
-    return account_data(
-        account = account, 
-        auth_descriptor_id = auth_descriptor.hash(),
-        keypair = keypair
-    );
-}
-
-function get_ft3_test_acc(rell.test.keypair): account_data {
-    val auth_descriptor = create_auth_descriptor(keypair.pub);
 
     val account = acc.account_auth_descriptor @ {
         .id == auth_descriptor.hash()
@@ -80,28 +82,36 @@ function create_auth_descriptor(participant_id: byte_array): acc.auth_descriptor
 }
 
 function create_asset(name: text, symbol: text, decimals: integer) {
-    dev_op_asset.dev_register_asset(
-            name,
-            symbol,
-            decimals,
-            issuing_brid = chain_context.blockchain_rid,
-            icon_url=""
-        )
-        .sign(rell.test.keypairs.alice)
-        .run();
+    admin.register_asset(
+        name,
+        symbol,
+        decimals,
+        icon_url=""
+    )
+    .sign(byte_array(chain_context.args.admin_priv_key))
+    .run();
 
     return core.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
 }
 
+function mint(acc.account, core.asset, amount: big_integer) {
+    admin.mint(
+        account.id,
+        asset.id,
+        amount
+    )
+    .sign(byte_array(chain_context.args.admin_priv_key))
+    .run();
+}
+
 function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test.tx {
-    return dev_op_asset.dev_register_asset(
-            name,
-            symbol,
-            decimals,
-            issuing_brid = chain_context.blockchain_rid,
-            icon_url=""
-        )
-        .sign(rell.test.keypairs.alice);
+    return admin.register_asset(
+        name,
+        symbol,
+        decimals,
+        icon_url = ""
+    )
+    .sign(rell.test.keypairs.alice);
 }
 
 /*
@@ -110,7 +120,8 @@ function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test
  * returns "account_data"
  */
 function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): account_data {
-    dev_op_account.dev_register_account(auth_descriptor)
+    admin.register_account(auth_descriptor)
+        .sign(byte_array(chain_context.args.admin_priv_key))
         .sign(keypair)
         .run();
     
@@ -133,7 +144,13 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
  * returns "account_data"
  */
 function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): account_data {
-    val op = dev_op_account.dev_register_account(auth_descriptor);
+    val op = admin.register_account(auth_descriptor);
+    val admin_privkey = byte_array(chain_context.args.admin_priv_key);
+    val admin_keypair = rell.test.keypair(
+        priv=admin_privkey, 
+        pub=crypto.privkey_to_pubkey(admin_privkey, true)
+    );
+    keys.add(admin_keypair);
     var tx = _sign_many(op, keys); 
     tx.run();
 
@@ -155,9 +172,21 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
     return tx;
 }
 
+function add_auth_op(rell.test.tx, message: text) {
+    return tx
+        .op(dev_op_auth.dev_authenticated_operation(message))
+        .sign(byte_array(chain_context.args.admin_priv_key));
+}
+
+function perform_large_transfer(rell.test.tx, amount: integer, to_address: text) {
+    return tx
+        .op(dev_op_auth.dev_perform_large_transfer(1000, to_address))
+        .sign(byte_array(chain_context.args.admin_priv_key));
+}
+
 function mint_to_account(account_data, core.asset, amount: big_integer) {
-    dev_op_balance.dev_give_balance(asset.id, account_data.account.id, amount)
-        .sign(rell.test.keypairs.alice)
+    admin.mint(account_data.account.id, asset.id, amount)
+        .sign(admin_priv_key())
         .run();
 }
 

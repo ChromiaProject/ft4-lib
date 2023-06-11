@@ -2,13 +2,8 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./account";
 import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
-import {
-  ftQuerySession,
-  ftUserSession,
-  Connection,
-  Session,
-} from "./interfaces";
-import { getChainInfo, getLastTimestamp, getVersion, nop } from "./utils";
+import { ftQuerySession, ftUserSession, Connection, Session } from "./types";
+import { getConfig, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -53,9 +48,6 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
   return Object.freeze({
     gtxClient: pci,
     createUserSession: (user: User) => createUserSession(pci, user),
-    chainInfo: () => getChainInfo(pci),
-    version: () => getVersion(pci),
-    lastTimestamp: () => getLastTimestamp(pci),
     account: accountQuerySession(pci),
     ...assetQuerySession(pci),
   });
@@ -65,6 +57,8 @@ export function createConnection(client: GtxClient): Connection {
   const connection = Object.freeze({
     client,
     query: <T>(queryObject: QueryObject) => query<T>(connection, queryObject),
+    getConfig: () => getConfig(client),
+    getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
@@ -111,7 +105,8 @@ export async function call(
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
-  return tx.postAndWaitConfirmation();
+  await tx.postAndWaitConfirmation();
+  return;
 }
 
 export type KeyStoreInteractor = {
@@ -124,7 +119,7 @@ export type KeyStoreInteractor = {
 export function createAuthDataService(connection: Connection): AuthDataService {
   return Object.freeze({
     getAuthData: async (operation: Operation) => {
-      let authData = null;
+      let authData: AuthData | null;
       try {
         authData = await connection.query<AuthData>(authDataQuery(operation));
       } catch {
@@ -137,7 +132,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
           };
         }
       }
-      return authData;
+      return authData!;
     },
     getAuthFlags: async (operation: Operation) => {
       return await connection.query<string[]>(authFlags(operation));

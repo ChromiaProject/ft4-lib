@@ -4,9 +4,9 @@ import { createEVMKeyHandler } from "../key-handler";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
 
 export async function createWeb3ProviderEVMKeyStore(
-  externalProvider: ethers.providers.ExternalProvider
+  externalProvider: ethers.Eip1193Provider
 ): Promise<EVMKeyStore> {
-  const provider = new ethers.providers.Web3Provider(externalProvider);
+  const provider = new ethers.BrowserProvider(externalProvider);
   await provider.send("eth_requestAccounts", []);
   const signer = await provider.getSigner();
   const ethAddress = await signer.getAddress();

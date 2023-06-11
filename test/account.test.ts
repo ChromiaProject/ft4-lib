@@ -2,9 +2,8 @@ import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { config } from "dotenv";
 import { Account, User } from "../client/lib/ft3/account/types";
-import { Connection, ftUserSession } from "../client/lib/ft3/interfaces";
+import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
@@ -14,6 +13,7 @@ import {
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
 import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
 import { op } from "../client/lib/ft3/utils";
+import adminUser from "./util/admin_user";
 import {
   createAuthDataService,
   createConnection,
@@ -22,7 +22,6 @@ import {
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
-config();
 
 async function addAuthDescriptorTo(
   account: Account,
@@ -34,6 +33,7 @@ async function addAuthDescriptorTo(
 
 let _ft: ftUserSession;
 let _connection: Connection;
+const admin = adminUser();
 
 describe("Test the account", () => {
   beforeAll(async () => {
@@ -66,7 +66,9 @@ describe("Test the account", () => {
       user.signatureProvider.pubKey
     ).andNoRules;
 
-    const account = await _ft.changeUser(user).account.dev.register(ad);
+    const account = await _ft
+      .changeUser(user)
+      .account.admin.register(adminUser(), ad);
 
     expect(account).not.toBeNull();
   });
@@ -89,7 +91,7 @@ describe("Test the account", () => {
 
     await ft.account.authDescriptor.add(user2, account.id);
     expect(
-      (await ft.get.account.by.id(account.id)).authDescriptors.length
+      (await ft.get.account.by.id(account.id))!.authDescriptors.length
     ).toBe(2);
   });
 
@@ -105,7 +107,8 @@ describe("Test the account", () => {
     };
     const ft = _ft.changeUser(user);
 
-    const account = await ft.account.dev.register(
+    const account = await ft.account.admin.register(
+      adminUser(),
       authDescriptor.create.singleSig.withArgs(
         [FlagsType.Transfer],
         user.signatureProvider.pubKey
@@ -116,7 +119,7 @@ describe("Test the account", () => {
     const promise = ft.account.authDescriptor.add(user2, account.id);
     await expect(promise).rejects.toBeInstanceOf(Error);
     expect(
-      (await ft.get.account.by.id(account.id)).authDescriptors.length
+      (await ft.get.account.by.id(account.id))!.authDescriptors.length
     ).toBe(1);
   });
 
@@ -130,10 +133,13 @@ describe("Test the account", () => {
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = _ft.get.gtxClient.newTransaction(ad.signers);
+    const tx = _ft.get.gtxClient.newTransaction(
+      ad.signers.concat(admin.authDescriptor.signers)
+    );
     tx.addOperation(...registerOp(ad));
     await tx.sign(user1.signatureProvider);
     await tx.sign(user2.signatureProvider);
+    await tx.sign(admin.signatureProvider);
     const promise = tx.postAndWaitConfirmation();
 
     await expect(promise).resolves.not.toThrowError();
@@ -156,10 +162,13 @@ describe("Test the account", () => {
       authDescriptor: ad,
     };
 
-    let tx = _ft.get.gtxClient.newTransaction(ad.signers);
+    let tx = _ft.get.gtxClient.newTransaction(
+      ad.signers.concat(admin.authDescriptor.signers)
+    );
     tx.addOperation(...registerOp(ad));
     await tx.sign(user1.signatureProvider);
     await tx.sign(sigProv2);
+    await tx.sign(admin.signatureProvider);
     await tx.postAndWaitConfirmation();
 
     tx = _ft.get.gtxClient.newTransaction([
@@ -185,9 +194,7 @@ describe("Test the account", () => {
 
     const account = await _ft.get.account.by.id(ad.id);
 
-    expect(
-      (await _ft.get.account.by.id(account.id)).authDescriptors.length
-    ).toBe(2);
+    expect(account!.authDescriptors.length).toBe(2);
   });
 
   it("should fail if only one signature provided", async () => {
@@ -208,18 +215,21 @@ describe("Test the account", () => {
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = _ft.get.gtxClient.newTransaction(ad.signers);
+    const tx = _ft.get.gtxClient.newTransaction(
+      ad.signers.concat(admin.authDescriptor.signers)
+    );
     tx.addOperation(...registerOp(ad));
     await tx.sign(user1.signatureProvider);
     await tx.sign(user2.signatureProvider);
+    await tx.sign(admin.signatureProvider);
     await tx.postAndWaitConfirmation();
 
     const account = await _ft.get.account.by.id(ad.id);
 
-    const promise = _ft.account.authDescriptor.add(user3, account.id);
+    const promise = _ft.account.authDescriptor.add(user3, account!.id);
     await expect(promise).rejects.toBeInstanceOf(Error);
     expect(
-      (await _ft.get.account.by.id(account.id)).authDescriptors.length
+      (await _ft.get.account.by.id(account!.id))!.authDescriptors.length
     ).toBe(1);
   });
 
@@ -271,7 +281,7 @@ describe("Test the account", () => {
 
     const foundAccount = await _connection.getAccountById(account.id);
 
-    expect(account.id).toEqual(foundAccount.id);
+    expect(account.id).toEqual(foundAccount!.id);
   });
 
   it("should return account by auth descriptor id", async () => {
@@ -323,17 +333,20 @@ describe("Test the account", () => {
 
     const foundAccount = await _ft.get.account.by.id(account.id);
 
-    expect(foundAccount.authDescriptors.length).toEqual(1);
+    expect(foundAccount!.authDescriptors.length).toEqual(1);
   });
 
   it("should be able to register account by directly calling 'register_account' operation", async () => {
     const user = testUser();
 
-    const tx = _ft.get.gtxClient.newTransaction(user.authDescriptor.signers);
+    const tx = _ft.get.gtxClient.newTransaction(
+      user.authDescriptor.signers.concat(admin.authDescriptor.signers)
+    );
     tx.addOperation(
-      ...op("ft3.dev_register_account", toGtv(user.authDescriptor))
+      ...op("ft4.admin.register_account", toGtv(user.authDescriptor))
     );
     await tx.sign(user.signatureProvider);
+    await tx.sign(admin.signatureProvider);
     await tx.postAndWaitConfirmation();
 
     const account = await _ft.get.account.by.id(user.authDescriptor.id);
@@ -369,7 +382,7 @@ describe("Test the account", () => {
 
     await expect(promise).resolves.not.toThrowError();
     const account2 = await ft.get.account.by.id(account.id);
-    expect(account2.authDescriptors.length).toEqual(1);
+    expect(account2!.authDescriptors.length).toEqual(1);
   });
 
   it("shouldn't be possible for auth descriptor to delete other auth descriptor without admin flag", async () => {

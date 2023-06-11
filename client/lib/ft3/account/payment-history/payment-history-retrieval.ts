@@ -36,6 +36,11 @@ export function createPaymentHistoryRetriever(
         nextCursor: res.next_cursor,
       };
     },
+    retrieveSingle: async (rowid: number) => {
+      return createPaymentHistoryEntryFromResponse(
+        await session.query("ft3.get_single_payment_history_entry", { rowid })
+      );
+    },
     brid: session.newTransaction([]).gtx.blockchainRID.toString("hex"),
   });
 }

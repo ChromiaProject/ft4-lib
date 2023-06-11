@@ -13,11 +13,9 @@ import {
   Account,
   IAuthenticatedAccount,
 } from "../../client/lib/ft3/account/types";
-import { ftUserSession } from "../../client/lib/ft3/interfaces";
+import { ftUserSession } from "../../client/lib/ft3/types";
 import { gtx } from "postchain-client";
-import { giveBalanceOp } from "../../client/lib/ft3/asset/asset-dev-operations";
-import { nop } from "../../client/lib/ft3/utils";
-import { legacyTransactionBuilder } from "../../client/lib/ft3/utils/transaction-builder-old";
+import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft3/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
 import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
@@ -100,7 +98,7 @@ class AccountBuilder {
     const account = await this.registerAccount();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
-    return await this.session.get.account.by.id(account.id);
+    return (await this.session.get.account.by.id(account.id))!;
   }
 
   async buildAuthenticated(): Promise<IAuthenticatedAccount> {
@@ -124,29 +122,34 @@ class AccountBuilder {
   /* Private functions */
 
   private async registerAccount(): Promise<Account> {
-    return await this.session.account.dev.register(this.getAuthDescriptor());
+    return await this.session.account.admin.register(
+      admin(),
+      this.getAuthDescriptor()
+    );
   }
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const tb = legacyTransactionBuilder(
-        this.session.user,
-        this.session.get.gtxClient
+      await Promise.all(
+        this.balances.map(async (balance) => {
+          await this.session.balance.admin.mint(
+            admin(),
+            account.id,
+            balance.asset.id,
+            balance.amount
+          );
+        })
       );
-
-      this.balances.forEach((balance) => {
-        tb.add(giveBalanceOp(balance.asset.id, account.id, balance.amount));
-      });
-
-      tb.add(nop());
-      const tx = await tb.buildSigned();
-      await tx.postAndWaitConfirmation();
     }
   }
 
   private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
-      await this.session.account.dev.givePoints(account.id, this.points);
+      await this.session.account.admin.givePoints(
+        admin(),
+        account.id,
+        this.points
+      );
     }
   }
 
