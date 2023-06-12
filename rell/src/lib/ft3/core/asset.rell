@@ -20,6 +20,9 @@ entity balance {
     mutable amount: big_integer = 0L;
 }
 
+val max_big_int = big_integer
+    .from_hex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
 function ensure_balance(acc.account, asset): balance {
     val balance = balance @? {asset, account};
     if (balance != null) {
@@ -41,18 +44,33 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
+function zero_inclusive_check_limits(value: big_integer, name) {
+    require(
+        value <= max_big_int, name+": value must be lower than 2^256");
+    require(value >= 0L, name+": value cannot be negative");
+}
+
+function zero_exclusive_check_limits(value: big_integer, name) {
+    require(
+        value <= max_big_int, name+": value must be lower than 2^256");
+    require(value > 0L, name+": value must be non-zero positive");
+}
+
 namespace Unsafe {
     function mint(acc.account, asset, amount: big_integer) {
-        require(amount > 0L, "Invalid value. Amount must be non-zero positive");
+        zero_exclusive_check_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
             "Assets can only be minted on issuing chain"
         );
         before_mint(account, asset, amount);
         val balance = ensure_balance(account, asset);
-        balance.amount += amount;
 
+        balance.amount += amount;
         asset.total_supply += amount;
+
+        // require(balance.amount <= max_big_int); checking for unminted tokens
+        require(asset.total_supply <= max_big_int, "End total supply must be lower than 2^256");
 
         create payment_history_entry(
             account,
@@ -79,17 +97,20 @@ namespace Unsafe {
     }
 
     function burn(acc.account, asset, amount: big_integer) {
-        require(amount > 0L, "Invalid value. Amount must be non-zero positive");
-        require(asset.total_supply >= amount, "Invalid value. Amount is greater than total supply");
+        zero_exclusive_check_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
             "Assets can only be burned on issuing chain"
         );
         val balance = balance @ {asset, account};
-        require(balance.amount >= amount, "Invalid value. Amount is greater than balance");
         before_burn(account, asset, amount);
+
+        require(balance.amount >= amount, "Insufficient balance");
+        // require(asset.total_supply >= amount); checking for supply < balance
+
         balance.amount -= amount;
         asset.total_supply -= amount;
+
         create payment_history_entry (
             account,
             asset,

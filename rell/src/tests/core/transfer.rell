@@ -3,9 +3,12 @@ module;
 
 import ^^^.main.*;
 import ^^.extensions.*;
+import ^^^.lib.ft3.core;
 import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.auth;
 import ^.utils;
+
+val too_big = big_integer.from_hex("10000000000000000000000000000000000000000000000000000000000000000");
 
 function test_before_transfer_extension_is_called() {
     val alice = utils.register_alice();
@@ -96,7 +99,7 @@ function test_transfer_fails_when_insufficient_balance() {
     utils.assert_error(tx, "Balance is too low");
 }
 
-function test_transfer_fails_when_balance_is_negative() {
+function test_transfer_fails_when_amount_is_negative() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
@@ -108,7 +111,21 @@ function test_transfer_fails_when_balance_is_negative() {
         .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, -1))
         .sign(alice.keypair);
 
-    utils.assert_error(tx, "Expected amount greater than 0. Found -1");
+    utils.assert_error(tx, "Parameter amount: value must be non-zero positive");
+}
+
+function test_transfer_fails_when_amount_is_too_high() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+
+    val tx = rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, too_big))
+        .sign(alice.keypair);
+
+    utils.assert_error(tx, "Parameter amount: value must be lower than 2^256");
 }
 
 function test_transfer_fails_when_sender_is_same_as_receiver() {
@@ -122,7 +139,7 @@ function test_transfer_fails_when_sender_is_same_as_receiver() {
         .op(ft3.core_ext.transfer_one(alice.account.id, asset.id, 5))
         .sign(alice.keypair);
 
-    utils.assert_error(tx, "Sender and reciver have to be different");
+    utils.assert_error(tx, "Sender and receiver have to be different");
 }
 
 function test_transfer_succeeds_when_enough_balance() {
