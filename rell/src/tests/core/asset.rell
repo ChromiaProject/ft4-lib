@@ -147,10 +147,11 @@ function test_before_burn_extensions_are_called() {
         .sign(utils.admin_priv_key())
         .run();
     
-    val tx = rell.test.tx()
+    rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft3.core_ext.burn(asset.id, 10L))
-        .sign(alice.keypair);
+        .sign(alice.keypair)
+        .run();
 
     assert_true(burn_extensions_state.is_before_burn_called);
     assert_equals(burn_extensions_state.before_burn_arg_asset_id, asset.id);
@@ -166,10 +167,11 @@ function test_after_burn_extensions_are_called() {
         .sign(utils.admin_priv_key())
         .run();
 
-    val tx = rell.test.tx()
+    rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft3.core_ext.burn(asset.id, 10L))
-        .sign(alice.keypair);
+        .sign(alice.keypair)
+        .run();
     
     assert_true(burn_extensions_state.is_after_burn_called);
     assert_equals(burn_extensions_state.after_burn_arg_asset_id, asset.id);
