@@ -44,12 +44,6 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
-function zero_inclusive_check_limits(value: big_integer, name) {
-    require(
-        value <= max_big_int, name+": value must be lower than 2^256");
-    require(value >= 0L, name+": value cannot be negative");
-}
-
 function zero_exclusive_check_limits(value: big_integer, name) {
     require(
         value <= max_big_int, name+": value must be lower than 2^256");
