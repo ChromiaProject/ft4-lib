@@ -103,6 +103,7 @@ done
 echo "> Starting jest tests with options: " "$opt" "\n"
 npx jest -maxWorkers=1 --testPathPattern=payment-history.test.ts $opt && \
     npx jest --testPathIgnorePatterns=payment-history.test.ts $opt
+return_code=$?
 
 if $docker; then
     docker stop ft4_jest_test  > /dev/null 
