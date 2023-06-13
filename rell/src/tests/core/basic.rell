@@ -61,8 +61,10 @@ function test_an_asset_can_be_created() {
 
 function test_an_invalid_asset_cannot_be_created() {
   val error = "Decimals must be between 0 and 78 (included)";
-  var tx = admin.register_asset("e", "e", -1, "").sign(utils.admin_priv_key());
-  utils.assert_error(tx, error);
-  tx = admin.register_asset("f", "f", 79, "").sign(utils.admin_priv_key());
-  utils.assert_error(tx, error);
+  admin.register_asset("e", "e", -1, "")
+    .sign(utils.admin_priv_key())
+    .run_must_fail(error);
+  admin.register_asset("f", "f", 79, "")
+    .sign(utils.admin_priv_key())
+    .run_must_fail(error);
 }

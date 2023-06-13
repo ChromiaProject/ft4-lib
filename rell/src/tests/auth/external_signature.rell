@@ -8,15 +8,37 @@ import acc_ext: ^^^.lib.ft3.account.external;
 import dev_op: ^^^.lib.ft3.operations.dev_op_auth;
 import test_operations: ^^.operations;
 
-val external_key = byte_array.from_hex("dc922451d86a9c802257066592122a7cc9a64d16");
+val external_priv_key = byte_array
+  .from_hex("78542bc0fa5278d4c4f2a8244f1b76c02494de806a97c55a708c00ad4bdf71cb");
+val external_address = byte_array
+  .from_hex("a28f6f9f591ac13ee2d9f374fcb8c1401c2f1209");
+
+val second_external_priv_key = byte_array
+  .from_hex("9ad64e7ce9723b2c04e101c24cea8e36e336726efd7dec8f61b3a9a68f49f548");
+val second_external_address = byte_array
+  .from_hex("0011df4f2514c4e94f4f6e3598c360a5925b4d9e");
+
 val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
 
-function setup_extended_auth(rell.test.keypair) {
+function eth_sign(msg: text, priv: byte_array = external_priv_key): auth.signature {
+  val sig = crypto.eth_sign(
+    keccak256(("\u0019Ethereum Signed Message:\n" + msg.size().to_text() + msg).to_bytes()),
+    priv
+  );
+
+  return auth.signature(
+    r=sig[0],
+    s=sig[1],
+    v=sig[2] + 27
+  );
+}
+
+function setup_extended_auth(rell.test.keypair, flags: gtv = set(["A"]).to_gtv()) {
   val desc = acc.auth_descriptor(
     acc.auth_type.ES,
     [
-      set(["A"]).to_gtv(),
-      external_key.to_gtv()
+      flags,
+      external_address.to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -31,50 +53,38 @@ function test_operation_without_auth_operation() {
   utils.register_alice();
   var tx = rell.test.tx()
     .op(dev_op.dev_authenticated_operation(""))
-    .sign(utils.admin_priv_key());
-  utils.assert_error(tx, "Expected at least two operations");
+    .sign(utils.admin_priv_key())
+    .run_must_fail("Expected at least two operations");
 }
 
 function test_fails_if_insufficient_permissions() {
-  val alice_auth_desc_id = setup_extended_auth(rell.test.keypairs.alice);
-  val signature = auth.signature(
-    r=x"",
-    s=x"",
-    v=1
-  );
-
-  var tx = rell.test.tx()
-    .op(auth.evm_auth(alice_auth_desc_id, alice_auth_desc_id, [signature]))
-    .op(dev_op.dev_authenticated_operation(""))
-    .sign(utils.admin_priv_key());
-
-  utils.assert_error(tx, "Invalid signature");
-}
-
-function test_it_rejects_empty_messages() {
-  val alice_auth_desc_id = setup_extended_auth(rell.test.keypairs.alice);
-  val signature = auth.signature(
-    r=x"a93754f90fe2a42f2b5705eeb7f7cd4e13f2f70ae049ebac035c5401ed663e8d",
-    s=x"1e926edb77543a4d50310ac792a5cc615cf648320915e353e55af779146fd30f",
-    v=28
-  );
+  val alice_auth_desc_id = setup_extended_auth(rell.test.keypairs.alice, set(["X"]).to_gtv());
+  val signature = eth_sign("");
 
   var tx = rell.test.tx()
     .op(auth.evm_auth(alice_auth_desc_id, alice_auth_desc_id, [signature]))
     .op(dev_op.dev_authenticated_operation(""))
     .sign(utils.admin_priv_key())
-    .sign(rell.test.keypairs.alice.priv);
+    .run_must_fail("The auth descriptor does not have the required permissions");
+}
 
-  utils.assert_error(tx, "Empty messages are not allowed");
+function test_it_rejects_messages_without_nonce() {
+  val alice_auth_desc_id = setup_extended_auth(rell.test.keypairs.alice);
+  val signature = eth_sign("");
+
+  var tx = rell.test.tx()
+    .op(auth.evm_auth(alice_auth_desc_id, alice_auth_desc_id, [signature]))
+    .op(dev_op.dev_authenticated_operation(""))
+    .sign(utils.admin_priv_key())
+    .sign(rell.test.keypairs.alice.priv)
+    //gets thrown before "Empty messages are not allowed"
+    .run_must_fail("Message template has to include '{nonce}'");
 }
 
 function test_it_rejects_wrong_eth_signatures() {
   val auth_desc_id = setup_extended_auth(rell.test.keypairs.alice);
-  val wrong_signature = auth.signature(
-    r=x"e49d73012d42d33388fba929de5b423ebc7cec6b7b01a05459785f4d1f8f87ba",
-    s=x"6ae3ee3dbc393f2d8ed49c4effa480c3832989d46eac2ca141d1b2069b88fcf3",
-    v=28
-  );
+  val wrong_signature = eth_sign("abc");
+
   val args = [
     auth_desc_id.to_gtv(),
     [wrong_signature].to_gtv(),
@@ -84,23 +94,21 @@ function test_it_rejects_wrong_eth_signatures() {
 
   var tx = rell.test.tx()
     .op(auth.evm_auth(auth_desc_id, auth_desc_id, [wrong_signature]))
-    .op(dev_op.dev_authenticated_operation("Some message"))
+    .op(dev_op.dev_authenticated_operation("Some message {nonce}"))
     .sign(utils.admin_priv_key())
-    .sign(rell.test.keypairs.alice);
-
-  utils.assert_error(tx, "Invalid signature");
+    .sign(rell.test.keypairs.alice)
+    .run_must_fail("Invalid signature");
 }
 
 function test_perform_eth_auth_transaction() {
   val alice_acc_desc_id = setup_extended_auth(rell.test.keypairs.alice);
-  val signature = auth.signature(
-    r=x"a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
-    s=x"4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
-    v=28
+  val desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
+  val signature = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      desc.ctr.to_text().replace("\"", "")
+    ) 
   );
-
-  val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
-  val alice_acc = alice_acc_desc.account;  
 
   rell.test.tx()
     .op(auth.evm_auth(alice_acc_desc_id, alice_acc_desc_id, [signature]))
@@ -110,14 +118,12 @@ function test_perform_eth_auth_transaction() {
 }
 
 function test_multisig_external_signature() {
-  val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
-
   val desc = acc.auth_descriptor(
     acc.auth_type.EM,
     [
       set(["A"]).to_gtv(),
       0x2.to_gtv(),
-      [external_key, second_external_key].to_gtv()
+      [external_address, second_external_address].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -126,15 +132,18 @@ function test_multisig_external_signature() {
 
   val alice_acc = acc.account_auth_descriptor @ {}(.account);
 
-  val signature0 = auth.signature(
-    r=x"a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
-    s=x"4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
-    v=28
+  val signature0 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ) 
   );
-  val signature1 = auth.signature(
-    r=x"e49d73012d42d33388fba929de5b423ebc7cec6b7b01a05459785f4d1f8f87ba",
-    s=x"6ae3ee3dbc393f2d8ed49c4effa480c3832989d46eac2ca141d1b2069b88fcf3",
-    v=28
+  val signature1 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ),
+    second_external_priv_key 
   );
 
   val auth_descriptor_id = desc.hash();
@@ -147,29 +156,30 @@ function test_multisig_external_signature() {
 }
 
 function test_it_rejects_transactions_if_not_enough_signatures() {
-  val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
-
   val desc = acc.auth_descriptor(
     acc.auth_type.EM,
     [
       set(["A"]).to_gtv(),
       0x3.to_gtv(),
-      [external_key, second_external_key].to_gtv()
+      [external_address, second_external_address].to_gtv()
     ],
     rules = null.to_gtv()
   );
 
   utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
 
-  val signature0 = auth.signature(
-    r=x"a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
-    s=x"4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
-    v=28
+  val signature0 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ) 
   );
-  val signature1 = auth.signature(
-    r=x"e49d73012d42d33388fba929de5b423ebc7cec6b7b01a05459785f4d1f8f87ba",
-    s=x"6ae3ee3dbc393f2d8ed49c4effa480c3832989d46eac2ca141d1b2069b88fcf3",
-    v=28
+  val signature1 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ),
+    second_external_priv_key
   );
 
   val auth_descriptor_id = desc.hash();
@@ -177,34 +187,35 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(utils.admin_priv_key())
-    .sign(rell.test.keypairs.alice.priv);
-  utils.assert_error(tx, "Minimum number of valid signatures not reached");
+    .sign(rell.test.keypairs.alice.priv)
+    .run_must_fail("Minimum number of valid signatures not reached");
 }
 
 function test_it_rejects_signatures_not_part_of_a_d() {
-  val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
-
   val desc = acc.auth_descriptor(
     acc.auth_type.EM,
     [
       set(["A"]).to_gtv(),
       0x1.to_gtv(),
-      [external_key].to_gtv()
+      [external_address].to_gtv()
     ],
     rules = null.to_gtv()
   );
 
   utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
 
-  val signature0 = auth.signature(
-    r=x"a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
-    s=x"4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
-    v=28
+  val signature0 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ) 
   );
-  val signature1 = auth.signature(
-    r=x"e49d73012d42d33388fba929de5b423ebc7cec6b7b01a05459785f4d1f8f87ba",
-    s=x"6ae3ee3dbc393f2d8ed49c4effa480c3832989d46eac2ca141d1b2069b88fcf3",
-    v=28
+  val signature1 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ),
+    second_external_priv_key
   );
 
   val auth_descriptor_id = desc.hash();
@@ -212,22 +223,23 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(utils.admin_priv_key())
-    .sign(rell.test.keypairs.alice.priv);
-  utils.assert_error(tx, "Invalid signature");
+    .sign(rell.test.keypairs.alice.priv)
+    .run_must_fail("Invalid signature");
 }
 
-function test_requires_correct_ctr() {
+function test_works_with_correct_ctr() {
   val alice_acc_desc_id = setup_extended_auth(rell.test.keypairs.alice);
-  val signature0 = auth.signature(
-    r=x"a148762f624a0cb7b4e346feb6cf5fa85559b56f4006844c9b3ae3c3370e34d3",
-    s=x"4766e6ff17abe57140a37bcfb60452486b2ec69b2e334c685a93efe9446ab6d8",
-    v=28
+  val signature0 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ) 
   );
-
-  val signature1 = auth.signature(
-    r=x"cbdb6d7ee8139647783035cc54805a4de4049fbaf5b819bc0c89cbcbbed72577",
-    s=x"18c6881717ae1939a97dc7eb443644625a4a8765b22f5de19f881c10a2e24fbf",
-    v=28
+  val signature1 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "1"
+    )
   );
 
   val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
@@ -242,24 +254,58 @@ function test_requires_correct_ctr() {
     .run();
 }
 
+function test_rejects_wrong_ctr() {
+  val alice_acc_desc_id = setup_extended_auth(rell.test.keypairs.alice);
+  val signature0 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "0"
+    ) 
+  );
+  val signature1 = eth_sign(
+    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+      to_addr,
+      "1"
+    )
+  );
+
+  val alice_acc_desc = acc.account_auth_descriptor @ { .id == alice_acc_desc_id };
+
+  rell.test.tx()
+    .op(auth.evm_auth(alice_acc_desc_id, alice_acc_desc_id, [signature0]))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
+    .op(auth.evm_auth(alice_acc_desc_id, alice_acc_desc_id, [signature0]))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
+    .sign(utils.admin_priv_key())
+    .sign(rell.test.keypairs.alice.priv)
+    .run_must_fail("Invalid signature");
+  rell.test.tx()
+    .op(auth.evm_auth(alice_acc_desc_id, alice_acc_desc_id, [signature1]))
+    .op(dev_op.dev_perform_large_transfer(1000, to_addr))
+    .sign(utils.admin_priv_key())
+    .sign(rell.test.keypairs.alice.priv)
+    .run_must_fail("Invalid signature");
+}
+
 function test_ft_auth_fails_if_key_invalid() {
-  val external_key = rell.test.keypairs.alice;
+  val keypair = rell.test.keypairs.alice;
   val desc = acc.auth_descriptor(
     acc.auth_type.S,
     [
       ["A"].to_gtv(),
-      external_key.pub.to_hex().to_gtv()
+      keypair.pub.to_hex().to_gtv()
     ],
     rules = null.to_gtv()
   );
+  utils._create_test_acc_from_auth_desc_single_sig(keypair, desc);
 
   val auth_descriptor_id = desc.hash();
   var tx = rell.test.tx()
     .op(auth.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
     .sign(utils.admin_priv_key())
-    .sign(rell.test.keypairs.bob.priv);
-  utils.assert_error(tx, "The provided key(s) is not a signer of this auth descriptor");
+    .sign(rell.test.keypairs.bob.priv)
+    .run_must_fail("The provided key(s) is not a signer of this auth descriptor");
 }
 
 function test_perform_ft_auth_transaction() {
@@ -412,7 +458,7 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
   var message = "Invalid message template. Nonce: {nonce}";
   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 
-  val tx = rell.test.tx()
+  rell.test.tx()
     .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
     // Operation internally calls authenticate but doesn't pass auth message template
     .op(test_operations.operation_without_auth_message_template(
@@ -423,7 +469,6 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
       x"abcdef",
       "text value",
       null
-    ));
-
-    utils.assert_error(tx, "Invalid signature");
+    ))
+    .run_must_fail("Invalid signature");
 }
