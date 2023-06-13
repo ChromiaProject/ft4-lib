@@ -29,9 +29,9 @@ function setup_extended_auth(rell.test.keypair) {
 
 function test_operation_without_auth_operation() {
   utils.register_alice();
-  rell.test.tx()
-    .op(dev_op.dev_authenticated_operation(""))
-    .run_must_fail();
+  var tx = rell.test.tx()
+    .op(dev_op.dev_authenticated_operation(""));
+  utils.assert_error(tx, "Expected at least two operations");
 }
 
 function test_fails_if_insufficient_permissions() {
@@ -42,10 +42,11 @@ function test_fails_if_insufficient_permissions() {
     v=1
   );
 
-  rell.test.tx()
+  var tx = rell.test.tx()
     .op(auth.evm_auth(alice_auth_desc_id, alice_auth_desc_id, [signature]))
-    .op(dev_op.dev_authenticated_operation(""))
-    .run_must_fail();
+    .op(dev_op.dev_authenticated_operation(""));
+
+  utils.assert_error(tx, "Invalid signature");
 }
 
 function test_it_rejects_empty_messages() {
@@ -56,11 +57,12 @@ function test_it_rejects_empty_messages() {
     v=28
   );
 
-  rell.test.tx()
+  var tx = rell.test.tx()
     .op(auth.evm_auth(alice_auth_desc_id, alice_auth_desc_id, [signature]))
     .op(dev_op.dev_authenticated_operation(""))
-    .sign(rell.test.keypairs.alice.priv)
-    .run_must_fail();
+    .sign(rell.test.keypairs.alice.priv);
+
+  utils.assert_error(tx, "Empty messages are not allowed");
 }
 
 function test_it_rejects_wrong_eth_signatures() {
@@ -77,11 +79,12 @@ function test_it_rejects_wrong_eth_signatures() {
     rell.test.keypairs.alice.pub.to_gtv()
   ];
 
-  rell.test.tx()
+  var tx = rell.test.tx()
     .op(auth.evm_auth(auth_desc_id, auth_desc_id, [wrong_signature]))
     .op(dev_op.dev_authenticated_operation("Some message"))
-    .sign(rell.test.keypairs.alice)
-    .run_must_fail();
+    .sign(rell.test.keypairs.alice);
+
+  utils.assert_error(tx, "Invalid signature");
 }
 
 function test_perform_eth_auth_transaction() {
@@ -138,7 +141,7 @@ function test_multisig_external_signature() {
     .run();
 }
 
-function test_it_rejects_transactions_if_not_enough_sinatures() {
+function test_it_rejects_transactions_if_not_enough_signatures() {
   val second_external_key = byte_array.from_hex("859304192d439DB42DFFD47b87b794509e6c9B9e");
 
   val desc = acc.auth_descriptor(
@@ -165,11 +168,11 @@ function test_it_rejects_transactions_if_not_enough_sinatures() {
   );
 
   val auth_descriptor_id = desc.hash();
-  rell.test.tx()
+  var tx = rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
-    .sign(rell.test.keypairs.alice.priv)
-    .run_must_fail();
+    .sign(rell.test.keypairs.alice.priv);
+  utils.assert_error(tx, "Minimum number of valid signatures not reached");
 }
 
 function test_it_rejects_signatures_not_part_of_a_d() {
@@ -199,11 +202,11 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   );
 
   val auth_descriptor_id = desc.hash();
-  rell.test.tx()
+  var tx = rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
-    .sign(rell.test.keypairs.alice.priv)
-    .run_must_fail();
+    .sign(rell.test.keypairs.alice.priv);
+  utils.assert_error(tx, "Invalid signature");
 }
 
 function test_requires_correct_ctr() {
@@ -243,11 +246,11 @@ function test_ft_auth_fails_if_key_invalid() {
   );
 
   val auth_descriptor_id = desc.hash();
-  rell.test.tx()
+  var tx = rell.test.tx()
     .op(auth.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(dev_op.dev_perform_large_transfer(1000, to_addr))
-    .sign(rell.test.keypairs.bob.priv)
-    .run_must_fail();
+    .sign(rell.test.keypairs.bob.priv);
+  utils.assert_error(tx, "The provided key(s) is not a signer of this auth descriptor");
 }
 
 function test_perform_ft_auth_transaction() {
