@@ -20,8 +20,7 @@ entity balance {
     mutable amount: big_integer = 0L;
 }
 
-val max_big_int = big_integer
-    .from_hex("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+val max_asset_amount = big_integer.from_hex("ff".repeat(32));
 
 function ensure_balance(acc.account, asset): balance {
     val balance = balance @? {asset, account};
@@ -44,15 +43,15 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
-function zero_exclusive_check_limits(value: big_integer, name) {
+function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
     require(
-        value <= max_big_int, name+": value must be lower than 2^256");
-    require(value > 0L, name+": value must be non-zero positive");
+        value <= max_asset_amount, "%s: value must be lower than 2^256".format(name));
+    require(value > 0L, "%s: value must be non-zero positive".format(name));
 }
 
 namespace Unsafe {
     function mint(acc.account, asset, amount: big_integer) {
-        zero_exclusive_check_limits(amount, "Parameter amount");
+        require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
             "Assets can only be minted on issuing chain"
@@ -63,8 +62,7 @@ namespace Unsafe {
         balance.amount += amount;
         asset.total_supply += amount;
 
-        // require(balance.amount <= max_big_int); checking for unminted tokens
-        require(asset.total_supply <= max_big_int, "End total supply must be lower than 2^256");
+        require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256");
 
         create payment_history_entry(
             account,
@@ -91,7 +89,7 @@ namespace Unsafe {
     }
 
     function burn(acc.account, asset, amount: big_integer) {
-        zero_exclusive_check_limits(amount, "Parameter amount");
+        require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
             "Assets can only be burned on issuing chain"

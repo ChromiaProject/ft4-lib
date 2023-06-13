@@ -186,7 +186,7 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
 
 namespace Unsafe {
    function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
-      zero_exclusive_check_limits(amount, "Parameter amount");
+      require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
 
       val args = [
