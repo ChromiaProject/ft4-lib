@@ -67,7 +67,7 @@ function test_mint_fails_if_supply_is_too_high() {
         .run();
     admin.mint(alice.account.id, asset.id, 1)
         .sign(utils.admin_priv_key())
-        .run_must_fail("End total supply must be lower than 2^256, actual: %d".format(too_big));
+        .run_must_fail("End total supply must be lower than 2^256");
 }
 
 function test_burn_fails_if_amount_is_too_high() {

@@ -62,7 +62,7 @@ namespace Unsafe {
         balance.amount += amount;
         asset.total_supply += amount;
 
-        require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256, actual: %d".format(asset.total_supply));
+        require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256");
 
         create payment_history_entry(
             account,
