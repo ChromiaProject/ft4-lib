@@ -45,8 +45,8 @@ function get_asset_balances(account_id: byte_array) {
 
 function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
     require(
-        value <= max_asset_amount, "%s: value must be lower than 2^256".format(name));
-    require(value > 0L, "%s: value must be non-zero positive".format(name));
+        value <= max_asset_amount, "%s: value must be lower than 2^256, actual: %d".format(name, value));
+    require(value > 0L, "%s: value must be non-zero positive, actual: %d".format(name, value));
 }
 
 namespace Unsafe {
@@ -62,7 +62,7 @@ namespace Unsafe {
         balance.amount += amount;
         asset.total_supply += amount;
 
-        require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256");
+        require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256, actual: %d".format(asset.total_supply));
 
         create payment_history_entry(
             account,
@@ -95,10 +95,9 @@ namespace Unsafe {
             "Assets can only be burned on issuing chain"
         );
         val balance = balance @ {asset, account};
-        before_burn(account, asset, amount);
-
         require(balance.amount >= amount, "Insufficient balance");
-        // require(asset.total_supply >= amount); checking for supply < balance
+
+        before_burn(account, asset, amount);
 
         balance.amount -= amount;
         asset.total_supply -= amount;
