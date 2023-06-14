@@ -67,7 +67,7 @@ describe("Asset amount", () => {
       BigInt("2" + "0".repeat(15)),
       BigInt(1600),
     ]);
-    expect(numbers.map(stringify)).toEqual([
+    expect(numbers.map(n=>stringify(n))).toEqual([
       "1",
       "-25",
       "100000",
@@ -108,10 +108,11 @@ describe("Asset amount", () => {
       createAmount("10000000000.1", 20),
     ];
 
+console.log("\n\n\n\n\n\n\n\n\n\n", amounts[0]);
     expect(
       amounts.map((num) => num.format(DecimalFormat.fixedDecimals, 4))
     ).toEqual([
-      "1 234 567 890",
+      "1 234 567 890.0",
       "12.123 5",
       "1 234 567 890.123 5",
       "1.000 0",

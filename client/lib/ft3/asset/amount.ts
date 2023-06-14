@@ -65,9 +65,9 @@ function buildAmountObject(amount: RawAmount): Amount {
  * @param decimals - The desired number of decimal digits.
  *
  * @returns An asset amount with the specified value, and decimal digits added to it if needed.
- * Be careful with blockchain return values! They are generally represented as integers,
+ * Be careful with blockchain return values! They are generally represented as big integers,
  * removing the decimal point. If you want to use (num: 1000, decimals: 3) to represent
- * 1.000, you should use createAmountFromBalance(1000, 3) instead
+ * 1.000, you should use createAmountFromBalance(1000, 3) instead.
  *
  * @example
  * createAmount(1, 2) // returns 1.00
@@ -129,8 +129,8 @@ export function createAmount(
  * instead.
  *
  * @example
- * createAmount(1, 2) // returns 0.01
- * createAmount(100, 2) // returns 1.00
+ * createAmountFromBalance(1, 2) // returns 0.01
+ * createAmountFromBalance(100, 2) // returns 1.00
  */
 export function createAmountFromBalance(
   num: bigint,
@@ -162,10 +162,16 @@ export function checkValueInRange(val: bigint) {
 /**
  * To be used if you want the precise value. Can be formatted starting from here
  * must return a string, as a Number could still be overflowed and it won't be an integer
+ * 
+ * @param amount - the amount to format
+ * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -> 0.8)
  *
  * @returns The amount as string
  */
-export function stringify(amount: AnyAssetAmount): string {
+export function stringify(
+  amount: AnyAssetAmount,
+  removeTrailingZeroes = true
+): string {
   let s = amount.value.toString();
   let negative = false;
   if (s.startsWith("-")) {
@@ -173,10 +179,12 @@ export function stringify(amount: AnyAssetAmount): string {
     negative = true;
   }
   const int = s.substring(0, s.length - amount.decimals) || "0";
-  const decimals = s
+  let decimals = s
     .substring(s.length - amount.decimals)
-    .padStart(amount.decimals, "0")
-    .replace(/0+$/, "");
+    .padStart(amount.decimals, "0");
+  if (removeTrailingZeroes) {
+    decimals = decimals.replace(/0+$/, "");
+  }
   return (negative ? "-" : "") + int + (decimals ? "." + decimals : "");
 }
 
@@ -237,7 +245,7 @@ export function toScientific(
   digits: number,
   removeTrailingZeroes = false
 ) {
-  const formatted = Number(stringify(amount)).toExponential(digits - 1);
+  const formatted = Number(stringify(amount, removeTrailingZeroes)).toExponential(digits - 1);
   if (removeTrailingZeroes) return formatted.replace(/\.?0+e/, "e");
   else return formatted;
 }
@@ -248,7 +256,7 @@ export function toFixedDecimals(
   removeTrailingZeroes = false,
   groupDigits = true
 ) {
-  const s = stringify(amount);
+  const s = stringify(amount, removeTrailingZeroes);
   let [int, decimals] = s.split("."); //decimals may be undefined
   if (groupDigits) {
     int = int.replace(/(\d)(?=(\d{3})+$)/g, "$1 ");
