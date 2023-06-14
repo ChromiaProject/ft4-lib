@@ -49,7 +49,7 @@ describe("Asset balance", () => {
       balances.map((b) => ({
         asset: b.asset,
         amount: makeAmountBareBones(b.amount),
-      }))
+      })).sort()
     ).toEqual(
       [
         {
