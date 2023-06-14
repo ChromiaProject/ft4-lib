@@ -38,24 +38,26 @@ operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: bi
     core.Unsafe.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
 }
 
+@extend(auth.auth_handler)
+function () = auth.auth(
+    scope = "ft3.burn",
+    flags = ["T"],
+    formatter = burn_message(*)
+);
 
-query burn_auth_data(gtv) {
+function burn_message(gtv) {
     val params = struct<burn>.from_gtv(gtv);
     val asset = core.Asset(params.asset_id);
 
-    return auth.auth_data(
-        flags = ["T"],
-        message = "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}\n\nNonce: {nonce}"
-            .format(
-                core.format_amount_with_decimals(params.amount, asset.decimals),
-                asset.name
-            )
-    );
+    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}\n\nNonce: {nonce}"
+        .format(
+            core.format_amount_with_decimals(params.amount, asset.decimals),
+            asset.name
+        );
 }
 
 operation burn(asset_id: byte_array, amount: big_integer) {
-    val auth_data = burn_auth_data(auth.args());
-    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
+    val account = acc.authenticateV2();
 
     core.Unsafe.burn(account, core.Asset(asset_id), amount);
 }

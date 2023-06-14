@@ -42,6 +42,7 @@ function get_asset_balances(account_id: byte_array) {
 }
 
 function format_amount_with_decimals(amount: big_integer, decimals: integer): text {
+    require(decimals >= 0, "Decimals must be non-negative. Received: %s".format(decimals));
     var amt = amount.to_text();
     if (decimals == 0) {
         return amt;
