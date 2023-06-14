@@ -45,8 +45,13 @@ function get_asset_balances(account_id: byte_array) {
 
 function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
     require(
-        value <= max_asset_amount, "%s: value must be lower than 2^256, actual: %d".format(name, value));
-    require(value > 0L, "%s: value must be non-zero positive, actual: %d".format(name, value));
+        value <= max_asset_amount, 
+        "%s: value must be lower than 2^256, actual: %d".format(name, value)
+    );
+    require(
+        value > 0L, 
+         "%s: value must be non-zero positive, actual: %d".format(name, value)
+    );
 }
 
 namespace Unsafe {

@@ -8,7 +8,7 @@ import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.auth;
 import ^.utils;
 
-val too_big = big_integer.from_hex("10000000000000000000000000000000000000000000000000000000000000000");
+val too_big = core.max_asset_amount + 1;
 
 function test_before_transfer_extension_is_called() {
     val alice = utils.register_alice();
