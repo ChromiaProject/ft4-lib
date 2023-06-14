@@ -219,3 +219,5 @@ function eth_sign(hash: byte_array, privkey: byte_array) {
 function eth_hex_address_from_pubkey(pubkey) = "0x" + eth_address_from_pubkey(pubkey).to_hex();
 
 function eth_address_from_pubkey(pubkey) = keccak256(pubkey).sub(12);
+
+function eth_address_from_privkey(privkey: byte_array) = eth_address_from_pubkey(crypto.privkey_to_pubkey(privkey).sub(1));
