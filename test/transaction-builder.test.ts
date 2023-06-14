@@ -35,7 +35,7 @@ describe("Transaction Builder", () => {
 
     keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(ad);
     const authDataService = createFakeAuthDataService({
-      ["ft3.transfer"]: { flags: [FlagsType.Transfer], message: "" },
+      ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
       ["ft4.admin.register_account"]: {
         flags: [FlagsType.Account],
         message: "",
@@ -80,7 +80,7 @@ describe("Transaction Builder", () => {
         opName: "ft.ft_auth",
         args: [authenticator.accountId, authDescriptor.id],
       },
-      { opName: "ft3.transfer", args: [[expectedInput], [expectedOutput]] },
+      { opName: "ft4.transfer", args: [[expectedInput], [expectedOutput]] },
     ]);
   });
 

@@ -12,7 +12,7 @@ let vaultUrl = "https://vault-testnet.chromia.com";
 
 const Operations = {
   register: "ft4.admin.register_account",
-  addAuthDescriptor: "ft3.add_auth_descriptor",
+  addAuthDescriptor: "ft4.add_auth_descriptor",
 };
 
 function assert(condition: boolean, error: string) {
