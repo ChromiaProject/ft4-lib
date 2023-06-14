@@ -43,7 +43,9 @@ function get_asset_balances(account_id: byte_array) {
 
 function format_amount_with_decimals(amount: big_integer, decimals: integer): text {
     var amt = amount.to_text();
-    if (amt.size() > decimals) {
+    if (decimals == 0) {
+        return amt;
+    } else if (amt.size() > decimals) {
         amt = amt.sub(0, amt.size() - decimals) + "." + amt.sub(amt.size() - decimals);
     } else {
         amt = "0." + "0".repeat(decimals - amt.size()) + amt;
