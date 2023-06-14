@@ -41,6 +41,19 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
+function format_amount_with_decimals(amount: big_integer, decimals: integer): text {
+    require(decimals >= 0, "Decimals must be non-negative. Received: %s".format(decimals));
+    var amt = amount.to_text();
+    if (decimals == 0) {
+        return amt;
+    } else if (amt.size() > decimals) {
+        amt = amt.sub(0, amt.size() - decimals) + "." + amt.sub(amt.size() - decimals);
+    } else {
+        amt = "0." + "0".repeat(decimals - amt.size()) + amt;
+    }
+    return amt;
+}
+
 namespace Unsafe {
     function mint(acc.account, asset, amount: big_integer) {
         require(amount > 0L, "Invalid value. Amount must be non-zero positive");
