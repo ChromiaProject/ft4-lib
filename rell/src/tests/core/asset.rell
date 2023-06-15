@@ -172,3 +172,33 @@ function test_after_burn_extensions_are_called() {
     assert_equals(burn_extensions_state.after_burn_arg_account_id, alice.account.id);
     assert_equals(burn_extensions_state.after_burn_arg_amount, 10L);
 }
+
+function test_register_asset_with_invalid_icon_url() {
+    val invalid_icon_url = "invalidurl";
+
+    admin.register_asset(
+        "test",
+        "TST",
+        0,
+        invalid_icon_url
+    )
+    .sign(utils.admin_priv_key())
+    .run_must_fail("Invalid URL for icon");
+}
+
+
+function test_register_asset_with_valid_icon_url() {
+    val valid_icon_url = "https://example.com/icon.png";
+
+    admin.register_asset(
+        "test",
+        "TST",
+        0,
+        valid_icon_url
+    )
+    .sign(utils.admin_priv_key())
+    .run();
+
+    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    assert_equals(asset.icon_url, valid_icon_url);
+}

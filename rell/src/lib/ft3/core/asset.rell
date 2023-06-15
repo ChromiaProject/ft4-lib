@@ -136,6 +136,12 @@ namespace Unsafe {
         decimals: integer,
         icon_url: text): asset {
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
+
+        require(
+            icon_url.matches('^(http|https):\\/\\/[^\\s$.?#].[^\\s]*$'),
+            "Invalid URL for icon"
+        );
+
         val id = (name, chain_context.blockchain_rid).hash();
         return create asset (
             id,
