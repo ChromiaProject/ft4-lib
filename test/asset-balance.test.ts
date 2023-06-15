@@ -28,6 +28,12 @@ describe("Asset balance", () => {
     connection = createConnection(ft.get.gtxClient);
     asset1 = await getNewAsset(ft);
     asset2 = await getNewAsset(ft, undefined, undefined, 5);
+
+    // This is needed to make sure that BigInts are serialized as strings
+    expect.addSnapshotSerializer({
+      test: (val) => typeof val === "bigint",
+      print: (val) => val.toString() + "n",
+    });
   });
 
   beforeEach(() => {
@@ -60,7 +66,7 @@ describe("Asset balance", () => {
             name: asset1.name,
             decimals: asset1.decimals,
             brid: asset1.brid,
-            supply: BigInt(10).toString(),
+            supply: BigInt(10),
           },
           amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
         },
@@ -70,7 +76,7 @@ describe("Asset balance", () => {
             name: asset2.name,
             decimals: asset2.decimals,
             brid: asset2.brid,
-            supply: BigInt("20" + "0".repeat(asset2.decimals)).toString(),
+            supply: BigInt("20" + "0".repeat(asset2.decimals)),
           },
           amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
         },
@@ -98,10 +104,10 @@ describe("Asset balance", () => {
         name: asset2.name,
         decimals: asset2.decimals,
         brid: asset2.brid,
-        supply: BigInt(70 + "0".repeat(asset2.decimals)).toString(),
+        supply: BigInt(70 + "0".repeat(asset2.decimals)),
       },
       amount: {
-        value: BigInt(50 + "0".repeat(asset2.decimals)).toString(),
+        value: BigInt(50 + "0".repeat(asset2.decimals)),
         decimals: asset2.decimals,
       },
     });
