@@ -51,7 +51,7 @@ if $docker; then
     docker rm ft4_rell_test > /dev/null
 fi
 
-if [ "${BASH_SOURCE[0]}" != "${0}" ]; then
+if [ "$$" -eq "$PPID" ]; then
     return $return_code
 else
     exit $return_code

@@ -69,7 +69,12 @@ exit_rell=$?
 if [ $exit_js -ne 0 -o $exit_rell -ne 0 ] ; then
     echo "\n======================================\n"
     echo "\e[0;31mTESTS FAILED\e[0m\n"
-    return 1 || exit 1;
+
+    if [ "$$" -eq "$PPID" ]; then
+        return 1
+    else
+        exit 1
+    fi
 fi
 
 echo "\n======================================\n"
