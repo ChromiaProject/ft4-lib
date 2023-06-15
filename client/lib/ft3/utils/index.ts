@@ -24,7 +24,6 @@ export async function getVersion(session: GtxClient): Promise<string> {
 
 type DeepReadonly<T> =
   T extends (infer R)[] ? DeepReadonlyArray<R> :
-  T extends Function ? T :
   T extends object ? DeepReadonlyObject<T> :
   T;
 
