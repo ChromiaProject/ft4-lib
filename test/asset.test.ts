@@ -2,6 +2,7 @@ import { generateAssetName, generateAssetSymbol } from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
+import { InvalidUrlError } from "../client/lib/ft3/asset/interfaces";
 
 let ft: ftUserSession;
 let connection: Connection;
@@ -52,5 +53,18 @@ describe("Asset", () => {
     expect(expectedAssets).toEqual(
       expect.arrayContaining([asset1, asset2, asset3])
     );
+  });
+
+  it("should successfully register with valid icon URL", async () => {
+    const validUrl = "https://example.com/icon.png";
+    const asset = await getNewAsset(ft, "Test Asset", "TST", 0, validUrl);
+    expect(asset).not.toBeNull();
+  });
+
+  it("should fail to register with invalid icon URL", async () => {
+    const invalidUrl = "not-a-valid-url";
+    await expect(
+      getNewAsset(ft, "Test Asset", "TST", 0, invalidUrl)
+    ).rejects.toThrow(InvalidUrlError);
   });
 });
