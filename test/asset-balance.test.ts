@@ -46,10 +46,12 @@ describe("Asset balance", () => {
     const balances = await foundAccount!.getBalances();
 
     expect(
-      balances.map((b) => ({
-        asset: b.asset,
-        amount: makeAmountBareBones(b.amount),
-      })).sort()
+      balances
+        .map((b) => ({
+          asset: b.asset,
+          amount: makeAmountBareBones(b.amount),
+        }))
+        .sort()
     ).toEqual(
       [
         {
@@ -58,7 +60,7 @@ describe("Asset balance", () => {
             name: asset1.name,
             decimals: asset1.decimals,
             brid: asset1.brid,
-            supply: BigInt(10),
+            supply: BigInt(10).toString(),
           },
           amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
         },
@@ -68,7 +70,7 @@ describe("Asset balance", () => {
             name: asset2.name,
             decimals: asset2.decimals,
             brid: asset2.brid,
-            supply: BigInt("20" + "0".repeat(asset2.decimals)),
+            supply: BigInt("20" + "0".repeat(asset2.decimals)).toString(),
           },
           amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
         },
@@ -96,10 +98,10 @@ describe("Asset balance", () => {
         name: asset2.name,
         decimals: asset2.decimals,
         brid: asset2.brid,
-        supply: BigInt(70 + "0".repeat(asset2.decimals)),
+        supply: BigInt(70 + "0".repeat(asset2.decimals)).toString(),
       },
       amount: {
-        value: BigInt(50 + "0".repeat(asset2.decimals)),
+        value: BigInt(50 + "0".repeat(asset2.decimals)).toString(),
         decimals: asset2.decimals,
       },
     });
