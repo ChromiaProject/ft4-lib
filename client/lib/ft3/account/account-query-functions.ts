@@ -21,7 +21,7 @@ import {
   _getBalancesByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection, PageCursor } from "../types";
+import { Connection, OptionalPageCursor } from "../types";
 import { formatter } from "postchain-client";
 import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
@@ -71,7 +71,7 @@ export async function getByIds(
   ids: BufferId[]
 ): Promise<Account[]> {
   const accounts = await Promise.all(ids.map((id) => getById(session, id)));
-  return <Account[]>accounts.filter((account) => account != null);
+  return accounts.filter((account) => account != null);
 }
 
 export async function getById(
@@ -91,12 +91,12 @@ async function createAccountObjectFromId(
   accountId: BufferId
 ): Promise<Account> {
   const id = formatter.ensureBuffer(accountId);
-  const [balances, authDescriptors] = await Promise.all([
-    getBalancesByAccountId(session, id),
+  const [{ items, retriever }, authDescriptors] = await Promise.all([
+    getBalancesByAccountId(session, id, 10),
     _getAuthDescriptors(createConnection(session), id),
   ]);
   return Object.freeze({
-    balances,
+    balances: { items, retriever },
     authDescriptors,
     id,
   });
@@ -167,7 +167,7 @@ export function createAccountObject(
     getTransferHistory: async (
       limit = 100,
       filter: PaymentHistoryFilter = {},
-      cursor: PageCursor | null = null
+      cursor: OptionalPageCursor = null
     ) => {
       return retriever.retrieve(limit, filter, cursor);
     },

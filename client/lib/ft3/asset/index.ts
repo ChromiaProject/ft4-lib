@@ -28,8 +28,8 @@ export const assetQuerySession = (pci: GtxClient) =>
     },
     balance: {
       by: {
-        accountId: (accountId: BufferId) =>
-          getBalancesByAccountId(pci, accountId),
+        accountId: (accountId: BufferId, amount: number) =>
+          getBalancesByAccountId(pci, accountId, amount),
         accountAndAssetId: (accountId: BufferId, assetId: BufferId) =>
           getBalance(pci, accountId, assetId),
       },

@@ -43,7 +43,7 @@ describe("Asset balance", () => {
       .build();
 
     const foundAccount = await connection.getAccountById(account.id);
-    const balances = (await foundAccount!.getBalances()).map((b) => ({
+    const balances = (await foundAccount.getBalances()).items.map((b) => ({
       asset: b.asset,
       amount: makeAmountBareBones(b.amount),
     }));
@@ -53,9 +53,11 @@ describe("Asset balance", () => {
       asset: {
         id: asset1.id,
         name: asset1.name,
+        symbol: asset1.symbol,
         decimals: asset1.decimals,
         brid: asset1.brid,
         supply: BigInt(10),
+        icon_url: "",
       },
       amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
     });
@@ -63,9 +65,11 @@ describe("Asset balance", () => {
       asset: {
         id: asset2.id,
         name: asset2.name,
+        symbol: asset2.symbol,
         decimals: asset2.decimals,
         brid: asset2.brid,
         supply: BigInt("20" + "0".repeat(asset2.decimals)),
+        icon_url: "",
       },
       amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
     });
@@ -99,4 +103,41 @@ describe("Asset balance", () => {
       },
     });
   });
+
+  it("paginates asset balances", async () => {
+    const asset1 = await getNewAsset(ft);
+    const asset2 = await getNewAsset(ft);
+    const asset3 = await getNewAsset(ft);
+    const asset4 = await getNewAsset(ft);
+    const asset5 = await getNewAsset(ft);
+    const asset6 = await getNewAsset(ft);
+    const asset7 = await getNewAsset(ft);
+    const asset8 = await getNewAsset(ft);
+    const asset9 = await getNewAsset(ft);
+    const asset10 = await getNewAsset(ft);
+    const asset11 = await getNewAsset(ft);
+    const account = await AccountBuilder.account(ft)
+      .withBalances([
+        { amount: 10, asset: asset1 },
+        { amount: 10, asset: asset2 },
+        { amount: 10, asset: asset3 },
+        { amount: 10, asset: asset4 },
+        { amount: 10, asset: asset5 },
+        { amount: 10, asset: asset6 },
+        { amount: 10, asset: asset7 },
+        { amount: 10, asset: asset8 },
+        { amount: 10, asset: asset9 },
+        { amount: 10, asset: asset10 },
+        { amount: 10, asset: asset11 },
+      ])
+      .build();
+
+    const foundAccount = await connection.getAccountById(account.id);
+    const balances = await foundAccount.getBalances();
+
+    expect(balances.items.length).toBe(10);
+
+    const next = await balances.retriever.next();
+    expect(next.length).toBe(1);
+  }, 50000);
 });

@@ -12,10 +12,11 @@ import { Authenticator } from "../authentication/interfaces";
 import { Amount } from "../asset/interfaces";
 import { PageCursor } from "../types";
 import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { PaginatedEntity } from "../utils/types";
 
 export type Account = {
   id: Buffer;
-  balances: Balance[];
+  balances: PaginatedEntity<Balance[]>;
   authDescriptors: AuthDescriptor[];
   //rateLimit: RateLimit;
 };
@@ -51,7 +52,7 @@ export type User = {
 export interface IAccount {
   id: BufferId;
   // TODO: Use Page<Balance> type instead
-  getBalances: () => Promise<Balance[]>;
+  getBalances: () => Promise<PaginatedEntity<Balance[]>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: () => Promise<AuthDescriptor[]>;

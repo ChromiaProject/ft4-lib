@@ -181,7 +181,6 @@ function test_register_asset_with_invalid_icon_url() {
         .run_must_fail("Invalid URL for icon");
 }
 
-
 function test_register_asset_with_valid_icon_url() {
     val valid_icon_url = "https://example.com/icon.png";
 
@@ -230,4 +229,57 @@ function test_register_asset_with_trimmed_icon_url() {
 
     val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, icon_url_with_spaces.trim());
+}
+
+struct gtv_asset {
+    id: byte_array;
+    name;
+    symbol: text;
+    decimals: integer;
+    brid: byte_array;
+    supply: big_integer;
+    icon_url: text;
+}
+
+function test_asset_balances_are_returned_in_correct_order() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice);
+    val asset1 = utils.create_asset("test1", "TST1", 0);
+    val asset2 = utils.create_asset("test2", "TST2", 0);
+    val asset3 = utils.create_asset("test3", "TST3", 0);
+    val asset4 = utils.create_asset("test4", "TST4", 0);
+    
+    admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.mint(alice.account.id, asset2.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
+    
+    val balances = ft3.core_ext.get_asset_balances(alice.account.id, 4, null).data;
+
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances[0])[0]).name, asset1.name);
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances[1])[0]).name, asset2.name);
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances[2])[0]).name, asset3.name);
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances[3])[0]).name, asset4.name);
+}
+
+function test_asset_balances_are_paginated() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice);
+    val asset1 = utils.create_asset("test1", "TST1", 0);
+    val asset2 = utils.create_asset("test2", "TST2", 0);
+    val asset3 = utils.create_asset("test3", "TST3", 0);
+    val asset4 = utils.create_asset("test4", "TST4", 0);
+    
+    admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.mint(alice.account.id, asset2.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
+    
+    val balances_p1 = ft3.core_ext.get_asset_balances(alice.account.id, 3, null);
+
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances_p1.data[0])[0]).name, asset1.name);
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances_p1.data[1])[0]).name, asset2.name);
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances_p1.data[2])[0]).name, asset3.name);
+
+    val balances_p2 = ft3.core_ext.get_asset_balances(alice.account.id, 3, balances_p1.next_cursor);
+
+    assert_equals(gtv_asset.from_gtv(list<gtv>.from_gtv(balances_p2.data[0])[0]).name, asset4.name);
 }

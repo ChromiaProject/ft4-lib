@@ -1,4 +1,5 @@
 import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { OptionalPageCursor } from "../types";
 
 export type Operation = [string, ...RawGtv[]];
 
@@ -36,3 +37,13 @@ export type QueryObject = {
 export function freeze<T>(object: T): T {
   return Object.freeze(object);
 }
+
+export type EntityRetreiver<T> = {
+  next_cursor: OptionalPageCursor;
+  next: () => Promise<T>;
+};
+
+export type PaginatedEntity<T> = {
+  items: T;
+  retriever: EntityRetreiver<T>;
+};

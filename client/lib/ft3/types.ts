@@ -14,10 +14,11 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { Config, QueryObject, Operation } from "./utils/types";
+import { QueryObject, Operation, PaginatedEntity, Config } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
 export type PageCursor = string;
+export type OptionalPageCursor = PageCursor | null;
 export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;
@@ -100,7 +101,11 @@ export interface ftQuerySession {
   };
   balance: {
     by: {
-      accountId: (accountid: BufferId) => Promise<Balance[]>;
+      accountId: (
+        accountid: BufferId,
+        amount: number,
+        page_cursor: OptionalPageCursor
+      ) => Promise<PaginatedEntity<Balance[]>>;
       accountAndAssetId: (
         accountid: BufferId,
         assetid: BufferId

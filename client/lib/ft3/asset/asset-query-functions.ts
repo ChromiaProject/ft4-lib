@@ -6,17 +6,17 @@ import {
   balanceQuery,
   assetByNameQuery,
   allAssetsQuery,
-  balancesByAccountId,
   balanceByAccountId,
   assetById,
   assetByName,
   allAssets,
 } from "./asset-queries";
-import { Asset, Balance, BalanceResponse } from "./types";
+import { Asset, Balance, BalanceResponse, BalanceResponseGtv } from "./types";
 import { formatter } from "postchain-client";
 import { Connection } from "../types";
-import { freeze } from "../utils/types";
+import { EntityRetreiver, PaginatedEntity, freeze } from "../utils/types";
 import { createAmountFromBalance } from "./amount";
+import { createEntityRetriever } from "../utils/entity-retreiver";
 
 export async function getAssetById(
   session: GtxClient,
@@ -43,12 +43,20 @@ export async function getAssetsByName(
 
 export async function getBalancesByAccountId(
   session: GtxClient,
-  accountId: BufferId
-): Promise<Balance[]> {
-  const balances = await session.query(
-    ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
+  accountId: BufferId,
+  amount: number
+): Promise<{ items: Balance[]; retriever: EntityRetreiver<Balance[]> }> {
+  const retriever = createEntityRetriever<
+    Balance[],
+    (BalanceResponse | BalanceResponseGtv)[]
+  >(
+    session,
+    balancesByAccountIdQuery(formatter.ensureBuffer(accountId)),
+    amount,
+    (balances) => balances.map(createBalanceObject)
   );
-  return balances.map(createBalanceObject);
+  const items = await retriever.next();
+  return { items, retriever };
 }
 
 export async function getBalance(
@@ -96,15 +104,37 @@ export async function _getBalanceByAccountId(
 export async function _getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId
-): Promise<Balance[]> {
-  return await connection
-    .query<BalanceResponse[]>(balancesByAccountId(accountId))
-    .then((balances) => balances.map(createBalanceObject));
+): Promise<PaginatedEntity<Balance[]>> {
+  const retriever = createEntityRetriever<Balance[]>(
+    connection.client,
+    balancesByAccountIdQuery(accountId),
+    10,
+    (balances) => balances.map(createBalanceObject)
+  );
+  const items = await retriever.next();
+  return { items, retriever };
 }
 
-function createBalanceObject(balance: BalanceResponse): Balance {
+function createBalanceObject(
+  balance: BalanceResponse | BalanceResponseGtv
+): Balance {
+  if (!Array.isArray(balance)) {
+    return {
+      asset: balance.asset,
+      amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
+    };
+  }
+
   return freeze({
-    asset: balance.asset,
-    amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
+    asset: {
+      id: balance[0][0],
+      name: balance[0][1],
+      symbol: balance[0][2],
+      decimals: balance[0][3],
+      brid: balance[0][4],
+      supply: balance[0][5],
+      icon_url: balance[0][6],
+    },
+    amount: createAmountFromBalance(balance[1], balance[0][3]),
   });
 }
