@@ -138,7 +138,7 @@ namespace Unsafe {
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
         require(
-            icon_url.matches('^(http|https):\\/\\/[^\\s$.?#].[^\\s]*$'),
+            (icon_url == "") or icon_url.matches('^(http|https):\\/\\/[^\\s$.?#].[^\\s]*$'),
             "Invalid URL for icon"
         );
 
