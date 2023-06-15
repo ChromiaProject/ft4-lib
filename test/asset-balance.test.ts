@@ -46,7 +46,7 @@ describe("Asset balance", () => {
     const balances = (await foundAccount!.getBalances()).map((b) => ({
       asset: b.asset,
       amount: makeAmountBareBones(b.amount),
-    }))
+    }));
 
     expect(balances).toHaveLength(2);
     expect(balances).toContainEqual({
@@ -58,7 +58,7 @@ describe("Asset balance", () => {
         supply: BigInt(10),
       },
       amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
-    })
+    });
     expect(balances).toContainEqual({
       asset: {
         id: asset2.id,

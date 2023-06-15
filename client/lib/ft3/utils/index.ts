@@ -15,11 +15,11 @@ export function op(
 }
 
 export async function getConfig(session: GtxClient): Promise<Config> {
-  return Object.freeze(await session.query("ft3.get_config"));
+  return Object.freeze(await session.query("ft4.get_config"));
 }
 
 export async function getVersion(session: GtxClient): Promise<string> {
-  return Object.freeze(await session.query("ft3.get_version"));
+  return Object.freeze(await session.query("ft4.get_version"));
 }
 
 type DeepReadonly<T> =
