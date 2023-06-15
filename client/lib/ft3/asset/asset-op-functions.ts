@@ -16,13 +16,15 @@ export async function registerAsset(
   name: string,
   symbol: string,
   decimals: number,
-  iconUrl: string
+  iconUrl?: string
 ): Promise<Buffer> {
   // Validate icon URL
-  try {
-    new URL(iconUrl);
-  } catch (_) {
-    throw new InvalidUrlError("Invalid URL for icon");
+  if (iconUrl?.trim()) {
+    try {
+      new URL(iconUrl);
+    } catch (_) {
+      throw new InvalidUrlError("Invalid URL for icon");
+    }
   }
 
   const tx = session.newTransaction([
