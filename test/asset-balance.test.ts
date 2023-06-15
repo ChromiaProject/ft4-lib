@@ -28,12 +28,6 @@ describe("Asset balance", () => {
     connection = createConnection(ft.get.gtxClient);
     asset1 = await getNewAsset(ft);
     asset2 = await getNewAsset(ft, undefined, undefined, 5);
-
-    // This is needed to make sure that BigInts are serialized as strings
-    expect.addSnapshotSerializer({
-      test: (val) => typeof val === "bigint",
-      print: (val) => val.toString() + "n",
-    });
   });
 
   beforeEach(() => {
