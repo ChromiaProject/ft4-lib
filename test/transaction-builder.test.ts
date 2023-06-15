@@ -70,10 +70,10 @@ describe("Transaction Builder", () => {
       .buildUnsigned();
 
     const expectedInput: any = [...input];
-    expectedInput[expectedInput.length - 1] = [];
+    expectedInput[expectedInput.length - 1] = {};
 
     const expectedOutput: any = [...output];
-    expectedOutput[expectedOutput.length - 1] = [];
+    expectedOutput[expectedOutput.length - 1] = {};
 
     expect(tx.gtx.operations).toStrictEqual([
       {
