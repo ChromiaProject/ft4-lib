@@ -108,7 +108,6 @@ describe("Asset amount", () => {
       createAmount("10000000000.1", 20),
     ];
 
-console.log("\n\n\n\n\n\n\n\n\n\n", amounts[0]);
     expect(
       amounts.map((num) => num.format(DecimalFormat.fixedDecimals, 4))
     ).toEqual([
@@ -134,7 +133,7 @@ console.log("\n\n\n\n\n\n\n\n\n\n", amounts[0]);
         num.format(DecimalFormat.fixedDecimals, 4, false, false)
       )
     ).toEqual([
-      "1234567890",
+      "1234567890.0",
       "12.1235",
       "1234567890.1235",
       "1.0000",

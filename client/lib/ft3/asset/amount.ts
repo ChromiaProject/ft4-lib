@@ -245,7 +245,7 @@ export function toScientific(
   digits: number,
   removeTrailingZeroes = false
 ) {
-  const formatted = Number(stringify(amount, removeTrailingZeroes)).toExponential(digits - 1);
+  const formatted = Number(stringify(amount, false)).toExponential(digits - 1);
   if (removeTrailingZeroes) return formatted.replace(/\.?0+e/, "e");
   else return formatted;
 }
@@ -256,23 +256,28 @@ export function toFixedDecimals(
   removeTrailingZeroes = false,
   groupDigits = true
 ) {
-  const s = stringify(amount, removeTrailingZeroes);
+  const s = stringify(amount, false);
   let [int, decimals] = s.split("."); //decimals may be undefined
   if (groupDigits) {
     int = int.replace(/(\d)(?=(\d{3})+$)/g, "$1 ");
   }
   if (decimals) {
-    decimals = decimals.substring(0, digits + 1).padEnd(digits + 1, "0");
+    decimals = decimals.substring(0, digits + 1);
 
-    if (Number(decimals.charAt(decimals.length - 1)) > 4) {
-      decimals = decimals.slice(0, -2) + (Number(decimals.slice(-2, -1)) + 1);
-    } else {
-      decimals = decimals.slice(0, -1);
+    if (decimals.length > digits) {
+      if (Number(decimals.charAt(decimals.length - 1)) > 4) {
+        decimals = decimals.slice(0, -2) + (Number(decimals.slice(-2, -1)) + 1);
+      } else {
+        decimals = decimals.slice(0, -1);
+      }
     }
+
     if (groupDigits) {
       decimals = decimals.replace(/(\d{3})/g, "$1 ").trimEnd();
     }
+
     const formatted = int + "." + decimals;
+
     if (removeTrailingZeroes) return formatted.replace(/\.?[0 ]*$/, "");
     else return formatted;
   } else return int; //never remove trailing zeroes
