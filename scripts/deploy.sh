@@ -1,10 +1,10 @@
 #!/bin/sh
-which="auto"
+which="latest"
 while :; do
     case $1 in
-        --manual)
-              echo 'Deploying to manual'
-              which="manual"
+        --stable)
+              echo 'Deploying to stable'
+              which="stable"
               ;;
         --)
             shift
