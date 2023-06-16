@@ -15,13 +15,13 @@ compile:
   target: ../rell/out
 
 deployments:
-  auto: #Deployment Target name
+  auto:
     url: https://node0.devnet1.chromia.dev:7740
     brid: x"162777934BD83E40EBE189B387C382F79CB83BCDE0FC32E9E8CB53B2934FF247"
     container: ft4autodeploy
     chains:
       ft_deploy: x"0CDAA9D097A636B878E2B72536F57C9740F317DD3CB4487F600B319C9D5D6034" #auto
-  manual: #Deployment Target name
+  manual:
     url: https://node0.devnet1.chromia.dev:7740
     brid: x"162777934BD83E40EBE189B387C382F79CB83BCDE0FC32E9E8CB53B2934FF247"
     container: ft4manualdeploy
