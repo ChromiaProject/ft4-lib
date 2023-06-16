@@ -31,6 +31,7 @@ pipelines:
             - apt install chr
             - echo -e $DEPLOYMENT_KEYS > .secret
             - npm run deploy
+            - rm .secret
 
 definitions: 
   services: 
