@@ -81,12 +81,12 @@ function create_auth_descriptor(participant_id: byte_array): acc.auth_descriptor
         rules = null.to_gtv());
 }
 
-function create_asset(name: text, symbol: text, decimals: integer) {
+function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "") {
     admin.register_asset(
         name,
         symbol,
         decimals,
-        icon_url=""
+        icon_url
     )
     .sign(byte_array(chain_context.args.admin_priv_key))
     .run();
