@@ -57,19 +57,19 @@ describe("Asset", () => {
 
   it("should successfully register with valid icon URL", async () => {
     const validUrl = "https://example.com/icon.png";
-    const asset = await getNewAsset(ft, "Test Asset", "TST", 0, validUrl);
+    const asset = await getNewAsset(ft, "Test Asset 1", "TST1", 0, validUrl);
     expect(asset).not.toBeNull();
   });
 
   it("should fail to register with invalid icon URL", async () => {
     const invalidUrl = "not-a-valid-url";
     await expect(
-      getNewAsset(ft, "Test Asset", "TST", 0, invalidUrl)
+      getNewAsset(ft, "Test Asset 2", "TST2", 0, invalidUrl)
     ).rejects.toThrow(InvalidUrlError);
   });
 
   it("should successfully register without providing icon URL", async () => {
-    const asset = await getNewAsset(ft, "Test Asset", "TST", 0);
+    const asset = await getNewAsset(ft, "Test Asset 3", "TST3", 0, "");
     expect(asset).not.toBeNull();
   });
 });
