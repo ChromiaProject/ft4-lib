@@ -202,3 +202,17 @@ function test_register_asset_with_valid_icon_url() {
     val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, valid_icon_url);
 }
+
+function test_register_asset_with_empty_icon_url() {
+    admin.register_asset(
+        "test",
+        "TST",
+        0,
+        ""
+    )
+    .sign(utils.admin_priv_key())
+    .run();
+
+    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    assert_equals(asset.icon_url, "");
+}

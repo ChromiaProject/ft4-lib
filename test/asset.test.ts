@@ -67,4 +67,9 @@ describe("Asset", () => {
       getNewAsset(ft, "Test Asset", "TST", 0, invalidUrl)
     ).rejects.toThrow(InvalidUrlError);
   });
+
+  it("should successfully register without providing icon URL", async () => {
+    const asset = await getNewAsset(ft, "Test Asset", "TST", 0);
+    expect(asset).not.toBeNull();
+  });
 });
