@@ -139,7 +139,7 @@ namespace Unsafe {
 
         val trimmed_icon_url = icon_url.trim();
         require(
-            (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 100 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
+            (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
             "Invalid URL for icon"
         );
 

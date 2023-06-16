@@ -214,7 +214,7 @@ function test_register_asset_with_ipfs_icon_url() {
 }
 
 function test_register_asset_with_long_icon_url() {
-    val long_icon_url = "a".repeat(101);
+    val long_icon_url = "a".repeat(2049);
 
     admin.register_asset("test", "TST", 0, long_icon_url)
         .sign(utils.admin_priv_key())
