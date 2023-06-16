@@ -18,7 +18,6 @@
     "stop-postchain:demo": "docker stop ft4_demo; docker rm ft4_demo",
     "stop-postchain:rell": "docker stop postchain; docker rm postchain",
     "start-postchain:demo": "./scripts/rundemo.sh",
-    "deploy": "./scripts/deploy.sh",
     "deploy:latest": "./scripts/deploy.sh",
     "deploy:stable": "./scripts/deploy.sh --stable",
     "start": "node index.js",

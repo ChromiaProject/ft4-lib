@@ -30,7 +30,7 @@ pipelines:
             - apt install default-jre -y
             - apt install chr
             - echo -e $DEPLOYMENT_KEYS > .secret
-            - npm run deploy
+            - npm run deploy:latest
             - rm .secret
 
 definitions: 
