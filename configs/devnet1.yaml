@@ -15,9 +15,15 @@ compile:
   target: ../rell/out
 
 deployments:
-  devnet1: #Deployment Target name
+  auto: #Deployment Target name
     url: https://node0.devnet1.chromia.dev:7740
     brid: x"43B6185404EA6CB51FC179748B78B2295A1B20F267826807F905B691FC4BD1D0"
-    container: ft
+    container: ft4autodeploy
     chains:
-      ft_deploy: x"700107A024E4EC1FAE17D4A8FCCEE797D90436735C8E51DCF82093D4FE046B70"
+      ft_deploy: x"7EA93222EF5B1E6E12E035BFE55E1AC285E85604D648F214FD61CE09CEFF7BC6" #auto
+  manual: #Deployment Target name
+    url: https://node0.devnet1.chromia.dev:7740
+    brid: x"43B6185404EA6CB51FC179748B78B2295A1B20F267826807F905B691FC4BD1D0"
+    container: ft4manualdeploy
+    chains:
+      ft_deploy: x"700107A024E4EC1FAE17D4A8FCCEE797D90436735C8E51DCF82093D4FE046B70" #manual
