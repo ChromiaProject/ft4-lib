@@ -9,6 +9,15 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 
 //-------------------ADMIN OPERATIONS-------------------//
 
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function registerAsset(
   user: User,
   adminUser: User,
@@ -18,13 +27,8 @@ export async function registerAsset(
   decimals: number,
   iconUrl?: string
 ): Promise<Buffer> {
-  // Validate icon URL
-  if (iconUrl?.trim()) {
-    try {
-      new URL(iconUrl);
-    } catch (_) {
-      throw new InvalidUrlError("Invalid URL for icon");
-    }
+  if (iconUrl?.trim() && !isValidUrl(iconUrl)) {
+    throw new InvalidUrlError("Invalid URL for icon");
   }
 
   const tx = session.newTransaction([
