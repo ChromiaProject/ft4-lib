@@ -10,8 +10,8 @@ forceexit(){
 exitfn () {
     trap "forceexit" 2
     echo; echo 'Stopping docker, hit Ctrl+C to force quit'
-    $DOCKER stop postchain  > /dev/null 
-    $DOCKER rm postchain > /dev/null
+    $DOCKER stop ft4_rell_test  > /dev/null 
+    $DOCKER rm ft4_rell_test > /dev/null
     exit 2
 }
 

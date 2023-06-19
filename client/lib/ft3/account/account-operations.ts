@@ -32,8 +32,8 @@ export function burnOp(assetId: BufferId, amount: Amount): Operation {
 }
 
 export function xcTransferOp /*
-  source: GtvCompatible,
-  target: GtvCompatible,
+  source: RawGtv,
+  target: RawGtv,
   hops: Array<Buffer>*/(): Operation {
   throw new Error("Not implemented!");
   //return op("ft4.xc.init_xfer", source, target, hops);
