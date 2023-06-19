@@ -38,7 +38,7 @@ export function createPaymentHistoryRetriever(
     },
     retrieveSingle: async (rowid: number) => {
       return createPaymentHistoryEntryFromResponse(
-        await session.query("ft4.get_single_payment_history_entry", { rowid })
+        await session.query("ft4.get_transfer_history_entry", { rowid })
       );
     },
     brid: session.newTransaction([]).gtx.blockchainRID.toString("hex"),
