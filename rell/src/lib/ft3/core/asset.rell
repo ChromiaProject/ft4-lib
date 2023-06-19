@@ -37,11 +37,7 @@ function register_asset(name, symbol: text, decimals: integer, issuing_brid: byt
 }
 
 function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?) {
-    var before_rowid: rowid? = null;
-    if (page_cursor??) {
-        val cursor = utils.decode_cursor(page_cursor);
-        before_rowid = cursor.before_rowid;
-    }
+    val before_rowid = utils.before_rowid(page_cursor);
     val user_balances = balance @* { .account.id == account_id };
     return user_balances @* { .rowid > before_rowid ?: rowid(0) } (
         @omit @sort .rowid,

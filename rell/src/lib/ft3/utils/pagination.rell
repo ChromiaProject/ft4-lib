@@ -29,6 +29,15 @@ function null_page() = paged_result(
 
 function fetch_data_size(page_size: integer) = min(MAX_PAGE_SIZE, page_size) + 1;
 
+function before_rowid(page_cursor: text?) {
+    var before_rowid: rowid? = null;
+    if (page_cursor??) {
+        val cursor = decode_cursor(page_cursor);
+        before_rowid = cursor.before_rowid;
+    }
+    return before_rowid;
+}
+
 
 function make_page(pagination_results: list<pagination_result>, page_size: integer): paged_result {
     require(page_size > 0, "Must return at least one item");
