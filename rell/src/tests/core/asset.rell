@@ -176,43 +176,58 @@ function test_after_burn_extensions_are_called() {
 function test_register_asset_with_invalid_icon_url() {
     val invalid_icon_url = "invalidurl";
 
-    admin.register_asset(
-        "test",
-        "TST",
-        0,
-        invalid_icon_url
-    )
-    .sign(utils.admin_priv_key())
-    .run_must_fail("Invalid URL for icon");
+    admin.register_asset("test", "TST", 0, invalid_icon_url)
+        .sign(utils.admin_priv_key())
+        .run_must_fail("Invalid URL for icon");
 }
 
 
 function test_register_asset_with_valid_icon_url() {
     val valid_icon_url = "https://example.com/icon.png";
 
-    admin.register_asset(
-        "test",
-        "TST",
-        0,
-        valid_icon_url
-    )
-    .sign(utils.admin_priv_key())
-    .run();
+    admin.register_asset("test", "TST", 0, valid_icon_url)
+        .sign(utils.admin_priv_key())
+        .run();
 
     val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, valid_icon_url);
 }
 
 function test_register_asset_with_empty_icon_url() {
-    admin.register_asset(
-        "test",
-        "TST",
-        0,
-        ""
-    )
-    .sign(utils.admin_priv_key())
-    .run();
+    admin.register_asset("test", "TST", 0, "")
+        .sign(utils.admin_priv_key())
+        .run();
 
     val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, "");
+}
+
+function test_register_asset_with_ipfs_icon_url() {
+    val ipfs_icon_url = "ipfs://example/ipfs/QmTtqW4D6dbnar8UX2sbgHNszxzKN7xX1gJGU1MzCX1TvY";
+
+    admin.register_asset("test", "TST", 0, ipfs_icon_url)
+        .sign(utils.admin_priv_key())
+        .run();
+
+    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    assert_equals(asset.icon_url, ipfs_icon_url);
+}
+
+function test_register_asset_with_long_icon_url() {
+    val long_icon_url = "a".repeat(2049);
+
+    admin.register_asset("test", "TST", 0, long_icon_url)
+        .sign(utils.admin_priv_key())
+        .run_must_fail("Invalid URL for icon");
+}
+
+function test_register_asset_with_trimmed_icon_url() {
+    val icon_url_with_spaces = "   https://example.com/icon.png   ";
+
+    admin.register_asset("test", "TST", 0, icon_url_with_spaces)
+        .sign(utils.admin_priv_key())
+        .run();
+
+    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    assert_equals(asset.icon_url, icon_url_with_spaces.trim());
 }

@@ -137,8 +137,9 @@ namespace Unsafe {
         icon_url: text): asset {
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
+        val trimmed_icon_url = icon_url.trim();
         require(
-            (icon_url == "") or icon_url.matches('^(http|https):\\/\\/[^\\s$.?#].[^\\s]*$'),
+            (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
             "Invalid URL for icon"
         );
 
@@ -149,7 +150,7 @@ namespace Unsafe {
             symbol,
             decimals,
             issuing_brid=chain_context.blockchain_rid,
-            icon_url,
+            icon_url=trimmed_icon_url,
             total_supply=0L
         );
     }
