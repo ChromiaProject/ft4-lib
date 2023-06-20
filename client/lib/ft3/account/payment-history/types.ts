@@ -6,20 +6,20 @@ export type PaymentHistoryTransferArgs = {
   accountId: Buffer;
 };
 
-export type PaymentHistoryEntryResponse = [
-  id: string,
-  delta: bigint,
-  decimals: number,
-  asset: string,
-  asset_id: Buffer,
-  is_input: number,
-  timestamp: number,
-  block_height: number,
-  entry_index: number,
-  transfer_args: string,
-  tx_rid: Buffer,
-  tx_data: string
-];
+export type PaymentHistoryEntryResponse = {
+  id: string;
+  delta: bigint;
+  decimals: number;
+  asset: string;
+  asset_id: Buffer;
+  is_input: number;
+  timestamp: number;
+  block_height: number;
+  entry_index: number;
+  transfer_args: string;
+  tx_rid: Buffer;
+  tx_data: string;
+};
 
 export type PaymentHistoryEntry = {
   rowid: string;

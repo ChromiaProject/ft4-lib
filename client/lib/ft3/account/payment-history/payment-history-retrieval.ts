@@ -25,7 +25,7 @@ export function createPaymentHistoryRetriever(
       if (amount > 100)
         throw new PaymentHistoryError("amount needs to be <= 100");
 
-      const res = await session.query("ft4.get_payment_history_paginated", {
+      const res = await session.query("ft4.get_transfer_history", {
         account_id: id,
         filter: [filter?.paymentHistoryType],
         page_size: amount,
@@ -38,7 +38,7 @@ export function createPaymentHistoryRetriever(
     },
     retrieveSingle: async (rowid: number) => {
       return createPaymentHistoryEntryFromResponse(
-        await session.query("ft4.get_single_payment_history_entry", { rowid })
+        await session.query("ft4.get_transfer_history_entry", { rowid })
       );
     },
     brid: session.newTransaction([]).gtx.blockchainRID.toString("hex"),
