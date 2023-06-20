@@ -32,3 +32,10 @@ BRID=$( echo y | chr deployment create -d $which -bc ft_deploy -s configs/devnet
 echo "new brid: $BRID"
 
 sed -E -i 's/#'$which'/chains:\n      ft_deploy: x"'$BRID'" #'$which'/' configs/devnet1.yaml
+
+curl -X POST https://chromadev.zulipchat.com/api/v1/messages \
+    -u $BOT_EMAIL_ADDRESS:$BOT_API_KEY \
+    --data-urlencode type=stream \
+    --data-urlencode 'to="Chromia Wallet"' \
+    --data-urlencode 'topic=deploy bot' \
+    --data-urlencode "content=New $which release! BRID: \`$BRID\`"

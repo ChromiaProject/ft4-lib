@@ -33,9 +33,10 @@ pipelines:
             - echo -e $DEPLOYMENT_KEYS > .secret
             - npm run deploy:latest
             - rm .secret
+  custom:
+    deploy-to-stable:
       - step:
           name: deploy:stable
-          trigger: manual
           script:
             - apt update
             - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
