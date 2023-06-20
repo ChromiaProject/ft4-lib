@@ -32,6 +32,7 @@ import {
 } from "./auth-descriptor/types";
 import { mapAuthDescriptors } from "./auth-descriptor";
 import { createConnection } from "../ft-session";
+import { createAuthDescriptorRetriever } from "./auth-descriptor/auth-descriptor-retrieval";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -152,7 +153,14 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
-  const retriever = createPaymentHistoryRetriever(connection.client, accountId);
+  const payment_history_retriever = createPaymentHistoryRetriever(
+    connection.client,
+    accountId
+  );
+  const auth_descriptors_retriever = createAuthDescriptorRetriever(
+    connection.client,
+    accountId
+  );
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -161,6 +169,10 @@ export function createAccountObject(
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
+    getAuthDescriptorsPaginated: async (
+      limit = 100,
+      cursor: OptionalPageCursor = null
+    ) => auth_descriptors_retriever.retrieve(limit, cursor),
     getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
       getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => getRateLimit(connection.client, accountId),
@@ -169,10 +181,10 @@ export function createAccountObject(
       filter: PaymentHistoryFilter = {},
       cursor: OptionalPageCursor = null
     ) => {
-      return retriever.retrieve(limit, filter, cursor);
+      return payment_history_retriever.retrieve(limit, filter, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) =>
-      retriever.retrieveSingle(rowid),
+      payment_history_retriever.retrieveSingle(rowid),
   });
 }
 

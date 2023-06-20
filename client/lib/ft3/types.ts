@@ -19,6 +19,10 @@ import { TransactionBuilder } from "./utils/transaction-builder";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
+export type PagedResponse<T> = {
+  data: T[];
+  nextCursor: PageCursor | null;
+};
 export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;

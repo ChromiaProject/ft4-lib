@@ -101,3 +101,14 @@ export function accountAuthDescriptorsByParticipantId(
     },
   };
 }
+
+export function accountAuthDescriptorsPaginated(
+  accountId: BufferId
+): QueryObject {
+  return {
+    name: "ft4.get_account_auth_descriptors_paginated",
+    args: {
+      id: formatter.ensureBuffer(accountId),
+    },
+  };
+}
