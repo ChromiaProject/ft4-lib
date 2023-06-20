@@ -38,6 +38,8 @@ function authenticate(required_flags: set<text>, message_template: text? = null)
         else -> null;
     };
 
+    rate_limit(account);
+
     return require(account, "Invalid auth operation: %s".format(previous_op.name));
 }
 
