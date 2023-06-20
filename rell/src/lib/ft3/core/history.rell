@@ -16,7 +16,7 @@ function extract_data_from_payment_history_list(
         entries: list<payment_history_entry>
     ): list<(data:gtv,rowid:rowid)> {
     return entries @* {} (
-        data = extract_data_from_payment_history_entry($).to_gtv(),
+        data = extract_data_from_payment_history_entry($).to_gtv_pretty(),
         rowid = .rowid
     );
 }

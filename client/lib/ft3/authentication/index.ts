@@ -111,13 +111,13 @@ export function authDataQuery(operation: Operation): QueryObject {
 }
 
 export const defaultFTAuthData: QueryObject = {
-  name: `ft3.default_auth_data`,
+  name: `ft4.default_auth_data`,
   args: {},
 };
 
 export function nonce(authDescriptorId: BufferId): QueryObject {
   return {
-    name: "ft3.get_ctr_for_auth_descriptor",
+    name: "ft4.get_ctr_for_auth_descriptor",
     args: {
       auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
     },

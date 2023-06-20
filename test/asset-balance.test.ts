@@ -43,37 +43,32 @@ describe("Asset balance", () => {
       .build();
 
     const foundAccount = await connection.getAccountById(account.id);
-    const balances = await foundAccount!.getBalances();
+    const balances = (await foundAccount!.getBalances()).map((b) => ({
+      asset: b.asset,
+      amount: makeAmountBareBones(b.amount),
+    }));
 
-    expect(
-      balances.map((b) => ({
-        asset: b.asset,
-        amount: makeAmountBareBones(b.amount),
-      }))
-    ).toEqual(
-      [
-        {
-          asset: {
-            id: asset1.id,
-            name: asset1.name,
-            decimals: asset1.decimals,
-            brid: asset1.brid,
-            supply: BigInt(10),
-          },
-          amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
-        },
-        {
-          asset: {
-            id: asset2.id,
-            name: asset2.name,
-            decimals: asset2.decimals,
-            brid: asset2.brid,
-            supply: BigInt("20" + "0".repeat(asset2.decimals)),
-          },
-          amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
-        },
-      ].sort()
-    );
+    expect(balances).toHaveLength(2);
+    expect(balances).toContainEqual({
+      asset: {
+        id: asset1.id,
+        name: asset1.name,
+        decimals: asset1.decimals,
+        brid: asset1.brid,
+        supply: BigInt(10),
+      },
+      amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
+    });
+    expect(balances).toContainEqual({
+      asset: {
+        id: asset2.id,
+        name: asset2.name,
+        decimals: asset2.decimals,
+        brid: asset2.brid,
+        supply: BigInt("20" + "0".repeat(asset2.decimals)),
+      },
+      amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
+    });
   });
 
   it("should return balance for specific asset", async () => {

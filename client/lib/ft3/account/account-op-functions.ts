@@ -28,7 +28,6 @@ import {
 import { BufferId, KeyPair } from "../../cryptoUtils";
 import { formatter } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
-import { GtvCompatible } from "../utils/gtv";
 import { Amount } from "../asset/interfaces";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
@@ -37,6 +36,7 @@ import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-mem
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/interfaces";
 import { call } from "../ft-session";
+import { RawGtv } from "postchain-client/built/src/gtv/types";
 
 export async function ssoRawTransactionRegister(
   newAuthDesc: AuthDescriptor,
@@ -148,7 +148,7 @@ export async function transfer(
   assetId: BufferId,
   amount: Amount,
   tb: LegacyTransactionBuilder,
-  extra?: { [key: string]: GtvCompatible }
+  extra?: { [key: string]: RawGtv }
 ): Promise<void> {
   //if we want to check that amount has the correct decimals, do it here
   const input: XferInput = [

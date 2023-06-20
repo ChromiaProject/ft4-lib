@@ -35,7 +35,7 @@ describe("Transaction Builder", () => {
 
     keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(ad);
     const authDataService = createFakeAuthDataService({
-      ["ft3.transfer"]: { flags: [FlagsType.Transfer], message: "" },
+      ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
       ["ft4.admin.register_account"]: {
         flags: [FlagsType.Account],
         message: "",
@@ -70,17 +70,17 @@ describe("Transaction Builder", () => {
       .buildUnsigned();
 
     const expectedInput: any = [...input];
-    expectedInput[expectedInput.length - 1] = [];
+    expectedInput[expectedInput.length - 1] = {};
 
     const expectedOutput: any = [...output];
-    expectedOutput[expectedOutput.length - 1] = [];
+    expectedOutput[expectedOutput.length - 1] = {};
 
     expect(tx.gtx.operations).toStrictEqual([
       {
         opName: "ft.ft_auth",
         args: [authenticator.accountId, authDescriptor.id],
       },
-      { opName: "ft3.transfer", args: [[expectedInput], [expectedOutput]] },
+      { opName: "ft4.transfer", args: [[expectedInput], [expectedOutput]] },
     ]);
   });
 

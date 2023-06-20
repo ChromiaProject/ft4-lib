@@ -13,7 +13,7 @@ export function addAuthDescriptorOp(
   authDescriptor: AuthDescriptor
 ): Operation {
   return op(
-    "ft3.add_auth_descriptor",
+    "ft4.add_auth_descriptor",
     accountId,
     authDescriptorId,
     authDesc.toGtv(authDescriptor)
@@ -24,19 +24,19 @@ export function transferOp(
   inputs: XferInput[],
   outputs: XferOutput[]
 ): Operation {
-  return op("ft3.transfer", inputs, outputs);
+  return op("ft4.transfer", inputs, outputs);
 }
 
 export function burnOp(assetId: BufferId, amount: Amount): Operation {
-  return op("ft3.burn", formatter.ensureBuffer(assetId), Number(amount));
+  return op("ft4.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
 
 export function xcTransferOp /*
-  source: GtvCompatible,
-  target: GtvCompatible,
+  source: RawGtv,
+  target: RawGtv,
   hops: Array<Buffer>*/(): Operation {
   throw new Error("Not implemented!");
-  //return op("ft3.xc.init_xfer", source, target, hops);
+  //return op("ft4.xc.init_xfer", source, target, hops);
 }
 
 export function deleteAllAuthDescriptorsExcludeOp(
@@ -44,7 +44,7 @@ export function deleteAllAuthDescriptorsExcludeOp(
   excludeAuthDescriptorId: Buffer
 ): Operation {
   return op(
-    "ft3.delete_all_auth_descriptors_exclude",
+    "ft4.delete_all_auth_descriptors_exclude",
     accountId,
     excludeAuthDescriptorId
   );
@@ -56,7 +56,7 @@ export function deleteAuthDescriptorOp(
   deleteAuthDescriptorId: Buffer
 ): Operation {
   return op(
-    "ft3.delete_auth_descriptor",
+    "ft4.delete_auth_descriptor",
     accountId,
     authDescriptorId,
     deleteAuthDescriptorId
@@ -69,7 +69,7 @@ export function transferV2(
   amount: Amount
 ) {
   return op(
-    "ft3.transfer_one",
+    "ft4.transfer_one",
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),
     amount.value
@@ -77,12 +77,12 @@ export function transferV2(
 }
 
 export function addAuthDescriptorV2(authDescriptor: AuthDescriptor): Operation {
-  return op("ft3.add_auth_descriptor_v2", authDesc.toGtv(authDescriptor));
+  return op("ft4.add_auth_descriptor_v2", authDesc.toGtv(authDescriptor));
 }
 
 export function deleteAuthDescriptorV2(authDescriptorId: BufferId): Operation {
   return op(
-    "ft3.delete_auth_descriptor_v2",
+    "ft4.delete_auth_descriptor_v2",
     formatter.ensureBuffer(authDescriptorId)
   );
 }
