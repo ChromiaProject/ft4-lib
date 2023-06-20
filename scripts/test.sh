@@ -67,5 +67,16 @@ npm run test:rell -- $nodocker
 exit_rell=$?
 
 if [ $exit_js -ne 0 -o $exit_rell -ne 0 ] ; then
-    return 1 || exit 1;
+    echo "\n======================================\n"
+    echo "\e[0;31mTESTS FAILED\e[0m\n"
+
+    # If we're in interactive mode, return 1, otherwise exit 1
+    if echo "$-" | grep -q "i"; then
+        return 1
+    else
+        exit 1
+    fi
 fi
+
+echo "\n======================================\n"
+echo "\e[0;32mTESTS SUCCEEDED\e[0m\n"

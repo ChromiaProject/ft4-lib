@@ -55,25 +55,24 @@ export function getTransferArgs(
 
 export function createPaymentHistoryEntryFromResponse(
   responseEntry: PaymentHistoryEntryResponse
-  //brid: BufferId
 ): PaymentHistoryEntry {
-  const [
-    rowid,
+  const {
+    id: rowId,
     delta,
     decimals,
-    asset_name,
-    asset_id,
-    is_input,
+    asset: assetName,
+    asset_id: assetId,
+    is_input: isInput,
     timestamp,
-    block_height,
-    entry_index,
-    transfer_args,
-    tx_rid,
-    tx_data,
-  ] = responseEntry;
+    block_height: blockHeight,
+    entry_index: entryIndex,
+    transfer_args: transferArgs,
+    tx_rid: txRid,
+    tx_data: txData,
+  } = responseEntry;
 
   const args = (<[bigint, string][][]>(
-    gtv.decode(Buffer.from(transfer_args, "hex"))
+    gtv.decode(Buffer.from(transferArgs, "hex"))
   )).map((list) =>
     list.map((a) => ({
       amount: a[0],
@@ -82,19 +81,18 @@ export function createPaymentHistoryEntryFromResponse(
   );
 
   return createPaymentHistoryEntry(
-    rowid,
-    is_input === 1,
+    rowId,
+    isInput === 1,
     delta,
     decimals,
-    asset_name,
-    asset_id,
-    entry_index,
-    tx_data,
+    assetName,
+    assetId,
+    entryIndex,
+    txData,
     args,
     new Date(timestamp),
-    tx_rid,
-    block_height
-    //brid
+    txRid,
+    blockHeight
   );
 }
 

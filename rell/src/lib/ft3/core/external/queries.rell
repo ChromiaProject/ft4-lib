@@ -69,19 +69,19 @@ query get_all_assets() {
     );
 }
 
-query get_payment_history_paginated(account_id: byte_array, filter: core.filter, page_size: integer, page_cursor: text?) {
+query get_transfer_history(account_id: byte_array, filter: core.filter, page_size: integer, page_cursor: text?) {
     val account = acc.account @? { account_id };
     if (empty(account)) return null;
 
-    val paginated_payments = core.get_paginated_payments(account, filter, page_size, page_cursor);
-    return core.make_page(paginated_payments, page_size);
+    val paginated_transfers = core.get_paginated_payments(account, filter, page_size, page_cursor);
+    return core.make_page(paginated_transfers, page_size);
 }
 
 query get_payment_history_size(account_id: byte_array) {
     return core.payment_history_entry @* { acc.account @ {account_id} } ($).size();
 }
 
-query get_single_payment_history_entry(rowid) {
+query get_transfer_history_entry(rowid) {
     val entry = core.payment_history_entry @? { .rowid == rowid };
-    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry).to_gtv();
+    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry);
 }

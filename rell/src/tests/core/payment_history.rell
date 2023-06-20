@@ -42,8 +42,8 @@ function test_history() {
 
     val filter = core.filter(null);
     val start_cursor = core.encode_cursor(core.page_cursor());
-    val response_small = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 10, start_cursor);
-    val response_big = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 110, start_cursor);
+    val response_small = ft3.core_ext.get_transfer_history(alice.account.id, filter, 10, start_cursor);
+    val response_big = ft3.core_ext.get_transfer_history(alice.account.id, filter, 110, start_cursor);
     val expected_data = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -61,7 +61,7 @@ function test_history() {
     assert_true(response_big!!.data.size() == 2);
 }
 
-function test_history_pagination() {
+function test_transfer_history() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
@@ -95,7 +95,7 @@ function test_history_pagination() {
         .run();
     
     val filter = core.filter(null);
-    var response = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 2, core.encode_cursor(core.page_cursor()));
+    var response = ft3.core_ext.get_transfer_history(alice.account.id, filter, 2, core.encode_cursor(core.page_cursor()));
     var expected_result = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -110,10 +110,12 @@ function test_history_pagination() {
     
     assert_true(expected_result.size() == 2);
     assert_equals(response, expected);
-    //vvv entry index, checks if they're ordered LIFO vvv
-    assert_equals(list<gtv>.from_gtv(expected_data[0])[8], (2).to_gtv());
 
-    response = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 2, next_cursor);
+    //vvv entry index, checks if they're ordered LIFO vvv
+    val entry_index1 = map<text, gtv>.from_gtv(expected_data[0])['entry_index'];
+    assert_equals(entry_index1, (2).to_gtv());
+
+    response = ft3.core_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
     expected_result = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -127,10 +129,14 @@ function test_history_pagination() {
     );
     assert_equals(expected_result.size(), 2);
     assert_equals(response, expected);
-    assert_equals(list<gtv>.from_gtv(expected_data[0])[8], (0).to_gtv());
-    assert_equals(list<gtv>.from_gtv(expected_data[1])[8], (0).to_gtv());
 
-    response = ft3.core_ext.get_payment_history_paginated(alice.account.id, filter, 2, next_cursor);
+    val entry_index2 = map<text, gtv>.from_gtv(expected_data[0])['entry_index'];
+    assert_equals(entry_index2, (0).to_gtv());
+
+    val entry_index3 = map<text, gtv>.from_gtv(expected_data[1])['entry_index'];
+    assert_equals(entry_index3, (0).to_gtv());
+
+    response = ft3.core_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
     expected_result = core.extract_data_from_payment_history_list(
             core.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -179,13 +185,13 @@ function test_history_filtering() {
         .run();
 
     val cursor = core.encode_cursor(core.page_cursor());
-    assert_equals(ft3.core_ext.get_payment_history_paginated(alice.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 1);
-    assert_equals(ft3.core_ext.get_payment_history_paginated(alice.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
-    assert_equals(ft3.core_ext.get_payment_history_paginated(bob.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 0);
-    assert_equals(ft3.core_ext.get_payment_history_paginated(bob.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft3.core_ext.get_transfer_history(alice.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft3.core_ext.get_transfer_history(alice.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft3.core_ext.get_transfer_history(bob.account.id, core.filter(core.transfer_type.sent), 10, cursor)!!.data.size(), 0);
+    assert_equals(ft3.core_ext.get_transfer_history(bob.account.id, core.filter(core.transfer_type.received), 10, cursor)!!.data.size(), 1);
 }
 
-function test_single_payment_history_entry() {
+function test_transfer_history_entry() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
@@ -219,7 +225,7 @@ function test_single_payment_history_entry() {
     
     val entry = core.payment_history_entry @* {}[0];
     assert_equals(
-        ft3.core_ext.get_single_payment_history_entry(entry.rowid),
+        ft3.core_ext.get_transfer_history_entry(entry.rowid),
         (
             id = '%d'.format(entry.rowid),
             delta = entry.delta,
@@ -233,6 +239,6 @@ function test_single_payment_history_entry() {
             transfer_args = entry.transfer_args,
             tx_rid = entry.transaction.tx_rid,
             tx_data = entry.transaction.tx_data
-        ).to_gtv()
+        )
     );
 }
