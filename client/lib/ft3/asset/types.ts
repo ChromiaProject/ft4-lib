@@ -7,7 +7,7 @@ export type Asset = {
   decimals: number;
   brid: Buffer;
   supply: bigint;
-  icon_url: string;
+  iconUrl: string;
 };
 
 export type Balance = {
@@ -19,20 +19,6 @@ export type BalanceResponse = {
   asset: Asset;
   amount: bigint;
 };
-
-export type BalanceResponseGtv = [
-  asset: [
-    assetId: Buffer,
-    name: string,
-    symbol: string,
-    decimals: number,
-    brid: Buffer,
-    balance: bigint,
-    icon_url: string
-  ],
-  amount: bigint,
-  rowid: number
-];
 
 export enum DecimalFormat {
   scientific = "S",

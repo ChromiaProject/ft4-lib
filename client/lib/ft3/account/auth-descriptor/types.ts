@@ -49,7 +49,7 @@ export type AuthDescriptorArgs =
   | MultiSigAuthDescriptorArgs;
 
 export type RawAuthDescriptor = {
-  type: string;
+  auth_type: string;
   args: AuthDescriptorArgs;
   rules: AuthDescriptorRule | null;
 };

@@ -70,17 +70,26 @@ export function balanceByAccountId(
   };
 }
 
-export function balancesByAccountId(
-  accountId: BufferId,
-  amount: number,
-  page_cursor: OptionalPageCursor = null
-): QueryObject {
+export function balancesByAccountId(accountId: BufferId): QueryObject {
   return {
     name: "ft4.get_asset_balances",
     args: {
       account_id: formatter.ensureBuffer(accountId),
-      page_size: amount,
-      page_cursor,
+    },
+  };
+}
+
+export function balancesByAccountIdPaginated(
+  accountId: BufferId,
+  limit = 100,
+  cursor: OptionalPageCursor = null
+): QueryObject {
+  return {
+    name: "ft4.get_asset_balances_paginated",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

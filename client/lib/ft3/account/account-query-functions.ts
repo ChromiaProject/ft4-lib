@@ -11,6 +11,7 @@ import {
   isAuthDescriptorValidQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
+  accountAuthDescriptorsPaginated,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -19,6 +20,7 @@ import { getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
   _getBalancesByAccountId,
+  createBalanceObject,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { Connection, OptionalPageCursor } from "../types";
@@ -29,10 +31,12 @@ import {
   GtvAuthDescriptor,
   AuthDescriptor,
   RawAuthDescriptor,
-} from "./auth-descriptor/types";
-import { mapAuthDescriptors } from "./auth-descriptor";
+  mapAuthDescriptors,
+} from "./auth-descriptor";
 import { createConnection } from "../ft-session";
-import { createAuthDescriptorRetriever } from "./auth-descriptor/auth-descriptor-retrieval";
+import { createEntityRetriever } from "../utils/entity-retriever";
+import { Balance, BalanceResponse } from "../asset/types";
+import { balancesByAccountIdPaginated } from "../asset/asset-queries";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -72,7 +76,7 @@ export async function getByIds(
   ids: BufferId[]
 ): Promise<Account[]> {
   const accounts = await Promise.all(ids.map((id) => getById(session, id)));
-  return accounts.filter((account) => account != null);
+  return accounts.filter((account): account is Account => account != null);
 }
 
 export async function getById(
@@ -92,12 +96,12 @@ async function createAccountObjectFromId(
   accountId: BufferId
 ): Promise<Account> {
   const id = formatter.ensureBuffer(accountId);
-  const [{ items, retriever }, authDescriptors] = await Promise.all([
-    getBalancesByAccountId(session, id, 10),
+  const [balances, authDescriptors] = await Promise.all([
+    getBalancesByAccountId(session, id),
     _getAuthDescriptors(createConnection(session), id),
   ]);
   return Object.freeze({
-    balances: { items, retriever },
+    balances,
     authDescriptors,
     id,
   });
@@ -157,22 +161,36 @@ export function createAccountObject(
     connection.client,
     accountId
   );
-  const auth_descriptors_retriever = createAuthDescriptorRetriever(
-    connection.client,
-    accountId
-  );
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
     getBalances: () => _getBalancesByAccountId(connection, accountId),
+    getBalancesPaginated: (limit = 100, cursor: OptionalPageCursor = null) => {
+      const retriever = createEntityRetriever<Balance, BalanceResponse>(
+        connection,
+        balancesByAccountIdPaginated(accountId, limit, cursor),
+        (balances) => balances.map(createBalanceObject)
+      );
+      return retriever.retrieve(limit, cursor);
+    },
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
     getAuthDescriptorsPaginated: async (
       limit = 100,
       cursor: OptionalPageCursor = null
-    ) => auth_descriptors_retriever.retrieve(limit, cursor),
+    ) => {
+      const retriever = createEntityRetriever<
+        AuthDescriptor,
+        RawAuthDescriptor
+      >(
+        connection,
+        accountAuthDescriptorsPaginated(accountId, limit, cursor),
+        mapAuthDescriptors
+      );
+      return retriever.retrieve(limit, cursor);
+    },
     getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
       getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => getRateLimit(connection.client, accountId),

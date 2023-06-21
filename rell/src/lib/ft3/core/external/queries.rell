@@ -11,10 +11,13 @@ query get_config() {
     );
 }
 
-query get_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?) {
+query get_asset_balances(account_id: byte_array) {
+    return core.get_asset_balances(account_id);
+}
+
+query get_asset_balances_paginated(account_id: byte_array, page_size: integer, page_cursor: text?) {
     val balances = core.get_paginated_asset_balances(account_id, page_size, page_cursor);
-    val pagination_results = balances @* {} ( utils.pagination_result(data = $.to_gtv(), rowid = .rowid) );
-    return utils.make_page(pagination_results, page_size);
+    return utils.make_page(balances, page_size);
 }
 
 query get_asset_balance(account_id: byte_array, asset_id: byte_array) {

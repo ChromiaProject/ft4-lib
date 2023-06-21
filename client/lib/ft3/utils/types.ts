@@ -39,11 +39,13 @@ export function freeze<T>(object: T): T {
 }
 
 export type EntityRetreiver<T> = {
-  next_cursor: OptionalPageCursor;
-  next: () => Promise<T>;
+  retrieve: (
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<T[]>>;
 };
 
-export type PaginatedEntity<T> = {
-  items: T;
-  retriever: EntityRetreiver<T>;
+export type PaginatedEntity<T extends any[]> = {
+  data: T;
+  nextCursor: OptionalPageCursor;
 };

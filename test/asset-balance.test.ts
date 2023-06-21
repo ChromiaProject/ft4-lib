@@ -1,11 +1,20 @@
 import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Amount } from "../client/lib/ft3/asset/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
-import { createConnection } from "../client/lib/ft3/ft-session";
+import {
+  createConnection,
+  createKeyStoreInteractor,
+} from "../client/lib/ft3/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import testUser from "./util/test-user";
+import { KeyPair } from "/cryptoUtils";
+import { createInMemoryFTKeyStore } from "/ft3/authentication/ft/key-stores/in-memory";
 
 let ft: ftUserSession;
 let connection: Connection;
@@ -43,7 +52,7 @@ describe("Asset balance", () => {
       .build();
 
     const foundAccount = await connection.getAccountById(account.id);
-    const balances = (await foundAccount.getBalances()).items.map((b) => ({
+    const balances = (await foundAccount.getBalances()).map((b) => ({
       asset: b.asset,
       amount: makeAmountBareBones(b.amount),
     }));
@@ -53,11 +62,9 @@ describe("Asset balance", () => {
       asset: {
         id: asset1.id,
         name: asset1.name,
-        symbol: asset1.symbol,
         decimals: asset1.decimals,
         brid: asset1.brid,
         supply: BigInt(10),
-        icon_url: "",
       },
       amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
     });
@@ -65,11 +72,9 @@ describe("Asset balance", () => {
       asset: {
         id: asset2.id,
         name: asset2.name,
-        symbol: asset2.symbol,
         decimals: asset2.decimals,
         brid: asset2.brid,
         supply: BigInt("20" + "0".repeat(asset2.decimals)),
-        icon_url: "",
       },
       amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
     });
@@ -116,6 +121,11 @@ describe("Asset balance", () => {
     const asset9 = await getNewAsset(ft);
     const asset10 = await getNewAsset(ft);
     const asset11 = await getNewAsset(ft);
+
+    const client = await createClient();
+    const keyPair = new KeyPair();
+    const keyStore = createInMemoryFTKeyStore(keyPair);
+
     const account = await AccountBuilder.account(ft)
       .withBalances([
         { amount: 10, asset: asset1 },
@@ -132,12 +142,19 @@ describe("Asset balance", () => {
       ])
       .build();
 
-    const foundAccount = await connection.getAccountById(account.id);
-    const balances = await foundAccount.getBalances();
+    const ad = account.authDescriptors[0];
+    const session = await createKeyStoreInteractor(client, keyStore).getSession(
+      ad.id
+    );
 
-    expect(balances.items.length).toBe(10);
+    const { data, nextCursor } = await session.account.getBalancesPaginated(10);
 
-    const next = await balances.retriever.next();
-    expect(next.length).toBe(1);
+    expect(data.length).toBe(10);
+
+    const { data: data2 } = await session.account.getBalancesPaginated(
+      10,
+      nextCursor
+    );
+    expect(data2.length).toBe(1);
   }, 50000);
 });
