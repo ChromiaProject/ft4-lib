@@ -22,8 +22,8 @@ function register_bob() = create_test_account(rell.test.keypairs.bob);
 function register_eve() = create_test_account(rell.test.keypairs.eve);
 function register_trudy() = create_test_account(rell.test.keypairs.trudy);
 
-function evm_register_alice() = create_evm_auth_test_account(rell.test.keypairs.alice);
-function evm_register_bob() = create_evm_auth_test_account(rell.test.keypairs.bob);
+function evm_register_alice(flags: set<text> = set(["T"])) = create_evm_auth_test_account(rell.test.keypairs.alice, flags);
+function evm_register_bob(flags: set<text> = set(["T"])) = create_evm_auth_test_account(rell.test.keypairs.bob, flags);
 
 function create_test_account(rell.test.keypair): account_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub);
@@ -52,9 +52,9 @@ function create_test_account_with_auth_descriptor(
         .run();
 }
 
-function create_evm_auth_test_account(rell.test.keypair): account_data {
+function create_evm_auth_test_account(rell.test.keypair, flags: set<text> = set(["T"])): account_data {
     val address = eth_address_from_pubkey(crypto.privkey_to_pubkey(keypair.priv).sub(1));
-    val auth_descriptor = create_auth_descriptor(address);
+    val auth_descriptor = create_auth_descriptor(address, flags);
     dev_op_account.register_account_test(auth_descriptor)
         .sign(keypair)
         .run();
@@ -70,11 +70,11 @@ function create_evm_auth_test_account(rell.test.keypair): account_data {
     );
 }
 
-function create_auth_descriptor(participant_id: byte_array): acc.auth_descriptor {
+function create_auth_descriptor(participant_id: byte_array, flags: set<text> = set(["T"])): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.S,
         [
-            ["T"].to_gtv(),
+            flags.to_gtv(),
             participant_id.to_hex().to_gtv()
         ],
         rules = null.to_gtv());
@@ -111,10 +111,6 @@ function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test
         icon_url = ""
     )
     .sign(rell.test.keypairs.alice);
-}
-
-function assert_error(rell.test.tx, error_message: text) {
-  assert_true(tx.run_must_fail().message.ends_with(error_message));
 }
 
 /*
@@ -222,3 +218,5 @@ function eth_sign(hash: byte_array, privkey: byte_array) {
 function eth_hex_address_from_pubkey(pubkey) = "0x" + eth_address_from_pubkey(pubkey).to_hex();
 
 function eth_address_from_pubkey(pubkey) = keccak256(pubkey).sub(12);
+
+function eth_address_from_privkey(privkey: byte_array) = eth_address_from_pubkey(crypto.privkey_to_pubkey(privkey).sub(1));
