@@ -6,6 +6,7 @@ import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.admin;
 import ^^^.lib.ft3.auth;
 import ^^^.lib.ft3.core;
+import ft3_utils: ^^^.lib.ft3.utils;
 import ^.utils;
 
 val too_big = core.max_asset_amount + 1;
@@ -293,12 +294,23 @@ function test_paginated_assets_have_correct_format() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset1 = utils.create_asset("test1", "TST1", 0);
     admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
-    val balances = ft3.core_ext.get_asset_balances_paginated(alice.account.id, 1, null).data;
+    val result = ft3.core_ext.get_asset_balances_paginated(alice.account.id, 1, null);
 
-    val balance = gtv_balance.from_gtv_pretty(balances[0]);
-    assert_equals(balance.asset.id, asset1.id);
-    assert_equals(balance.asset.name, asset1.name);
-    assert_equals(balance.asset.symbol, asset1.symbol);
-    assert_equals(balance.asset.decimals, asset1.decimals);
-    assert_equals(balance.asset.icon_url, asset1.icon_url);
+    assert_equals(result, ft3_utils.paged_result(     
+        data = [
+            (
+                asset = (
+                    id = asset1.id,
+                    name = "test1",
+                    symbol = "TST1",
+                    decimals = 0,
+                    icon_url = "",
+                    supply = 10L,
+                    brid = asset1.issuing_brid
+                ),
+                amount = 10L
+            ).to_gtv_pretty()
+        ],
+        next_cursor = null
+    ));
 }
