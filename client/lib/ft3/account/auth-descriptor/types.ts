@@ -1,5 +1,3 @@
-import { OptionalPageCursor, PagedResponse } from "/ft3/types";
-
 export enum AuthType {
   single_sig = "S",
   multi_sig = "M",
@@ -53,11 +51,3 @@ export type RawAuthDescriptor = {
   args: AuthDescriptorArgs;
   rules: AuthDescriptorRule | null;
 };
-
-export interface AccountAuthDescriptorsRetriever {
-  retrieve: (
-    limit: number,
-    cursor: OptionalPageCursor
-  ) => Promise<PagedResponse<AuthDescriptor>>;
-  brid: string;
-}
