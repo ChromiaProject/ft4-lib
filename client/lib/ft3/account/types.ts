@@ -55,14 +55,14 @@ export interface IAccount {
   getBalancesPaginated: (
     limit?: number,
     cursor?: OptionalPageCursor
-  ) => Promise<PaginatedEntity<Balance[]>>;
+  ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: () => Promise<AuthDescriptor[]>;
   getAuthDescriptorsPaginated: (
     limit?: number,
     cursor?: OptionalPageCursor
-  ) => Promise<PaginatedEntity<AuthDescriptor[]>>;
+  ) => Promise<PaginatedEntity<AuthDescriptor>>;
   getAuthDescriptorsByParticipantId: (
     partiticipantId: BufferId
   ) => Promise<AuthDescriptor[]>;

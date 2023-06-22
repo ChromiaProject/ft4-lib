@@ -19,7 +19,7 @@ export function createEntityRetriever<
   dataMapper: (arg: V[]) => T[]
 ): EntityRetreiver<T> {
   return {
-    retrieve: async (limit = 100): Promise<PaginatedEntity<T[]>> => {
+    retrieve: async (limit = 100): Promise<PaginatedEntity<T>> => {
       if (limit > 100) throw new RetrieveError("amount needs to be <= 100");
       const res = await session.query<R>(query);
       return {

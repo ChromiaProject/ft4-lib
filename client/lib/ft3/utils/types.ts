@@ -42,10 +42,10 @@ export type EntityRetreiver<T> = {
   retrieve: (
     limit?: number,
     cursor?: OptionalPageCursor
-  ) => Promise<PaginatedEntity<T[]>>;
+  ) => Promise<PaginatedEntity<T>>;
 };
 
-export type PaginatedEntity<T extends any[]> = {
-  data: T;
+export type PaginatedEntity<T> = {
+  data: T[];
   nextCursor: OptionalPageCursor;
 };
