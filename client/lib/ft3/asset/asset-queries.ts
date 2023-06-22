@@ -1,13 +1,17 @@
 import { formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { QueryObject, Query } from "../utils/types";
+import { OptionalPageCursor } from "../types";
 
 export function assetByIdQuery(assetId: Buffer): Query {
   return ["ft4.get_asset_by_id", { asset_id: assetId }];
 }
 
-export function balancesByAccountIdQuery(accountId: Buffer): Query {
-  return ["ft4.get_asset_balances", { account_id: accountId }];
+export function balancesByAccountIdQuery(accountId: BufferId): Query {
+  return [
+    "ft4.get_asset_balances",
+    { account_id: formatter.ensureBuffer(accountId) },
+  ];
 }
 
 export function balanceQuery(accountId: Buffer, assetId: Buffer): Query {
@@ -71,6 +75,21 @@ export function balancesByAccountId(accountId: BufferId): QueryObject {
     name: "ft4.get_asset_balances",
     args: {
       account_id: formatter.ensureBuffer(accountId),
+    },
+  };
+}
+
+export function balancesByAccountIdPaginated(
+  accountId: BufferId,
+  limit = 100,
+  cursor: OptionalPageCursor = null
+): QueryObject {
+  return {
+    name: "ft4.get_asset_balances_paginated",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

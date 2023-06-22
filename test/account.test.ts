@@ -4,10 +4,13 @@ import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Account, User } from "../client/lib/ft3/account/types";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
-import { getUserSession } from "./util/blockchain-util";
+import { createClient, getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
+  AuthType,
+  createSingleSignatureAuthDescriptor,
   FlagsType,
+  singleSigArgs,
   toGtv,
 } from "../client/lib/ft3/account/auth-descriptor";
 import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
@@ -22,6 +25,7 @@ import {
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../client/lib/ft3/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
+import { createAccount } from "./util/util";
 
 async function addAuthDescriptorTo(
   account: Account,
@@ -313,6 +317,71 @@ describe("Test the account", () => {
     );
 
     expect(accounts.length).toEqual(2);
+  });
+
+  it("has correct format when fetching paginated auth descriptors", async () => {
+    const client = await createClient();
+
+    const keyPair = new KeyPair();
+    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      ["A"],
+      keyStore.pubKey
+    ).andNoRules;
+
+    await createAccount(client, ad);
+
+    const session = await createKeyStoreInteractor(client, keyStore).getSession(
+      ad.id
+    );
+
+    const keyPair2 = new KeyPair();
+    const ad2 = authDescriptor.create.singleSig.withArgs(
+      ["T"],
+      keyPair2.pubKey
+    ).andNoRules;
+    await session.account.addAuthDescriptor(ad2, keyPair2);
+
+    const { data } = await session.account.getAuthDescriptorsPaginated(1);
+    const auth_desc = createSingleSignatureAuthDescriptor(
+      AuthType.single_sig,
+      singleSigArgs([FlagsType.Account], keyStore.pubKey),
+      null
+    );
+    expect(data[0]).toStrictEqual(auth_desc);
+  });
+
+  it("can fetch paginated auth descriptors", async () => {
+    const client = await createClient();
+
+    const keyPair = new KeyPair();
+    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      ["A"],
+      keyStore.pubKey
+    ).andNoRules;
+
+    await createAccount(client, ad);
+
+    const session = await createKeyStoreInteractor(client, keyStore).getSession(
+      ad.id
+    );
+
+    const keyPair2 = new KeyPair();
+    const ad2 = authDescriptor.create.singleSig.withArgs(
+      ["T"],
+      keyPair2.pubKey
+    ).andNoRules;
+    await session.account.addAuthDescriptor(ad2, keyPair2);
+
+    const { data, nextCursor } =
+      await session.account.getAuthDescriptorsPaginated(1);
+    expect(data.length).toBe(1);
+    const { data: data2 } = await session.account.getAuthDescriptorsPaginated(
+      1,
+      nextCursor
+    );
+    expect(data2.length).toBe(1);
   });
 
   it("should have only one auth descriptor after calling deleteAllExcluding", async () => {

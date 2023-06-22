@@ -1,13 +1,13 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
-import { KeyStore } from "../../interfaces";
 import { createFTKeyHandler } from "../key-handler";
 import { gtx } from "postchain-client";
+import { FtKeystore } from "..";
 
 export function createInMemoryFTKeyStore(
   keyHolder: KeyPair | SignatureProvider
-): KeyStore {
+): FtKeystore {
   const signatureProvider =
     "privKey" in keyHolder ? gtx.newSignatureProvider(keyHolder) : keyHolder;
 

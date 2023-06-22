@@ -1,5 +1,6 @@
 import ^^.core;
 import acc: ^^.account;
+import ^^.utils;
 
 query get_config() {
     return (
@@ -12,6 +13,11 @@ query get_config() {
 
 query get_asset_balances(account_id: byte_array) {
     return core.get_asset_balances(account_id);
+}
+
+query get_asset_balances_paginated(account_id: byte_array, page_size: integer, page_cursor: text?) {
+    val balances = core.get_paginated_asset_balances(account_id, page_size, page_cursor);
+    return utils.make_page(balances, page_size);
 }
 
 query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
@@ -73,8 +79,8 @@ query get_transfer_history(account_id: byte_array, filter: core.filter, page_siz
     val account = acc.account @? { account_id };
     if (empty(account)) return null;
 
-    val paginated_transfers = core.get_paginated_payments(account, filter, page_size, page_cursor);
-    return core.make_page(paginated_transfers, page_size);
+    val paginated_payments = core.get_paginated_payments(account, filter, page_size, page_cursor);
+    return utils.make_page(paginated_payments, page_size);
 }
 
 query get_payment_history_size(account_id: byte_array) {

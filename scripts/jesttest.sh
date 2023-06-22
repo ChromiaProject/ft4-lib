@@ -105,6 +105,7 @@ done
 
 echo "> Starting jest tests with options: " "$opt" "\n"
 npx jest -maxWorkers=1 --testPathPattern=payment-history.test.ts $opt && \
+npx jest -maxWorkers=1 --testPathPattern=asset-balance.test.ts $opt && \
     npx jest --testPathIgnorePatterns=payment-history.test.ts $opt
 return_code=$?
 

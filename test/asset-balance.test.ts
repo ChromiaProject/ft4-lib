@@ -1,11 +1,20 @@
 import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Amount } from "../client/lib/ft3/asset/interfaces";
 import { Asset } from "../client/lib/ft3/asset/types";
-import { createConnection } from "../client/lib/ft3/ft-session";
+import {
+  createConnection,
+  createKeyStoreInteractor,
+} from "../client/lib/ft3/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import testUser from "./util/test-user";
+import { KeyPair } from "/cryptoUtils";
+import { createInMemoryFTKeyStore } from "/ft3/authentication/ft/key-stores/in-memory";
 
 let ft: ftUserSession;
 let connection: Connection;
@@ -43,7 +52,7 @@ describe("Asset balance", () => {
       .build();
 
     const foundAccount = await connection.getAccountById(account.id);
-    const balances = (await foundAccount!.getBalances()).map((b) => ({
+    const balances = (await foundAccount.getBalances()).map((b) => ({
       asset: b.asset,
       amount: makeAmountBareBones(b.amount),
     }));
@@ -98,5 +107,38 @@ describe("Asset balance", () => {
         decimals: asset2.decimals,
       },
     });
+  });
+
+  it("paginates asset balances", async () => {
+    const asset1 = await getNewAsset(ft);
+    const asset2 = await getNewAsset(ft);
+    const asset3 = await getNewAsset(ft);
+
+    const client = await createClient();
+    const keyPair = new KeyPair();
+    const keyStore = createInMemoryFTKeyStore(keyPair);
+
+    const account = await AccountBuilder.account(ft)
+      .withBalances([
+        { amount: 10, asset: asset1 },
+        { amount: 10, asset: asset2 },
+        { amount: 10, asset: asset3 },
+      ])
+      .build();
+
+    const ad = account.authDescriptors[0];
+    const session = await createKeyStoreInteractor(client, keyStore).getSession(
+      ad.id
+    );
+
+    const { data, nextCursor } = await session.account.getBalancesPaginated(2);
+
+    expect(data.length).toBe(2);
+
+    const { data: data2 } = await session.account.getBalancesPaginated(
+      2,
+      nextCursor
+    );
+    expect(data2.length).toBe(1);
   });
 });

@@ -14,10 +14,15 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { Config, QueryObject, Operation } from "./utils/types";
+import { QueryObject, Operation, Config } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 
 export type PageCursor = string;
+export type OptionalPageCursor = PageCursor | null;
+export type PagedResponse<T> = {
+  data: T[];
+  next_cursor: OptionalPageCursor;
+};
 export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;
