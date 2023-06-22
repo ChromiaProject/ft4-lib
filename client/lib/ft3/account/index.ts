@@ -1,4 +1,4 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { GtxClient } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {

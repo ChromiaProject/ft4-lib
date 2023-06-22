@@ -1,4 +1,3 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../cryptoUtils";
 import { AuthDescriptor } from "./account/auth-descriptor/types";
 import {
@@ -14,8 +13,10 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { Config, QueryObject, Operation } from "./utils/types";
+import { Config, Operation } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
+import { IClient } from "postchain-client/built/src/blockchainClient/interface";
+import { QueryArguments, QueryObject, GtxClient } from "postchain-client";
 
 export type PageCursor = string;
 export interface ftUserSession {
@@ -137,8 +138,8 @@ export interface ftQuerySession {
 }
 
 export interface Connection {
-  client: GtxClient;
-  query: <T>(query: QueryObject) => Promise<T | null>;
+  client: IClient;
+  query: <T>(query: QueryObject<QueryArguments>) => Promise<T | null>;
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 

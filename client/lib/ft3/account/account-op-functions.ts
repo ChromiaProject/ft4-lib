@@ -1,6 +1,7 @@
 /* eslint @typescript-eslint/ban-ts-comment: 0 */
 import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
+  _transferOp,
   addAuthDescriptorOp,
   addAuthDescriptorV2,
   burnOp,
@@ -26,17 +27,15 @@ import {
   PaymentHistoryStore,
 } from "./payment-history/interfaces";
 import { BufferId, KeyPair } from "../../cryptoUtils";
-import { formatter } from "postchain-client";
+import { formatter, GtxClient, RawGtv } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { Amount } from "../asset/interfaces";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { Connection } from "../types";
 import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/interfaces";
 import { call } from "../ft-session";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
 
 export async function ssoRawTransactionRegister(
   newAuthDesc: AuthDescriptor,
@@ -346,5 +345,5 @@ async function _burn(
     amount.value,
     {},
   ];
-  return call(connection, authenticator, transferOp([input], []));
+  return call(connection, authenticator, _transferOp([input], []));
 }

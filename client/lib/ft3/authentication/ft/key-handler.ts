@@ -1,11 +1,7 @@
 import { BufferId } from "../../../cryptoUtils";
-import { Operation } from "../../utils/types";
 import { KeyHandler, KeyStore } from "../interfaces";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
-import {
-  Itransaction,
-  SignatureProvider,
-} from "postchain-client/built/src/gtx/interfaces";
+import { Transaction, Operation, SignatureProvider } from "postchain-client";
 import { ftAuth } from ".";
 
 export function createFTKeyHandler(
@@ -19,7 +15,7 @@ export function createFTKeyHandler(
       satisfiesAuthRequirements(authDescriptor, requiredFlags),
     authenticate: (accountId: BufferId, operation: Operation) =>
       authenticate(accountId, authDescriptor.id, operation),
-    sign: (transaction: Itransaction) => sign(transaction, keyStore),
+    sign: (transaction: Transaction) => sign(transaction, keyStore),
     getSigners: () => authDescriptor.signers,
   });
 }
@@ -33,7 +29,7 @@ async function authenticate(
 }
 
 async function sign(
-  transaction: Itransaction,
+  transaction: Transaction,
   keyStore: FTKeyStore
 ): Promise<void> {
   return transaction.sign(keyStore);

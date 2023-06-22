@@ -1,5 +1,5 @@
-import { formatter } from "postchain-client";
-import { Query, QueryObject } from "../utils/types";
+import { QueryObject, formatter } from "postchain-client";
+import { Query } from "../utils/types";
 import { BufferId } from "../../cryptoUtils";
 
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
@@ -31,16 +31,18 @@ export function isAuthDescriptorValidQuery(
   ];
 }
 
-export function getRateLimitQuery(accountId: Buffer): Query {
-  return [
-    "ft4.get_account_rate_limit_last_update",
-    {
+export function getRateLimitQuery(
+  accountId: Buffer
+): QueryObject<{ account_id: Buffer }> {
+  return {
+    name: "ft4.get_account_rate_limit_last_update",
+    args: {
       account_id: accountId,
     },
-  ];
+  };
 }
 
-export function accountById(id: BufferId): QueryObject {
+export function accountById(id: BufferId): QueryObject<{ id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {
@@ -49,7 +51,9 @@ export function accountById(id: BufferId): QueryObject {
   };
 }
 
-export function accountsByParticipantId(id: BufferId): QueryObject {
+export function accountsByParticipantId(
+  id: BufferId
+): QueryObject<{ id: Buffer }> {
   return {
     name: "ft4.get_accounts_by_participant_id",
     args: {
@@ -58,7 +62,9 @@ export function accountsByParticipantId(id: BufferId): QueryObject {
   };
 }
 
-export function accountsByAuthDescriptorId(id: BufferId): QueryObject {
+export function accountsByAuthDescriptorId(
+  id: BufferId
+): QueryObject<{ id: Buffer }> {
   return {
     name: "ft4.get_accounts_by_auth_descriptor_id",
     args: {
@@ -70,7 +76,7 @@ export function accountsByAuthDescriptorId(id: BufferId): QueryObject {
 export function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId
-): QueryObject {
+): QueryObject<{ account_id: Buffer; auth_descriptor_id: Buffer }> {
   return {
     name: "ft4.is_auth_descriptor_valid",
     args: {
@@ -80,7 +86,9 @@ export function isAuthDescriptorValid(
   };
 }
 
-export function accountAuthDescriptors(accountId: BufferId): QueryObject {
+export function accountAuthDescriptors(
+  accountId: BufferId
+): QueryObject<{ id: Buffer }> {
   return {
     name: "ft4.get_account_auth_descriptors",
     args: {
@@ -92,7 +100,7 @@ export function accountAuthDescriptors(accountId: BufferId): QueryObject {
 export function accountAuthDescriptorsByParticipantId(
   accountId: BufferId,
   participantId: BufferId
-): QueryObject {
+): QueryObject<{ account_id: Buffer; participant_id: Buffer }> {
   return {
     name: "ft4.get_account_auth_descriptors_by_participant_id",
     args: {

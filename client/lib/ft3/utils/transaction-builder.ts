@@ -1,9 +1,6 @@
-import {
-  GtxClient,
-  Itransaction,
-} from "postchain-client/built/src/gtx/interfaces";
-import { Operation } from "./types";
 import { Authenticator, KeyHandler } from "../authentication/interfaces";
+import { Itransaction, Operation, Transaction } from "postchain-client";
+import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -67,7 +64,7 @@ export type TransactionBuilder = {
    * and which consequently should sign the transaction.
    */
   keyHandlersUsed: () => KeyHandler[];
-  session: GtxClient;
+  session: IClient;
 };
 
 /**
@@ -78,7 +75,7 @@ export type TransactionBuilder = {
  */
 export function transactionBuilder(
   authenticator: Authenticator,
-  client: GtxClient
+  client: IClient
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
     this._operations.push([operation, authenticator]);
@@ -97,13 +94,15 @@ export function transactionBuilder(
       this._operations
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
-    const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
+    const txn: Transaction = {
+      operations: [],
+      signers: toPubkeys(this._keyhandlersUsed),
+    };
     const addOperation = (op: Operation) => {
-      const [name, ...args] = op;
-      txn.addOperation(name, ...args);
+      txn.operations.push(op);
     };
     operations.forEach((op: Operation | Operation[]) => {
-      isOperation(op) ? addOperation(op) : op.forEach(addOperation);
+      Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
     });
     return txn;
   }
@@ -160,9 +159,9 @@ export function transactionBuilder(
     }
     let opsToReturn: Operation[] = [];
     processedOperations.forEach((item) => {
-      opsToReturn = isOperation(item)
-        ? [...opsToReturn, item]
-        : opsToReturn.concat(item);
+      opsToReturn = Array.isArray(item)
+        ? opsToReturn.concat(item)
+        : [...opsToReturn, item];
     });
     return [opsToReturn, keyHandlers];
   }
@@ -200,8 +199,4 @@ export function transactionBuilder(
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
   return context as TransactionBuilder;
-}
-
-function isOperation(op: Operation | Operation[]): op is Operation {
-  return typeof op[0] === "string";
 }

@@ -1,6 +1,11 @@
 import { generateAssetName, generateAssetSymbol } from "./util";
 import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/types";
-import { gtxClient, restClient, restClientutil } from "postchain-client";
+import {
+  gtxClient,
+  restClient,
+  restClientutil,
+  createClient as chromiaClient,
+} from "postchain-client";
 import {
   createQuerySession,
   createUserSession,
@@ -18,6 +23,14 @@ export async function createClient(nodeUrl?: string) {
     brid,
     []
   );
+}
+
+export async function createChromiaClient(nodeUrl?: string) {
+  const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
+  return chromiaClient({
+    nodeURLPool: url,
+    blockchainIID: 0,
+  });
 }
 
 export async function getQuerySession(): Promise<ftQuerySession> {

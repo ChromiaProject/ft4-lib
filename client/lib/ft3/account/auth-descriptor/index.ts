@@ -97,8 +97,15 @@ function createMultiSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
   ];
 }
 
-export function mapAuthDescriptor(raw: RawAuthDescriptor): AuthDescriptor {
-  const { type, args, rules } = raw;
+export function mapAuthDescriptor(
+  raw: RawAuthDescriptor | GtvAuthDescriptor
+): AuthDescriptor {
+  let type, args, rules;
+  if (Array.isArray(raw)) {
+    [type, args, rules] = raw as GtvAuthDescriptor;
+  } else {
+    ({ type, args, rules } = raw as RawAuthDescriptor);
+  }
   return Object.freeze(
     fromGtv([
       serializeAuthType(type as AuthType),
@@ -108,7 +115,9 @@ export function mapAuthDescriptor(raw: RawAuthDescriptor): AuthDescriptor {
   );
 }
 
-export function mapAuthDescriptors(raw: RawAuthDescriptor[]): AuthDescriptor[] {
+export function mapAuthDescriptors(
+  raw: (RawAuthDescriptor | GtvAuthDescriptor)[]
+): AuthDescriptor[] {
   return raw.map(mapAuthDescriptor);
 }
 

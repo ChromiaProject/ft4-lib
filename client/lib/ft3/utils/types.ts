@@ -1,4 +1,4 @@
-import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { RawGtv } from "postchain-client";
 
 export type Operation = [string, ...RawGtv[]];
 

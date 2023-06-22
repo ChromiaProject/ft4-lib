@@ -1,4 +1,4 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
+import { SignatureProvider, RawGtv } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId, KeyPair } from "../../cryptoUtils";
@@ -11,7 +11,6 @@ import {
 import { Authenticator } from "../authentication/interfaces";
 import { Amount } from "../asset/interfaces";
 import { PageCursor } from "../types";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
 
 export type Account = {
   id: Buffer;

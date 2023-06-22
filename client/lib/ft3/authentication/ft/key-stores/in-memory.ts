@@ -1,15 +1,14 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
 import { KeyStore } from "../../interfaces";
 import { createFTKeyHandler } from "../key-handler";
-import { gtx } from "postchain-client";
+import { SignatureProvider, newSignatureProvider } from "postchain-client";
 
 export function createInMemoryFTKeyStore(
   keyHolder: KeyPair | SignatureProvider
 ): KeyStore {
   const signatureProvider =
-    "privKey" in keyHolder ? gtx.newSignatureProvider(keyHolder) : keyHolder;
+    "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
 
   const keyStore = Object.freeze({
     id: signatureProvider.pubKey,

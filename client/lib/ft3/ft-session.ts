@@ -1,9 +1,8 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./account";
 import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
 import { ftQuerySession, ftUserSession, Connection, Session } from "./types";
-import { getConfig, getVersion, nop } from "./utils";
+import { _getConfig, getVersion, _nop as nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -11,7 +10,6 @@ import {
   _getById,
   createAccountObject,
 } from "./account/account-query-functions";
-import { Operation, QueryObject } from "./utils/types";
 import {
   _getAllAssets,
   _getAssetById,
@@ -31,6 +29,14 @@ import {
   defaultFTAuthData,
   nonce,
 } from "./authentication";
+import { IClient } from "postchain-client/built/src/blockchainClient/interface";
+import {
+  QueryObject,
+  RawGtv,
+  GtxClient,
+  QueryArguments,
+  Operation,
+} from "postchain-client";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -51,11 +57,12 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
   });
 }
 
-export function createConnection(client: GtxClient): Connection {
+export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
     client,
-    query: <T>(queryObject: QueryObject) => query<T>(connection, queryObject),
-    getConfig: () => getConfig(client),
+    query: <T extends RawGtv>(queryObject: QueryObject<QueryArguments>) =>
+      query<T>(connection, queryObject),
+    getConfig: () => _getConfig(client),
     getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
@@ -88,11 +95,11 @@ export function createSession(
   });
 }
 
-async function query<T>(
+async function query<T extends RawGtv>(
   connection: Connection,
-  queryObject: QueryObject
+  queryObject: QueryObject<QueryArguments>
 ): Promise<T | null> {
-  return await connection.client.query(queryObject.name, queryObject.args);
+  return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
 export async function call(
@@ -138,7 +145,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
 }
 
 export function createKeyStoreInteractor(
-  client: GtxClient,
+  client: IClient,
   keyStore: KeyStore
 ): KeyStoreInteractor {
   const connection = createConnection(client);

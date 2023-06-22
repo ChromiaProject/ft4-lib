@@ -1,10 +1,8 @@
 import { BufferId } from "../../../cryptoUtils";
-import { Operation } from "../../utils/types";
 import { AuthData, KeyHandler, KeyStore } from "../interfaces";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
-import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 import { EVMKeyStore, evmAuth } from ".";
-import { formatter } from "postchain-client";
+import { formatter, Operation, Transaction } from "postchain-client";
 
 export function createEVMKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -21,7 +19,7 @@ export function createEVMKeyHandler(
       authData: AuthData
     ) =>
       authenticate(accountId, authDescriptor.id, operation, authData, keyStore),
-    sign: (transaction: Itransaction) => sign(transaction, keyStore),
+    sign: (transaction: Transaction) => sign(transaction, keyStore),
     getSigners: () => null,
   });
 }
@@ -45,7 +43,7 @@ async function authenticate(
 
 /* eslint-disable */
 async function sign(
-  transaction: Itransaction,
+  transaction: Transaction,
   keyStore: KeyStore
 ): Promise<void> {
   // return transaction.sign(keyStore);
