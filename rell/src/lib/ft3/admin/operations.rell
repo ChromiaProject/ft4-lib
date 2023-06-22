@@ -18,3 +18,4 @@ operation add_rate_limit_points(account_id: byte_array, amount: integer) {
     require_admin();
 	account.add_rate_limit_points(account.Account(account_id), amount);
 }
+

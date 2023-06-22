@@ -1,4 +1,5 @@
 import { RawGtv } from "postchain-client";
+import { OptionalPageCursor } from "../types";
 
 export type Operation = [string, ...RawGtv[]];
 
@@ -36,3 +37,15 @@ export type QueryObject = {
 export function freeze<T>(object: T): T {
   return Object.freeze(object);
 }
+
+export type EntityRetreiver<T> = {
+  retrieve: (
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<T>>;
+};
+
+export type PaginatedEntity<T> = {
+  data: T[];
+  nextCursor: OptionalPageCursor;
+};

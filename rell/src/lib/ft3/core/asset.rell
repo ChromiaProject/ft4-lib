@@ -30,6 +30,30 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0L);
 }
 
+function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?): list<utils.pagination_result> {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return balance @* {
+        .account.id == account_id,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                asset = (
+                    id = .asset.id,
+                    name = .asset.name,
+                    symbol = .asset.symbol,
+                    decimals = .asset.decimals,
+                    brid = .asset.issuing_brid,
+                    supply = .asset.total_supply,
+                    icon_url = .asset.icon_url
+                ),
+                amount = .amount
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 function get_asset_balances(account_id: byte_array) {
     return balance @* { .account.id == account_id } (
         asset = (

@@ -4,7 +4,6 @@ import ^^^.lib.ft3.core;
 import ^^^.lib.ft3.admin;
 import ^^^.lib.ft3.operations.dev_op_account;
 import ^^^.lib.ft3.operations.dev_op_auth;
-import cu: ^^.core.utils;
 
 struct module_args {
     admin_priv_key: text; 

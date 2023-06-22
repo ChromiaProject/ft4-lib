@@ -3,6 +3,7 @@ module;
 
 import ^.account;
 import ^.core;
+import ^.utils;
 
 struct module_args {
     admin_pubkey: pubkey;

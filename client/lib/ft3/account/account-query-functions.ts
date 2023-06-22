@@ -11,6 +11,7 @@ import {
   isAuthDescriptorValidQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
+  accountAuthDescriptorsPaginated,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -19,17 +20,21 @@ import { _getConfig, getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
   _getBalancesByAccountId,
+  createBalanceObject,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection, PageCursor } from "../types";
+import { Connection, OptionalPageCursor } from "../types";
 import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
 import {
   GtvAuthDescriptor,
   AuthDescriptor,
   RawAuthDescriptor,
-} from "./auth-descriptor/types";
-import { mapAuthDescriptors } from "./auth-descriptor";
+  mapAuthDescriptors,
+} from "./auth-descriptor";
+import { createEntityRetriever } from "../utils/entity-retriever";
+import { Balance, BalanceResponse } from "../asset/types";
+import { balancesByAccountIdPaginated } from "../asset/asset-queries";
 import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
@@ -70,7 +75,7 @@ export async function getByIds(
   ids: BufferId[]
 ): Promise<Account[]> {
   const accounts = await Promise.all(ids.map((id) => getById(session, id)));
-  return <Account[]>accounts.filter((account) => account != null);
+  return accounts.filter((account): account is Account => account != null);
 }
 
 export async function getById(
@@ -177,27 +182,52 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
-  const retriever = createPaymentHistoryRetriever(connection.client, accountId);
+  const payment_history_retriever = createPaymentHistoryRetriever(
+    connection.client,
+    accountId
+  );
   return Object.freeze({
     id: accountId,
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
     getBalances: () => _getBalancesByAccountId(connection, accountId),
+    getBalancesPaginated: (limit = 100, cursor: OptionalPageCursor = null) => {
+      const retriever = createEntityRetriever<Balance, BalanceResponse>(
+        connection,
+        balancesByAccountIdPaginated(accountId, limit, cursor),
+        (balances) => balances.map(createBalanceObject)
+      );
+      return retriever.retrieve(limit, cursor);
+    },
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
+    getAuthDescriptorsPaginated: async (
+      limit = 100,
+      cursor: OptionalPageCursor = null
+    ) => {
+      const retriever = createEntityRetriever<
+        AuthDescriptor,
+        RawAuthDescriptor
+      >(
+        connection,
+        accountAuthDescriptorsPaginated(accountId, limit, cursor),
+        mapAuthDescriptors
+      );
+      return retriever.retrieve(limit, cursor);
+    },
     getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
       getAuthDescriptorsByParticipantId(connection, accountId, participantId),
     getRateLimit: () => _getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
       filter: PaymentHistoryFilter = {},
-      cursor: PageCursor | null = null
+      cursor: OptionalPageCursor = null
     ) => {
-      return retriever.retrieve(limit, filter, cursor);
+      return payment_history_retriever.retrieve(limit, filter, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) =>
-      retriever.retrieveSingle(rowid),
+      payment_history_retriever.retrieveSingle(rowid),
   });
 }
 

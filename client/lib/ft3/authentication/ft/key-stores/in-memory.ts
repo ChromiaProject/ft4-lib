@@ -1,12 +1,12 @@
 import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
-import { KeyStore } from "../../interfaces";
 import { createFTKeyHandler } from "../key-handler";
 import { SignatureProvider, newSignatureProvider } from "postchain-client";
+import { FtKeystore } from "..";
 
 export function createInMemoryFTKeyStore(
   keyHolder: KeyPair | SignatureProvider
-): KeyStore {
+): FtKeystore {
   const signatureProvider =
     "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
 

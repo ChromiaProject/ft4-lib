@@ -13,12 +13,22 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { Config, Operation } from "./utils/types";
+import { Config } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import { IClient } from "postchain-client/built/src/blockchainClient/interface";
-import { QueryArguments, QueryObject, GtxClient } from "postchain-client";
+import {
+  QueryArguments,
+  QueryObject,
+  GtxClient,
+  Operation as _Operation,
+} from "postchain-client";
 
 export type PageCursor = string;
+export type OptionalPageCursor = PageCursor | null;
+export type PagedResponse<T> = {
+  data: T[];
+  next_cursor: OptionalPageCursor;
+};
 export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;
@@ -156,7 +166,7 @@ export interface Connection {
 
 export interface Session extends Connection {
   account: IAuthenticatedAccount;
-  call: (...operations: Operation[]) => Promise<void>;
-  callWithoutNop: (...operations: Operation[]) => Promise<void>;
+  call: (...operations: _Operation[]) => Promise<void>;
+  callWithoutNop: (...operations: _Operation[]) => Promise<void>;
   transactionBuilder: () => TransactionBuilder;
 }
