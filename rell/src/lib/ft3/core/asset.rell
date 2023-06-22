@@ -30,12 +30,6 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0L);
 }
 
-function register_asset(name, symbol: text, decimals: integer, issuing_brid: byte_array, icon_url: text): asset {
-    require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
-    val id = (name, issuing_brid).hash();
-    return create asset (id, name, symbol, decimals=decimals, issuing_brid, icon_url, total_supply=0);
-}
-
 function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?): list<utils.pagination_result> {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {

@@ -19,7 +19,3 @@ operation add_rate_limit_points(account_id: byte_array, amount: integer) {
 	account.add_rate_limit_points(account.Account(account_id), amount);
 }
 
-operation update_max_page_size(new_size: integer) {
-    require_admin();
-    utils.update_max_page_size(new_size);
-}

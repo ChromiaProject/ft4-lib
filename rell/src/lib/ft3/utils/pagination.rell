@@ -7,13 +7,7 @@ struct pagination_result {
     rowid: rowid;
 }
 
-object pagination_config {
-  mutable max_page_size: integer = 100;
-}
-
-function update_max_page_size(new_size: integer) {
-    pagination_config.max_page_size = new_size;
-}
+val MAX_PAGE_SIZE: integer = 100;
 
 function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
 
@@ -29,7 +23,7 @@ function null_page() = paged_result(
     data = list<gtv>()
 );
 
-function fetch_data_size(page_size: integer) = min(pagination_config.max_page_size, page_size) + 1;
+function fetch_data_size(page_size: integer) = min(MAX_PAGE_SIZE, page_size) + 1;
 
 function before_rowid(page_cursor: text?) {
     var before_rowid: rowid? = null;

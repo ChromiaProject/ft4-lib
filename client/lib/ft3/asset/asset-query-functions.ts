@@ -98,7 +98,7 @@ export async function _getBalancesByAccountId(
   accountId: BufferId
 ): Promise<Balance[]> {
   const balances = await connection.query<BalanceResponse[]>(
-    balancesByAccountId(formatter.ensureBuffer(accountId))
+    balancesByAccountId(accountId)
   );
   return balances.map(createBalanceObject);
 }

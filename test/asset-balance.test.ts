@@ -113,14 +113,6 @@ describe("Asset balance", () => {
     const asset1 = await getNewAsset(ft);
     const asset2 = await getNewAsset(ft);
     const asset3 = await getNewAsset(ft);
-    const asset4 = await getNewAsset(ft);
-    const asset5 = await getNewAsset(ft);
-    const asset6 = await getNewAsset(ft);
-    const asset7 = await getNewAsset(ft);
-    const asset8 = await getNewAsset(ft);
-    const asset9 = await getNewAsset(ft);
-    const asset10 = await getNewAsset(ft);
-    const asset11 = await getNewAsset(ft);
 
     const client = await createClient();
     const keyPair = new KeyPair();
@@ -131,14 +123,6 @@ describe("Asset balance", () => {
         { amount: 10, asset: asset1 },
         { amount: 10, asset: asset2 },
         { amount: 10, asset: asset3 },
-        { amount: 10, asset: asset4 },
-        { amount: 10, asset: asset5 },
-        { amount: 10, asset: asset6 },
-        { amount: 10, asset: asset7 },
-        { amount: 10, asset: asset8 },
-        { amount: 10, asset: asset9 },
-        { amount: 10, asset: asset10 },
-        { amount: 10, asset: asset11 },
       ])
       .build();
 
@@ -147,14 +131,14 @@ describe("Asset balance", () => {
       ad.id
     );
 
-    const { data, nextCursor } = await session.account.getBalancesPaginated(10);
+    const { data, nextCursor } = await session.account.getBalancesPaginated(2);
 
-    expect(data.length).toBe(10);
+    expect(data.length).toBe(2);
 
     const { data: data2 } = await session.account.getBalancesPaginated(
-      10,
+      2,
       nextCursor
     );
     expect(data2.length).toBe(1);
-  }, 50000);
+  });
 });
