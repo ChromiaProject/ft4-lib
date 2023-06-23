@@ -28,6 +28,26 @@ describe("Asset", () => {
     expect(expectedAssets[0]).toEqual(asset);
   });
 
+  it("can fetch paginated assets", async () => {
+    const assetName = generateAssetName();
+    const asset = await getNewAsset(ft, assetName);
+    await getNewAsset(ft, assetName);
+    await getNewAsset(ft, assetName);
+
+    const { data: expectedAssets, nextCursor } =
+      await connection.getAssetsByNamePaginated(assetName, 2);
+    expect(expectedAssets.length).toEqual(2);
+    expect(expectedAssets[0]).toEqual(asset);
+
+    const { data: expectedAssets2 } = await connection.getAssetsByNamePaginated(
+      assetName,
+      2,
+      nextCursor
+    );
+    expect(expectedAssets2.length).toEqual(1);
+    expect(expectedAssets2[0]).toEqual(asset);
+  });
+
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();

@@ -87,6 +87,27 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
+function get_paginated_asset_balances_by_name(name, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return core.asset @* {
+        .name == name,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                id = .id,
+                name = .name,
+                symbol = .symbol,
+                decimals = .decimals,
+                brid = .issuing_brid,
+                icon_url = .icon_url,
+                supply = .total_supply
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
     require(
         value <= max_asset_amount, 

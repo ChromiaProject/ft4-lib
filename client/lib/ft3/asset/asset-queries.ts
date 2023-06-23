@@ -56,6 +56,21 @@ export function assetByName(name: string): QueryObject {
   };
 }
 
+export function assetByNamePaginated(
+  name: string,
+  limit: number,
+  cursor: OptionalPageCursor = null
+): QueryObject {
+  return {
+    name: "ft4.get_asset_by_name",
+    args: {
+      name: name,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
 export function allAssets(): QueryObject {
   return {
     name: "ft4.get_all_assets",

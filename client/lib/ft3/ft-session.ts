@@ -24,6 +24,7 @@ import {
   _getAssetBySymbol,
   _getAssetsByName,
   _getAllAssetsPaginated,
+  _getAssetsByNamePaginated,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./account/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
@@ -76,6 +77,11 @@ export function createConnection(client: GtxClient): Connection {
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
+    getAssetsByNamePaginated: (
+      name: string,
+      limit: number,
+      cursor: OptionalPageCursor = null
+    ) => _getAssetsByNamePaginated(connection, name, limit, cursor),
     getAllAssets: () => _getAllAssets(connection),
     getAllAssetsPaginated: (
       limit?: number,

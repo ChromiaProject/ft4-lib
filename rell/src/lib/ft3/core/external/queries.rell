@@ -36,6 +36,13 @@ query get_asset_by_name(name) {
     return core.asset @* { name } ( extract_asset_data($) );
 }
 
+query get_asset_by_name_paginated(name, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        core.get_paginated_asset_balances_by_name(name, page_size, page_cursor),
+        page_size
+    );
+}
+
 query get_asset_by_id(asset_id: byte_array) {
     return core.asset @? { .id == asset_id } ( extract_asset_data($) );
 }
