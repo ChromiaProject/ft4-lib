@@ -3,9 +3,11 @@ import { Amount } from "./interfaces";
 export type Asset = {
   id: Buffer;
   name: string;
+  symbol: string;
   decimals: number;
   brid: Buffer;
   supply: bigint;
+  iconUrl: string;
 };
 
 export type Balance = {

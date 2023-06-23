@@ -6,11 +6,11 @@ import {
   balanceQuery,
   assetByNameQuery,
   allAssetsQuery,
-  balancesByAccountId,
   balanceByAccountId,
   assetById,
   assetByName,
   allAssets,
+  balancesByAccountId,
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
@@ -97,14 +97,15 @@ export async function _getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId
 ): Promise<Balance[]> {
-  return await connection
-    .query<BalanceResponse[]>(balancesByAccountId(accountId))
-    .then((balances) => balances.map(createBalanceObject));
+  const balances = await connection.query<BalanceResponse[]>(
+    balancesByAccountId(accountId)
+  );
+  return balances.map(createBalanceObject);
 }
 
-function createBalanceObject(balance: BalanceResponse): Balance {
-  return freeze({
+export function createBalanceObject(balance: BalanceResponse): Balance {
+  return {
     asset: balance.asset,
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
-  });
+  };
 }

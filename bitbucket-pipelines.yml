@@ -4,6 +4,7 @@ pipelines:
   pull-requests:
     '**':
       - step:
+          size: 2x
           name: Test
           caches:
             - node

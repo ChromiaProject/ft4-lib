@@ -3,6 +3,7 @@ module;
 
 import ^.core;
 import ^.auth;
+import ^.utils;
 
 enum auth_type {
     S, M, ES, EM,
@@ -142,6 +143,19 @@ function account_by_id(id: byte_array) = require(
     account @? { id },
     "Account not found: '%s'".format(id)
 );
+
+function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return account_auth_descriptor @* {
+        .account.id == id,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        @sort .rowid,
+        auth_type = .auth_type,
+        args = gtv.from_bytes(.args),
+        rules = gtv.from_bytes(.rules)
+    ) limit utils.fetch_data_size(page_size);
+}
 
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)

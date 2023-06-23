@@ -10,8 +10,9 @@ import {
 } from "./payment-history/types";
 import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
-import { PageCursor } from "../types";
 import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { OptionalPageCursor } from "../types";
+import { PaginatedEntity } from "../utils/types";
 
 export type Account = {
   id: Buffer;
@@ -50,11 +51,18 @@ export type User = {
 // TODO: Rename to Account after deleting Account type
 export interface IAccount {
   id: BufferId;
-  // TODO: Use Page<Balance> type instead
   getBalances: () => Promise<Balance[]>;
+  getBalancesPaginated: (
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: () => Promise<AuthDescriptor[]>;
+  getAuthDescriptorsPaginated: (
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<AuthDescriptor>>;
   getAuthDescriptorsByParticipantId: (
     partiticipantId: BufferId
   ) => Promise<AuthDescriptor[]>;
@@ -62,7 +70,7 @@ export interface IAccount {
   getTransferHistory: (
     limit?: number,
     filter?: PaymentHistoryFilter,
-    cursor?: PageCursor | null
+    cursor?: OptionalPageCursor
   ) => Promise<TransferHistoryResponse>;
   getTransferHistoryEntry: (
     rowid: number

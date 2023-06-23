@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DOCKER=${DOCKER:-docker}
 
@@ -97,16 +97,32 @@ i=0
 max=15
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( $max - $i )) \r"
+    echo -n "Waiting to start tests... $(( $max - $i ))"
     true $(( i=i+1 ))
     sleep 1
 done
 
 
-echo "> Starting jest tests with options: " "$opt" "\n"
-npx jest -maxWorkers=1 --testPathPattern=payment-history.test.ts $opt && \
-    npx jest --testPathIgnorePatterns=payment-history.test.ts $opt
-return_code=$?
+echo "> Starting jest tests with options: " "$opt"
+
+pids=()
+for f in ./**/*.test.ts; do
+    npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+    pids+=($!)
+done;
+
+return_code=0
+for pid in "${pids[@]}"; do
+    wait "$pid"
+    status=$?
+    if [[ $status -eq 0 ]]; then return_code=$return_code; else return_code=$status; fi
+done
+
+if [[ $return_code -eq 0 ]]; then
+    echo "All TypeScript tests passed"
+else
+    echo "Tests failed"
+fi
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 

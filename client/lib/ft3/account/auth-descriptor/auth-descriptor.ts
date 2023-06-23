@@ -64,7 +64,7 @@ export function multiSigArgs(
   ]);
 }
 
-function signleSigObj(
+function singleSigObj(
   type: AuthType.single_sig | AuthType.external_single_sig
 ) {
   return {
@@ -99,8 +99,8 @@ function multiSigObj(type: AuthType.multi_sig | AuthType.external_multi_sig) {
 }
 
 export const create = {
-  singleSig: signleSigObj(AuthType.single_sig),
-  singleSigEvm: signleSigObj(AuthType.external_single_sig),
+  singleSig: singleSigObj(AuthType.single_sig),
+  singleSigEvm: singleSigObj(AuthType.external_single_sig),
   multiSig: multiSigObj(AuthType.multi_sig),
   multiSigEvm: multiSigObj(AuthType.external_multi_sig),
 };
