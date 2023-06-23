@@ -1,4 +1,3 @@
-#!/bin/sh
 
 DOCKER=${DOCKER:-docker}
 
@@ -117,6 +116,12 @@ for pid in "${pids[@]}"; do
     status=$?
     if [[ $status -eq 0 ]]; then status_code=$status_code; else status_code=$status; fi
 done
+
+if [[ $status_code -eq 0 ]]; then
+    echo "All TypeScript tests passed"
+else
+    echo "Tests failed"
+fi
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 
