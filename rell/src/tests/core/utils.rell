@@ -26,8 +26,8 @@ function register_trudy() = create_test_account(rell.test.keypairs.trudy);
 function evm_register_alice() = create_evm_auth_test_account(rell.test.keypairs.alice);
 function evm_register_bob() = create_evm_auth_test_account(rell.test.keypairs.bob);
 
-function create_test_account(rell.test.keypair): account_data {
-    val auth_descriptor = create_auth_descriptor(keypair.pub);
+function create_test_account(rell.test.keypair, permission_type: text = "T"): account_data {
+    val auth_descriptor = create_auth_descriptor(keypair.pub, permission_type);
 
     create_test_account_with_auth_descriptor(auth_descriptor, keypair);
     val account = acc.account_auth_descriptor @ {
@@ -71,11 +71,11 @@ function create_evm_auth_test_account(rell.test.keypair): account_data {
     );
 }
 
-function create_auth_descriptor(participant_id: byte_array): acc.auth_descriptor {
+function create_auth_descriptor(participant_id: byte_array, permission_type: text = "T"): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.S,
         [
-            ["T"].to_gtv(),
+            [permission_type].to_gtv(),
             participant_id.to_hex().to_gtv()
         ],
         rules = null.to_gtv());
