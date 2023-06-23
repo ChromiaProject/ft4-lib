@@ -38,7 +38,7 @@ export function freeze<T>(object: T): T {
   return Object.freeze(object);
 }
 
-export type EntityRetreiver<T> = {
+export type EntityRetriever<T> = {
   retrieve: (
     limit?: number,
     cursor?: OptionalPageCursor

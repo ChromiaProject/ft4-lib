@@ -4,7 +4,6 @@ import {
   PaymentHistoryStore,
 } from "./interfaces";
 import { BufferId } from "../../../cryptoUtils";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import {
   paymentHistoryEntryFromJSON,
@@ -13,9 +12,10 @@ import {
 import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { formatter } from "postchain-client";
 import { PageCursor } from "/ft3/types";
+import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 export async function ensurePaymentHistoryStoreLocal(
-  session: GtxClient,
+  session: IClient,
   pageSize: number,
   accountId: BufferId,
   filter: PaymentHistoryFilter | null
@@ -41,7 +41,7 @@ export async function ensurePaymentHistoryStoreLocal(
 }
 
 export async function createNewPaymentHistoryStoreLocal(
-  session: GtxClient,
+  session: IClient,
   accountId: BufferId,
   pageSize: number,
   filter: PaymentHistoryFilter | null
@@ -71,7 +71,7 @@ export async function createNewPaymentHistoryStoreLocal(
 }
 
 export async function loadPaymentHistoryStoreLocal(
-  session: GtxClient,
+  session: IClient,
   accountId: BufferId,
   pageSize: number,
   filter: PaymentHistoryFilter | null

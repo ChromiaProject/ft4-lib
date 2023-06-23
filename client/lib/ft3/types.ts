@@ -1,9 +1,9 @@
 import { BufferId } from "../cryptoUtils";
 import { AuthDescriptor } from "./account/auth-descriptor/types";
-import {
-  PaymentHistoryIterator,
-  PaymentHistoryStore,
-} from "./account/payment-history/interfaces";
+// import {
+//   PaymentHistoryIterator,
+//   PaymentHistoryStore,
+// } from "./account/payment-history/interfaces";
 import { Amount } from "./asset/interfaces";
 import {
   Account,
@@ -125,7 +125,7 @@ export interface ftQuerySession {
       ids: (ids: Buffer[]) => Promise<Account[]>;
       id: (id: BufferId) => Promise<Account | null>;
     };
-    paymentHistory: {
+    /*paymentHistory: {
       iterator: (
         paymentHistoryStore: PaymentHistoryStore
       ) => PaymentHistoryIterator;
@@ -137,7 +137,7 @@ export interface ftQuerySession {
         accountId: BufferId,
         pageSize: number
       ) => Promise<PaymentHistoryStore>;
-    };
+    };*/
     isAuthDescriptorValid: (
       accountid: BufferId,
       authDescriptorid: BufferId

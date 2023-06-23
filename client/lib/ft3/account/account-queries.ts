@@ -115,7 +115,7 @@ export function accountAuthDescriptorsPaginated(
   accountId: BufferId,
   limit: number,
   cursor: OptionalPageCursor = null
-): QueryObject {
+): QueryObject<{ id: Buffer; page_size: number; page_cursor: string }> {
   return {
     name: "ft4.get_account_auth_descriptors_paginated",
     args: {

@@ -5,12 +5,13 @@ import {
 } from "./interfaces";
 import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { BufferId } from "../../../cryptoUtils";
-import { GtxClient, formatter } from "postchain-client";
+import { formatter } from "postchain-client";
+import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { PageCursor } from "/ft3/types";
 
 export async function createPaymentHistoryStoreMemory(
-  session: GtxClient,
+  session: IClient,
   accountId: BufferId,
   pageSize: number,
   filter: PaymentHistoryFilter | null

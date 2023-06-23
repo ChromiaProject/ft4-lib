@@ -1,12 +1,17 @@
-import { PaymentHistoryFilter, TransferHistoryResponse } from "./types";
+import {
+  PaymentHistoryEntryResponse,
+  PaymentHistoryFilter,
+  PaymentHistoryType,
+  TransferHistoryResponse,
+} from "./types";
 import { BufferId } from "../../../cryptoUtils";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { formatter } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
 import { PaymentHistoryError, PaymentHistoryRetriever } from "./interfaces";
+import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 export function createPaymentHistoryRetriever(
-  session: GtxClient,
+  session: IClient,
   accountId: BufferId
 ): PaymentHistoryRetriever {
   const id = formatter.ensureBuffer(accountId);
@@ -25,14 +30,20 @@ export function createPaymentHistoryRetriever(
       if (amount > 100)
         throw new PaymentHistoryError("amount needs to be <= 100");
 
-      const res = await session.query("ft4.get_transfer_history", {
+      const res = await session.query<
+        QueryType,
+        {
+          data: PaymentHistoryEntryResponse[];
+          next_cursor: string;
+        }
+      >("ft4.get_transfer_history", {
         account_id: id,
         filter: [filter?.paymentHistoryType],
         page_size: amount,
         page_cursor: cursor,
       });
       return {
-        data: res.data.map((d) => createPaymentHistoryEntryFromResponse(d)),
+        data: res.data.map(createPaymentHistoryEntryFromResponse),
         nextCursor: res.next_cursor,
       };
     },
@@ -41,6 +52,13 @@ export function createPaymentHistoryRetriever(
         await session.query("ft4.get_transfer_history_entry", { rowid })
       );
     },
-    brid: session.newTransaction([]).gtx.blockchainRID.toString("hex"),
+    brid: session.config.blockchainRID.toString("hex"),
   });
 }
+
+type QueryType = {
+  account_id: Buffer;
+  filter: PaymentHistoryType[] | undefined;
+  page_size: number;
+  page_cursor: string;
+};

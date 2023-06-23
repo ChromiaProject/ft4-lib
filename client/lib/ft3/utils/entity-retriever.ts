@@ -1,5 +1,6 @@
-import { EntityRetreiver, PaginatedEntity, QueryObject } from "./types";
+import { EntityRetriever, PaginatedEntity } from "./types";
 import { Connection, PagedResponse } from "../types";
+import { QueryArguments, QueryObject } from "postchain-client";
 
 class RetrieveError extends Error {
   constructor(msg?: string) {
@@ -15,9 +16,9 @@ export function createEntityRetriever<
   R extends PagedResponse<V> = PagedResponse<V>
 >(
   session: Connection,
-  query: QueryObject,
+  query: QueryObject<QueryArguments>,
   dataMapper: (arg: V[]) => T[]
-): EntityRetreiver<T> {
+): EntityRetriever<T> {
   return {
     retrieve: async (limit = 100): Promise<PaginatedEntity<T>> => {
       if (limit > 100) throw new RetrieveError("amount needs to be <= 100");
