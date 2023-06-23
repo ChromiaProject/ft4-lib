@@ -2,7 +2,13 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./account";
 import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
-import { ftQuerySession, ftUserSession, Connection, Session } from "./types";
+import {
+  ftQuerySession,
+  ftUserSession,
+  Connection,
+  Session,
+  OptionalPageCursor,
+} from "./types";
 import { getConfig, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
@@ -16,6 +22,7 @@ import {
   _getAllAssets,
   _getAssetById,
   _getAssetsByName,
+  _getAllAssetsPaginated,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./account/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
@@ -67,6 +74,10 @@ export function createConnection(client: GtxClient): Connection {
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
     getAllAssets: () => _getAllAssets(connection),
+    getAllAssetsPaginated: (
+      limit?: number,
+      cursor: OptionalPageCursor = null
+    ) => _getAllAssetsPaginated(connection, limit, cursor),
   });
 
   return connection;
