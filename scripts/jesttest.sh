@@ -97,13 +97,13 @@ i=0
 max=15
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( $max - $i )) \r"
+    echo -n "Waiting to start tests... $(( $max - $i ))"
     true $(( i=i+1 ))
     sleep 1
 done
 
 
-echo "> Starting jest tests with options: " "$opt" "\n"
+echo "> Starting jest tests with options: " "$opt"
 
 pids=()
 for f in ./**/*.test.ts; do
@@ -111,14 +111,14 @@ for f in ./**/*.test.ts; do
     pids+=($!)
 done;
 
-status_code=0
+return_code=0
 for pid in "${pids[@]}"; do
     wait "$pid"
     status=$?
-    if [[ $status -eq 0 ]]; then status_code=$status_code; else status_code=$status; fi
+    if [[ $status -eq 0 ]]; then return_code=$return_code; else return_code=$status; fi
 done
 
-if [[ $status_code -eq 0 ]]; then
+if [[ $return_code -eq 0 ]]; then
     echo "All TypeScript tests passed"
 else
     echo "Tests failed"
