@@ -104,10 +104,19 @@ done
 
 
 echo "> Starting jest tests with options: " "$opt" "\n"
-npx jest -maxWorkers=1 --testPathPattern=payment-history.test.ts $opt && \
-npx jest -maxWorkers=1 --testPathPattern=asset-balance.test.ts $opt && \
-    npx jest --testPathIgnorePatterns=payment-history.test.ts $opt
-return_code=$?
+
+pids=()
+for f in ./**/*.test.ts; do
+    npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+    pids+=($!)
+done;
+
+status_code=0
+for pid in "${pids[@]}"; do
+    wait "$pid"
+    status=$?
+    if [[ $status -eq 0 ]]; then status_code=$status_code; else status_code=$status; fi
+done
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 
