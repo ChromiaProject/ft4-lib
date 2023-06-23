@@ -1,3 +1,4 @@
+#!/bin/bash
 
 DOCKER=${DOCKER:-docker}
 
