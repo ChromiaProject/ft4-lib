@@ -55,6 +55,25 @@ describe("Asset", () => {
     );
   });
 
+  it("returns the assets paginated", async () => {
+    // Assure that there will always be at least three assets to not make it dependent on execution order
+    await getNewAsset(ft);
+    await getNewAsset(ft);
+    await getNewAsset(ft);
+
+    const { data: page1, nextCursor } = await connection.getAllAssetsPaginated(
+      2
+    );
+
+    expect(page1.length).toBe(2);
+    const { data: page2 } = await connection.getAllAssetsPaginated(
+      1,
+      nextCursor
+    );
+
+    expect(page2.length).toBe(1);
+  });
+
   it("should successfully register with valid icon URL", async () => {
     const validUrl = "https://example.com/icon.png";
     const asset = await getNewAsset(ft, "Test Asset 1", "TST1", 0, validUrl);

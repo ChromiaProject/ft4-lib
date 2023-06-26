@@ -58,6 +58,19 @@ export function allAssets(): QueryObject {
   };
 }
 
+export function allAssetsPaginated(
+  limit: number,
+  cursor: OptionalPageCursor
+): QueryObject {
+  return {
+    name: "ft4.get_all_assets_paginated",
+    args: {
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
 export function balanceByAccountId(
   accountId: BufferId,
   assetId: BufferId

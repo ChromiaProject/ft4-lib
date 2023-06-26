@@ -11,12 +11,14 @@ import {
   assetByName,
   allAssets,
   balancesByAccountId,
+  allAssetsPaginated,
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
-import { Connection } from "../types";
-import { freeze } from "../utils/types";
+import { Connection, OptionalPageCursor } from "../types";
+import { PaginatedEntity, freeze } from "../utils/types";
 import { createAmountFromBalance } from "./amount";
+import { createEntityRetriever } from "../utils/entity-retriever";
 
 export async function getAssetById(
   session: GtxClient,
@@ -81,6 +83,18 @@ export async function _getAssetsByName(
 
 export async function _getAllAssets(connection: Connection): Promise<Asset[]> {
   return await connection.query<Asset[]>(allAssets());
+}
+
+export async function _getAllAssetsPaginated(
+  connection: Connection,
+  limit: number,
+  cursor: OptionalPageCursor = null
+): Promise<PaginatedEntity<Asset>> {
+  return createEntityRetriever<Asset, Asset>(
+    connection,
+    allAssetsPaginated(limit, cursor),
+    (a) => a
+  ).retrieve();
 }
 
 export async function _getBalanceByAccountId(
