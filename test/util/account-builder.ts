@@ -1,4 +1,3 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import {
   authDescriptor,
   FlagsType,
@@ -14,7 +13,7 @@ import {
   IAuthenticatedAccount,
 } from "../../client/lib/ft3/account/types";
 import { ftUserSession } from "../../client/lib/ft3/types";
-import { gtx } from "postchain-client";
+import { gtx, SignatureProvider } from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft3/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
@@ -24,6 +23,7 @@ import {
   createAuthDataService,
   createConnection,
 } from "../../client/lib/ft3/ft-session";
+import { createChromiaClient } from "./blockchain-util";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -105,7 +105,7 @@ class AccountBuilder {
     const account = await this.registerAccount();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
-    const connection = createConnection(this.session.get.gtxClient);
+    const connection = createConnection(await createChromiaClient());
     const { signatureProvider, authDescriptor } = this.session.user;
     const keyHandler =
       createInMemoryFTKeyStore(signatureProvider).createKeyHandler(

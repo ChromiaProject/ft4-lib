@@ -1,16 +1,17 @@
-import { encryption, gtx } from "postchain-client";
+import { Operation, encryption, gtx } from "postchain-client";
 import {
   authDescriptor,
   FlagsType,
 } from "../../client/lib/ft3/account/auth-descriptor";
 import { User } from "../../client/lib/ft3/account/types";
-import { KeyManager } from "../../client/lib/ft3/account/auth/types";
-import { Operation } from "../../client/lib/ft3/utils/types";
+import { AuthData, KeyManager } from "../../client/lib/ft3/account/auth/types";
 
 export default function adminUser(): User {
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),
-    authorize: (operation: Operation) => Promise.resolve([operation]),
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    authorize: (operation: Operation, auth_data: AuthData) =>
+      Promise.resolve([operation]),
   };
   const signatureProvider = {
     ...gtx.newSignatureProvider(
