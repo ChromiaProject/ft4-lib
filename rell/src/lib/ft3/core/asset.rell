@@ -199,6 +199,7 @@ namespace Unsafe {
         name,
         symbol: text,
         decimals: integer,
+        blockchain_rid: byte_array,
         icon_url: text): asset {
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
@@ -208,13 +209,13 @@ namespace Unsafe {
             "Invalid URL for icon"
         );
 
-        val id = (name, chain_context.blockchain_rid).hash();
+        val id = (name, blockchain_rid).hash();
         return create asset (
             id,
             name,
             symbol,
             decimals,
-            issuing_brid=chain_context.blockchain_rid,
+            issuing_brid=blockchain_rid,
             icon_url=trimmed_icon_url,
             total_supply=0L
         );

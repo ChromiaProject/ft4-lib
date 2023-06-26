@@ -62,7 +62,7 @@ export function assetByNamePaginated(
   cursor: OptionalPageCursor = null
 ): QueryObject {
   return {
-    name: "ft4.get_asset_by_name",
+    name: "ft4.get_asset_by_name_paginated",
     args: {
       name: name,
       page_size: limit,

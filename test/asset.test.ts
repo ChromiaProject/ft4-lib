@@ -30,14 +30,39 @@ describe("Asset", () => {
 
   it("can fetch paginated assets", async () => {
     const assetName = generateAssetName();
-    const asset = await getNewAsset(ft, assetName);
-    await getNewAsset(ft, assetName);
-    await getNewAsset(ft, assetName);
+    const client = ft.get.gtxClient;
+    const txn = client.newTransaction([]);
+    txn.addOperation(
+      "register_asset",
+      assetName,
+      generateAssetSymbol(),
+      0,
+      Buffer.alloc(32, "a"),
+      ""
+    );
+    txn.addOperation(
+      "register_asset",
+      assetName,
+      generateAssetSymbol(),
+      0,
+      Buffer.alloc(32, "b"),
+      ""
+    );
+    txn.addOperation(
+      "register_asset",
+      assetName,
+      generateAssetSymbol(),
+      0,
+      Buffer.alloc(32, "c"),
+      ""
+    );
+    await txn.postAndWaitConfirmation();
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByNamePaginated(assetName, 2);
     expect(expectedAssets.length).toEqual(2);
-    expect(expectedAssets[0]).toEqual(asset);
+    expect(expectedAssets[0].name).toEqual(assetName);
+    expect(expectedAssets[1].name).toEqual(assetName);
 
     const { data: expectedAssets2 } = await connection.getAssetsByNamePaginated(
       assetName,
@@ -45,7 +70,7 @@ describe("Asset", () => {
       nextCursor
     );
     expect(expectedAssets2.length).toEqual(1);
-    expect(expectedAssets2[0]).toEqual(asset);
+    expect(expectedAssets2[0].name).toEqual(assetName);
   });
 
   it("should be returned when queried by id", async () => {
