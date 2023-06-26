@@ -51,4 +51,9 @@ if $docker; then
     docker rm ft4_rell_test > /dev/null
 fi
 
-return $return_code || exit $return_code
+# If the script is sourced, return the exit code, otherwise exit the script
+if echo "$-" | grep -q "i"; then
+    return $return_code
+else
+    exit $return_code
+fi

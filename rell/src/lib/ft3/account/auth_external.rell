@@ -38,7 +38,11 @@ function authenticate(required_flags: set<text>, message_template: text? = null)
         else -> null;
     };
 
-    return require(account, "Invalid auth operation: %s".format(previous_op.name));
+    val valid_account = require(account, "Invalid auth operation: %s".format(previous_op.name));
+
+    rate_limit(valid_account);
+
+    return valid_account;
 }
 
 function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<text>, auth_message_template: text?): account {
