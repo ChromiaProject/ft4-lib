@@ -100,7 +100,7 @@ describe("EVM key handler", () => {
 
     expect(tx.gtx.operations).toEqual([
       {
-        opName: "ft.evm_auth",
+        opName: "ft4.evm_auth",
         args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
       },
       {
@@ -108,7 +108,7 @@ describe("EVM key handler", () => {
         args: [],
       },
       {
-        opName: "ft.evm_auth",
+        opName: "ft4.evm_auth",
         args: [accountId, ad.id, [[signature2.r, signature2.s, signature2.v]]],
       },
       {

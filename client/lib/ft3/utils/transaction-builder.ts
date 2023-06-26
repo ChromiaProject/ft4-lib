@@ -152,7 +152,7 @@ export function transactionBuilder(
       );
       // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {
-        if (op[0] === "ft.evm_auth") {
+        if (op[0] === "ft4.evm_auth") {
           nonces.set(keyHandler.authDescriptor.id, nonce + 1);
         }
       });

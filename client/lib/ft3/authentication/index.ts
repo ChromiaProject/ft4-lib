@@ -141,7 +141,7 @@ export function nonce(authDescriptorId: BufferId): QueryObject {
 
 export function loginConfig(configName: string | null = null): QueryObject {
   return {
-    name: "ft.get_login_config",
+    name: "ft4.get_login_config",
     args: {
       name: configName,
     },

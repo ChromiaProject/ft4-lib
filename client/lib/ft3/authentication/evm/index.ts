@@ -12,7 +12,7 @@ export function evmAuth(
   signatures: Signature[]
 ): Operation {
   return [
-    "ft.evm_auth",
+    "ft4.evm_auth",
     formatter.ensureBuffer(accountId),
     formatter.ensureBuffer(authDesriptorId),
     signatures.map(({ r, s, v }) => [r, s, v]),

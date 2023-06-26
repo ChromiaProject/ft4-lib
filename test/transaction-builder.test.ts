@@ -77,7 +77,7 @@ describe("Transaction Builder", () => {
 
     expect(tx.gtx.operations).toStrictEqual([
       {
-        opName: "ft.ft_auth",
+        opName: "ft4.ft_auth",
         args: [authenticator.accountId, authDescriptor.id],
       },
       { opName: "ft4.transfer", args: [[expectedInput], [expectedOutput]] },
