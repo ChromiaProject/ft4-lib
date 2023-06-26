@@ -1,0 +1,15 @@
+module;
+
+import ^^^.lib.ft3.auth;
+
+@extend(auth.login_config)
+function () = auth.add_login_config(
+    flags = ["B"]
+);
+
+@extend(auth.login_config)
+function () = auth.add_login_config(
+    name = "custom_config",
+    flags = ["X", "Y"]
+);
+

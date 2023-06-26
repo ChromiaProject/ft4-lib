@@ -1,0 +1,21 @@
+@test
+module;
+
+import ^^^.lib.ft3.auth;
+
+function test_querying_default_login_config_returns_empty_flags_list_when_default_config_is_not_overriden() {
+    val config = auth.get_login_config("default");
+
+    assert_equals(config, auth._login_config(flags = []));
+}
+
+function test_querying_login_config_without_config_name_returns_default_login_config() {
+    val config = auth.get_login_config();
+
+    assert_equals(config, auth._login_config(flags = []));
+}
+
+function test_querying_unknown_login_config_throws_error() {
+    assert_null(try_call(auth.get_login_config("unknown_config", *)));
+}
+
