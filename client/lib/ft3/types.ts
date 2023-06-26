@@ -153,6 +153,11 @@ export interface Connection {
   getAccountsByAuthDescriptorId: (
     authDescriptorId: BufferId
   ) => Promise<IAccount[]>;
+  getAccountsByAuthDescriptorIdPaginated: (
+    id: BufferId,
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<IAccount>>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;

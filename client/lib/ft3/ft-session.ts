@@ -16,6 +16,7 @@ import {
   _getByAuthDescriptorId,
   _getById,
   createAccountObject,
+  _getByAuthDescriptorIdPaginated,
 } from "./account/account-query-functions";
 import { Operation, QueryObject } from "./utils/types";
 import {
@@ -72,7 +73,11 @@ export function createConnection(client: GtxClient): Connection {
       _getByParticipantId(connection, id),
     getAccountsByAuthDescriptorId: (id: BufferId) =>
       _getByAuthDescriptorId(connection, id),
-
+    getAccountsByAuthDescriptorIdPaginated: (
+      id: BufferId,
+      limit?: number,
+      cursor?: OptionalPageCursor
+    ) => _getByAuthDescriptorIdPaginated(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
