@@ -2,6 +2,7 @@ import { formatter } from "postchain-client";
 import { Query, QueryObject } from "../utils/types";
 import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
   return ["ft4.get_account_auth_descriptors", { id: accountId }];

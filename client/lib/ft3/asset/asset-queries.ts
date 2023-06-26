@@ -2,6 +2,7 @@ import { formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { QueryObject, Query } from "../utils/types";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export function assetByIdQuery(assetId: Buffer): Query {
   return ["ft4.get_asset_by_id", { asset_id: assetId }];

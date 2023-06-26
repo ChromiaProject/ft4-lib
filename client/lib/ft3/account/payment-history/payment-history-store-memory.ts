@@ -9,6 +9,7 @@ import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { formatter } from "postchain-client";
 import { PageCursor } from "/ft3/types";
+import { Buffer } from "buffer";
 
 export async function createPaymentHistoryStoreMemory(
   session: GtxClient,

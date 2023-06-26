@@ -16,6 +16,7 @@ import {
 import { Asset, Balance } from "./asset/types";
 import { QueryObject, Operation, Config } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
+import { Buffer } from "buffer";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;

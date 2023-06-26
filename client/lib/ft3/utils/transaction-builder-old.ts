@@ -5,6 +5,7 @@ import {
 import { User } from "../account/types";
 import { Operation } from "./types";
 import { FlagsType } from "../account";
+import { Buffer } from "buffer";
 
 export type LegacyTransactionBuilder = {
   _operations: Operation[];

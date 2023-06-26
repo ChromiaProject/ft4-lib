@@ -1,5 +1,6 @@
 import { Amount } from "../../asset/interfaces";
 import { PageCursor } from "../../types";
+import { Buffer } from "buffer";
 
 export type PaymentHistoryTransferArgs = {
   amount: Amount;

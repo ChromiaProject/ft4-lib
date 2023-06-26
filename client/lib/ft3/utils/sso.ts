@@ -7,6 +7,7 @@ import { authDescriptor, FlagsType } from "../account/auth-descriptor";
 import { Account, User } from "../account/types";
 import { ftUserSession } from "../types";
 import { localStorageSignatureProvider } from "./local-signature-provider";
+import { Buffer } from "buffer";
 
 let vaultUrl = "https://vault-testnet.chromia.com";
 

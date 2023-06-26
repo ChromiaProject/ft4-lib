@@ -31,6 +31,7 @@ import {
   defaultFTAuthData,
   nonce,
 } from "./authentication";
+import { Buffer } from "buffer";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
