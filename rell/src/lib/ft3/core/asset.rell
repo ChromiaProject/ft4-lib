@@ -54,6 +54,26 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     ) limit utils.fetch_data_size(page_size);
 }
 
+function get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return core.asset @* {
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                id = .id,
+                symbol = .symbol,
+                name = .name,
+                decimals = .decimals,
+                brid = .issuing_brid,
+                icon_url = .icon_url,
+                supply = .total_supply
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 function get_asset_balances(account_id: byte_array) {
     return balance @* { .account.id == account_id } (
         asset = (
