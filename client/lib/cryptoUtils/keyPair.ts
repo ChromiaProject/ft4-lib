@@ -1,5 +1,6 @@
 import * as pcl from "postchain-client";
 import { BufferId } from "./index";
+import { Buffer } from "buffer";
 
 class KeyPair {
   readonly pubKey: Buffer;

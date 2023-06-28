@@ -6,6 +6,7 @@ import {
 import { User } from "../../client/lib/ft3/account/types";
 import { KeyManager } from "../../client/lib/ft3/account/auth/types";
 import { Operation } from "../../client/lib/ft3/utils/types";
+import { Buffer } from "buffer";
 
 export default function adminUser(): User {
   const km = {

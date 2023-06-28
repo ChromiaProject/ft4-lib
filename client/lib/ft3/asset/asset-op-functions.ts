@@ -6,6 +6,7 @@ import { Amount, InvalidUrlError } from "../asset/interfaces";
 import { formatter } from "postchain-client";
 import { nop } from "../utils";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { Buffer } from "buffer";
 
 //-------------------ADMIN OPERATIONS-------------------//
 

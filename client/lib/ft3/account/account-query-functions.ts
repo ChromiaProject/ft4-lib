@@ -37,6 +37,7 @@ import { createConnection } from "../ft-session";
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountIdPaginated } from "../asset/asset-queries";
+import { Buffer } from "buffer";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
