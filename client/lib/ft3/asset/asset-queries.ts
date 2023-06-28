@@ -41,12 +41,17 @@ export function assetById(assetId: BufferId): QueryObject {
   };
 }
 
+export function assetBySymbol(symbol: string): QueryObject {
+  return {
+    name: "ft4.get_asset_by_symbol",
+    args: { symbol },
+  };
+}
+
 export function assetByName(name: string): QueryObject {
   return {
     name: "ft4.get_asset_by_name",
-    args: {
-      name: name,
-    },
+    args: { name },
   };
 }
 
