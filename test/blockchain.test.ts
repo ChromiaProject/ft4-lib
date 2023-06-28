@@ -1,9 +1,9 @@
 import { version } from "../package.json";
-import { Connection } from "../client/lib/ft3/types";
+import { Connection } from "../client/lib/ft4/types";
 import { createClient } from "./util/blockchain-util";
-import { Config } from "../client/lib/ft3/utils/types";
+import { Config } from "../client/lib/ft4/utils/types";
 import { ft } from "../client/lib/ft3";
-import { createConnection } from "/ft3/ft-session";
+import { createConnection } from "/ft4/ft-session";
 
 let connection: Connection;
 

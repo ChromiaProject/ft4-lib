@@ -1,7 +1,7 @@
 import { encryption, gtv } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
-import { AuthDescriptor } from "../../client/lib/ft3/accounts/auth-descriptor/types";
-import { authDescriptor } from "../../client/lib/ft3/accounts/auth-descriptor";
+import { AuthDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor/types";
+import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 
 function generateNumber(max = 10000): number {

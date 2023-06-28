@@ -2,8 +2,8 @@ import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Account, User } from "../client/lib/ft3/accounts/types";
-import { Connection, ftUserSession } from "../client/lib/ft3/types";
+import { Account, User } from "../client/lib/ft4/accounts/types";
+import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import { createClient, getUserSession } from "./util/blockchain-util";
 import {
   authDescriptor,
@@ -12,19 +12,19 @@ import {
   FlagsType,
   singleSigArgs,
   toGtv,
-} from "../client/lib/ft3/accounts/auth-descriptor";
-import { registerOp } from "../client/lib/ft3/accounts/account-dev-operations";
-import { addAuthDescriptorOp } from "../client/lib/ft3/accounts/account-operations";
-import { op } from "../client/lib/ft3/utils";
+} from "../client/lib/ft4/accounts/auth-descriptor";
+import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
+import { addAuthDescriptorOp } from "../client/lib/ft4/accounts/account-operations";
+import { op } from "../client/lib/ft4/utils";
 import adminUser from "./util/admin_user";
 import {
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
-} from "../client/lib/ft3/ft-session";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
-import { createAuthenticatedAccount } from "../client/lib/ft3/accounts/account-op-functions";
+} from "../client/lib/ft4/ft-session";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenicator } from "../client/lib/ft4/authentication";
+import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
 import { createAccount } from "./util/util";
 
 async function addAuthDescriptorTo(

@@ -1,11 +1,11 @@
 import { encryption } from "postchain-client";
-import { ftAuth } from "../client/lib/ft3/authentication/ft";
-import { op } from "../client/lib/ft3/utils";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { ftAuth } from "../client/lib/ft4/authentication/ft";
+import { op } from "../client/lib/ft4/utils";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createClient } from "./util/blockchain-util";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
+import { createAuthenicator } from "../client/lib/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { KeyHandler } from "../client/lib/ft3/authentication/interfaces";
+import { KeyHandler } from "../client/lib/ft4/authentication/interfaces";
 import { createTestAuthDescriptor } from "./util/util";
 
 describe("Authenticator session", () => {

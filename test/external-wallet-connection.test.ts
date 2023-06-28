@@ -1,5 +1,5 @@
 //import WalletConnect from "@walletconnect/client";
-//import ExternalWalletConnection from "../client/lib/ft3/user/external-wallet-connection";
+//import ExternalWalletConnection from "../client/lib/ft4/user/external-wallet-connection";
 
 //jest.mock("@walletconnect/client");
 

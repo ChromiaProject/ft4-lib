@@ -1,24 +1,24 @@
 import { encryption } from "postchain-client";
 import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
+import { createAuthenicator } from "../client/lib/ft4/authentication";
 import {
   AuthorizationError,
   transactionBuilder,
-} from "../client/lib/ft3/utils/transaction-builder";
+} from "../client/lib/ft4/utils/transaction-builder";
 import { createClient } from "./util/blockchain-util";
-import { nop } from "../client/lib/ft3/utils";
+import { nop } from "../client/lib/ft4/utils";
 import {
   Authenticator,
   KeyHandler,
-} from "../client/lib/ft3/authentication/interfaces";
+} from "../client/lib/ft4/authentication/interfaces";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { transferOp } from "../client/lib/ft3/accounts/account-operations";
-import { XferInput, XferOutput } from "../client/lib/ft3/accounts/types";
-import { AuthDescriptor } from "../client/lib/ft3/accounts/auth-descriptor/types";
-import { FlagsType } from "../client/lib/ft3/accounts/auth-descriptor";
-import { registerOp } from "../client/lib/ft3/accounts/account-dev-operations";
+import { transferOp } from "../client/lib/ft4/accounts/account-operations";
+import { XferInput, XferOutput } from "../client/lib/ft4/accounts/types";
+import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
+import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
+import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

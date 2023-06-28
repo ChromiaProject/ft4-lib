@@ -13,7 +13,7 @@ import {
   nop,
 } from "../client/lib/ft3";
 import SSO from "./util/fake-sso";
-import { register } from "../client/lib/ft3/accounts/account-dev-operations";
+import { register } from "../client/lib/ft4/accounts/account-dev-operations";
 import { LocalStorageMock } from "./util/util";
 
 let blockchain: Blockchain;
