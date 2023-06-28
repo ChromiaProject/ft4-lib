@@ -1,18 +1,19 @@
 @test module;
 
 import acc: ^^^.lib.ft3.account;
+import utils: ^^^.lib.ft3.utils;
 import acc_external: ^^^.lib.ft3.account.external;
-import ^^.core.utils;
+import test_utils: ^^.core.utils;
 import test_op: ^^.operations;
 
 function setup_account_with_many_ads() {
-  val alice_ad = utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
-  utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
+  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  test_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
   val account = acc.account @ {};
-  val bob_ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-  val eve_ad = utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
-  val trudy_ad = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
+  val eve_ad = test_utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
+  val trudy_ad = test_utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
   
   rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob).run();
   rell.test.tx().op(test_op.add_ad_to_account(account, eve_ad)).sign(rell.test.keypairs.eve).run();
@@ -52,15 +53,15 @@ function test_paginated_items_have_the_correct_return_format() {
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors_paginated(account.id, 1, null);
 
-  val alice_ad = utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
   assert_equals(descriptors.data[0], alice_ad.to_gtv_pretty());
 }
 
 function test_accounts_by_ad_id_are_paginated() {
-  val alice_ad = utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
-  val bob = utils.register_bob();
-  val eve = utils.register_eve();
-  val trudy = utils.register_trudy();
+  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val bob = test_utils.register_bob();
+  val eve = test_utils.register_eve();
+  val trudy = test_utils.register_trudy();
 
   rell.test.tx()
     .op(test_op.add_ad_to_account(bob.account, alice_ad))
@@ -70,16 +71,21 @@ function test_accounts_by_ad_id_are_paginated() {
     .run();
 
   val accounts_p1 = acc_external.get_accounts_by_auth_descriptor_id_paginated(alice_ad.hash(), 2, null);
-  assert_equals(byte_array.from_gtv_pretty(accounts_p1.data[0]), bob.account.id);
-  assert_equals(byte_array.from_gtv_pretty(accounts_p1.data[1]), eve.account.id);
+  assert_equals(
+    accounts_p1, 
+    utils.paged_result(
+        data = [bob.account.id.to_gtv(), eve.account.id.to_gtv()],
+        next_cursor = accounts_p1.next_cursor
+    )
+  );
   
   val accounts_p2 = acc_external.get_accounts_by_auth_descriptor_id_paginated(alice_ad.hash(), 2, accounts_p1.next_cursor);
   assert_equals(byte_array.from_gtv_pretty(accounts_p2.data[0]), trudy.account.id);
-}
-
-function test_paginated_accounts_have_correct_format() {
-  val alice = utils.register_alice();
-  
-  val accounts_p1 = acc_external.get_accounts_by_auth_descriptor_id_paginated(alice.auth_descriptor_id, 2, null);
-  assert_equals(byte_array.from_gtv_pretty(accounts_p1.data[0]), alice.account.id);
+  assert_equals(
+    accounts_p2, 
+    utils.paged_result(
+        data = [trudy.account.id.to_gtv()],
+        next_cursor = null
+    )
+  );
 }
