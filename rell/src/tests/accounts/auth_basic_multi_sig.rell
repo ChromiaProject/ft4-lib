@@ -2,9 +2,9 @@
 module;
 
 import cu: ^^.assets.utils;
-import acc: ^^^.lib.ft3.accounts;
-import ^^^.lib.ft3.ft3_basic_dev.*;
-import ^^^.lib.ft3.operations.dev_op_auth;
+import acc: ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.ft4_basic_dev.*;
+import ^^^.lib.ft4.operations.dev_op_auth;
 
 /*
  * We aim to unit test the basic authentication rules (e.g. the number of signatures and required flags).

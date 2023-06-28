@@ -1,5 +1,5 @@
-import ^^.lib.ft3.assets;
-import ^^.lib.ft3.accounts;
+import ^^.lib.ft4.assets;
+import ^^.lib.ft4.accounts;
 
 object transfer_extensions_state {
     mutable is_before_transfer_called: boolean = false;

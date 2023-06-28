@@ -1,15 +1,15 @@
 @test module;
-import acc: ^^^.lib.ft3.accounts;
-import ^^^.lib.ft3.assets;
-import ^^^.lib.ft3.admin;
-import ^^^.lib.ft3.operations.dev_op_account;
-import ^^^.lib.ft3.operations.dev_op_auth;
+import acc: ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.assets;
+import ^^^.lib.ft4.admin;
+import ^^^.lib.ft4.operations.dev_op_account;
+import ^^^.lib.ft4.operations.dev_op_auth;
 
 struct module_args {
     admin_priv_key: text; 
 }
 
-import ^^^.lib.ft3.auth;
+import ^^^.lib.ft4.auth;
 
 struct account_data {
     acc.account;

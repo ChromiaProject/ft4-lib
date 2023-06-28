@@ -1,9 +1,9 @@
 module;
 
-namespace ft3 {
+namespace ft4 {
     import acc: ^.accounts;
     import acc_ext: ^.accounts.external;
-    import assets: ^.ft3_basic_dev;
+    import assets: ^.ft4_basic_dev;
     import assets_ext: ^.assets.external;
     import ^.operations.dev_op_account;
     import ^.operations.dev_op_auth;

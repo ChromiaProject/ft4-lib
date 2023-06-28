@@ -1,8 +1,8 @@
 @test module;
 
 import ^.utils;
-import acc: ^^^.lib.ft3.accounts;
-import ^^^.lib.ft3.admin;
+import acc: ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.admin;
 
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;

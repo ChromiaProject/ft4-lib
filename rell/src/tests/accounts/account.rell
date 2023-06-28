@@ -1,7 +1,7 @@
 @test module;
 
-import acc: ^^^.lib.ft3.accounts;
-import acc_external: ^^^.lib.ft3.accounts.external;
+import acc: ^^^.lib.ft4.accounts;
+import acc_external: ^^^.lib.ft4.accounts.external;
 import ^^.assets.utils;
 import test_op: ^^.operations;
 

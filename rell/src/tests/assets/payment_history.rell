@@ -3,11 +3,11 @@ module;
 
 import ^^^.main.*;
 import ^^.extensions.*;
-import ^^^.lib.ft3.assets;
-import ^^^.lib.ft3.ft3_basic_dev.*;
-import acc: ^^^.lib.ft3.accounts;
+import ^^^.lib.ft4.assets;
+import ^^^.lib.ft4.ft4_basic_dev.*;
+import acc: ^^^.lib.ft4.accounts;
 import test_utils: ^.utils;
-import utils: ^^^.lib.ft3.utils;
+import utils: ^^^.lib.ft4.utils;
 
 function test_history() {
     val alice = test_utils.register_alice();
@@ -37,14 +37,14 @@ function test_history() {
     test_utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(ft3.assets_ext.transfer(inputs, outputs))
+        .op(ft4.assets_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
 
     val filter = assets.filter(null);
     val start_cursor = utils.encode_cursor(utils.page_cursor());
-    val response_small = ft3.assets_ext.get_transfer_history(alice.account.id, filter, 10, start_cursor);
-    val response_big = ft3.assets_ext.get_transfer_history(alice.account.id, filter, 110, start_cursor);
+    val response_small = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 10, start_cursor);
+    val response_big = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 110, start_cursor);
     val expected_data = assets.extract_data_from_payment_history_list(
             assets.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -56,7 +56,7 @@ function test_history() {
     );
     
     assert_equals(response_small, expected);
-    assert_equals(ft3.assets_ext.get_payment_history_size(alice.account.id), 2);
+    assert_equals(ft4.assets_ext.get_payment_history_size(alice.account.id), 2);
     assert_equals(response_big, expected);
     assert_true(response_small!!.data.size() == 2);
     assert_true(response_big!!.data.size() == 2);
@@ -90,13 +90,13 @@ function test_history_pagination() {
     test_utils.mint(alice.account, asset, 5L); //adds one entry to the history
 
     rell.test.tx()
-        .op(ft3.assets_ext.transfer(inputs, outputs))
-        .op(ft3.assets_ext.transfer([inputs[0], inputs[0], inputs[0]], outputs))
+        .op(ft4.assets_ext.transfer(inputs, outputs))
+        .op(ft4.assets_ext.transfer([inputs[0], inputs[0], inputs[0]], outputs))
         .sign(rell.test.keypairs.alice)
         .run();
     
     val filter = assets.filter(null);
-    var response = ft3.assets_ext.get_transfer_history(alice.account.id, filter, 2, utils.encode_cursor(utils.page_cursor()));
+    var response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, utils.encode_cursor(utils.page_cursor()));
     var expected_result = assets.extract_data_from_payment_history_list(
             assets.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -116,7 +116,7 @@ function test_history_pagination() {
     val entry_index1 = map<text, gtv>.from_gtv(expected_data[0])['entry_index'];
     assert_equals(entry_index1, (2).to_gtv());
 
-    response = ft3.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
+    response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
     expected_result = assets.extract_data_from_payment_history_list(
             assets.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -137,7 +137,7 @@ function test_history_pagination() {
     val entry_index3 = map<text, gtv>.from_gtv(expected_data[1])['entry_index'];
     assert_equals(entry_index3, (0).to_gtv());
 
-    response = ft3.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
+    response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
     expected_result = assets.extract_data_from_payment_history_list(
             assets.payment_history_entry @* {
                 acc.account @ { .id == alice.account.id }
@@ -150,7 +150,7 @@ function test_history_pagination() {
     );
     assert_true(expected_result.size() == 1);
     assert_equals(response, expected);
-    assert_equals(ft3.assets_ext.get_payment_history_size(alice.account.id), 5);
+    assert_equals(ft4.assets_ext.get_payment_history_size(alice.account.id), 5);
 }
 
 function test_history_filtering() {
@@ -181,15 +181,15 @@ function test_history_filtering() {
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(ft3.assets_ext.transfer(inputs, outputs))
+        .op(ft4.assets_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
 
     val cursor = utils.encode_cursor(utils.page_cursor());
-    assert_equals(ft3.assets_ext.get_transfer_history(alice.account.id, assets.filter(assets.transfer_type.sent), 10, cursor)!!.data.size(), 1);
-    assert_equals(ft3.assets_ext.get_transfer_history(alice.account.id, assets.filter(assets.transfer_type.received), 10, cursor)!!.data.size(), 1);
-    assert_equals(ft3.assets_ext.get_transfer_history(bob.account.id, assets.filter(assets.transfer_type.sent), 10, cursor)!!.data.size(), 0);
-    assert_equals(ft3.assets_ext.get_transfer_history(bob.account.id, assets.filter(assets.transfer_type.received), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft4.assets_ext.get_transfer_history(alice.account.id, assets.filter(assets.transfer_type.sent), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft4.assets_ext.get_transfer_history(alice.account.id, assets.filter(assets.transfer_type.received), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft4.assets_ext.get_transfer_history(bob.account.id, assets.filter(assets.transfer_type.sent), 10, cursor)!!.data.size(), 0);
+    assert_equals(ft4.assets_ext.get_transfer_history(bob.account.id, assets.filter(assets.transfer_type.received), 10, cursor)!!.data.size(), 1);
 }
 
 function test_transfer_history_entry() {
@@ -220,13 +220,13 @@ function test_transfer_history_entry() {
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(ft3.assets_ext.transfer(inputs, outputs))
+        .op(ft4.assets_ext.transfer(inputs, outputs))
         .sign(rell.test.keypairs.alice)
         .run();
     
     val entry = assets.payment_history_entry @* {}[0];
     assert_equals(
-        ft3.assets_ext.get_transfer_history_entry(entry.rowid),
+        ft4.assets_ext.get_transfer_history_entry(entry.rowid),
         (
             id = '%d'.format(entry.rowid),
             delta = entry.delta,

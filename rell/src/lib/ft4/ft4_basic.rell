@@ -1,6 +1,6 @@
 module;
 
-namespace ft3 {
+namespace ft4 {
     import acc: ^.account;
     import acc_ext: ^.accounts.external;
     import assets_ext: ^.assets.external;

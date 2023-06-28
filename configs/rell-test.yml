@@ -1,5 +1,5 @@
 blockchains:
-  ft3_rell_test: #Name of the blockchain
+  ft4_rell_test: #Name of the blockchain
     module: tests.assets.app_module #Entrypoint to the project
 
 compile:
@@ -9,13 +9,13 @@ test: #Not default
   modules: #List of the test modules in your project
     - tests
   moduleArgs:
-    lib.ft3.assets:
+    lib.ft4.assets:
       rate_limit_active: 1
       rate_limit_max_points: 10
       rate_limit_recovery_time: 5000
       rate_limit_points_at_account_creation: 1
 
-    lib.ft3.admin:
+    lib.ft4.admin:
       admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
 
     tests.assets.utils:

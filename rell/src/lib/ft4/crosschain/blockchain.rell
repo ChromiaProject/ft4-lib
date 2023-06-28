@@ -1,9 +1,9 @@
-import ft3: ^.core;
+import ft4. ^.core;
 import acc: ^.account;
 
 
 entity asset_origin {
-   key ft3.asset;
+   key ft4.asset;
    origin_brid: byte_array;
 }
 

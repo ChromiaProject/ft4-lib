@@ -1,6 +1,6 @@
 module;
 
-namespace ft3 {
+namespace ft4 {
     import ^.assets;
     import ^.crosschain;
     import ^.version;
