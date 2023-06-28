@@ -61,5 +61,8 @@
     "tsc-alias": "^1.8.6",
     "tslint": "^6.1.3",
     "typescript": "^5.1.3"
+  },
+  "peerDependencies": {
+    "buffer": "^5.x || ^6.x"
   }
 }

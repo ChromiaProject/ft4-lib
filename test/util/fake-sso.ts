@@ -3,6 +3,7 @@ import { Account, User } from "../../client/lib/ft4/accounts/types";
 import { ftUserSession } from "../../client/lib/ft4/types";
 import { createLocalStorageSignatureProvider } from "../../client/lib/ft4/utils/local-signature-provider";
 import SSO from "../../client/lib/ft4/utils/sso";
+import { Buffer } from "buffer";
 
 export default class FakeSSO extends SSO {
   accountId: Buffer;

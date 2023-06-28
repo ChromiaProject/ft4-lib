@@ -16,13 +16,16 @@ import {
   _getByAuthDescriptorId,
   _getById,
   createAccountObject,
+  _getByAuthDescriptorIdPaginated,
 } from "./accounts/account-query-functions";
 import { Operation, QueryObject } from "./utils/types";
 import {
   _getAllAssets,
   _getAssetById,
+  _getAssetBySymbol,
   _getAssetsByName,
   _getAllAssetsPaginated,
+  _getAssetsByNamePaginated,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
@@ -38,6 +41,7 @@ import {
   defaultFTAuthData,
   nonce,
 } from "./authentication";
+import { Buffer } from "buffer";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -70,9 +74,19 @@ export function createConnection(client: GtxClient): Connection {
       _getByParticipantId(connection, id),
     getAccountsByAuthDescriptorId: (id: BufferId) =>
       _getByAuthDescriptorId(connection, id),
-
+    getAccountsByAuthDescriptorIdPaginated: (
+      id: BufferId,
+      limit?: number,
+      cursor?: OptionalPageCursor
+    ) => _getByAuthDescriptorIdPaginated(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
+    getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
+    getAssetsByNamePaginated: (
+      name: string,
+      limit?: number,
+      cursor?: OptionalPageCursor
+    ) => _getAssetsByNamePaginated(connection, name, limit, cursor),
     getAllAssets: () => _getAllAssets(connection),
     getAllAssetsPaginated: (
       limit?: number,

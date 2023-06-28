@@ -2,6 +2,7 @@ import { formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { QueryObject, Query } from "../utils/types";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export function assetByIdQuery(assetId: Buffer): Query {
   return ["ft4.get_asset_by_id", { asset_id: assetId }];
@@ -41,11 +42,31 @@ export function assetById(assetId: BufferId): QueryObject {
   };
 }
 
+export function assetBySymbol(symbol: string): QueryObject {
+  return {
+    name: "ft4.get_asset_by_symbol",
+    args: { symbol },
+  };
+}
+
 export function assetByName(name: string): QueryObject {
   return {
     name: "ft4.get_asset_by_name",
+    args: { name },
+  };
+}
+
+export function assetsByNamePaginated(
+  name: string,
+  limit: number,
+  cursor: OptionalPageCursor = null
+): QueryObject {
+  return {
+    name: "ft4.get_assets_by_name_paginated",
     args: {
       name: name,
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

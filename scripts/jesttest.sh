@@ -97,7 +97,7 @@ i=0
 max=15
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( $max - $i ))"
+    echo "Waiting to start tests... $(( $max - $i ))"
     true $(( i=i+1 ))
     sleep 1
 done
@@ -130,7 +130,7 @@ if $docker; then
 fi
 kill $prc
 
-# If we're in interactive mode, return the exit code
+# If we are in interactive mode, return the exit code
 if echo "$-" | grep -q "i"; then
     return $return_code
 else

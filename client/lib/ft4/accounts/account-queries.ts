@@ -2,6 +2,7 @@ import { formatter } from "postchain-client";
 import { Query, QueryObject } from "../utils/types";
 import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
   return ["ft4.get_account_auth_descriptors", { id: accountId }];
@@ -64,6 +65,21 @@ export function accountsByAuthDescriptorId(id: BufferId): QueryObject {
     name: "ft4.get_accounts_by_auth_descriptor_id",
     args: {
       id: formatter.ensureBuffer(id),
+    },
+  };
+}
+
+export function accountsByAuthDescriptorIdPaginated(
+  id: BufferId,
+  limit: number,
+  cursor: OptionalPageCursor
+): QueryObject {
+  return {
+    name: "ft4.get_accounts_by_auth_descriptor_id_paginated",
+    args: {
+      id: formatter.ensureBuffer(id),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

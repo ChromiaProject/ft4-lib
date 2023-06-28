@@ -13,6 +13,7 @@ import { Amount } from "../asset/interfaces";
 import { RawGtv } from "postchain-client/built/src/gtv/types";
 import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
+import { Buffer } from "buffer";
 
 export type Account = {
   id: Buffer;

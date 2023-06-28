@@ -19,6 +19,7 @@ import { XferInput, XferOutput } from "../client/lib/ft4/accounts/types";
 import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
+import { Buffer } from "buffer";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

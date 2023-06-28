@@ -4,6 +4,7 @@ import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
 import { createFTKeyHandler } from "../key-handler";
 import { gtx } from "postchain-client";
 import { FtKeystore } from "..";
+import { Buffer } from "buffer";
 
 export function createInMemoryFTKeyStore(
   keyHolder: KeyPair | SignatureProvider

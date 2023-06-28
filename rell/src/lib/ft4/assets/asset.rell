@@ -3,7 +3,7 @@ import acc: ^.accounts;
 entity asset {
     key id: byte_array;
     name;
-    symbol: text;
+    key symbol: text;
     decimals: integer;
     issuing_brid: byte_array;
     icon_url: text;
@@ -85,6 +85,27 @@ function get_asset_balances(account_id: byte_array) {
         ),
         amount = .amount
     );
+}
+
+function get_paginated_asset_balances_by_name(name, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return assets.asset @* {
+        .name == name,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                id = .id,
+                name = .name,
+                symbol = .symbol,
+                decimals = .decimals,
+                brid = .issuing_brid,
+                icon_url = .icon_url,
+                supply = .total_supply
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
 }
 
 function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
@@ -178,6 +199,7 @@ namespace Unsafe {
         name,
         symbol: text,
         decimals: integer,
+        blockchain_rid: byte_array,
         icon_url: text): asset {
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
@@ -187,13 +209,13 @@ namespace Unsafe {
             "Invalid URL for icon"
         );
 
-        val id = (name, chain_context.blockchain_rid).hash();
+        val id = (name, blockchain_rid).hash();
         return create asset (
             id,
             name,
             symbol,
             decimals,
-            issuing_brid=chain_context.blockchain_rid,
+            issuing_brid=blockchain_rid,
             icon_url=trimmed_icon_url,
             total_supply=0L
         );

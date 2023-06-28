@@ -12,6 +12,7 @@ import {
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
   accountAuthDescriptorsPaginated,
+  accountsByAuthDescriptorIdPaginated,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -37,6 +38,8 @@ import { createConnection } from "../ft-session";
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountIdPaginated } from "../asset/asset-queries";
+import { Buffer } from "buffer";
+import { PaginatedEntity } from "../utils/types";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
@@ -232,6 +235,19 @@ export async function _getByAuthDescriptorId(
   const accountIds =
     (await connection.query<Buffer[]>(accountsByAuthDescriptorId(id))) ?? [];
   return accountIds.map((id) => createAccountObject(connection, id));
+}
+
+export async function _getByAuthDescriptorIdPaginated(
+  connection: Connection,
+  id: BufferId,
+  limit = 100,
+  cursor: OptionalPageCursor = null
+): Promise<PaginatedEntity<IAccount>> {
+  return createEntityRetriever<IAccount, Buffer>(
+    connection,
+    accountsByAuthDescriptorIdPaginated(id, limit, cursor),
+    (accounts) => accounts.map((acc) => createAccountObject(connection, acc))
+  ).retrieve();
 }
 
 export async function _isAuthDescriptorValid(

@@ -1,8 +1,10 @@
+import { randomBytes } from "crypto";
 import { encryption, gtv } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 import { AuthDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { Buffer } from "buffer";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -78,4 +80,22 @@ export async function createAccount(client: GtxClient, ad: AuthDescriptor) {
   const tx = client.newTransaction([]);
   tx.addOperation("ft4.register_account_test", authDescriptor.toGtv(ad) as any);
   await tx.postAndWaitConfirmation();
+}
+
+export async function registerAsset(
+  client: GtxClient,
+  assetName: string,
+  decimals = 0,
+  blockchainRID: Buffer = randomBytes(32)
+) {
+  const txn = client.newTransaction([]);
+  txn.addOperation(
+    "register_asset",
+    assetName,
+    generateAssetSymbol(),
+    decimals,
+    blockchainRID,
+    ""
+  );
+  await txn.postAndWaitConfirmation();
 }

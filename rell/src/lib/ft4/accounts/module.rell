@@ -157,6 +157,19 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
     ) limit utils.fetch_data_size(page_size);
 }
 
+function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return account_auth_descriptor @* {
+        .id == id,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data=.account.id.to_gtv_pretty(),
+            rowid=.rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth(auth_descriptor): byte_array {
