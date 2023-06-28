@@ -1,4 +1,5 @@
 import { Authenticator, KeyHandler } from "../authentication/interfaces";
+import { Buffer } from "buffer";
 import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
 

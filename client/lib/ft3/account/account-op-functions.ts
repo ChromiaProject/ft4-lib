@@ -41,6 +41,7 @@ import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-mem
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/interfaces";
 import { call } from "../ft-session";
+import { Buffer } from "buffer";
 
 export async function ssoRawTransactionRegister(
   newAuthDesc: AuthDescriptor,

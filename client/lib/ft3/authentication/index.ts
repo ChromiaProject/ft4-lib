@@ -8,6 +8,7 @@ import {
   KeyHandler,
 } from "./interfaces";
 import { TxBuilderTransaction } from "../utils/types";
+import { Buffer } from "buffer";
 
 export * from "./evm";
 export * from "./ft";

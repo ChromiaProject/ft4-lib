@@ -130,7 +130,7 @@ if $docker; then
 fi
 kill $prc
 
-# If we're in interactive mode, return the exit code
+# If we are in interactive mode, return the exit code
 if echo "$-" | grep -q "i"; then
     return $return_code
 else

@@ -12,6 +12,7 @@ import {
 import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { IClient, formatter } from "postchain-client";
 import { PageCursor } from "/ft3/types";
+import { Buffer } from "buffer";
 
 export async function ensurePaymentHistoryStoreLocal(
   session: IClient,

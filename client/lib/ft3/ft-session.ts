@@ -1,7 +1,13 @@
 import { accountQuerySession, accountUserSession } from "./account";
 import { IAccount, User } from "./account/types";
 import { assetQuerySession, assetUserSession } from "./asset";
-import { ftQuerySession, ftUserSession, Connection, Session } from "./types";
+import {
+  ftQuerySession,
+  ftUserSession,
+  Connection,
+  Session,
+  OptionalPageCursor,
+} from "./types";
 import { _getConfig, getVersion, _nop as nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
@@ -9,11 +15,15 @@ import {
   _getByAuthDescriptorId,
   _getById,
   createAccountObject,
+  _getByAuthDescriptorIdPaginated,
 } from "./account/account-query-functions";
 import {
   _getAllAssets,
   _getAssetById,
+  _getAssetBySymbol,
   _getAssetsByName,
+  _getAllAssetsPaginated,
+  _getAssetsByNamePaginated,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./account/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
@@ -38,6 +48,7 @@ import {
   Operation,
   TransactionReceipt,
 } from "postchain-client";
+import { Buffer } from "buffer";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -71,10 +82,24 @@ export function createConnection(client: IClient): Connection {
       _getByParticipantId(connection, id),
     getAccountsByAuthDescriptorId: (id: BufferId) =>
       _getByAuthDescriptorId(connection, id),
-
+    getAccountsByAuthDescriptorIdPaginated: (
+      id: BufferId,
+      limit?: number,
+      cursor?: OptionalPageCursor
+    ) => _getByAuthDescriptorIdPaginated(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
+    getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
+    getAssetsByNamePaginated: (
+      name: string,
+      limit?: number,
+      cursor?: OptionalPageCursor
+    ) => _getAssetsByNamePaginated(connection, name, limit, cursor),
     getAllAssets: () => _getAllAssets(connection),
+    getAllAssetsPaginated: (
+      limit?: number,
+      cursor: OptionalPageCursor = null
+    ) => _getAllAssetsPaginated(connection, limit, cursor),
   });
 
   return connection;

@@ -7,6 +7,7 @@ import { createAuthenticator } from "../client/lib/ft3/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { KeyHandler } from "../client/lib/ft3/authentication/interfaces";
 import { createTestAuthDescriptor, toNewTx } from "./util/util";
+import { Buffer } from "buffer";
 import { Operation as OldOperation } from "/ft3/utils/types";
 
 describe("Authenticator session", () => {

@@ -4,6 +4,7 @@ import {
   encryption,
   formatter,
 } from "postchain-client";
+import { Buffer } from "buffer";
 
 function storeLocalStoragePrivateKey(privKey?: Buffer | string) {
   const kp = encryption.makeKeyPair(privKey);

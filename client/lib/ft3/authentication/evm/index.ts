@@ -2,6 +2,7 @@ import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../../cryptoUtils";
 import { KeyStore } from "../interfaces";
 import { ethers } from "ethers";
+import { Buffer } from "buffer";
 
 export * from "./key-stores";
 

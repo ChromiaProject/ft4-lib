@@ -1,8 +1,10 @@
+import { randomBytes } from "crypto";
 import { encryption, gtv, GtxClient, Itransaction } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
 import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
 import { TxBuilderTransaction } from "/ft3/utils/types";
+import { Buffer } from "buffer";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -85,4 +87,22 @@ export function toNewTx(tx: Itransaction): TxBuilderTransaction {
     ...tx.gtx,
     signatures: tx.gtx.signatures ?? [],
   };
+}
+
+export async function registerAsset(
+  client: GtxClient,
+  assetName: string,
+  decimals = 0,
+  blockchainRID: Buffer = randomBytes(32)
+) {
+  const txn = client.newTransaction([]);
+  txn.addOperation(
+    "register_asset",
+    assetName,
+    generateAssetSymbol(),
+    decimals,
+    blockchainRID,
+    ""
+  );
+  await txn.postAndWaitConfirmation();
 }

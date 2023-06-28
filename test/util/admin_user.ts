@@ -5,6 +5,7 @@ import {
 } from "../../client/lib/ft3/account/auth-descriptor";
 import { User } from "../../client/lib/ft3/account/types";
 import { AuthData, KeyManager } from "../../client/lib/ft3/account/auth/types";
+import { Buffer } from "buffer";
 
 export default function adminUser(): User {
   const km = {

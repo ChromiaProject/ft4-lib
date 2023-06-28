@@ -7,6 +7,7 @@ import {
 } from "./types";
 import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
+import { Buffer } from "buffer";
 
 export function createPaymentHistoryEntry(
   rowid: string,

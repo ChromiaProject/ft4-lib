@@ -2,6 +2,7 @@ import { BufferId } from "../../../cryptoUtils";
 import { KeyHandler, KeyStore } from "../interfaces";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
 import { Operation, SignatureProvider, gtx } from "postchain-client";
+import { Buffer } from "buffer";
 import { ftAuth } from ".";
 import { TxBuilderTransaction } from "/ft3/utils/types";
 

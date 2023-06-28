@@ -100,7 +100,9 @@ describe("Asset balance", () => {
         name: asset2.name,
         decimals: asset2.decimals,
         brid: asset2.brid,
+        iconUrl: "",
         supply: BigInt(70 + "0".repeat(asset2.decimals)),
+        symbol: asset2.symbol,
       },
       amount: {
         value: BigInt(50 + "0".repeat(asset2.decimals)),

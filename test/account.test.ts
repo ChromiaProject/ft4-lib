@@ -323,6 +323,38 @@ describe("Test the account", () => {
     expect(accounts.length).toEqual(2);
   });
 
+  it("returns multiple accounts paginated when auth descriptor is attached to multiple accounts", async () => {
+    const user1 = testUser();
+    const user2 = testUser();
+    const user3 = testUser();
+    const ft1 = _ft.changeUser(user1);
+    const ft2 = _ft.changeUser(user2);
+    const ft3 = _ft.changeUser(user3);
+
+    const account1 = await AccountBuilder.account(ft1).build();
+    const account2 = await AccountBuilder.account(ft2).build();
+    const account3 = await AccountBuilder.account(ft3).build();
+
+    await addAuthDescriptorTo(account2, user1, ft2);
+    await addAuthDescriptorTo(account3, user1, ft3);
+
+    const { data: accounts1, nextCursor } =
+      await _connection.getAccountsByAuthDescriptorIdPaginated(
+        account1.id,
+        2,
+        null
+      );
+    expect(accounts1.length).toEqual(2);
+
+    const { data: accounts2 } =
+      await _connection.getAccountsByAuthDescriptorIdPaginated(
+        account1.id,
+        2,
+        nextCursor
+      );
+    expect(accounts2.length).toEqual(1);
+  });
+
   it("has correct format when fetching paginated auth descriptors", async () => {
     const client = await createClient();
 

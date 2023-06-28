@@ -3,6 +3,7 @@ import { Operation } from "../utils/types";
 import { Operation as _Operation } from "postchain-client";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
+import { Buffer } from "buffer";
 
 export function registerOp(authDescriptor: AuthDescriptor): Operation {
   const ad = authDesc.toGtv(authDescriptor);

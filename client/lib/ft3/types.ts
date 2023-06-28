@@ -13,8 +13,9 @@ import {
   IAuthenticatedAccount,
 } from "./account/types";
 import { Asset, Balance } from "./asset/types";
-import { Config } from "./utils/types";
+import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
+import { Buffer } from "buffer";
 import {
   IClient,
   QueryArguments,
@@ -159,10 +160,25 @@ export interface Connection {
   getAccountsByAuthDescriptorId: (
     authDescriptorId: BufferId
   ) => Promise<IAccount[]>;
+  getAccountsByAuthDescriptorIdPaginated: (
+    id: BufferId,
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<IAccount>>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
+  getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
   getAssetsByName: (name: string) => Promise<Asset[]>;
+  getAssetsByNamePaginated: (
+    name: string,
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: () => Promise<Asset[]>;
+  getAllAssetsPaginated: (
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<Asset>>;
 }
 
 export interface Session extends Connection {

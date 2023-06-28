@@ -2,6 +2,7 @@ import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Query } from "../utils/types";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export function assetByIdQuery(assetId: Buffer): Query {
   return ["ft4.get_asset_by_id", { asset_id: assetId }];
@@ -43,11 +44,35 @@ export function assetById(
   };
 }
 
+export function assetBySymbol(symbol: string): QueryObject<{ symbol: string }> {
+  return {
+    name: "ft4.get_asset_by_symbol",
+    args: { symbol },
+  };
+}
+
 export function assetByName(name: string): QueryObject<{ name: string }> {
   return {
     name: "ft4.get_asset_by_name",
+    args: { name },
+  };
+}
+
+export function assetsByNamePaginated(
+  name: string,
+  limit: number,
+  cursor: OptionalPageCursor = null
+): QueryObject<{
+  name: string;
+  page_size: number;
+  page_cursor: OptionalPageCursor;
+}> {
+  return {
+    name: "ft4.get_assets_by_name_paginated",
     args: {
       name: name,
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }
@@ -55,6 +80,19 @@ export function assetByName(name: string): QueryObject<{ name: string }> {
 export function allAssets(): QueryObject<undefined> {
   return {
     name: "ft4.get_all_assets",
+  };
+}
+
+export function allAssetsPaginated(
+  limit: number,
+  cursor: OptionalPageCursor
+): QueryObject<{ page_size: number; page_cursor: OptionalPageCursor }> {
+  return {
+    name: "ft4.get_all_assets_paginated",
+    args: {
+      page_size: limit,
+      page_cursor: cursor,
+    },
   };
 }
 

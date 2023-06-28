@@ -2,6 +2,7 @@ import { Operation } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { AuthDescriptor } from "../account/auth-descriptor/types";
 import { TxBuilderTransaction } from "../utils/types";
+import { Buffer } from "buffer";
 
 export interface Authenticator {
   accountId: Buffer;

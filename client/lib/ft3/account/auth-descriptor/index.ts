@@ -7,6 +7,7 @@ import {
 import { create } from "./auth-descriptor";
 import { allow } from "./rules";
 import { gtv } from "postchain-client";
+import { Buffer } from "buffer";
 
 export * from "./types";
 export * from "./auth-descriptor";

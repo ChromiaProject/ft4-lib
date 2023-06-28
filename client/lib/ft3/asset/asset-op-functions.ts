@@ -5,6 +5,7 @@ import { mintOp, registerAssetOp } from "./asset-dev-operations";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
 import { formatter, GtxClient } from "postchain-client";
 import { nop } from "../utils";
+import { Buffer } from "buffer";
 
 //-------------------ADMIN OPERATIONS-------------------//
 

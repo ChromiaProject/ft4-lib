@@ -3,6 +3,7 @@ import { Account, User } from "../../client/lib/ft3/account/types";
 import { ftUserSession } from "../../client/lib/ft3/types";
 import { createLocalStorageSignatureProvider } from "../../client/lib/ft3/utils/local-signature-provider";
 import SSO from "../../client/lib/ft3/utils/sso";
+import { Buffer } from "buffer";
 
 export default class FakeSSO extends SSO {
   accountId: Buffer;

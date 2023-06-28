@@ -1,4 +1,8 @@
-import { generateAssetName, generateAssetSymbol } from "./util/util";
+import {
+  generateAssetName,
+  generateAssetSymbol,
+  registerAsset,
+} from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import {
   createChromiaClient,
@@ -32,6 +36,28 @@ describe("Asset", () => {
     expect(expectedAssets[0]).toEqual(asset);
   });
 
+  it("can fetch paginated assets", async () => {
+    const assetName = generateAssetName();
+    const client = ft.get.gtxClient;
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+
+    const { data: expectedAssets, nextCursor } =
+      await connection.getAssetsByNamePaginated(assetName, 2);
+    expect(expectedAssets.length).toEqual(2);
+    expect(expectedAssets[0].name).toEqual(assetName);
+    expect(expectedAssets[1].name).toEqual(assetName);
+
+    const { data: expectedAssets2 } = await connection.getAssetsByNamePaginated(
+      assetName,
+      2,
+      nextCursor
+    );
+    expect(expectedAssets2.length).toEqual(1);
+    expect(expectedAssets2[0].name).toEqual(assetName);
+  });
+
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
@@ -47,6 +73,23 @@ describe("Asset", () => {
     expect(expectedAsset.brid).toEqual(brid);
   });
 
+  it("is returned when queried by symbol", async () => {
+    const assetName = generateAssetName();
+    const assetSymbol = generateAssetSymbol();
+    const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
+    const assetId = ft.get.asset.id(assetName, brid);
+    await getNewAsset(ft, assetName, assetSymbol, 3);
+
+    const result = (await connection.getAssetBySymbol(assetSymbol))!;
+
+    expect(result).toMatchObject({
+      name: assetName,
+      id: assetId,
+      decimals: 3,
+      brid,
+    });
+  });
+
   it("should return all the assets registered", async () => {
     const asset1 = await getNewAsset(ft);
     const asset2 = await getNewAsset(ft);
@@ -57,6 +100,25 @@ describe("Asset", () => {
     expect(expectedAssets).toEqual(
       expect.arrayContaining([asset1, asset2, asset3])
     );
+  });
+
+  it("returns the assets paginated", async () => {
+    // Assure that there will always be at least three assets to not make it dependent on execution order
+    await getNewAsset(ft);
+    await getNewAsset(ft);
+    await getNewAsset(ft);
+
+    const { data: page1, nextCursor } = await connection.getAllAssetsPaginated(
+      2
+    );
+
+    expect(page1.length).toBe(2);
+    const { data: page2 } = await connection.getAllAssetsPaginated(
+      1,
+      nextCursor
+    );
+
+    expect(page2.length).toBe(1);
   });
 
   it("should successfully register with valid icon URL", async () => {

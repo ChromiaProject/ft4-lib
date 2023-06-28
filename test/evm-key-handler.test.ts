@@ -11,6 +11,7 @@ import { createAccount } from "./util/util";
 import { ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
 import { createChromiaClient, createClient } from "./util/blockchain-util";
+import { Buffer } from "buffer";
 
 describe("EVM key handler", () => {
   let client: IClient;

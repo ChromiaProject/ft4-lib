@@ -8,6 +8,7 @@ import { BufferId } from "../../../cryptoUtils";
 import { IClient, formatter } from "postchain-client";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { PageCursor } from "/ft3/types";
+import { Buffer } from "buffer";
 
 export async function createPaymentHistoryStoreMemory(
   session: IClient,

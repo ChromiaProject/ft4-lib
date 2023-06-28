@@ -2,6 +2,7 @@ import { GtxClient, Itransaction } from "postchain-client";
 import { User } from "../account/types";
 import { Operation } from "./types";
 import { FlagsType } from "../account";
+import { Buffer } from "buffer";
 import { RawGtv } from "postchain-client";
 
 export type LegacyTransactionBuilder = {

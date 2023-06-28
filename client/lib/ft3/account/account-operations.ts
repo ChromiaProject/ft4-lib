@@ -6,6 +6,7 @@ import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "../../cryptoUtils";
 import { formatter, Operation as _Operation } from "postchain-client";
 import { Amount } from "../asset/interfaces";
+import { Buffer } from "buffer";
 
 export function addAuthDescriptorOp(
   accountId: Buffer,

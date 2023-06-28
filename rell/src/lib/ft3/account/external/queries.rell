@@ -67,5 +67,11 @@ query get_accounts_by_auth_descriptor_id(id: byte_array) {
     return acc.account_auth_descriptor @* { id } ( .account.id );
 }
 
+query get_accounts_by_auth_descriptor_id_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        acc.get_paginated_accounts_by_ad_id(id, page_size, page_cursor),
+        page_size);
+}
+
 query get_ctr_for_auth_descriptor(auth_descriptor_id: byte_array) =
     acc.account_auth_descriptor @ { .id == auth_descriptor_id }( .ctr );

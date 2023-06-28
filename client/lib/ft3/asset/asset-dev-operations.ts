@@ -1,6 +1,7 @@
 import { op } from "../utils";
 import { Operation } from "../utils/types";
 import { Amount } from "../asset/interfaces";
+import { Buffer } from "buffer";
 
 export function registerAssetOp(
   name: string,

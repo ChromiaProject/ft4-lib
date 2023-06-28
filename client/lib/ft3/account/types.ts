@@ -16,6 +16,7 @@ import { Authenticator } from "../authentication/interfaces";
 import { Amount } from "../asset/interfaces";
 import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
+import { Buffer } from "buffer";
 
 export type Account = {
   id: Buffer;
