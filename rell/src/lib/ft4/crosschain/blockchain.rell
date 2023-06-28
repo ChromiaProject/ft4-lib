@@ -1,5 +1,5 @@
-import ft4. ^.core;
-import acc: ^.account;
+import ft4. ^.assets;
+import acc: ^.accounts;
 
 
 entity asset_origin {

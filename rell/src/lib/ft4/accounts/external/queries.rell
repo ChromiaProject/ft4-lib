@@ -1,9 +1,9 @@
 import acc: ^;
-import core: ^^.assets;
+import assets: ^^.assets;
 import utils: ^^.utils;
 
 query get_account_rate_limit_last_update(account_id: byte_array) {
-    if (core.config.rate_limit_active == false) return (points = 0, last_update = 0);
+    if (assets.config.rate_limit_active == false) return (points = 0, last_update = 0);
     
     return acc.rl_state @ { .account.id == account_id }
     (
