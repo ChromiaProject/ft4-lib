@@ -1,6 +1,6 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import { KeyPair } from "../../../../cryptoUtils";
-import { AuthDescriptor } from "../../../account/auth-descriptor/types";
+import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
 import { createFTKeyHandler } from "../key-handler";
 import { gtx } from "postchain-client";
 import { FtKeystore } from "..";

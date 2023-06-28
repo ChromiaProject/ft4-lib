@@ -1,7 +1,7 @@
 import { EVMKeyStore, signMessage } from "..";
 import { ethers } from "ethers";
 import { createEVMKeyHandler } from "../key-handler";
-import { AuthDescriptor } from "../../../account/auth-descriptor/types";
+import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
 
 export async function createWeb3ProviderEVMKeyStore(
   externalProvider: ethers.Eip1193Provider

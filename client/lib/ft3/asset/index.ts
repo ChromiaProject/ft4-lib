@@ -7,7 +7,7 @@ import {
 } from "./asset-query-functions";
 import { mint, registerAsset } from "./asset-op-functions";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { User } from "../account/types";
+import { User } from "../accounts/types";
 import { Amount } from "./interfaces";
 import { BufferId } from "../../cryptoUtils";
 import { formatter, gtv } from "postchain-client";

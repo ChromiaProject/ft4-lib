@@ -1,6 +1,6 @@
 import { id } from ".";
 import { BufferId } from "../../cryptoUtils";
-import { User } from "../account/types";
+import { User } from "../accounts/types";
 import { mintOp, registerAssetOp } from "./asset-dev-operations";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
 import { formatter } from "postchain-client";

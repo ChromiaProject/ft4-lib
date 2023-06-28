@@ -2,9 +2,9 @@ import {
   GtxClient,
   Itransaction,
 } from "postchain-client/built/src/gtx/interfaces";
-import { User } from "../account/types";
+import { User } from "../accounts/types";
 import { Operation } from "./types";
-import { FlagsType } from "../account";
+import { FlagsType } from "../accounts";
 
 export type LegacyTransactionBuilder = {
   _operations: Operation[];

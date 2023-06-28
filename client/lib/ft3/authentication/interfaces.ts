@@ -1,6 +1,6 @@
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../../cryptoUtils";
-import { AuthDescriptor } from "../account/auth-descriptor/types";
+import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Operation } from "../utils/types";
 
 export interface Authenticator {

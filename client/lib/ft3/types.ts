@@ -1,10 +1,10 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../cryptoUtils";
-import { AuthDescriptor } from "./account/auth-descriptor/types";
+import { AuthDescriptor } from "./accounts/auth-descriptor/types";
 import {
   PaymentHistoryIterator,
   PaymentHistoryStore,
-} from "./account/payment-history/interfaces";
+} from "./accounts/payment-history/interfaces";
 import { Amount } from "./asset/interfaces";
 import {
   Account,
@@ -12,7 +12,7 @@ import {
   User,
   IAccount,
   IAuthenticatedAccount,
-} from "./account/types";
+} from "./accounts/types";
 import { Asset, Balance } from "./asset/types";
 import { QueryObject, Operation, Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";

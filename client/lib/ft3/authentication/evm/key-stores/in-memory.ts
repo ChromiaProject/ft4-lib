@@ -1,6 +1,6 @@
 import { EVMKeyStore, signMessage } from "..";
 import { KeyPair } from "postchain-client/built/src/encryption/types";
-import { AuthDescriptor } from "../../../account/auth-descriptor/types";
+import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
 import { createEVMKeyHandler } from "../key-handler";
 import { ethers } from "ethers";
 

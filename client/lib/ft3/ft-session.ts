@@ -1,6 +1,6 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { accountQuerySession, accountUserSession } from "./account";
-import { IAccount, User } from "./account/types";
+import { accountQuerySession, accountUserSession } from "./accounts";
+import { IAccount, User } from "./accounts/types";
 import { assetQuerySession, assetUserSession } from "./asset";
 import {
   ftQuerySession,
@@ -16,7 +16,7 @@ import {
   _getByAuthDescriptorId,
   _getById,
   createAccountObject,
-} from "./account/account-query-functions";
+} from "./accounts/account-query-functions";
 import { Operation, QueryObject } from "./utils/types";
 import {
   _getAllAssets,
@@ -24,7 +24,7 @@ import {
   _getAssetsByName,
   _getAllAssetsPaginated,
 } from "./asset/asset-query-functions";
-import { createAuthenticatedAccount } from "./account/account-op-functions";
+import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
 import {
   AuthData,
