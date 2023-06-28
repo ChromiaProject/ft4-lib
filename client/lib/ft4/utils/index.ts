@@ -7,10 +7,7 @@ export function nop(): Operation {
   return ["nop", encryption.randomBytes(32)];
 }
 
-export function op(
-  name: string,
-  ...args: DeepReadonly<RawGtv>[]
-): Operation {
+export function op(name: string, ...args: DeepReadonly<RawGtv>[]): Operation {
   return [name, ...(args as RawGtv[])];
 }
 
@@ -22,10 +19,11 @@ export async function getVersion(session: GtxClient): Promise<string> {
   return Object.freeze(await session.query("ft4.get_version"));
 }
 
-type DeepReadonly<T> =
-  T extends (infer R)[] ? DeepReadonlyArray<R> :
-  T extends object ? DeepReadonlyObject<T> :
-  T;
+type DeepReadonly<T> = T extends (infer R)[]
+  ? DeepReadonlyArray<R>
+  : T extends object
+  ? DeepReadonlyObject<T>
+  : T;
 
 interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
 

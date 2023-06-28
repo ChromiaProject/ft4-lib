@@ -162,7 +162,7 @@ export function checkValueInRange(val: bigint) {
 /**
  * To be used if you want the precise value. Can be formatted starting from here
  * must return a string, as a Number could still be overflowed and it won't be an integer
- * 
+ *
  * @param amount - the amount to format
  * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -> 0.8)
  *
