@@ -13,7 +13,7 @@ import {
   balancesByAccountId,
   allAssetsPaginated,
   assetBySymbol,
-  assetByNamePaginated,
+  assetsByNamePaginated,
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
@@ -98,7 +98,7 @@ export function _getAssetsByNamePaginated(
 ) {
   const retriever = createEntityRetriever<Asset, Asset>(
     connection,
-    assetByNamePaginated(name, limit, cursor),
+    assetsByNamePaginated(name, limit, cursor),
     (a) => a
   );
   return retriever.retrieve();

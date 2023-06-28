@@ -56,13 +56,13 @@ export function assetByName(name: string): QueryObject {
   };
 }
 
-export function assetByNamePaginated(
+export function assetsByNamePaginated(
   name: string,
   limit: number,
   cursor: OptionalPageCursor = null
 ): QueryObject {
   return {
-    name: "ft4.get_asset_by_name_paginated",
+    name: "ft4.get_assets_by_name_paginated",
     args: {
       name: name,
       page_size: limit,

@@ -1,4 +1,8 @@
-import { generateAssetName, generateAssetSymbol } from "./util/util";
+import {
+  generateAssetName,
+  generateAssetSymbol,
+  registerAsset,
+} from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
@@ -31,32 +35,9 @@ describe("Asset", () => {
   it("can fetch paginated assets", async () => {
     const assetName = generateAssetName();
     const client = ft.get.gtxClient;
-    const txn = client.newTransaction([]);
-    txn.addOperation(
-      "register_asset",
-      assetName,
-      generateAssetSymbol(),
-      0,
-      Buffer.alloc(32, "a"),
-      ""
-    );
-    txn.addOperation(
-      "register_asset",
-      assetName,
-      generateAssetSymbol(),
-      0,
-      Buffer.alloc(32, "b"),
-      ""
-    );
-    txn.addOperation(
-      "register_asset",
-      assetName,
-      generateAssetSymbol(),
-      0,
-      Buffer.alloc(32, "c"),
-      ""
-    );
-    await txn.postAndWaitConfirmation();
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByNamePaginated(assetName, 2);
