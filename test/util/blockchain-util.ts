@@ -7,7 +7,7 @@ import {
 } from "../../client/lib/ft3/ft-session";
 import { Asset } from "../../client/lib/ft3/asset/types";
 import singleSigUser from "./test-user";
-import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import { AuthDescriptorRule } from "../../client/lib/ft3/accounts/auth-descriptor/types";
 import adminUser from "./admin_user";
 
 export async function createClient(nodeUrl?: string) {

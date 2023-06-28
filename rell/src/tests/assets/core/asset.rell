@@ -5,7 +5,7 @@ import ^^.extensions.*;
 import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.admin;
 import ^^^.lib.ft3.auth;
-import ^^^.lib.ft3.core;
+import ^^^.lib.ft3.assets;
 import ft3_utils: ^^^.lib.ft3.utils;
 import ^.utils;
 

@@ -3,9 +3,9 @@ module;
 
 import ^^^.main.*;
 import ^^.extensions.*;
-import ^^^.lib.ft3.core;
+import ^^^.lib.ft3.assets;
 import ^^^.lib.ft3.ft3_basic_dev.*;
-import acc: ^^^.lib.ft3.account;
+import acc: ^^^.lib.ft3.accounts;
 import test_utils: ^.utils;
 import utils: ^^^.lib.ft3.utils;
 

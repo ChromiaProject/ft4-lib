@@ -1,5 +1,5 @@
-import ^^.lib.ft3.core;
-import acc: ^^.lib.ft3.account;
+import ^^.lib.ft3.assets;
+import acc: ^^.lib.ft3.accounts;
 
 object mint_extensions_state {
     mutable is_before_mint_called: boolean = false;

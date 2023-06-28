@@ -1,9 +1,9 @@
 import { KeyPair } from "../client/lib/cryptoUtils";
-import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
+import { registerOp } from "../client/lib/ft3/accounts/account-dev-operations";
 import {
   authDescriptor as ad,
   FlagsType,
-} from "../client/lib/ft3/account/auth-descriptor";
+} from "../client/lib/ft3/accounts/auth-descriptor";
 import { createAmount } from "../client/lib/ft3/asset/amount";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";

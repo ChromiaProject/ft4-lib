@@ -1,6 +1,6 @@
 import { encryption } from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
-import { authDescriptor } from "../client/lib/ft3/account/auth-descriptor";
+import { authDescriptor } from "../client/lib/ft3/accounts/auth-descriptor";
 import { createInMemoryEVMKeyStore } from "../client/lib/ft3/authentication/evm/key-stores/in-memory";
 import { op } from "../client/lib/ft3/utils";
 import { evmAuth } from "../client/lib/ft3/authentication/evm";

@@ -1,5 +1,5 @@
 import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { Account, User } from "../../client/lib/ft3/account/types";
+import { Account, User } from "../../client/lib/ft3/accounts/types";
 import { ftUserSession } from "../../client/lib/ft3/types";
 import { createLocalStorageSignatureProvider } from "../../client/lib/ft3/utils/local-signature-provider";
 import SSO from "../../client/lib/ft3/utils/sso";

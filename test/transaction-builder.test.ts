@@ -14,11 +14,11 @@ import {
   KeyHandler,
 } from "../client/lib/ft3/authentication/interfaces";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { transferOp } from "../client/lib/ft3/account/account-operations";
-import { XferInput, XferOutput } from "../client/lib/ft3/account/types";
-import { AuthDescriptor } from "../client/lib/ft3/account/auth-descriptor/types";
-import { FlagsType } from "../client/lib/ft3/account/auth-descriptor";
-import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
+import { transferOp } from "../client/lib/ft3/accounts/account-operations";
+import { XferInput, XferOutput } from "../client/lib/ft3/accounts/types";
+import { AuthDescriptor } from "../client/lib/ft3/accounts/auth-descriptor/types";
+import { FlagsType } from "../client/lib/ft3/accounts/auth-descriptor";
+import { registerOp } from "../client/lib/ft3/accounts/account-dev-operations";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

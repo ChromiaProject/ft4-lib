@@ -2,8 +2,8 @@ import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import {
   authDescriptor,
   FlagsType,
-} from "../../client/lib/ft3/account/auth-descriptor";
-import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+} from "../../client/lib/ft3/accounts/auth-descriptor";
+import { AuthDescriptorRule } from "../../client/lib/ft3/accounts/auth-descriptor/types";
 import {
   Asset,
   Balance,
@@ -12,12 +12,12 @@ import {
 import {
   Account,
   IAuthenticatedAccount,
-} from "../../client/lib/ft3/account/types";
+} from "../../client/lib/ft3/accounts/types";
 import { ftUserSession } from "../../client/lib/ft3/types";
 import { gtx } from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft3/asset/amount";
-import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
+import { createAuthenticatedAccount } from "../../client/lib/ft3/accounts/account-op-functions";
 import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createAuthenicator } from "../../client/lib/ft3/authentication";
 import {

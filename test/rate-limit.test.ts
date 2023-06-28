@@ -1,5 +1,5 @@
-import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
-import { User } from "../client/lib/ft3/account/types";
+import { addAuthDescriptorOp } from "../client/lib/ft3/accounts/account-operations";
+import { User } from "../client/lib/ft3/accounts/types";
 import { createConnection } from "../client/lib/ft3/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";

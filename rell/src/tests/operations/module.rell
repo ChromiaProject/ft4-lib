@@ -1,5 +1,5 @@
 
-import acc: ^^.lib.ft3.account;
+import acc: ^^.lib.ft3.accounts;
 
 operation operation_without_auth_message_template(
     integer,

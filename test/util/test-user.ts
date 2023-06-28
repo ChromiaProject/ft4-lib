@@ -2,10 +2,10 @@ import { gtx } from "postchain-client";
 import {
   authDescriptor,
   FlagsType,
-} from "../../client/lib/ft3/account/auth-descriptor";
-import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
-import { User } from "../../client/lib/ft3/account/types";
-import { KeyManager } from "../../client/lib/ft3/account/auth/types";
+} from "../../client/lib/ft3/accounts/auth-descriptor";
+import { AuthDescriptorRule } from "../../client/lib/ft3/accounts/auth-descriptor/types";
+import { User } from "../../client/lib/ft3/accounts/types";
+import { KeyManager } from "../../client/lib/ft3/accounts/auth/types";
 import { Operation } from "../../client/lib/ft3/utils/types";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 

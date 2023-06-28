@@ -3,8 +3,8 @@ module;
 
 import ^^.core.utils;
 import ^^^.lib.ft3.auth;
-import acc: ^^^.lib.ft3.account;
-import acc_ext: ^^^.lib.ft3.account.external;
+import acc: ^^^.lib.ft3.accounts;
+import acc_ext: ^^^.lib.ft3.accounts.external;
 import dev_op: ^^^.lib.ft3.operations.dev_op_auth;
 import test_operations: ^^.operations;
 
