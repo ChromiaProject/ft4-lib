@@ -1,6 +1,5 @@
 import { Authenticator, KeyHandler } from "../authentication/interfaces";
-import { Operation, SignedTransaction, gtx } from "postchain-client";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
+import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
 
 type OpAuthPair = [Operation, Authenticator];
@@ -118,7 +117,7 @@ export function transactionBuilder(
     const processedOperations: Operation[][] = [];
     for (const tuple of operations) {
       const [operation, authenticator] = tuple;
-      if (operation[0] === "nop") {
+      if (operation.name === "nop") {
         processedOperations.push([operation]);
         continue;
       }
@@ -154,7 +153,7 @@ export function transactionBuilder(
       );
       // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {
-        if (op[0] === "ft.evm_auth") {
+        if (op.name === "ft.evm_auth") {
           nonces.set(keyHandler.authDescriptor.id, nonce + 1);
         }
       });

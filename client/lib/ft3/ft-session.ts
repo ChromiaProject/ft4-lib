@@ -25,12 +25,12 @@ import {
 } from "./authentication/interfaces";
 import {
   authDataQuery,
-  createAuthenicator,
+  createAuthenticator,
   defaultFTAuthData,
   nonce,
 } from "./authentication";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 import {
+  IClient,
   QueryObject,
   RawGtv,
   GtxClient,
@@ -159,7 +159,7 @@ export function createKeyStoreInteractor(
       const keyHandlers = authDescriptors.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor)
       );
-      const authenticator = createAuthenicator(
+      const authenticator = createAuthenticator(
         accountId,
         keyHandlers,
         createAuthDataService(connection)

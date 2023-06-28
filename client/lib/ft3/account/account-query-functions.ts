@@ -1,4 +1,4 @@
-import { GtxClient, formatter } from "postchain-client";
+import { GtxClient, formatter, IClient } from "postchain-client";
 import {
   accountAuthDescriptorsQuery,
   accountById,
@@ -35,7 +35,6 @@ import {
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountIdPaginated } from "../asset/asset-queries";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,

@@ -15,8 +15,8 @@ import {
 import { Asset, Balance } from "./asset/types";
 import { Config } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 import {
+  IClient,
   QueryArguments,
   QueryObject,
   GtxClient,

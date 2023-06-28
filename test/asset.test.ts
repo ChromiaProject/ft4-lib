@@ -1,6 +1,10 @@
 import { generateAssetName, generateAssetSymbol } from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createChromiaClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
 import { InvalidUrlError } from "../client/lib/ft3/asset/interfaces";
 
@@ -10,7 +14,7 @@ let connection: Connection;
 describe("Asset", () => {
   beforeAll(async () => {
     ft = await getUserSession();
-    connection = createConnection(ft.get.gtxClient);
+    connection = createConnection(await createChromiaClient());
   });
 
   it("should be successfully registered", async () => {
@@ -31,7 +35,7 @@ describe("Asset", () => {
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = connection.client.newTransaction([]).gtx.blockchainRID;
+    const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
     const assetId = ft.get.asset.id(assetName, brid);
     await getNewAsset(ft, assetName, assetSymbol, 3);
 

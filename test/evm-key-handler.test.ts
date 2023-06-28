@@ -1,23 +1,22 @@
-import { encryption } from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { authDescriptor } from "../client/lib/ft3/account/auth-descriptor";
 import { createInMemoryEVMKeyStore } from "../client/lib/ft3/authentication/evm/key-stores/in-memory";
-import { op } from "../client/lib/ft3/utils";
+import { _op } from "../client/lib/ft3/utils";
 import { evmAuth } from "../client/lib/ft3/authentication/evm";
 import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 import { transactionBuilder } from "../client/lib/ft3/utils/transaction-builder";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
+import { createAuthenticator } from "../client/lib/ft3/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAccount } from "./util/util";
 import { ethers } from "ethers";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { createClient } from "./util/blockchain-util";
+import { IClient, encryption, gtx } from "postchain-client";
+import { createChromiaClient, createClient } from "./util/blockchain-util";
 
 describe("EVM key handler", () => {
-  let client: GtxClient;
+  let client: IClient;
 
   beforeAll(async () => {
-    client = await createClient();
+    client = await createChromiaClient();
   });
 
   it("should sign message", async () => {
@@ -57,14 +56,14 @@ describe("EVM key handler", () => {
 
     const operations = await keyHandler.authenticate(
       accountId,
-      op("foo"),
+      _op("foo"),
       authData
     );
 
     const signature = await keyStore.signMessage(authData.message);
     expect(operations).toEqual([
       evmAuth(accountId, ad.id, [signature]),
-      op("foo"),
+      _op("foo"),
     ]);
   });
 
@@ -80,7 +79,7 @@ describe("EVM key handler", () => {
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
-    const authenticator = createAuthenicator(
+    const authenticator = createAuthenticator(
       accountId,
       [keyStore.createKeyHandler(ad)],
       authService
@@ -94,11 +93,11 @@ describe("EVM key handler", () => {
     );
 
     const tx = await transactionBuilder(authenticator, client)
-      .add(op("foo"))
-      .add(op("foo"))
+      .add(_op("foo"))
+      .add(_op("foo"))
       .build();
 
-    expect(tx.gtx.operations).toEqual([
+    expect(gtx.deserialize(tx).operations).toEqual([
       {
         opName: "ft.evm_auth",
         args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
@@ -125,7 +124,7 @@ describe("EVM key handler", () => {
       ["A"],
       keyStore.address
     ).andNoRules;
-    await createAccount(client, ad);
+    await createAccount(await createClient(), ad);
 
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
       ad.id

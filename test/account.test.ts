@@ -27,7 +27,7 @@ import {
   createKeyStoreInteractor,
 } from "../client/lib/ft3/ft-session";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
+import { createAuthenticator } from "../client/lib/ft3/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
 import { createAccount } from "./util/util";
 
@@ -494,7 +494,7 @@ describe("Test the account", () => {
 
     const keyHandler3 =
       createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
-    const authenticator3 = createAuthenicator(
+    const authenticator3 = createAuthenticator(
       account.id,
       [keyHandler3],
       createAuthDataService(_connection)

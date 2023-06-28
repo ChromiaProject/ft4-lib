@@ -3,10 +3,10 @@ import {
   encryption,
   GtxClient,
   QueryArguments,
+  RawGtv,
+  IClient,
 } from "postchain-client";
 import { Config, Operation } from "./types";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 export function nop(): Operation {
   return ["nop", encryption.randomBytes(32)];

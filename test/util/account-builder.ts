@@ -18,7 +18,7 @@ import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft3/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
 import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../../client/lib/ft3/authentication";
+import { createAuthenticator } from "../../client/lib/ft3/authentication";
 import {
   createAuthDataService,
   createConnection,
@@ -111,7 +111,7 @@ class AccountBuilder {
       createInMemoryFTKeyStore(signatureProvider).createKeyHandler(
         authDescriptor
       );
-    const authenticator = createAuthenicator(
+    const authenticator = createAuthenticator(
       account.id,
       [keyHandler],
       createAuthDataService(connection)

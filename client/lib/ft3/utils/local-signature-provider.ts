@@ -1,6 +1,9 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { KeyPair } from "postchain-client/built/src/encryption/types";
-import { encryption, formatter } from "postchain-client";
+import {
+  SignatureProvider,
+  KeyPair,
+  encryption,
+  formatter,
+} from "postchain-client";
 
 function storeLocalStoragePrivateKey(privKey?: Buffer | string) {
   const kp = encryption.makeKeyPair(privKey);

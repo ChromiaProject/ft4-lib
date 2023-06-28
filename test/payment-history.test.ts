@@ -3,7 +3,11 @@ import AccountBuilder from "./util/account-builder";
 import { ftUserSession } from "../client/lib/ft3/types";
 import { Asset } from "../client/lib/ft3/asset/types";
 import { LocalStorageMock } from "./util/util";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createChromiaClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payment-history/payment-history-store-memory";
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
 import { createAmount } from "../client/lib/ft3/asset/amount";
@@ -13,15 +17,18 @@ import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
 import { createPaymentHistoryRetriever } from "../client/lib/ft3/account/payment-history/payment-history-retrieval";
+import { IClient } from "postchain-client";
 
 let _ft: ftUserSession;
 let asset: Asset;
+let client: IClient;
 
 describe("Payment history", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
     _ft = await getUserSession();
     asset = await getNewAsset(_ft);
+    client = await createChromiaClient();
   });
   describe("Payment history iterator", () => {
     it("should have two payment history entry when mint + transfer is made", async () => {
@@ -39,7 +46,7 @@ describe("Payment history", () => {
       ).build();
 
       const session = await createKeyStoreInteractor(
-        _ft.get.gtxClient,
+        client,
         createInMemoryFTKeyStore(keyPair)
       ).getSession(account1.id);
 
@@ -50,7 +57,7 @@ describe("Payment history", () => {
       );
 
       const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
+        client,
         account1.id,
         5,
         null
@@ -97,7 +104,7 @@ describe("Payment history", () => {
       );
 
       const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
+        client,
         account1.id,
         5,
         null
@@ -128,7 +135,7 @@ describe("Payment history", () => {
       );
 
       const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
+        client,
         account.id,
         5,
         null
@@ -183,7 +190,7 @@ describe("Payment history", () => {
       );
 
       const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
+        client,
         account1.id,
         2,
         null
@@ -212,7 +219,7 @@ describe("Payment history", () => {
         createAmount(10, asset.decimals)
       );
 
-      const connection = createConnection(_ft.get.gtxClient);
+      const connection = createConnection(client);
       const foundAccount = await connection.getAccountById(account1.id);
       const history = await foundAccount!.getTransferHistory();
       expect(history.data.length).toStrictEqual(2);
@@ -248,7 +255,7 @@ describe("Payment history", () => {
       const accountId2 = generateId();
       await account1.xcTransfer(brid2, accountId2, asset.id, 10);
   
-      const paymentHistoryStore = await createPaymentHistoryStoreMemory(account1.id, 5, ft.get.gtxClient)
+      const paymentHistoryStore = await createPaymentHistoryStoreMemory(account1.id, 5, client)
       const paymentHistoryIterator = _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
       const paymentHistoryEntries = await paymentHistoryIterator.next();
   
@@ -280,7 +287,7 @@ describe("Payment history", () => {
       await ft.account.token.transfer(account1.id, account2.id, asset.id, createAmount(10, asset.decimals));
       await account1.xcTransfer(generateId(), generateId(), asset.id, 10);
   
-      const paymentHistoryStore = await createPaymentHistoryStoreMemory(account1.id, 5, ft.get.gtxClient)
+      const paymentHistoryStore = await createPaymentHistoryStoreMemory(account1.id, 5, client)
       const paymentHistoryIterator = _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
       const paymentHistoryEntries = await paymentHistoryIterator.next();
   
@@ -324,7 +331,7 @@ describe("Payment history", () => {
         );
 
         const paymentHistoryStore = await createNewPaymentHistoryStoreLocal(
-          ft.get.gtxClient,
+          client,
           account1.id,
           2,
           null
@@ -431,10 +438,7 @@ describe("Payment history", () => {
       createAmount(10, asset.decimals)
     );
 
-    const retreiver = createPaymentHistoryRetriever(
-      ft.get.gtxClient,
-      account1.id
-    );
+    const retreiver = createPaymentHistoryRetriever(client, account1.id);
     const expectedEntry = (await retreiver.retrieve(1, null, null)).data[0];
     const actualEntry = await retreiver.retrieveSingle(
       parseInt(expectedEntry.rowid, 10)
@@ -471,11 +475,11 @@ describe("Payment history", () => {
       createAmount(10, asset.decimals)
     );
 
-    const connection = createConnection(_ft.get.gtxClient);
+    const connection = createConnection(client);
     const foundAccount = await connection.getAccountById(account1.id);
 
     const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-      ft.get.gtxClient,
+      client,
       account1.id,
       5,
       {

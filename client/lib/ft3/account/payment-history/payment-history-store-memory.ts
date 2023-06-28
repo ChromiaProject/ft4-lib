@@ -5,8 +5,7 @@ import {
 } from "./interfaces";
 import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
 import { BufferId } from "../../../cryptoUtils";
-import { formatter } from "postchain-client";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
+import { IClient, formatter } from "postchain-client";
 import { createPaymentHistoryRetriever } from "./payment-history-retrieval";
 import { PageCursor } from "/ft3/types";
 

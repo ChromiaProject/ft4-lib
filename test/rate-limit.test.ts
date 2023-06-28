@@ -4,7 +4,7 @@ import { createConnection } from "../client/lib/ft3/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
-import { getUserSession } from "./util/blockchain-util";
+import { createChromiaClient, getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 
 jest.setTimeout(2000000);
@@ -19,7 +19,7 @@ const POINTS_AT_ACCOUNT_CREATION = 1;
 describe.skip("Rate Limit", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    _connection = createConnection(_ft.get.gtxClient);
+    _connection = createConnection(await createChromiaClient());
   });
 
   describe("Blockchain request configuration in run.xml", () => {
@@ -94,68 +94,6 @@ describe.skip("Rate Limit", () => {
       await expect(makeRequests(ft, 8)).rejects.toBeInstanceOf(Error);
     });
   });
-
-  /* removed
-  describe("test the client side point calculation", () => {
-    const lastOperation = 10000;
-    let timestamp = lastOperation;
-
-    it("initializes with 0 points", async () => {
-      const spy = jest
-        .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(() => new Promise((res) => res(timestamp)));
-      const expect0Points = await RateLimit.getPointsAvailable(
-        0,
-        lastOperation,
-        blockchain
-      );
-      expect(expect0Points).toBe(0);
-      spy.mockRestore();
-    });
-
-    it("gets 2 points after 10 seconds", async () => {
-      timestamp += 10000;
-      const spy = jest
-        .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(() => new Promise((res) => res(timestamp)));
-      const expect2Points = await RateLimit.getPointsAvailable(
-        0,
-        lastOperation,
-        blockchain
-      );
-      expect(expect2Points).toBe(2);
-      spy.mockRestore();
-    });
-
-    it("gets maximum 10 points", async () => {
-      timestamp = lastOperation + 10 * 5 * 1000; // ten times the recovery period
-      const spy = jest
-        .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(() => new Promise((res) => res(timestamp)));
-      const expectMax10Points = await RateLimit.getPointsAvailable(
-        5,
-        lastOperation,
-        blockchain
-      );
-      expect(expectMax10Points).toBe(10);
-      spy.mockRestore();
-    });
-
-    it("doesn't into negative number", async () => {
-      timestamp = 0; // ten times the recovery period
-      const spy = jest
-        .spyOn(RateLimit, "getLastTimestamp")
-        .mockImplementation(() => new Promise((res) => res(timestamp)));
-      const expectMax10Points = await RateLimit.getPointsAvailable(
-        0,
-        lastOperation,
-        blockchain
-      );
-      expect(expectMax10Points).toBe(0);
-      spy.mockRestore();
-    });
-  });
-  */
 
   const timeout = async (timer: number) => {
     return new Promise((res) => {

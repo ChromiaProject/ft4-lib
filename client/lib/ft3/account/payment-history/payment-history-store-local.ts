@@ -10,9 +10,8 @@ import {
   paymentHistoryEntryToJSON,
 } from "./payment-history-entry";
 import { PaymentHistoryEntry, PaymentHistoryFilter } from "./types";
-import { formatter } from "postchain-client";
+import { IClient, formatter } from "postchain-client";
 import { PageCursor } from "/ft3/types";
-import { IClient } from "postchain-client/built/src/blockchainClient/interface";
 
 export async function ensurePaymentHistoryStoreLocal(
   session: IClient,

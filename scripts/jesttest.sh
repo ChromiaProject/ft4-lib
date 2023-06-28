@@ -92,18 +92,18 @@ chr node start -s configs/jest-test.yml --wipe \
     -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
 prc=$!
 
-echo "done!\n"
+printf "done!\n\n"
 i=0
 max=15
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( $max - $i ))"
+    printf "Waiting to start tests... $(( $max - $i )) \r"
     true $(( i=i+1 ))
     sleep 1
 done
 
 
-echo "> Starting jest tests with options: " "$opt"
+printf "\n> Starting jest tests with options: $opt \n"
 
 pids=()
 for f in ./**/*.test.ts; do

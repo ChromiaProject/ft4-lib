@@ -1,8 +1,8 @@
 import {
   Itransaction,
   SignatureProvider,
-} from "postchain-client/built/src/gtx/interfaces";
-import { RellOperation } from "postchain-client/built/src/gtx/types";
+  RellOperation,
+} from "postchain-client";
 import { authDescriptor, FlagsType } from "../account/auth-descriptor";
 import { Account, User } from "../account/types";
 import { ftUserSession } from "../types";

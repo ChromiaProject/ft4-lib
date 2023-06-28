@@ -39,7 +39,7 @@
   "dependencies": {
     "@walletconnect/client": "^1.8.0",
     "ethers": "^6.4.1",
-    "postchain-client": "^1.5.2"
+    "postchain-client": "^1.5.4"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",

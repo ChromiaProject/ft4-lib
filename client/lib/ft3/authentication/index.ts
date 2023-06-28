@@ -13,7 +13,7 @@ export * from "./evm";
 export * from "./ft";
 export * from "./interfaces";
 
-export function createAuthenicator(
+export function createAuthenticator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService
