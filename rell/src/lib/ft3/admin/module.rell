@@ -1,8 +1,8 @@
 @mount("ft4.admin")
 module;
 
-import ^.account;
-import ^.core;
+import ^.accounts;
+import ^.assets;
 import ^.utils;
 
 struct module_args {

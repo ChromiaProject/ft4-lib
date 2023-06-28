@@ -8,7 +8,7 @@ import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.auth;
 import ^.utils;
 
-val too_big = core.max_asset_amount + 1;
+val too_big = assets.max_asset_amount + 1;
 
 function test_before_transfer_extension_is_called() {
     val alice = utils.register_alice();
@@ -17,7 +17,7 @@ function test_before_transfer_extension_is_called() {
     val asset = utils.create_asset("test", "t", 1);
 
     val inputs = [
-        core.xfer_input(
+        assets.xfer_input(
             account_id = alice.account.id,
             asset_id = asset.id,
             auth_descriptor_id = alice.auth_descriptor_id,
@@ -27,7 +27,7 @@ function test_before_transfer_extension_is_called() {
     ];
 
     val outputs = [
-        core.xfer_output(
+        assets.xfer_output(
             account_id = bob.account.id, 
             asset_id = asset.id,
             amount = 1,
@@ -54,7 +54,7 @@ function test_after_transfer_extension_is_called() {
     val asset = utils.create_asset("test", "t", 1);
 
     val inputs = [
-        core.xfer_input(
+        assets.xfer_input(
             account_id = alice.account.id, 
             asset_id = asset.id, 
             auth_descriptor_id = alice.auth_descriptor_id,
@@ -64,7 +64,7 @@ function test_after_transfer_extension_is_called() {
     ];
 
     val outputs = [
-        core.xfer_output(
+        assets.xfer_output(
             account_id = bob.account.id, 
             asset_id = asset.id,
             amount = 1,
@@ -151,8 +151,8 @@ function test_transfer_succeeds_when_enough_balance() {
         .sign(alice.keypair)
         .run();
 
-    assert_equals(core.ensure_balance(alice.account, asset).amount, 7);
-    assert_equals(core.ensure_balance(bob.account, asset).amount, 3);
+    assert_equals(assets.ensure_balance(alice.account, asset).amount, 7);
+    assert_equals(assets.ensure_balance(bob.account, asset).amount, 3);
 }
 
 function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
@@ -178,8 +178,8 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
         .op(ft3.core_ext.transfer_one(bob.account.id, asset.id, 5))
         .run();
 
-    assert_equals(core.ensure_balance(alice.account, asset).amount, 10);
-    assert_equals(core.ensure_balance(bob.account, asset).amount, 5);
+    assert_equals(assets.ensure_balance(alice.account, asset).amount, 10);
+    assert_equals(assets.ensure_balance(bob.account, asset).amount, 5);
 }
 
 function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_sender() {

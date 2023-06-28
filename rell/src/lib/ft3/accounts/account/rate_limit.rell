@@ -1,4 +1,4 @@
-import ^.core;
+import ^.assets;
 
 function rate_limit(account) {
     if (core.config.rate_limit_active == false) return;

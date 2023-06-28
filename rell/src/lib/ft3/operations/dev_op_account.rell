@@ -1,7 +1,7 @@
 @mount('ft4')
 module;
 
-import acc: ^^.account; 
+import acc: ^^.accounts; 
 
 // TODO: move to tests directory
 operation register_account_test(acc.auth_descriptor) {

@@ -1,5 +1,5 @@
 import acc: ^;
-import core: ^^.core;
+import core: ^^.assets;
 import utils: ^^.utils;
 
 query get_account_rate_limit_last_update(account_id: byte_array) {

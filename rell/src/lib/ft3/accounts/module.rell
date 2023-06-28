@@ -1,7 +1,7 @@
 @mount('ft')
 module;
 
-import ^.core;
+import ^.assets;
 import ^.auth;
 import ^.utils;
 

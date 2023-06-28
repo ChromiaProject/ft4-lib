@@ -1,5 +1,5 @@
-import acc: ^^.account;
-import ^^.core;
+import acc: ^^.accounts;
+import ^^.assets;
 import ^^.auth;
 
 query delete_auth_descriptor_auth_data(gtv) = auth.auth_data(

@@ -1,4 +1,4 @@
-import ^^.core;
+import ^^.assets;
 import ^^.auth;
 
 query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");

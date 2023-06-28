@@ -2,7 +2,7 @@
 module;
 
 import ^^.admin;
-import acc: ^^.account; 
+import acc: ^^.accounts; 
 
 /*
  * We can store the error message in this singleton, and later check it in our tests.

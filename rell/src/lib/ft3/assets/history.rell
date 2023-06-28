@@ -1,5 +1,5 @@
 import acc: ^.account;
-import ^.core;
+import ^.assets;
 import ^.utils;
 
 @log entity payment_history_entry {
