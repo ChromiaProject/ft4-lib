@@ -1,6 +1,7 @@
 import { Authenticator, KeyHandler } from "../authentication/interfaces";
-import { Itransaction, Operation, Transaction } from "postchain-client";
+import { Operation, SignedTransaction, gtx } from "postchain-client";
 import { IClient } from "postchain-client/built/src/blockchainClient/interface";
+import { TxBuilderTransaction } from "./types";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -48,14 +49,14 @@ export type TransactionBuilder = {
    * @param signers array of participants that should sign this transaction
    * @returns A promised containing the unsigned transaction
    */
-  build: () => Promise<Itransaction>;
+  build: () => Promise<SignedTransaction>;
   /**
    * Builds an unsigned transaction containgin the previously added
    * transactions, as well as any authhorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
    */
-  buildUnsigned: () => Promise<Itransaction>;
+  buildUnsigned: () => Promise<TxBuilderTransaction>;
   /**
    * A function to extract the keyhandlers used to build a transaction,
    * and thus should be the ones signing the transaction when
@@ -94,12 +95,14 @@ export function transactionBuilder(
       this._operations
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
-    const txn: Transaction = {
+    const txn: TxBuilderTransaction = {
+      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
       operations: [],
       signers: toPubkeys(this._keyhandlersUsed),
+      signatures: [],
     };
     const addOperation = (op: Operation) => {
-      txn.operations.push(op);
+      txn.operations.push({ opName: op.name, args: op.args });
     };
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
@@ -171,7 +174,7 @@ export function transactionBuilder(
     await Promise.all(
       this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx))
     );
-    return tx;
+    return gtx.serialize(tx);
   }
 
   function addSigners(...signers: KeyHandler[]): TransactionBuilder {

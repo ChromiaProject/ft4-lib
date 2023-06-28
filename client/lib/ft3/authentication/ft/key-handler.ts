@@ -1,8 +1,9 @@
 import { BufferId } from "../../../cryptoUtils";
 import { KeyHandler, KeyStore } from "../interfaces";
 import { AuthDescriptor } from "../../account/auth-descriptor/types";
-import { Transaction, Operation, SignatureProvider } from "postchain-client";
+import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { ftAuth } from ".";
+import { TxBuilderTransaction } from "/ft3/utils/types";
 
 export function createFTKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -15,7 +16,7 @@ export function createFTKeyHandler(
       satisfiesAuthRequirements(authDescriptor, requiredFlags),
     authenticate: (accountId: BufferId, operation: Operation) =>
       authenticate(accountId, authDescriptor.id, operation),
-    sign: (transaction: Transaction) => sign(transaction, keyStore),
+    sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
     getSigners: () => authDescriptor.signers,
   });
 }
@@ -29,10 +30,18 @@ async function authenticate(
 }
 
 async function sign(
-  transaction: Transaction,
+  transaction: TxBuilderTransaction,
   keyStore: FTKeyStore
 ): Promise<void> {
-  return transaction.sign(keyStore);
+  transaction.signatures.push(
+    await keyStore.sign(
+      gtx.getDigestToSign({
+        blockchainRID: transaction.blockchainRID,
+        signers: transaction.signers,
+        operations: transaction.operations,
+      })
+    )
+  );
 }
 
 export function satisfiesAuthRequirements(

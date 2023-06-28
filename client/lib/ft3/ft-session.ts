@@ -36,6 +36,7 @@ import {
   GtxClient,
   QueryArguments,
   Operation,
+  TransactionReceipt,
 } from "postchain-client";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
@@ -106,12 +107,11 @@ export async function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Promise<void> {
+): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
-  await tx.postAndWaitConfirmation();
-  return;
+  return connection.client.sendTransaction(tx);
 }
 
 export type KeyStoreInteractor = {

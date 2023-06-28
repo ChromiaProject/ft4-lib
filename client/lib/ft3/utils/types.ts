@@ -1,4 +1,4 @@
-import { RawGtv } from "postchain-client";
+import { RawGtv, RellOperation } from "postchain-client";
 import { OptionalPageCursor } from "../types";
 
 export type Operation = [string, ...RawGtv[]];
@@ -48,4 +48,11 @@ export type EntityRetriever<T> = {
 export type PaginatedEntity<T> = {
   data: T[];
   nextCursor: OptionalPageCursor;
+};
+
+export type TxBuilderTransaction = {
+  blockchainRID: Buffer;
+  operations: RellOperation[];
+  signers: Buffer[];
+  signatures: Buffer[];
 };

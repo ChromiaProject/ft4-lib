@@ -1,10 +1,4 @@
-import {
-  Operation,
-  QueryObject,
-  RawGtv,
-  Transaction,
-  formatter,
-} from "postchain-client";
+import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
   AuthData,
@@ -13,6 +7,7 @@ import {
   AuthenticatorSession,
   KeyHandler,
 } from "./interfaces";
+import { TxBuilderTransaction } from "../utils/types";
 
 export * from "./evm";
 export * from "./ft";
@@ -96,7 +91,7 @@ function createAuthenticatorSession(
         authData
       );
     },
-    sign: async (transaction: Transaction) => {
+    sign: async (transaction: TxBuilderTransaction) => {
       await Promise.all(
         Array.from(usedKeyHandlers).map((keyHandler) =>
           keyHandler.sign(transaction)

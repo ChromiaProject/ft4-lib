@@ -27,7 +27,12 @@ import {
   PaymentHistoryStore,
 } from "./payment-history/interfaces";
 import { BufferId, KeyPair } from "../../cryptoUtils";
-import { formatter, GtxClient, RawGtv } from "postchain-client";
+import {
+  formatter,
+  GtxClient,
+  RawGtv,
+  TransactionReceipt,
+} from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { Amount } from "../asset/interfaces";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
@@ -274,7 +279,7 @@ async function _addAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
   keyPair: KeyPair
-): Promise<void> {
+): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
@@ -284,15 +289,14 @@ async function _addAuthDescriptor(
     )
     .build();
 
-  await tx.postAndWaitConfirmation();
-  return;
+  return connection.client.sendTransaction(tx);
 }
 
 async function _deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId
-): Promise<void> {
+): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
@@ -306,7 +310,7 @@ async function _transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount
-): Promise<void> {
+): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
@@ -323,7 +327,7 @@ async function _xcTransfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount
-): Promise<void> {
+): Promise<TransactionReceipt> {
   throw new Error("Not implemented!");
 }
 /* eslint-enable */

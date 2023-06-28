@@ -62,7 +62,10 @@ export function legacyTransactionBuilder(
             `No keymanager registered to handle <${operation[0]}> operation`
           );
         }
-        return await manager.authorize(operation, auth_data);
+        return await manager.authorize(
+          { name: operation[0], args: operation.slice(1) },
+          auth_data
+        );
       })
     );
     (await operations).forEach((op: Operation | Operation[]) => {

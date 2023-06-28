@@ -1,4 +1,8 @@
-import { SignatureProvider, RawGtv } from "postchain-client";
+import {
+  SignatureProvider,
+  RawGtv,
+  TransactionReceipt,
+} from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId, KeyPair } from "../../cryptoUtils";
@@ -81,18 +85,20 @@ export interface IAuthenticatedAccount extends IAccount {
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
     keyPair: KeyPair
-  ) => Promise<void>;
-  deleteAuthDescriptor: (authDescriptorId: BufferId) => Promise<void>;
+  ) => Promise<TransactionReceipt>;
+  deleteAuthDescriptor: (
+    authDescriptorId: BufferId
+  ) => Promise<TransactionReceipt>;
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount
-  ) => Promise<void>;
+  ) => Promise<TransactionReceipt>;
   xcTransfer: (
     brid: BufferId,
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount
-  ) => Promise<void>;
-  burn: (assetId: BufferId, amount: Amount) => Promise<void>;
+  ) => Promise<TransactionReceipt>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionReceipt>;
 }

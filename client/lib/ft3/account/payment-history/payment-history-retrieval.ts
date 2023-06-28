@@ -52,7 +52,7 @@ export function createPaymentHistoryRetriever(
         await session.query("ft4.get_transfer_history_entry", { rowid })
       );
     },
-    brid: session.config.blockchainRID.toString("hex"),
+    brid: session.config.blockchainRID,
   });
 }
 

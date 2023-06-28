@@ -20,7 +20,8 @@ import {
   QueryArguments,
   QueryObject,
   GtxClient,
-  Operation as _Operation,
+  Operation,
+  TransactionReceipt,
 } from "postchain-client";
 
 export type PageCursor = string;
@@ -166,7 +167,7 @@ export interface Connection {
 
 export interface Session extends Connection {
   account: IAuthenticatedAccount;
-  call: (...operations: _Operation[]) => Promise<void>;
-  callWithoutNop: (...operations: _Operation[]) => Promise<void>;
+  call: (...operations: Operation[]) => Promise<TransactionReceipt>;
+  callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
   transactionBuilder: () => TransactionBuilder;
 }

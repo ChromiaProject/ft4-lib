@@ -1,6 +1,7 @@
-import { Transaction, Operation } from "postchain-client";
+import { Operation } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { AuthDescriptor } from "../account/auth-descriptor/types";
+import { TxBuilderTransaction } from "../utils/types";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -26,7 +27,7 @@ export interface KeyHandler {
     authData: AuthData
   ): Promise<Operation[]>;
 
-  sign(transaction: Transaction): Promise<void>;
+  sign(transaction: TxBuilderTransaction): Promise<void>;
 
   // FIXME
   getSigners(): Buffer[];
@@ -43,7 +44,7 @@ export interface AuthenticatorSession {
   getUsedKeyHandlers(): Set<KeyHandler>;
   getSigners(): Set<Buffer>;
   authenticate(operation: Operation): Promise<Operation[]>;
-  sign(transaction: Transaction): Promise<void>;
+  sign(transaction: TxBuilderTransaction): Promise<void>;
 }
 
 export interface AuthDataService {
