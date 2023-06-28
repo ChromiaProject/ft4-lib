@@ -12,6 +12,7 @@ import { createAccount } from "./util/util";
 import { ethers } from "ethers";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { createClient } from "./util/blockchain-util";
+import { Buffer } from "buffer";
 
 describe("EVM key handler", () => {
   let client: GtxClient;

@@ -9,6 +9,7 @@ import {
 // Export public interfaces
 import { KeyStore, createWeb3ProviderEVMKeyStore } from "./authentication";
 import { AuthDescriptor, FlagsType, IAccount, authDescriptor } from "./account";
+import { createAmount } from "./asset/amount";
 
 export {
   KeyStore,
@@ -18,6 +19,7 @@ export {
   authDescriptor,
   createKeyStoreInteractor,
   createWeb3ProviderEVMKeyStore,
+  createAmount,
 };
 
 export const ft = Object.freeze({

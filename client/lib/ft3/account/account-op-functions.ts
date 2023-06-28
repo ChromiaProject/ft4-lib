@@ -37,6 +37,7 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
 import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { Buffer } from "buffer";
 
 export async function ssoRawTransactionRegister(
   newAuthDesc: AuthDescriptor,

@@ -1,4 +1,5 @@
 import { Amount } from "./interfaces";
+import { Buffer } from "buffer";
 
 export type Asset = {
   id: Buffer;

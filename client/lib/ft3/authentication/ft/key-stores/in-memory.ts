@@ -3,11 +3,12 @@ import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../account/auth-descriptor/types";
 import { createFTKeyHandler } from "../key-handler";
 import { gtx } from "postchain-client";
-import { FtKeyStore } from "..";
+import { FTKeyStore } from "..";
+import { Buffer } from "buffer";
 
 export function createInMemoryFTKeyStore(
   keyHolder: KeyPair | SignatureProvider
-): FtKeyStore {
+): FTKeyStore {
   const signatureProvider =
     "privKey" in keyHolder ? gtx.newSignatureProvider(keyHolder) : keyHolder;
 

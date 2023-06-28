@@ -18,6 +18,8 @@
     "stop-postchain:demo": "docker stop ft4_demo; docker rm ft4_demo",
     "stop-postchain:rell": "docker stop postchain; docker rm postchain",
     "start-postchain:demo": "./scripts/rundemo.sh",
+    "deploy:latest": "./scripts/deploy.sh",
+    "deploy:stable": "./scripts/deploy.sh --stable",
     "start": "node index.js",
     "build": "shx rm -rf dist && tsc --project tsconfig.dist.json && tsc-alias",
     "prepublish": "npm run build",
@@ -59,5 +61,8 @@
     "tsc-alias": "^1.8.6",
     "tslint": "^6.1.3",
     "typescript": "^5.1.3"
+  },
+  "peerDependencies": {
+    "buffer": "^5.x || ^6.x"
   }
 }

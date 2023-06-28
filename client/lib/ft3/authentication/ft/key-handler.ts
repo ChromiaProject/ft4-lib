@@ -6,6 +6,7 @@ import {
   Itransaction,
   SignatureProvider,
 } from "postchain-client/built/src/gtx/interfaces";
+import { Buffer } from "buffer";
 import { ftAuth } from ".";
 
 export function createFTKeyHandler(

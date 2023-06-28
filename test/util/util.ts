@@ -3,6 +3,7 @@ import { KeyPair } from "../../client/lib/cryptoUtils";
 import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
 import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { Buffer } from "buffer";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);

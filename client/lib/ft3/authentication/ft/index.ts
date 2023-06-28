@@ -2,6 +2,7 @@ import { formatter } from "postchain-client";
 import { BufferId } from "../../../cryptoUtils";
 import { Operation } from "../../utils/types";
 import { KeyStore } from "../types";
+import { Buffer } from "buffer";
 
 export function ftAuth(
   accountId: BufferId,
@@ -14,6 +15,6 @@ export function ftAuth(
   ];
 }
 
-export interface FtKeyStore extends KeyStore {
+export interface FTKeyStore extends KeyStore {
   pubKey: Buffer;
 }

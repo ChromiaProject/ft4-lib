@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 export enum AuthType {
   single_sig = "S",
   multi_sig = "M",

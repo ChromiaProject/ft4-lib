@@ -16,8 +16,10 @@ query get_asset_balances(account_id: byte_array) {
 }
 
 query get_asset_balances_paginated(account_id: byte_array, page_size: integer, page_cursor: text?) {
-    val balances = core.get_paginated_asset_balances(account_id, page_size, page_cursor);
-    return utils.make_page(balances, page_size);
+    return utils.make_page(
+        core.get_paginated_asset_balances(account_id, page_size, page_cursor),
+        page_size
+    );
 }
 
 query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
@@ -72,6 +74,13 @@ query get_all_assets() {
         brid = .issuing_brid,
         icon_url = .icon_url,
         supply = .total_supply
+    );
+}
+
+query get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        core.get_all_assets_paginated(page_size, page_cursor),
+        page_size
     );
 }
 

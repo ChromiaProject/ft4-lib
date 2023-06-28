@@ -4,6 +4,7 @@ import {
 } from "postchain-client/built/src/gtx/interfaces";
 import { Operation } from "./types";
 import { Authenticator, KeyHandler } from "../authentication/types";
+import { Buffer } from "buffer";
 
 type OpAuthPair = [Operation, Authenticator];
 

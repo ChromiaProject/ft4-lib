@@ -2,6 +2,7 @@ import { op } from "../utils";
 import { Operation } from "../utils/types";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
+import { Buffer } from "buffer";
 
 export function registerOp(authDescriptor: AuthDescriptor): Operation {
   const ad = authDesc.toGtv(authDescriptor);

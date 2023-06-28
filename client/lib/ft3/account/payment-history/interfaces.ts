@@ -4,6 +4,7 @@ import {
   TransferHistoryResponse,
 } from "./types";
 import { PageCursor } from "../../types";
+import { Buffer } from "buffer";
 
 export interface PaymentHistoryStore {
   accountId: Buffer;

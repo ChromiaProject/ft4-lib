@@ -9,6 +9,7 @@ import {
 } from "./types";
 import { Operation, QueryObject } from "../utils/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
+import { Buffer } from "buffer";
 
 export * from "./evm";
 export * from "./ft";
