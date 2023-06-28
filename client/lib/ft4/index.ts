@@ -8,7 +8,12 @@ import {
 
 // Export public interfaces
 import { KeyStore, createWeb3ProviderEVMKeyStore } from "./authentication";
-import { AuthDescriptor, FlagsType, IAccount, authDescriptor } from "./account";
+import {
+  AuthDescriptor,
+  FlagsType,
+  IAccount,
+  authDescriptor,
+} from "./accounts";
 import { createAmount } from "./asset/amount";
 
 export {
