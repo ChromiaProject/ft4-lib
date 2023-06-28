@@ -50,12 +50,14 @@ describe("Asset", () => {
     const assetId = ft.get.asset.id(assetName, brid);
     await getNewAsset(ft, assetName, assetSymbol, 3);
 
-    const expectedAsset = (await connection.getAssetBySymbol(assetSymbol))!;
+    const result = (await connection.getAssetBySymbol(assetSymbol))!;
 
-    expect(expectedAsset.name).toEqual(assetName);
-    expect(expectedAsset.id).toEqual(assetId);
-    expect(expectedAsset.decimals).toEqual(3);
-    expect(expectedAsset.brid).toEqual(brid);
+    expect(result).toMatchObject({
+      name: assetName,
+      id: assetId,
+      decimals: 3,
+      brid,
+    });
   });
 
   it("should return all the assets registered", async () => {

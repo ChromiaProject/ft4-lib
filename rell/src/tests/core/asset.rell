@@ -358,5 +358,17 @@ function test_it_gets_asset_by_symbol() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val actual_asset = ft3.core_ext.get_asset_by_symbol(asset1.symbol);
-    assert_equals(actual_asset, ft3.core_ext.extract_asset_data(asset1));
+    
+    assert_equals(
+        actual_asset,
+        (
+            id = asset1.id,
+            symbol = "TST1",
+            name = "test1",
+            decimals = 0,
+            brid = asset1.issuing_brid,
+            icon_url = "",
+            supply = 0L
+        )
+    );
 }
