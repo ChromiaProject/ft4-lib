@@ -162,6 +162,11 @@ export interface Connection {
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
   getAssetsByName: (name: string) => Promise<Asset[]>;
+  getAssetsByNamePaginated: (
+    name: string,
+    limit?: number,
+    cursor?: OptionalPageCursor
+  ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: () => Promise<Asset[]>;
   getAllAssetsPaginated: (
     limit?: number,

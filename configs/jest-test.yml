@@ -1,6 +1,6 @@
 blockchains:
   ft3_jest_test: #Name of the blockchain
-    module: main #Entrypoint to the project
+    module: tests.core.app_module #Entrypoint to the project
     moduleArgs:
       lib.ft3.core:
         rate_limit_active: 1

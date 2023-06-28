@@ -97,7 +97,7 @@ i=0
 max=15
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( $max - $i ))"
+    echo "Waiting to start tests... $(( $max - $i ))"
     true $(( i=i+1 ))
     sleep 1
 done

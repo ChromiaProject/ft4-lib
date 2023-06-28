@@ -1,4 +1,8 @@
-import { generateAssetName, generateAssetSymbol } from "./util/util";
+import {
+  generateAssetName,
+  generateAssetSymbol,
+  registerAsset,
+} from "./util/util";
 import { Connection, ftUserSession } from "../client/lib/ft3/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
@@ -26,6 +30,28 @@ describe("Asset", () => {
 
     expect(expectedAssets.length).toEqual(1);
     expect(expectedAssets[0]).toEqual(asset);
+  });
+
+  it("can fetch paginated assets", async () => {
+    const assetName = generateAssetName();
+    const client = ft.get.gtxClient;
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+
+    const { data: expectedAssets, nextCursor } =
+      await connection.getAssetsByNamePaginated(assetName, 2);
+    expect(expectedAssets.length).toEqual(2);
+    expect(expectedAssets[0].name).toEqual(assetName);
+    expect(expectedAssets[1].name).toEqual(assetName);
+
+    const { data: expectedAssets2 } = await connection.getAssetsByNamePaginated(
+      assetName,
+      2,
+      nextCursor
+    );
+    expect(expectedAssets2.length).toEqual(1);
+    expect(expectedAssets2[0].name).toEqual(assetName);
   });
 
   it("should be returned when queried by id", async () => {

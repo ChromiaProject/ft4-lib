@@ -13,6 +13,7 @@ import {
   balancesByAccountId,
   allAssetsPaginated,
   assetBySymbol,
+  assetsByNamePaginated,
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
@@ -87,6 +88,20 @@ export async function _getAssetsByName(
   name: string
 ): Promise<Asset[]> {
   return await connection.query<Asset[]>(assetByName(name));
+}
+
+export function _getAssetsByNamePaginated(
+  connection: Connection,
+  name: string,
+  limit = 100,
+  cursor: OptionalPageCursor = null
+) {
+  const retriever = createEntityRetriever<Asset, Asset>(
+    connection,
+    assetsByNamePaginated(name, limit, cursor),
+    (a) => a
+  );
+  return retriever.retrieve();
 }
 
 export async function _getAllAssets(connection: Connection): Promise<Asset[]> {
