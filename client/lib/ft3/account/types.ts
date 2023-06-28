@@ -51,7 +51,7 @@ export type User = {
 
 // TODO: Rename to Account after deleting Account type
 export interface IAccount {
-  id: BufferId;
+  id: Buffer;
   getBalances: () => Promise<Balance[]>;
   getBalancesPaginated: (
     limit?: number,

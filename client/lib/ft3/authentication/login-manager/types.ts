@@ -1,24 +1,30 @@
+import { LoginKeyStore } from "./stores/types";
 import { BufferId } from "/cryptoUtils";
 import { Session } from "/ft3/types";
 
+export type LoginConfig = {
+  flags: string[];
+};
+
 export type LoginOptions = {
   accountId: BufferId;
+  loginKeyStore?: LoginKeyStore;
 } & (
   | {
       configName: string;
-      flags?: never;
+      config?: never;
     }
   | {
       configName?: never;
-      flags: string[];
+      config: LoginConfig;
     }
   | {
       configName?: never;
-      flags?: never;
+      config?: never;
     }
 );
 
 export type LoginManger = {
   login: (options: LoginOptions) => Promise<Session>;
-  logout: () => void;
+  logout: (accountId: Buffer) => void;
 };

@@ -45,6 +45,7 @@ import {
   createLoginManager,
 } from "./authentication/login-manager";
 import { Buffer } from "buffer";
+import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -128,7 +129,7 @@ export async function call(
 export type KeyStoreInteractor = {
   getAccounts(): Promise<IAccount[]>;
   getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(): LoginManger;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };
 
 // TODO: Improve error handling
@@ -181,6 +182,7 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
-    getLoginManager: () => createLoginManager(connection, keyStore),
+    getLoginManager: (loginKeyStore?: LoginKeyStore) =>
+      createLoginManager(connection, keyStore, loginKeyStore),
   });
 }

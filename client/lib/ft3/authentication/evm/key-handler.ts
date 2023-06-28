@@ -5,6 +5,7 @@ import { AuthDescriptor } from "../../account/auth-descriptor/types";
 import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
 import { EVMKeyStore, evmAuth } from ".";
 import { formatter } from "postchain-client";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 
 export function createEVMKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -14,7 +15,7 @@ export function createEVMKeyHandler(
     authDescriptor,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      satisfiesAuthRequirements(authDescriptor, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
     authenticate: (
       accountId: BufferId,
       operation: Operation,
@@ -51,10 +52,3 @@ async function sign(
   // return transaction.sign(keyStore);
 }
 /* eslint-enable */
-
-export function satisfiesAuthRequirements(
-  authDescriptor: AuthDescriptor,
-  requiredFlags: string[]
-): boolean {
-  return requiredFlags.every((flag) => authDescriptor.flags.has(flag));
-}

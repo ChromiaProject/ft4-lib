@@ -17,7 +17,7 @@ export function createFTKeyHandler(
     authDescriptor,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      satisfiesAuthRequirements(authDescriptor, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
     authenticate: (accountId: BufferId, operation: Operation) =>
       authenticate(accountId, authDescriptor.id, operation),
     sign: (transaction: Itransaction) => sign(transaction, keyStore),
@@ -40,7 +40,7 @@ async function sign(
   return transaction.sign(keyStore);
 }
 
-export function satisfiesAuthRequirements(
+export function hasAuthDescriptorFlags(
   authDescriptor: AuthDescriptor,
   requiredFlags: string[]
 ): boolean {
