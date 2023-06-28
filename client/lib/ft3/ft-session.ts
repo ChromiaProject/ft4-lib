@@ -79,8 +79,8 @@ export function createConnection(client: GtxClient): Connection {
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
     getAssetsByNamePaginated: (
       name: string,
-      limit: number,
-      cursor: OptionalPageCursor = null
+      limit?: number,
+      cursor?: OptionalPageCursor
     ) => _getAssetsByNamePaginated(connection, name, limit, cursor),
     getAllAssets: () => _getAllAssets(connection),
     getAllAssetsPaginated: (

@@ -93,8 +93,8 @@ export async function _getAssetsByName(
 export function _getAssetsByNamePaginated(
   connection: Connection,
   name: string,
-  limit: number,
-  cursor: OptionalPageCursor
+  limit = 100,
+  cursor: OptionalPageCursor = null
 ) {
   const retriever = createEntityRetriever<Asset, Asset>(
     connection,
