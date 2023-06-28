@@ -1,5 +1,0 @@
-import acc: ^accounts;
-import ^^.assets;
-import ^^.auth;
-
-query default_auth_data(gtv) = auth.auth_data(list<text>(), "");

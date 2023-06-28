@@ -2,7 +2,7 @@
 
 import acc: ^^^.lib.ft3.accounts;
 import acc_external: ^^^.lib.ft3.accounts.external;
-import ^^.core.utils;
+import ^^.assets.utils;
 import test_op: ^^.operations;
 
 function setup_account_with_many_ads() {

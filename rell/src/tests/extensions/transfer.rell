@@ -1,4 +1,3 @@
-
 import ^^.lib.ft3.assets;
 import ^^.lib.ft3.accounts;
 
@@ -40,7 +39,7 @@ object transfer_one_extensions_state {
 }
 
 @extend(assets.before_transfer_one) 
-function (from: account.account, to: account.account, assets.asset, amount: big_integer) {
+function (from: accounts.account, to: accounts.account, assets.asset, amount: big_integer) {
     transfer_one_extensions_state.is_before_transfer_called = true;
     transfer_one_extensions_state.before_transfer_from_account_id = from.id;
     transfer_one_extensions_state.before_transfer_to_account_id = to.id;
@@ -49,7 +48,7 @@ function (from: account.account, to: account.account, assets.asset, amount: big_
 }
 
 @extend(assets.after_transfer_one) 
-function (from: account.account, to: account.account, assets.asset, amount: big_integer) {
+function (from: accounts.account, to: accounts.account, assets.asset, amount: big_integer) {
     transfer_one_extensions_state.is_after_transfer_called = true;
     transfer_one_extensions_state.after_transfer_from_account_id = from.id;
     transfer_one_extensions_state.after_transfer_to_account_id = to.id;

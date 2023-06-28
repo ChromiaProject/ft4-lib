@@ -1,7 +1,7 @@
 @test
 module;
 
-import ^^.core.utils;
+import ^^.assets.utils;
 import ^^^.lib.ft3.auth;
 import acc: ^^^.lib.ft3.accounts;
 import acc_ext: ^^^.lib.ft3.accounts.external;

@@ -1,4 +1,4 @@
-import acc: ^.account;
+import acc: ^.accounts;
 
 struct xfer_input {
    account_id: byte_array;
@@ -185,7 +185,7 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
 }
 
 namespace Unsafe {
-   function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
+   function transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
       require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
 

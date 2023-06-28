@@ -9,7 +9,7 @@ import ^^^.lib.ft3.assets;
 import ft3_utils: ^^^.lib.ft3.utils;
 import ^.utils;
 
-val too_big = core.max_asset_amount + 1;
+val too_big = assets.max_asset_amount + 1;
 
 function test_mint() {
     val alice = utils.register_alice();
@@ -20,7 +20,7 @@ function test_mint() {
         .run();
     
     assert_equals(asset.total_supply, 10L);
-    assert_equals(core.balance @ { .account == alice.account, .asset == asset }.amount, 10L);
+    assert_equals(assets.balance @ { .account == alice.account, .asset == asset }.amount, 10L);
 }
 
 function test_burn() {
@@ -33,12 +33,12 @@ function test_burn() {
     
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.core_ext.burn(asset.id, 10L))
+        .op(ft3.assets_ext.burn(asset.id, 10L))
         .sign(alice.keypair)
         .run();
 
     assert_equals(asset.total_supply, 0);
-    assert_equals(core.balance @ { .account == alice.account, .asset == asset }.amount, 0L);
+    assert_equals(assets.balance @ { .account == alice.account, .asset == asset }.amount, 0L);
 }
 
 function test_mint_fails_if_amount_is_too_high() {
@@ -77,7 +77,7 @@ function test_burn_fails_if_amount_is_too_high() {
     
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.core_ext.burn(asset.id, too_big))
+        .op(ft3.assets_ext.burn(asset.id, too_big))
         .sign(alice.keypair)
         .run_must_fail("Parameter amount: value must be lower than 2^256, actual: %d".format(too_big));
 }
@@ -88,7 +88,7 @@ function test_burn_fails_if_amount_is_too_low() {
     
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.core_ext.burn(asset.id, 0))
+        .op(ft3.assets_ext.burn(asset.id, 0))
         .sign(alice.keypair)
         .run_must_fail("Parameter amount: value must be non-zero positive, actual: %d".format(0));
 }
@@ -102,7 +102,7 @@ function test_burn_fails_if_balance_is_too_low() {
         .run();
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.core_ext.burn(asset.id, 2))
+        .op(ft3.assets_ext.burn(asset.id, 2))
         .sign(alice.keypair)
         .run_must_fail("Insufficient balance");
 }
@@ -144,7 +144,7 @@ function test_before_burn_extensions_are_called() {
     
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.core_ext.burn(asset.id, 10L))
+        .op(ft3.assets_ext.burn(asset.id, 10L))
         .sign(alice.keypair)
         .run();
 
@@ -164,7 +164,7 @@ function test_after_burn_extensions_are_called() {
 
     rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft3.core_ext.burn(asset.id, 10L))
+        .op(ft3.assets_ext.burn(asset.id, 10L))
         .sign(alice.keypair)
         .run();
     
@@ -189,7 +189,7 @@ function test_register_asset_with_valid_icon_url() {
         .sign(utils.admin_priv_key())
         .run();
 
-    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    val asset = assets.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, valid_icon_url);
 }
 
@@ -198,7 +198,7 @@ function test_register_asset_with_empty_icon_url() {
         .sign(utils.admin_priv_key())
         .run();
 
-    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    val asset = assets.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, "");
 }
 
@@ -209,7 +209,7 @@ function test_register_asset_with_ipfs_icon_url() {
         .sign(utils.admin_priv_key())
         .run();
 
-    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    val asset = assets.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, ipfs_icon_url);
 }
 
@@ -228,7 +228,7 @@ function test_register_asset_with_trimmed_icon_url() {
         .sign(utils.admin_priv_key())
         .run();
 
-    val asset = core.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
+    val asset = assets.asset @ { .id == ("test", chain_context.blockchain_rid).hash() };
     assert_equals(asset.icon_url, icon_url_with_spaces.trim());
 }
 
@@ -259,7 +259,7 @@ function test_asset_balances_are_returned_in_correct_order() {
     admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
     admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
     
-    val balances = ft3.core_ext.get_asset_balances_paginated(alice.account.id, 4, null).data;
+    val balances = ft3.assets_ext.get_asset_balances_paginated(alice.account.id, 4, null).data;
 
     assert_equals(gtv_balance.from_gtv_pretty(balances[0]).asset.name, asset1.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances[1]).asset.name, asset2.name);
@@ -279,13 +279,13 @@ function test_asset_balances_are_paginated() {
     admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
     admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
     
-    val balances_p1 = ft3.core_ext.get_asset_balances_paginated(alice.account.id, 3, null);
+    val balances_p1 = ft3.assets_ext.get_asset_balances_paginated(alice.account.id, 3, null);
 
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[0]).asset.name, asset1.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[1]).asset.name, asset2.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[2]).asset.name, asset3.name);
 
-    val balances_p2 = ft3.core_ext.get_asset_balances_paginated(alice.account.id, 3, balances_p1.next_cursor);
+    val balances_p2 = ft3.assets_ext.get_asset_balances_paginated(alice.account.id, 3, balances_p1.next_cursor);
 
     assert_equals(gtv_balance.from_gtv_pretty(balances_p2.data[0]).asset.name, asset4.name);
 }
@@ -294,7 +294,7 @@ function test_paginated_asset_balances_have_correct_format() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset1 = utils.create_asset("test1", "TST1", 0);
     admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
-    val result = ft3.core_ext.get_asset_balances_paginated(alice.account.id, 1, null);
+    val result = ft3.assets_ext.get_asset_balances_paginated(alice.account.id, 1, null);
 
     assert_equals(result, ft3_utils.paged_result(     
         data = [
@@ -320,7 +320,7 @@ function test_assets_are_returned_in_correct_order() {
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets = ft3.core_ext.get_all_assets_paginated(3, null).data;
+    val assets = ft3.assets_ext.get_all_assets_paginated(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(assets[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[1]).name, asset2.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[2]).name, asset3.name);
@@ -330,19 +330,19 @@ function test_assets_are_paginated() {
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets_p1 = ft3.core_ext.get_all_assets_paginated(2, null);
+    val assets_p1 = ft3.assets_ext.get_all_assets_paginated(2, null);
     assert_equals(assets_p1.data.size(), 2);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p1.data[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p1.data[1]).name, asset2.name);
     
-    val assets_p2 = ft3.core_ext.get_all_assets_paginated(2, assets_p1.next_cursor);
+    val assets_p2 = ft3.assets_ext.get_all_assets_paginated(2, assets_p1.next_cursor);
     assert_equals(assets_p2.data.size(), 1);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p2.data[0]).name, asset3.name);
 
 }
 function test_paginated_assets_have_correct_format() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
-    val assets = ft3.core_ext.get_all_assets_paginated(3, null).data;
+    val assets = ft3.assets_ext.get_all_assets_paginated(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(assets[0]), gtv_asset(
         id = asset1.id,
         name = asset1.name,

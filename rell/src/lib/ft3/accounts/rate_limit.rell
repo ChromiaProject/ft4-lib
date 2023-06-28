@@ -1,10 +1,10 @@
 import ^.assets;
 
 function rate_limit(account) {
-    if (core.config.rate_limit_active == false) return;
+    if (assets.config.rate_limit_active == false) return;
     
-    val max_counter = core.config.rate_limit_max_points;
-    val recovery_time = core.config.rate_limit_recovery_time;
+    val max_counter = assets.config.rate_limit_max_points;
+    val recovery_time = assets.config.rate_limit_recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)

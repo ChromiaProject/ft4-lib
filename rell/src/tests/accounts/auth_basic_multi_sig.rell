@@ -1,7 +1,7 @@
 @test
 module;
 
-import cu: ^^.core.utils;
+import cu: ^^.assets.utils;
 import acc: ^^^.lib.ft3.accounts;
 import ^^^.lib.ft3.ft3_basic_dev.*;
 import ^^^.lib.ft3.operations.dev_op_auth;
