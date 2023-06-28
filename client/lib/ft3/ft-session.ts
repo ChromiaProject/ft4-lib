@@ -21,6 +21,7 @@ import { Operation, QueryObject } from "./utils/types";
 import {
   _getAllAssets,
   _getAssetById,
+  _getAssetBySymbol,
   _getAssetsByName,
   _getAllAssetsPaginated,
 } from "./asset/asset-query-functions";
@@ -73,6 +74,7 @@ export function createConnection(client: GtxClient): Connection {
       _getByAuthDescriptorId(connection, id),
 
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
+    getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
     getAssetsByName: (name: string) => _getAssetsByName(connection, name),
     getAllAssets: () => _getAllAssets(connection),
     getAllAssetsPaginated: (

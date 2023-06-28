@@ -43,6 +43,23 @@ describe("Asset", () => {
     expect(expectedAsset.brid).toEqual(brid);
   });
 
+  it("is returned when queried by symbol", async () => {
+    const assetName = generateAssetName();
+    const assetSymbol = generateAssetSymbol();
+    const brid = connection.client.newTransaction([]).gtx.blockchainRID;
+    const assetId = ft.get.asset.id(assetName, brid);
+    await getNewAsset(ft, assetName, assetSymbol, 3);
+
+    const result = (await connection.getAssetBySymbol(assetSymbol))!;
+
+    expect(result).toMatchObject({
+      name: assetName,
+      id: assetId,
+      decimals: 3,
+      brid,
+    });
+  });
+
   it("should return all the assets registered", async () => {
     const asset1 = await getNewAsset(ft);
     const asset2 = await getNewAsset(ft);

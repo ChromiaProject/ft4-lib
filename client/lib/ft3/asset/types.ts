@@ -11,13 +11,23 @@ export type Asset = {
   iconUrl: string;
 };
 
+export type AssetResponse = {
+  id: Buffer;
+  name: string;
+  symbol: string;
+  decimals: number;
+  brid: Buffer;
+  supply: bigint;
+  icon_url: string;
+};
+
 export type Balance = {
   asset: Asset;
   amount: Amount;
 };
 
 export type BalanceResponse = {
-  asset: Asset;
+  asset: AssetResponse;
   amount: bigint;
 };
 

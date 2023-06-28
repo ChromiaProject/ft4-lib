@@ -3,7 +3,7 @@ import acc: ^.account;
 entity asset {
     key id: byte_array;
     name;
-    symbol: text;
+    key symbol: text;
     decimals: integer;
     issuing_brid: byte_array;
     icon_url: text;

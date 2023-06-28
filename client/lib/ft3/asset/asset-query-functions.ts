@@ -12,6 +12,7 @@ import {
   allAssets,
   balancesByAccountId,
   allAssetsPaginated,
+  assetBySymbol,
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
@@ -74,6 +75,13 @@ export async function _getAssetById(
   return await connection.query<Asset>(assetById(id)).then(freeze);
 }
 
+export async function _getAssetBySymbol(
+  connection: Connection,
+  symbol: string
+): Promise<Asset> {
+  return await connection.query<Asset>(assetBySymbol(symbol)).then(freeze);
+}
+
 export async function _getAssetsByName(
   connection: Connection,
   name: string
@@ -119,7 +127,15 @@ export async function _getBalancesByAccountId(
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
   return {
-    asset: balance.asset,
+    asset: {
+      id: balance.asset.id,
+      name: balance.asset.name,
+      symbol: balance.asset.symbol,
+      decimals: balance.asset.decimals,
+      brid: balance.asset.brid,
+      supply: balance.asset.supply,
+      iconUrl: balance.asset.icon_url,
+    },
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
   };
 }

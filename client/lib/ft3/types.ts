@@ -155,6 +155,7 @@ export interface Connection {
   ) => Promise<IAccount[]>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
+  getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
   getAssetsByName: (name: string) => Promise<Asset[]>;
   getAllAssets: () => Promise<Asset[]>;
   getAllAssetsPaginated: (
