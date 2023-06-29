@@ -2,28 +2,28 @@ import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import {
   authDescriptor,
   FlagsType,
-} from "../../client/lib/ft3/account/auth-descriptor";
-import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+} from "../../client/lib/ft4/accounts/auth-descriptor";
+import { AuthDescriptorRule } from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import {
   Asset,
   Balance,
   SupportedNumber,
-} from "../../client/lib/ft3/asset/types";
+} from "../../client/lib/ft4/asset/types";
 import {
   Account,
   IAuthenticatedAccount,
-} from "../../client/lib/ft3/account/types";
-import { ftUserSession } from "../../client/lib/ft3/types";
+} from "../../client/lib/ft4/accounts/types";
+import { ftUserSession } from "../../client/lib/ft4/types";
 import { gtx } from "postchain-client";
 import admin from "./admin_user";
-import { createAmount } from "../../client/lib/ft3/asset/amount";
-import { createAuthenticatedAccount } from "../../client/lib/ft3/account/account-op-functions";
-import { createInMemoryFTKeyStore } from "../../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../../client/lib/ft3/authentication";
+import { createAmount } from "../../client/lib/ft4/asset/amount";
+import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
+import { createInMemoryFTKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenicator } from "../../client/lib/ft4/authentication";
 import {
   createAuthDataService,
   createConnection,
-} from "../../client/lib/ft3/ft-session";
+} from "../../client/lib/ft4/ft-session";
 
 class AccountBuilder {
   private session: ftUserSession;

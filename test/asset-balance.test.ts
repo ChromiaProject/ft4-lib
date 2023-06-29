@@ -1,11 +1,11 @@
-import { createAmount } from "../client/lib/ft3/asset/amount";
-import { Amount } from "../client/lib/ft3/asset/interfaces";
-import { Asset } from "../client/lib/ft3/asset/types";
+import { createAmount } from "../client/lib/ft4/asset/amount";
+import { Amount } from "../client/lib/ft4/asset/interfaces";
+import { Asset } from "../client/lib/ft4/asset/types";
 import {
   createConnection,
   createKeyStoreInteractor,
-} from "../client/lib/ft3/ft-session";
-import { Connection, ftUserSession } from "../client/lib/ft3/types";
+} from "../client/lib/ft4/ft-session";
+import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import {
   createClient,
@@ -14,7 +14,7 @@ import {
 } from "./util/blockchain-util";
 import testUser from "./util/test-user";
 import { KeyPair } from "/cryptoUtils";
-import { createInMemoryFTKeyStore } from "/ft3/authentication/ft/key-stores/in-memory";
+import { createInMemoryFTKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 
 let ft: ftUserSession;
 let connection: Connection;

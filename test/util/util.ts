@@ -1,8 +1,8 @@
 import { randomBytes } from "crypto";
 import { encryption, gtv } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
-import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
-import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
+import { AuthDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor/types";
+import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { Buffer } from "buffer";
 

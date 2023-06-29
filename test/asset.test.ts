@@ -3,10 +3,10 @@ import {
   generateAssetSymbol,
   registerAsset,
 } from "./util/util";
-import { Connection, ftUserSession } from "../client/lib/ft3/types";
+import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
-import { createConnection } from "../client/lib/ft3/ft-session";
-import { InvalidUrlError } from "../client/lib/ft3/asset/interfaces";
+import { createConnection } from "../client/lib/ft4/ft-session";
+import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
 
 let ft: ftUserSession;
 let connection: Connection;
