@@ -1,4 +1,4 @@
-import ft4. ^.assets;
+import ft4: ^.assets;
 
 struct xc_target {
     account_id: byte_array;

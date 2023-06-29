@@ -1,4 +1,4 @@
-import ft4. ^^.assets;
+import ft4: ^^.assets;
 import xc: ^;
 
 operation init_xfer(source: ft4.xfer_input, target: xc.xc_target, hops: list<byte_array>) {

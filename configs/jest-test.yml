@@ -2,7 +2,7 @@ blockchains:
   ft4_jest_test: #Name of the blockchain
     module: tests.assets.app_module #Entrypoint to the project
     moduleArgs:
-      lib.ft4.assets:
+      lib.ft4.accounts:
         rate_limit_active: 1
         rate_limit_max_points: 10
         rate_limit_recovery_time: 5000

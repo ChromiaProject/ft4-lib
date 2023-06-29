@@ -9,7 +9,7 @@ test: #Not default
   modules: #List of the test modules in your project
     - tests
   moduleArgs:
-    lib.ft4.assets:
+    lib.ft4.accounts:
       rate_limit_active: 1
       rate_limit_max_points: 10
       rate_limit_recovery_time: 5000

@@ -2,15 +2,6 @@ import ^^.assets;
 import acc: ^^.accounts;
 import ^^.utils;
 
-query get_config() {
-    return (
-        rate_limit_active = assets.config.rate_limit_active,
-        rate_limit_max_points = assets.config.rate_limit_max_points,
-        rate_limit_recovery_time = assets.config.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = assets.config.rate_limit_points_at_account_creation
-    );
-}
-
 query get_asset_balances(account_id: byte_array) {
     return assets.get_asset_balances(account_id);
 }
