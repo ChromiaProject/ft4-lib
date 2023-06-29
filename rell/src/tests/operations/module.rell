@@ -1,6 +1,6 @@
 
-import acc: ^^.lib.ft3.account;
-import core: ^^.lib.ft3.core;
+import acc: ^^.lib.ft4.accounts;
+import assets: ^^.lib.ft4.assets;
 
 operation operation_without_auth_message_template(
     integer,
@@ -19,5 +19,5 @@ operation add_ad_to_account(acc.account, acc.auth_descriptor) {
 }
 
 operation register_asset(name, symbol: text, decimals: integer, issuing_brid: byte_array, icon_url: text) {
-    core.Unsafe.register_asset(name, symbol, decimals, issuing_brid, icon_url);
+    assets.Unsafe.register_asset(name, symbol, decimals, issuing_brid, icon_url);
 }

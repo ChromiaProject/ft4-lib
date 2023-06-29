@@ -1,9 +1,9 @@
 import { randomBytes } from "crypto";
 import { encryption, gtv, GtxClient, Itransaction } from "postchain-client";
 import { KeyPair } from "../../client/lib/cryptoUtils";
-import { AuthDescriptor } from "../../client/lib/ft3/account/auth-descriptor/types";
-import { authDescriptor } from "../../client/lib/ft3/account/auth-descriptor";
-import { TxBuilderTransaction } from "/ft3/utils/types";
+import { AuthDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor/types";
+import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
+import { TxBuilderTransaction } from "/ft4/utils/types";
 import { Buffer } from "buffer";
 
 function generateNumber(max = 10000): number {

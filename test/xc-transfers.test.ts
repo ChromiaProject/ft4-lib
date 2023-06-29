@@ -1,8 +1,8 @@
 import AccountBuilder from "./util/account-builder";
 import { blockchainAccountId, generateId } from "./util/util";
 import TestUser from "./util/test-user";
-import { ftUserSession } from "../client/lib/ft3/types";
-import { Asset } from "../client/lib/ft3/asset/types";
+import { ftUserSession } from "../client/lib/ft4/types";
+import { Asset } from "../client/lib/ft4/asset/types";
 import { getNewAsset, getUserSession } from "./util/blockchain-util";
 
 let _ft: ftUserSession;

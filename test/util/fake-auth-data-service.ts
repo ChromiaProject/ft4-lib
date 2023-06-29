@@ -3,7 +3,7 @@ import { BufferId } from "../../client/lib/cryptoUtils";
 import {
   AuthData,
   AuthDataService,
-} from "../../client/lib/ft3/authentication/interfaces";
+} from "../../client/lib/ft4/authentication/interfaces";
 
 export function createFakeAuthDataService(data: {
   [operation: string]: AuthData;
