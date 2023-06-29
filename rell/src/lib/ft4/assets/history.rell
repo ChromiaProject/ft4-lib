@@ -31,9 +31,9 @@ function extract_data_from_payment_history_list(
     );
 }
 
-function extract_operation_name(entry: payment_history_entry, op_index: integer): text {
+function extract_operation_name(entry: payment_history_entry): text {
     val gtx = gtx_transaction.from_gtv(gtv.from_bytes(entry.transaction.tx_data));
-    return gtx.body.operations[op_index].name;
+    return gtx.body.operations[entry.op_index].name;
 }
 
 function extract_data_from_payment_history_entry(entry: payment_history_entry) {
@@ -50,7 +50,7 @@ function extract_data_from_payment_history_entry(entry: payment_history_entry) {
         transfer_args = entry.transfer_args,
         tx_rid = entry.transaction.tx_rid,
         tx_data = entry.transaction.tx_data,
-        operation_name = extract_operation_name(entry, entry.op_index)
+        operation_name = extract_operation_name(entry)
     );
 }
 
