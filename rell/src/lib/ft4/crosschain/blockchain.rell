@@ -1,4 +1,4 @@
-import ft4: ^.assets;
+import ft4. ^.assets;
 import acc: ^.accounts;
 
 
