@@ -1,5 +1,6 @@
 import { RawGtv, RellOperation } from "postchain-client";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export type Operation = [string, ...RawGtv[]];
 

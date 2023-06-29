@@ -11,6 +11,7 @@ import {
 } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft3/ft-session";
 import { InvalidUrlError } from "../client/lib/ft3/asset/interfaces";
+import { Buffer } from "buffer";
 
 let ft: ftUserSession;
 let connection: Connection;
