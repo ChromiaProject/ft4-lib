@@ -2,9 +2,9 @@ import { Operation, encryption, gtx } from "postchain-client";
 import {
   authDescriptor,
   FlagsType,
-} from "../../client/lib/ft3/account/auth-descriptor";
-import { User } from "../../client/lib/ft3/account/types";
-import { AuthData, KeyManager } from "../../client/lib/ft3/account/auth/types";
+} from "../../client/lib/ft4/accounts/auth-descriptor";
+import { User } from "../../client/lib/ft4/accounts/types";
+import { AuthData, KeyManager } from "../../client/lib/ft4/accounts/auth/types";
 import { Buffer } from "buffer";
 
 export default function adminUser(): User {

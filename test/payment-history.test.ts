@@ -1,22 +1,22 @@
 import TestUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { ftUserSession } from "../client/lib/ft3/types";
-import { Asset } from "../client/lib/ft3/asset/types";
+import { ftUserSession } from "../client/lib/ft4/types";
+import { Asset } from "../client/lib/ft4/asset/types";
 import { LocalStorageMock } from "./util/util";
 import {
   createChromiaClient,
   getNewAsset,
   getUserSession,
 } from "./util/blockchain-util";
-import { createPaymentHistoryStoreMemory } from "../client/lib/ft3/account/payment-history/payment-history-store-memory";
-import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft3/account/payment-history/payment-history-store-local";
-import { createAmount } from "../client/lib/ft3/asset/amount";
-import { PaymentHistoryType } from "../client/lib/ft3/account/payment-history/types";
-import { createConnection } from "../client/lib/ft3/ft-session";
+import { createPaymentHistoryStoreMemory } from "../client/lib/ft4/accounts/payment-history/payment-history-store-memory";
+import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft4/accounts/payment-history/payment-history-store-local";
+import { createAmount } from "../client/lib/ft4/asset/amount";
+import { PaymentHistoryType } from "../client/lib/ft4/accounts/payment-history/types";
+import { createConnection } from "../client/lib/ft4/ft-session";
 import { KeyPair } from "../client/lib/cryptoUtils";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
-import { createPaymentHistoryRetriever } from "../client/lib/ft3/account/payment-history/payment-history-retrieval";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
+import { createPaymentHistoryRetriever } from "../client/lib/ft4/accounts/payment-history/payment-history-retrieval";
 import { IClient } from "postchain-client";
 
 let _ft: ftUserSession;

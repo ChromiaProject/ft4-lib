@@ -1,8 +1,8 @@
 import { encryption } from "postchain-client";
 import { createTestAuthDescriptor, toNewTx } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { _op } from "../client/lib/ft3/utils";
-import { ftAuth } from "../client/lib/ft3/authentication/ft";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { _op } from "../client/lib/ft4/utils";
+import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { createClient } from "./util/blockchain-util";
 
 describe("FT key handler", () => {

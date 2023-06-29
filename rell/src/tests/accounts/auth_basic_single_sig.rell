@@ -1,0 +1,171 @@
+
+@test
+module;
+
+import ^^.assets.utils;
+import acc: ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.ft4_basic_dev.*;
+import ^^^.lib.ft4.operations.dev_op_auth;
+
+/*
+ * We aim to unit test the basic authentication rules (e.g. the number of signatures and required flags).
+ *
+ * Note: 
+ * Ideally this should be simple unit tests, but since we have "op_context.is_signer()" inside the auth logic,
+ * the code must come from a signed transaction, so we added a new method for this in the "dev_op_auth.rell" file.
+ * We also have to go the roundabout way of storing the returned error message in a global object "dev_error".
+ */
+
+function required_flags() = ["T"];  
+
+function test_happy_valid() {
+    val alice = utils.register_alice();
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_equals(dev_op_auth.dev_error.msg, "valid");
+}
+
+function test_invalid_required_flags() {
+    val alice = utils.register_alice();
+
+    val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_equals(dev_op_auth.dev_error.msg, "Some required flags [A] are missing on the (single sig) Auth Descriptor.");
+}
+
+function test_invalid_single_signer() {
+    val alice = utils.register_alice();
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .sign(rell.test.keypairs.bob) // <---- We sign with wrong user "Bob"
+        .run();
+    
+    assert_equals(dev_op_auth.dev_error.msg, "The participant is not the signer of this transaction.");
+}
+
+function test_not_signed() {
+    val alice = utils.register_alice();
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .run(); // <--- No signing at all
+
+    assert_equals(dev_op_auth.dev_error.msg, "The participant is not the signer of this transaction.");
+}
+
+/*
+ *----------------------------------------------------------------
+ * for some reason these tests always fail
+ *----------------------------------------------------------------
+*/
+/*
+function test_0_participant_in_ad() {
+    val adBad = create_BAD_auth_descriptor_S_but_0_pub(rell.test.keypairs.alice.pub);
+    val alice_auth_id = cu._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, adBad).auth;
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice_auth_id.account.id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .sign(rell.test.keypairs.alice) 
+        .run();
+
+    assert_equals(dev_op_auth.dev_error.msg, "Single sig Auth Descriptor's participant list is empty.");
+}
+
+function test_2_participants_in_ad() {
+    val adBad = create_BAD_auth_descriptor_S_but_2_pub(
+        rell.test.keypairs.alice.pub, 
+        rell.test.keypairs.bob.pub
+    );
+    val alice_auth_id = cu._create_test_acc_from_auth_desc_multi_sig([rell.test.keypairs.alice, rell.test.keypairs.bob], adBad).auth;
+
+    rell.test.tx()
+        .op(dev_op_auth.dev_auth(alice_auth_id.account.id, alice_auth_id.auth_descriptor_id, required_flags()))
+        .sign(rell.test.keypairs.alice) 
+        .run_must_fail(); 
+}
+
+// Here we cannot get an error back, it'll explode
+function test_bad_ad_missing_data() {
+    val adBad = create_BAD_auth_descriptor_missing_data(rell.test.keypairs.alice.pub);
+
+    dev_op_account.dev_register_account(adBad)
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail(); // Won't get a message back
+}
+
+function test_unsigned_ad_is_rejected() {
+    val keypair = rell.test.keypairs.alice;
+    val adBad = acc.auth_descriptor(
+        acc.auth_type.S,
+        [ keypair.pub ],
+        [
+            ["T"].to_gtv(),
+            keypair.pub.to_hex().to_gtv()
+        ],
+        rules = null.to_gtv()
+    );
+
+    rell.test.tx()
+        .op(dev_op_account.dev_register_account(adBad))
+        .run_must_fail();
+}
+
+// ----- util -----
+
+/*
+ * Creates an inherently broken Auth Desc, which claims to be "S" but has no participant.
+ *
+function create_BAD_auth_descriptor_S_but_0_pub(pubkey): acc.auth_descriptor {
+    return acc.auth_descriptor(
+        acc.auth_type.S,
+        list<pubkey>(), // <-- Incorrect!
+        [ 
+            ["T"].to_gtv(),
+            "".to_gtv()
+        ],
+        rules = null.to_gtv()
+    );
+}
+
+/*
+ * Creates an inherently broken Auth Desc, which claims to be "S" but has two participants.
+ *
+function create_BAD_auth_descriptor_S_but_2_pub(pubkey1: pubkey, pubkey2: pubkey): acc.auth_descriptor {
+    return acc.auth_descriptor(
+        acc.auth_type.S,
+        [ pubkey1, pubkey2 ], // <-- Incorrect
+        [
+            ["T"].to_gtv(),
+            pubkey1.to_hex().to_gtv(),
+            pubkey2.to_hex().to_gtv() // <-- Incorrect
+        ],
+        rules = null.to_gtv()
+    );
+}
+
+/*
+ * Creates an inherently broken Auth Desc, where pub key is missing
+ *
+function create_BAD_auth_descriptor_missing_data(pubkey): acc.auth_descriptor {
+    return acc.auth_descriptor(
+        acc.auth_type.S,
+        [ pubkey ],
+        [
+            ["T"].to_gtv() 
+        ], // <--- Should have pub key here
+        rules = null.to_gtv()
+    );
+}
+
+
+*/

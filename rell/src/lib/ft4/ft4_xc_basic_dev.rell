@@ -1,0 +1,7 @@
+module;
+
+namespace ft4 {
+    import ^.assets;
+    import ^.crosschain;
+    import ^.version;
+}

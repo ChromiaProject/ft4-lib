@@ -1,14 +1,14 @@
 import { KeyPair } from "../client/lib/cryptoUtils";
-import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
+import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import {
   authDescriptor as ad,
   FlagsType,
-} from "../client/lib/ft3/account/auth-descriptor";
-import { createAmount } from "../client/lib/ft3/asset/amount";
-import { Asset } from "../client/lib/ft3/asset/types";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createKeyStoreInteractor } from "../client/lib/ft3/ft-session";
-import { ftUserSession } from "../client/lib/ft3/types";
+} from "../client/lib/ft4/accounts/auth-descriptor";
+import { createAmount } from "../client/lib/ft4/asset/amount";
+import { Asset } from "../client/lib/ft4/asset/types";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
+import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import {
