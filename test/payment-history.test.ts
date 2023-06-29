@@ -79,35 +79,21 @@ describe("Payment history", () => {
       const account1 = await AccountBuilder.account(ft)
         .withBalance(asset, 200)
         .withPoints(1)
-        .build();
+        .buildAuthenticated();
 
       const account2 = await AccountBuilder.account(
         _ft.changeUser(TestUser())
       ).build();
 
-      const session = await createKeyStoreInteractor(
-        _ft.get.gtxClient,
-        createInMemoryFTKeyStore(keyPair)
-      ).getSession(account1.id);
-
-      await session.account.transfer(
+      await account1.transfer(
         account2.id,
         asset.id,
         createAmount(10, asset.decimals)
       );
 
-      const paymentHistoryStore = await createPaymentHistoryStoreMemory(
-        ft.get.gtxClient,
-        account1.id,
-        5,
-        null
-      );
-      const paymentHistoryIterator =
-        _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
-      const paymentHistoryEntries = await paymentHistoryIterator.next();
+      const paymentHistoryEntries = await account1.getTransferHistory();
 
-      const [transferEntry, mintEntry] = paymentHistoryEntries;
-      console.log(mintEntry, transferEntry);
+      const [transferEntry, mintEntry] = paymentHistoryEntries.data;
 
       expect(mintEntry.operationName).toEqual("ft4.admin.mint");
       expect(transferEntry.operationName).toEqual("ft4.transfer_one");
