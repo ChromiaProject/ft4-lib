@@ -106,7 +106,7 @@ done
 printf "\n> Starting jest tests with options: $opt \n"
 
 pids=()
-for f in ./**/payment-history.test.ts; do
+for f in ./**/*.test.ts; do
     npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
     pids+=($!)
 done;
