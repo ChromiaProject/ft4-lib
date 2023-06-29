@@ -12,7 +12,6 @@ import {
   ssoRawTransactionAddAuthDescriptor,
   ssoRawTransactionRegister,
   transfer,
-  xcTransfer,
 } from "./account-op-functions";
 import {
   getByAuthDescriptorId,
@@ -115,7 +114,6 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
         transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
       burn: (from: BufferId, asset: BufferId, amount: Amount) =>
         burnTokens(asset, amount, legacyTransactionBuilder(user, pci)),
-      xcTransfer: () => xcTransfer(),
     },
     admin: {
       register: (adminUser, authDescriptor: AuthDescriptor) =>

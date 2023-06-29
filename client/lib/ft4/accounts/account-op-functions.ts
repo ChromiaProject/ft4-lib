@@ -186,24 +186,6 @@ export function getPaymentHistoryIterator(
   return createPaymentHistoryIterator(paymentHistoryStore);
 }
 
-export async function xcTransfer(): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  /*destinationBRID: BufferId,
-  destinationAccountId: BufferId,
-  assetId: BufferId,
-  amount: Amount,*/
-  throw new Error("Not implemented!");
-  /*const tx = await xcTransferOp(
-    destinationBRID,
-    destinationAccountId,
-    assetId,
-    amount
-  );
-  await tx.post();
-  await this.sync();*/
-}
-
 //-------------------ADMIN OPERATIONS-------------------//
 
 export async function registerAccount(
@@ -258,13 +240,6 @@ export function createAuthenticatedAccount(
       _deleteAuthDescriptor(connection, authenticator, authDescriptorId),
     transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
       _transfer(connection, authenticator, receiverId, assetId, amount),
-    xcTransfer: (
-      brid: BufferId,
-      receiverId: BufferId,
-      assetId: BufferId,
-      amount: Amount
-    ) =>
-      _xcTransfer(connection, authenticator, brid, receiverId, assetId, amount),
     burn: (assetId: BufferId, amount: Amount) =>
       _burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
@@ -315,20 +290,6 @@ async function _transfer(
     transferV2(receiverId, assetId, amount)
   );
 }
-
-/* eslint-disable */
-// @ts-ignore
-async function _xcTransfer(
-  connection: Connection,
-  authenticator: Authenticator,
-  brid: BufferId,
-  receiverId: BufferId,
-  assetId: BufferId,
-  amount: Amount
-): Promise<void> {
-  throw new Error("Not implemented!");
-}
-/* eslint-enable */
 
 async function _burn(
   connection: Connection,
