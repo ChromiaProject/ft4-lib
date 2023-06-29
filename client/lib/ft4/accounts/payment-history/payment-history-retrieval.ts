@@ -8,6 +8,7 @@ import { BufferId } from "../../../cryptoUtils";
 import { IClient, formatter } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
 import { PaymentHistoryError, PaymentHistoryRetriever } from "./interfaces";
+import { Buffer } from "buffer";
 
 export function createPaymentHistoryRetriever(
   session: IClient,
