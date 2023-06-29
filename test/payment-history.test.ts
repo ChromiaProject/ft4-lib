@@ -8,10 +8,12 @@ import { createPaymentHistoryStoreMemory } from "../client/lib/ft4/accounts/paym
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft4/accounts/payment-history/payment-history-store-local";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { PaymentHistoryType } from "../client/lib/ft4/accounts/payment-history/types";
-import { createConnection } from "../client/lib/ft4/ft-session";
+import {
+  createConnection,
+  createKeyStoreInteractor,
+} from "../client/lib/ft4/ft-session";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { createPaymentHistoryRetriever } from "../client/lib/ft4/accounts/payment-history/payment-history-retrieval";
 
 let _ft: ftUserSession;
@@ -67,6 +69,48 @@ describe("Payment history", () => {
       expect(entry.isInput).toEqual(true);
       expect(entry.transferOutputArgs.length).toEqual(1);
       expect(entry.transferOutputArgs[0].accountId).toEqual(account2.id);
+    });
+
+    it("includes the name of the operation causing the history entry", async () => {
+      const keyPair = new KeyPair();
+      const user = newSingleSigUser(keyPair);
+      const ft = _ft.changeUser(user);
+
+      const account1 = await AccountBuilder.account(ft)
+        .withBalance(asset, 200)
+        .withPoints(1)
+        .build();
+
+      const account2 = await AccountBuilder.account(
+        _ft.changeUser(TestUser())
+      ).build();
+
+      const session = await createKeyStoreInteractor(
+        _ft.get.gtxClient,
+        createInMemoryFTKeyStore(keyPair)
+      ).getSession(account1.id);
+
+      await session.account.transfer(
+        account2.id,
+        asset.id,
+        createAmount(10, asset.decimals)
+      );
+
+      const paymentHistoryStore = await createPaymentHistoryStoreMemory(
+        ft.get.gtxClient,
+        account1.id,
+        5,
+        null
+      );
+      const paymentHistoryIterator =
+        _ft.get.account.paymentHistory.iterator(paymentHistoryStore);
+      const paymentHistoryEntries = await paymentHistoryIterator.next();
+
+      const [transferEntry, mintEntry] = paymentHistoryEntries;
+      console.log(mintEntry, transferEntry);
+
+      expect(mintEntry.operationName).toEqual("ft4.admin.mint");
+      expect(transferEntry.operationName).toEqual("ft4.transfer_one");
     });
 
     it("should have three payment history entries if mint + two transfers made", async () => {

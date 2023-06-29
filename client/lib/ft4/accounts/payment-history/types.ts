@@ -20,6 +20,7 @@ export type PaymentHistoryEntryResponse = {
   transfer_args: string;
   tx_rid: Buffer;
   tx_data: string;
+  operation_name: string;
 };
 
 export type PaymentHistoryEntry = {
@@ -34,6 +35,7 @@ export type PaymentHistoryEntry = {
   timestamp: Date;
   transactionId: Buffer;
   blockHeight: number;
+  operationName: string;
   //brid: Buffer;
 };
 

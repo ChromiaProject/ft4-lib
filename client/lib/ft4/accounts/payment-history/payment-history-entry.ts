@@ -21,7 +21,8 @@ export function createPaymentHistoryEntry(
   transferArgs: { amount: bigint; accountId: BufferId }[][],
   timestamp: Date | number,
   transactionId: BufferId,
-  blockHeight: number
+  blockHeight: number,
+  operationName: string
   //brid: BufferId
 ): PaymentHistoryEntry {
   const txArgs = transferArgs.map((list) =>
@@ -33,17 +34,18 @@ export function createPaymentHistoryEntry(
   //eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return Object.freeze({
-    rowid: rowid,
-    isInput: isInput,
+    rowid,
+    isInput,
     delta: createAmountFromBalance(delta, decimals),
     asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
-    entryIndex: entryIndex,
+    entryIndex,
     data: formatter.ensureBuffer(data),
     transferInputArgs: txArgs[0],
     transferOutputArgs: txArgs[1],
     timestamp: typeof timestamp === "number" ? new Date(timestamp) : timestamp,
     transactionId: formatter.ensureBuffer(transactionId),
-    blockHeight: blockHeight,
+    blockHeight,
+    operationName,
     //brid: formatter.ensureBuffer(brid),
   });
 }
@@ -70,6 +72,7 @@ export function createPaymentHistoryEntryFromResponse(
     transfer_args: transferArgs,
     tx_rid: txRid,
     tx_data: txData,
+    operation_name: operationName,
   } = responseEntry;
 
   const args = (<[bigint, string][][]>(
@@ -93,7 +96,8 @@ export function createPaymentHistoryEntryFromResponse(
     args,
     new Date(timestamp),
     txRid,
-    blockHeight
+    blockHeight,
+    operationName
   );
 }
 
@@ -151,6 +155,7 @@ export function paymentHistoryEntryFromJSON(
     timestamp,
     transactionId,
     blockHeight,
+    operationName,
   } = typeof json === "string" ? JSON.parse(json) : json;
   return createPaymentHistoryEntry(
     rowid,
@@ -164,6 +169,7 @@ export function paymentHistoryEntryFromJSON(
     transferArgs,
     timestamp,
     transactionId,
-    blockHeight
+    blockHeight,
+    operationName
   );
 }
