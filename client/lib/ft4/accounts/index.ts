@@ -41,20 +41,7 @@ export const accountQuerySession = (pci: GtxClient) =>
       authDescriptorId: (id: BufferId) => getByAuthDescriptorId(pci, id),
       ids: (ids: BufferId[]) => getByIds(pci, ids),
       id: (id: BufferId) => getById(pci, id),
-    } /*
-    paymentHistory: {
-      iterator: getPaymentHistoryIterator,
-      storeMemory: (
-        accountId: BufferId,
-        pageSize: number,
-        filter: PaymentHistoryFilter | null = null
-      ) => createPaymentHistoryStoreMemory(pci, accountId, pageSize, filter),
-      storeLocal: (
-        accountId: BufferId,
-        pageSize: number,
-        filter: PaymentHistoryFilter | null = null
-      ) => ensurePaymentHistoryStoreLocal(pci, pageSize, accountId, filter),
-    },*/,
+    },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),
     rateLimit: (accountId: BufferId) => getRateLimit(pci, accountId),
