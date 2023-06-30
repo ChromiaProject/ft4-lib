@@ -10,11 +10,7 @@ import {
 } from "./util/blockchain-util";
 import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft4/accounts/payment-history/payment-history-store-local";
 import { createAmount } from "../client/lib/ft4/asset/amount";
-import {
-  PaymentHistoryFilter,
-  PaymentHistoryType,
-  TransferHistoryResponse,
-} from "../client/lib/ft4/accounts/payment-history/types";
+import { PaymentHistoryType } from "../client/lib/ft4/accounts/payment-history/types";
 import {
   createConnection,
   createKeyStoreInteractor,
@@ -28,17 +24,6 @@ let _ft: ftUserSession;
 let asset: Asset;
 let connection: Connection;
 const NULL_ACCOUNT = gtv.encode(null);
-
-async function getHistoryById(
-  id: Buffer,
-  limit?: number,
-  filter?: PaymentHistoryFilter,
-  cursor?: string
-): Promise<TransferHistoryResponse> {
-  return await (
-    await connection.getAccountById(id)
-  ).getTransferHistory(limit, filter, cursor);
-}
 
 describe("Payment history", () => {
   beforeAll(async () => {
@@ -56,9 +41,9 @@ describe("Payment history", () => {
       const account1 = await AccountBuilder.account(ft)
         .withBalance(asset, 200)
         .withPoints(1)
-        .build();
+        .buildAuthenticated();
 
-      const history = await getHistoryById(account1.id);
+      const history = await account1.getTransferHistory();
 
       expect(history.data.length).toEqual(1);
       expect(history.nextCursor).toEqual(null);
@@ -80,7 +65,7 @@ describe("Payment history", () => {
       const account1 = await AccountBuilder.account(ft)
         .withBalance(asset, 200)
         .withPoints(1)
-        .build();
+        .buildAuthenticated();
 
       const account2 = await AccountBuilder.account(
         _ft.changeUser(TestUser())
@@ -97,7 +82,7 @@ describe("Payment history", () => {
         createAmount(10, asset.decimals)
       );
 
-      const history = await getHistoryById(account1.id);
+      const history = await account1.getTransferHistory();
 
       expect(history.data.length).toEqual(2);
       expect(history.nextCursor).toEqual(null);
@@ -145,7 +130,7 @@ describe("Payment history", () => {
         .withParticipants([user.signatureProvider])
         .withBalance(asset, 200)
         .withPoints(2)
-        .build();
+        .buildAuthenticated();
 
       const account2 = await AccountBuilder.account(
         _ft.changeUser(TestUser())
@@ -164,7 +149,7 @@ describe("Payment history", () => {
         createAmount(11, asset.decimals)
       );
 
-      const history = await getHistoryById(account1.id);
+      const history = await account1.getTransferHistory();
 
       expect(history.data.length).toEqual(3);
       expect(history.nextCursor).toEqual(null);
@@ -178,7 +163,7 @@ describe("Payment history", () => {
         .withParticipants([user.signatureProvider])
         .withBalance(asset, 200)
         .withPoints(1)
-        .build();
+        .buildAuthenticated();
 
       await ft.account.token.transfer(
         account.id,
@@ -187,7 +172,7 @@ describe("Payment history", () => {
         createAmount(20, asset.decimals)
       );
 
-      const history = await getHistoryById(account.id);
+      const history = await account.getTransferHistory();
 
       expect(history.data.length).toEqual(3);
       expect(history.nextCursor).toEqual(null);
@@ -221,7 +206,7 @@ describe("Payment history", () => {
         .withParticipants([user.signatureProvider])
         .withBalance(asset, 200)
         .withPoints(4)
-        .build();
+        .buildAuthenticated();
 
       const account2 = await AccountBuilder.account(
         _ft.changeUser(TestUser())
@@ -240,7 +225,7 @@ describe("Payment history", () => {
         createAmount(10, asset.decimals)
       );
 
-      const history = await getHistoryById(account1.id, 2);
+      const history = await account1.getTransferHistory(2);
 
       expect(history.data.length).toEqual(2);
       expect(history.nextCursor).not.toEqual(NULL_ACCOUNT);
@@ -253,7 +238,7 @@ describe("Payment history", () => {
       const account1 = await AccountBuilder.account(ft)
         .withBalance(asset, 200)
         .withPoints(1)
-        .build();
+        .buildAuthenticated();
 
       const account2 = await AccountBuilder.account(
         _ft.changeUser(TestUser())
@@ -266,8 +251,7 @@ describe("Payment history", () => {
         createAmount(10, asset.decimals)
       );
 
-      const foundAccount = await connection.getAccountById(account1.id);
-      const history = await foundAccount!.getTransferHistory();
+      const history = await account1.getTransferHistory();
       expect(history.data.length).toStrictEqual(2);
       expect(history.data[0].transferInputArgs.length).toBe(1);
       expect(history.data[0].transferInputArgs[0].accountId).toEqual(
