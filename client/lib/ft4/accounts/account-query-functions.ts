@@ -158,7 +158,7 @@ export async function _getRateLimit(
   const rateLimit = await session.query<
     { account_id: Buffer },
     Omit<RateLimit, "getAvailablePoints">
-  >(getRateLimitQuery(formatter.ensureBuffer(accountId)));
+  >(getRateLimitQuery(accountId));
 
   const chainInfo = await _getConfig(session);
 
