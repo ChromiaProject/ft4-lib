@@ -1,13 +1,18 @@
 import { generateAssetName, generateAssetSymbol } from "./util";
-import { ftQuerySession, ftUserSession } from "../../client/lib/ft3/types";
-import { gtxClient, restClient, restClientutil } from "postchain-client";
+import { ftQuerySession, ftUserSession } from "../../client/lib/ft4/types";
+import {
+  gtxClient,
+  restClient,
+  restClientutil,
+  createClient as chromiaClient,
+} from "postchain-client";
 import {
   createQuerySession,
   createUserSession,
-} from "../../client/lib/ft3/ft-session";
-import { Asset } from "../../client/lib/ft3/asset/types";
+} from "../../client/lib/ft4/ft-session";
+import { Asset } from "../../client/lib/ft4/asset/types";
 import singleSigUser from "./test-user";
-import { AuthDescriptorRule } from "../../client/lib/ft3/account/auth-descriptor/types";
+import { AuthDescriptorRule } from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import adminUser from "./admin_user";
 
 export async function createClient(nodeUrl?: string) {
@@ -18,6 +23,14 @@ export async function createClient(nodeUrl?: string) {
     brid,
     []
   );
+}
+
+export async function createChromiaClient(nodeUrl?: string) {
+  const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
+  return chromiaClient({
+    nodeURLPool: url,
+    blockchainIID: 0,
+  });
 }
 
 export async function getQuerySession(): Promise<ftQuerySession> {

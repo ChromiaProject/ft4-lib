@@ -1,7 +1,0 @@
-module;
-
-namespace ft3 {
-    import ^.core;
-    import ^.crosschain;
-    import ^.version;
-}

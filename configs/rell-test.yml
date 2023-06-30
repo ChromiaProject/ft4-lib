@@ -1,41 +1,64 @@
 blockchains:
   ft4_rell_test: #Name of the blockchain
-    module: tests.core.app_module #Entrypoint to the project
+# <<<<<<< HEAD
+    module: tests.assets.app_module #Entrypoint to the project
     test: #Not default
       modules: #List of the test modules in your project
-        - tests.account
+        - tests.accounts
+        - tests.assets        
         - tests.auth
-        - tests.core
       moduleArgs:
-        lib.ft3.core:
+        lib.ft4.accounts:
           rate_limit_active: 1
           rate_limit_max_points: 10
           rate_limit_recovery_time: 5000
           rate_limit_points_at_account_creation: 1
 
-        lib.ft3.admin:
+        lib.ft4.admin:
           admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
 
-        tests.core.utils:
+        tests.assets.utils:
           admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
 
   ft4_rell_login: #Name of the blockchain
-    module: tests.core.app_module_2 #Entrypoint to the project
+    module: tests.assets.app_module_2 #Entrypoint to the project
     test: #Not default
       modules: #List of the test modules in your project
         - tests.auth_extensions
       moduleArgs:
-        lib.ft3.core:
+        lib.ft4.accounts:
           rate_limit_active: 1
           rate_limit_max_points: 10
           rate_limit_recovery_time: 5000
           rate_limit_points_at_account_creation: 1
 
-        lib.ft3.admin:
+        lib.ft4.admin:
           admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
 
-        tests.core.utils:
+        tests.assets.utils:
           admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE          
 
 compile:
   source: ../rell/src
+# =======
+#     module: tests.assets.app_module #Entrypoint to the project
+
+# compile:
+#   source: ../rell/src
+
+# test: #Not default
+#   modules: #List of the test modules in your project
+#     - tests
+#   moduleArgs:
+#     lib.ft4.accounts:
+#       rate_limit_active: 1
+#       rate_limit_max_points: 10
+#       rate_limit_recovery_time: 5000
+#       rate_limit_points_at_account_creation: 1
+
+#     lib.ft4.admin:
+#       admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
+
+#     tests.assets.utils:
+#       admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
+# >>>>>>> origin/ft4

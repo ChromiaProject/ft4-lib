@@ -1,0 +1,27 @@
+import { KeyPair } from "../../../../cryptoUtils";
+import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
+import { createFTKeyHandler } from "../key-handler";
+import { FTKeyStore } from "..";
+import { SignatureProvider, newSignatureProvider } from "postchain-client";
+import { Buffer } from "buffer";
+
+export function createInMemoryFTKeyStore(
+  keyHolder: KeyPair | SignatureProvider
+): FTKeyStore {
+  const signatureProvider =
+    "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
+
+  const keyStore = Object.freeze({
+    id: signatureProvider.pubKey,
+    pubKey: signatureProvider.pubKey,
+    isInteractive: false,
+    // Would it be better to receive transaction?
+    // If transaction is signed on a different device, it would make sense to be able to display
+    // transaction details, so user knows what is being signed.
+    sign: (digestToSign: Buffer) => signatureProvider.sign(digestToSign),
+    createKeyHandler: (authDescriptor: AuthDescriptor) =>
+      createFTKeyHandler(authDescriptor, keyStore),
+  });
+
+  return keyStore;
+}

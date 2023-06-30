@@ -1,6 +1,6 @@
 module;
 
-import ^^^.lib.ft3.auth;
+import ^^^.lib.ft4.auth;
 
 @extend(auth.login_config)
 function () = auth.add_login_config(

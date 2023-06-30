@@ -1,29 +1,28 @@
-import { encryption } from "postchain-client";
 import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
+import { createAuthenticator } from "../client/lib/ft4/authentication";
 import {
   AuthorizationError,
   transactionBuilder,
-} from "../client/lib/ft3/utils/transaction-builder";
-import { createClient } from "./util/blockchain-util";
-import { nop } from "../client/lib/ft3/utils";
+} from "../client/lib/ft4/utils/transaction-builder";
+import { createChromiaClient } from "./util/blockchain-util";
+import { _nop } from "../client/lib/ft4/utils";
 import {
   Authenticator,
   KeyHandler,
-} from "../client/lib/ft3/authentication/types";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { transferOp } from "../client/lib/ft3/account/account-operations";
-import { XferInput, XferOutput } from "../client/lib/ft3/account/types";
-import { AuthDescriptor } from "../client/lib/ft3/account/auth-descriptor/types";
-import { FlagsType } from "../client/lib/ft3/account/auth-descriptor";
-import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
+} from "../client/lib/ft4/authentication/types";
+import { IClient, encryption, gtx } from "postchain-client";
+import { _transferOp } from "../client/lib/ft4/accounts/account-operations";
+import { XferInput, XferOutput } from "../client/lib/ft4/accounts/types";
+import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
+import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
+import { _registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import { Buffer } from "buffer";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
-  let client: GtxClient;
+  let client: IClient;
   let authDescriptor: AuthDescriptor;
   let keyHandler: KeyHandler;
 
@@ -42,13 +41,13 @@ describe("Transaction Builder", () => {
         message: "",
       },
     });
-    authenticator = createAuthenicator(
+    authenticator = createAuthenticator(
       accountId,
       [keyHandler],
       authDataService
     );
 
-    client = await createClient();
+    client = await createChromiaClient();
   });
 
   it("builds an unsigned transaction", async () => {
@@ -67,7 +66,7 @@ describe("Transaction Builder", () => {
     ];
 
     const tx = await transactionBuilder(authenticator, client)
-      .add(transferOp([input], [output]))
+      .add(_transferOp([input], [output]))
       .buildUnsigned();
 
     const expectedInput: any = [...input];
@@ -76,7 +75,7 @@ describe("Transaction Builder", () => {
     const expectedOutput: any = [...output];
     expectedOutput[expectedOutput.length - 1] = {};
 
-    expect(tx.gtx.operations).toStrictEqual([
+    expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
         args: [authenticator.accountId, authDescriptor.id],
@@ -101,35 +100,35 @@ describe("Transaction Builder", () => {
     ];
 
     const tx = await transactionBuilder(authenticator, client)
-      .add(transferOp([input], [output]))
+      .add(_transferOp([input], [output]))
       .build();
 
-    expect(tx.gtx.signers).toStrictEqual(authDescriptor.signers);
-    expect(tx.gtx.signatures).toBeDefined();
+    expect(gtx.deserialize(tx).signers).toStrictEqual(authDescriptor.signers);
+    expect(gtx.deserialize(tx).signatures).toBeDefined();
   });
 
-  it("can build transations with a nop", async () => {
-    const operation = nop();
+  it("can build transactions with a nop", async () => {
+    const operation = _nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
       .buildUnsigned();
-    const [opName, ...args] = operation;
-    expect(tx.gtx.operations).toStrictEqual([{ opName, args }]);
+    const { name, args } = operation;
+    expect(tx.operations).toStrictEqual([{ opName: name, args }]);
   });
 
   it("does not sign transaction with only a nop on build", async () => {
-    const operation = nop();
+    const operation = _nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
       .build();
-    expect(tx.gtx.signers).toStrictEqual([]);
-    expect(tx.gtx.signatures).toStrictEqual(undefined);
+    expect(gtx.deserialize(tx).signers).toStrictEqual([]);
+    expect(gtx.deserialize(tx).signatures).toStrictEqual([]);
   });
 
   it("throws an error if not sufficient permissions", async () => {
     try {
       await transactionBuilder(authenticator, client)
-        .add(registerOp(authDescriptor))
+        .add(_registerOp(authDescriptor))
         .buildUnsigned();
     } catch (e) {
       expect(e instanceof AuthorizationError).toBe(true);
@@ -137,13 +136,13 @@ describe("Transaction Builder", () => {
   });
 
   it("uses additional signers provided", async () => {
-    const operation = nop();
+    const operation = _nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
       .addSigners(keyHandler)
       .build();
-    expect(tx.gtx.signers).toStrictEqual(keyHandler.getSigners());
-    expect(tx.gtx.signatures).toBeDefined();
+    expect(gtx.deserialize(tx).signers).toStrictEqual(keyHandler.getSigners());
+    expect(gtx.deserialize(tx).signatures).toBeDefined();
   });
 
   it("uses custom authenticator if provided", async () => {
@@ -157,7 +156,7 @@ describe("Transaction Builder", () => {
       authenticate: jest
         .fn()
         .mockImplementation((accountId, operation) =>
-          Promise.resolve(operation)
+          Promise.resolve([operation])
         ),
       sign: jest.fn(),
       getSigners: jest.fn(),
@@ -174,7 +173,7 @@ describe("Transaction Builder", () => {
       getNonce: jest.fn(),
     };
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(registerOp(authDescriptor), authenticatorMock)
+      .addWithAuthenticator(_registerOp(authDescriptor), authenticatorMock)
       .build();
     expect(keyHandlerMock.authenticate).toHaveBeenCalled();
     expect(keyHandlerMock.sign).toHaveBeenCalled();

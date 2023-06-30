@@ -1,9 +1,0 @@
-@mount('ft4')
-module;
-
-struct module_args {
-	rate_limit_active: boolean;
-	rate_limit_max_points: integer;
-    rate_limit_recovery_time: integer;
-    rate_limit_points_at_account_creation: integer;    
-}

@@ -5,8 +5,8 @@ import {
   createAmount,
   createAmountFromBalance,
   stringify,
-} from "../client/lib/ft3/asset/amount";
-import { DecimalFormat } from "../client/lib/ft3/asset/types";
+} from "../client/lib/ft4/asset/amount";
+import { DecimalFormat } from "../client/lib/ft4/asset/types";
 
 describe("Asset amount", () => {
   const amounts = [
@@ -67,7 +67,7 @@ describe("Asset amount", () => {
       BigInt("2" + "0".repeat(15)),
       BigInt(1600),
     ]);
-    expect(numbers.map(n=>stringify(n))).toEqual([
+    expect(numbers.map((n) => stringify(n))).toEqual([
       "1",
       "-25",
       "100000",

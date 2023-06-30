@@ -1,11 +1,11 @@
 @test
 module;
 
-import ^^.core.utils;
-import ^^^.lib.ft3.auth;
-import acc: ^^^.lib.ft3.account;
-import acc_ext: ^^^.lib.ft3.account.external;
-import dev_op: ^^^.lib.ft3.operations.dev_op_auth;
+import ^^.assets.utils;
+import ^^^.lib.ft4.auth;
+import acc: ^^^.lib.ft4.accounts;
+import acc_ext: ^^^.lib.ft4.accounts.external;
+import dev_op: ^^^.lib.ft4.operations.dev_op_auth;
 import test_operations: ^^.operations;
 
 val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";

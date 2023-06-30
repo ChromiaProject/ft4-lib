@@ -1,13 +1,13 @@
 import { encryption } from "postchain-client";
 import { KeyPair } from "/cryptoUtils";
-import { AuthDescriptor, authDescriptor } from "/ft3";
-import { createAuthenicator } from "/ft3/authentication";
+import { AuthDescriptor, authDescriptor } from "/ft4";
+import { createAuthenticator } from "/ft4/authentication";
 import {
   FTKeyStore,
   createFTKeyHandler,
-} from "/ft3/authentication/ft/key-handler";
+} from "/ft4/authentication/ft/key-handler";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { op } from "/ft3/utils";
+import { _op as op } from "/ft4/utils";
 
 describe("Authenticator", () => {
   it("uses non-interactive key store if both non-interactive and interactive auth handlers satisfy auth requirements", async () => {
@@ -57,7 +57,7 @@ describe("Authenticator", () => {
         message: "",
       },
     });
-    const authenticator = createAuthenicator(
+    const authenticator = createAuthenticator(
       accountId,
       [authHandler1, authHandler2],
       authDataService

@@ -15,9 +15,9 @@
     "types": ["jest"],
     "paths": {
       "/*": [
-        "./client/lib/*",
+        "./client/lib/*"
       ],
-      "@authentication/*": ["./client/lib/ft3/authentication/*"]
+      "@authentication/*": ["./client/lib/ft4/authentication/*"]
     }
   },
   "include": ["./client/**/*"],

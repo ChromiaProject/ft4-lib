@@ -1,25 +1,31 @@
 import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createChromiaClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import { KeyPair } from "/cryptoUtils";
-import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft3";
-import { createInMemoryEVMKeyStore } from "/ft3/authentication";
-import { ftUserSession } from "/ft3/types";
+import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
+import { createInMemoryEVMKeyStore } from "/ft4/authentication";
+import { Connection, ftUserSession } from "/ft4/types";
 import { createAccount } from "./util/util";
-import { createAccountObject } from "/ft3/account/account-query-functions";
-import { createConnection } from "/ft3/ft-session";
-import { createAmount } from "/ft3/asset/amount";
-import { encryption } from "postchain-client";
-import { transferV2 } from "/ft3/account/account-operations";
-import { createInMemoryFTKeyStore } from "/ft3/authentication/ft/key-stores/in-memory";
-import { createInMemoryLoginKeyStore } from "/ft3/authentication/login-manager/stores/in-memory";
+import { createAccountObject } from "/ft4/accounts/account-query-functions";
+import { createConnection } from "/ft4/ft-session";
+import { createAmount } from "/ft4/asset/amount";
+import { encryption, gtx } from "postchain-client";
+import { transferV2 } from "/ft4/accounts/account-operations";
+import { createInMemoryFTKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
 describe("Login manager", () => {
   let client: GtxClient;
   let ft: ftUserSession;
+  let connection: Connection;
 
   beforeAll(async () => {
     ft = await getUserSession();
     client = ft.get.gtxClient;
+    connection = createConnection(await createChromiaClient());
   });
 
   it("adds disposable auth descriptor to account", async () => {
@@ -30,10 +36,10 @@ describe("Login manager", () => {
       keyStore.address
     ).andNoRules;
     const accountId = await createAccount(client, ad);
-    const account = createAccountObject(createConnection(client), accountId);
+    const account = createAccountObject(connection, accountId);
 
     const loginManger = createKeyStoreInteractor(
-      client,
+      connection.client,
       keyStore
     ).getLoginManager();
 
@@ -56,7 +62,7 @@ describe("Login manager", () => {
     const accountId = await createAccount(client, ad);
 
     const loginManger = createKeyStoreInteractor(
-      client,
+      connection.client,
       keyStore
     ).getLoginManager();
 
@@ -77,7 +83,7 @@ describe("Login manager", () => {
         (keyHandler) => keyHandler.authDescriptor.id !== keyStore.address
       )[0];
 
-    expect(transaction.gtx.signers).toEqual(
+    expect(gtx.deserialize(transaction).signers).toEqual(
       disposableAuthHandler.authDescriptor.signers
     );
   });
@@ -91,9 +97,10 @@ describe("Login manager", () => {
     ).andNoRules;
     const accountId = await createAccount(client, ad);
 
-    const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      accountId
-    );
+    const session = await createKeyStoreInteractor(
+      connection.client,
+      keyStore
+    ).getSession(accountId);
 
     const keyPair2 = new KeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
@@ -104,7 +111,7 @@ describe("Login manager", () => {
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const keyStoreInteractor = await createKeyStoreInteractor(
-      client,
+      connection.client,
       createInMemoryFTKeyStore(keyPair2)
     );
     const loginManger = keyStoreInteractor.getLoginManager();
@@ -124,7 +131,10 @@ describe("Login manager", () => {
       keyStore.id
     ).andNoRules;
     const accountId = await createAccount(client, ad);
-    const keyStoreInteractor = createKeyStoreInteractor(client, keyStore);
+    const keyStoreInteractor = createKeyStoreInteractor(
+      connection.client,
+      keyStore
+    );
     const session = await keyStoreInteractor.getSession(accountId);
 
     const loginKeyStore = createInMemoryLoginKeyStore();

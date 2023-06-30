@@ -1,8 +1,17 @@
-import { generateAssetName, generateAssetSymbol } from "./util/util";
-import { Connection, ftUserSession } from "../client/lib/ft3/types";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
-import { createConnection } from "../client/lib/ft3/ft-session";
-import { InvalidUrlError } from "../client/lib/ft3/asset/interfaces";
+import {
+  generateAssetName,
+  generateAssetSymbol,
+  registerAsset,
+} from "./util/util";
+import { Connection, ftUserSession } from "../client/lib/ft4/types";
+import {
+  createChromiaClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
+import { createConnection } from "../client/lib/ft4/ft-session";
+import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
+import { Buffer } from "buffer";
 
 let ft: ftUserSession;
 let connection: Connection;
@@ -10,7 +19,7 @@ let connection: Connection;
 describe("Asset", () => {
   beforeAll(async () => {
     ft = await getUserSession();
-    connection = createConnection(ft.get.gtxClient);
+    connection = createConnection(await createChromiaClient());
   });
 
   it("should be successfully registered", async () => {
@@ -28,10 +37,32 @@ describe("Asset", () => {
     expect(expectedAssets[0]).toEqual(asset);
   });
 
+  it("can fetch paginated assets", async () => {
+    const assetName = generateAssetName();
+    const client = ft.get.gtxClient;
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+
+    const { data: expectedAssets, nextCursor } =
+      await connection.getAssetsByNamePaginated(assetName, 2);
+    expect(expectedAssets.length).toEqual(2);
+    expect(expectedAssets[0].name).toEqual(assetName);
+    expect(expectedAssets[1].name).toEqual(assetName);
+
+    const { data: expectedAssets2 } = await connection.getAssetsByNamePaginated(
+      assetName,
+      2,
+      nextCursor
+    );
+    expect(expectedAssets2.length).toEqual(1);
+    expect(expectedAssets2[0].name).toEqual(assetName);
+  });
+
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = connection.client.newTransaction([]).gtx.blockchainRID;
+    const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
     const assetId = ft.get.asset.id(assetName, brid);
     await getNewAsset(ft, assetName, assetSymbol, 3);
 
@@ -41,6 +72,23 @@ describe("Asset", () => {
     expect(expectedAsset.id).toEqual(assetId);
     expect(expectedAsset.decimals).toEqual(3);
     expect(expectedAsset.brid).toEqual(brid);
+  });
+
+  it("is returned when queried by symbol", async () => {
+    const assetName = generateAssetName();
+    const assetSymbol = generateAssetSymbol();
+    const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
+    const assetId = ft.get.asset.id(assetName, brid);
+    await getNewAsset(ft, assetName, assetSymbol, 3);
+
+    const result = (await connection.getAssetBySymbol(assetSymbol))!;
+
+    expect(result).toMatchObject({
+      name: assetName,
+      id: assetId,
+      decimals: 3,
+      brid,
+    });
   });
 
   it("should return all the assets registered", async () => {

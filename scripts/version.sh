@@ -9,7 +9,7 @@ updaterell(){
       echo "ERROR: Invalid version format"
       exit 1
     fi
-    sed -i 's/[0-9]\+\.[0-9]\+\.[0-9]\+r/'${version}'r/' rell/src/lib/ft3/version.rell
+    sed -i 's/[0-9]\+\.[0-9]\+\.[0-9]\+r/'${version}'r/' rell/src/lib/ft4/version.rell
     sed -i 's/toEqual("[0-9]\+\.[0-9]\+\.[0-9]\+r")/toEqual("'${version}'r")/' test/blockchain.test.ts
 }
 
@@ -58,7 +58,7 @@ done
 
 shift $(($OPTIND - 1))
 
-currVersion=$(grep -o "[0-9]*\.[0-9]*\.[0-9]*" rell/src/lib/ft3/version.rell);
+currVersion=$(grep -o "[0-9]*\.[0-9]*\.[0-9]*" rell/src/lib/ft4/version.rell);
 if [[ $no_args = "true" ]]; then version=$1; else version=$currVersion; fi
 
 # Build array from version string.
