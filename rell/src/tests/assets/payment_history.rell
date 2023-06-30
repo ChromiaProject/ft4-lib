@@ -239,7 +239,49 @@ function test_transfer_history_entry() {
             entry_index = entry.entry_index,
             transfer_args = entry.transfer_args,
             tx_rid = entry.transaction.tx_rid,
-            tx_data = entry.transaction.tx_data
+            tx_data = entry.transaction.tx_data,
+            operation_name = "ft4.admin.mint"
         )
+    );
+}
+
+function test_transfer_history_operation_name() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 0);
+
+    val inputs = [
+        assets.xfer_input(
+            account_id = alice.account.id,
+            asset_id = asset.id,
+            auth_descriptor_id = alice.auth_descriptor_id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    val outputs = [
+        assets.xfer_output(
+            account_id = bob.account.id, 
+            asset_id = asset.id,
+            amount = 1,
+            extra = map()
+        )
+    ];
+
+    test_utils.mint(alice.account, asset, 5L);
+
+    rell.test.tx()
+        .op(ft4.assets_ext.transfer(inputs, outputs))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val entries = assets.payment_history_entry @* {};
+    assert_equals(
+        ft4.assets_ext.get_transfer_history_entry(entries[0].rowid)!!.operation_name, "ft4.admin.mint"
+    );
+    assert_equals(
+        ft4.assets_ext.get_transfer_history_entry(entries[1].rowid)!!.operation_name, "ft4.transfer"
     );
 }
