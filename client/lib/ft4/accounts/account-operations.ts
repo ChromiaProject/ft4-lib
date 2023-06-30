@@ -32,14 +32,6 @@ export function burnOp(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
 
-export function xcTransferOp /*
-  source: RawGtv,
-  target: RawGtv,
-  hops: Array<Buffer>*/(): Operation {
-  throw new Error("Not implemented!");
-  //return op("ft4.xc.init_xfer", source, target, hops);
-}
-
 export function deleteAllAuthDescriptorsExcludeOp(
   accountId: Buffer,
   excludeAuthDescriptorId: Buffer
