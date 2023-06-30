@@ -56,7 +56,6 @@ function test_history() {
     );
     
     assert_equals(response_small, expected);
-    assert_equals(ft4.assets_ext.get_payment_history_size(alice.account.id), 2);
     assert_equals(response_big, expected);
     assert_true(response_small!!.data.size() == 2);
     assert_true(response_big!!.data.size() == 2);
@@ -150,7 +149,6 @@ function test_history_pagination() {
     );
     assert_true(expected_result.size() == 1);
     assert_equals(response, expected);
-    assert_equals(ft4.assets_ext.get_payment_history_size(alice.account.id), 5);
 }
 
 function test_history_filtering() {

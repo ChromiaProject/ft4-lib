@@ -8,7 +8,7 @@ import {
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import {
-  createClient,
+  createChromiaClient,
   getNewAsset,
   getUserSession,
 } from "./util/blockchain-util";
@@ -34,7 +34,7 @@ function makeAmountBareBones(amount: Amount): {
 describe("Asset balance", () => {
   beforeAll(async () => {
     ft = await getUserSession();
-    connection = createConnection(ft.get.gtxClient);
+    connection = createConnection(await createChromiaClient());
     asset1 = await getNewAsset(ft);
     asset2 = await getNewAsset(ft, undefined, undefined, 5);
   });
@@ -116,7 +116,7 @@ describe("Asset balance", () => {
     const asset2 = await getNewAsset(ft);
     const asset3 = await getNewAsset(ft);
 
-    const client = await createClient();
+    const client = await createChromiaClient();
     const keyPair = new KeyPair();
     const keyStore = createInMemoryFTKeyStore(keyPair);
 

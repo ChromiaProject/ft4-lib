@@ -4,19 +4,6 @@ import {
   TransferHistoryResponse,
 } from "./types";
 import { PageCursor } from "../../types";
-import { Buffer } from "buffer";
-
-export interface PaymentHistoryStore {
-  accountId: Buffer;
-  setPageSize(size: number): void;
-  getPageSize(): number;
-  getPageCount(): number;
-  getEntryCount(): number;
-  loadAllNewTx(): Promise<PaymentHistoryStore | null>; //returns new updated one
-  isUpToDate(): Promise<boolean>;
-  get(page: number): Promise<readonly PaymentHistoryEntry[]>;
-  deletePaymentHistory(): void;
-}
 
 export interface PaymentHistoryRetriever {
   getTotalCount: () => Promise<number>;
@@ -27,20 +14,6 @@ export interface PaymentHistoryRetriever {
   ) => Promise<TransferHistoryResponse>;
   retrieveSingle: (rowid: number) => Promise<PaymentHistoryEntry | null>;
   brid: string;
-}
-
-export interface PaymentHistoryIterator {
-  getStorage: () => PaymentHistoryStore;
-  getCurrentPage: () => number;
-  sync: () => Promise<void>;
-  reload: () => Promise<readonly PaymentHistoryEntry[]>;
-  changePageSize: (size: number) => Promise<readonly PaymentHistoryEntry[]>;
-  rewind: () => Promise<readonly PaymentHistoryEntry[]>;
-  prev: () => Promise<readonly PaymentHistoryEntry[]>;
-  jumpTo: (page: number) => Promise<readonly PaymentHistoryEntry[]>;
-  next: () => Promise<readonly PaymentHistoryEntry[]>;
-  fastForward: () => Promise<readonly PaymentHistoryEntry[]>;
-  hasMore: () => boolean;
 }
 
 export class PaymentHistoryError extends Error {

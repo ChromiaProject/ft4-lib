@@ -2,7 +2,7 @@ import { Amount } from "../../asset/interfaces";
 import { PageCursor } from "../../types";
 import { Buffer } from "buffer";
 
-export type PaymentHistoryTransferArgs = {
+type PaymentHistoryTransferArgs = {
   amount: Amount;
   accountId: Buffer;
 };
@@ -36,7 +36,6 @@ export type PaymentHistoryEntry = {
   transactionId: Buffer;
   blockHeight: number;
   operationName: string;
-  //brid: Buffer;
 };
 
 export type TransferHistoryResponse = {
@@ -44,7 +43,7 @@ export type TransferHistoryResponse = {
   nextCursor: PageCursor | null;
 };
 
-export type AssetInfo = {
+type AssetInfo = {
   name: string;
   id: Buffer;
 };
@@ -56,23 +55,4 @@ export enum PaymentHistoryType {
 
 export type PaymentHistoryFilter = {
   paymentHistoryType?: PaymentHistoryType;
-};
-
-export type PaymentHistoryJSON = {
-  rowid: string;
-  isInput: boolean;
-  delta: string;
-  decimals: number;
-  assetName: string;
-  assetId: string;
-  entryIndex: number;
-  data: string;
-  transferArgs: {
-    amount: number;
-    accountId: string;
-  }[][];
-  timestamp: number;
-  transactionId: string;
-  blockHeight: number;
-  //brid: brid.toString("hex"),
 };

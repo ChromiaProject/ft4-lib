@@ -1,4 +1,8 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
+import {
+  SignatureProvider,
+  RawGtv,
+  TransactionReceipt,
+} from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId, KeyPair } from "../../cryptoUtils";
@@ -10,7 +14,6 @@ import {
 } from "./payment-history/types";
 import { Authenticator } from "../authentication/interfaces";
 import { Amount } from "../asset/interfaces";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
 import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
 import { Buffer } from "buffer";
@@ -83,12 +86,14 @@ export interface IAuthenticatedAccount extends IAccount {
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
     keyPair: KeyPair
-  ) => Promise<void>;
-  deleteAuthDescriptor: (authDescriptorId: BufferId) => Promise<void>;
+  ) => Promise<TransactionReceipt>;
+  deleteAuthDescriptor: (
+    authDescriptorId: BufferId
+  ) => Promise<TransactionReceipt>;
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount
-  ) => Promise<void>;
-  burn: (assetId: BufferId, amount: Amount) => Promise<void>;
+  ) => Promise<TransactionReceipt>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionReceipt>;
 }

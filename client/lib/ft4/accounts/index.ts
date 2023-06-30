@@ -1,4 +1,4 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { GtxClient } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {
@@ -6,7 +6,7 @@ import {
   burnTokens,
   deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
-  getPaymentHistoryIterator,
+  // getPaymentHistoryIterator,
   givePoints,
   registerAccount,
   ssoRawTransactionAddAuthDescriptor,
@@ -22,12 +22,12 @@ import {
   isAuthDescriptorValid,
 } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
-import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
+// import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
+// import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Amount } from "../asset/interfaces";
-import { PaymentHistoryFilter } from "./payment-history/types";
+// import { PaymentHistoryFilter } from "./payment-history/types";
 
 export * from "./auth";
 export * from "./auth-descriptor";
@@ -41,19 +41,6 @@ export const accountQuerySession = (pci: GtxClient) =>
       authDescriptorId: (id: BufferId) => getByAuthDescriptorId(pci, id),
       ids: (ids: BufferId[]) => getByIds(pci, ids),
       id: (id: BufferId) => getById(pci, id),
-    },
-    paymentHistory: {
-      iterator: getPaymentHistoryIterator,
-      storeMemory: (
-        accountId: BufferId,
-        pageSize: number,
-        filter: PaymentHistoryFilter | null = null
-      ) => createPaymentHistoryStoreMemory(pci, accountId, pageSize, filter),
-      storeLocal: (
-        accountId: BufferId,
-        pageSize: number,
-        filter: PaymentHistoryFilter | null = null
-      ) => ensurePaymentHistoryStoreLocal(pci, pageSize, accountId, filter),
     },
     isAuthDescriptorValid: (accountId: BufferId, authDescriptorId: BufferId) =>
       isAuthDescriptorValid(pci, accountId, authDescriptorId),

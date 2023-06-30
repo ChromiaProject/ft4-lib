@@ -1,11 +1,9 @@
-import {
-  GtxClient,
-  Itransaction,
-} from "postchain-client/built/src/gtx/interfaces";
+import { GtxClient, Itransaction } from "postchain-client";
 import { User } from "../accounts/types";
 import { Operation } from "./types";
 import { FlagsType } from "../accounts";
 import { Buffer } from "buffer";
+import { RawGtv } from "postchain-client";
 
 export type LegacyTransactionBuilder = {
   _operations: Operation[];
@@ -63,7 +61,12 @@ export function legacyTransactionBuilder(
             `No keymanager registered to handle <${operation[0]}> operation`
           );
         }
-        return await manager.authorize(operation, auth_data);
+        const newOps: { name: string; args?: RawGtv[] }[] =
+          await manager.authorize(
+            { name: operation[0], args: operation.slice(1) },
+            auth_data
+          );
+        return newOps.map((newOp) => [newOp.name, ...(newOp.args ?? [])]);
       })
     );
     (await operations).forEach((op: Operation | Operation[]) => {

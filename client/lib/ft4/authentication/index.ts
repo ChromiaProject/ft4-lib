@@ -1,4 +1,4 @@
-import { formatter } from "postchain-client";
+import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
   AuthData,
@@ -7,15 +7,14 @@ import {
   AuthenticatorSession,
   KeyHandler,
 } from "./interfaces";
-import { Operation, QueryObject } from "../utils/types";
-import { Itransaction } from "postchain-client/built/src/gtx/interfaces";
+import { TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
 
 export * from "./evm";
 export * from "./ft";
 export * from "./interfaces";
 
-export function createAuthenicator(
+export function createAuthenticator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService
@@ -93,7 +92,7 @@ function createAuthenticatorSession(
         authData
       );
     },
-    sign: async (transaction: Itransaction) => {
+    sign: async (transaction: TxBuilderTransaction) => {
       await Promise.all(
         Array.from(usedKeyHandlers).map((keyHandler) =>
           keyHandler.sign(transaction)
@@ -103,20 +102,25 @@ function createAuthenticatorSession(
   });
 }
 
-export function authDataQuery(operation: Operation): QueryObject {
-  const [opName, ...args] = operation;
+export function authDataQuery(
+  operation: Operation
+): QueryObject<{ gtv?: RawGtv[] }> {
   return {
-    name: `${opName}_auth_data`,
-    args: { gtv: args },
+    name: `${operation.name}_auth_data`,
+    args: {
+      gtv: operation.args,
+    },
   };
 }
 
-export const defaultFTAuthData: QueryObject = {
+export const defaultFTAuthData: QueryObject<Record<string, never>> = {
   name: `ft4.default_auth_data`,
   args: {},
 };
 
-export function nonce(authDescriptorId: BufferId): QueryObject {
+export function nonce(
+  authDescriptorId: BufferId
+): QueryObject<{ auth_descriptor_id: Buffer }> {
   return {
     name: "ft4.get_ctr_for_auth_descriptor",
     args: {

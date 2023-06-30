@@ -1,4 +1,3 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
 import {
   authDescriptor,
   FlagsType,
@@ -14,16 +13,17 @@ import {
   IAuthenticatedAccount,
 } from "../../client/lib/ft4/accounts/types";
 import { ftUserSession } from "../../client/lib/ft4/types";
-import { gtx } from "postchain-client";
+import { gtx, SignatureProvider } from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft4/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
 import { createInMemoryFTKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../../client/lib/ft4/authentication";
+import { createAuthenticator } from "../../client/lib/ft4/authentication";
 import {
   createAuthDataService,
   createConnection,
 } from "../../client/lib/ft4/ft-session";
+import { createChromiaClient } from "./blockchain-util";
 
 class AccountBuilder {
   private session: ftUserSession;
@@ -105,13 +105,13 @@ class AccountBuilder {
     const account = await this.registerAccount();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
-    const connection = createConnection(this.session.get.gtxClient);
+    const connection = createConnection(await createChromiaClient());
     const { signatureProvider, authDescriptor } = this.session.user;
     const keyHandler =
       createInMemoryFTKeyStore(signatureProvider).createKeyHandler(
         authDescriptor
       );
-    const authenticator = createAuthenicator(
+    const authenticator = createAuthenticator(
       account.id,
       [keyHandler],
       createAuthDataService(connection)

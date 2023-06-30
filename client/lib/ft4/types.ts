@@ -1,10 +1,5 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { BufferId } from "../cryptoUtils";
 import { AuthDescriptor } from "./accounts/auth-descriptor/types";
-import {
-  PaymentHistoryIterator,
-  PaymentHistoryStore,
-} from "./accounts/payment-history/interfaces";
 import { Amount } from "./asset/interfaces";
 import {
   Account,
@@ -14,9 +9,17 @@ import {
   IAuthenticatedAccount,
 } from "./accounts/types";
 import { Asset, Balance } from "./asset/types";
-import { QueryObject, Operation, Config, PaginatedEntity } from "./utils/types";
+import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import { Buffer } from "buffer";
+import {
+  IClient,
+  QueryArguments,
+  QueryObject,
+  GtxClient,
+  Operation,
+  TransactionReceipt,
+} from "postchain-client";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -119,7 +122,7 @@ export interface ftQuerySession {
       ids: (ids: Buffer[]) => Promise<Account[]>;
       id: (id: BufferId) => Promise<Account | null>;
     };
-    paymentHistory: {
+    /*paymentHistory: {
       iterator: (
         paymentHistoryStore: PaymentHistoryStore
       ) => PaymentHistoryIterator;
@@ -131,7 +134,7 @@ export interface ftQuerySession {
         accountId: BufferId,
         pageSize: number
       ) => Promise<PaymentHistoryStore>;
-    };
+    };*/
     isAuthDescriptorValid: (
       accountid: BufferId,
       authDescriptorid: BufferId
@@ -142,8 +145,8 @@ export interface ftQuerySession {
 }
 
 export interface Connection {
-  client: GtxClient;
-  query: <T>(query: QueryObject) => Promise<T | null>;
+  client: IClient;
+  query: <T>(query: QueryObject<QueryArguments>) => Promise<T | null>;
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
@@ -175,7 +178,7 @@ export interface Connection {
 
 export interface Session extends Connection {
   account: IAuthenticatedAccount;
-  call: (...operations: Operation[]) => Promise<void>;
-  callWithoutNop: (...operations: Operation[]) => Promise<void>;
+  call: (...operations: Operation[]) => Promise<TransactionReceipt>;
+  callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
   transactionBuilder: () => TransactionBuilder;
 }

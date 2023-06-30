@@ -1,5 +1,6 @@
-import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { RawGtv, RellOperation } from "postchain-client";
 import { OptionalPageCursor } from "../types";
+import { Buffer } from "buffer";
 
 export type Operation = [string, ...RawGtv[]];
 
@@ -38,7 +39,7 @@ export function freeze<T>(object: T): T {
   return Object.freeze(object);
 }
 
-export type EntityRetreiver<T> = {
+export type EntityRetriever<T> = {
   retrieve: (
     limit?: number,
     cursor?: OptionalPageCursor
@@ -48,4 +49,11 @@ export type EntityRetreiver<T> = {
 export type PaginatedEntity<T> = {
   data: T[];
   nextCursor: OptionalPageCursor;
+};
+
+export type TxBuilderTransaction = {
+  blockchainRID: Buffer;
+  operations: RellOperation[];
+  signers: Buffer[];
+  signatures: Buffer[];
 };

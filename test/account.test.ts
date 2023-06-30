@@ -4,7 +4,11 @@ import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Account, User } from "../client/lib/ft4/accounts/types";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
-import { createClient, getUserSession } from "./util/blockchain-util";
+import {
+  createChromiaClient,
+  createClient,
+  getUserSession,
+} from "./util/blockchain-util";
 import {
   authDescriptor,
   AuthType,
@@ -23,7 +27,7 @@ import {
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
 import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../client/lib/ft4/authentication";
+import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
 import { createAccount } from "./util/util";
 
@@ -42,7 +46,7 @@ const admin = adminUser();
 describe("Test the account", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    _connection = createConnection(_ft.get.gtxClient);
+    _connection = createConnection(await createChromiaClient());
   });
 
   it("should be in DEV mode", () => {
@@ -263,7 +267,7 @@ describe("Test the account", () => {
     const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
 
     const { getSession } = createKeyStoreInteractor(
-      _ft.get.gtxClient,
+      _connection.client,
       createInMemoryFTKeyStore(keyPair2)
     );
     const session = await getSession(account2.id);
@@ -363,9 +367,10 @@ describe("Test the account", () => {
 
     await createAccount(client, ad);
 
-    const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      ad.id
-    );
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore
+    ).getSession(ad.id);
 
     const keyPair2 = new KeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
@@ -395,9 +400,10 @@ describe("Test the account", () => {
 
     await createAccount(client, ad);
 
-    const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      ad.id
-    );
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore
+    ).getSession(ad.id);
 
     const keyPair2 = new KeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
@@ -497,7 +503,7 @@ describe("Test the account", () => {
       .build();
 
     const { getSession } = createKeyStoreInteractor(
-      ft.get.gtxClient,
+      _connection.client,
       createInMemoryFTKeyStore(keyPair1)
     );
     const session = await getSession(account.id);
@@ -520,7 +526,7 @@ describe("Test the account", () => {
 
     const keyHandler3 =
       createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
-    const authenticator3 = createAuthenicator(
+    const authenticator3 = createAuthenticator(
       account.id,
       [keyHandler3],
       createAuthDataService(_connection)

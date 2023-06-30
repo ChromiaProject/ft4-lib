@@ -1,5 +1,4 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { Operation } from "../../utils/types";
+import { SignatureProvider, Operation } from "postchain-client";
 import { FlagsType } from "../auth-descriptor";
 
 export type AuthData = {
