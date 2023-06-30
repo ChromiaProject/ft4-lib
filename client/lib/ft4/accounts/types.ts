@@ -95,11 +95,5 @@ export interface IAuthenticatedAccount extends IAccount {
     assetId: BufferId,
     amount: Amount
   ) => Promise<TransactionReceipt>;
-  xcTransfer: (
-    brid: BufferId,
-    receiverId: BufferId,
-    assetId: BufferId,
-    amount: Amount
-  ) => Promise<TransactionReceipt>;
   burn: (assetId: BufferId, amount: Amount) => Promise<TransactionReceipt>;
 }

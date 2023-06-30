@@ -80,7 +80,6 @@ export interface ftUserSession {
         amount: Amount
       ) => Promise<void>;
       burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
-      xcTransfer: () => Promise<void>;
     };
     admin: {
       register: (

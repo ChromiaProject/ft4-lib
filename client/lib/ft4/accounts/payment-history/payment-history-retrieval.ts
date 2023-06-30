@@ -9,6 +9,7 @@ import { IClient, formatter } from "postchain-client";
 import { createPaymentHistoryEntryFromResponse } from "./payment-history-entry";
 import { PaymentHistoryError, PaymentHistoryRetriever } from "./interfaces";
 import { Buffer } from "buffer";
+import { PagedResponse } from "/ft4/types";
 
 export function createPaymentHistoryRetriever(
   session: IClient,
@@ -32,10 +33,7 @@ export function createPaymentHistoryRetriever(
 
       const res = await session.query<
         QueryType,
-        {
-          data: PaymentHistoryEntryResponse[];
-          next_cursor: string;
-        }
+        PagedResponse<PaymentHistoryEntryResponse>
       >("ft4.get_transfer_history", {
         account_id: id,
         filter: [filter?.paymentHistoryType],

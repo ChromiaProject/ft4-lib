@@ -28,7 +28,6 @@ import { Connection, OptionalPageCursor } from "../types";
 import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
 import {
-  GtvAuthDescriptor,
   AuthDescriptor,
   RawAuthDescriptor,
   mapAuthDescriptors,
@@ -99,9 +98,7 @@ async function createAccountObjectFromId(
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(session, id),
-    getAuthDescriptors(session, id).then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
-    ),
+    getAuthDescriptors(session, id).then(mapAuthDescriptors),
   ]);
   return Object.freeze({
     balances,
@@ -123,7 +120,7 @@ async function createAccountObjectsFromIds(
 export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
-): Promise<GtvAuthDescriptor[]> {
+): Promise<RawAuthDescriptor[]> {
   return session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
@@ -135,7 +132,7 @@ export async function getRateLimit(
   session: GtxClient,
   accountId: BufferId
 ): Promise<RateLimit> {
-  const q = getRateLimitQuery(formatter.ensureBuffer(accountId));
+  const q = getRateLimitQuery(accountId);
   const rateLimit = await session.query(q.name, q.args);
 
   const chainInfo = await getConfig(session);

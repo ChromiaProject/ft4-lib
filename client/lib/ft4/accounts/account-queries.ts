@@ -34,12 +34,12 @@ export function isAuthDescriptorValidQuery(
 }
 
 export function getRateLimitQuery(
-  accountId: Buffer
+  accountId: BufferId
 ): QueryObject<{ account_id: Buffer }> {
   return {
     name: "ft4.get_account_rate_limit_last_update",
     args: {
-      account_id: accountId,
+      account_id: formatter.ensureBuffer(accountId),
     },
   };
 }
