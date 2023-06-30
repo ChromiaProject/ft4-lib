@@ -18,7 +18,6 @@ export function createPaymentHistoryEntry(
   transactionId: BufferId,
   blockHeight: number,
   operationName: string
-  //brid: BufferId
 ): PaymentHistoryEntry {
   const txArgs = transferArgs.map((list) =>
     list.map((a) => ({
@@ -26,8 +25,6 @@ export function createPaymentHistoryEntry(
       accountId: formatter.ensureBuffer(a.accountId),
     }))
   );
-  //eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   return Object.freeze({
     rowid,
     isInput,
@@ -41,7 +38,6 @@ export function createPaymentHistoryEntry(
     transactionId: formatter.ensureBuffer(transactionId),
     blockHeight,
     operationName,
-    //brid: formatter.ensureBuffer(brid),
   });
 }
 

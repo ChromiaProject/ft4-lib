@@ -36,7 +36,6 @@ export type PaymentHistoryEntry = {
   transactionId: Buffer;
   blockHeight: number;
   operationName: string;
-  //brid: Buffer;
 };
 
 export type TransferHistoryResponse = {
