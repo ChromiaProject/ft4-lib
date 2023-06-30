@@ -4,7 +4,7 @@ import { DecimalFormat, SupportedNumber } from "./types";
 type RawAmount = { value: bigint; decimals: number };
 type AnyAssetAmount = RawAmount | Amount;
 
-//(2^256)-1 = (2^(4*64))-1 = (16^64)-1
+// (2^256)-1 = (2^(4*64))-1 = (16^64)-1
 export const MAX = BigInt("0x" + "f".repeat(64));
 
 export class AmountInputError extends Error {
@@ -33,16 +33,18 @@ function buildAmountObject(amount: RawAmount): Amount {
     value: amount.value,
     decimals: amount.decimals,
 
-    plus: (other: SupportedNumber) => sum(amount, other),
-    minus: (other: SupportedNumber) => sub(amount, other),
-    times: (other: string | number | bigint) => mul(amount, other),
-    dividedBy: (other: string | number | bigint) => div(amount, other),
+    plus: (other: SupportedNumber) => sum(amount, convertToBigInt(other)),
+    minus: (other: SupportedNumber) => sub(amount, convertToBigInt(other)),
+    times: (other: string | number | bigint) =>
+      mul(amount, convertToBigInt(other)),
+    dividedBy: (other: string | number | bigint) =>
+      div(amount, convertToBigInt(other)),
 
-    gt: (other: SupportedNumber) => gt(amount, other),
-    gte: (other: SupportedNumber) => gte(amount, other),
-    lt: (other: SupportedNumber) => lt(amount, other),
-    lte: (other: SupportedNumber) => lte(amount, other),
-    eq: (other: SupportedNumber) => eq(amount, other),
+    gt: (other: SupportedNumber) => gt(amount, convertToBigInt(other)),
+    gte: (other: SupportedNumber) => gte(amount, convertToBigInt(other)),
+    lt: (other: SupportedNumber) => lt(amount, convertToBigInt(other)),
+    lte: (other: SupportedNumber) => lte(amount, convertToBigInt(other)),
+    eq: (other: SupportedNumber) => eq(amount, convertToBigInt(other)),
 
     toString: () => stringify(amount),
     format: function (
@@ -146,6 +148,35 @@ export function createAmountFromBalance(
   }
   checkValueInRange(num);
   return buildAmountObject({ value: num, decimals: decimals || 0 });
+}
+
+/**
+ * Converts a SupportedNumber type to BigInt.
+ *
+ * @param value - The value to be converted to BigInt.
+ * @returns BigInt equivalent of the value.
+ */
+export function convertToBigInt(value: SupportedNumber): bigint {
+  const err = new Error(
+    `Unsupported type for conversion to BigInt: ${typeof value}`
+  );
+
+  switch (typeof value) {
+    case "bigint":
+      return value;
+    case "string":
+    case "number":
+      return BigInt(value);
+    case "object":
+      if ("value" in value) {
+        // Assuming the object is of Amount type.
+        return value.value;
+      }
+
+      throw err;
+    default:
+      throw err;
+  }
 }
 
 /**
@@ -314,7 +345,7 @@ export function div(
   return createAmountFromBalance(resultVal, amount.decimals);
 }
 
-//Comparisons
+// Comparisons
 
 export function eq(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   const o = requireSameDecimals(amount, other);
@@ -341,7 +372,7 @@ export function lte(amount: AnyAssetAmount, other: SupportedNumber): boolean {
   return amount.value <= o.value;
 }
 
-//Utilities
+// Utilities
 
 function requireSameDecimals(
   amount: AnyAssetAmount,

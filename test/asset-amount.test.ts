@@ -2,6 +2,7 @@ import {
   AmountDecimalsError,
   AmountInputError,
   AmountOutOfRangeError,
+  convertToBigInt,
   createAmount,
   createAmountFromBalance,
   stringify,
@@ -353,5 +354,38 @@ describe("Asset amount", () => {
     expect(() => first.eq(second)).toThrow(AmountDecimalsError);
     expect(() => first.gte(second)).toThrow(AmountDecimalsError);
     expect(() => first.lte(second)).toThrow(AmountDecimalsError);
+  });
+
+  it("should handle addition with different types correctly", async () => {
+    const amount = createAmount(10, 1);
+    const otherNumber = 3;
+    const otherBigInt = BigInt(3);
+
+    expect(amount.plus(otherNumber).value).toEqual(BigInt(13));
+    expect(amount.plus(otherBigInt).value).toEqual(BigInt(13));
+  });
+
+  it("should handle comparison with different types correctly", async () => {
+    const amount = createAmount(10, 1);
+    const otherNumber = 15;
+    const otherBigInt = BigInt(5);
+
+    expect(amount.gt(otherNumber)).toBe(false);
+    expect(amount.gt(otherBigInt)).toBe(true);
+  });
+
+  it("should convert different types to BigInt correctly", async () => {
+    const amount = createAmount(10, 1);
+
+    expect(convertToBigInt(3)).toEqual(BigInt(3));
+    expect(convertToBigInt("3")).toEqual(BigInt(3));
+    expect(convertToBigInt(amount)).toEqual(BigInt(10));
+  });
+
+  it("should throw error when converting unsupported type to BigInt", async () => {
+    // @ts-expect-error: Testing error path, invalid type passed intentionally
+    expect(() => convertToBigInt({})).toThrowError(
+      new Error("Unsupported type for conversion to BigInt: object")
+    );
   });
 });
