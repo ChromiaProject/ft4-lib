@@ -8,7 +8,6 @@ import {
   getNewAsset,
   getUserSession,
 } from "./util/blockchain-util";
-import { createNewPaymentHistoryStoreLocal } from "../client/lib/ft4/accounts/payment-history/payment-history-store-local";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { PaymentHistoryType } from "../client/lib/ft4/accounts/payment-history/types";
 import {
@@ -267,51 +266,6 @@ describe("Payment history", () => {
       expect(history.data[0].transferOutputArgs[0].amount.value).toEqual(
         createAmount(10, asset.decimals).value
       );
-    });
-
-    describe("local storage store", () => {
-      it("should have more than one page if number of entries is greater than page size", async () => {
-        const user = TestUser();
-        const ft = _ft.changeUser(user);
-
-        const account1 = await AccountBuilder.account(ft)
-          .withParticipants([user.signatureProvider])
-          .withBalance(asset, 200)
-          .withPoints(4)
-          .build();
-
-        const account2 = await AccountBuilder.account(
-          _ft.changeUser(TestUser())
-        ).build();
-
-        await ft.account.token.transfer(
-          account1.id,
-          account2.id,
-          asset.id,
-          createAmount(10, asset.decimals)
-        );
-        await ft.account.token.transfer(
-          account1.id,
-          account2.id,
-          asset.id,
-          createAmount(10, asset.decimals)
-        );
-        await ft.account.token.transfer(
-          account1.id,
-          account2.id,
-          asset.id,
-          createAmount(10, asset.decimals)
-        );
-
-        const paymentHistoryStore = await createNewPaymentHistoryStoreLocal(
-          connection.client,
-          account1.id,
-          2,
-          null
-        );
-
-        expect(paymentHistoryStore.getPageCount()).toEqual(2);
-      });
     });
   });
 

@@ -61,10 +61,6 @@ query get_transfer_history(account_id: byte_array, filter: assets.filter, page_s
     return utils.make_page(paginated_payments, page_size);
 }
 
-query get_payment_history_size(account_id: byte_array) {
-    return assets.payment_history_entry @* { acc.account @ {account_id} } ($).size();
-}
-
 query get_transfer_history_entry(rowid) {
     val entry = assets.payment_history_entry @? { .rowid == rowid };
     return if (empty(entry)) null else assets.extract_data_from_payment_history_entry(entry);

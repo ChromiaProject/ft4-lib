@@ -21,11 +21,6 @@ import {
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { createPaymentHistoryIterator } from "./payment-history/payment-history-iterator";
-import {
-  PaymentHistoryIterator,
-  PaymentHistoryStore,
-} from "./payment-history/interfaces";
 import { BufferId, KeyPair } from "../../cryptoUtils";
 import {
   formatter,
@@ -182,12 +177,6 @@ export async function burnTokens(
   //if we want to check that amount has the correct decimals, do it here
   const tx = await tb.add(burnOp(assetId, amount)).add(nop()).buildSigned();
   await tx.postAndWaitConfirmation();
-}
-
-export function getPaymentHistoryIterator(
-  paymentHistoryStore: PaymentHistoryStore
-): PaymentHistoryIterator {
-  return createPaymentHistoryIterator(paymentHistoryStore);
 }
 
 //-------------------ADMIN OPERATIONS-------------------//
