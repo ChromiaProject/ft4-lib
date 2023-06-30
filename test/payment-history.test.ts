@@ -228,7 +228,7 @@ describe("Payment history", () => {
       const history = await account1.getTransferHistory(2);
 
       expect(history.data.length).toEqual(2);
-      expect(history.nextCursor).not.toEqual(NULL_ACCOUNT);
+      expect(history.nextCursor).not.toBeNull();
     });
 
     it("is possible to get payment history from via the IAccount interface", async () => {
