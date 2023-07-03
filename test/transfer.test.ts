@@ -6,7 +6,7 @@ import {
 } from "../client/lib/ft4/accounts/auth-descriptor";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { Asset } from "../client/lib/ft4/asset/types";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
@@ -179,7 +179,7 @@ describe("Transfer", () => {
 
     const session = await createKeyStoreInteractor(
       await createChromiaClient(),
-      createInMemoryFTKeyStore(keyPair)
+      createInMemoryFtKeyStore(keyPair)
     ).getSession(account.id);
     await session.account.burn(asset.id, createAmount(10, asset.decimals));
     const assetBalance = await session.account.getBalanceByAssetId(asset.id);

@@ -1,13 +1,13 @@
 import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
-import { createFTKeyHandler } from "../key-handler";
-import { FTKeyStore } from "..";
+import { createFtKeyHandler } from "../key-handler";
+import { FtKeyStore } from "..";
 import { SignatureProvider, newSignatureProvider } from "postchain-client";
 import { Buffer } from "buffer";
 
-export function createInMemoryFTKeyStore(
+export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider
-): FTKeyStore {
+): FtKeyStore {
   const signatureProvider =
     "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
 
@@ -20,7 +20,7 @@ export function createInMemoryFTKeyStore(
     // transaction details, so user knows what is being signed.
     sign: (digestToSign: Buffer) => signatureProvider.sign(digestToSign),
     createKeyHandler: (authDescriptor: AuthDescriptor) =>
-      createFTKeyHandler(authDescriptor, keyStore),
+      createFtKeyHandler(authDescriptor, keyStore),
   });
 
   return keyStore;

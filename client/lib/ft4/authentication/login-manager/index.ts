@@ -1,5 +1,5 @@
 import { createAuthenticator } from "..";
-import { createInMemoryFTKeyStore } from "../ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
@@ -54,7 +54,7 @@ export function createLoginManager(
       // check if there are already auth descriptors with required flags.
       // If they already exist then it will be used instead of adding a new auth descriptor
       if (keyPair) {
-        const disposableKeyStore = createInMemoryFTKeyStore(keyPair);
+        const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
         const disposableAuthDescriptors =
           await account.getAuthDescriptorsByParticipantId(keyPair.pubKey);
         disposableKeyHandlers = disposableAuthDescriptors
@@ -136,7 +136,7 @@ async function addDisposableAuthDescriptor(
   const session = createSession(connection, authenticator);
 
   const keyPair = await loginKeyStore.createKeyPair(accountId);
-  const ks = createInMemoryFTKeyStore(keyPair);
+  const ks = createInMemoryFtKeyStore(keyPair);
 
   const ad = authDescriptor.create.singleSig.withArgs(
     flags,

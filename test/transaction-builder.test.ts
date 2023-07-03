@@ -1,5 +1,5 @@
 import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import {
@@ -33,7 +33,7 @@ describe("Transaction Builder", () => {
     ]);
     authDescriptor = ad;
 
-    keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(ad);
+    keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ad);
     const authDataService = createFakeAuthDataService({
       ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
       ["ft4.admin.register_account"]: {
@@ -151,7 +151,7 @@ describe("Transaction Builder", () => {
     ]);
     const keyHandlerMock: KeyHandler = {
       authDescriptor,
-      keyStore: createInMemoryFTKeyStore(keyPair),
+      keyStore: createInMemoryFtKeyStore(keyPair),
       satisfiesAuthRequirements: jest.fn(),
       authenticate: jest
         .fn()

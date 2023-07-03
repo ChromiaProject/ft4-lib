@@ -16,6 +16,6 @@ export function ftAuth(
   };
 }
 
-export interface FTKeyStore extends KeyStore {
+export interface FtKeyStore extends KeyStore {
   pubKey: Buffer;
 }

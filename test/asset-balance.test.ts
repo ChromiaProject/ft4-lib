@@ -14,7 +14,7 @@ import {
 } from "./util/blockchain-util";
 import testUser from "./util/test-user";
 import { KeyPair } from "/cryptoUtils";
-import { createInMemoryFTKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 
 let ft: ftUserSession;
 let connection: Connection;
@@ -118,7 +118,7 @@ describe("Asset balance", () => {
 
     const client = await createChromiaClient();
     const keyPair = new KeyPair();
-    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const keyStore = createInMemoryFtKeyStore(keyPair);
 
     const account = await AccountBuilder.account(ft)
       .withBalances([

@@ -27,7 +27,7 @@ export type Signature = {
   v: number;
 };
 
-export interface EVMKeyStore extends KeyStore {
+export interface EvmKeyStore extends KeyStore {
   address: Buffer;
   signMessage(message: string): Promise<Signature>;
 }

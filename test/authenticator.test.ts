@@ -3,8 +3,8 @@ import { KeyPair } from "/cryptoUtils";
 import { AuthDescriptor, authDescriptor } from "/ft4";
 import { createAuthenticator } from "/ft4/authentication";
 import {
-  FTKeyStore,
-  createFTKeyHandler,
+  FtKeyStore,
+  createFtKeyHandler,
 } from "/ft4/authentication/ft/key-handler";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { _op as op } from "/ft4/utils";
@@ -23,26 +23,26 @@ describe("Authenticator", () => {
       keyPair2.pubKey
     ).andNoRules;
 
-    const interactiveKeyStore: FTKeyStore = {
+    const interactiveKeyStore: FtKeyStore = {
       isInteractive: true,
       pubKey: keyPair1.pubKey,
       id: keyPair1.pubKey,
       createKeyHandler: jest
         .fn()
         .mockImplementation((authDescriptor: AuthDescriptor) =>
-          createFTKeyHandler(authDescriptor, interactiveKeyStore)
+          createFtKeyHandler(authDescriptor, interactiveKeyStore)
         ),
       sign: jest.fn(),
     };
 
-    const nonInteractiveKeyStore: FTKeyStore = {
+    const nonInteractiveKeyStore: FtKeyStore = {
       isInteractive: false,
       pubKey: keyPair2.pubKey,
       id: keyPair2.pubKey,
       createKeyHandler: jest
         .fn()
         .mockImplementation((authDescriptor: AuthDescriptor) =>
-          createFTKeyHandler(authDescriptor, nonInteractiveKeyStore)
+          createFtKeyHandler(authDescriptor, nonInteractiveKeyStore)
         ),
       sign: jest.fn(),
     };

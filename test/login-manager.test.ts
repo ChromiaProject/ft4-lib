@@ -6,7 +6,7 @@ import {
 } from "./util/blockchain-util";
 import { KeyPair } from "/cryptoUtils";
 import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
-import { createInMemoryEVMKeyStore } from "/ft4/authentication";
+import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection, ftUserSession } from "/ft4/types";
 import { createAccount } from "./util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
@@ -14,7 +14,7 @@ import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";
 import { encryption, gtx } from "postchain-client";
 import { transferV2 } from "/ft4/accounts/account-operations";
-import { createInMemoryFTKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
 describe("Login manager", () => {
@@ -30,7 +30,7 @@ describe("Login manager", () => {
 
   it("adds disposable auth descriptor to account", async () => {
     const keyPair = new KeyPair();
-    const keyStore = createInMemoryEVMKeyStore(keyPair);
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
       keyStore.address
@@ -54,7 +54,7 @@ describe("Login manager", () => {
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = new KeyPair();
     const asset = await getNewAsset(ft, undefined, undefined, 5);
-    const keyStore = createInMemoryEVMKeyStore(keyPair);
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
       keyStore.address
@@ -90,7 +90,7 @@ describe("Login manager", () => {
 
   it("does not login when account does not have admin auth descriptor that corresponds to used key store", async () => {
     const keyPair1 = new KeyPair();
-    const keyStore = createInMemoryEVMKeyStore(keyPair1);
+    const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
       keyStore.id
@@ -112,7 +112,7 @@ describe("Login manager", () => {
 
     const keyStoreInteractor = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFTKeyStore(keyPair2)
+      createInMemoryFtKeyStore(keyPair2)
     );
     const loginManger = keyStoreInteractor.getLoginManager();
 
@@ -125,7 +125,7 @@ describe("Login manager", () => {
 
   it("uses key pair stored in login key store", async () => {
     const keyPair1 = new KeyPair();
-    const keyStore = createInMemoryEVMKeyStore(keyPair1);
+    const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
       keyStore.id

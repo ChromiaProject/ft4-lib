@@ -2,7 +2,7 @@ import { gtxClient, restClient, restClientutil } from "postchain-client";
 import {
   KeyStore,
   FlagsType,
-  createWeb3ProviderEVMKeyStore,
+  createWeb3ProviderEvmKeyStore,
   createKeyStoreInteractor,
   AuthDescriptor,
   authDescriptor,
@@ -57,7 +57,7 @@ async function onClick(e: Event) {
   e.preventDefault();
 
   // Create a keystore for holding the evm key
-  const evmKeyStore: KeyStore = await createWeb3ProviderEVMKeyStore(window.ethereum);
+  const evmKeyStore: KeyStore = await createWeb3ProviderEvmKeyStore(window.ethereum);
   
   // Wrap the keystore in an interactor, to be able to fetch accounts
   const { getAccounts } = createKeyStoreInteractor(client, evmKeyStore);

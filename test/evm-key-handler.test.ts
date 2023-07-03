@@ -1,6 +1,6 @@
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryEVMKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
+import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
 import { _op } from "../client/lib/ft4/utils";
 import { evmAuth } from "../client/lib/ft4/authentication/evm";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
@@ -34,7 +34,7 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage = await createInMemoryEVMKeyStore(keyPair).signMessage(
+    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
       message
     );
 
@@ -44,7 +44,7 @@ describe("EVM key handler", () => {
   it("should insert evm_auth operation", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = new KeyPair();
-    const keyStore = createInMemoryEVMKeyStore(keyPair);
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [],
       keyStore.address
@@ -72,7 +72,7 @@ describe("EVM key handler", () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = new KeyPair();
     const message = "Sign this message with {nonce}";
-    const keyStore = createInMemoryEVMKeyStore(keyPair);
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["T"],
       keyStore.address
@@ -120,7 +120,7 @@ describe("EVM key handler", () => {
 
   it("should add FT auth descriptor", async () => {
     const keyPair = new KeyPair();
-    const keyStore = createInMemoryEVMKeyStore(keyPair);
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
       keyStore.address
