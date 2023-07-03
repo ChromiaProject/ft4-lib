@@ -94,7 +94,7 @@ function join_text_list(components: list<text>, count: integer) {
     require(count > 0);
     var result = components[0];
     for (i in range(1, count)) {
-        result = result + components[i];
+        result = result + "." + components[i];
     }
     return result;
 }

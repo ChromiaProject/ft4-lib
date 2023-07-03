@@ -1,5 +1,5 @@
 blockchains:
-  ft3_rell_test: #Name of the blockchain
+  ft4_rell_test: #Name of the blockchain
     module: tests.assets.app_module #Entrypoint to the project
     test: #Not default
       modules: #List of the test modules in your project
@@ -19,7 +19,7 @@ blockchains:
         tests.assets.utils:
           admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
 
-  ft4_rell_login: # Runs separate test chain to test auth extensions
+  ft4_rell_auth: # Runs separate test chain to test auth extensions
     module: tests.assets.app_module_2 #Entrypoint to the project
     test:
       modules:
