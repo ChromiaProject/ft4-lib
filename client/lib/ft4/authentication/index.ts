@@ -88,7 +88,7 @@ function createAuthenticatorSession(
       );
       return signers;
     },
-    authenticate: async (operation: Operation) => {
+    authorize: async (operation: Operation) => {
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation
       );
@@ -97,7 +97,7 @@ function createAuthenticatorSession(
         throw new Error(`Cannot authenticate operation: ${operation[0]}`);
       }
       usedKeyHandlers.add(keyHandler);
-      return await keyHandler.authenticate(
+      return await keyHandler.authorize(
         authenticator.accountId,
         operation,
         // FIXME!!!!!!!!!!!!!!!!!!!

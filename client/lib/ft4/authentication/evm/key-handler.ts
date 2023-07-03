@@ -15,13 +15,13 @@ export function createEvmKeyHandler(
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
       hasAuthDescriptorFlags(authDescriptor, requiredFlags),
-    authenticate: (
+    authorize: (
       accountId: BufferId,
       operation: Operation,
       nonce: number,
       authDataService: AuthDataService
     ) =>
-      authenticate(
+      authorize(
         accountId,
         authDescriptor.id,
         operation,
@@ -34,7 +34,7 @@ export function createEvmKeyHandler(
   });
 }
 
-async function authenticate(
+async function authorize(
   accountId: BufferId,
   authDescriptorId: BufferId,
   operation: Operation,

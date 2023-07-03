@@ -141,7 +141,7 @@ export function transactionBuilder(
       }
 
       const nonce = nonces.get(keyHandler.authDescriptor.id);
-      const ops = await keyHandler.authenticate(
+      const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
         nonce,

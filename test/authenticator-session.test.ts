@@ -26,7 +26,7 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
 
-    const operations = await authenticatorSession.authenticate(_op("foo"));
+    const operations = await authenticatorSession.authorize(_op("foo"));
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),
@@ -49,7 +49,7 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
     const operations: OldOperation[] = (
-      await authenticatorSession.authenticate(_op("foo"))
+      await authenticatorSession.authorize(_op("foo"))
     ).map((op) => [op.name, ...(op.args ?? [])]);
 
     const client = await createClient();
@@ -118,8 +118,8 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
 
-    await authenticatorSession.authenticate(_op("bar"));
-    await authenticatorSession.authenticate(_op("foo"));
+    await authenticatorSession.authorize(_op("bar"));
+    await authenticatorSession.authorize(_op("foo"));
 
     const usedKeyHandlers = authenticatorSession.getUsedKeyHandlers();
 
@@ -144,7 +144,7 @@ describe("Authenticator session", () => {
     ).createSession();
 
     await expect(
-      authenticatorSession.authenticate(_op("foo"))
+      authenticatorSession.authorize(_op("foo"))
     ).rejects.toBeInstanceOf(Error);
   });
 
@@ -175,8 +175,8 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
 
-    await authenticatorSession.authenticate(_op("foo"));
-    await authenticatorSession.authenticate(_op("bar"));
+    await authenticatorSession.authorize(_op("foo"));
+    await authenticatorSession.authorize(_op("bar"));
 
     const signers = authenticatorSession.getSigners();
 

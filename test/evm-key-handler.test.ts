@@ -55,7 +55,7 @@ describe("EVM key handler", () => {
       message: "Message to sign",
     };
 
-    const operations = await keyHandler.authenticate(
+    const operations = await keyHandler.authorize(
       accountId,
       _op("foo"),
       0,

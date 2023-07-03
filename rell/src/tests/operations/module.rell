@@ -11,7 +11,7 @@ operation operation_without_auth_message_template(
     text,
     optional_text: text?
 ) {
-    acc.authenticate(set<text>());
+    acc._authenticate(set<text>());
 }
 
 operation add_ad_to_account(acc.account, acc.auth_descriptor) {

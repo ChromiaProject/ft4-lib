@@ -41,7 +41,6 @@ export function authMessageTemplate(
     name: "ft4.get_auth_message_template",
     args: {
       op_name: operation.name,
-      // TODO: check if putting operation[1] inside an array could cause issues
       op_args: operation.args,
     },
   };

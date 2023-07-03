@@ -15,15 +15,16 @@ function Account(id: byte_array) = require(
     "Account not found: %s".format(id)
 );
 
-function authenticateV2() {
+function authenticate() {
     val op = op_context.get_all_operations()[op_context.op_index];
     val flags = auth.get_auth_flags(op.name);
     // FIXME: call from evm auth handler instead from this place
     val message = auth.get_auth_message_template(op.name, op.args.to_gtv());
-    return authenticate(set(flags), message);
+    return _authenticate(set(flags), message);
 }
 
-function authenticate(required_flags: set<text>, message_template: text? = null): account {
+// TODO: Merge with `authetnicate` function.
+function _authenticate(required_flags: set<text>, message_template: text? = null): account {
     require(op_context.op_index > 0, "Expected at least two operations");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];

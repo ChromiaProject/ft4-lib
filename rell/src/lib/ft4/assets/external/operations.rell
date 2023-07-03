@@ -34,7 +34,7 @@ function () = auth.add_auth_handler(
 );
 
 operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
-    val account = acc.authenticateV2();
+    val account = acc.authenticate();
     assets.Unsafe.transfer_one(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
 }
 
@@ -57,7 +57,7 @@ function burn_message(gtv) {
 }
 
 operation burn(asset_id: byte_array, amount: big_integer) {
-    val account = acc.authenticateV2();
+    val account = acc.authenticate();
 
     assets.Unsafe.burn(account, assets.Asset(asset_id), amount);
 }

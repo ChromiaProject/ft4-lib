@@ -23,7 +23,7 @@ export interface KeyHandler {
 
   satisfiesAuthRequirements(flags: string[]): boolean;
 
-  authenticate(
+  authorize(
     accountId: BufferId,
     operation: Operation,
     nonce: number,
@@ -46,7 +46,7 @@ export interface AuthenticatorSession {
   authenticator: Authenticator;
   getUsedKeyHandlers(): Set<KeyHandler>;
   getSigners(): Set<Buffer>;
-  authenticate(operation: Operation): Promise<Operation[]>;
+  authorize(operation: Operation): Promise<Operation[]>;
   sign(transaction: TxBuilderTransaction): Promise<void>;
 }
 
