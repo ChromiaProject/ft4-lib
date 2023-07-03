@@ -38,13 +38,10 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
 }
 
 operation test_authenticated_operation(message_template: text) {
-  admin.require_admin();
-  // require(acc.authenticate(set<text>(["A"]), message_template));
   acc.authenticate(set<text>(["A"]), message_template);
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
-  admin.require_admin();
   acc.add_auth_descriptor_to_account(account, desc);
 }
 
