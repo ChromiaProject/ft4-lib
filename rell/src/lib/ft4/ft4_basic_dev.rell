@@ -5,9 +5,6 @@ namespace ft4 {
     import acc_ext: ^.accounts.external;
     import assets: ^.ft4_basic_dev;
     import assets_ext: ^.assets.external;
-    import ^.operations.dev_op_account;
-    import ^.operations.dev_op_auth;
-    import ^.operations.dev_op_auth;
     import ^.version;
 }
 

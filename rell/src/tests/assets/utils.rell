@@ -2,8 +2,7 @@
 import acc: ^^^.lib.ft4.accounts;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
-import ^^^.lib.ft4.operations.dev_op_account;
-import ^^^.lib.ft4.operations.dev_op_auth;
+import ^^.operations;
 
 struct module_args {
     admin_priv_key: text; 
@@ -55,7 +54,7 @@ function create_test_account_with_auth_descriptor(
 function create_evm_auth_test_account(rell.test.keypair, flags: set<text> = set(["T"])): account_data {
     val address = eth_address_from_pubkey(crypto.privkey_to_pubkey(keypair.priv).sub(1));
     val auth_descriptor = create_auth_descriptor(address, flags);
-    dev_op_account.register_account_test(auth_descriptor)
+    operations.register_account_test(auth_descriptor)
         .sign(keypair)
         .run();
 
@@ -173,13 +172,13 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
 
 function add_auth_op(rell.test.tx, message: text) {
     return tx
-        .op(dev_op_auth.dev_authenticated_operation(message))
+        .op(operations.auth.test_authenticated_operation(message))
         .sign(byte_array(chain_context.args.admin_priv_key));
 }
 
 function perform_large_transfer(rell.test.tx, amount: integer, to_address: text) {
     return tx
-        .op(dev_op_auth.dev_perform_large_transfer(1000, to_address))
+        .op(operations.auth.test_perform_large_transfer(1000, to_address))
         .sign(byte_array(chain_context.args.admin_priv_key));
 }
 

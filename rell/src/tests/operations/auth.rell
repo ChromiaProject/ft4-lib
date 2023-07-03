@@ -1,13 +1,12 @@
-@mount('ft4')
 module;
 
-import ^^.admin;
-import acc: ^^.accounts; 
+import ^^^.lib.ft4.admin;
+import acc: ^^^.lib.ft4.accounts; 
 
 /*
  * We can store the error message in this singleton, and later check it in our tests.
  */
-object dev_error {
+object test_error {
     mutable msg: text = "valid";
 }
 
@@ -15,7 +14,7 @@ object dev_error {
  * This operation does NOTHING but authenticates the transaction. 
  * Only used for testing of authentication mechanics.
  */
-operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>) {
+operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>) {
     val account = acc.account @ { .id == account_id };
 
     val acc_auth_desc = acc.account_auth_descriptor @ {
@@ -32,13 +31,13 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
 	);
 
     if (result.valid) {
-        dev_error.msg = "valid";
+        test_error.msg = "valid";
     } else {
-        dev_error.msg = result.error!!;
+        test_error.msg = result.error!!;
     }
 }
 
-operation dev_authenticated_operation(message_template: text) {
+operation test_authenticated_operation(message_template: text) {
   admin.require_admin();
   // require(acc.authenticate(set<text>(["A"]), message_template));
   acc.authenticate(set<text>(["A"]), message_template);
@@ -49,7 +48,7 @@ operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_d
   acc.add_auth_descriptor_to_account(account, desc);
 }
 
-operation dev_perform_large_transfer(
+operation test_perform_large_transfer(
   amount: integer,
   to: text
 ) {
