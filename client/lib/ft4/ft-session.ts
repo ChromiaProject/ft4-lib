@@ -34,13 +34,13 @@ import {
   KeyStore,
   LoginConfig,
 } from "./authentication/types";
+import { createAuthenticator } from "./authentication";
 import {
   authDataQuery,
-  createAuthenticator,
   defaultFTAuthData,
   loginConfig,
   nonce,
-} from "./authentication";
+} from "./authentication/queries";
 import {
   LoginManger,
   createLoginManager,

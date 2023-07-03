@@ -5,9 +5,10 @@ const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 
 export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
   function loadData(): { [key: string]: string } {
-    return JSON.parse(storage.getItem(STORAGE_KEY)) as {
+    const loadedData = JSON.parse(storage.getItem(STORAGE_KEY)) as {
       [key: string]: string;
     };
+    return loadedData || {};
   }
 
   function saveData(data: { [key: string]: string }) {
