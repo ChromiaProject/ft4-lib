@@ -17,17 +17,19 @@ export function createLoginManager(
   keyStore: KeyStore,
   loginKeyStore: LoginKeyStore | null = null
 ): LoginManger {
-  const accountIdKeyStoreMap = new Map<Buffer, LoginKeyStore>();
   const usedLoginKeyStore = loginKeyStore || createInMemoryLoginKeyStore();
 
   return Object.freeze({
-    login: async (options: LoginOptions) => {
-      const account = createAccountObject(connection, options.accountId);
+    login: async (loginOptions: LoginOptions) => {
+      const account = createAccountObject(connection, loginOptions.accountId);
 
+      // Get all auth descriptors that can be used with the provided key store
       const authDescriptors = await account.getAuthDescriptorsByParticipantId(
         keyStore.id
       );
 
+      // We need need an auth descriptor with admin flag in order to add a
+      // disposable key
       const adminAuthDescriptor = authDescriptors.find((authDescriptor) =>
         authDescriptor.flags.has(FlagsType.Account)
       );
@@ -43,10 +45,14 @@ export function createLoginManager(
       let disposableKeyHandlers = [];
 
       const authDataService = createAuthDataService(connection);
-      const flags = await getFlags(authDataService, options);
+      // Get list of flags that will be added to new auth descriptor
+      const flags = await getFlags(authDataService, loginOptions);
 
       const keyPair = await usedLoginKeyStore.getKeyPair(account.id);
 
+      // If disposable key pair exists in login key store for provided account id,
+      // check if there are already auth descriptors with required flags.
+      // If they already exist then it will be used instead of adding a new auth descriptor
       if (keyPair) {
         const disposableKeyStore = createInMemoryFTKeyStore(keyPair);
         const disposableAuthDescriptors =
@@ -54,6 +60,7 @@ export function createLoginManager(
         disposableKeyHandlers = disposableAuthDescriptors
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
+            // If
             hasAuthDescriptorFlags(authDescriptor, flags)
           )
           .map((authDescriptor) =>
@@ -61,7 +68,9 @@ export function createLoginManager(
           );
       }
 
-      // Key pair was not found in login key store, or there are no auth descriptors that have required flags
+      // Key pair was not found in login key store,
+      // or there are no auth descriptors that have required flags.
+      // Add new auth descriptor.
       if (!disposableKeyHandlers.length) {
         const disposableKeyHandler = await addDisposableAuthDescriptor(
           connection,
@@ -73,12 +82,13 @@ export function createLoginManager(
         disposableKeyHandlers = [disposableKeyHandler];
       }
 
+      // Initialize key handlers that correspond to master key store
       const masterKeyHandlers = authDescriptors.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor)
       );
 
       const authenticator = createAuthenticator(
-        options.accountId,
+        loginOptions.accountId,
         [...disposableKeyHandlers, ...masterKeyHandlers],
         authDataService
       );
@@ -86,9 +96,7 @@ export function createLoginManager(
       return createSession(connection, authenticator);
     },
     logout: (accountId: Buffer) => {
-      const loginKeyStore = accountIdKeyStoreMap.get(accountId);
-      if (!loginKeyStore) return;
-      loginKeyStore.clear(accountId);
+      usedLoginKeyStore.clear(accountId);
     },
   });
 }

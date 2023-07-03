@@ -1,17 +1,17 @@
 import { LoginKeyStore } from "../types";
 import { BufferId, KeyPair } from "/cryptoUtils";
 
-const LOCAL_STORAGE_KEY = "FT_LOGIN_KEY_STORE";
+const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 
 export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
   function loadData(): { [key: string]: string } {
-    return JSON.parse(storage.getItem(LOCAL_STORAGE_KEY)) as {
+    return JSON.parse(storage.getItem(STORAGE_KEY)) as {
       [key: string]: string;
     };
   }
 
   function saveData(data: { [key: string]: string }) {
-    storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
   return Object.freeze({
