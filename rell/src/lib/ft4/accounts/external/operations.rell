@@ -35,7 +35,7 @@ function () = auth.add_auth_handler(
 
 operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
-    val account = acc.authenticate();
+    val account = auth.authenticate();
 
     acc._delete_auth_descriptor(
         acc.auth_descriptor_by_id(account, auth_descriptor_id)
@@ -81,6 +81,6 @@ function () = auth.add_auth_handler(
 );
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
-    val account = acc.authenticate();
+    val account = auth.authenticate();
     acc.add_auth_descriptor_to_account(account, new_desc);
 }

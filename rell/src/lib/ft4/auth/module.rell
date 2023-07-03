@@ -1,6 +1,8 @@
 @mount('ft4')
 module;
 
+import ^.accounts;
+
 struct auth_data {
     flags: list<text>;
     message: text;
