@@ -10,7 +10,6 @@ export interface Authenticator {
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
   createSession(): AuthenticatorSession;
-  getAuthRequirements(operation: Operation): Promise<AuthData>;
   getAuthFlags(operation: Operation): Promise<string[]>;
   getKeyHandlerForOperation(
     operation: Operation
@@ -52,14 +51,8 @@ export interface AuthenticatorSession {
 }
 
 export interface AuthDataService {
-  getAuthData(operation: Operation): Promise<AuthData>;
   getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   // TODO: add account id argument
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
-
-export type AuthData = {
-  flags: string[];
-  message: string;
-};

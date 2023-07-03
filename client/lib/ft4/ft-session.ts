@@ -28,17 +28,14 @@ import {
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
 import {
-  AuthData,
   AuthDataService,
   Authenticator,
   KeyStore,
 } from "./authentication/interfaces";
 import {
-  authDataQuery,
   authFlags,
   authMessageTemplate,
   createAuthenticator,
-  defaultFTAuthData,
   nonce,
 } from "./authentication";
 import {
@@ -150,22 +147,6 @@ export type KeyStoreInteractor = {
 // Use `rell.get_app_structure` to get exposed queries (FT3-99)
 export function createAuthDataService(connection: Connection): AuthDataService {
   return Object.freeze({
-    getAuthData: async (operation: Operation) => {
-      let authData: AuthData | null;
-      try {
-        authData = await connection.query<AuthData>(authDataQuery(operation));
-      } catch {
-        try {
-          authData = await connection.query<AuthData>(defaultFTAuthData);
-        } catch {
-          authData = {
-            flags: [],
-            message: "",
-          };
-        }
-      }
-      return authData!;
-    },
     getAuthFlags: async (operation: Operation) => {
       return await connection.query<string[]>(authFlags(operation));
     },

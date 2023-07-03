@@ -1,7 +1,6 @@
 import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
-  AuthData,
   AuthDataService,
   Authenticator,
   AuthenticatorSession,
@@ -25,8 +24,6 @@ export function createAuthenticator(
     keyHandlers,
     createSession: () =>
       createAuthenticatorSession(authenticator, authDataService),
-    getAuthRequirements: (operation: Operation) =>
-      getAuthRequirements(authDataService, operation),
     getAuthFlags: (operation: Operation) =>
       getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
@@ -36,13 +33,6 @@ export function createAuthenticator(
   });
 
   return authenticator;
-}
-
-async function getAuthRequirements(
-  authDataService: AuthDataService,
-  operation: Operation
-): Promise<AuthData> {
-  return authDataService.getAuthData(operation);
 }
 
 async function getAuthFlags(
@@ -110,23 +100,6 @@ function createAuthenticatorSession(
     },
   });
 }
-
-// TODO: REMOVE
-export function authDataQuery(
-  operation: Operation
-): QueryObject<{ gtv?: RawGtv[] }> {
-  return {
-    name: `${operation.name}_auth_data`,
-    args: {
-      gtv: operation.args,
-    },
-  };
-}
-
-export const defaultFTAuthData: QueryObject<Record<string, never>> = {
-  name: `ft4.default_auth_data`,
-  args: {},
-};
 
 export function authFlags(
   operation: Operation
