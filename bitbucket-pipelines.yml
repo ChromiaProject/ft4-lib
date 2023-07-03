@@ -4,6 +4,7 @@ pipelines:
   pull-requests:
     '**':
       - step:
+          size: 2x
           name: Test
           caches:
             - node
@@ -19,6 +20,34 @@ pipelines:
 
           services:
             - postgres
+  branches:
+    ft4:
+      - step:
+          name: deploy:latest
+          script:
+            - apt update
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
+            - echo -e $DEPLOYMENT_KEYS > .secret
+            - npm run deploy:latest
+            - rm .secret
+  custom:
+    deploy-to-stable:
+      - step:
+          name: deploy:stable
+          script:
+            - apt update
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
+            - echo -e $DEPLOYMENT_KEYS > .secret
+            - npm run deploy:stable
+            - rm .secret
 
 definitions: 
   services: 

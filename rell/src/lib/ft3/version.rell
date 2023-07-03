@@ -1,4 +1,0 @@
-@mount('ft3')
-module;
-
-query get_version(): text = "4.0.0r";

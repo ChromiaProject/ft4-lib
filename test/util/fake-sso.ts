@@ -1,8 +1,9 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
-import { Account, User } from "../../client/lib/ft3/account/types";
-import { ftUserSession } from "../../client/lib/ft3/types";
-import { createLocalStorageSignatureProvider } from "../../client/lib/ft3/utils/local-signature-provider";
-import SSO from "../../client/lib/ft3/utils/sso";
+import { SignatureProvider } from "postchain-client";
+import { Account, User } from "../../client/lib/ft4/accounts/types";
+import { ftUserSession } from "../../client/lib/ft4/types";
+import { createLocalStorageSignatureProvider } from "../../client/lib/ft4/utils/local-signature-provider";
+import SSO from "../../client/lib/ft4/utils/sso";
+import { Buffer } from "buffer";
 
 export default class FakeSSO extends SSO {
   accountId: Buffer;

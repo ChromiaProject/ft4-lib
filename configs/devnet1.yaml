@@ -2,20 +2,28 @@ blockchains:
   ft_deploy: #Name of the blockchain
     module: main #Entrypoint to the project
     moduleArgs:
-      lib.ft3.core:
+      lib.ft4.accounts:
         rate_limit_active: 1
         rate_limit_max_points: 10
         rate_limit_recovery_time: 5000
         rate_limit_points_at_account_creation: 1
+      lib.ft4.admin:
+        admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD
 
 compile:
   source: ../rell/src
   target: ../rell/out
 
 deployments:
-  devnet1: #Deployment Target name
+  latest:
     url: https://node0.devnet1.chromia.dev:7740
-    brid: x"43B6185404EA6CB51FC179748B78B2295A1B20F267826807F905B691FC4BD1D0"
-    container: ft
+    brid: x"162777934BD83E40EBE189B387C382F79CB83BCDE0FC32E9E8CB53B2934FF247"
+    container: ft4autodeploy
     chains:
-      ft_deploy: x"700107A024E4EC1FAE17D4A8FCCEE797D90436735C8E51DCF82093D4FE046B70"
+      ft_deploy: x"0439F39051FA3955D8308B74F8097165C6AF2013BE17E1A23541F9AF10AE0D91" #latest
+  stable:
+    url: https://node0.devnet1.chromia.dev:7740
+    brid: x"162777934BD83E40EBE189B387C382F79CB83BCDE0FC32E9E8CB53B2934FF247"
+    container: ft4manualdeploy
+    chains:
+      ft_deploy: x"BAA7BA08E6F5BCBA61DBD82361D446D028733EB730CFD58DAF9BAA3E507D931B" #stable

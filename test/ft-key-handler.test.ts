@@ -1,8 +1,8 @@
 import { encryption } from "postchain-client";
-import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { op } from "../client/lib/ft3/utils";
-import { ftAuth } from "../client/lib/ft3/authentication/ft";
+import { createTestAuthDescriptor, toNewTx } from "./util/util";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { _op } from "../client/lib/ft4/utils";
+import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { createClient } from "./util/blockchain-util";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 
@@ -15,14 +15,14 @@ describe("FT key handler", () => {
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
     const operations = await keyHandler.authenticate(
       accountId,
-      op("foo"),
+      _op("foo"),
       0,
       createFakeAuthDataService({})
     );
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),
-      op("foo"),
+      _op("foo"),
     ]);
   });
 
@@ -35,11 +35,12 @@ describe("FT key handler", () => {
 
     const keyHandler =
       createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
-    await keyHandler.sign(transaction);
+    const newTx = toNewTx(transaction);
+    await keyHandler.sign(newTx);
 
     const digestToSign = transaction.getDigestToSign();
     const signature = encryption.signDigest(digestToSign, keyPair.privKey);
 
-    expect(transaction.gtx.signatures).toEqual([signature]);
+    expect(newTx.signatures).toEqual([signature]);
   });
 });

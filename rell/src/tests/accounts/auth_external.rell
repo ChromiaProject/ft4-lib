@@ -1,0 +1,29 @@
+@test
+module;
+
+import ^^.assets.utils;
+import ^^^.lib.ft4.auth;
+import acc: ^^^.lib.ft4.accounts;
+import dev_op: ^^^.lib.ft4.operations.dev_op_auth;
+
+function test_authenticate_v2_and_rate_limit_call() {
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+  // Get rate_limit points before the transaction
+  val rl_state_before = acc.rl_state @ { .account == alice.account } (.points);
+
+  // Perform the transaction
+  rell.test.tx()
+      .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+      .op(dev_op.dev_authenticated_operation("Some message"))
+      .sign(utils.admin_priv_key())
+      .sign(rell.test.keypairs.alice)
+      .run();
+
+  // Get rate_limit points after the transaction
+  val rl_state_after = acc.rl_state @ { .account == alice.account } (.points);
+
+  // Check if the points have increased after the transaction,
+  // indicating that the rate_limit function was called
+  assert_true(rl_state_after > rl_state_before);
+}

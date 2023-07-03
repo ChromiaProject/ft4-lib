@@ -2,26 +2,34 @@ import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Account, User } from "../client/lib/ft3/account/types";
-import { Connection, ftUserSession } from "../client/lib/ft3/types";
-import { getUserSession } from "./util/blockchain-util";
+import { Account, User } from "../client/lib/ft4/accounts/types";
+import { Connection, ftUserSession } from "../client/lib/ft4/types";
+import {
+  createChromiaClient,
+  createClient,
+  getUserSession,
+} from "./util/blockchain-util";
 import {
   authDescriptor,
+  AuthType,
+  createSingleSignatureAuthDescriptor,
   FlagsType,
+  singleSigArgs,
   toGtv,
-} from "../client/lib/ft3/account/auth-descriptor";
-import { registerOp } from "../client/lib/ft3/account/account-dev-operations";
-import { addAuthDescriptorOp } from "../client/lib/ft3/account/account-operations";
-import { op } from "../client/lib/ft3/utils";
+} from "../client/lib/ft4/accounts/auth-descriptor";
+import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
+import { addAuthDescriptorOp } from "../client/lib/ft4/accounts/account-operations";
+import { op } from "../client/lib/ft4/utils";
 import adminUser from "./util/admin_user";
 import {
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
-} from "../client/lib/ft3/ft-session";
-import { createInMemoryFTKeyStore } from "../client/lib/ft3/authentication/ft/key-stores/in-memory";
-import { createAuthenicator } from "../client/lib/ft3/authentication";
-import { createAuthenticatedAccount } from "../client/lib/ft3/account/account-op-functions";
+} from "../client/lib/ft4/ft-session";
+import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
+import { createAccount } from "./util/util";
 
 async function addAuthDescriptorTo(
   account: Account,
@@ -38,7 +46,7 @@ const admin = adminUser();
 describe("Test the account", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    _connection = createConnection(_ft.get.gtxClient);
+    _connection = createConnection(await createChromiaClient());
   });
 
   it("should be in DEV mode", () => {
@@ -259,7 +267,7 @@ describe("Test the account", () => {
     const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
 
     const { getSession } = createKeyStoreInteractor(
-      _ft.get.gtxClient,
+      _connection.client,
       createInMemoryFTKeyStore(keyPair2)
     );
     const session = await getSession(account2.id);
@@ -313,6 +321,105 @@ describe("Test the account", () => {
     );
 
     expect(accounts.length).toEqual(2);
+  });
+
+  it("returns multiple accounts paginated when auth descriptor is attached to multiple accounts", async () => {
+    const user1 = testUser();
+    const user2 = testUser();
+    const user3 = testUser();
+    const ft1 = _ft.changeUser(user1);
+    const ft2 = _ft.changeUser(user2);
+    const ft3 = _ft.changeUser(user3);
+
+    const account1 = await AccountBuilder.account(ft1).build();
+    const account2 = await AccountBuilder.account(ft2).build();
+    const account3 = await AccountBuilder.account(ft3).build();
+
+    await addAuthDescriptorTo(account2, user1, ft2);
+    await addAuthDescriptorTo(account3, user1, ft3);
+
+    const { data: accounts1, nextCursor } =
+      await _connection.getAccountsByAuthDescriptorIdPaginated(
+        account1.id,
+        2,
+        null
+      );
+    expect(accounts1.length).toEqual(2);
+
+    const { data: accounts2 } =
+      await _connection.getAccountsByAuthDescriptorIdPaginated(
+        account1.id,
+        2,
+        nextCursor
+      );
+    expect(accounts2.length).toEqual(1);
+  });
+
+  it("has correct format when fetching paginated auth descriptors", async () => {
+    const client = await createClient();
+
+    const keyPair = new KeyPair();
+    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      ["A"],
+      keyStore.pubKey
+    ).andNoRules;
+
+    await createAccount(client, ad);
+
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore
+    ).getSession(ad.id);
+
+    const keyPair2 = new KeyPair();
+    const ad2 = authDescriptor.create.singleSig.withArgs(
+      ["T"],
+      keyPair2.pubKey
+    ).andNoRules;
+    await session.account.addAuthDescriptor(ad2, keyPair2);
+
+    const { data } = await session.account.getAuthDescriptorsPaginated(1);
+    const auth_desc = createSingleSignatureAuthDescriptor(
+      AuthType.single_sig,
+      singleSigArgs([FlagsType.Account], keyStore.pubKey),
+      null
+    );
+    expect(data[0]).toStrictEqual(auth_desc);
+  });
+
+  it("can fetch paginated auth descriptors", async () => {
+    const client = await createClient();
+
+    const keyPair = new KeyPair();
+    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      ["A"],
+      keyStore.pubKey
+    ).andNoRules;
+
+    await createAccount(client, ad);
+
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore
+    ).getSession(ad.id);
+
+    const keyPair2 = new KeyPair();
+    const ad2 = authDescriptor.create.singleSig.withArgs(
+      ["T"],
+      keyPair2.pubKey
+    ).andNoRules;
+    await session.account.addAuthDescriptor(ad2, keyPair2);
+
+    const { data, nextCursor } =
+      await session.account.getAuthDescriptorsPaginated(1);
+    expect(data.length).toBe(1);
+    const { data: data2 } = await session.account.getAuthDescriptorsPaginated(
+      1,
+      nextCursor
+    );
+    expect(data2.length).toBe(1);
   });
 
   it("should have only one auth descriptor after calling deleteAllExcluding", async () => {
@@ -396,7 +503,7 @@ describe("Test the account", () => {
       .build();
 
     const { getSession } = createKeyStoreInteractor(
-      ft.get.gtxClient,
+      _connection.client,
       createInMemoryFTKeyStore(keyPair1)
     );
     const session = await getSession(account.id);
@@ -419,7 +526,7 @@ describe("Test the account", () => {
 
     const keyHandler3 =
       createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
-    const authenticator3 = createAuthenicator(
+    const authenticator3 = createAuthenticator(
       account.id,
       [keyHandler3],
       createAuthDataService(_connection)

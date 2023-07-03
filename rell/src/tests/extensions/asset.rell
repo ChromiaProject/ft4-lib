@@ -1,5 +1,5 @@
-import ^^.lib.ft3.core;
-import acc: ^^.lib.ft3.account;
+import ^^.lib.ft4.assets;
+import acc: ^^.lib.ft4.accounts;
 
 object mint_extensions_state {
     mutable is_before_mint_called: boolean = false;
@@ -13,14 +13,14 @@ object mint_extensions_state {
     mutable after_mint_arg_amount: big_integer = 0L;
 }
 
-@extend(core.before_mint) function(acc.account, core.asset, amount: big_integer) {
+@extend(assets.before_mint) function(acc.account, assets.asset, amount: big_integer) {
     mint_extensions_state.is_before_mint_called = true;
     mint_extensions_state.before_mint_arg_asset_id = asset.id;
     mint_extensions_state.before_mint_arg_account_id = account.id;
     mint_extensions_state.before_mint_arg_amount = amount;
 }
 
-@extend(core.after_mint) function(acc.account, core.asset, amount: big_integer) {
+@extend(assets.after_mint) function(acc.account, assets.asset, amount: big_integer) {
     mint_extensions_state.is_after_mint_called = true;
     mint_extensions_state.after_mint_arg_asset_id = asset.id;
     mint_extensions_state.after_mint_arg_account_id = account.id;
@@ -39,14 +39,14 @@ object burn_extensions_state {
     mutable after_burn_arg_amount: big_integer = 0L;
 }
 
-@extend(core.before_burn) function(acc.account, core.asset, amount: big_integer) {
+@extend(assets.before_burn) function(acc.account, assets.asset, amount: big_integer) {
     burn_extensions_state.is_before_burn_called = true;
     burn_extensions_state.before_burn_arg_asset_id = asset.id;
     burn_extensions_state.before_burn_arg_account_id = account.id;
     burn_extensions_state.before_burn_arg_amount = amount;
 }
 
-@extend(core.after_burn) function(acc.account, core.asset, amount: big_integer) {
+@extend(assets.after_burn) function(acc.account, assets.asset, amount: big_integer) {
     burn_extensions_state.is_after_burn_called = true;
     burn_extensions_state.after_burn_arg_asset_id = asset.id;
     burn_extensions_state.after_burn_arg_account_id = account.id;

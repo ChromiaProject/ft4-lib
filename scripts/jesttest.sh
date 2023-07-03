@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+DOCKER=${DOCKER:-docker}
+
 forceexit(){
     echo
     if $docker; then
@@ -12,8 +15,8 @@ exitfn () {
     trap "forceexit" 2
     echo; echo 'Stopping docker, hit Ctrl+C to force quit'
     if $docker; then
-        docker stop ft4_jest_test  > /dev/null 
-        docker rm ft4_jest_test > /dev/null
+        $DOCKER stop ft4_jest_test  > /dev/null 
+        $DOCKER rm ft4_jest_test > /dev/null
     fi
     kill $prc
     exit 2
@@ -76,7 +79,7 @@ rm -rf logs
 mkdir logs
 
 if $docker; then
-    docker run --name ft4_jest_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
+    $DOCKER run --name ft4_jest_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
         --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_USER=postchain \
         --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs -e POSTGRES_DB=postchain \
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > ./logs/postgres.log;
@@ -89,24 +92,47 @@ chr node start -s configs/jest-test.yml --wipe \
     -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
 prc=$!
 
-echo "done!\n"
+printf "done!\n\n"
 i=0
 max=15
 while [ $i -lt $max ]
 do
-    echo -n "Waiting to start tests... $(( $max - $i )) \r"
+    printf "Waiting to start tests... $(( $max - $i )) \r"
     true $(( i=i+1 ))
     sleep 1
 done
 
 
-echo "> Starting jest tests with options: " "$opt" "\n"
-npx jest -maxWorkers=1 --testPathPattern=payment-history.test.ts $opt && \
-    npx jest --testPathIgnorePatterns=payment-history.test.ts $opt
+printf "\n> Starting jest tests with options: $opt \n"
+
+pids=()
+for f in ./**/*.test.ts; do
+    npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+    pids+=($!)
+done;
+
+return_code=0
+for pid in "${pids[@]}"; do
+    wait "$pid"
+    status=$?
+    if [[ $status -eq 0 ]]; then return_code=$return_code; else return_code=$status; fi
+done
+
+if [[ $return_code -eq 0 ]]; then
+    echo "All TypeScript tests passed"
+else
+    echo "Tests failed"
+fi
 
 if $docker; then
-    docker stop ft4_jest_test  > /dev/null 
-    docker rm ft4_jest_test > /dev/null
+    $DOCKER stop ft4_jest_test  > /dev/null 
+    $DOCKER rm ft4_jest_test > /dev/null
 fi
 kill $prc
-return $return_code || exit $return_code
+
+# If we are in interactive mode, return the exit code
+if echo "$-" | grep -q "i"; then
+    return $return_code
+else
+    exit $return_code
+fi

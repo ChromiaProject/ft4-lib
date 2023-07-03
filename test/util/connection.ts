@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { Buffer } from "buffer";
 
 async function get(url: string): Promise<string> {
   const response = await fetch(url);
