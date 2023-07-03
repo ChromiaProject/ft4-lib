@@ -27,10 +27,10 @@ function delete_auth_descriptor_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
+function () = auth.add_auth_handler(
     scope = "ft4.delete_auth_descriptor_v2",
     flags = ["A"],
-    formatter = delete_auth_descriptor_message(*)
+    message = delete_auth_descriptor_message(*)
 );
 
 operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
@@ -74,10 +74,10 @@ function add_auth_descriptor_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
+function () = auth.add_auth_handler(
     scope = "ft4.add_auth_descriptor_v2",
     flags = ["A"],
-    formatter = add_auth_descriptor_message(*)
+    message = add_auth_descriptor_message(*)
 );
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {

@@ -44,8 +44,8 @@ function get_auth_handler(op_name: name) {
     );
 }
 
-function auth(scope: text = APP_SCOPE, flags: list<text>, formatter: ((gtv) -> text)? = null) {
-    return [scope: _auth_handler(flags, formatter)];
+function add_auth_handler(scope: text = APP_SCOPE, flags: list<text>, message: ((gtv) -> text)? = null) {
+    return [scope: _auth_handler(flags, message)];
 } 
 
 function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();

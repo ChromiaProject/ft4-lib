@@ -5,7 +5,7 @@ query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %
 
 // TODO: remove
 @extend(auth.auth_handler)
-function () = auth.auth(
+function () = auth.add_auth_handler(
     scope = "ft4.transfer",
     flags = ["T"]
 );
@@ -27,10 +27,10 @@ function transfer_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
+function () = auth.add_auth_handler(
     scope = "ft4.transfer_one",
     flags = ["T"],
-    formatter = transfer_message(*)
+    message = transfer_message(*)
 );
 
 operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
@@ -39,10 +39,10 @@ operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: bi
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
+function () = auth.add_auth_handler(
     scope = "ft4.burn",
     flags = ["T"],
-    formatter = burn_message(*)
+    message = burn_message(*)
 );
 
 function burn_message(gtv) {
