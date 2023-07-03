@@ -2,7 +2,8 @@ import {
   AmountDecimalsError,
   AmountInputError,
   AmountOutOfRangeError,
-  convertToBigInt,
+  RawAmount,
+  convertToRawAmount,
   createAmount,
   createAmountFromBalance,
   stringify,
@@ -367,25 +368,61 @@ describe("Asset amount", () => {
 
   it("should handle comparison with different types correctly", async () => {
     const amount = createAmount(10, 1);
+
     const otherNumber = 15;
     const otherBigInt = BigInt(5);
+    console.error("\x1b[0m"); // Add this at the end
 
     expect(amount.gt(otherNumber)).toBe(false);
     expect(amount.gt(otherBigInt)).toBe(true);
   });
 
-  it("should convert different types to BigInt correctly", async () => {
-    const amount = createAmount(10, 1);
+  describe("convertToRawAmount", () => {
+    const validTestCases: [
+      number | string | bigint,
+      number | undefined,
+      RawAmount
+    ][] = [
+      [100.5, undefined, { value: BigInt(10050), decimals: 2 }],
+      [100, undefined, { value: BigInt(10000), decimals: 2 }],
+      [100.1234, undefined, { value: BigInt(1001234), decimals: 4 }],
+      ["100.5", undefined, { value: BigInt(10050), decimals: 2 }],
+      ["100", undefined, { value: BigInt(10000), decimals: 2 }],
+      ["100.1234", undefined, { value: BigInt(1001234), decimals: 4 }],
+      [BigInt(100), 2, { value: BigInt(100), decimals: 2 }],
+    ];
 
-    expect(convertToBigInt(3)).toEqual(BigInt(3));
-    expect(convertToBigInt("3")).toEqual(BigInt(3));
-    expect(convertToBigInt(amount)).toEqual(BigInt(10));
-  });
+    it.each(validTestCases)(
+      "should correctly convert %s to RawAmount",
+      (input, decimals, expectedOutput) => {
+        const rawAmount = convertToRawAmount(input, decimals);
+        expect(rawAmount).toEqual(expectedOutput);
+      }
+    );
 
-  it("should throw error when converting unsupported type to BigInt", async () => {
-    // @ts-expect-error: Testing error path, invalid type passed intentionally
-    expect(() => convertToBigInt({})).toThrowError(
-      new Error("Unsupported type for conversion to BigInt: object")
+    const invalidStringTestCases = ["abc", "10.1.2"];
+    it.each(invalidStringTestCases)(
+      "should throw error for invalid string input '%s'",
+      async (num) => {
+        expect(() => convertToRawAmount(num)).toThrow(AmountInputError);
+      }
+    );
+
+    it("should throw error for incompatible decimals", async () => {
+      const rawAmount: RawAmount = { value: BigInt(100), decimals: 2 };
+      expect(() => convertToRawAmount(rawAmount, 3)).toThrow(
+        AmountDecimalsError
+      );
+    });
+
+    const invalidDecimalsTestCases = [-1, 80, 1.5];
+    it.each(invalidDecimalsTestCases)(
+      "should throw error for invalid decimals %s",
+      async (decimals) => {
+        expect(() => convertToRawAmount(100, decimals)).toThrow(
+          AmountDecimalsError
+        );
+      }
     );
   });
 });
