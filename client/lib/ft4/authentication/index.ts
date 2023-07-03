@@ -93,14 +93,12 @@ function createAuthenticatorSession(
         operation
       );
       if (!keyHandler) {
-        // TODO: replace `operation[0]` with `operation.name` when Operation type is updated
-        throw new Error(`Cannot authenticate operation: ${operation[0]}`);
+        throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }
       usedKeyHandlers.add(keyHandler);
       return await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        // FIXME!!!!!!!!!!!!!!!!!!!
         0,
         authDataService
       );

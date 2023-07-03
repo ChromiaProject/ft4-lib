@@ -37,7 +37,7 @@ function get_auth_handler(op_name: name) {
     val auth_handlers = auth_handler();
     if (op_name in auth_handlers) return auth_handlers[op_name];
 
-    val handler = get_mount_point_scope_auth_handler(auth_handlers, op_name);
+    val handler = get_mount_scope_auth_handler(auth_handlers, op_name);
     if (handler??) return handler;
 
     return require(
@@ -58,7 +58,7 @@ struct signature {
     v: integer;
 }
 
-function get_mount_point_scope_auth_handler(auth_handlers: map<name, _auth_handler>, op_name: name) {
+function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, op_name: name) {
     val op_name_components = op_name.split(".");
     if (op_name_components.size() < 2) return null;
     
@@ -90,8 +90,7 @@ function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
 }
 
 function join_text_list(components: list<text>, count: integer) {
-    require(count < components.size());
-    require(count > 0);
+    require(count < components.size() and count > 0, "Error building mount path");
     var result = components[0];
     for (i in range(1, count)) {
         result = result + "." + components[i];
