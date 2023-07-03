@@ -55,4 +55,9 @@ export interface AuthDataService {
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   // TODO: add account id argument
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
+  getLoginConfig(name: string | null): Promise<LoginConfig>;
 }
+
+export type LoginConfig = {
+  flags: string[];
+};

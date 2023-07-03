@@ -1,20 +1,20 @@
 import { BufferId } from "../../../cryptoUtils";
-import { AuthDataService, KeyHandler, KeyStore } from "../interfaces";
-import { Operation, SignatureProvider, gtx } from "postchain-client";
+import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
+import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { Buffer } from "buffer";
 import { ftAuth } from ".";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
-export function createFTKeyHandler(
+export function createFtKeyHandler(
   authDescriptor: AuthDescriptor,
-  keyStore: FTKeyStore
+  keyStore: FtKeyStore
 ): KeyHandler {
   return Object.freeze({
     authDescriptor,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      satisfiesAuthRequirements(authDescriptor, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
     authenticate: (
       accountId: BufferId,
       operation: Operation,
@@ -38,7 +38,7 @@ async function authenticate(
 
 async function sign(
   transaction: TxBuilderTransaction,
-  keyStore: FTKeyStore
+  keyStore: FtKeyStore
 ): Promise<void> {
   transaction.signatures.push(
     await keyStore.sign(
@@ -51,13 +51,13 @@ async function sign(
   );
 }
 
-export function satisfiesAuthRequirements(
+export function hasAuthDescriptorFlags(
   authDescriptor: AuthDescriptor,
   requiredFlags: string[]
 ): boolean {
   return requiredFlags.every((flag) => authDescriptor.flags.has(flag));
 }
 
-export interface FTKeyStore extends KeyStore, SignatureProvider {
+export interface FtKeyStore extends KeyStore, SignatureProvider {
   pubKey: Buffer;
 }

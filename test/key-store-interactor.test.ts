@@ -2,7 +2,7 @@ import { IClient } from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
@@ -28,7 +28,7 @@ describe("Key store interactor", () => {
 
     const accounts = await createKeyStoreInteractor(
       client,
-      createInMemoryFTKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1)
     ).getAccounts();
 
     expect(accounts.length).toEqual(1);
@@ -48,7 +48,7 @@ describe("Key store interactor", () => {
 
     const accounts = await createKeyStoreInteractor(
       client,
-      createInMemoryFTKeyStore(keyPair2)
+      createInMemoryFtKeyStore(keyPair2)
     ).getAccounts();
 
     expect(accounts.length).toEqual(2);
@@ -61,7 +61,7 @@ describe("Key store interactor", () => {
 
     const { getAccounts, getSession } = createKeyStoreInteractor(
       client,
-      createInMemoryFTKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1)
     );
     const accounts = await getAccounts();
     expect(accounts.length).toEqual(1);
@@ -92,7 +92,7 @@ describe("Key store interactor", () => {
 
     const session = await createKeyStoreInteractor(
       client,
-      createInMemoryFTKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1)
     ).getSession(account.id);
 
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);

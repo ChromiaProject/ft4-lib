@@ -1,12 +1,12 @@
-import { EVMKeyStore, signMessage } from "..";
+import { EvmKeyStore, signMessage } from "..";
 import { ethers } from "ethers";
-import { createEVMKeyHandler } from "../key-handler";
+import { createEvmKeyHandler } from "../key-handler";
 import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
 
-export async function createWeb3ProviderEVMKeyStore(
+export async function createWeb3ProviderEvmKeyStore(
   externalProvider: ethers.Eip1193Provider
-): Promise<EVMKeyStore> {
+): Promise<EvmKeyStore> {
   const provider = new ethers.BrowserProvider(externalProvider);
   await provider.send("eth_requestAccounts", []);
   const signer = await provider.getSigner();
@@ -20,7 +20,7 @@ export async function createWeb3ProviderEVMKeyStore(
     // FIXME
     sign: (digestToSign: Buffer) => Promise.resolve(digestToSign),
     createKeyHandler: (authDescriptor: AuthDescriptor) =>
-      createEVMKeyHandler(authDescriptor, keyStore),
+      createEvmKeyHandler(authDescriptor, keyStore),
   });
   return keyStore;
 }

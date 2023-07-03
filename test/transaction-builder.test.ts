@@ -1,5 +1,5 @@
 import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import {
@@ -11,7 +11,7 @@ import { _nop } from "../client/lib/ft4/utils";
 import {
   Authenticator,
   KeyHandler,
-} from "../client/lib/ft4/authentication/interfaces";
+} from "../client/lib/ft4/authentication/types";
 import { IClient, encryption, gtx } from "postchain-client";
 import { _transferOp } from "../client/lib/ft4/accounts/account-operations";
 import { XferInput, XferOutput } from "../client/lib/ft4/accounts/types";
@@ -33,7 +33,7 @@ describe("Transaction Builder", () => {
     ]);
     authDescriptor = ad;
 
-    keyHandler = createInMemoryFTKeyStore(keyPair).createKeyHandler(ad);
+    keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ad);
     const authDataService = createFakeAuthDataService({
       ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
       ["ft4.admin.register_account"]: {
@@ -77,7 +77,7 @@ describe("Transaction Builder", () => {
 
     expect(tx.operations).toStrictEqual([
       {
-        opName: "ft.ft_auth",
+        opName: "ft4.ft_auth",
         args: [authenticator.accountId, authDescriptor.id],
       },
       { opName: "ft4.transfer", args: [[expectedInput], [expectedOutput]] },
@@ -151,7 +151,7 @@ describe("Transaction Builder", () => {
     ]);
     const keyHandlerMock: KeyHandler = {
       authDescriptor,
-      keyStore: createInMemoryFTKeyStore(keyPair),
+      keyStore: createInMemoryFtKeyStore(keyPair),
       satisfiesAuthRequirements: jest.fn(),
       authenticate: jest
         .fn()

@@ -1,19 +1,20 @@
 import { BufferId } from "../../../cryptoUtils";
-import { AuthDataService, KeyHandler, KeyStore } from "../interfaces";
+import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
-import { EVMKeyStore, evmAuth } from ".";
+import { EvmKeyStore, evmAuth } from ".";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
-export function createEVMKeyHandler(
+export function createEvmKeyHandler(
   authDescriptor: AuthDescriptor,
-  keyStore: EVMKeyStore
+  keyStore: EvmKeyStore
 ): KeyHandler {
   return Object.freeze({
     authDescriptor,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      satisfiesAuthRequirements(authDescriptor, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
     authenticate: (
       accountId: BufferId,
       operation: Operation,
@@ -39,7 +40,7 @@ async function authenticate(
   operation: Operation,
   nonce: number,
   authDataService: AuthDataService,
-  keyStore: EVMKeyStore
+  keyStore: EvmKeyStore
 ): Promise<Operation[]> {
   const messageTemplate = await authDataService.getAuthMessageTemplate(
     operation
@@ -64,10 +65,3 @@ async function sign(
   // return transaction.sign(keyStore);
 }
 /* eslint-enable */
-
-export function satisfiesAuthRequirements(
-  authDescriptor: AuthDescriptor,
-  requiredFlags: string[]
-): boolean {
-  return requiredFlags.every((flag) => authDescriptor.flags.has(flag));
-}

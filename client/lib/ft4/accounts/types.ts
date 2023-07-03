@@ -12,7 +12,7 @@ import {
   TransferHistoryResponse,
   PaymentHistoryEntry,
 } from "./payment-history/types";
-import { Authenticator } from "../authentication/interfaces";
+import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
 import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
@@ -54,7 +54,7 @@ export type User = {
 
 // TODO: Rename to Account after deleting Account type
 export interface IAccount {
-  id: BufferId;
+  id: Buffer;
   getBalances: () => Promise<Balance[]>;
   getBalancesPaginated: (
     limit?: number,

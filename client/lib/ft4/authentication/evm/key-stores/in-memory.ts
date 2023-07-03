@@ -1,11 +1,11 @@
-import { EVMKeyStore, signMessage } from "..";
+import { EvmKeyStore, signMessage } from "..";
 import { KeyPair } from "postchain-client";
 import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
-import { createEVMKeyHandler } from "../key-handler";
+import { createEvmKeyHandler } from "../key-handler";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
 
-export function createInMemoryEVMKeyStore(keyPair: KeyPair): EVMKeyStore {
+export function createInMemoryEvmKeyStore(keyPair: KeyPair): EvmKeyStore {
   const wallet = new ethers.Wallet(keyPair.privKey.toString("hex"));
   const address = Buffer.from(wallet.address.slice(2), "hex");
   const keyStore = Object.freeze({
@@ -16,7 +16,7 @@ export function createInMemoryEVMKeyStore(keyPair: KeyPair): EVMKeyStore {
     // FIXME
     sign: (digestToSign: Buffer) => Promise.resolve(digestToSign),
     createKeyHandler: (authDescriptor: AuthDescriptor) =>
-      createEVMKeyHandler(authDescriptor, keyStore),
+      createEvmKeyHandler(authDescriptor, keyStore),
   });
   return keyStore;
 }

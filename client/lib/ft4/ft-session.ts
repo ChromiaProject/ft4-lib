@@ -31,13 +31,19 @@ import {
   AuthDataService,
   Authenticator,
   KeyStore,
-} from "./authentication/interfaces";
+  LoginConfig,
+} from "./authentication/types";
+import { createAuthenticator } from "./authentication";
 import {
   authFlags,
   authMessageTemplate,
-  createAuthenticator,
+  loginConfig,
   nonce,
-} from "./authentication";
+} from "./authentication/queries";
+import {
+  LoginManger,
+  createLoginManager,
+} from "./authentication/login-manager";
 import {
   IClient,
   QueryObject,
@@ -48,6 +54,7 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { Buffer } from "buffer";
+import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -141,6 +148,7 @@ export async function call(
 export type KeyStoreInteractor = {
   getAccounts(): Promise<IAccount[]>;
   getSession(accountId: BufferId): Promise<Session>;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };
 
 // TODO: Improve error handling
@@ -155,6 +163,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getNonce: async (authDescriptorId: BufferId) =>
       connection.query<number>(nonce(authDescriptorId)),
+    getLoginConfig: async (configName: string | null = null) =>
+      connection.query<LoginConfig>(loginConfig(configName)),
   });
 }
 
@@ -181,5 +191,7 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
+    getLoginManager: (loginKeyStore?: LoginKeyStore) =>
+      createLoginManager(connection, keyStore, loginKeyStore),
   });
 }

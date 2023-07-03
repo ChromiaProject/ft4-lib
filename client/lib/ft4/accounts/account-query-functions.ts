@@ -186,7 +186,7 @@ export function createAccountObject(
     accountId
   );
   return Object.freeze({
-    id: accountId,
+    id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
     getBalances: () => _getBalancesByAccountId(connection, accountId),
