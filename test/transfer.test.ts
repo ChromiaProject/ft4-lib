@@ -6,12 +6,16 @@ import {
 } from "../client/lib/ft4/accounts/auth-descriptor";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { Asset } from "../client/lib/ft4/asset/types";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  getNewAsset,
+  getUserSession,
+  createChromiaClient,
+} from "./util/blockchain-util";
 import TestUser, { newSingleSigUser } from "./util/test-user";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
@@ -174,8 +178,8 @@ describe("Transfer", () => {
       .build();
 
     const session = await createKeyStoreInteractor(
-      ft.get.gtxClient,
-      createInMemoryFTKeyStore(keyPair)
+      await createChromiaClient(),
+      createInMemoryFtKeyStore(keyPair)
     ).getSession(account.id);
     await session.account.burn(asset.id, createAmount(10, asset.decimals));
     const assetBalance = await session.account.getBalanceByAssetId(asset.id);

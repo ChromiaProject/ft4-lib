@@ -1,4 +1,4 @@
-import { SignatureProvider } from "postchain-client/built/src/gtx/interfaces";
+import { SignatureProvider } from "postchain-client";
 import { Account, User } from "../../client/lib/ft4/accounts/types";
 import { ftUserSession } from "../../client/lib/ft4/types";
 import { createLocalStorageSignatureProvider } from "../../client/lib/ft4/utils/local-signature-provider";

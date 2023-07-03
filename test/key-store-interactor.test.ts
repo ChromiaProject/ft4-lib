@@ -1,18 +1,21 @@
+import { IClient } from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
-import { getUserSession } from "./util/blockchain-util";
+import { createChromiaClient, getUserSession } from "./util/blockchain-util";
 import { newSingleSigUser } from "./util/test-user";
 
 let _ft: ftUserSession;
+let client: IClient;
 
 describe("Key store interactor", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
+    client = await createChromiaClient();
   });
 
   it("should return one account if corresponding key is used in one account", async () => {
@@ -24,8 +27,8 @@ describe("Key store interactor", () => {
     await AccountBuilder.account(ft2).withPoints(1).build();
 
     const accounts = await createKeyStoreInteractor(
-      ft1.get.gtxClient,
-      createInMemoryFTKeyStore(keyPair1)
+      client,
+      createInMemoryFtKeyStore(keyPair1)
     ).getAccounts();
 
     expect(accounts.length).toEqual(1);
@@ -44,8 +47,8 @@ describe("Key store interactor", () => {
     await account.addAuthDescriptor(ft2.user.authDescriptor, keyPair2);
 
     const accounts = await createKeyStoreInteractor(
-      ft1.get.gtxClient,
-      createInMemoryFTKeyStore(keyPair2)
+      client,
+      createInMemoryFtKeyStore(keyPair2)
     ).getAccounts();
 
     expect(accounts.length).toEqual(2);
@@ -57,8 +60,8 @@ describe("Key store interactor", () => {
     const account = await AccountBuilder.account(ft).withPoints(1).build();
 
     const { getAccounts, getSession } = createKeyStoreInteractor(
-      ft.get.gtxClient,
-      createInMemoryFTKeyStore(keyPair1)
+      client,
+      createInMemoryFtKeyStore(keyPair1)
     );
     const accounts = await getAccounts();
     expect(accounts.length).toEqual(1);
@@ -88,8 +91,8 @@ describe("Key store interactor", () => {
     await account.addAuthDescriptor(ad2, keyPair2);
 
     const session = await createKeyStoreInteractor(
-      ft.get.gtxClient,
-      createInMemoryFTKeyStore(keyPair1)
+      client,
+      createInMemoryFtKeyStore(keyPair1)
     ).getSession(account.id);
 
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);

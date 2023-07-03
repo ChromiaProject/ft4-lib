@@ -1,6 +1,7 @@
 /* eslint @typescript-eslint/ban-ts-comment: 0 */
 import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
+  _transferOp,
   addAuthDescriptorOp,
   addAuthDescriptorV2,
   burnOp,
@@ -20,23 +21,21 @@ import {
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { createPaymentHistoryIterator } from "./payment-history/payment-history-iterator";
-import {
-  PaymentHistoryIterator,
-  PaymentHistoryStore,
-} from "./payment-history/interfaces";
 import { BufferId, KeyPair } from "../../cryptoUtils";
-import { formatter } from "postchain-client";
+import {
+  formatter,
+  GtxClient,
+  RawGtv,
+  TransactionReceipt,
+} from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { Amount } from "../asset/interfaces";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { Connection } from "../types";
-import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
-import { Authenticator } from "../authentication/interfaces";
+import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
-import { RawGtv } from "postchain-client/built/src/gtv/types";
 import { Buffer } from "buffer";
 
 export async function ssoRawTransactionRegister(
@@ -180,12 +179,6 @@ export async function burnTokens(
   await tx.postAndWaitConfirmation();
 }
 
-export function getPaymentHistoryIterator(
-  paymentHistoryStore: PaymentHistoryStore
-): PaymentHistoryIterator {
-  return createPaymentHistoryIterator(paymentHistoryStore);
-}
-
 //-------------------ADMIN OPERATIONS-------------------//
 
 export async function registerAccount(
@@ -251,25 +244,24 @@ async function _addAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
   keyPair: KeyPair
-): Promise<void> {
+): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
     .add(addAuthDescriptorV2(authDescriptor))
     .addSigners(
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor)
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor)
     )
     .build();
 
-  await tx.postAndWaitConfirmation();
-  return;
+  return connection.client.sendTransaction(tx);
 }
 
 async function _deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId
-): Promise<void> {
+): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
@@ -283,7 +275,7 @@ async function _transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount
-): Promise<void> {
+): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
@@ -308,5 +300,5 @@ async function _burn(
     amount.value,
     {},
   ];
-  return call(connection, authenticator, transferOp([input], []));
+  return call(connection, authenticator, _transferOp([input], []));
 }

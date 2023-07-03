@@ -1,5 +1,6 @@
-import { EntityRetreiver, PaginatedEntity, QueryObject } from "./types";
+import { EntityRetriever, PaginatedEntity } from "./types";
 import { Connection, PagedResponse } from "../types";
+import { QueryArguments, QueryObject } from "postchain-client";
 
 export function createEntityRetriever<
   T,
@@ -7,9 +8,9 @@ export function createEntityRetriever<
   R extends PagedResponse<V> = PagedResponse<V>
 >(
   session: Connection,
-  query: QueryObject,
+  query: QueryObject<QueryArguments>,
   dataMapper: (arg: V[]) => T[]
-): EntityRetreiver<T> {
+): EntityRetriever<T> {
   return {
     retrieve: async (): Promise<PaginatedEntity<T>> => {
       const res = await session.query<R>(query);

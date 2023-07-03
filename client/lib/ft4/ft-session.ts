@@ -1,4 +1,3 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import { accountQuerySession, accountUserSession } from "./accounts";
 import { IAccount, User } from "./accounts/types";
 import { assetQuerySession, assetUserSession } from "./asset";
@@ -9,7 +8,7 @@ import {
   Session,
   OptionalPageCursor,
 } from "./types";
-import { getConfig, getVersion, nop } from "./utils";
+import { _getConfig, getVersion, _nop as nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
@@ -18,7 +17,6 @@ import {
   createAccountObject,
   _getByAuthDescriptorIdPaginated,
 } from "./accounts/account-query-functions";
-import { Operation, QueryObject } from "./utils/types";
 import {
   _getAllAssets,
   _getAssetById,
@@ -34,14 +32,30 @@ import {
   AuthDataService,
   Authenticator,
   KeyStore,
-} from "./authentication/interfaces";
+  LoginConfig,
+} from "./authentication/types";
+import { createAuthenticator } from "./authentication";
 import {
   authDataQuery,
-  createAuthenicator,
   defaultFTAuthData,
+  loginConfig,
   nonce,
-} from "./authentication";
+} from "./authentication/queries";
+import {
+  LoginManger,
+  createLoginManager,
+} from "./authentication/login-manager";
+import {
+  IClient,
+  QueryObject,
+  RawGtv,
+  GtxClient,
+  QueryArguments,
+  Operation,
+  TransactionReceipt,
+} from "postchain-client";
 import { Buffer } from "buffer";
+import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -62,11 +76,12 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
   });
 }
 
-export function createConnection(client: GtxClient): Connection {
+export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
     client,
-    query: <T>(queryObject: QueryObject) => query<T>(connection, queryObject),
-    getConfig: () => getConfig(client),
+    query: <T extends RawGtv>(queryObject: QueryObject<QueryArguments>) =>
+      query<T>(connection, queryObject),
+    getConfig: () => _getConfig(client),
     getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => _getById(connection, id),
@@ -113,28 +128,28 @@ export function createSession(
   });
 }
 
-async function query<T>(
+async function query<T extends RawGtv>(
   connection: Connection,
-  queryObject: QueryObject
+  queryObject: QueryObject<QueryArguments>
 ): Promise<T | null> {
-  return await connection.client.query(queryObject.name, queryObject.args);
+  return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
 export async function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Promise<void> {
+): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
-  await tx.postAndWaitConfirmation();
-  return;
+  return connection.client.sendTransaction(tx);
 }
 
 export type KeyStoreInteractor = {
   getAccounts(): Promise<IAccount[]>;
   getSession(accountId: BufferId): Promise<Session>;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };
 
 // TODO: Improve error handling
@@ -159,11 +174,13 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getNonce: async (authDescriptorId: BufferId) =>
       connection.query<number>(nonce(authDescriptorId)),
+    getLoginConfig: async (configName: string | null = null) =>
+      connection.query<LoginConfig>(loginConfig(configName)),
   });
 }
 
 export function createKeyStoreInteractor(
-  client: GtxClient,
+  client: IClient,
   keyStore: KeyStore
 ): KeyStoreInteractor {
   const connection = createConnection(client);
@@ -177,7 +194,7 @@ export function createKeyStoreInteractor(
       const keyHandlers = authDescriptors.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor)
       );
-      const authenticator = createAuthenicator(
+      const authenticator = createAuthenticator(
         accountId,
         keyHandlers,
         createAuthDataService(connection)
@@ -185,5 +202,7 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
+    getLoginManager: (loginKeyStore?: LoginKeyStore) =>
+      createLoginManager(connection, keyStore, loginKeyStore),
   });
 }

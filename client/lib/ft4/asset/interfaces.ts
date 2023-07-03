@@ -1,4 +1,4 @@
-import { RawGtv } from "postchain-client/built/src/gtv/types";
+import { RawGtv } from "postchain-client";
 import { DecimalFormat, SupportedNumber } from "./types";
 
 export interface Amount {

@@ -1,4 +1,4 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+import { GtxClient, formatter, IClient } from "postchain-client";
 import {
   accountAuthDescriptorsQuery,
   accountById,
@@ -17,7 +17,7 @@ import {
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { getConfig } from "../utils";
+import { _getConfig, getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
   _getBalancesByAccountId,
@@ -25,16 +25,13 @@ import {
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { Connection, OptionalPageCursor } from "../types";
-import { formatter } from "postchain-client";
 import { PaymentHistoryFilter } from "./payment-history/types";
 import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
 import {
-  GtvAuthDescriptor,
   AuthDescriptor,
   RawAuthDescriptor,
   mapAuthDescriptors,
 } from "./auth-descriptor";
-import { createConnection } from "../ft-session";
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountIdPaginated } from "../asset/asset-queries";
@@ -101,7 +98,7 @@ async function createAccountObjectFromId(
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(session, id),
-    _getAuthDescriptors(createConnection(session), id),
+    getAuthDescriptors(session, id).then(mapAuthDescriptors),
   ]);
   return Object.freeze({
     balances,
@@ -123,7 +120,7 @@ async function createAccountObjectsFromIds(
 export async function getAuthDescriptors(
   session: GtxClient,
   accountId: BufferId
-): Promise<GtvAuthDescriptor[]> {
+): Promise<RawAuthDescriptor[]> {
   return session.query(
     ...accountAuthDescriptorsQuery(formatter.ensureBuffer(accountId))
   );
@@ -135,11 +132,35 @@ export async function getRateLimit(
   session: GtxClient,
   accountId: BufferId
 ): Promise<RateLimit> {
-  const rateLimit = await session.query(
-    ...getRateLimitQuery(formatter.ensureBuffer(accountId))
-  );
+  const q = getRateLimitQuery(accountId);
+  const rateLimit = await session.query(q.name, q.args);
 
   const chainInfo = await getConfig(session);
+
+  return Object.freeze({
+    points: rateLimit.points,
+    lastUpdate: rateLimit.lastUpdate,
+    getAvailablePoints: () => {
+      if (chainInfo.rate_limit_active) {
+        const deltaTime = Date.now() - rateLimit.lastUpdate;
+        const points =
+          rateLimit.points + deltaTime / chainInfo.rate_limit_recovery_time;
+        return Math.min(points, chainInfo.rate_limit_max_points);
+      }
+      return null;
+    },
+  });
+}
+export async function _getRateLimit(
+  session: IClient,
+  accountId: BufferId
+): Promise<RateLimit> {
+  const rateLimit = await session.query<
+    { account_id: Buffer },
+    Omit<RateLimit, "getAvailablePoints">
+  >(getRateLimitQuery(accountId));
+
+  const chainInfo = await _getConfig(session);
 
   return Object.freeze({
     points: rateLimit.points,
@@ -165,7 +186,7 @@ export function createAccountObject(
     accountId
   );
   return Object.freeze({
-    id: accountId,
+    id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
     getBalances: () => _getBalancesByAccountId(connection, accountId),
@@ -196,7 +217,7 @@ export function createAccountObject(
     },
     getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
       getAuthDescriptorsByParticipantId(connection, accountId, participantId),
-    getRateLimit: () => getRateLimit(connection.client, accountId),
+    getRateLimit: () => _getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
       filter: PaymentHistoryFilter = {},

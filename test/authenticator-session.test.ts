@@ -1,13 +1,14 @@
 import { encryption } from "postchain-client";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
-import { op } from "../client/lib/ft4/utils";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { _op } from "../client/lib/ft4/utils";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createClient } from "./util/blockchain-util";
-import { createAuthenicator } from "../client/lib/ft4/authentication";
+import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { KeyHandler } from "../client/lib/ft4/authentication/interfaces";
-import { createTestAuthDescriptor } from "./util/util";
+import { KeyHandler } from "../client/lib/ft4/authentication/types";
+import { createTestAuthDescriptor, toNewTx } from "./util/util";
 import { Buffer } from "buffer";
+import { Operation as OldOperation } from "/ft4/utils/types";
 
 describe("Authenticator session", () => {
   it("should insert FT auth operation", async () => {
@@ -15,21 +16,21 @@ describe("Authenticator session", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
       foo: { flags: [], message: "" },
     });
-    const authenticatorSession = createAuthenicator(
+    const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
       authDataService
     ).createSession();
 
-    const operations = await authenticatorSession.authenticate(op("foo"));
+    const operations = await authenticatorSession.authenticate(_op("foo"));
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),
-      op("foo"),
+      _op("foo"),
     ]);
   });
 
@@ -38,26 +39,29 @@ describe("Authenticator session", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
       foo: { flags: [], message: "" },
     });
-    const authenticatorSession = createAuthenicator(
+    const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
       authDataService
     ).createSession();
-    const operations = await authenticatorSession.authenticate(op("foo"));
+    const operations: OldOperation[] = (
+      await authenticatorSession.authenticate(_op("foo"))
+    ).map((op) => [op.name, ...(op.args ?? [])]);
 
     const client = await createClient();
     const transaction = client.newTransaction(authDescriptor.signers);
     operations.forEach((operation) => transaction.addOperation(...operation));
-    await authenticatorSession.sign(transaction);
+    const newTx = toNewTx(transaction);
+    await authenticatorSession.sign(newTx);
 
     const digestToSign = transaction.getDigestToSign();
     const signature = encryption.signDigest(digestToSign, keyPair.privKey);
 
-    expect(transaction.gtx.signatures).toEqual([signature]);
+    expect(newTx.signatures).toEqual([signature]);
   });
 
   it("should use key handler that satisfies operation auth requirements", async () => {
@@ -68,19 +72,21 @@ describe("Authenticator session", () => {
       createTestAuthDescriptor(["f"]);
 
     const keyHandler1 =
-      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
     const keyHandler2 =
-      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+      createInMemoryFtKeyStore(keyPair2).createKeyHandler(authDescriptor2);
 
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["f"], message: "" },
     });
-    const authenticator = createAuthenicator(
+    const authenticator = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2],
       authDataService
     );
-    const keyHandler = await authenticator.getKeyHandlerForOperation(op("foo"));
+    const keyHandler = await authenticator.getKeyHandlerForOperation(
+      _op("foo")
+    );
 
     expect(keyHandler.authDescriptor).toEqual(authDescriptor2);
   });
@@ -95,25 +101,25 @@ describe("Authenticator session", () => {
       createTestAuthDescriptor(["a"]);
 
     const keyHandler1 =
-      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
     const keyHandler2 =
-      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+      createInMemoryFtKeyStore(keyPair2).createKeyHandler(authDescriptor2);
     const keyHandler3 =
-      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+      createInMemoryFtKeyStore(keyPair3).createKeyHandler(authDescriptor3);
 
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["f"], message: "" },
       bar: { flags: ["a"], message: "" },
     });
 
-    const authenticatorSession = createAuthenicator(
+    const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2, keyHandler3],
       authDataService
     ).createSession();
 
-    await authenticatorSession.authenticate(op("bar"));
-    await authenticatorSession.authenticate(op("foo"));
+    await authenticatorSession.authenticate(_op("bar"));
+    await authenticatorSession.authenticate(_op("foo"));
 
     const usedKeyHandlers = authenticatorSession.getUsedKeyHandlers();
 
@@ -127,18 +133,18 @@ describe("Authenticator session", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor(["a"]);
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["b"], message: "" },
     });
-    const authenticatorSession = createAuthenicator(
+    const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
       authDataService
     ).createSession();
 
     await expect(
-      authenticatorSession.authenticate(op("foo"))
+      authenticatorSession.authenticate(_op("foo"))
     ).rejects.toBeInstanceOf(Error);
   });
 
@@ -152,25 +158,25 @@ describe("Authenticator session", () => {
       createTestAuthDescriptor(["f"]);
 
     const keyHandler1 =
-      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
     const keyHandler2 =
-      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+      createInMemoryFtKeyStore(keyPair2).createKeyHandler(authDescriptor2);
     const keyHandler3 =
-      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+      createInMemoryFtKeyStore(keyPair3).createKeyHandler(authDescriptor3);
 
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["f"], message: "" },
       bar: { flags: ["b"], message: "" },
     });
 
-    const authenticatorSession = createAuthenicator(
+    const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2, keyHandler3],
       authDataService
     ).createSession();
 
-    await authenticatorSession.authenticate(op("foo"));
-    await authenticatorSession.authenticate(op("bar"));
+    await authenticatorSession.authenticate(_op("foo"));
+    await authenticatorSession.authenticate(_op("bar"));
 
     const signers = authenticatorSession.getSigners();
 

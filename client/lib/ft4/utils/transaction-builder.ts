@@ -1,10 +1,7 @@
-import {
-  GtxClient,
-  Itransaction,
-} from "postchain-client/built/src/gtx/interfaces";
-import { Operation } from "./types";
-import { Authenticator, KeyHandler } from "../authentication/interfaces";
+import { Authenticator, KeyHandler } from "../authentication/types";
 import { Buffer } from "buffer";
+import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
+import { TxBuilderTransaction } from "./types";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -52,14 +49,14 @@ export type TransactionBuilder = {
    * @param signers array of participants that should sign this transaction
    * @returns A promised containing the unsigned transaction
    */
-  build: () => Promise<Itransaction>;
+  build: () => Promise<SignedTransaction>;
   /**
    * Builds an unsigned transaction containgin the previously added
    * transactions, as well as any authhorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
    */
-  buildUnsigned: () => Promise<Itransaction>;
+  buildUnsigned: () => Promise<TxBuilderTransaction>;
   /**
    * A function to extract the keyhandlers used to build a transaction,
    * and thus should be the ones signing the transaction when
@@ -68,7 +65,7 @@ export type TransactionBuilder = {
    * and which consequently should sign the transaction.
    */
   keyHandlersUsed: () => KeyHandler[];
-  session: GtxClient;
+  session: IClient;
 };
 
 /**
@@ -79,7 +76,7 @@ export type TransactionBuilder = {
  */
 export function transactionBuilder(
   authenticator: Authenticator,
-  client: GtxClient
+  client: IClient
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
     this._operations.push([operation, authenticator]);
@@ -98,13 +95,17 @@ export function transactionBuilder(
       this._operations
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
-    const txn = client.newTransaction(toPubkeys(this._keyhandlersUsed));
+    const txn: TxBuilderTransaction = {
+      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      operations: [],
+      signers: toPubkeys(this._keyhandlersUsed),
+      signatures: [],
+    };
     const addOperation = (op: Operation) => {
-      const [name, ...args] = op;
-      txn.addOperation(name, ...args);
+      txn.operations.push({ opName: op.name, args: op.args });
     };
     operations.forEach((op: Operation | Operation[]) => {
-      isOperation(op) ? addOperation(op) : op.forEach(addOperation);
+      Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
     });
     return txn;
   }
@@ -117,7 +118,7 @@ export function transactionBuilder(
     const processedOperations: Operation[][] = [];
     for (const tuple of operations) {
       const [operation, authenticator] = tuple;
-      if (operation[0] === "nop") {
+      if (operation.name === "nop") {
         processedOperations.push([operation]);
         continue;
       }
@@ -128,7 +129,7 @@ export function transactionBuilder(
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          "No keyhandler registered to handle this operation"
+          `No keyhandler registered to handle operation <${operation[0]}>`
         );
       }
       keyHandlers.push(keyHandler);
@@ -153,7 +154,7 @@ export function transactionBuilder(
       );
       // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {
-        if (op[0] === "ft.evm_auth") {
+        if (op.name === "ft4.evm_auth") {
           nonces.set(keyHandler.authDescriptor.id, nonce + 1);
         }
       });
@@ -161,9 +162,9 @@ export function transactionBuilder(
     }
     let opsToReturn: Operation[] = [];
     processedOperations.forEach((item) => {
-      opsToReturn = isOperation(item)
-        ? [...opsToReturn, item]
-        : opsToReturn.concat(item);
+      opsToReturn = Array.isArray(item)
+        ? opsToReturn.concat(item)
+        : [...opsToReturn, item];
     });
     return [opsToReturn, keyHandlers];
   }
@@ -173,7 +174,7 @@ export function transactionBuilder(
     await Promise.all(
       this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx))
     );
-    return tx;
+    return gtx.serialize(tx);
   }
 
   function addSigners(...signers: KeyHandler[]): TransactionBuilder {
@@ -201,8 +202,4 @@ export function transactionBuilder(
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
 
   return context as TransactionBuilder;
-}
-
-function isOperation(op: Operation | Operation[]): op is Operation {
-  return typeof op[0] === "string";
 }
