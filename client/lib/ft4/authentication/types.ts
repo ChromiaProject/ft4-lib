@@ -52,9 +52,14 @@ export interface AuthDataService {
   getAuthData(operation: Operation): Promise<AuthData>;
   // TODO: add account id argument
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
+  getLoginConfig(name: string | null): Promise<LoginConfig>;
 }
 
 export type AuthData = {
   flags: string[];
   message: string;
+};
+
+export type LoginConfig = {
+  flags: string[];
 };

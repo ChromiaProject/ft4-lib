@@ -1,11 +1,11 @@
 import { encryption } from "postchain-client";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { _op } from "../client/lib/ft4/utils";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createClient } from "./util/blockchain-util";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { KeyHandler } from "../client/lib/ft4/authentication/interfaces";
+import { KeyHandler } from "../client/lib/ft4/authentication/types";
 import { createTestAuthDescriptor, toNewTx } from "./util/util";
 import { Buffer } from "buffer";
 import { Operation as OldOperation } from "/ft4/utils/types";
@@ -16,7 +16,7 @@ describe("Authenticator session", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
       foo: { flags: [], message: "" },
     });
@@ -39,7 +39,7 @@ describe("Authenticator session", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
       foo: { flags: [], message: "" },
     });
@@ -72,9 +72,9 @@ describe("Authenticator session", () => {
       createTestAuthDescriptor(["f"]);
 
     const keyHandler1 =
-      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
     const keyHandler2 =
-      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+      createInMemoryFtKeyStore(keyPair2).createKeyHandler(authDescriptor2);
 
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["f"], message: "" },
@@ -101,11 +101,11 @@ describe("Authenticator session", () => {
       createTestAuthDescriptor(["a"]);
 
     const keyHandler1 =
-      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
     const keyHandler2 =
-      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+      createInMemoryFtKeyStore(keyPair2).createKeyHandler(authDescriptor2);
     const keyHandler3 =
-      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+      createInMemoryFtKeyStore(keyPair3).createKeyHandler(authDescriptor3);
 
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["f"], message: "" },
@@ -133,7 +133,7 @@ describe("Authenticator session", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor(["a"]);
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["b"], message: "" },
     });
@@ -158,11 +158,11 @@ describe("Authenticator session", () => {
       createTestAuthDescriptor(["f"]);
 
     const keyHandler1 =
-      createInMemoryFTKeyStore(keyPair1).createKeyHandler(authDescriptor1);
+      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
     const keyHandler2 =
-      createInMemoryFTKeyStore(keyPair2).createKeyHandler(authDescriptor2);
+      createInMemoryFtKeyStore(keyPair2).createKeyHandler(authDescriptor2);
     const keyHandler3 =
-      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+      createInMemoryFtKeyStore(keyPair3).createKeyHandler(authDescriptor3);
 
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["f"], message: "" },

@@ -17,7 +17,7 @@ import { gtx, SignatureProvider } from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft4/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
-import { createInMemoryFTKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../../client/lib/ft4/authentication";
 import {
   createAuthDataService,
@@ -108,7 +108,7 @@ class AccountBuilder {
     const connection = createConnection(await createChromiaClient());
     const { signatureProvider, authDescriptor } = this.session.user;
     const keyHandler =
-      createInMemoryFTKeyStore(signatureProvider).createKeyHandler(
+      createInMemoryFtKeyStore(signatureProvider).createKeyHandler(
         authDescriptor
       );
     const authenticator = createAuthenticator(

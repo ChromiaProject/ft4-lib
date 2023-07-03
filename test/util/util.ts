@@ -80,6 +80,7 @@ export async function createAccount(client: GtxClient, ad: AuthDescriptor) {
   const tx = client.newTransaction([]);
   tx.addOperation("ft4.register_account_test", authDescriptor.toGtv(ad) as any);
   await tx.postAndWaitConfirmation();
+  return ad.id;
 }
 
 export function toNewTx(tx: Itransaction): TxBuilderTransaction {

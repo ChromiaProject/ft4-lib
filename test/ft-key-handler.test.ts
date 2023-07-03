@@ -1,6 +1,6 @@
 import { encryption } from "postchain-client";
 import { createTestAuthDescriptor, toNewTx } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { _op } from "../client/lib/ft4/utils";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { createClient } from "./util/blockchain-util";
@@ -11,7 +11,7 @@ describe("FT key handler", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const operations = await keyHandler.authenticate(accountId, _op("foo"), {
       flags: [],
       message: "",
@@ -31,7 +31,7 @@ describe("FT key handler", () => {
     transaction.addOperation("foo");
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const newTx = toNewTx(transaction);
     await keyHandler.sign(newTx);
 

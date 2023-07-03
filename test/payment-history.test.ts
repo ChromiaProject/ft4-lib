@@ -15,7 +15,7 @@ import {
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
 import { KeyPair } from "../client/lib/cryptoUtils";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createPaymentHistoryRetriever } from "../client/lib/ft4/accounts/payment-history/payment-history-retrieval";
 import { gtv } from "postchain-client";
 
@@ -72,7 +72,7 @@ describe("Payment history", () => {
 
       const session = await createKeyStoreInteractor(
         connection.client,
-        createInMemoryFTKeyStore(keyPair)
+        createInMemoryFtKeyStore(keyPair)
       ).getSession(account1.id);
 
       await session.account.transfer(

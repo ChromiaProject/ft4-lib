@@ -1,4 +1,4 @@
-import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
+import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
   AuthData,
@@ -6,13 +6,13 @@ import {
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
-} from "./interfaces";
+} from "./types";
 import { TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
 
 export * from "./evm";
 export * from "./ft";
-export * from "./interfaces";
+export * from "./types";
 
 export function createAuthenticator(
   accountId: BufferId,
@@ -45,14 +45,29 @@ async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
   operation: Operation
-): Promise<KeyHandler | undefined> {
+): Promise<KeyHandler | null> {
   const authRequirements = await getAuthRequirements(
     authDataService,
     operation
   );
-  return keyHandlers.find((keyHandler) =>
+
+  const handlers = keyHandlers.filter((keyHandler) =>
     keyHandler.satisfiesAuthRequirements(authRequirements.flags)
   );
+
+  const nonInteractiveHandlers = handlers.filter(
+    (keyHandler) => !keyHandler.keyStore.isInteractive
+  );
+
+  if (nonInteractiveHandlers.length !== 0) {
+    return nonInteractiveHandlers[0];
+  }
+
+  if (handlers.length !== 0) {
+    return handlers[0];
+  }
+
+  return null;
 }
 
 function createAuthenticatorSession(
@@ -100,31 +115,4 @@ function createAuthenticatorSession(
       );
     },
   });
-}
-
-export function authDataQuery(
-  operation: Operation
-): QueryObject<{ gtv?: RawGtv[] }> {
-  return {
-    name: `${operation.name}_auth_data`,
-    args: {
-      gtv: operation.args,
-    },
-  };
-}
-
-export const defaultFTAuthData: QueryObject<Record<string, never>> = {
-  name: `ft4.default_auth_data`,
-  args: {},
-};
-
-export function nonce(
-  authDescriptorId: BufferId
-): QueryObject<{ auth_descriptor_id: Buffer }> {
-  return {
-    name: "ft4.get_ctr_for_auth_descriptor",
-    args: {
-      auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
-    },
-  };
 }

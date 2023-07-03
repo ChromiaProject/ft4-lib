@@ -26,7 +26,7 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
 import { createAccount } from "./util/util";
@@ -268,7 +268,7 @@ describe("Test the account", () => {
 
     const { getSession } = createKeyStoreInteractor(
       _connection.client,
-      createInMemoryFTKeyStore(keyPair2)
+      createInMemoryFtKeyStore(keyPair2)
     );
     const session = await getSession(account2.id);
 
@@ -359,7 +359,7 @@ describe("Test the account", () => {
     const client = await createClient();
 
     const keyPair = new KeyPair();
-    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
       keyStore.pubKey
@@ -392,7 +392,7 @@ describe("Test the account", () => {
     const client = await createClient();
 
     const keyPair = new KeyPair();
-    const keyStore = createInMemoryFTKeyStore(keyPair);
+    const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
       keyStore.pubKey
@@ -504,7 +504,7 @@ describe("Test the account", () => {
 
     const { getSession } = createKeyStoreInteractor(
       _connection.client,
-      createInMemoryFTKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1)
     );
     const session = await getSession(account.id);
 
@@ -525,7 +525,7 @@ describe("Test the account", () => {
     await session.account.addAuthDescriptor(authDescriptor3, keyPair3);
 
     const keyHandler3 =
-      createInMemoryFTKeyStore(keyPair3).createKeyHandler(authDescriptor3);
+      createInMemoryFtKeyStore(keyPair3).createKeyHandler(authDescriptor3);
     const authenticator3 = createAuthenticator(
       account.id,
       [keyHandler3],
