@@ -35,18 +35,26 @@ function buildAmountObject(amount: RawAmount): Amount {
     value: amount.value,
     decimals: amount.decimals,
 
-    plus: (other: SupportedNumber) => sum(amount, convertToRawAmount(other)),
-    minus: (other: SupportedNumber) => sub(amount, convertToRawAmount(other)),
-    times: (other: string | number | bigint) =>
-      mul(amount, convertToRawAmount({ value: BigInt(other), decimals: 0 })),
-    dividedBy: (other: string | number | bigint) =>
-      div(amount, convertToRawAmount(other)),
+    plus: (other: SupportedNumber) =>
+      sum(amount, convertToRawAmount(other, amount.decimals)),
+    minus: (other: SupportedNumber) =>
+      sub(amount, convertToRawAmount(other, amount.decimals)),
 
-    gt: (other: SupportedNumber) => gt(amount, convertToRawAmount(other)),
-    gte: (other: SupportedNumber) => gte(amount, convertToRawAmount(other)),
-    lt: (other: SupportedNumber) => lt(amount, convertToRawAmount(other)),
-    lte: (other: SupportedNumber) => lte(amount, convertToRawAmount(other)),
-    eq: (other: SupportedNumber) => eq(amount, convertToRawAmount(other)),
+    times: (other: string | number | bigint) =>
+      mul(amount, convertToRawAmount(other, amount.decimals)),
+    dividedBy: (other: string | number | bigint) =>
+      div(amount, convertToRawAmount(other, amount.decimals)),
+
+    gt: (other: SupportedNumber) =>
+      gt(amount, convertToRawAmount(other, amount.decimals)),
+    gte: (other: SupportedNumber) =>
+      gte(amount, convertToRawAmount(other, amount.decimals)),
+    lt: (other: SupportedNumber) =>
+      lt(amount, convertToRawAmount(other, amount.decimals)),
+    lte: (other: SupportedNumber) =>
+      lte(amount, convertToRawAmount(other, amount.decimals)),
+    eq: (other: SupportedNumber) =>
+      eq(amount, convertToRawAmount(other, amount.decimals)),
 
     toString: () => stringify(amount),
     format: function (
@@ -122,7 +130,7 @@ export function createAmountFromBalance(
  * @throws Will throw an error if the input number is not a base-10 number or the specified decimals is invalid.
  */
 export function convertToRawAmount(
-  num: SupportedNumber | RawAmount,
+  num: SupportedNumber,
   decimals?: number
 ): RawAmount {
   if (
@@ -134,42 +142,46 @@ export function convertToRawAmount(
     );
   }
 
-  if (typeof num === "bigint") {
-    checkValueInRange(num);
-    return { value: num, decimals: decimals || 0 };
-  } else if (typeof num === "string" || typeof num === "number") {
-    let _num = num.toString();
+  let value: bigint;
+  let amountDecimals = decimals ?? 0;
 
-    if (!_num.match(/^-?\d*\.?\d*$/)) {
-      throw new AmountInputError(
-        "Formatting error: '" + _num + "' is not a base-10 number"
+  switch (typeof num) {
+    case "bigint":
+      // value = num * BigInt(10 ** amountDecimals);
+      value = num;
+      break;
+
+    case "string":
+    case "number": {
+      const numStr = num.toString();
+
+      if (!/^-?\d*\.?\d*$/.test(numStr)) {
+        throw new AmountInputError(
+          `Formatting error: '${numStr}' is not a base-10 number`
+        );
+      }
+
+      const [whole, fraction = ""] = numStr.split(".");
+      amountDecimals = decimals ?? fraction.length;
+      value = BigInt(
+        whole + fraction.padEnd(amountDecimals, "0").slice(0, amountDecimals)
       );
+      break;
     }
 
-    const numDecimals = _num.split(".")[1]?.length ?? 0;
-    _num = _num.replace(".", "");
-    const amountDecimals = decimals ?? numDecimals;
-
-    let value: bigint;
-    if (decimals === null || decimals === undefined) {
-      value = BigInt(_num);
-    } else if (numDecimals <= decimals) {
-      value = BigInt(_num + "0".repeat(decimals - numDecimals));
-    } else {
-      value = BigInt(_num.slice(0, _num.length - (numDecimals - decimals)));
-    }
-
-    checkValueInRange(value);
-    return { value, decimals: amountDecimals };
-  } else {
-    if (decimals !== num.decimals && decimals !== undefined)
-      throw new AmountDecimalsError(
-        `Incompatible arguments: decimals (${decimals}), num.decimals (${num.decimals})`
-      );
-
-    checkValueInRange(num.value);
-    return num;
+    default: // if it's not string, number or bigint, it's an object
+      if (decimals !== num.decimals && decimals !== undefined) {
+        throw new AmountDecimalsError(
+          `Incompatible arguments: decimals (${decimals}), num.decimals (${num.decimals})`
+        );
+      }
+      value = num.value;
+      amountDecimals = num.decimals;
+      break;
   }
+
+  checkValueInRange(value);
+  return { value, decimals: amountDecimals };
 }
 
 /**
@@ -319,17 +331,23 @@ function sub(amount: RawAmount, other: RawAmount): Amount {
   return buildAmountObject({ value: resultVal, decimals: amount.decimals });
 }
 
-function mul(amount: RawAmount, other: RawAmount): Amount {
-  const resultVal = amount.value * other.value;
-  return buildAmountObject({ value: resultVal, decimals: amount.decimals });
-}
-
 function div(amount: RawAmount, other: RawAmount): Amount {
   requireSameDecimals(amount, other);
   if (other.value === BigInt(0)) {
     throw new AmountInputError("AssetAmount: invalid divisor (0)");
   }
-  const resultVal = amount.value / other.value;
+
+  const factor = BigInt(10 ** amount.decimals);
+  const resultVal = (amount.value * factor) / other.value;
+
+  return buildAmountObject({ value: resultVal, decimals: amount.decimals });
+}
+
+function mul(amount: RawAmount, other: RawAmount): Amount {
+  requireSameDecimals(amount, other);
+  const factor = BigInt(10 ** amount.decimals);
+  const resultVal = (amount.value * other.value) / factor;
+
   return buildAmountObject({ value: resultVal, decimals: amount.decimals });
 }
 
