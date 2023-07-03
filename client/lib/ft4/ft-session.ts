@@ -161,8 +161,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     getAuthMessageTemplate: async (operation: Operation) => {
       return await connection.query<string>(authMessageTemplate(operation));
     },
-    getNonce: async (authDescriptorId: BufferId) =>
-      connection.query<number>(nonce(authDescriptorId)),
+    getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
+      connection.query<number>(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | null = null) =>
       connection.query<LoginConfig>(loginConfig(configName)),
   });

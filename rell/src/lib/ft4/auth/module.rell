@@ -59,7 +59,7 @@ struct signature {
 }
 
 function get_mount_point_scope_auth_handler(auth_handlers: map<name, _auth_handler>, op_name: name) {
-    val op_name_components = op_name.split("0");
+    val op_name_components = op_name.split(".");
     if (op_name_components.size() < 2) return null;
     
     for (count in range(op_name_components.size()-1, 0, -1)) {

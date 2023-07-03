@@ -81,5 +81,10 @@ query get_accounts_by_auth_descriptor_id_paginated(id: byte_array, page_size: in
         page_size);
 }
 
-query get_ctr_for_auth_descriptor(auth_descriptor_id: byte_array) =
-    acc.account_auth_descriptor @ { .id == auth_descriptor_id }( .ctr );
+query get_auth_descriptor_nonce(
+    account_id: byte_array, 
+    auth_descriptor_id: byte_array
+) = acc.account_auth_descriptor @ { 
+        .account.id == account_id, 
+        .id == auth_descriptor_id 
+    } ( .ctr );

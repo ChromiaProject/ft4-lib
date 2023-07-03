@@ -2,11 +2,13 @@ import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 
 export function nonce(
+  accountId: BufferId,
   authDescriptorId: BufferId
-): QueryObject<{ auth_descriptor_id: Buffer }> {
+): QueryObject<{ account_id: Buffer; auth_descriptor_id: Buffer }> {
   return {
-    name: "ft4.get_ctr_for_auth_descriptor",
+    name: "ft4.get_auth_descriptor_nonce",
     args: {
+      account_id: formatter.ensureBuffer(accountId),
       auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
     },
   };

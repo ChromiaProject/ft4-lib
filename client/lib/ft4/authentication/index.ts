@@ -29,7 +29,7 @@ export function createAuthenticator(
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
-      authDataService.getNonce(authDescriptorId),
+      authDataService.getNonce(accountId, authDescriptorId),
   });
 
   return authenticator;

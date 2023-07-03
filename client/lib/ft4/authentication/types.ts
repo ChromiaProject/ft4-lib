@@ -53,8 +53,10 @@ export interface AuthenticatorSession {
 export interface AuthDataService {
   getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
-  // TODO: add account id argument
-  getNonce(authDescriptorId: BufferId): Promise<number | null>;
+  getNonce(
+    accountId: BufferId,
+    authDescriptorId: BufferId
+  ): Promise<number | null>;
   getLoginConfig(name: string | null): Promise<LoginConfig>;
 }
 
