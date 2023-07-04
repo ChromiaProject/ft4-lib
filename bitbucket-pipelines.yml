@@ -31,7 +31,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            - echo -e $DEPLOYMENT_KEYS > .secret
+            - printf $DEPLOYMENT_KEYS > .secret
             - npm run deploy:latest
             - rm .secret
   custom:
@@ -45,7 +45,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            - echo -e $DEPLOYMENT_KEYS > .secret
+            - printf $DEPLOYMENT_KEYS > .secret
             - npm run deploy:stable
             - rm .secret
     deploy-to-latest:
@@ -58,7 +58,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            - echo -e $DEPLOYMENT_KEYS > .secret
+            - printf $DEPLOYMENT_KEYS > .secret
             - npm run deploy:latest
             - rm .secret
 
