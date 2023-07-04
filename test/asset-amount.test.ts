@@ -361,20 +361,20 @@ describe("Asset amount", () => {
   it("should handle addition with different types correctly", async () => {
     const amount = createAmount(10, 1);
     const otherNumber = 3;
-    const otherBigInt = BigInt(3);
+    const otherString = "3";
 
     expect(amount.plus(otherNumber).value).toEqual(BigInt(130)); // 13.0 represented as 130
-    expect(amount.plus(otherBigInt).value).toEqual(BigInt(130)); // 13.0 represented as 130
+    expect(amount.plus(otherString).value).toEqual(BigInt(130)); // 13.0 represented as 130
   });
 
   it("should handle comparison with different types correctly", async () => {
     const amount = createAmount(10, 1);
 
     const otherNumber = 15;
-    const otherBigInt = BigInt(5);
+    const otherString = "5";
 
     expect(amount.gt(otherNumber)).toBe(false);
-    expect(amount.gt(otherBigInt)).toBe(true);
+    expect(amount.gt(otherString)).toBe(true);
   });
 
   describe("convertToRawAmount", () => {

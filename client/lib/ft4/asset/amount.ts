@@ -36,13 +36,13 @@ function buildAmountObject(amount: RawAmount): Amount {
     decimals: amount.decimals,
 
     plus: (other: SupportedNumber) =>
-      sum(amount, scaleToDecimals(other, amount.decimals)),
+      sum(amount, convertToRawAmount(other, amount.decimals)),
     minus: (other: SupportedNumber) =>
-      sub(amount, scaleToDecimals(other, amount.decimals)),
+      sub(amount, convertToRawAmount(other, amount.decimals)),
 
-    times: (other: string | number | bigint) =>
+    times: (other: string | number) =>
       mul(amount, convertToRawAmount(other, amount.decimals)),
-    dividedBy: (other: string | number | bigint) =>
+    dividedBy: (other: string | number) =>
       div(amount, convertToRawAmount(other, amount.decimals)),
 
     gt: (other: SupportedNumber) =>
@@ -117,23 +117,6 @@ export function createAmountFromBalance(
 }
 
 /**
- * Converts and scales a value to a RawAmount. Used for addition and subtraction of bigints.
- *
- * @param value - The numeric value to be converted.
- * @param decimals - The desired number of decimal places to scale the value.
- * @returns The converted and scaled RawAmount.
- */
-function scaleToDecimals(value: SupportedNumber, decimals: number): RawAmount {
-  let amountValue = value;
-
-  if (typeof value === "bigint") {
-    amountValue = value * BigInt(10 ** decimals);
-  }
-
-  return convertToRawAmount(amountValue, decimals);
-}
-
-/**
  * Convert a SupportedNumber or RawAmount into RawAmount with optional specified decimals.
  * The function throws error under these conditions:
  * - When the input number is not a base-10 number.
@@ -147,7 +130,7 @@ function scaleToDecimals(value: SupportedNumber, decimals: number): RawAmount {
  * @throws Will throw an error if the input number is not a base-10 number or the specified decimals is invalid.
  */
 export function convertToRawAmount(
-  num: SupportedNumber,
+  num: SupportedNumber | bigint,
   decimals?: number
 ): RawAmount {
   if (
