@@ -1,7 +1,6 @@
 import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
-  AuthData,
   AuthDataService,
   Authenticator,
   AuthenticatorSession,
@@ -21,24 +20,26 @@ export function createAuthenticator(
 ): Authenticator {
   const authenticator = Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
+    authDataService,
     keyHandlers,
-    createSession: () => createAuthenticatorSession(authenticator),
-    getAuthRequirements: (operation: Operation) =>
-      getAuthRequirements(authDataService, operation),
+    createSession: () =>
+      createAuthenticatorSession(authenticator, authDataService),
+    getAuthFlags: (operation: Operation) =>
+      getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
-      authDataService.getNonce(authDescriptorId),
+      authDataService.getNonce(accountId, authDescriptorId),
   });
 
   return authenticator;
 }
 
-async function getAuthRequirements(
+async function getAuthFlags(
   authDataService: AuthDataService,
   operation: Operation
-): Promise<AuthData> {
-  return authDataService.getAuthData(operation);
+): Promise<string[]> {
+  return await authDataService.getAuthFlags(operation);
 }
 
 async function getKeyHandlerForOperation(
@@ -46,13 +47,10 @@ async function getKeyHandlerForOperation(
   keyHandlers: KeyHandler[],
   operation: Operation
 ): Promise<KeyHandler | null> {
-  const authRequirements = await getAuthRequirements(
-    authDataService,
-    operation
-  );
+  const flags = await getAuthFlags(authDataService, operation);
 
   const handlers = keyHandlers.filter((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(authRequirements.flags)
+    keyHandler.satisfiesAuthRequirements(flags)
   );
 
   const nonInteractiveHandlers = handlers.filter(
@@ -71,7 +69,8 @@ async function getKeyHandlerForOperation(
 }
 
 function createAuthenticatorSession(
-  authenticator: Authenticator
+  authenticator: Authenticator,
+  authDataService: AuthDataService
 ): AuthenticatorSession {
   const usedKeyHandlers = new Set<KeyHandler>();
 
@@ -89,22 +88,19 @@ function createAuthenticatorSession(
       );
       return signers;
     },
-    authenticate: async (operation: Operation) => {
+    authorize: async (operation: Operation) => {
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation
       );
       if (!keyHandler) {
-        // TODO: replace `operation[0]` with `operation.name` when Operation type is updated
-        throw new Error(`Cannot authenticate operation: ${operation[0]}`);
+        throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }
       usedKeyHandlers.add(keyHandler);
-      // `getKeyHandlerForOperation` internally calls `getAuthRequirements`
-      // Find a way to make only one call
-      const authData = await authenticator.getAuthRequirements(operation);
-      return await keyHandler.authenticate(
+      return await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        authData
+        0,
+        authDataService
       );
     },
     sign: async (transaction: TxBuilderTransaction) => {

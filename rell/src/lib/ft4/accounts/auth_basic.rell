@@ -1,14 +1,14 @@
 import u: ^.utils;
 
 struct single_sig_args {
-       flags: set<text>;
-       pubkey;
+    flags: set<text>;
+    pubkey;
 }
 
 struct multi_sig_args {
-       flags: set<text>;
-       signatures_required: integer;
-       pubkeys: list<pubkey>;
+    flags: set<text>;
+    signatures_required: integer;
+    pubkeys: list<pubkey>;
 }
 
 /*

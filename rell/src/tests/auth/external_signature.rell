@@ -19,7 +19,7 @@ function test_operation_without_auth_operation() {
 }
 
 function test_fails_if_insufficient_permissions() {
-  val external_auth_data = utils.evm_register_alice(set(["X"]));
+  val external_auth_data = utils.evm_register_alice(["X"]);
   val signature = utils.metamask_sign("", external_auth_data.keypair.priv);
 
   rell.test.tx()
@@ -30,7 +30,7 @@ function test_fails_if_insufficient_permissions() {
 }
 
 function test_it_rejects_messages_without_nonce() {
-  val external_auth_data = utils.evm_register_alice(set(["A"]));
+  val external_auth_data = utils.evm_register_alice(["A"]);
   val signature = utils.metamask_sign("", external_auth_data.keypair.priv);
 
   rell.test.tx()
@@ -42,7 +42,7 @@ function test_it_rejects_messages_without_nonce() {
 }
 
 function test_it_rejects_wrong_eth_signatures() {
-  val external_auth_data = utils.evm_register_alice(set(["A"]));
+  val external_auth_data = utils.evm_register_alice(["A"]);
   val wrong_signature = utils.metamask_sign("abc", external_auth_data.keypair.priv);
   
   rell.test.tx()
@@ -54,7 +54,7 @@ function test_it_rejects_wrong_eth_signatures() {
 }
 
 function test_perform_eth_auth_transaction() {
-  val external_auth_data = utils.evm_register_alice(set(["A"]));
+  val external_auth_data = utils.evm_register_alice(["A"]);
   val signature = utils.metamask_sign(
     "Do you want to send 1000 CHR to %s? Nonce: %s".format(
       to_addr,
@@ -188,7 +188,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
 }
 
 function test_works_with_correct_ctr() {
-  val external_auth_data = utils.evm_register_alice(set(["A"]));
+  val external_auth_data = utils.evm_register_alice(["A"]);
   val signature0 = utils.metamask_sign(
     "Do you want to send 1000 CHR to %s? Nonce: %s".format(
       to_addr,
@@ -215,7 +215,7 @@ function test_works_with_correct_ctr() {
 }
 
 function test_rejects_wrong_ctr() {
-  val external_auth_data = utils.evm_register_alice(set(["A"]));
+  val external_auth_data = utils.evm_register_alice(["A"]);
   val signature0 = utils.metamask_sign(
     "Do you want to send 1000 CHR to %s? Nonce: %s".format(
       to_addr,

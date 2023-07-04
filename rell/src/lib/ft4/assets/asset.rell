@@ -87,6 +87,19 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
+function format_amount_with_decimals(amount: big_integer, decimals: integer): text {
+    require(decimals >= 0, "Decimals must be non-negative. Received: %s".format(decimals));
+    var amt = amount.to_text();
+    if (decimals == 0) {
+        return amt;
+    } else if (amt.size() > decimals) {
+        amt = amt.sub(0, amt.size() - decimals) + "." + amt.sub(amt.size() - decimals);
+    } else {
+        amt = "0." + "0".repeat(decimals - amt.size()) + amt;
+    }
+    return amt;
+}
+
 function get_paginated_asset_balances_by_name(name, page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {

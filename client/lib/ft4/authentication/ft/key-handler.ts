@@ -1,5 +1,5 @@
 import { BufferId } from "../../../cryptoUtils";
-import { KeyHandler, KeyStore } from "../types";
+import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
 import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { Buffer } from "buffer";
@@ -15,14 +15,20 @@ export function createFtKeyHandler(
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
       hasAuthDescriptorFlags(authDescriptor, requiredFlags),
-    authenticate: (accountId: BufferId, operation: Operation) =>
-      authenticate(accountId, authDescriptor.id, operation),
+    authorize: (
+      accountId: BufferId,
+      operation: Operation,
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
+      nonce: number,
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
+      authDataService: AuthDataService
+    ) => authorize(accountId, authDescriptor.id, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
     getSigners: () => authDescriptor.signers,
   });
 }
 
-async function authenticate(
+async function authorize(
   accountId: BufferId,
   authDescriptorId: BufferId,
   operation: Operation
