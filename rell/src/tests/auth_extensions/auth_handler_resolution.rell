@@ -43,3 +43,12 @@ function test_auth_handler_resolves_to_app_scope_auth_handler_when_no_operation_
     val auth_handler_flags = auth.get_auth_flags("x.y.z.foo");
     assert_equals(auth_handler_flags, ["X"]);
 }
+
+function test_get_auth_flags_throws_error_when_name_ends_with_period() {
+    // `try_call` returns null when a function/query fails
+    assert_null(try_call(auth.get_auth_flags("x.y.z.", *)));
+}
+
+function test_get_auth_flags_throws_error_when_name_starts_with_period() {
+    assert_null(try_call(auth.get_auth_flags(".x.y.z", *)));
+}

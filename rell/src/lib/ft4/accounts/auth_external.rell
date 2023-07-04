@@ -15,7 +15,7 @@ function Account(id: byte_array) = require(
     "Account not found: %s".format(id)
 );
 
-// TODO: Merge with `authetnicate` function.
+// TODO: Merge with `authenticate` function.
 function _authenticate(required_flags: set<text>, message_template: text? = null): account {
     require(op_context.op_index > 0, "Expected at least two operations");
 

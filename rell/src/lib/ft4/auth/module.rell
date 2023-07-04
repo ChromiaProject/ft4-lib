@@ -34,6 +34,7 @@ function auth_handler(): map<name, _auth_handler>;
  * Finds auth handler for provided operation name.
  */
 function get_auth_handler(op_name: name) {
+    require_valid_scope_name(op_name);
     val auth_handlers = auth_handler();
     if (op_name in auth_handlers) return auth_handlers[op_name];
 
@@ -47,8 +48,10 @@ function get_auth_handler(op_name: name) {
 }
 
 function add_auth_handler(scope: text = APP_SCOPE, flags: list<text>, message: ((gtv) -> text)? = null) {
-    return [scope: _auth_handler(flags, message)];
-} 
+    val scope_name = scope.trim();
+    require_valid_scope_name(scope_name);
+    return [scope_name: _auth_handler(flags, message)];
+}
 
 function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
 
@@ -97,3 +100,9 @@ function join_text_list(components: list<text>, count: integer) {
     }
     return result;
 }
+
+function require_valid_scope_name(name) =     
+    require(
+        name.matches("^\\w+(\\.\\w+)*$"), 
+        "Invalid scope name <%s>".format(name)
+    );
