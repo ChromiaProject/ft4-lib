@@ -172,14 +172,12 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
 
 function add_auth_op(rell.test.tx, message: text) {
     return tx
-        .op(operations.auth.test_authenticated_operation(message))
-        .sign(byte_array(chain_context.args.admin_priv_key));
+        .op(operations.auth.test_authenticated_operation(message));
 }
 
 function perform_large_transfer(rell.test.tx, amount: integer, to_address: text) {
     return tx
-        .op(operations.auth.test_perform_large_transfer(1000, to_address))
-        .sign(byte_array(chain_context.args.admin_priv_key));
+        .op(operations.auth.test_perform_large_transfer(1000, to_address));
 }
 
 function mint_to_account(account_data, assets.asset, amount: big_integer) {

@@ -13,7 +13,6 @@ function test_operation_without_auth_operation() {
   utils.register_alice();
   rell.test.tx()
     .op(test_operations.auth.test_authenticated_operation(""))
-    .sign(utils.admin_priv_key())
     .run_must_fail("Expected at least two operations");
 }
 
@@ -24,7 +23,6 @@ function test_fails_if_insufficient_permissions() {
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature]))
     .op(test_operations.auth.test_authenticated_operation(""))
-    .sign(utils.admin_priv_key())
     .run_must_fail("The auth descriptor does not have the required permissions");
 }
 
@@ -35,7 +33,6 @@ function test_it_rejects_messages_without_nonce() {
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature]))
     .op(test_operations.auth.test_authenticated_operation(""))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Message template has to include '{nonce}'");
 }
@@ -47,7 +44,6 @@ function test_it_rejects_wrong_eth_signatures() {
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [wrong_signature]))
     .op(test_operations.auth.test_authenticated_operation("Some message {nonce}"))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice)
     .run_must_fail("Invalid signature");
 }
@@ -104,7 +100,6 @@ function test_multisig_external_signature() {
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -144,7 +139,6 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Minimum number of valid signatures not reached");
 }
@@ -181,7 +175,6 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Invalid signature");
 }
@@ -208,7 +201,6 @@ function test_works_with_correct_ctr() {
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature1]))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -235,13 +227,11 @@ function test_rejects_wrong_ctr() {
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature0]))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Invalid signature");
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature1]))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Invalid signature");
 }
@@ -262,7 +252,6 @@ function test_ft_auth_fails_if_key_invalid() {
   rell.test.tx()
     .op(auth.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(rell.test.keypairs.bob.priv)
     .run_must_fail("The provided key(s) is not a signer of this auth descriptor");
 }
@@ -284,7 +273,6 @@ function test_perform_ft_auth_transaction() {
   rell.test.tx()
     .op(auth.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
-    .sign(utils.admin_priv_key())
     .sign(external_key.priv)
     .run();
 }
