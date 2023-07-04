@@ -55,10 +55,13 @@ describe("EVM key handler", () => {
       message: "Message to sign",
     };
 
-    const operations = await keyHandler.authenticate(
+    const operations = await keyHandler.authorize(
       accountId,
       _op("foo"),
-      authData
+      0,
+      createFakeAuthDataService({
+        foo: authData,
+      })
     );
 
     const signature = await keyStore.signMessage(authData.message);

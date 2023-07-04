@@ -2,6 +2,7 @@
 
 import ^.utils;
 import acc: ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
 
 val alice = rell.test.keypairs.alice;
@@ -67,4 +68,16 @@ function test_an_invalid_asset_cannot_be_created() {
   admin.register_asset("f", "f", 79, "")
     .sign(utils.admin_priv_key())
     .run_must_fail(error);
+}
+
+function test_asset_amounts_are_correctly_formatted() {
+  assert_equals(assets.format_amount_with_decimals(1L, 0), "1");
+  assert_equals(assets.format_amount_with_decimals(10L, 0), "10");
+  assert_equals(assets.format_amount_with_decimals(100000000L, 0), "100000000");
+  assert_equals(assets.format_amount_with_decimals(1L, 1), "0.1");
+  assert_equals(assets.format_amount_with_decimals(10L, 1), "1.0");
+  assert_equals(assets.format_amount_with_decimals(100000000L, 1), "10000000.0");
+  assert_equals(assets.format_amount_with_decimals(1L, 6), "0.000001");
+  assert_equals(assets.format_amount_with_decimals(10L, 6), "0.000010");
+  assert_equals(assets.format_amount_with_decimals(100000000L, 6), "100.000000");
 }

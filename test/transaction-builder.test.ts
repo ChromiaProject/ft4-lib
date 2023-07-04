@@ -153,7 +153,7 @@ describe("Transaction Builder", () => {
       authDescriptor,
       keyStore: createInMemoryFtKeyStore(keyPair),
       satisfiesAuthRequirements: jest.fn(),
-      authenticate: jest
+      authorize: jest
         .fn()
         .mockImplementation((accountId, operation) =>
           Promise.resolve([operation])
@@ -164,18 +164,16 @@ describe("Transaction Builder", () => {
     const authenticatorMock: Authenticator = {
       accountId: Buffer.alloc(32),
       keyHandlers: [keyHandlerMock],
-
+      authDataService: createFakeAuthDataService({}),
       createSession: jest.fn(),
-      getAuthRequirements: jest
-        .fn()
-        .mockReturnValue({ flags: [], message: "" }),
+      getAuthFlags: jest.fn().mockReturnValue([]),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
       getNonce: jest.fn(),
     };
     await transactionBuilder(authenticator, client)
       .addWithAuthenticator(_registerOp(authDescriptor), authenticatorMock)
       .build();
-    expect(keyHandlerMock.authenticate).toHaveBeenCalled();
+    expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyHandlerMock.sign).toHaveBeenCalled();
   });
 });
