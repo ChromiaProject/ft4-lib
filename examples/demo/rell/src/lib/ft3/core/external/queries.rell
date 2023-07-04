@@ -1,0 +1,87 @@
+import ^^.core;
+import acc: ^^.account;
+
+query get_config() {
+    return (
+        rate_limit_active = core.config.rate_limit_active,
+        rate_limit_max_points = core.config.rate_limit_max_points,
+        rate_limit_recovery_time = core.config.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = core.config.rate_limit_points_at_account_creation
+    );
+}
+
+query get_asset_balances(account_id: byte_array) {
+    return core.get_asset_balances(account_id);
+}
+
+query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
+    return core.balance @? {
+        .account.id == account_id,
+        .asset.id == asset_id
+    } (
+        asset = (
+            id = .asset.id,
+            name = .asset.name,
+            decimals = .asset.decimals,
+            brid = .asset.issuing_brid,
+            supply = .asset.total_supply
+        ),
+        amount = .amount
+    );
+}
+
+query get_asset_by_name(name) {
+    return core.asset @* { name } (
+        id = .id,
+        name = .name,
+        symbol = .symbol,
+        decimals = .decimals,
+        brid = .issuing_brid,
+        icon_url = .icon_url,
+        supply = .total_supply
+    );
+
+}
+
+query get_asset_by_id(asset_id: byte_array) {
+    return core.asset @? {
+        .id == asset_id
+    }(
+        id = .id,
+        name = .name,
+        symbol = .symbol,
+        decimals = .decimals,
+        brid = .issuing_brid,
+        icon_url = .icon_url,
+        supply = .total_supply
+    );
+}
+
+query get_all_assets() {
+    return core.asset @* {} (
+        id = .id,
+        symbol = .symbol,
+        name = .name,
+        decimals = .decimals,
+        brid = .issuing_brid,
+        icon_url = .icon_url,
+        supply = .total_supply
+    );
+}
+
+query get_payment_history_paginated(account_id: byte_array, filter: core.filter, page_size: integer, page_cursor: text?) {
+    val account = acc.account @? { account_id };
+    if (empty(account)) return null;
+
+    val paginated_payments = core.get_paginated_payments(account, filter, page_size, page_cursor);
+    return core.make_page(paginated_payments, page_size);
+}
+
+query get_payment_history_size(account_id: byte_array) {
+    return core.payment_history_entry @* { acc.account @ {account_id} } ($).size();
+}
+
+query get_single_payment_history_entry(rowid) {
+    val entry = core.payment_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry).to_gtv();
+}

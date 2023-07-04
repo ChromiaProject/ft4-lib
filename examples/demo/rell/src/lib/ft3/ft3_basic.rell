@@ -1,0 +1,9 @@
+module;
+
+namespace ft3 {
+    import acc: ^.account;
+    import acc_ext: ^.account.external;
+    import core_ext: ^.core.external;
+    import ^.version;
+}
+

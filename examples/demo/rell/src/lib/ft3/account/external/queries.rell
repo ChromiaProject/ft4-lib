@@ -1,0 +1,60 @@
+import acc: ^;
+import core: ^^.core;
+
+query get_account_rate_limit_last_update(account_id: byte_array) {
+    if (core.config.rate_limit_active == false) return (points = 0, last_update = 0);
+    
+    return acc.rl_state @ { .account.id == account_id }
+    (
+        .points, 
+        .last_update
+    );
+}
+
+query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
+    return acc.is_valid(acc.account_auth_descriptor @ {
+        .account.id == account_id,
+        .id == auth_descriptor_id
+    });
+}
+
+query get_account_auth_descriptors(id: byte_array) {
+    return acc.account_auth_descriptor @* {
+        .account.id == id
+    } (
+        type = .auth_type,
+        args = gtv.from_bytes(.args),
+        rules = gtv.from_bytes(.rules)
+    );
+}
+
+query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
+    return (ad: acc.account_auth_descriptor, p: acc.auth_descriptor_participant) @* {
+        ad.account.id == account_id,
+        p.id == participant_id,
+        ad == p.account_auth_descriptor
+    } (
+        type = ad.auth_type,
+        args = gtv.from_bytes(ad.args),
+        rules = gtv.from_bytes(ad.rules)
+    );
+}
+
+query get_account_by_id(id: byte_array) {
+    return acc.account @? { id } ( .id );
+}
+
+query get_account_by_auth_descriptor(acc.auth_descriptor) {
+    return acc.account @? { .id == auth_descriptor.hash() } ( .id );
+}
+
+query get_accounts_by_participant_id(id: byte_array) {
+    return acc.auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
+}
+
+query get_accounts_by_auth_descriptor_id(id: byte_array) {
+    return acc.account_auth_descriptor @* { id } ( .account.id );
+}
+
+query get_ctr_for_auth_descriptor(auth_descriptor_id: byte_array) =
+    acc.account_auth_descriptor @ { .id == auth_descriptor_id }( .ctr );

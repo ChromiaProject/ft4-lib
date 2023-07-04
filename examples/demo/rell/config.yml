@@ -1,0 +1,17 @@
+blockchains:
+  hello:
+    module: main
+    moduleArgs:
+      lib.ft3.core:
+        rate_limit_active: 1
+        rate_limit_max_points: 20
+        rate_limit_recovery_time: 5000
+        rate_limit_points_at_account_creation: 1
+      
+      lib.ft3.admin:
+        admin_pubkey: 03CEE2C9EC423D754C4E2797576705CB49905324DFEFCEADD37A3089BDD0013EFE
+
+
+compile:
+  rellVersion: 0.12.0
+

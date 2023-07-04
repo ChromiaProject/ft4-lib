@@ -1,0 +1,118 @@
+import ft3: ^^.core;
+import xc: ^;
+
+operation init_xfer(source: ft3.xfer_input, target: xc.xc_target, hops: list<byte_array>) {
+    //ft3.consume_input(source, 0, map<ft3.asset, integer>());
+    val asset = require(
+        ft3.asset @? { .id == source.asset_id }, 
+        "Asset not found '%s'".format(source.asset_id)
+    );
+    xc.add_to_blockchain_balance( hops[0], asset, source.amount );
+}
+
+operation apply_xfer(
+    init_tx_rid: byte_array,
+    init_tx: xc.transaction_proof,
+    prev_hop: xc.transaction_proof?,
+    hop_index: integer
+) {
+    val tx_hash = init_tx.tx.hash();
+    require(
+        tx_hash == init_tx_rid, 
+        "Argument mismatch: init_tx (%s) and init_tx_rid (%s)".format(tx_hash, init_tx_rid)
+    );
+    xc.verify_transaction_proof( init_tx );
+    create xc.applied_transfers (init_tx_rid);
+
+    require(
+        init_tx.tx.body.operations[0].name == "ft3.xc.init_xfer", 
+        "init_tx is not the start of a crosschain transaction"
+    );
+    val init_args = xc.init_xfer_args.from_gtv(
+        init_tx.tx.body.operations[0].args.to_full().to_gtv()
+    );
+
+    val my_brid = chain_context.blockchain_rid;
+    val source = init_args.source;
+
+    require(
+        init_args.hops.size() > hop_index,
+        "Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index)
+    );
+    require(
+        init_args.hops[hop_index] == my_brid,
+        "This transaction hop must happen on a chain with brid %s"
+            .format(init_args.hops[hop_index])
+    );
+
+    val from_brid: byte_array;
+
+    if (hop_index > 0) {
+        from_brid = init_args.hops[hop_index - 1];
+
+        require(
+            prev_hop, 
+            "Argument mismatch: prev_hop is null, but hop_index > 0 (%d)".format(hop_index)
+        );
+        xc.verify_transaction_proof(prev_hop);
+        require(
+            prev_hop.tx.body.brid == from_brid,
+            "Argument mismatch: prev_hop brid (%s) and init_args.hops (%s) don't correspond"
+                .format(prev_hop.tx.body.brid, from_brid)
+        );
+        require(
+            prev_hop.tx.body.operations[0].name == "ft3.xc.apply_xfer",
+            "prev_hop didn't start with ft3.xc.apply_xfer"
+        );
+
+        val prev_hop_init_tx_rid = byte_array.from_gtv(prev_hop.tx.body.operations[0].args[0]);
+        require(
+            prev_hop_init_tx_rid == init_tx_rid,
+            "Argument mismatch: prev_hop had a different init_tx_rid (%s). Should be '%s'"
+                .format(prev_hop_init_tx_rid, init_tx_rid)
+        );
+    } else {
+        from_brid = init_tx.tx.body.brid;
+    }
+
+    val asset = require(
+        ft3.asset @? { .id == source.asset_id },
+        "Asset not found '%s'".format(source.asset_id)
+    );
+    val origin_brid = require(
+        xc.asset_origin @? { asset } .origin_brid,
+        "Asset origin not found. Did you register the xc asset '%s'?".format(asset.id)
+    );
+
+    // process "from" side
+    if (from_brid == origin_brid) {
+        // asset comes from origin -- do nothing
+    } else {
+        ft3.deduct_balance(
+            xc.get_blockchain_account( from_brid ),
+            asset, source.amount
+        );
+    }
+
+    // process "to" side
+    if (init_args.hops.size() > hop_index + 1) {
+        // this hop is not last
+        val next_hop = init_args.hops[hop_index + 1];
+        xc.add_to_blockchain_balance(next_hop, asset, source.amount);
+    } else {
+        // final hop -- send money to recipient account
+        val available_assets = map<ft3.asset, big_integer>();
+        available_assets[asset] = source.amount;
+        val target = init_args.target;
+        /*ft3.process_transfer_output(
+            ft3.xfer_output(
+                account_id = target.account_id,
+                asset_id = source.asset_id,
+                amount = source.amount,
+                extra = target.extra
+            ),
+            0,
+            available_assets
+        );*/
+    }
+}
