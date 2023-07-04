@@ -2,8 +2,8 @@ import {
   AmountDecimalsError,
   AmountInputError,
   AmountOutOfRangeError,
-  // RawAmount,
-  // convertToRawAmount,
+  RawAmount,
+  convertToRawAmount,
   createAmount,
   createAmountFromBalance,
   stringify,
@@ -377,52 +377,51 @@ describe("Asset amount", () => {
     expect(amount.gt(otherBigInt)).toBe(true);
   });
 
-  // describe("convertToRawAmount", () => {
-  //   const validTestCases: [
-  //     number | string | bigint,
-  //     number | undefined,
-  //     RawAmount
-  //   ][] = [
-  //     [100.5, undefined, { value: BigInt(10050), decimals: 2 }],
-  //     [100, undefined, { value: BigInt(10000), decimals: 2 }],
-  //     [100.1234, undefined, { value: BigInt(1001234), decimals: 4 }],
-  //     ["100.5", undefined, { value: BigInt(10050), decimals: 2 }],
-  //     ["100", undefined, { value: BigInt(10000), decimals: 2 }],
-  //     ["100.1234", undefined, { value: BigInt(1001234), decimals: 4 }],
-  //     [BigInt(100), 2, { value: BigInt(100), decimals: 2 }],
-  //   ];
-  //
-  //   it.each(validTestCases)(
-  //     "should correctly convert %s to RawAmount",
-  //     (input, decimals, expectedOutput) => {
-  //       const rawAmount = convertToRawAmount(input, decimals);
-  //       expect(rawAmount).toEqual(expectedOutput);
-  //     }
-  //   );
-  //
-  //   const invalidStringTestCases = ["abc", "10.1.2"];
-  //   it.each(invalidStringTestCases)(
-  //     "should throw error for invalid string input '%s'",
-  //     async (num) => {
-  //       expect(() => convertToRawAmount(num)).toThrow(AmountInputError);
-  //     }
-  //   );
-  //
-  //   it("should throw error for incompatible decimals", async () => {
-  //     const rawAmount: RawAmount = { value: BigInt(100), decimals: 2 };
-  //     expect(() => convertToRawAmount(rawAmount, 3)).toThrow(
-  //       AmountDecimalsError
-  //     );
-  //   });
-  //
-  //   const invalidDecimalsTestCases = [-1, 80, 1.5];
-  //   it.each(invalidDecimalsTestCases)(
-  //     "should throw error for invalid decimals %s",
-  //     async (decimals) => {
-  //       expect(() => convertToRawAmount(100, decimals)).toThrow(
-  //         AmountDecimalsError
-  //       );
-  //     }
-  //   );
-  // });
+  describe("convertToRawAmount", () => {
+    const validTestCases: [
+      number | string | bigint,
+      number | undefined,
+      RawAmount
+    ][] = [
+      [100.5, undefined, { value: BigInt(1005), decimals: 1 }],
+      [100, undefined, { value: BigInt(100), decimals: 0 }],
+      [100.1234, undefined, { value: BigInt(1001234), decimals: 4 }],
+      ["100.5", undefined, { value: BigInt(1005), decimals: 1 }],
+      ["100", undefined, { value: BigInt(100), decimals: 0 }],
+      ["100.1234", undefined, { value: BigInt(1001234), decimals: 4 }],
+      [BigInt(100), 2, { value: BigInt(100), decimals: 2 }],
+    ];
+
+    it.each(validTestCases)(
+      "should correctly convert %s to RawAmount",
+      (input, decimals, expectedOutput) => {
+        const rawAmount = convertToRawAmount(input, decimals);
+        expect(rawAmount).toEqual(expectedOutput);
+      }
+    );
+
+    const invalidStringTestCases = ["abc", "10.1.2"];
+    it.each(invalidStringTestCases)(
+      "should throw error for invalid string input '%s'",
+      async (num) => {
+        expect(() => convertToRawAmount(num)).toThrow(AmountInputError);
+      }
+    );
+
+    it("should throw error for incompatible decimals", async () => {
+      expect(() => convertToRawAmount(BigInt(100), -3)).toThrow(
+        AmountDecimalsError
+      );
+    });
+
+    const invalidDecimalsTestCases = [-1, 80, 1.5];
+    it.each(invalidDecimalsTestCases)(
+      "should throw error for invalid decimals %s",
+      async (decimals) => {
+        expect(() => convertToRawAmount(100, decimals)).toThrow(
+          AmountDecimalsError
+        );
+      }
+    );
+  });
 });
