@@ -52,6 +52,7 @@ describe("Asset amount", () => {
       createAmountFromBalance(BigInt("0x640"), 1),
     ],
   ];
+
   it.each(amounts)("should correctly build instances", async (...numbers) => {
     expect(numbers.map((num) => num.decimals)).toEqual([
       1, 0, 5, 5, 1, 2, 0, 4, 3, 15, 1,
