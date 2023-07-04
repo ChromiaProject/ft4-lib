@@ -2,12 +2,12 @@ import { Amount } from "../../asset/interfaces";
 import { PageCursor } from "../../types";
 import { Buffer } from "buffer";
 
-type PaymentHistoryTransferArgs = {
+type TransferHistoryTransferArgs = {
   amount: Amount;
   accountId: Buffer;
 };
 
-export type PaymentHistoryEntryResponse = {
+export type TransferHistoryEntryResponse = {
   id: string;
   delta: bigint;
   decimals: number;
@@ -23,15 +23,15 @@ export type PaymentHistoryEntryResponse = {
   operation_name: string;
 };
 
-export type PaymentHistoryEntry = {
+export type TransferHistoryEntry = {
   rowid: string;
   isInput: boolean;
   delta: Amount;
   asset: AssetInfo;
   entryIndex: number;
   data: Buffer;
-  transferInputArgs: PaymentHistoryTransferArgs[];
-  transferOutputArgs: PaymentHistoryTransferArgs[];
+  transferInputArgs: TransferHistoryTransferArgs[];
+  transferOutputArgs: TransferHistoryTransferArgs[];
   timestamp: Date;
   transactionId: Buffer;
   blockHeight: number;
@@ -39,7 +39,7 @@ export type PaymentHistoryEntry = {
 };
 
 export type TransferHistoryResponse = {
-  data: PaymentHistoryEntry[];
+  data: TransferHistoryEntry[];
   nextCursor: PageCursor | null;
 };
 
@@ -48,11 +48,11 @@ type AssetInfo = {
   id: Buffer;
 };
 
-export enum PaymentHistoryType {
+export enum TransferHistoryType {
   Sent = 0,
   Received = 1,
 }
 
-export type PaymentHistoryFilter = {
-  paymentHistoryType?: PaymentHistoryType;
+export type TransferHistoryFilter = {
+  transferHistoryType?: TransferHistoryType;
 };

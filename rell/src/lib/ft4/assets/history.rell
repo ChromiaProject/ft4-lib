@@ -2,11 +2,11 @@ import acc: ^.accounts;
 import ^.assets;
 import ^.utils;
 
-@log entity payment_history_entry {
+@log entity transfer_history_entry {
     index acc.account, asset;
     delta: big_integer;
 
-    // helps to locate exact position of payment entry in transaction
+    // helps to locate exact position of transfer entry in transaction
     op_index: integer;
     is_input: boolean;
     entry_index: integer;
@@ -22,21 +22,21 @@ struct filter {
     transfer_type?;
 }
 
-function extract_data_from_payment_history_list(
-        entries: list<payment_history_entry>
+function extract_data_from_transfer_history_list(
+        entries: list<transfer_history_entry>
     ): list<(data:gtv,rowid:rowid)> {
     return entries @* {} (
-        data = extract_data_from_payment_history_entry($).to_gtv_pretty(),
+        data = extract_data_from_transfer_history_entry($).to_gtv_pretty(),
         rowid = .rowid
     );
 }
 
-function extract_operation_name(entry: payment_history_entry): text {
+function extract_operation_name(entry: transfer_history_entry): text {
     val gtx = gtx_transaction.from_gtv(gtv.from_bytes(entry.transaction.tx_data));
     return gtx.body.operations[entry.op_index].name;
 }
 
-function extract_data_from_payment_history_entry(entry: payment_history_entry) {
+function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
         id = '%d'.format(entry.rowid),
         delta = entry.delta,
@@ -54,20 +54,20 @@ function extract_data_from_payment_history_entry(entry: payment_history_entry) {
     );
 }
 
-function get_paginated_payments(acc.account, filter, page_size: integer, page_cursor: text?) {
+function get_paginated_transfers(acc.account, filter, page_size: integer, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
         val cursor = utils.decode_cursor(page_cursor);
         before_rowid = cursor.before_rowid;
     }
 
-    val entries = payment_history_entry @* {
+    val entries = transfer_history_entry @* {
         account,
         if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent), 
         if (before_rowid??) (.rowid < before_rowid) else true
     } (@sort_desc $) limit utils.fetch_data_size(page_size);
     
-    return extract_data_from_payment_history_list(entries) @* {} (
+    return extract_data_from_transfer_history_list(entries) @* {} (
         utils.pagination_result(
             data = .data,
             rowid = .rowid
