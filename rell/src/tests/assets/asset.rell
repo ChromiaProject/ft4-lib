@@ -259,7 +259,7 @@ function test_asset_balances_are_returned_in_correct_order() {
     admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
     admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
     
-    val balances = ft4.assets_ext.get_asset_balances_paginated(alice.account.id, 4, null).data;
+    val balances = ft4.assets_ext.get_asset_balances(alice.account.id, 4, null).data;
 
     assert_equals(gtv_balance.from_gtv_pretty(balances[0]).asset.name, asset1.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances[1]).asset.name, asset2.name);
@@ -279,13 +279,13 @@ function test_asset_balances_are_paginated() {
     admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
     admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
     
-    val balances_p1 = ft4.assets_ext.get_asset_balances_paginated(alice.account.id, 3, null);
+    val balances_p1 = ft4.assets_ext.get_asset_balances(alice.account.id, 3, null);
 
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[0]).asset.name, asset1.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[1]).asset.name, asset2.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[2]).asset.name, asset3.name);
 
-    val balances_p2 = ft4.assets_ext.get_asset_balances_paginated(alice.account.id, 3, balances_p1.next_cursor);
+    val balances_p2 = ft4.assets_ext.get_asset_balances(alice.account.id, 3, balances_p1.next_cursor);
 
     assert_equals(gtv_balance.from_gtv_pretty(balances_p2.data[0]).asset.name, asset4.name);
 }
@@ -294,7 +294,7 @@ function test_paginated_asset_balances_have_correct_format() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset1 = utils.create_asset("test1", "TST1", 0);
     admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
-    val result = ft4.assets_ext.get_asset_balances_paginated(alice.account.id, 1, null);
+    val result = ft4.assets_ext.get_asset_balances(alice.account.id, 1, null);
 
     assert_equals(result, ft4_utils.paged_result(     
         data = [
@@ -320,7 +320,7 @@ function test_assets_are_returned_in_correct_order() {
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets = ft4.assets_ext.get_all_assets_paginated(3, null).data;
+    val assets = ft4.assets_ext.get_all_assets(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(assets[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[1]).name, asset2.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[2]).name, asset3.name);
@@ -330,19 +330,19 @@ function test_assets_are_paginated() {
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets_p1 = ft4.assets_ext.get_all_assets_paginated(2, null);
+    val assets_p1 = ft4.assets_ext.get_all_assets(2, null);
     assert_equals(assets_p1.data.size(), 2);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p1.data[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p1.data[1]).name, asset2.name);
     
-    val assets_p2 = ft4.assets_ext.get_all_assets_paginated(2, assets_p1.next_cursor);
+    val assets_p2 = ft4.assets_ext.get_all_assets(2, assets_p1.next_cursor);
     assert_equals(assets_p2.data.size(), 1);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p2.data[0]).name, asset3.name);
 
 }
 function test_paginated_assets_have_correct_format() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
-    val assets = ft4.assets_ext.get_all_assets_paginated(3, null).data;
+    val assets = ft4.assets_ext.get_all_assets(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(assets[0]), gtv_asset(
         id = asset1.id,
         name = asset1.name,

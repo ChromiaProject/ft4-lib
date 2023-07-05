@@ -5,7 +5,7 @@ import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
-  return ["ft4.get_account_auth_descriptors", { id: accountId }];
+  return ["ft4._get_account_auth_descriptors", { id: accountId }];
 }
 
 export function accountByIdQuery(id: Buffer): Query {
@@ -17,7 +17,7 @@ export function accountsByParticipantIdQuery(id: Buffer): Query {
 }
 
 export function accountsByAuthDescriptorIdQuery(id: Buffer): Query {
-  return ["ft4.get_accounts_by_auth_descriptor_id", { id: id }];
+  return ["ft4._get_accounts_by_auth_descriptor_id", { id: id }];
 }
 
 export function isAuthDescriptorValidQuery(
@@ -74,7 +74,7 @@ export function accountsByAuthDescriptorId(
   page_cursor: OptionalPageCursor;
 }> {
   return {
-    name: "ft4.get_accounts_by_auth_descriptor_id_paginated",
+    name: "ft4.get_accounts_by_auth_descriptor_id",
     args: {
       id: formatter.ensureBuffer(id),
       page_size: limit,
@@ -115,7 +115,7 @@ export function accountAuthDescriptors(
   cursor: OptionalPageCursor = null
 ): QueryObject<{ id: Buffer; page_size: number; page_cursor: string }> {
   return {
-    name: "ft4.get_account_auth_descriptors_paginated",
+    name: "ft4.get_account_auth_descriptors",
     args: {
       id: formatter.ensureBuffer(accountId),
       page_size: limit,

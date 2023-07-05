@@ -10,7 +10,7 @@ export function assetByIdQuery(assetId: Buffer): Query {
 
 export function balancesByAccountIdQuery(accountId: BufferId): Query {
   return [
-    "ft4.get_asset_balances",
+    "ft4._get_asset_balances",
     { account_id: formatter.ensureBuffer(accountId) },
   ];
 }
@@ -30,7 +30,7 @@ export function assetByNameQuery(name: string): Query {
 }
 
 export function allAssetsQuery(): Query {
-  return ["ft4.get_all_assets", undefined];
+  return ["ft4._get_all_assets", undefined];
 }
 
 export function assetById(
@@ -61,7 +61,7 @@ export function assetsByName(
   page_cursor: OptionalPageCursor;
 }> {
   return {
-    name: "ft4.get_assets_by_name_paginated",
+    name: "ft4.get_assets_by_name",
     args: {
       name: name,
       page_size: limit,
@@ -75,7 +75,7 @@ export function allAssets(
   cursor: OptionalPageCursor
 ): QueryObject<{ page_size: number; page_cursor: OptionalPageCursor }> {
   return {
-    name: "ft4.get_all_assets_paginated",
+    name: "ft4.get_all_assets",
     args: {
       page_size: limit,
       page_cursor: cursor,
@@ -106,7 +106,7 @@ export function balancesByAccountId(
   page_cursor: OptionalPageCursor;
 }> {
   return {
-    name: "ft4.get_asset_balances_paginated",
+    name: "ft4.get_asset_balances",
     args: {
       account_id: formatter.ensureBuffer(accountId),
       page_size: limit,

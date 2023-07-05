@@ -54,7 +54,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+function get_all_assets(page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {
         .rowid > (before_rowid ?: rowid(0))
