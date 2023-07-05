@@ -1,6 +1,6 @@
 import { accountQuerySession, accountUserSession } from "./accounts";
 import { IAccount, User } from "./accounts/types";
-import { assetQuerySession, assetUserSession } from "./asset";
+import { assetUserSession } from "./asset";
 import {
   ftQuerySession,
   ftUserSession,
@@ -68,7 +68,6 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
     gtxClient: pci,
     createUserSession: (user: User) => createUserSession(pci, user),
     account: accountQuerySession(pci),
-    ...assetQuerySession(pci),
   });
 }
 

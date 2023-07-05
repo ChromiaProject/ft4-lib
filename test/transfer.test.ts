@@ -8,7 +8,10 @@ import {
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { Asset } from "../client/lib/ft4/asset/types";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
+import {
+  createConnection,
+  createKeyStoreInteractor,
+} from "../client/lib/ft4/ft-session";
 import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
@@ -40,27 +43,20 @@ describe("Transfer", () => {
       .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .build();
+      .buildAuthenticated();
 
     const account2 = await AccountBuilder.account(
       _ft.changeUser(TestUser())
-    ).build();
+    ).buildAuthenticated();
 
-    await ft.account.token.transfer(
-      account1.id,
+    await account1.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
     );
 
-    const assetBalance1 = await ft.get.balance.by.accountAndAssetId(
-      account1.id,
-      asset.id
-    );
-    const assetBalance2 = await ft.get.balance.by.accountAndAssetId(
-      account2.id,
-      asset.id
-    );
+    const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
+    const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
 
     expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
       true
@@ -128,7 +124,7 @@ describe("Transfer", () => {
       .withParticipants([user.signatureProvider])
       .withBalance(asset, 200)
       .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .build();
+      .buildAuthenticated();
 
     const authDescriptor = ad.create.multiSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
@@ -145,21 +141,18 @@ describe("Transfer", () => {
     await tx.sign(admin.signatureProvider);
     await tx.postAndWaitConfirmation();
 
-    await ft.account.token.transfer(
-      account1.id,
+    const account2 = await createConnection(client).getAccountById(
+      authDescriptor.id
+    );
+
+    await account1.transfer(
       authDescriptor.id,
       asset.id,
       createAmount(10, asset.decimals)
     );
 
-    const assetBalance1 = await ft.get.balance.by.accountAndAssetId(
-      account1.id,
-      asset.id
-    );
-    const assetBalance2 = await ft.get.balance.by.accountAndAssetId(
-      authDescriptor.id,
-      asset.id
-    );
+    const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
+    const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
 
     expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
       true

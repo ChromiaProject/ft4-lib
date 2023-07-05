@@ -2,7 +2,6 @@ import { GtxClient } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
   balancesByAccountIdQuery,
-  balanceQuery,
   balanceByAccountId,
   assetById,
   balancesByAccountId,
@@ -25,20 +24,6 @@ export async function getBalancesByAccountId(
     ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
   );
   return balances.map(createBalanceObject);
-}
-
-export async function getBalance(
-  session: GtxClient,
-  accountId: BufferId,
-  assetId: BufferId
-): Promise<Balance> {
-  const balance = await session.query(
-    ...balanceQuery(
-      formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(assetId)
-    )
-  );
-  return createBalanceObject(balance);
 }
 
 export async function _getAssetById(

@@ -8,7 +8,7 @@ import {
   IAccount,
   IAuthenticatedAccount,
 } from "./accounts/types";
-import { Asset, Balance } from "./asset/types";
+import { Asset } from "./asset/types";
 import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import { Buffer } from "buffer";
@@ -98,15 +98,6 @@ export interface ftUserSession {
 export interface ftQuerySession {
   gtxClient: GtxClient;
   createUserSession: (user: User) => ftUserSession;
-  balance: {
-    by: {
-      accountId: (accountid: BufferId) => Promise<Balance[]>;
-      accountAndAssetId: (
-        accountid: BufferId,
-        assetid: BufferId
-      ) => Promise<Balance>;
-    };
-  };
   account: {
     by: {
       participantId: (id: BufferId) => Promise<Account[]>;

@@ -11,16 +11,6 @@ export function balancesByAccountIdQuery(accountId: BufferId): Query {
   ];
 }
 
-export function balanceQuery(accountId: Buffer, assetId: Buffer): Query {
-  return [
-    "ft4.get_asset_balance",
-    {
-      account_id: accountId,
-      asset_id: assetId,
-    },
-  ];
-}
-
 export function assetById(
   assetId: BufferId
 ): QueryObject<{ asset_id: Buffer }> {
