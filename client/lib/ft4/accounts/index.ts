@@ -7,25 +7,19 @@ import {
   deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
   registerAccount,
-  ssoRawTransactionAddAuthDescriptor,
-  ssoRawTransactionRegister,
   transfer,
 } from "./account-op-functions";
 import {
   getByAuthDescriptorId,
   getById,
   getByIds,
-  getByParticipantId,
   getRateLimit,
   isAuthDescriptorValid,
 } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
-// import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
-// import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Amount } from "../asset/interfaces";
-// import { PaymentHistoryFilter } from "./payment-history/types";
 
 export * from "./auth";
 export * from "./auth-descriptor";
@@ -35,7 +29,6 @@ export * from "./types";
 export const accountQuerySession = (pci: GtxClient) =>
   Object.freeze({
     by: {
-      participantId: (id: BufferId) => getByParticipantId(pci, id),
       authDescriptorId: (id: BufferId) => getByAuthDescriptorId(pci, id),
       ids: (ids: BufferId[]) => getByIds(pci, ids),
       id: (id: BufferId) => getById(pci, id),
@@ -49,23 +42,6 @@ export const accountQuerySession = (pci: GtxClient) =>
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) =>
-        ssoRawTransactionRegister(
-          authDescriptor,
-          user.authDescriptor,
-          legacyTransactionBuilder(user, pci)
-        ),
-      ssoAddAuthDescriptor: (
-        accountId: BufferId,
-        authDescriptor: AuthDescriptor
-      ) =>
-        ssoRawTransactionAddAuthDescriptor(
-          accountId,
-          authDescriptor,
-          legacyTransactionBuilder(user, pci)
-        ),
-    },
     authDescriptor: {
       add: (
         newUser: User,

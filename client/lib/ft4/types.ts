@@ -67,7 +67,6 @@ export interface ftQuerySession {
   createUserSession: (user: User) => ftUserSession;
   account: {
     by: {
-      participantId: (id: BufferId) => Promise<Account[]>;
       authDescriptorId: (id: BufferId) => Promise<Account[]>;
       ids: (ids: Buffer[]) => Promise<Account[]>;
       id: (id: BufferId) => Promise<Account | null>;

@@ -5,7 +5,6 @@ import {
   accountByIdQuery,
   accountsByAuthDescriptorIdQuery,
   accountsByParticipantId,
-  accountsByParticipantIdQuery,
   getRateLimitQuery,
   isAuthDescriptorValidQuery,
   accountAuthDescriptors,
@@ -34,16 +33,6 @@ import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountId } from "../asset/asset-queries";
 import { Buffer } from "buffer";
 import { PaginatedEntity } from "../utils/types";
-
-export async function getByParticipantId( //"by pubKey" would be more descriptive?
-  session: GtxClient,
-  id: BufferId
-): Promise<Account[]> {
-  const accountIds = await session.query(
-    ...accountsByParticipantIdQuery(formatter.ensureBuffer(id))
-  );
-  return await createAccountObjectsFromIds(session, accountIds);
-}
 
 export async function getByAuthDescriptorId(
   session: GtxClient,

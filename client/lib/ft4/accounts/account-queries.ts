@@ -12,10 +12,6 @@ export function accountByIdQuery(id: Buffer): Query {
   return ["ft4.get_account_by_id", { id: id }];
 }
 
-export function accountsByParticipantIdQuery(id: Buffer): Query {
-  return ["ft4.get_accounts_by_participant_id", { id: id }];
-}
-
 export function accountsByAuthDescriptorIdQuery(id: Buffer): Query {
   return ["ft4._get_accounts_by_auth_descriptor_id", { id: id }];
 }
