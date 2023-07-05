@@ -181,7 +181,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
-  const transfer_history_retriever = createTransferHistoryRetriever(
+  const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
     accountId
   );
@@ -223,10 +223,10 @@ export function createAccountObject(
       filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null
     ) => {
-      return transfer_history_retriever.retrieve(limit, filter, cursor);
+      return transferHistoryRetriever.retrieve(limit, filter, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) =>
-      transfer_history_retriever.retrieveSingle(rowid),
+      transferHistoryRetriever.retrieveSingle(rowid),
   });
 }
 

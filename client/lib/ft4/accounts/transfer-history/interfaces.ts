@@ -6,7 +6,6 @@ import {
 import { PageCursor } from "../../types";
 
 export interface TransferHistoryRetriever {
-  getTotalCount: () => Promise<number>;
   retrieve: (
     amount: number,
     filter: TransferHistoryFilter | null,

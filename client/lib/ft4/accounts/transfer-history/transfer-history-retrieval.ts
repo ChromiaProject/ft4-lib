@@ -18,11 +18,6 @@ export function createTransferHistoryRetriever(
   const id = formatter.ensureBuffer(accountId);
 
   return Object.freeze({
-    getTotalCount: async (): Promise<number> => {
-      return await session.query("ft4.get_transfer_history_size", {
-        account_id: id,
-      });
-    },
     retrieve: async (
       amount: number,
       filter: TransferHistoryFilter | null,
