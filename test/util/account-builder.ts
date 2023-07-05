@@ -19,6 +19,7 @@ import { createAmount } from "../../client/lib/ft4/asset/amount";
 import {
   createAuthenticatedAccount,
   givePoints,
+  registerAccount,
 } from "../../client/lib/ft4/accounts/account-op-functions";
 import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../../client/lib/ft4/authentication";
@@ -125,8 +126,9 @@ class AccountBuilder {
   /* Private functions */
 
   private async registerAccount(): Promise<Account> {
-    return await this.session.account.admin.register(
-      admin(),
+    return await registerAccount(
+      this.session.get.gtxClient,
+      admin().signatureProvider,
       this.getAuthDescriptor()
     );
   }

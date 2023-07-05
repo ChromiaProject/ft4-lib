@@ -17,7 +17,6 @@ import {
   singleSigArgs,
   toGtv,
 } from "../client/lib/ft4/accounts/auth-descriptor";
-import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import { addAuthDescriptorOp } from "../client/lib/ft4/accounts/account-operations";
 import { op } from "../client/lib/ft4/utils";
 import adminUser from "./util/admin_user";
@@ -28,7 +27,10 @@ import {
 } from "../client/lib/ft4/ft-session";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
-import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
+import {
+  createAuthenticatedAccount,
+  registerAccount,
+} from "../client/lib/ft4/accounts/account-op-functions";
 import { createAccount } from "./util/util";
 
 async function addAuthDescriptorTo(
@@ -74,9 +76,11 @@ describe("Test the account", () => {
       user.signatureProvider.pubKey
     ).andNoRules;
 
-    const account = await _ft
-      .changeUser(user)
-      .account.admin.register(adminUser(), ad);
+    const account = await registerAccount(
+      _ft.get.gtxClient,
+      adminUser().signatureProvider,
+      ad
+    );
 
     expect(account).not.toBeNull();
   });
@@ -115,8 +119,9 @@ describe("Test the account", () => {
     };
     const ft = _ft.changeUser(user);
 
-    const account = await ft.account.admin.register(
-      adminUser(),
+    const account = await registerAccount(
+      ft.get.gtxClient,
+      adminUser().signatureProvider,
       authDescriptor.create.singleSig.withArgs(
         [FlagsType.Transfer],
         user.signatureProvider.pubKey
@@ -131,7 +136,9 @@ describe("Test the account", () => {
     ).toBe(1);
   });
 
-  it("should create new multisig account", async () => {
+  // No longer relevant. Admin operations don't require signatures of
+  // key pairs that are added to multisig auth descriptor
+  it.skip("should create new multisig account", async () => {
     const user1 = testUser();
     const user2 = testUser();
 
@@ -141,14 +148,11 @@ describe("Test the account", () => {
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = _ft.get.gtxClient.newTransaction(
-      ad.signers.concat(admin.authDescriptor.signers)
+    const promise = registerAccount(
+      _ft.get.gtxClient,
+      admin.signatureProvider,
+      ad
     );
-    tx.addOperation(...registerOp(ad));
-    await tx.sign(user1.signatureProvider);
-    await tx.sign(user2.signatureProvider);
-    await tx.sign(admin.signatureProvider);
-    const promise = tx.postAndWaitConfirmation();
 
     await expect(promise).resolves.not.toThrowError();
   });
@@ -164,22 +168,9 @@ describe("Test the account", () => {
       [sigProv1.pubKey, sigProv2.pubKey]
     ).andNoRules;
 
-    const user1: User = {
-      ...testUser(),
-      signatureProvider: sigProv1,
-      authDescriptor: ad,
-    };
+    await registerAccount(_ft.get.gtxClient, admin.signatureProvider, ad);
 
-    let tx = _ft.get.gtxClient.newTransaction(
-      ad.signers.concat(admin.authDescriptor.signers)
-    );
-    tx.addOperation(...registerOp(ad));
-    await tx.sign(user1.signatureProvider);
-    await tx.sign(sigProv2);
-    await tx.sign(admin.signatureProvider);
-    await tx.postAndWaitConfirmation();
-
-    tx = _ft.get.gtxClient.newTransaction([
+    const tx = _ft.get.gtxClient.newTransaction([
       sigProv1.pubKey,
       sigProv2.pubKey,
       sigProv3.pubKey,
@@ -223,14 +214,7 @@ describe("Test the account", () => {
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = _ft.get.gtxClient.newTransaction(
-      ad.signers.concat(admin.authDescriptor.signers)
-    );
-    tx.addOperation(...registerOp(ad));
-    await tx.sign(user1.signatureProvider);
-    await tx.sign(user2.signatureProvider);
-    await tx.sign(admin.signatureProvider);
-    await tx.postAndWaitConfirmation();
+    await registerAccount(_ft.get.gtxClient, admin.signatureProvider, ad);
 
     const account = await _ft.get.account.by.id(ad.id);
 

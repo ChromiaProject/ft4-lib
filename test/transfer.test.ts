@@ -1,6 +1,5 @@
 import { IClient } from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
-import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import {
   authDescriptor as ad,
   FlagsType,
@@ -21,6 +20,7 @@ import {
   createChromiaClient,
 } from "./util/blockchain-util";
 import TestUser, { newSingleSigUser } from "./util/test-user";
+import { registerAccount } from "/ft4/accounts/account-op-functions";
 
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let _ft: ftUserSession;
@@ -132,14 +132,11 @@ describe("Transfer", () => {
       [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = ft.get.gtxClient.newTransaction(
-      authDescriptor.signers.concat(admin.authDescriptor.signers)
+    await registerAccount(
+      _ft.get.gtxClient,
+      admin.signatureProvider,
+      authDescriptor
     );
-    tx.addOperation(...registerOp(authDescriptor));
-    await tx.sign(user2.signatureProvider);
-    await tx.sign(user3.signatureProvider);
-    await tx.sign(admin.signatureProvider);
-    await tx.postAndWaitConfirmation();
 
     const account2 = await createConnection(client).getAccountById(
       authDescriptor.id

@@ -6,7 +6,6 @@ import {
   accountsByAuthDescriptorIdQuery,
   accountsByParticipantId,
   getRateLimitQuery,
-  isAuthDescriptorValidQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
   accountsByAuthDescriptorId,
@@ -14,7 +13,7 @@ import {
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
-import { _getConfig, getConfig } from "../utils";
+import { _getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
   createBalanceObject,
@@ -42,27 +41,6 @@ export async function getByAuthDescriptorId(
     ...accountsByAuthDescriptorIdQuery(formatter.ensureBuffer(id))
   );
   return await createAccountObjectsFromIds(session, accountIds);
-}
-
-export async function isAuthDescriptorValid(
-  session: GtxClient,
-  accountId: BufferId,
-  authDescId: BufferId
-): Promise<boolean> {
-  return await session.query(
-    ...isAuthDescriptorValidQuery(
-      formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(authDescId)
-    )
-  );
-}
-
-export async function getByIds(
-  session: GtxClient,
-  ids: BufferId[]
-): Promise<Account[]> {
-  const accounts = await Promise.all(ids.map((id) => getById(session, id)));
-  return accounts.filter((account): account is Account => account != null);
 }
 
 export async function getById(
@@ -114,29 +92,6 @@ export async function getAuthDescriptors(
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
-export async function getRateLimit(
-  session: GtxClient,
-  accountId: BufferId
-): Promise<RateLimit> {
-  const q = getRateLimitQuery(accountId);
-  const rateLimit = await session.query(q.name, q.args);
-
-  const chainInfo = await getConfig(session);
-
-  return Object.freeze({
-    points: rateLimit.points,
-    lastUpdate: rateLimit.lastUpdate,
-    getAvailablePoints: () => {
-      if (chainInfo.rate_limit_active) {
-        const deltaTime = Date.now() - rateLimit.lastUpdate;
-        const points =
-          rateLimit.points + deltaTime / chainInfo.rate_limit_recovery_time;
-        return Math.min(points, chainInfo.rate_limit_max_points);
-      }
-      return null;
-    },
-  });
-}
 export async function _getRateLimit(
   session: IClient,
   accountId: BufferId

@@ -1,9 +1,7 @@
 import { BufferId } from "../cryptoUtils";
-import { AuthDescriptor } from "./accounts/auth-descriptor/types";
 import { Amount } from "./asset/interfaces";
 import {
   Account,
-  RateLimit,
   User,
   IAccount,
   IAuthenticatedAccount,
@@ -11,7 +9,6 @@ import {
 import { Asset } from "./asset/types";
 import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
-import { Buffer } from "buffer";
 import {
   IClient,
   QueryArguments,
@@ -51,13 +48,6 @@ export interface ftUserSession {
         asset: BufferId,
         amount: Amount
       ) => Promise<void>;
-      burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
-    };
-    admin: {
-      register: (
-        adminUser: User,
-        authDescriptor: AuthDescriptor
-      ) => Promise<Account>;
     };
   };
 }
@@ -68,15 +58,8 @@ export interface ftQuerySession {
   account: {
     by: {
       authDescriptorId: (id: BufferId) => Promise<Account[]>;
-      ids: (ids: Buffer[]) => Promise<Account[]>;
       id: (id: BufferId) => Promise<Account | null>;
     };
-    isAuthDescriptorValid: (
-      accountid: BufferId,
-      authDescriptorid: BufferId
-    ) => Promise<boolean>;
-    rateLimit: (accountId: BufferId) => Promise<RateLimit>;
-    idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) => Buffer;
   };
 }
 

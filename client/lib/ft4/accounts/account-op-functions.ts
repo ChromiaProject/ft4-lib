@@ -31,50 +31,11 @@ import {
 } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { Amount } from "../asset/interfaces";
-import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../types";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
-import { Buffer } from "buffer";
-
-export async function ssoRawTransactionRegister(
-  newAuthDesc: AuthDescriptor,
-  authDescriptor: AuthDescriptor,
-  tb: LegacyTransactionBuilder
-): Promise<Buffer> {
-  const adId = authDescriptor.id;
-  const tx = await tb
-    .add(registerOp(authDescriptor))
-    .add(
-      addAuthDescriptorOp(
-        deriveAccountId(toGtv(authDescriptor)),
-        adId,
-        newAuthDesc
-      )
-    )
-    .buildSigned([...authDescriptor.signers, ...newAuthDesc.signers]);
-  return tx.encode();
-}
-
-export async function ssoRawTransactionAddAuthDescriptor(
-  accountId: BufferId,
-  newAuthDesc: AuthDescriptor,
-  tb: LegacyTransactionBuilder
-): Promise<Buffer> {
-  const tx = await tb
-    .add(
-      addAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
-        newAuthDesc
-      )
-    )
-    .add(nop())
-    .buildSigned();
-  return tx.encode();
-}
 
 export async function addAuthDescriptorToAccount( //maybe rename to addUserToAccount?
   newUser: User,
@@ -183,19 +144,14 @@ export async function burnTokens(
 //-------------------ADMIN OPERATIONS-------------------//
 
 export async function registerAccount(
-  user: User,
-  adminUser: User,
   session: GtxClient,
+  adminSingatureProvider: SignatureProvider,
   newAuthDesc: AuthDescriptor
 ): Promise<Account> {
-  const tx = session.newTransaction([
-    ...user.authDescriptor.signers,
-    ...adminUser.authDescriptor.signers,
-  ]);
-  // @ts-ignore
-  tx.addOperation(...registerOp(newAuthDesc)); //doesn't need nop
-  await tx.sign(user.signatureProvider);
-  await tx.sign(adminUser.signatureProvider);
+  const tx = session.newTransaction([adminSingatureProvider.pubKey]);
+  const op = registerOp(newAuthDesc);
+  tx.addOperation(op.name, ...op.args);
+  await tx.sign(adminSingatureProvider);
   await tx.postAndWaitConfirmation();
   return <Account>await getById(session, newAuthDesc.id);
 }
