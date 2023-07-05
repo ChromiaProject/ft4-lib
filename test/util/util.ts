@@ -78,7 +78,7 @@ export function createTestAuthDescriptor(flags: string[] = []): {
 
 export async function createAccount(client: GtxClient, ad: AuthDescriptor) {
   const tx = client.newTransaction([]);
-  tx.addOperation("ft4.register_account_test", authDescriptor.toGtv(ad) as any);
+  tx.addOperation("register_account_test", authDescriptor.toGtv(ad) as any);
   await tx.postAndWaitConfirmation();
   return ad.id;
 }

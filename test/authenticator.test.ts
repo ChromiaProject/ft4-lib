@@ -67,8 +67,6 @@ describe("Authenticator", () => {
       op("foo")
     );
 
-    console.log(authHandler1.authDescriptor.id.toString("hex"));
-    console.log(authHandler2.authDescriptor.id.toString("hex"));
     expect(authHandler2.authDescriptor.id).toEqual(
       authHandler.authDescriptor.id
     );

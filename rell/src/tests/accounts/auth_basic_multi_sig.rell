@@ -4,7 +4,7 @@ module;
 import cu: ^^.assets.utils;
 import acc: ^^^.lib.ft4.accounts;
 import ^^^.lib.ft4.ft4_basic_dev.*;
-import ^^^.lib.ft4.operations.dev_op_auth;
+import test_operations: ^^.operations;
 
 /*
  * We aim to unit test the basic authentication rules (e.g. the number of signatures and required flags).
@@ -25,11 +25,11 @@ function test_multi_sig_valid_1_of_1() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .op(test_operations.auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice) 
         .run();
 
-    assert_equals(dev_op_auth.dev_error.msg, "valid");
+    assert_equals(test_operations.auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_valid_2_of_2_signs() {
@@ -39,7 +39,7 @@ function test_multi_sig_valid_2_of_2_signs() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(
+        .op(test_operations.auth.test_auth(
             account_data.account.id,
             account_data.auth_descriptor_id,
             required_flags()
@@ -48,7 +48,7 @@ function test_multi_sig_valid_2_of_2_signs() {
         .sign(rell.test.keypairs.bob)
         .run();
 
-    assert_equals(dev_op_auth.dev_error.msg, "valid");
+    assert_equals(test_operations.auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_valid_1_of_2_signs() {
@@ -58,7 +58,7 @@ function test_multi_sig_valid_1_of_2_signs() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(
+        .op(test_operations.auth.test_auth(
             account_data.account.id,
             account_data.auth_descriptor_id,
             required_flags()
@@ -66,7 +66,7 @@ function test_multi_sig_valid_1_of_2_signs() {
         .sign(rell.test.keypairs.bob) // <-- Omitting Alice should work
         .run();
 
-    assert_equals(dev_op_auth.dev_error.msg, "valid");
+    assert_equals(test_operations.auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_valid_3_of_3_signs() {
@@ -76,7 +76,7 @@ function test_multi_sig_valid_3_of_3_signs() {
     );
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(account_data.account.id,
+        .op(test_operations.auth.test_auth(account_data.account.id,
         account_data.auth_descriptor_id,
         required_flags()
     ))
@@ -85,7 +85,7 @@ function test_multi_sig_valid_3_of_3_signs() {
         .sign(rell.test.keypairs.trudy)
         .run();
 
-    assert_equals(dev_op_auth.dev_error.msg, "valid");
+    assert_equals(test_operations.auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_wrong_required_flags() {
@@ -97,7 +97,7 @@ function test_multi_sig_wrong_required_flags() {
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
 
     rell.test.tx()
-        .op(dev_op_auth.dev_auth(
+        .op(test_operations.auth.test_auth(
             account_data.account.id,
             account_data.auth_descriptor_id,
             bad_required_flags
@@ -106,7 +106,7 @@ function test_multi_sig_wrong_required_flags() {
         .sign(rell.test.keypairs.bob)
         .run();
 
-    assert_equals(dev_op_auth.dev_error.msg, "Some required flags [A] are missing on the (multi sig) Auth Descriptor.");
+    assert_equals(test_operations.auth.test_error.msg, "Some required flags [A] are missing on the (multi sig) Auth Descriptor.");
 }
 
 // ----- util -----
