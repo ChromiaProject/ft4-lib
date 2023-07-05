@@ -319,16 +319,19 @@ export function toFixedDecimals(
 }
 
 function sum(amount: RawAmount, other: RawAmount): Amount {
+  requireSameDecimals(amount, other);
   const resultVal = amount.value + other.value;
   return buildAmountObject({ value: resultVal, decimals: amount.decimals });
 }
 
 function sub(amount: RawAmount, other: RawAmount): Amount {
+  requireSameDecimals(amount, other);
   const resultVal = amount.value - other.value;
   return buildAmountObject({ value: resultVal, decimals: amount.decimals });
 }
 
 function div(amount: RawAmount, other: RawAmount): Amount {
+  requireSameDecimals(amount, other);
   if (other.value === BigInt(0)) {
     throw new AmountInputError("AssetAmount: invalid divisor (0)");
   }
@@ -340,6 +343,7 @@ function div(amount: RawAmount, other: RawAmount): Amount {
 }
 
 function mul(amount: RawAmount, other: RawAmount): Amount {
+  requireSameDecimals(amount, other);
   const factor = BigInt(10 ** amount.decimals);
   const resultVal = (amount.value * other.value) / factor;
 
@@ -347,21 +351,36 @@ function mul(amount: RawAmount, other: RawAmount): Amount {
 }
 
 function eq(amount: RawAmount, other: RawAmount): boolean {
+  requireSameDecimals(amount, other);
   return amount.value === other.value;
 }
 
 function gt(amount: RawAmount, other: RawAmount): boolean {
+  requireSameDecimals(amount, other);
   return amount.value > other.value;
 }
 
 function lt(amount: RawAmount, other: RawAmount): boolean {
+  requireSameDecimals(amount, other);
   return amount.value < other.value;
 }
 
 function gte(amount: RawAmount, other: RawAmount): boolean {
+  requireSameDecimals(amount, other);
   return amount.value >= other.value;
 }
 
 function lte(amount: AnyAssetAmount, other: RawAmount): boolean {
+  requireSameDecimals(amount, other);
   return amount.value <= other.value;
+}
+
+function requireSameDecimals(amount: AnyAssetAmount, other: RawAmount): void {
+  if (amount.decimals !== other.decimals) {
+    throw new AmountDecimalsError(
+      "Cannot sum, subtract or compare two Amounts with different amount of " +
+        `decimals: amount (${amount.decimals}), other ` +
+        `(${other.decimals})`
+    );
+  }
 }
