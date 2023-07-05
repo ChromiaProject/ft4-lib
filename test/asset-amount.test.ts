@@ -424,4 +424,23 @@ describe("Asset amount", () => {
       }
     );
   });
+
+  it("should not export certain arithmetic functions", async () => {
+    const myModule = await import("../client/lib/ft4/asset/amount");
+    const nonExportedFunctions = [
+      "sum",
+      "sub",
+      "div",
+      "mul",
+      "eq",
+      "gt",
+      "lt",
+      "gte",
+      "lte",
+    ];
+
+    nonExportedFunctions.forEach((funcName) => {
+      expect(myModule[funcName]).toBeUndefined();
+    });
+  });
 });
