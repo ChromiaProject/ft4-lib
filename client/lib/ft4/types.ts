@@ -153,9 +153,6 @@ export interface Connection {
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
   getAccountsByAuthDescriptorId: (
-    authDescriptorId: BufferId
-  ) => Promise<IAccount[]>;
-  getAccountsByAuthDescriptorIdPaginated: (
     id: BufferId,
     limit?: number,
     cursor?: OptionalPageCursor
@@ -163,14 +160,12 @@ export interface Connection {
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
-  getAssetsByName: (name: string) => Promise<Asset[]>;
-  getAssetsByNamePaginated: (
+  getAssetsByName: (
     name: string,
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Asset>>;
-  getAllAssets: () => Promise<Asset[]>;
-  getAllAssetsPaginated: (
+  getAllAssets: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Asset>>;

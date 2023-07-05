@@ -65,17 +65,6 @@ export function accountsByParticipantId(
 }
 
 export function accountsByAuthDescriptorId(
-  id: BufferId
-): QueryObject<{ id: Buffer }> {
-  return {
-    name: "ft4.get_accounts_by_auth_descriptor_id",
-    args: {
-      id: formatter.ensureBuffer(id),
-    },
-  };
-}
-
-export function accountsByAuthDescriptorIdPaginated(
   id: BufferId,
   limit: number,
   cursor: OptionalPageCursor
@@ -107,17 +96,6 @@ export function isAuthDescriptorValid(
   };
 }
 
-export function accountAuthDescriptors(
-  accountId: BufferId
-): QueryObject<{ id: Buffer }> {
-  return {
-    name: "ft4.get_account_auth_descriptors",
-    args: {
-      id: formatter.ensureBuffer(accountId),
-    },
-  };
-}
-
 export function accountAuthDescriptorsByParticipantId(
   accountId: BufferId,
   participantId: BufferId
@@ -131,7 +109,7 @@ export function accountAuthDescriptorsByParticipantId(
   };
 }
 
-export function accountAuthDescriptorsPaginated(
+export function accountAuthDescriptors(
   accountId: BufferId,
   limit: number,
   cursor: OptionalPageCursor = null

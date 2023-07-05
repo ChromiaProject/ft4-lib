@@ -3,7 +3,6 @@ import {
   accountAuthDescriptorsQuery,
   accountById,
   accountByIdQuery,
-  accountsByAuthDescriptorId,
   accountsByAuthDescriptorIdQuery,
   accountsByParticipantId,
   accountsByParticipantIdQuery,
@@ -11,8 +10,7 @@ import {
   isAuthDescriptorValidQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
-  accountAuthDescriptorsPaginated,
-  accountsByAuthDescriptorIdPaginated,
+  accountsByAuthDescriptorId,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -200,8 +198,7 @@ export function createAccountObject(
     },
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
-    getAuthDescriptorsPaginated: async (
+    getAuthDescriptors: async (
       limit = 100,
       cursor: OptionalPageCursor = null
     ) => {
@@ -210,7 +207,7 @@ export function createAccountObject(
         RawAuthDescriptor
       >(
         connection,
-        accountAuthDescriptorsPaginated(accountId, limit, cursor),
+        accountAuthDescriptors(accountId, limit, cursor),
         mapAuthDescriptors
       );
       return retriever.retrieve(limit, cursor);
@@ -251,22 +248,13 @@ export async function _getByParticipantId(
 
 export async function _getByAuthDescriptorId(
   connection: Connection,
-  id: BufferId
-): Promise<IAccount[]> {
-  const accountIds =
-    (await connection.query<Buffer[]>(accountsByAuthDescriptorId(id))) ?? [];
-  return accountIds.map((id) => createAccountObject(connection, id));
-}
-
-export async function _getByAuthDescriptorIdPaginated(
-  connection: Connection,
   id: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null
 ): Promise<PaginatedEntity<IAccount>> {
   return createEntityRetriever<IAccount, Buffer>(
     connection,
-    accountsByAuthDescriptorIdPaginated(id, limit, cursor),
+    accountsByAuthDescriptorId(id, limit, cursor),
     (accounts) => accounts.map((acc) => createAccountObject(connection, acc))
   ).retrieve();
 }
@@ -279,19 +267,6 @@ export async function _isAuthDescriptorValid(
   return (await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   ))!;
-}
-
-export async function _getAuthDescriptors(
-  connection: Connection,
-  accountId: BufferId
-): Promise<AuthDescriptor[]> {
-  return connection
-    .query<RawAuthDescriptor[]>(
-      accountAuthDescriptors(formatter.ensureBuffer(accountId))
-    )
-    .then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
-    );
 }
 
 export async function getAuthDescriptorsByParticipantId(

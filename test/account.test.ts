@@ -302,7 +302,7 @@ describe("Test the account", () => {
       account.id
     );
 
-    expect(accounts.length).toEqual(1);
+    expect(accounts.data.length).toEqual(1);
   });
 
   it("should return two accounts by auth descriptor id when auth descriptor is attached to two accounts", async () => {
@@ -320,7 +320,7 @@ describe("Test the account", () => {
       account1.id
     );
 
-    expect(accounts.length).toEqual(2);
+    expect(accounts.data.length).toEqual(2);
   });
 
   it("returns multiple accounts paginated when auth descriptor is attached to multiple accounts", async () => {
@@ -339,19 +339,14 @@ describe("Test the account", () => {
     await addAuthDescriptorTo(account3, user1, ft3);
 
     const { data: accounts1, nextCursor } =
-      await _connection.getAccountsByAuthDescriptorIdPaginated(
-        account1.id,
-        2,
-        null
-      );
+      await _connection.getAccountsByAuthDescriptorId(account1.id, 2, null);
     expect(accounts1.length).toEqual(2);
 
-    const { data: accounts2 } =
-      await _connection.getAccountsByAuthDescriptorIdPaginated(
-        account1.id,
-        2,
-        nextCursor
-      );
+    const { data: accounts2 } = await _connection.getAccountsByAuthDescriptorId(
+      account1.id,
+      2,
+      nextCursor
+    );
     expect(accounts2.length).toEqual(1);
   });
 
@@ -379,7 +374,7 @@ describe("Test the account", () => {
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const { data } = await session.account.getAuthDescriptorsPaginated(1);
+    const { data } = await session.account.getAuthDescriptors(1);
     const auth_desc = createSingleSignatureAuthDescriptor(
       AuthType.single_sig,
       singleSigArgs([FlagsType.Account], keyStore.pubKey),
@@ -412,10 +407,9 @@ describe("Test the account", () => {
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const { data, nextCursor } =
-      await session.account.getAuthDescriptorsPaginated(1);
+    const { data, nextCursor } = await session.account.getAuthDescriptors(1);
     expect(data.length).toBe(1);
-    const { data: data2 } = await session.account.getAuthDescriptorsPaginated(
+    const { data: data2 } = await session.account.getAuthDescriptors(
       1,
       nextCursor
     );

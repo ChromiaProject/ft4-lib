@@ -62,8 +62,7 @@ export interface IAccount {
   ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
-  getAuthDescriptors: () => Promise<AuthDescriptor[]>;
-  getAuthDescriptorsPaginated: (
+  getAuthDescriptors: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<AuthDescriptor>>;

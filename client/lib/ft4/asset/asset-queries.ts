@@ -51,14 +51,7 @@ export function assetBySymbol(symbol: string): QueryObject<{ symbol: string }> {
   };
 }
 
-export function assetByName(name: string): QueryObject<{ name: string }> {
-  return {
-    name: "ft4.get_asset_by_name",
-    args: { name },
-  };
-}
-
-export function assetsByNamePaginated(
+export function assetsByName(
   name: string,
   limit: number,
   cursor: OptionalPageCursor = null
@@ -77,13 +70,7 @@ export function assetsByNamePaginated(
   };
 }
 
-export function allAssets(): QueryObject<undefined> {
-  return {
-    name: "ft4.get_all_assets",
-  };
-}
-
-export function allAssetsPaginated(
+export function allAssets(
   limit: number,
   cursor: OptionalPageCursor
 ): QueryObject<{ page_size: number; page_cursor: OptionalPageCursor }> {
