@@ -1,9 +1,0 @@
-@mount('ft3')
-module;
-
-import acc: ^^.account; 
-
-// TODO: move to tests directory
-operation register_account_test(acc.auth_descriptor) {
-    acc.Unsafe.create_account_with_auth(auth_descriptor);
-}
