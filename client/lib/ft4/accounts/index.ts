@@ -2,14 +2,10 @@ import { GtxClient } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {
-  addAuthDescriptorToAccount,
   burnTokens,
-  deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
   givePoints,
   registerAccount,
-  ssoRawTransactionAddAuthDescriptor,
-  ssoRawTransactionRegister,
   transfer,
 } from "./account-op-functions";
 import {
@@ -47,39 +43,7 @@ export const accountQuerySession = (pci: GtxClient) =>
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) =>
-        ssoRawTransactionRegister(
-          authDescriptor,
-          user.authDescriptor,
-          legacyTransactionBuilder(user, pci)
-        ),
-      ssoAddAuthDescriptor: (
-        accountId: BufferId,
-        authDescriptor: AuthDescriptor
-      ) =>
-        ssoRawTransactionAddAuthDescriptor(
-          accountId,
-          authDescriptor,
-          legacyTransactionBuilder(user, pci)
-        ),
-    },
     authDescriptor: {
-      add: (
-        newUser: User,
-        accountId: BufferId //add user? needs refactoring
-      ) =>
-        addAuthDescriptorToAccount(
-          newUser,
-          accountId,
-          legacyTransactionBuilder(user, pci)
-        ),
-      deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAllAuthDescriptorsExclude(
-          authDescriptorId,
-          accountId,
-          legacyTransactionBuilder(user, pci)
-        ),
       delete: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAuthDescriptor(
           authDescriptorId,

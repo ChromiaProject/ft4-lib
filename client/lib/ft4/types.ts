@@ -54,19 +54,7 @@ export interface ftUserSession {
   };
 
   account: {
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;
-      ssoAddAuthDescriptor: (
-        accountid: BufferId,
-        authDescriptor: AuthDescriptor
-      ) => Promise<Buffer>;
-    };
     authDescriptor: {
-      add: (newUser: User, accountId: BufferId) => Promise<void>;
-      deleteAllExcluding: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
       delete: (
         authDescriptorid: BufferId,
         accountid: BufferId
