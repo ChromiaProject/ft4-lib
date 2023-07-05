@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/ban-ts-comment: 0 */
-import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
+import { registerOp } from "./account-dev-operations";
 import {
   _transferOp,
   addAuthDescriptorOp,
@@ -26,6 +26,7 @@ import {
   formatter,
   GtxClient,
   RawGtv,
+  SignatureProvider,
   TransactionReceipt,
 } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
@@ -200,24 +201,18 @@ export async function registerAccount(
 }
 
 export async function givePoints(
-  user: User,
-  adminUser: User,
-  session: GtxClient,
+  client: GtxClient,
+  adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
   points: number
 ) {
-  const tx = session.newTransaction([
-    ...user.authDescriptor.signers,
-    ...adminUser.authDescriptor.signers,
-  ]);
-  // @ts-ignore
+  const tx = client.newTransaction([adminSignatureProvider.pubKey]);
   tx.addOperation(
-    ...addRateLimitPointsOp(formatter.ensureBuffer(accountId), points)
+    "ft4.admin.add_rate_limit_points",
+    formatter.ensureBuffer(accountId),
+    points
   );
-  // @ts-ignore
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
-  await tx.sign(adminUser.signatureProvider);
+  await tx.sign(adminSignatureProvider);
   await tx.postAndWaitConfirmation();
 }
 

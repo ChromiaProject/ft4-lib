@@ -3,7 +3,6 @@ import { Operation } from "../utils/types";
 import { Operation as _Operation } from "postchain-client";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { Buffer } from "buffer";
 
 export function registerOp(authDescriptor: AuthDescriptor): Operation {
   const ad = authDesc.toGtv(authDescriptor);
@@ -13,11 +12,4 @@ export function registerOp(authDescriptor: AuthDescriptor): Operation {
 export function _registerOp(authDescriptor: AuthDescriptor): _Operation {
   const ad = authDesc.toGtv(authDescriptor);
   return _op("ft4.admin.register_account", ad);
-}
-
-export function addRateLimitPointsOp(
-  accountId: Buffer,
-  points: number
-): Operation {
-  return ["ft4.admin.add_rate_limit_points", accountId, points];
 }

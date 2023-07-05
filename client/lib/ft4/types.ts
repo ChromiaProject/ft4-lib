@@ -31,36 +31,8 @@ export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;
   get: ftQuerySession;
-  asset: {
-    admin: {
-      register: (
-        adminUser: User,
-        name: string,
-        symbol: string,
-        decimals: number,
-        iconUrl: string
-      ) => Promise<Buffer>;
-    };
-  };
-  balance: {
-    admin: {
-      mint: (
-        adminUser: User,
-        assetid: BufferId,
-        accountid: BufferId,
-        amount: Amount
-      ) => Promise<void>;
-    };
-  };
 
   account: {
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;
-      ssoAddAuthDescriptor: (
-        accountid: BufferId,
-        authDescriptor: AuthDescriptor
-      ) => Promise<Buffer>;
-    };
     authDescriptor: {
       add: (newUser: User, accountId: BufferId) => Promise<void>;
       deleteAllExcluding: (
@@ -86,11 +58,6 @@ export interface ftUserSession {
         adminUser: User,
         authDescriptor: AuthDescriptor
       ) => Promise<Account>;
-      givePoints: (
-        adminUser: User,
-        accountId: BufferId,
-        points: number
-      ) => Promise<void>;
     };
   };
 }

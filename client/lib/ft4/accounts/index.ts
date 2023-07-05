@@ -6,8 +6,6 @@ import {
   burnTokens,
   deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
-  // getPaymentHistoryIterator,
-  givePoints,
   registerAccount,
   ssoRawTransactionAddAuthDescriptor,
   ssoRawTransactionRegister,
@@ -105,7 +103,5 @@ export const accountUserSession = (user: User, pci: GtxClient) =>
     admin: {
       register: (adminUser, authDescriptor: AuthDescriptor) =>
         registerAccount(user, adminUser, pci, authDescriptor),
-      givePoints: (adminUser, accountId: BufferId, points: number) =>
-        givePoints(user, adminUser, pci, accountId, points),
     },
   });
