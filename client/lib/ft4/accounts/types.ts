@@ -55,8 +55,7 @@ export type User = {
 // TODO: Rename to Account after deleting Account type
 export interface IAccount {
   id: Buffer;
-  getBalances: () => Promise<Balance[]>;
-  getBalancesPaginated: (
+  getBalances: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Balance>>;

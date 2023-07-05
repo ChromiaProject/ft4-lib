@@ -18,7 +18,6 @@ import { BufferId } from "../../cryptoUtils";
 import { _getConfig, getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
-  _getBalancesByAccountId,
   createBalanceObject,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
@@ -32,7 +31,7 @@ import {
 } from "./auth-descriptor";
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
-import { balancesByAccountIdPaginated } from "../asset/asset-queries";
+import { balancesByAccountId } from "../asset/asset-queries";
 import { Buffer } from "buffer";
 import { PaginatedEntity } from "../utils/types";
 
@@ -187,11 +186,10 @@ export function createAccountObject(
     id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: () => _getBalancesByAccountId(connection, accountId),
-    getBalancesPaginated: (limit = 100, cursor: OptionalPageCursor = null) => {
+    getBalances: (limit = 100, cursor: OptionalPageCursor = null) => {
       const retriever = createEntityRetriever<Balance, BalanceResponse>(
         connection,
-        balancesByAccountIdPaginated(accountId, limit, cursor),
+        balancesByAccountId(accountId, limit, cursor),
         (balances) => balances.map(createBalanceObject)
       );
       return retriever.retrieve(limit, cursor);

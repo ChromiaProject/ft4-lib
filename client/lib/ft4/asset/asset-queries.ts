@@ -97,17 +97,6 @@ export function balanceByAccountId(
 }
 
 export function balancesByAccountId(
-  accountId: BufferId
-): QueryObject<{ account_id: Buffer }> {
-  return {
-    name: "ft4.get_asset_balances",
-    args: {
-      account_id: formatter.ensureBuffer(accountId),
-    },
-  };
-}
-
-export function balancesByAccountIdPaginated(
   accountId: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null
