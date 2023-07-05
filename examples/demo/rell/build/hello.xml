@@ -25,14 +25,7 @@
                 <dict>
                     <entry key="moduleArgs">
                         <dict>
-                            <entry key="lib.ft3.admin">
-                                <dict>
-                                    <entry key="admin_pubkey">
-                                        <string>03CEE2C9EC423D754C4E2797576705CB49905324DFEFCEADD37A3089BDD0013EFE</string>
-                                    </entry>
-                                </dict>
-                            </entry>
-                            <entry key="lib.ft3.core">
+                            <entry key="lib.ft4.accounts">
                                 <dict>
                                     <entry key="rate_limit_active">
                                         <int>1</int>
@@ -48,6 +41,13 @@
                                     </entry>
                                 </dict>
                             </entry>
+                            <entry key="lib.ft4.admin">
+                                <dict>
+                                    <entry key="admin_pubkey">
+                                        <string>03CEE2C9EC423D754C4E2797576705CB49905324DFEFCEADD37A3089BDD0013EFE</string>
+                                    </entry>
+                                </dict>
+                            </entry>
                         </dict>
                     </entry>
                     <entry key="modules">
@@ -57,7 +57,7 @@
                     </entry>
                     <entry key="sources">
                         <dict>
-                            <entry key="lib/ft3/account/auth_basic.rell">
+                            <entry key="lib/ft4/accounts/auth_basic.rell">
                                 <string>import u: ^.utils;
 
 struct single_sig_args {
@@ -188,7 +188,7 @@ function get_participants(a_t: auth_type, args: byte_array): list&lt;byte_array&
 
 </string>
                             </entry>
-                            <entry key="lib/ft3/account/auth_descriptor_rule.rell">
+                            <entry key="lib/ft4/accounts/auth_descriptor_rule.rell">
                                 <string>
 enum rule_variable {
 	block_height,
@@ -503,7 +503,7 @@ function is_block_height_rule_active(r: gtv): boolean {
  }
 </string>
                             </entry>
-                            <entry key="lib/ft3/account/auth_external.rell">
+                            <entry key="lib/ft4/accounts/auth_external.rell">
                                 <string>
 struct eth_auth_args {
     account;
@@ -521,30 +521,27 @@ function Account(id: byte_array) = require(
     "Account not found: %s".format(id)
 );
 
-function authenticateV2() {
-    val op = op_context.get_all_operations()[op_context.op_index];
-    val flags = auth.get_auth_flags(op.name);
-    // FIXME: call from evm auth handler instead from this place
-    val message = auth.get_auth_message_template(op.name, op.args.to_gtv());
-    return authenticate(set(flags), message);
-}
-
-function authenticate(required_flags: set&lt;text&gt;, message_template: text? = null): account {
+// TODO: Merge with `authenticate` function.
+function _authenticate(required_flags: set&lt;text&gt;, message_template: text? = null): account {
     require(op_context.op_index &gt; 0, "Expected at least two operations");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
-        previous_op.name in ["ft.evm_auth", "ft.ft_auth"],
+        previous_op.name in ["ft4.evm_auth", "ft4.ft_auth"],
         "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
     );
 
     val account = when (previous_op.name) {
-        "ft.evm_auth" -&gt; _validate_eth_signature(previous_op, required_flags, message_template);
-        "ft.ft_auth" -&gt; _validate_ft4_signature(previous_op.args, required_flags);
+        "ft4.evm_auth" -&gt; _validate_eth_signature(previous_op, required_flags, message_template);
+        "ft4.ft_auth" -&gt; _validate_ft4_signature(previous_op.args, required_flags);
         else -&gt; null;
     };
 
-    return require(account, "Invalid auth operation: %s".format(previous_op.name));
+    val valid_account = require(account, "Invalid auth operation: %s".format(previous_op.name));
+
+    rate_limit(valid_account);
+
+    return valid_account;
 }
 
 function _validate_eth_signature(auth_op: gtx_operation, required_flags: set&lt;text&gt;, auth_message_template: text?): account {
@@ -657,7 +654,7 @@ function _validate_ft4_signature(auth_args: list&lt;gtv&gt;, required_flags: set
         .account_auth_descriptor.id == auth_descriptor_id, 
         .id in op_context.get_signers()
     };
-    require(external, "The proided key(s) is not a signer of this auth descriptor");
+    require(external, "The provided key(s) is not a signer of this auth descriptor");
 
     require_auth(
         external.account_auth_descriptor.account,
@@ -669,21 +666,14 @@ function _validate_ft4_signature(auth_args: list&lt;gtv&gt;, required_flags: set
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/account/external/auth_data_queries.rell">
-                                <string>import acc: ^;
-import ^^.core;
-import ^^.auth;
-
-query default_auth_data(gtv) = auth.auth_data(list&lt;text&gt;(), "");</string>
-                            </entry>
-                            <entry key="lib/ft3/account/external/module.rell">
-                                <string>@mount('ft3')
+                            <entry key="lib/ft4/accounts/external/module.rell">
+                                <string>@mount('ft4')
 module;
 </string>
                             </entry>
-                            <entry key="lib/ft3/account/external/operations.rell">
-                                <string>import acc: ^^.account;
-import ^^.core;
+                            <entry key="lib/ft4/accounts/external/operations.rell">
+                                <string>import acc: ^^.accounts;
+import ^^.assets;
 import ^^.auth;
 
 query delete_auth_descriptor_auth_data(gtv) = auth.auth_data(
@@ -711,15 +701,15 @@ function delete_auth_descriptor_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
-    scope = "ft3.delete_auth_descriptor_v2",
+function () = auth.add_auth_handler(
+    scope = "ft4.delete_auth_descriptor_v2",
     flags = ["A"],
-    formatter = delete_auth_descriptor_message(*)
+    message = delete_auth_descriptor_message(*)
 );
 
 operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list&lt;text&gt;() else ["A"];
-    val account = acc.authenticateV2();
+    val account = auth.authenticate();
 
     acc._delete_auth_descriptor(
         acc.auth_descriptor_by_id(account, auth_descriptor_id)
@@ -758,24 +748,33 @@ function add_auth_descriptor_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
-    scope = "ft3.add_auth_descriptor_v2",
+function () = auth.add_auth_handler(
+    scope = "ft4.add_auth_descriptor_v2",
     flags = ["A"],
-    formatter = add_auth_descriptor_message(*)
+    message = add_auth_descriptor_message(*)
 );
 
 operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
-    val account = acc.authenticateV2();
+    val account = auth.authenticate();
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/account/external/queries.rell">
+                            <entry key="lib/ft4/accounts/external/queries.rell">
                                 <string>import acc: ^;
-import core: ^^.core;
+import utils: ^^.utils;
+
+query get_config() {
+    return (
+        rate_limit_active = acc.config.rate_limit_active,
+        rate_limit_max_points = acc.config.rate_limit_max_points,
+        rate_limit_recovery_time = acc.config.rate_limit_recovery_time,
+        rate_limit_points_at_account_creation = acc.config.rate_limit_points_at_account_creation
+    );
+}
 
 query get_account_rate_limit_last_update(account_id: byte_array) {
-    if (core.config.rate_limit_active == false) return (points = 0, last_update = 0);
+    if (acc.config.rate_limit_active == false) return (points = 0, last_update = 0);
     
     return acc.rl_state @ { .account.id == account_id }
     (
@@ -795,10 +794,20 @@ query get_account_auth_descriptors(id: byte_array) {
     return acc.account_auth_descriptor @* {
         .account.id == id
     } (
-        type = .auth_type,
+        auth_type = .auth_type,
         args = gtv.from_bytes(.args),
         rules = gtv.from_bytes(.rules)
     );
+}
+
+query get_account_auth_descriptors_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
+    val descriptors = acc.get_paginated_auth_descriptors(id, page_size, page_cursor);
+    val pagination_results = descriptors @* {} ( utils.pagination_result(data = (
+        auth_type = .auth_type,
+        args = .args,
+        rules = .rules
+    ).to_gtv_pretty(), rowid = .rowid) );
+    return utils.make_page(pagination_results, page_size);
 }
 
 query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
@@ -807,7 +816,7 @@ query get_account_auth_descriptors_by_participant_id(account_id: byte_array, par
         p.id == participant_id,
         ad == p.account_auth_descriptor
     } (
-        type = ad.auth_type,
+        auth_type = ad.auth_type,
         args = gtv.from_bytes(ad.args),
         rules = gtv.from_bytes(ad.rules)
     );
@@ -829,16 +838,34 @@ query get_accounts_by_auth_descriptor_id(id: byte_array) {
     return acc.account_auth_descriptor @* { id } ( .account.id );
 }
 
-query get_ctr_for_auth_descriptor(auth_descriptor_id: byte_array) =
-    acc.account_auth_descriptor @ { .id == auth_descriptor_id }( .ctr );
+query get_accounts_by_auth_descriptor_id_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        acc.get_paginated_accounts_by_ad_id(id, page_size, page_cursor),
+        page_size);
+}
+
+query get_auth_descriptor_nonce(
+    account_id: byte_array, 
+    auth_descriptor_id: byte_array
+) = acc.account_auth_descriptor @ { 
+        .account.id == account_id, 
+        .id == auth_descriptor_id 
+    } ( .ctr );
 </string>
                             </entry>
-                            <entry key="lib/ft3/account/module.rell">
+                            <entry key="lib/ft4/accounts/module.rell">
                                 <string>@mount('ft')
 module;
 
-import ^.core;
+struct module_args {
+	rate_limit_active: boolean;
+	rate_limit_max_points: integer;
+    rate_limit_recovery_time: integer;
+    rate_limit_points_at_account_creation: integer;    
+}
+
 import ^.auth;
+import ^.utils;
 
 enum auth_type {
     S, M, ES, EM,
@@ -940,9 +967,9 @@ function create_account_with_auth(auth_descriptor): byte_array {
 
     add_auth_descriptor_to_account(acc, auth_descriptor);
 
-    val max_points = core.config.rate_limit_max_points;
-    val recovery_time = core.config.rate_limit_recovery_time;
-    val points_at_start = core.config.rate_limit_points_at_account_creation;
+    val max_points = config.rate_limit_max_points;
+    val recovery_time = config.rate_limit_recovery_time;
+    val points_at_start = config.rate_limit_points_at_account_creation;
     
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
@@ -988,6 +1015,32 @@ function single_sig_auth_descriptor(pubkey, flags: set&lt;text&gt;) = auth_descr
     null.to_gtv()
 );
 
+function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return account_auth_descriptor @* {
+        .account.id == id,
+        .rowid &gt; (before_rowid ?: rowid(0))
+    } (
+        @sort .rowid,
+        auth_type = .auth_type,
+        args = gtv.from_bytes(.args),
+        rules = gtv.from_bytes(.rules)
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return account_auth_descriptor @* {
+        .id == id,
+        .rowid &gt; (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data=.account.id.to_gtv_pretty(),
+            rowid=.rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth(auth_descriptor): byte_array {
@@ -997,9 +1050,9 @@ namespace Unsafe {
         _add_auth_descriptor(
             acc, auth_descriptor
         );
-        val max_points = core.config.rate_limit_max_points;
-        val recovery_time = core.config.rate_limit_recovery_time;
-        val points_at_start = core.config.rate_limit_points_at_account_creation;
+        val max_points = config.rate_limit_max_points;
+        val recovery_time = config.rate_limit_recovery_time;
+        val points_at_start = config.rate_limit_points_at_account_creation;
         
         create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
         
@@ -1032,16 +1085,15 @@ namespace Unsafe {
         setup_auth_descriptor_variables(account_auth_descriptor);
         return id;
     }
-}</string>
+}
+</string>
                             </entry>
-                            <entry key="lib/ft3/account/rate_limit.rell">
-                                <string>import ^.core;
-
-function rate_limit(account) {
-    if (core.config.rate_limit_active == false) return;
+                            <entry key="lib/ft4/accounts/rate_limit.rell">
+                                <string>function rate_limit(account) {
+    if (config.rate_limit_active == false) return;
     
-    val max_counter = core.config.rate_limit_max_points;
-    val recovery_time = core.config.rate_limit_recovery_time;
+    val max_counter = config.rate_limit_max_points;
+    val recovery_time = config.rate_limit_recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
@@ -1078,12 +1130,21 @@ function add_rate_limit_points(account, amount: integer) {
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/admin/module.rell">
+                            <entry key="lib/ft4/accounts/rate_limit_config.rell">
+                                <string>object config {
+    mutable rate_limit_active: boolean = chain_context.args.rate_limit_active;
+    mutable rate_limit_max_points: integer = chain_context.args.rate_limit_max_points;
+    mutable rate_limit_recovery_time: integer = chain_context.args.rate_limit_recovery_time;
+    mutable rate_limit_points_at_account_creation: integer = chain_context.args.rate_limit_points_at_account_creation;
+}</string>
+                            </entry>
+                            <entry key="lib/ft4/admin/module.rell">
                                 <string>@mount("ft4.admin")
 module;
 
-import ^.account;
-import ^.core;
+import ^.accounts;
+import ^.assets;
+import ^.utils;
 
 struct module_args {
     admin_pubkey: pubkey;
@@ -1097,184 +1158,37 @@ function require_admin() {
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/admin/operations.rell">
+                            <entry key="lib/ft4/admin/operations.rell">
                                 <string>
-operation register_account(account.auth_descriptor) {
+operation register_account(accounts.auth_descriptor) {
     require_admin();
-    account.Unsafe.create_account_with_auth(auth_descriptor);
+    accounts.Unsafe.create_account_with_auth(auth_descriptor);
 }
 
 operation register_asset(name, symbol: text, decimals: integer, icon_url: text) {
     require_admin();
-    core.Unsafe.register_asset(name, symbol, decimals, icon_url);
+    assets.Unsafe.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url);
 }
 
 operation mint(account_id: byte_array, asset_id: byte_array, amount: big_integer) {
     require_admin();
-    core.Unsafe.mint(account.Account(account_id), core.Asset(asset_id), amount);
+    assets.Unsafe.mint(accounts.Account(account_id), assets.Asset(asset_id), amount);
 }
 
 operation add_rate_limit_points(account_id: byte_array, amount: integer) {
     require_admin();
-	account.add_rate_limit_points(account.Account(account_id), amount);
+	accounts.add_rate_limit_points(accounts.Account(account_id), amount);
 }
+
 </string>
                             </entry>
-                            <entry key="lib/ft3/auth/module.rell">
-                                <string>@mount('ft')
-module;
-
-struct auth_data {
-    flags: list&lt;text&gt;;
-    message: text;
-}
-
-struct _auth_handler {
-    flags: list&lt;text&gt;;
-    message_formatter: ((gtv) -&gt; text)? = null;
-}
-
-/*
- * The constant that defines app level authentication scope.
- * If scope is omitted when defining an auth handler, then
- * it has 'app' scope, i.e. it is used to authenticate 
- * operations that do not have own auth handlers or if 
- * there is no mount point auth handler for the operation.
- */
-val APP_SCOPE = "app";
-
-/*
- * Extendable function used to define auth handlers. 
- * When called it returns a list of all auth handlers defined
- * in the dapp.
- */
-@extendable 
-function auth_handler(): map&lt;name, _auth_handler&gt;;
-
-/*
- * Finds auth handler for provided operation name.
- */
-function get_auth_handler(op_name: name) {
-    val auth_handlers = auth_handler();
-    if (op_name in auth_handlers) return auth_handlers[op_name];
-
-    val handler = get_mount_point_scope_auth_handler(auth_handlers, op_name);
-    if (handler??) return handler;
-
-    return require(
-        auth_handlers.get_or_null(APP_SCOPE), 
-        "Cannot find auth handler for operation &lt;%s&gt;".format(op_name)
-    );
-}
-
-function auth(scope: text = APP_SCOPE, flags: list&lt;text&gt;, formatter: ((gtv) -&gt; text)? = null) {
-    return [scope: _auth_handler(flags, formatter)];
-} 
-
-function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
-
-struct signature {
-    r: byte_array;
-    s: byte_array;
-    v: integer;
-}
-
-function get_mount_point_scope_auth_handler(auth_handlers: map&lt;name, _auth_handler&gt;, op_name: name) {
-    val op_name_components = op_name.split(".");
-    if (op_name_components.size() &lt; 2) return null;
-    
-    for (count in range(op_name_components.size()-1, 0, -1)) {
-        val mount_point = join_text_list(op_name_components, count);
-        if (mount_point in auth_handlers) return auth_handlers[mount_point];
-    }
-
-    return null;
-}
-
-/*
- * Creates message from operation name and arguments.
- * It is used when `evm_auth` is used to authenticate a user, 
- * but auth message is not specified in the auth handler of the operation.
- */
-function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
-    var message = "Please sign the message to call\noperation:\n- %s\n\n".format(op.name);
-
-    if (op.args.size() &gt; 0) {
-        var arguments = "with arguments:\n";
-        for (arg in op.args) {
-            arguments = arguments + "- %s\n".format(arg).replace("\"", "");
-        }
-        message = message + arguments + "\n";
-    }
-    
-    return message + "Nonce: {nonce}";
-}
-
-function join_text_list(components: list&lt;text&gt;, count: integer) {
-    require(count &lt; components.size());
-    require(count &gt; 0);
-    var result = components[0];
-    for (i in range(1, count)) {
-        result = result + components[i];
-    }
-    return result;
-}
-
-val DEFAULT_LOGIN_CONFIG = "default";
-
-query get_login_config(name? = null) {
-    val configs = login_config();
-
-    if (empty(name)) return configs[DEFAULT_LOGIN_CONFIG];
-    if (name in configs) return configs[name];
-    return configs[DEFAULT_LOGIN_CONFIG];
-}
-
-struct _login_config {
-    flags: list&lt;text&gt;;
-}
-
-@extendable
-function login_config(): map&lt;name, _login_config&gt; = [DEFAULT_LOGIN_CONFIG:_login_config(flags = [])];
-</string>
-                            </entry>
-                            <entry key="lib/ft3/auth/operations.rell">
-                                <string>
-operation evm_auth(
-    account_id: byte_array,
-    auth_descriptor_id: byte_array,
-    signatures: list&lt;signature&gt;
-) {
-    // require(disposable_key in op_context.get_signers(), "Transaction must be signed with disposable key");
-}
-
-operation ft_auth(
-    account_id: byte_array,
-    auth_descriptor_id: byte_array
-) {}
-</string>
-                            </entry>
-                            <entry key="lib/ft3/auth/queries.rell">
-                                <string>
-query get_auth_flags(op_name: name) = get_auth_handler(op_name).flags;
-
-query get_auth_message_template(op_name: name, op_args: gtv) {
-    val formatter = get_auth_handler(op_name).message_formatter;
-
-    return if (formatter??) formatter(op_args) else generate_auth_message_template(chain_context.blockchain_rid, gtx_operation(
-        name = op_name,
-        args = list&lt;gtv&gt;.from_gtv(op_args)
-    ));
-}
-</string>
-                            </entry>
-                            <entry key="lib/ft3/core/asset.rell">
-                                <string>import acc: ^.account;
+                            <entry key="lib/ft4/assets/asset.rell">
+                                <string>import acc: ^.accounts;
 
 entity asset {
     key id: byte_array;
     name;
-    symbol: text;
+    key symbol: text;
     decimals: integer;
     issuing_brid: byte_array;
     icon_url: text;
@@ -1291,12 +1205,58 @@ entity balance {
     mutable amount: big_integer = 0L;
 }
 
+val max_asset_amount = big_integer.from_hex("ff".repeat(32));
+
 function ensure_balance(acc.account, asset): balance {
     val balance = balance @? {asset, account};
     if (balance != null) {
        return balance;
     }
     else return create balance(account, asset, amount = 0L);
+}
+
+function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?): list&lt;utils.pagination_result&gt; {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return balance @* {
+        .account.id == account_id,
+        .rowid &gt; (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                asset = (
+                    id = .asset.id,
+                    name = .asset.name,
+                    symbol = .asset.symbol,
+                    decimals = .asset.decimals,
+                    brid = .asset.issuing_brid,
+                    supply = .asset.total_supply,
+                    icon_url = .asset.icon_url
+                ),
+                amount = .amount
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return assets.asset @* {
+        .rowid &gt; (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                id = .id,
+                symbol = .symbol,
+                name = .name,
+                decimals = .decimals,
+                brid = .issuing_brid,
+                icon_url = .icon_url,
+                supply = .total_supply
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
 }
 
 function get_asset_balances(account_id: byte_array) {
@@ -1312,18 +1272,65 @@ function get_asset_balances(account_id: byte_array) {
     );
 }
 
+function format_amount_with_decimals(amount: big_integer, decimals: integer): text {
+    require(decimals &gt;= 0, "Decimals must be non-negative. Received: %s".format(decimals));
+    var amt = amount.to_text();
+    if (decimals == 0) {
+        return amt;
+    } else if (amt.size() &gt; decimals) {
+        amt = amt.sub(0, amt.size() - decimals) + "." + amt.sub(amt.size() - decimals);
+    } else {
+        amt = "0." + "0".repeat(decimals - amt.size()) + amt;
+    }
+    return amt;
+}
+
+function get_paginated_asset_balances_by_name(name, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return assets.asset @* {
+        .name == name,
+        .rowid &gt; (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                id = .id,
+                name = .name,
+                symbol = .symbol,
+                decimals = .decimals,
+                brid = .issuing_brid,
+                icon_url = .icon_url,
+                supply = .total_supply
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
+    require(
+        value &lt;= max_asset_amount, 
+        "%s: value must be lower than 2^256, actual: %d".format(name, value)
+    );
+    require(
+        value &gt; 0L, 
+         "%s: value must be non-zero positive, actual: %d".format(name, value)
+    );
+}
+
 namespace Unsafe {
     function mint(acc.account, asset, amount: big_integer) {
-        require(amount &gt; 0L, "Invalid value. Amount must be non-zero positive");
+        require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
             "Assets can only be minted on issuing chain"
         );
         before_mint(account, asset, amount);
         val balance = ensure_balance(account, asset);
-        balance.amount += amount;
 
+        balance.amount += amount;
         asset.total_supply += amount;
+
+        require(asset.total_supply &lt;= max_asset_amount, "End total supply must be lower than 2^256");
 
         create payment_history_entry(
             account,
@@ -1350,17 +1357,19 @@ namespace Unsafe {
     }
 
     function burn(acc.account, asset, amount: big_integer) {
-        require(amount &gt; 0L, "Invalid value. Amount must be non-zero positive");
-        require(asset.total_supply &gt;= amount, "Invalid value. Amount is greater than total supply");
+        require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
             "Assets can only be burned on issuing chain"
         );
         val balance = balance @ {asset, account};
-        require(balance.amount &gt;= amount, "Invalid value. Amount is greater than balance");
+        require(balance.amount &gt;= amount, "Insufficient balance");
+
         before_burn(account, asset, amount);
+
         balance.amount -= amount;
         asset.total_supply -= amount;
+
         create payment_history_entry (
             account,
             asset,
@@ -1388,26 +1397,35 @@ namespace Unsafe {
         name,
         symbol: text,
         decimals: integer,
+        blockchain_rid: byte_array,
         icon_url: text): asset {
         require(decimals &gt;= 0 and decimals &lt; 79, "Decimals must be between 0 and 78 (included)");
-        val id = (name, chain_context.blockchain_rid).hash();
+
+        val trimmed_icon_url = icon_url.trim();
+        require(
+            (trimmed_icon_url == "") or (trimmed_icon_url.size() &lt;= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
+            "Invalid URL for icon"
+        );
+
+        val id = (name, blockchain_rid).hash();
         return create asset (
             id,
             name,
             symbol,
             decimals,
-            issuing_brid=chain_context.blockchain_rid,
-            icon_url,
+            issuing_brid=blockchain_rid,
+            icon_url=trimmed_icon_url,
             total_supply=0L
         );
     }
-}</string>
+}
+</string>
                             </entry>
-                            <entry key="lib/ft3/core/extensions.rell">
+                            <entry key="lib/ft4/assets/extensions.rell">
                                 <string>
-@extendable function before_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
+@extendable function before_transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer);
 
-@extendable function after_transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer);
+@extendable function after_transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer);
 
 @extendable function before_transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&gt;);
 
@@ -1419,163 +1437,165 @@ namespace Unsafe {
 
 @extendable function before_burn(acc.account, asset, amount: big_integer);
 
-@extendable function after_burn(acc.account, asset, amount: big_integer);</string>
+@extendable function after_burn(acc.account, asset, amount: big_integer);
+</string>
                             </entry>
-                            <entry key="lib/ft3/core/external/module.rell">
-                                <string>@mount('ft3')
+                            <entry key="lib/ft4/assets/external/module.rell">
+                                <string>@mount('ft4')
 module;
 </string>
                             </entry>
-                            <entry key="lib/ft3/core/external/operations.rell">
-                                <string>import ^^.core;
+                            <entry key="lib/ft4/assets/external/operations.rell">
+                                <string>import ^^.assets;
 import ^^.auth;
 
 query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
 
 // TODO: remove
 @extend(auth.auth_handler)
-function () = auth.auth(
-    scope = "ft3.transfer",
+function () = auth.add_auth_handler(
+    scope = "ft4.transfer",
     flags = ["T"]
 );
 
-operation transfer(inputs: list&lt;core.xfer_input&gt;, outputs: list&lt;core.xfer_output&gt;) {
-    core._transfer(inputs, outputs);
+operation transfer(inputs: list&lt;assets.xfer_input&gt;, outputs: list&lt;assets.xfer_output&gt;) {
+    assets._transfer(inputs, outputs);
 }
 
 function transfer_message(gtv) {
     val params = struct&lt;transfer_one&gt;.from_gtv(gtv);
-    val asset = core.Asset(params.asset_id);
+    val asset = assets.Asset(params.asset_id);
 
     return "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
-        .format(params.amount, asset.name, params.receiver_id);
+        .format(
+            assets.format_amount_with_decimals(params.amount, asset.decimals),
+            asset.name,
+            params.receiver_id
+        );
 }
 
 @extend(auth.auth_handler)
-function () = auth.auth(
-    scope = "ft3.transfer_one",
+function () = auth.add_auth_handler(
+    scope = "ft4.transfer_one",
     flags = ["T"],
-    formatter = transfer_message(*)
+    message = transfer_message(*)
 );
 
 operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
-    val account = acc.authenticateV2();
-    core.Unsafe.transfer_one(account, acc.Account(receiver_id), core.Asset(asset_id), amount);
+    val account = auth.authenticate();
+    assets.Unsafe.transfer_one(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
 }
 
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "ft4.burn",
+    flags = ["T"],
+    message = burn_message(*)
+);
 
-query burn_auth_data(gtv) {
+function burn_message(gtv) {
     val params = struct&lt;burn&gt;.from_gtv(gtv);
-    val asset = core.Asset(params.asset_id);
+    val asset = assets.Asset(params.asset_id);
 
-    return auth.auth_data(
-        flags = ["T"],
-        message = "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}\n\nNonce: {nonce}"
-            .format(params.amount, asset.name)
-    );
+    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}\n\nNonce: {nonce}"
+        .format(
+            assets.format_amount_with_decimals(params.amount, asset.decimals),
+            asset.name
+        );
 }
 
 operation burn(asset_id: byte_array, amount: big_integer) {
-    val auth_data = burn_auth_data(auth.args());
-    val account = acc.authenticate(set(auth_data.flags), auth_data.message);
-
-    core.Unsafe.burn(account, core.Asset(asset_id), amount);
+    val account = auth.authenticate();
+    assets.Unsafe.burn(account, assets.Asset(asset_id), amount);
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/core/external/queries.rell">
-                                <string>import ^^.core;
-import acc: ^^.account;
+                            <entry key="lib/ft4/assets/external/queries.rell">
+                                <string>import ^^.assets;
+import acc: ^^.accounts;
+import ^^.utils;
 
-query get_config() {
-    return (
-        rate_limit_active = core.config.rate_limit_active,
-        rate_limit_max_points = core.config.rate_limit_max_points,
-        rate_limit_recovery_time = core.config.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = core.config.rate_limit_points_at_account_creation
+query get_asset_balances(account_id: byte_array) {
+    return assets.get_asset_balances(account_id);
+}
+
+query get_asset_balances_paginated(account_id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        assets.get_paginated_asset_balances(account_id, page_size, page_cursor),
+        page_size
     );
 }
 
-query get_asset_balances(account_id: byte_array) {
-    return core.get_asset_balances(account_id);
-}
-
 query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
-    return core.balance @? {
+    return assets.balance @? {
         .account.id == account_id,
         .asset.id == asset_id
     } (
-        asset = (
-            id = .asset.id,
-            name = .asset.name,
-            decimals = .asset.decimals,
-            brid = .asset.issuing_brid,
-            supply = .asset.total_supply
-        ),
+        asset = extract_asset_data(.asset),
         amount = .amount
     );
 }
 
 query get_asset_by_name(name) {
-    return core.asset @* { name } (
-        id = .id,
-        name = .name,
-        symbol = .symbol,
-        decimals = .decimals,
-        brid = .issuing_brid,
-        icon_url = .icon_url,
-        supply = .total_supply
-    );
+    return assets.asset @* { name } ( extract_asset_data($) );
+}
 
+query get_assets_by_name_paginated(name, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        assets.get_paginated_asset_balances_by_name(name, page_size, page_cursor),
+        page_size
+    );
 }
 
 query get_asset_by_id(asset_id: byte_array) {
-    return core.asset @? {
-        .id == asset_id
-    }(
-        id = .id,
-        name = .name,
-        symbol = .symbol,
-        decimals = .decimals,
-        brid = .issuing_brid,
-        icon_url = .icon_url,
-        supply = .total_supply
-    );
+    return assets.asset @? { .id == asset_id } ( extract_asset_data($) );
 }
+
+query get_asset_by_symbol(symbol: text) {
+    return assets.asset @? { .symbol == symbol } ( extract_asset_data($) );
+} 
 
 query get_all_assets() {
-    return core.asset @* {} (
-        id = .id,
-        symbol = .symbol,
-        name = .name,
-        decimals = .decimals,
-        brid = .issuing_brid,
-        icon_url = .icon_url,
-        supply = .total_supply
+    return assets.asset @* {} ( extract_asset_data($) );
+}
+
+query get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        assets.get_all_assets_paginated(page_size, page_cursor),
+        page_size
     );
 }
 
-query get_payment_history_paginated(account_id: byte_array, filter: core.filter, page_size: integer, page_cursor: text?) {
+query get_transfer_history(account_id: byte_array, filter: assets.filter, page_size: integer, page_cursor: text?) {
     val account = acc.account @? { account_id };
     if (empty(account)) return null;
 
-    val paginated_payments = core.get_paginated_payments(account, filter, page_size, page_cursor);
-    return core.make_page(paginated_payments, page_size);
+    val paginated_payments = assets.get_paginated_payments(account, filter, page_size, page_cursor);
+    return utils.make_page(paginated_payments, page_size);
 }
 
-query get_payment_history_size(account_id: byte_array) {
-    return core.payment_history_entry @* { acc.account @ {account_id} } ($).size();
+query get_transfer_history_entry(rowid) {
+    val entry = assets.payment_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else assets.extract_data_from_payment_history_entry(entry);
 }
 
-query get_single_payment_history_entry(rowid) {
-    val entry = core.payment_history_entry @? { .rowid == rowid };
-    return if (empty(entry)) null else core.extract_data_from_payment_history_entry(entry).to_gtv();
+function extract_asset_data(assets.asset) {
+    return (
+        id = asset.id,
+        symbol = asset.symbol,
+        name = asset.name,
+        decimals = asset.decimals,
+        brid = asset.issuing_brid,
+        icon_url = asset.icon_url,
+        supply = asset.total_supply
+    );
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/core/history.rell">
-                                <string>import acc: ^.account;
-import ^.core;
+                            <entry key="lib/ft4/assets/history.rell">
+                                <string>import acc: ^.accounts;
+import ^.assets;
+import ^.utils;
 
 @log entity payment_history_entry {
     index acc.account, asset;
@@ -1588,13 +1608,27 @@ import ^.core;
     transfer_args: byte_array;
 }
 
+enum transfer_type {
+    sent,
+    received,
+}
+
+struct filter {
+    transfer_type?;
+}
+
 function extract_data_from_payment_history_list(
         entries: list&lt;payment_history_entry&gt;
     ): list&lt;(data:gtv,rowid:rowid)&gt; {
     return entries @* {} (
-        data = extract_data_from_payment_history_entry($).to_gtv(),
+        data = extract_data_from_payment_history_entry($).to_gtv_pretty(),
         rowid = .rowid
     );
+}
+
+function extract_operation_name(entry: payment_history_entry): text {
+    val gtx = gtx_transaction.from_gtv(gtv.from_bytes(entry.transaction.tx_data));
+    return gtx.body.operations[entry.op_index].name;
 }
 
 function extract_data_from_payment_history_entry(entry: payment_history_entry) {
@@ -1610,14 +1644,15 @@ function extract_data_from_payment_history_entry(entry: payment_history_entry) {
         entry_index = entry.entry_index,
         transfer_args = entry.transfer_args,
         tx_rid = entry.transaction.tx_rid,
-        tx_data = entry.transaction.tx_data
+        tx_data = entry.transaction.tx_data,
+        operation_name = extract_operation_name(entry)
     );
 }
 
 function get_paginated_payments(acc.account, filter, page_size: integer, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
-        val cursor = core.decode_cursor(page_cursor);
+        val cursor = utils.decode_cursor(page_cursor);
         before_rowid = cursor.before_rowid;
     }
 
@@ -1625,99 +1660,23 @@ function get_paginated_payments(acc.account, filter, page_size: integer, page_cu
         account,
         if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent), 
         if (before_rowid??) (.rowid &lt; before_rowid) else true
-    } (@sort_desc $) limit fetch_data_size(page_size);
+    } (@sort_desc $) limit utils.fetch_data_size(page_size);
     
     return extract_data_from_payment_history_list(entries) @* {} (
-        pagination_result(
+        utils.pagination_result(
             data = .data,
             rowid = .rowid
         )
     );
 }
-
-struct page_cursor {
-    before_rowid: rowid? = null;
-}
-
-struct pagination_result {
-    data: gtv;
-    rowid: rowid;
-}
-
-enum transfer_type {
-    sent,
-    received,
-}
-
-struct filter {
-    transfer_type?;
-}
-
-val MAX_PAGE_SIZE = 100;
-
-function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
-
-function decode_cursor(cursor: text) = page_cursor.from_bytes(byte_array.from_base64(cursor));
-
-function fetch_data_size(page_size: integer) = min(MAX_PAGE_SIZE, page_size) + 1;
-
-struct paged_result {
-    next_cursor: text?;
-    data: list&lt;gtv&gt;;
-}
-
-function null_page() = paged_result(
-    next_cursor = null,
-    data = list&lt;gtv&gt;()
-);
-
-
-function make_page(pagination_results: list&lt;pagination_result&gt;, page_size: integer): paged_result {
-    if (empty(pagination_results)) {
-         return null_page();
-    }
-    // adding +1 should help with next page null situation when current page size
-    // is equal to max page size
-    if(pagination_results.size() &lt; fetch_data_size(page_size)) {
-        return paged_result(
-            next_cursor = null,
-            data = pagination_results  @* {} .data
-        );
-    }
-    val paginated_result = pagination_results.sub(0, pagination_results.size()-1);
-    val next_id = pagination_results[pagination_results.size()-2].rowid;
-    val next_cursor = page_cursor(
-        next_id
-    );
-    return paged_result(
-        next_cursor = encode_cursor(next_cursor),
-        data = paginated_result  @* {} .data
-    );
-}</string>
-                            </entry>
-                            <entry key="lib/ft3/core/module.rell">
-                                <string>@mount('ft3')
-module;
-
-struct module_args {
-	rate_limit_active: boolean;
-	rate_limit_max_points: integer;
-    rate_limit_recovery_time: integer;
-    rate_limit_points_at_account_creation: integer;    
-}
 </string>
                             </entry>
-                            <entry key="lib/ft3/core/my_blockchain_info.rell">
-                                <string>object config {
-    mutable rate_limit_active: boolean = chain_context.args.rate_limit_active;
-    mutable rate_limit_max_points: integer = chain_context.args.rate_limit_max_points;
-    mutable rate_limit_recovery_time: integer = chain_context.args.rate_limit_recovery_time;
-    mutable rate_limit_points_at_account_creation: integer = chain_context.args.rate_limit_points_at_account_creation;
-}
-</string>
+                            <entry key="lib/ft4/assets/module.rell">
+                                <string>@mount('ft4')
+module;</string>
                             </entry>
-                            <entry key="lib/ft3/core/transfer.rell">
-                                <string>import acc: ^.account;
+                            <entry key="lib/ft4/assets/transfer.rell">
+                                <string>import acc: ^.accounts;
 
 struct xfer_input {
    account_id: byte_array;
@@ -1904,8 +1863,9 @@ function _transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&
 }
 
 namespace Unsafe {
-   function transfer_one(from: acc.account, to: acc.account, core.asset, amount: big_integer) {
-      require(amount &gt; 0, "Expected amount greater than 0. Found %d".format(amount));
+   
+   function transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
+      require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
 
       val args = [
@@ -1942,27 +1902,208 @@ namespace Unsafe {
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/ft3_basic_dev.rell">
+                            <entry key="lib/ft4/auth/authentication.rell">
+                                <string>
+function authenticate() {
+    val op = op_context.get_all_operations()[op_context.op_index];
+    val flags = get_auth_flags(op.name);
+    // FIXME: call from evm auth handler instead from this place
+    val message = get_auth_message_template(op.name, op.args.to_gtv());
+    return accounts._authenticate(set(flags), message);
+}
+</string>
+                            </entry>
+                            <entry key="lib/ft4/auth/login.rell">
+                                <string>
+val DEFAULT_LOGIN_CONFIG_NAME = "default";
+
+query get_login_config(name? = null) {
+    val configs = login_config();
+    val config_name = name ?: DEFAULT_LOGIN_CONFIG_NAME;
+
+    if (config_name == DEFAULT_LOGIN_CONFIG_NAME) {
+        return if (config_name in configs) configs[config_name] else _login_config(flags = []);
+    }
+    
+    return require(
+        configs.get_or_null(config_name), 
+        "Unknown login configuration &lt;%s&gt;".format(config_name)
+    );
+}
+
+struct _login_config {
+    flags: list&lt;text&gt;;
+}
+
+@extendable
+function login_config(): map&lt;name, _login_config&gt;;
+
+function add_login_config(name = DEFAULT_LOGIN_CONFIG_NAME, flags: list&lt;text&gt;) {
+    return [name: _login_config(flags)];
+}
+
+</string>
+                            </entry>
+                            <entry key="lib/ft4/auth/module.rell">
+                                <string>@mount('ft4')
+module;
+
+import ^.accounts;
+
+struct auth_data {
+    flags: list&lt;text&gt;;
+    message: text;
+}
+
+struct _auth_handler {
+    flags: list&lt;text&gt;;
+    message_formatter: ((gtv) -&gt; text)? = null;
+}
+
+/*
+ * The constant that defines app level authentication scope.
+ * If scope is omitted when defining an auth handler, then
+ * it has 'app' scope, i.e. it is used to authenticate 
+ * operations that do not have own auth handlers or if 
+ * there is no mount point auth handler for the operation.
+ */
+val APP_SCOPE = "app";
+
+/*
+ * Extendable function used to define auth handlers. 
+ * When called it returns a list of all auth handlers defined
+ * in the dapp.
+ */
+@extendable 
+function auth_handler(): map&lt;name, _auth_handler&gt;;
+
+/*
+ * Finds auth handler for provided operation name.
+ */
+function get_auth_handler(op_name: name) {
+    require_valid_scope_name(op_name);
+    val auth_handlers = auth_handler();
+    if (op_name in auth_handlers) return auth_handlers[op_name];
+
+    val handler = get_mount_scope_auth_handler(auth_handlers, op_name);
+    if (handler??) return handler;
+
+    return require(
+        auth_handlers.get_or_null(APP_SCOPE), 
+        "Cannot find auth handler for operation &lt;%s&gt;".format(op_name)
+    );
+}
+
+function add_auth_handler(scope: text = APP_SCOPE, flags: list&lt;text&gt;, message: ((gtv) -&gt; text)? = null) {
+    val scope_name = scope.trim();
+    require_valid_scope_name(scope_name);
+    return [scope_name: _auth_handler(flags, message)];
+}
+
+function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
+
+struct signature {
+    r: byte_array;
+    s: byte_array;
+    v: integer;
+}
+
+function get_mount_scope_auth_handler(auth_handlers: map&lt;name, _auth_handler&gt;, op_name: name) {
+    val op_name_components = op_name.split(".");
+    if (op_name_components.size() &lt; 2) return null;
+    
+    for (count in range(op_name_components.size()-1, 0, -1)) {
+        val mount_point = join_text_list(op_name_components, count);
+        if (mount_point in auth_handlers) return auth_handlers[mount_point];
+    }
+
+    return null;
+}
+
+/*
+ * Creates message from operation name and arguments.
+ * It is used when `evm_auth` is used to authenticate a user, 
+ * but auth message is not specified in the auth handler of the operation.
+ */
+function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
+    var message = "Please sign the message to call\noperation:\n- %s\n\n".format(op.name);
+
+    if (op.args.size() &gt; 0) {
+        var arguments = "with arguments:\n";
+        for (arg in op.args) {
+            arguments = arguments + "- %s\n".format(arg).replace("\"", "");
+        }
+        message = message + arguments + "\n";
+    }
+    
+    return message + "Nonce: {nonce}";
+}
+
+function join_text_list(components: list&lt;text&gt;, count: integer) {
+    require(count &lt; components.size() and count &gt; 0, "Error building mount path");
+    var result = components[0];
+    for (i in range(1, count)) {
+        result = result + "." + components[i];
+    }
+    return result;
+}
+
+function require_valid_scope_name(name) =     
+    require(
+        name.matches("^\\w+(\\.\\w+)*$"), 
+        "Invalid scope name &lt;%s&gt;".format(name)
+    );
+</string>
+                            </entry>
+                            <entry key="lib/ft4/auth/operations.rell">
+                                <string>
+operation evm_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array,
+    signatures: list&lt;signature&gt;
+) {}
+
+operation ft_auth(
+    account_id: byte_array,
+    auth_descriptor_id: byte_array
+) {}
+</string>
+                            </entry>
+                            <entry key="lib/ft4/auth/queries.rell">
+                                <string>
+query get_auth_flags(op_name: name) = get_auth_handler(op_name).flags;
+
+query get_auth_message_template(op_name: name, op_args: gtv) {
+    val formatter = get_auth_handler(op_name).message_formatter;
+
+    return if (formatter??) formatter(op_args) else generate_auth_message_template(chain_context.blockchain_rid, gtx_operation(
+        name = op_name,
+        args = list&lt;gtv&gt;.from_gtv(op_args)
+    ));
+}
+</string>
+                            </entry>
+                            <entry key="lib/ft4/ft4_basic_dev.rell">
                                 <string>module;
 
-namespace ft3 {
-    import acc: ^.account;
-    import ^.core;
+namespace ft4 {
+    import acc: ^.accounts;
+    import ^.assets;
     import ^.auth;
     import ^.admin;
-    import acc_ext: ^.account.external;    
-    import core_ext: ^.core.external;
+    import acc_ext: ^.accounts.external;
+    import assets_ext: ^.assets.external;
     import ^.operations.dev_op_account;
     import ^.operations.dev_op_auth;
     import ^.version;
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/operations/dev_op_account.rell">
-                                <string>@mount('ft3')
+                            <entry key="lib/ft4/operations/dev_op_account.rell">
+                                <string>@mount('ft4')
 module;
 
-import acc: ^^.account; 
+import acc: ^^.accounts; 
 
 // TODO: move to tests directory
 operation register_account_test(acc.auth_descriptor) {
@@ -1970,12 +2111,12 @@ operation register_account_test(acc.auth_descriptor) {
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/operations/dev_op_auth.rell">
-                                <string>@mount('ft3')
+                            <entry key="lib/ft4/operations/dev_op_auth.rell">
+                                <string>@mount('ft4')
 module;
 
 import ^^.admin;
-import acc: ^^.account; 
+import acc: ^^.accounts; 
 
 /*
  * We can store the error message in this singleton, and later check it in our tests.
@@ -2013,8 +2154,7 @@ operation dev_auth(account_id: byte_array, auth_descriptor_id: byte_array, requi
 
 operation dev_authenticated_operation(message_template: text) {
   admin.require_admin();
-  // require(acc.authenticate(set&lt;text&gt;(["A"]), message_template));
-  acc.authenticate(set&lt;text&gt;(["A"]), message_template);
+  acc._authenticate(set&lt;text&gt;(["A"]), message_template);
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
@@ -2027,11 +2167,74 @@ operation dev_perform_large_transfer(
   to: text
 ) {
   val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {nonce}";
-  acc.authenticate(set(["A"]), msg_template);
+  acc._authenticate(set(["A"]), msg_template);
 }
 </string>
                             </entry>
-                            <entry key="lib/ft3/utils/utils.rell">
+                            <entry key="lib/ft4/utils/pagination.rell">
+                                <string>struct page_cursor {
+    before_rowid: rowid? = null;
+}
+
+struct pagination_result {
+    data: gtv;
+    rowid: rowid;
+}
+
+val MAX_PAGE_SIZE: integer = 100;
+
+function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
+
+function decode_cursor(cursor: text) = page_cursor.from_bytes(byte_array.from_base64(cursor));
+
+struct paged_result {
+    next_cursor: text?;
+    data: list&lt;gtv&gt;;
+}
+
+function null_page() = paged_result(
+    next_cursor = null,
+    data = list&lt;gtv&gt;()
+);
+
+function fetch_data_size(page_size: integer) = min(MAX_PAGE_SIZE, page_size) + 1;
+
+function before_rowid(page_cursor: text?) {
+    var before_rowid: rowid? = null;
+    if (page_cursor??) {
+        val cursor = decode_cursor(page_cursor);
+        before_rowid = cursor.before_rowid;
+    }
+    return before_rowid;
+}
+
+
+function make_page(pagination_results: list&lt;pagination_result&gt;, page_size: integer): paged_result {
+    require(page_size &gt; 0, "Must return at least one item");
+    if (empty(pagination_results)) {
+         return null_page();
+    }
+    // adding +1 should help with next page null situation when current page size
+    // is equal to max page size
+    if(pagination_results.size() &lt; fetch_data_size(page_size)) {
+        return paged_result(
+            next_cursor = null,
+            data = pagination_results  @* {} .data
+        );
+    }
+    val paginated_result = pagination_results.sub(0, pagination_results.size()-1);
+    val next_id = pagination_results[pagination_results.size()-2].rowid;
+    val next_cursor = page_cursor(
+        next_id
+    );
+    return paged_result(
+        next_cursor = encode_cursor(next_cursor),
+        data = paginated_result  @* {} .data
+    );
+}
+</string>
+                            </entry>
+                            <entry key="lib/ft4/utils/utils.rell">
                                 <string>/*
  * For complex validation we might not want to use simple "require()"
  * but an error message that is returned. 
@@ -2045,38 +2248,39 @@ val VALID = validation_result(true, null);
 
 function invalid(error: text) = validation_result(false, error);</string>
                             </entry>
-                            <entry key="lib/ft3/version.rell">
-                                <string>@mount('ft3')
+                            <entry key="lib/ft4/version.rell">
+                                <string>@mount('ft4')
 module;
 
-query get_version(): text = "4.0.0r";</string>
+query get_version(): text = "4.0.0r";
+</string>
                             </entry>
                             <entry key="main.rell">
                                 <string>module;
 
-import lib.ft3.ft3_basic_dev.*;
+import lib.ft4.ft4_basic_dev.*;
 
-query get_all_accounts() = ft3.acc.account @* {} (.id);
+query get_all_accounts() = ft4.acc.account @* {} (.id);
 
-@extend(ft3.auth.auth_handler)
-function () = ft3.auth.auth(
+@extend(ft4.auth.auth_handler)
+function () = ft4.auth.add_auth_handler(
   scope = "foo",
-  flags = []
+  flags = ["T"]
 );
 
 operation foo() {
-  val account = ft3.acc.authenticateV2();
+  val account = ft4.auth.authenticate();
   print("-------------- Calling foo with account %s".format(account.id));
 }
 
-@extend(ft3.auth.auth_handler)
-function () = ft3.auth.auth(
+@extend(ft4.auth.auth_handler)
+function () = ft4.auth.add_auth_handler(
   scope = "bar",
-  flags = []
+  flags = ["T"]
 );
 
 operation bar(arg1: text, arg2: integer) {
-  val account = ft3.acc.authenticateV2();
+  val account = ft4.auth.authenticate();
   print("-------------- Calling bar with account %s".format(account.id));
 }
 </string>
@@ -2093,7 +2297,7 @@ operation bar(arg1: text, arg2: integer) {
     <entry key="revolt">
         <dict>
             <entry key="fast_revolt_status_timeout">
-                <int>1000</int>
+                <int>2000</int>
             </entry>
         </dict>
     </entry>

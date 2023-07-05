@@ -1,27 +1,27 @@
 module;
 
-import lib.ft3.ft3_basic_dev.*;
+import lib.ft4.ft4_basic_dev.*;
 
-query get_all_accounts() = ft3.acc.account @* {} (.id);
+query get_all_accounts() = ft4.acc.account @* {} (.id);
 
-@extend(ft3.auth.auth_handler)
-function () = ft3.auth.auth(
+@extend(ft4.auth.auth_handler)
+function () = ft4.auth.add_auth_handler(
   scope = "foo",
-  flags = []
+  flags = ["T"]
 );
 
 operation foo() {
-  val account = ft3.acc.authenticateV2();
+  val account = ft4.auth.authenticate();
   print("-------------- Calling foo with account %s".format(account.id));
 }
 
-@extend(ft3.auth.auth_handler)
-function () = ft3.auth.auth(
+@extend(ft4.auth.auth_handler)
+function () = ft4.auth.add_auth_handler(
   scope = "bar",
-  flags = []
+  flags = ["T"]
 );
 
 operation bar(arg1: text, arg2: integer) {
-  val account = ft3.acc.authenticateV2();
+  val account = ft4.auth.authenticate();
   print("-------------- Calling bar with account %s".format(account.id));
 }
