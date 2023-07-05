@@ -38,13 +38,10 @@ query _get_account_auth_descriptors(id: byte_array) {
 }
 
 query get_account_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
-    val descriptors = acc.get_paginated_auth_descriptors(id, page_size, page_cursor);
-    val pagination_results = descriptors @* {} ( utils.pagination_result(data = (
-        auth_type = .auth_type,
-        args = .args,
-        rules = .rules
-    ).to_gtv_pretty(), rowid = .rowid) );
-    return utils.make_page(pagination_results, page_size);
+    return utils.make_page(
+        acc.get_paginated_auth_descriptors(id, page_size, page_cursor), 
+        page_size
+    );
 }
 
 query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {

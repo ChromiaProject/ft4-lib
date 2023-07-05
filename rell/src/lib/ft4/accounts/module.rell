@@ -165,10 +165,14 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
         .account.id == id,
         .rowid > (before_rowid ?: rowid(0))
     } (
-        @sort .rowid,
-        auth_type = .auth_type,
-        args = gtv.from_bytes(.args),
-        rules = gtv.from_bytes(.rules)
+        utils.pagination_result(
+            data = (
+                auth_type = .auth_type,
+                args = gtv.from_bytes(.args),
+                rules = gtv.from_bytes(.rules)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
     ) limit utils.fetch_data_size(page_size);
 }
 
