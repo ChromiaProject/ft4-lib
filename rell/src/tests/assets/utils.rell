@@ -21,11 +21,11 @@ function register_bob() = create_test_account(rell.test.keypairs.bob);
 function register_eve() = create_test_account(rell.test.keypairs.eve);
 function register_trudy() = create_test_account(rell.test.keypairs.trudy);
 
-function evm_register_alice(flags: set<text> = set(["T"])) = create_evm_auth_test_account(rell.test.keypairs.alice, flags);
-function evm_register_bob(flags: set<text> = set(["T"])) = create_evm_auth_test_account(rell.test.keypairs.bob, flags);
+function evm_register_alice(flags: list<text> = ["T"]) = create_evm_auth_test_account(rell.test.keypairs.alice, flags);
+function evm_register_bob(flags: list<text> = ["T"]) = create_evm_auth_test_account(rell.test.keypairs.bob, flags);
 
-function create_test_account(rell.test.keypair): account_data {
-    val auth_descriptor = create_auth_descriptor(keypair.pub);
+function create_test_account(rell.test.keypair, permissions: list<text> = ["T"]): account_data {
+    val auth_descriptor = create_auth_descriptor(keypair.pub, permissions);
 
     create_test_account_with_auth_descriptor(auth_descriptor, keypair);
     val account = acc.account_auth_descriptor @ {
@@ -51,7 +51,7 @@ function create_test_account_with_auth_descriptor(
         .run();
 }
 
-function create_evm_auth_test_account(rell.test.keypair, flags: set<text> = set(["T"])): account_data {
+function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T"]): account_data {
     val address = eth_address_from_pubkey(crypto.privkey_to_pubkey(keypair.priv).sub(1));
     val auth_descriptor = create_auth_descriptor(address, flags);
     operations.register_account_test(auth_descriptor)
@@ -69,11 +69,11 @@ function create_evm_auth_test_account(rell.test.keypair, flags: set<text> = set(
     );
 }
 
-function create_auth_descriptor(participant_id: byte_array, flags: set<text> = set(["T"])): acc.auth_descriptor {
+function create_auth_descriptor(participant_id: byte_array, permissions: list<text> = ["T"]): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.S,
         [
-            flags.to_gtv(),
+            set(permissions).to_gtv(),
             participant_id.to_hex().to_gtv()
         ],
         rules = null.to_gtv());

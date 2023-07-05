@@ -28,17 +28,22 @@ import {
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
 import {
-  AuthData,
   AuthDataService,
   Authenticator,
   KeyStore,
-} from "./authentication/interfaces";
+  LoginConfig,
+} from "./authentication/types";
+import { createAuthenticator } from "./authentication";
 import {
-  authDataQuery,
-  createAuthenticator,
-  defaultFTAuthData,
+  authFlags,
+  authMessageTemplate,
+  loginConfig,
   nonce,
-} from "./authentication";
+} from "./authentication/queries";
+import {
+  LoginManger,
+  createLoginManager,
+} from "./authentication/login-manager";
 import {
   IClient,
   QueryObject,
@@ -49,6 +54,7 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { Buffer } from "buffer";
+import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 
 export function createUserSession(pci: GtxClient, user: User): ftUserSession {
   return Object.freeze({
@@ -142,30 +148,23 @@ export async function call(
 export type KeyStoreInteractor = {
   getAccounts(): Promise<IAccount[]>;
   getSession(accountId: BufferId): Promise<Session>;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };
 
 // TODO: Improve error handling
 // Use `rell.get_app_structure` to get exposed queries (FT3-99)
 export function createAuthDataService(connection: Connection): AuthDataService {
   return Object.freeze({
-    getAuthData: async (operation: Operation) => {
-      let authData: AuthData | null;
-      try {
-        authData = await connection.query<AuthData>(authDataQuery(operation));
-      } catch {
-        try {
-          authData = await connection.query<AuthData>(defaultFTAuthData);
-        } catch {
-          authData = {
-            flags: [],
-            message: "",
-          };
-        }
-      }
-      return authData!;
+    getAuthFlags: async (operation: Operation) => {
+      return await connection.query<string[]>(authFlags(operation));
     },
-    getNonce: async (authDescriptorId: BufferId) =>
-      connection.query<number>(nonce(authDescriptorId)),
+    getAuthMessageTemplate: async (operation: Operation) => {
+      return await connection.query<string>(authMessageTemplate(operation));
+    },
+    getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
+      connection.query<number>(nonce(accountId, authDescriptorId)),
+    getLoginConfig: async (configName: string | null = null) =>
+      connection.query<LoginConfig>(loginConfig(configName)),
   });
 }
 
@@ -192,5 +191,7 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
+    getLoginManager: (loginKeyStore?: LoginKeyStore) =>
+      createLoginManager(connection, keyStore, loginKeyStore),
   });
 }

@@ -1,7 +1,6 @@
 import { GtxClient, Itransaction } from "postchain-client";
 import { User } from "../accounts/types";
 import { Operation } from "./types";
-import { FlagsType } from "../accounts";
 import { Buffer } from "buffer";
 import { RawGtv } from "postchain-client";
 
@@ -54,7 +53,6 @@ export function legacyTransactionBuilder(
       this._operations.map(async (operation: Operation) => {
         if (operation[0] === "nop") return operation;
 
-        const auth_data = { flags: new Set<FlagsType>(), message: "" };
         const manager = user.keyManagers[0];
         if (!manager) {
           throw new TransactionBuilderError(
@@ -62,10 +60,10 @@ export function legacyTransactionBuilder(
           );
         }
         const newOps: { name: string; args?: RawGtv[] }[] =
-          await manager.authorize(
-            { name: operation[0], args: operation.slice(1) },
-            auth_data
-          );
+          await manager.authorize({
+            name: operation[0],
+            args: operation.slice(1),
+          });
         return newOps.map((newOp) => [newOp.name, ...(newOp.args ?? [])]);
       })
     );

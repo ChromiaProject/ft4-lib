@@ -1,18 +1,17 @@
-import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
+import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
-  AuthData,
   AuthDataService,
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
-} from "./interfaces";
+} from "./types";
 import { TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
 
 export * from "./evm";
 export * from "./ft";
-export * from "./interfaces";
+export * from "./types";
 
 export function createAuthenticator(
   accountId: BufferId,
@@ -21,42 +20,57 @@ export function createAuthenticator(
 ): Authenticator {
   const authenticator = Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
+    authDataService,
     keyHandlers,
-    createSession: () => createAuthenticatorSession(authenticator),
-    getAuthRequirements: (operation: Operation) =>
-      getAuthRequirements(authDataService, operation),
+    createSession: () =>
+      createAuthenticatorSession(authenticator, authDataService),
+    getAuthFlags: (operation: Operation) =>
+      getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
-      authDataService.getNonce(authDescriptorId),
+      authDataService.getNonce(accountId, authDescriptorId),
   });
 
   return authenticator;
 }
 
-async function getAuthRequirements(
+async function getAuthFlags(
   authDataService: AuthDataService,
   operation: Operation
-): Promise<AuthData> {
-  return authDataService.getAuthData(operation);
+): Promise<string[]> {
+  return await authDataService.getAuthFlags(operation);
 }
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
   operation: Operation
-): Promise<KeyHandler | undefined> {
-  const authRequirements = await getAuthRequirements(
-    authDataService,
-    operation
+): Promise<KeyHandler | null> {
+  const flags = await getAuthFlags(authDataService, operation);
+
+  const handlers = keyHandlers.filter((keyHandler) =>
+    keyHandler.satisfiesAuthRequirements(flags)
   );
-  return keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(authRequirements.flags)
+
+  const nonInteractiveHandlers = handlers.filter(
+    (keyHandler) => !keyHandler.keyStore.isInteractive
   );
+
+  if (nonInteractiveHandlers.length !== 0) {
+    return nonInteractiveHandlers[0];
+  }
+
+  if (handlers.length !== 0) {
+    return handlers[0];
+  }
+
+  return null;
 }
 
 function createAuthenticatorSession(
-  authenticator: Authenticator
+  authenticator: Authenticator,
+  authDataService: AuthDataService
 ): AuthenticatorSession {
   const usedKeyHandlers = new Set<KeyHandler>();
 
@@ -74,22 +88,19 @@ function createAuthenticatorSession(
       );
       return signers;
     },
-    authenticate: async (operation: Operation) => {
+    authorize: async (operation: Operation) => {
       const keyHandler = await authenticator.getKeyHandlerForOperation(
         operation
       );
       if (!keyHandler) {
-        // TODO: replace `operation[0]` with `operation.name` when Operation type is updated
-        throw new Error(`Cannot authenticate operation: ${operation[0]}`);
+        throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }
       usedKeyHandlers.add(keyHandler);
-      // `getKeyHandlerForOperation` internally calls `getAuthRequirements`
-      // Find a way to make only one call
-      const authData = await authenticator.getAuthRequirements(operation);
-      return await keyHandler.authenticate(
+      return await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        authData
+        0,
+        authDataService
       );
     },
     sign: async (transaction: TxBuilderTransaction) => {
@@ -100,31 +111,4 @@ function createAuthenticatorSession(
       );
     },
   });
-}
-
-export function authDataQuery(
-  operation: Operation
-): QueryObject<{ gtv?: RawGtv[] }> {
-  return {
-    name: `${operation.name}_auth_data`,
-    args: {
-      gtv: operation.args,
-    },
-  };
-}
-
-export const defaultFTAuthData: QueryObject<Record<string, never>> = {
-  name: `ft4.default_auth_data`,
-  args: {},
-};
-
-export function nonce(
-  authDescriptorId: BufferId
-): QueryObject<{ auth_descriptor_id: Buffer }> {
-  return {
-    name: "ft4.get_ctr_for_auth_descriptor",
-    args: {
-      auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
-    },
-  };
 }

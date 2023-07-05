@@ -1,6 +1,6 @@
 import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../../cryptoUtils";
-import { KeyStore } from "../interfaces";
+import { KeyStore } from "../types";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
 
@@ -12,7 +12,7 @@ export function evmAuth(
   signatures: Signature[]
 ): Operation {
   return {
-    name: "ft.evm_auth",
+    name: "ft4.evm_auth",
     args: [
       formatter.ensureBuffer(accountId),
       formatter.ensureBuffer(authDesriptorId),
@@ -27,7 +27,7 @@ export type Signature = {
   v: number;
 };
 
-export interface EVMKeyStore extends KeyStore {
+export interface EvmKeyStore extends KeyStore {
   address: Buffer;
   signMessage(message: string): Promise<Signature>;
 }

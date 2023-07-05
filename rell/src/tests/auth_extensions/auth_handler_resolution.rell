@@ -1,0 +1,54 @@
+@test
+module;
+
+import ^^^.lib.ft4.auth;
+
+/*
+ * Following tests ensure auth handler resolution works as expected.
+ * We have following auth handlers defined in /tests/extensions/auth_handler.rell
+ *  - "app":    ["X"]
+ *  - "a":      ["A"]
+ *  - "a.b":    ["B"]
+ *  - "a.b.foo" ["F"]
+ * Auth handlers flags will be resolved as follows:
+ *  - "a.b.foo"     -> ["F"]
+ *  - "a.b.bar"     -> ["B"]
+ *  - "a.b.c.foo"   -> ["B"]
+ *  - "a.b.c.d.foo" -> ["B"]
+ *  - "x.y.z"       -> ["X"]
+ */ 
+
+
+function test_auth_handler_resolves_to_operation_scope_auth_handler_when_auth_handler_defined_for_operation() {
+    val auth_handler_flags = auth.get_auth_flags("a.b.foo");
+    assert_equals(auth_handler_flags, ["F"]);
+}
+
+function test_auth_handler_resolves_to_mount_scope_auth_handler() {
+    val auth_handler_flags = auth.get_auth_flags("a.b.bar");
+    assert_equals(auth_handler_flags, ["B"]);    
+}
+
+function test_auth_handler_resolves_to_parent_mount_scope_auth_handler() {
+    val auth_handler_flags = auth.get_auth_flags("a.b.c.foo");
+    assert_equals(auth_handler_flags, ["B"]);
+}
+
+function test_auth_handler_resolves_to_grand_parent_mount_scope_auth_handler() {
+    val auth_handler_flags = auth.get_auth_flags("a.b.c.d.foo");
+    assert_equals(auth_handler_flags, ["B"]);
+}
+
+function test_auth_handler_resolves_to_app_scope_auth_handler_when_no_operation_or_mount_scope_auth_handlers() {
+    val auth_handler_flags = auth.get_auth_flags("x.y.z.foo");
+    assert_equals(auth_handler_flags, ["X"]);
+}
+
+function test_get_auth_flags_throws_error_when_name_ends_with_period() {
+    // `try_call` returns null when a function/query fails
+    assert_null(try_call(auth.get_auth_flags("x.y.z.", *)));
+}
+
+function test_get_auth_flags_throws_error_when_name_starts_with_period() {
+    assert_null(try_call(auth.get_auth_flags(".x.y.z", *)));
+}

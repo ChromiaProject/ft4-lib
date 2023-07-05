@@ -1,9 +1,10 @@
 import { encryption } from "postchain-client";
 import { createTestAuthDescriptor, toNewTx } from "./util/util";
-import { createInMemoryFTKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { _op } from "../client/lib/ft4/utils";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { createClient } from "./util/blockchain-util";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -11,11 +12,13 @@ describe("FT key handler", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const operations = await keyHandler.authenticate(accountId, _op("foo"), {
-      flags: [],
-      message: "",
-    });
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const operations = await keyHandler.authorize(
+      accountId,
+      _op("foo"),
+      0,
+      createFakeAuthDataService({})
+    );
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),
@@ -31,7 +34,7 @@ describe("FT key handler", () => {
     transaction.addOperation("foo");
 
     const keyHandler =
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor);
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const newTx = toNewTx(transaction);
     await keyHandler.sign(newTx);
 

@@ -7,7 +7,7 @@ import {
 } from "./ft-session";
 
 // Export public interfaces
-import { KeyStore, createWeb3ProviderEVMKeyStore } from "./authentication";
+import { KeyStore, createWeb3ProviderEvmKeyStore } from "./authentication";
 import {
   AuthDescriptor,
   FlagsType,
@@ -23,7 +23,7 @@ export {
   IAccount,
   authDescriptor,
   createKeyStoreInteractor,
-  createWeb3ProviderEVMKeyStore,
+  createWeb3ProviderEvmKeyStore,
   createAmount,
 };
 

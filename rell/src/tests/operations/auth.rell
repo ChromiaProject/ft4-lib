@@ -38,7 +38,7 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
 }
 
 operation test_authenticated_operation(message_template: text) {
-  acc.authenticate(set<text>(["A"]), message_template);
+  acc._authenticate(set<text>(["A"]), message_template);
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
@@ -50,5 +50,5 @@ operation test_perform_large_transfer(
   to: text
 ) {
   val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {nonce}";
-  acc.authenticate(set(["A"]), msg_template);
+  acc._authenticate(set(["A"]), msg_template);
 }

@@ -32,9 +32,9 @@ import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { Amount } from "../asset/interfaces";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../types";
-import { createInMemoryFTKeyStore } from "../authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
-import { Authenticator } from "../authentication/interfaces";
+import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
 import { Buffer } from "buffer";
 
@@ -250,7 +250,7 @@ async function _addAuthDescriptor(
   const tx = await tb
     .add(addAuthDescriptorV2(authDescriptor))
     .addSigners(
-      createInMemoryFTKeyStore(keyPair).createKeyHandler(authDescriptor)
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor)
     )
     .build();
 

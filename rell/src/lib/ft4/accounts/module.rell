@@ -150,6 +150,15 @@ function account_by_id(id: byte_array) = require(
     "Account not found: '%s'".format(id)
 );
 
+function single_sig_auth_descriptor(pubkey, flags: set<text>) = auth_descriptor(
+    auth_type = auth_type.S,
+    args = [
+        flags.to_gtv(),
+        pubkey.to_gtv()
+    ],
+    null.to_gtv()
+);
+
 function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return account_auth_descriptor @* {

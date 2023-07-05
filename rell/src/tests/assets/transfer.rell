@@ -1,6 +1,7 @@
 @test
 module;
 
+import ^^^.lib.ft4.auth;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft4.assets;
@@ -91,7 +92,7 @@ function test_transfer_fails_when_insufficient_balance() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
-    val tx = rell.test.tx()
+    rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer_one(bob.account.id, asset.id, 11))
         .sign(alice.keypair)
@@ -105,7 +106,7 @@ function test_transfer_fails_when_amount_is_negative() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
-    val tx = rell.test.tx()
+    rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer_one(bob.account.id, asset.id, -1))
         .sign(alice.keypair)
@@ -131,7 +132,7 @@ function test_transfer_fails_when_sender_is_same_as_receiver() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
-    val tx = rell.test.tx()
+    rell.test.tx()
         .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer_one(alice.account.id, asset.id, 5))
         .sign(alice.keypair)
@@ -155,6 +156,21 @@ function test_transfer_succeeds_when_enough_balance() {
     assert_equals(assets.ensure_balance(bob.account, asset).amount, 3);
 }
 
+function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() {
+    val auth_descriptor = ft4.acc.single_sig_auth_descriptor(rell.test.keypairs.alice.pub, set(["A"]));
+    val alice = utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, auth_descriptor);
+    val bob = utils.register_bob();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer_one(bob.account.id, asset.id, 1))
+        .sign(alice.keypair)
+        .run_must_fail("Some required flags [T] are missing on the (single sig) Auth Descriptor.");
+}
+
 function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val alice = utils.evm_register_alice();
     val bob = utils.register_bob();
@@ -162,15 +178,19 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 15);
 
-    val auth_data = ft4.assets_ext.transfer_one_auth_data(
+    val receiver_id = bob.account.id;
+    val asset_id = asset.id;
+    val amount = 5L;
+
+    val template = auth.get_auth_message_template(
+        "ft4.transfer_one", 
         [
-            bob.account.id.to_gtv(), 
-            asset.id.to_gtv(), 
-            (5L).to_gtv()
+            receiver_id.to_gtv(), 
+            asset_id.to_gtv(), 
+            amount.to_gtv()
         ].to_gtv()
     );
-
-    val message = utils.create_auth_message(auth_data.message, alice);
+    val message = utils.create_auth_message(template, alice);
     val signature = utils.metamask_sign(message, alice.keypair.priv);
 
     rell.test.tx()
@@ -189,20 +209,24 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 15);
 
-    val auth_data = ft4.assets_ext.transfer_one_auth_data(
+    val receiver_id = bob.account.id;
+    val asset_id = asset.id;
+    val amount = 10L;
+
+    val template = auth.get_auth_message_template(
+        "ft4.transfer_one", 
         [
-            bob.account.id.to_gtv(), 
-            asset.id.to_gtv(), 
-            (10L).to_gtv()
+            receiver_id.to_gtv(), 
+            asset_id.to_gtv(), 
+            amount.to_gtv()
         ].to_gtv()
     );
-
-    val message = utils.create_auth_message(auth_data.message, alice);
+    val message = utils.create_auth_message(template, alice);
     val invalid_signature = utils.metamask_sign(message, bob.keypair.priv);
 
-    val tx = rell.test.tx()
+    rell.test.tx()
         .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
-        .op(ft4.assets_ext.transfer_one(bob.account.id, asset.id, 10))
+        .op(ft4.assets_ext.transfer_one(receiver_id, asset_id, amount))
         .run_must_fail("Invalid signature");
 }
 

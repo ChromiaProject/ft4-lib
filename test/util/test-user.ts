@@ -5,7 +5,7 @@ import {
 } from "../../client/lib/ft4/accounts/auth-descriptor";
 import { AuthDescriptorRule } from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import { User } from "../../client/lib/ft4/accounts/types";
-import { AuthData, KeyManager } from "../../client/lib/ft4/accounts/auth/types";
+import { KeyManager } from "../../client/lib/ft4/accounts/auth/types";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 import { Buffer } from "buffer";
 
@@ -22,8 +22,7 @@ export function newSingleSigUser(
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    authorize: (operation: Operation, auth_data: AuthData) =>
-      Promise.resolve([operation]),
+    authorize: (operation: Operation) => Promise.resolve([operation]),
   };
   const signatureProvider = { ...gtx.newSignatureProvider(keyPair), ...km };
   const keymanager: KeyManager = {

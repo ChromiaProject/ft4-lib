@@ -1,0 +1,26 @@
+module;
+
+import ^^^.lib.ft4.auth;
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    flags = ["X"]
+);
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "a",
+    flags = ["A"]
+);
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "a.b",
+    flags = ["B"]
+);
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "a.b.foo",
+    flags = ["F"]
+);
