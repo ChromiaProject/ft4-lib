@@ -17,19 +17,21 @@ import {
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createPaymentHistoryRetriever } from "../client/lib/ft4/accounts/payment-history/payment-history-retrieval";
-import { gtv } from "postchain-client";
+import { IClient, gtv } from "postchain-client";
 
 let _ft: ftUserSession;
 let asset: Asset;
 let connection: Connection;
+let client: IClient;
 const NULL_ACCOUNT = gtv.encode(null);
 
 describe("Payment history", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
     _ft = await getUserSession();
-    asset = await getNewAsset(_ft);
-    connection = createConnection(await createChromiaClient());
+    client = await createChromiaClient();
+    asset = await getNewAsset(client);
+    connection = createConnection(client);
   });
   describe("Payment history iterator", () => {
     it("should have one payment history entry when mint is made", async () => {

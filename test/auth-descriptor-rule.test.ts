@@ -4,12 +4,18 @@ import { ftUserSession } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
 import { Account, User } from "../client/lib/ft4/accounts/types";
 import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createChromiaClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
+import { IClient } from "postchain-client";
 
 let _ft: ftUserSession;
 let asset: Asset;
+let client: IClient;
 
 function sourceAccount(user: User): Promise<Account> {
   return AccountBuilder.account(_ft.changeUser(user))
@@ -51,7 +57,8 @@ async function getUserAndAccountFromAuthDescriptorRule(
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    asset = await getNewAsset(_ft);
+    client = await createChromiaClient();
+    asset = await getNewAsset(client);
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {

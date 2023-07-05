@@ -98,14 +98,6 @@ export interface ftUserSession {
 export interface ftQuerySession {
   gtxClient: GtxClient;
   createUserSession: (user: User) => ftUserSession;
-  asset: {
-    id: (name: string, brid: BufferId) => Buffer;
-    by: {
-      name: (name: string) => Promise<Asset[]>;
-      id: (assetId: BufferId) => Promise<Asset>;
-    };
-    all: () => Promise<Asset[]>;
-  };
   balance: {
     by: {
       accountId: (accountid: BufferId) => Promise<Balance[]>;

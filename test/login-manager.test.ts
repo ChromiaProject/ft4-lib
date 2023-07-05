@@ -12,20 +12,22 @@ import { createAccount } from "./util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";
-import { encryption, gtx } from "postchain-client";
+import { IClient, encryption, gtx } from "postchain-client";
 import { transferV2 } from "/ft4/accounts/account-operations";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
 describe("Login manager", () => {
-  let client: GtxClient;
+  let gtxClient: GtxClient;
+  let client: IClient;
   let ft: ftUserSession;
   let connection: Connection;
 
   beforeAll(async () => {
     ft = await getUserSession();
-    client = ft.get.gtxClient;
-    connection = createConnection(await createChromiaClient());
+    gtxClient = ft.get.gtxClient;
+    client = await createChromiaClient();
+    connection = createConnection(client);
   });
 
   it("adds disposable auth descriptor to account", async () => {
@@ -35,7 +37,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.address
     ).andNoRules;
-    const accountId = await createAccount(client, ad);
+    const accountId = await createAccount(gtxClient, ad);
     const account = createAccountObject(connection, accountId);
 
     const loginManger = createKeyStoreInteractor(
@@ -53,13 +55,13 @@ describe("Login manager", () => {
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = new KeyPair();
-    const asset = await getNewAsset(ft, undefined, undefined, 5);
+    const asset = await getNewAsset(client, undefined, undefined, 5);
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
       keyStore.address
     ).andNoRules;
-    const accountId = await createAccount(client, ad);
+    const accountId = await createAccount(gtxClient, ad);
 
     const loginManger = createKeyStoreInteractor(
       connection.client,
@@ -95,7 +97,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.id
     ).andNoRules;
-    const accountId = await createAccount(client, ad);
+    const accountId = await createAccount(gtxClient, ad);
 
     const session = await createKeyStoreInteractor(
       connection.client,
@@ -130,7 +132,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.id
     ).andNoRules;
-    const accountId = await createAccount(client, ad);
+    const accountId = await createAccount(gtxClient, ad);
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
       keyStore

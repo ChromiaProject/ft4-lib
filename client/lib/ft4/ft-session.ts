@@ -19,7 +19,7 @@ import {
 import {
   _getAssetById,
   _getAssetBySymbol,
-  _getAllAssets,
+  getAllAssets,
   _getAssetsByName,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
@@ -96,7 +96,7 @@ export function createConnection(client: IClient): Connection {
       cursor?: OptionalPageCursor
     ) => _getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
-      _getAllAssets(connection, limit, cursor),
+      getAllAssets(connection, limit, cursor),
   });
 
   return connection;

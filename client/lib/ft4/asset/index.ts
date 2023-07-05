@@ -1,10 +1,4 @@
-import {
-  getAllAssets,
-  getAssetById,
-  getAssetsByName,
-  getBalance,
-  getBalancesByAccountId,
-} from "./asset-query-functions";
+import { getBalance, getBalancesByAccountId } from "./asset-query-functions";
 import { mint, registerAsset } from "./asset-op-functions";
 import { User } from "../accounts/types";
 import { Amount } from "./interfaces";
@@ -17,14 +11,6 @@ export function id(assetName: string, assetBrid: BufferId) {
 
 export const assetQuerySession = (pci: GtxClient) =>
   Object.freeze({
-    asset: {
-      id,
-      by: {
-        name: (name: string) => getAssetsByName(pci, name),
-        id: (assetId: BufferId) => getAssetById(pci, assetId),
-      },
-      all: () => getAllAssets(pci),
-    },
     balance: {
       by: {
         accountId: (accountId: BufferId) =>

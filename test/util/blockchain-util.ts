@@ -5,8 +5,12 @@ import {
   restClient,
   restClientutil,
   createClient as chromiaClient,
+  gtv,
+  IClient,
+  formatter,
 } from "postchain-client";
 import {
+  createConnection,
   createQuerySession,
   createUserSession,
 } from "../../client/lib/ft4/ft-session";
@@ -46,19 +50,24 @@ export async function getUserSession(
 }
 
 export async function getNewAsset(
-  userSession: ftUserSession,
+  client: IClient,
   name = generateAssetName(),
   symbol = generateAssetSymbol(),
   decimals = 0,
   iconUrl = ""
 ): Promise<Asset> {
-  const id = await userSession.asset.admin.register(
-    adminUser(),
-    name,
-    symbol,
-    decimals,
-    iconUrl
+  const adminSignatureProvider = adminUser().signatureProvider;
+  await client.signAndSendUniqueTransaction(
+    {
+      name: "ft4.admin.register_asset",
+      args: [name, symbol, decimals, iconUrl],
+    },
+    adminSignatureProvider
   );
-  const asset = await userSession.get.asset.by.id(id);
+  const id = gtv.gtvHash([
+    name,
+    formatter.ensureBuffer(client.config.blockchainRID),
+  ]);
+  const asset = await createConnection(client).getAssetById(id);
   return asset;
 }

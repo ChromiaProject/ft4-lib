@@ -4,10 +4,6 @@ import { Query } from "../utils/types";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 
-export function assetByIdQuery(assetId: Buffer): Query {
-  return ["ft4.get_asset_by_id", { asset_id: assetId }];
-}
-
 export function balancesByAccountIdQuery(accountId: BufferId): Query {
   return [
     "ft4._get_asset_balances",
@@ -23,14 +19,6 @@ export function balanceQuery(accountId: Buffer, assetId: Buffer): Query {
       asset_id: assetId,
     },
   ];
-}
-
-export function assetByNameQuery(name: string): Query {
-  return ["ft4.get_asset_by_name", { name: name }];
-}
-
-export function allAssetsQuery(): Query {
-  return ["ft4._get_all_assets", undefined];
 }
 
 export function assetById(

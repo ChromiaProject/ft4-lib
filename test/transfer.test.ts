@@ -1,3 +1,4 @@
+import { IClient } from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import {
@@ -21,12 +22,14 @@ import TestUser, { newSingleSigUser } from "./util/test-user";
 const POINTS_AT_ACCOUNT_CREATION = 1;
 let _ft: ftUserSession;
 let asset: Asset;
+let client: IClient;
 const admin = adminUser();
 
 describe("Transfer", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    asset = await getNewAsset(_ft, undefined, undefined, 5);
+    client = await createChromiaClient();
+    asset = await getNewAsset(client, undefined, undefined, 5);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {
