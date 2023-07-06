@@ -1,13 +1,8 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
-import {
-  createChromiaClient,
-  getNewAsset,
-  getUserSession,
-} from "./util/blockchain-util";
+import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { KeyPair } from "/cryptoUtils";
 import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
-import { Connection, ftUserSession } from "/ft4/types";
+import { Connection } from "/ft4/types";
 import { createAccount } from "./util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
@@ -18,14 +13,10 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
 describe("Login manager", () => {
-  let gtxClient: GtxClient;
   let client: IClient;
-  let ft: ftUserSession;
   let connection: Connection;
 
   beforeAll(async () => {
-    ft = await getUserSession();
-    gtxClient = ft.get.gtxClient;
     client = await createChromiaClient();
     connection = createConnection(client);
   });
@@ -37,7 +28,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.address
     ).andNoRules;
-    const accountId = await createAccount(gtxClient, ad);
+    const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
     const loginManger = createKeyStoreInteractor(
@@ -61,7 +52,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.address
     ).andNoRules;
-    const accountId = await createAccount(gtxClient, ad);
+    const accountId = await createAccount(client, ad);
 
     const loginManger = createKeyStoreInteractor(
       connection.client,
@@ -97,7 +88,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.id
     ).andNoRules;
-    const accountId = await createAccount(gtxClient, ad);
+    const accountId = await createAccount(client, ad);
 
     const session = await createKeyStoreInteractor(
       connection.client,
@@ -112,7 +103,7 @@ describe("Login manager", () => {
 
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const keyStoreInteractor = await createKeyStoreInteractor(
+    const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
       createInMemoryFtKeyStore(keyPair2)
     );
@@ -132,7 +123,7 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.id
     ).andNoRules;
-    const accountId = await createAccount(gtxClient, ad);
+    const accountId = await createAccount(client, ad);
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
       keyStore

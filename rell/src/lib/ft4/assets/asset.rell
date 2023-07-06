@@ -147,7 +147,7 @@ namespace Unsafe {
 
         require(asset.total_supply <= max_asset_amount, "End total supply must be lower than 2^256");
 
-        create payment_history_entry(
+        create transfer_history_entry(
             account,
             asset,
             .delta = amount,
@@ -185,7 +185,7 @@ namespace Unsafe {
         balance.amount -= amount;
         asset.total_supply -= amount;
 
-        create payment_history_entry (
+        create transfer_history_entry (
             account,
             asset,
             .delta = amount,

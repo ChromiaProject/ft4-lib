@@ -20,8 +20,8 @@ import {
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { Connection, OptionalPageCursor } from "../types";
-import { PaymentHistoryFilter } from "./payment-history/types";
-import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
+import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
+import { TransferHistoryFilter } from "./transfer-history/types";
 import {
   AuthDescriptor,
   RawAuthDescriptor,
@@ -122,7 +122,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
-  const payment_history_retriever = createPaymentHistoryRetriever(
+  const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
     accountId
   );
@@ -159,13 +159,13 @@ export function createAccountObject(
     getRateLimit: () => _getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
-      filter: PaymentHistoryFilter = {},
+      filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null
     ) => {
-      return payment_history_retriever.retrieve(limit, filter, cursor);
+      return transferHistoryRetriever.retrieve(limit, filter, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) =>
-      payment_history_retriever.retrieveSingle(rowid),
+      transferHistoryRetriever.retrieveSingle(rowid),
   });
 }
 

@@ -2,22 +2,13 @@
 import { registerOp } from "./account-dev-operations";
 import {
   _transferOp,
-  addAuthDescriptorOp,
-  addAuthDescriptorV2,
+  addAuthDescriptor,
   burnOp,
-  deleteAllAuthDescriptorsExcludeOp,
-  deleteAuthDescriptorOp,
-  deleteAuthDescriptorV2,
+  deleteAuthDescriptor,
   transferOp,
   transferV2,
 } from "./account-operations";
-import {
-  Account,
-  XferInput,
-  XferOutput,
-  User,
-  IAuthenticatedAccount,
-} from "./types";
+import { Account, XferInput, XferOutput, IAuthenticatedAccount } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -36,64 +27,6 @@ import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-mem
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
-
-export async function addAuthDescriptorToAccount( //maybe rename to addUserToAccount?
-  newUser: User,
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-): Promise<void> {
-  const tx = await tb
-    .add(
-      addAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
-        newUser.authDescriptor
-      )
-    )
-    .add(nop())
-    .build([
-      ...tb.user.authDescriptor.signers,
-      ...newUser.authDescriptor.signers,
-    ]);
-  await tx.sign(tb.user.signatureProvider);
-  await tx.sign(newUser.signatureProvider);
-  await tx.postAndWaitConfirmation();
-}
-
-export async function deleteAllAuthDescriptorsExclude(
-  authDescriptorId: BufferId,
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-): Promise<void> {
-  const tx = await tb
-    .add(
-      deleteAllAuthDescriptorsExcludeOp(
-        formatter.ensureBuffer(accountId),
-        formatter.ensureBuffer(authDescriptorId)
-      )
-    )
-    .add(nop())
-    .buildSigned();
-  await tx.postAndWaitConfirmation();
-}
-
-export async function deleteAuthDescriptor(
-  authDescriptorId: BufferId,
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-): Promise<void> {
-  const tx = await tb
-    .add(
-      deleteAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
-        formatter.ensureBuffer(authDescriptorId)
-      )
-    )
-    .add(nop())
-    .buildSigned();
-  await tx.postAndWaitConfirmation();
-}
 
 export async function transferInputsToOutputs(
   inputs: XferInput[],
@@ -199,7 +132,7 @@ async function _addAuthDescriptor(
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
-    .add(addAuthDescriptorV2(authDescriptor))
+    .add(addAuthDescriptor(authDescriptor))
     .addSigners(
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor)
     )
@@ -216,7 +149,7 @@ async function _deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    deleteAuthDescriptorV2(authDescriptorId)
+    deleteAuthDescriptor(authDescriptorId)
   );
 }
 

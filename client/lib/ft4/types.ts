@@ -30,17 +30,6 @@ export interface ftUserSession {
   get: ftQuerySession;
 
   account: {
-    authDescriptor: {
-      add: (newUser: User, accountId: BufferId) => Promise<void>;
-      deleteAllExcluding: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-      delete: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-    };
     token: {
       transfer: (
         from: BufferId,

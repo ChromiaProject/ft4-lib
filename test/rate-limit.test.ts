@@ -1,4 +1,3 @@
-import { addAuthDescriptorOp } from "../client/lib/ft4/accounts/account-operations";
 import { User } from "../client/lib/ft4/accounts/types";
 import { createConnection } from "../client/lib/ft4/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
@@ -7,6 +6,7 @@ import adminUser from "./util/admin_user";
 import { createChromiaClient, getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 import { givePoints } from "/ft4/accounts/account-op-functions";
+import { _op } from "/ft4/utils";
 
 jest.setTimeout(2000000);
 
@@ -120,23 +120,22 @@ describe.skip("Rate Limit", () => {
     for (let i = 0; i < requests; i++) {
       users.push(TestUser());
     }
-    const tx = ft.get.gtxClient.newTransaction([
+
+    const operations = users.map(() =>
+      _op("ft.ft_auth", ft.user.authDescriptor.id, ft.user.authDescriptor.id)
+    );
+    const signers = [
       ft.user.signatureProvider.pubKey,
       ...users.map((user) => user.signatureProvider.pubKey),
-    ]);
-    users.forEach((user) => {
-      tx.addOperation(
-        ...addAuthDescriptorOp(
-          ft.user.authDescriptor.id,
-          ft.user.authDescriptor.id,
-          user.authDescriptor
-        )
-      );
+    ];
+    let tx: Buffer = _connection.client.encodeTransaction({
+      operations,
+      signers,
     });
-    await Promise.all(
-      [ft.user, ...users].map((user) => tx.sign(user.signatureProvider))
-    );
+    for (const user of [ft.user, ...users]) {
+      tx = await _connection.client.signTransaction(tx, user.signatureProvider);
+    }
 
-    return tx.postAndWaitConfirmation();
+    return _connection.client.sendTransaction(tx);
   };
 });

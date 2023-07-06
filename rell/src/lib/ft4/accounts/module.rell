@@ -59,6 +59,8 @@ entity rl_state {
 function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
     val id = auth_descriptor.hash();
 
+    analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+
     val account_auth_descriptor = create account_auth_descriptor (
         account, id,
         auth_descriptor.auth_type,
