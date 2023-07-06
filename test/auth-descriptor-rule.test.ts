@@ -11,7 +11,11 @@ import {
 } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
-import { createConnection, createSession } from "/ft4/ft-session";
+import {
+  createAuthDataService,
+  createConnection,
+  createSession,
+} from "/ft4/ft-session";
 import {
   addAuthDescriptorTo,
   createAccount,
@@ -20,7 +24,6 @@ import {
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { newSignatureProvider } from "postchain-client";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
 
 let _ft: ftUserSession;
@@ -491,9 +494,7 @@ describe("Auth Descriptor Rule", () => {
 
     const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
 
-    const authDataService = createFakeAuthDataService({
-      ["ft4.delete_all_auth_descriptors_exclude"]: { flags: [], message: "" },
-    });
+    const authDataService = createAuthDataService(_connection);
 
     const session = createSession(
       _connection,

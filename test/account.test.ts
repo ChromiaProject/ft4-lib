@@ -30,7 +30,6 @@ import {
   createTestAuthDescriptor,
   createTestMultisigAuthDescriptor,
 } from "./util/util";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import {
   addAuthDescriptor,
   deleteAllAuthDescriptorsExclude,
@@ -83,9 +82,7 @@ describe("Test the account", () => {
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const authDataService = createFakeAuthDataService({
-      ["ft4.add_auth_descriptor"]: { flags: [], message: "" },
-    });
+    const authDataService = createAuthDataService(_connection);
     await createAccount(_connection.client, authDescriptor);
 
     const session = createSession(
@@ -171,9 +168,7 @@ describe("Test the account", () => {
     );
     keyHandlers.push(createInMemoryFtKeyStore(keyPair).createKeyHandler(ad2));
 
-    const authDataService = createFakeAuthDataService({
-      ["ft4.add_auth_descriptor"]: { flags: [], message: "" },
-    });
+    const authDataService = createAuthDataService(_connection);
     await createAccount(_connection.client, authDescriptor);
 
     const session = createSession(
@@ -302,9 +297,7 @@ describe("Test the account", () => {
 
     const keyHandler1 =
       createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
-    const authDataService1 = createFakeAuthDataService({
-      ["ft4.add_auth_descriptor"]: { flags: [], message: "" },
-    });
+    const authDataService1 = createAuthDataService(_connection);
 
     await createAccount(_connection.client, authDescriptor1);
     await createAccount(_connection.client, authDescriptor2);
@@ -421,10 +414,7 @@ describe("Test the account", () => {
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const authDataService = createFakeAuthDataService({
-      ["ft4.add_auth_descriptor"]: { flags: [], message: "" },
-      ["ft4.delete_all_auth_descriptors_exclude"]: { flags: [], message: "" },
-    });
+    const authDataService = createAuthDataService(_connection);
     await createAccount(_connection.client, authDescriptor);
 
     const session = createSession(
@@ -470,10 +460,7 @@ describe("Test the account", () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor(["T"]);
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const authDataService = createFakeAuthDataService({
-      ["ft4.add_auth_descriptor"]: { flags: [], message: "" },
-      ["ft4.delete_auth_descriptor_v2"]: { flags: [], message: "" },
-    });
+    const authDataService = createAuthDataService(_connection);
     await createAccount(_connection.client, authDescriptor);
 
     const session = createSession(

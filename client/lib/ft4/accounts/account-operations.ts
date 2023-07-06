@@ -32,7 +32,7 @@ export function deleteAllAuthDescriptorsExclude(
 ): _Operation {
   return _op(
     "ft4.delete_all_auth_descriptors_exclude",
-    accountId,
+    formatter.ensureBuffer(accountId),
     excludeAuthDescriptorId
   );
 }

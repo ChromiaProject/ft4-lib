@@ -18,10 +18,10 @@ import { Buffer } from "buffer";
 import { _op } from "/ft4/utils";
 import adminUser from "./admin_user";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createFakeAuthDataService } from "./fake-auth-data-service";
 import { createAuthenticator } from "/ft4/authentication";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
+import { createAuthDataService, createConnection } from "/ft4/ft-session";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -134,10 +134,7 @@ export async function addAuthDescriptorTo(
     newUser.signatureProvider
   ).createKeyHandler(newUser.authDescriptor);
 
-  const authDataService = createFakeAuthDataService({
-    ["ft4.add_auth_descriptor"]: { flags: [], message: "" },
-    ["ft4.transfer_one"]: { flags: [], message: "" },
-  });
+  const authDataService = createAuthDataService(createConnection(client));
   const authenticator = createAuthenticator(
     accountId,
     [keyHandlerUser1],
