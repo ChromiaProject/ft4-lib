@@ -26,7 +26,7 @@ while :; do
     shift
 done
 
-ZULIP_MESSAGE="Releasing: ${which}.\n"
+ZULIP_MESSAGE="Releasing: ${which}. "
 EXIT_EARLY=0
 
 echo "\nBuilding..."
@@ -42,7 +42,7 @@ chr deployment pause -d $which -bc ft_deploy -s configs/devnet1.yaml
 
 PAUSED_OLD_CHAIN=$?
 echo "Old chain paused: $PAUSED_OLD_CHAIN"
-txt_to_add=$( [ $PAUSED_OLD_CHAIN -eq 0 ] && echo "Old chain paused" || echo "Couldn't pause old chain")
+# txt_to_add=$( [ $PAUSED_OLD_CHAIN -eq 0 ] && echo "Old chain paused" || echo "Couldn't pause old chain")
 
 sed -E -i 'N;s/chains:\n\s+ft_deploy: x"[0-9A-F]{64}" #'$which'/#'$which'/;P;D' configs/devnet1.yaml
 
@@ -51,10 +51,10 @@ BRID=$( echo y | chr deployment create -d $which -bc ft_deploy -s configs/devnet
 
 if [ -z "$BRID" ]; then
     printf "Error during deployment!\n" >&2
-    ZULIP_MESSAGE="${ZULIP_MESSAGE}Failed! ${txt_to_add}"
+    ZULIP_MESSAGE="${ZULIP_MESSAGE}Failed!"
     EXIT_EARLY=1
 else 
-    ZULIP_MESSAGE="${ZULIP_MESSAGE}Success! ${txt_to_add}\n\nBRID:`$BRID`"
+    ZULIP_MESSAGE="${ZULIP_MESSAGE}Success! BRID:`$BRID`"
 fi
 
 curl -X POST https://chromadev.zulipchat.com/api/v1/messages \
@@ -62,7 +62,7 @@ curl -X POST https://chromadev.zulipchat.com/api/v1/messages \
     --data-urlencode type=stream \
     --data-urlencode 'to="Chromia Wallet"' \
     --data-urlencode 'topic=deploy bot' \
-    --data-urlencode $"content=$ZULIP_MESSAGE" 
+    --data-urlencode "content=$ZULIP_MESSAGE" 
 
 printf "\n\nZulip message:\n${ZULIP_MESSAGE}\n\n"
 
