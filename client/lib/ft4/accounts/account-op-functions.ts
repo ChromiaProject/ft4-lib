@@ -5,8 +5,9 @@ import {
   _burn as _burnOp,
   deleteAllAuthDescriptorsExclude as deleteAllAuthDescriptorsExcludeOp,
   deleteAuthDescriptorOp,
-  deleteAuthDescriptor,
+  deleteAuthDescriptor as _deleteAuthDescriptorOp,
   transfer,
+  addAuthDescriptorOp,
 } from "./account-operations";
 import { Account, User, IAuthenticatedAccount } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
@@ -27,6 +28,7 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
 import { Buffer } from "buffer";
+import { deriveAccountId, toGtv } from "./auth-descriptor";
 
 export async function ssoRawTransactionRegister(
   newAuthDesc: AuthDescriptor,
@@ -220,7 +222,7 @@ async function _deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    deleteAuthDescriptor(authDescriptorId)
+    _deleteAuthDescriptorOp(authDescriptorId)
   );
 }
 

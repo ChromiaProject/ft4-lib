@@ -80,5 +80,5 @@ export async function _getNewAsset(
     adminKeyPair
   );
   const assets = await connection.getAssetsByName(name);
-  return assets[0];
+  return assets.data[0];
 }
