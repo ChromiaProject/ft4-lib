@@ -564,7 +564,7 @@ describe("Auth Descriptor Rule", () => {
     );
     await session.account.deleteAuthDescriptor(ad2.id);
 
-    expect((await session.account.getAuthDescriptors()).length).toEqual(1);
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("Should be able to create same rules with different value", async () => {
