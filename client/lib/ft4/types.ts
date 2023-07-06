@@ -54,12 +54,6 @@ export interface ftUserSession {
   };
 
   account: {
-    authDescriptor: {
-      delete: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-    };
     token: {
       transfer: (
         from: BufferId,

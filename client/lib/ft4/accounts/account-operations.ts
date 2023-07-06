@@ -37,19 +37,6 @@ export function deleteAllAuthDescriptorsExclude(
   );
 }
 
-export function deleteAuthDescriptorOp(
-  accountId: Buffer,
-  authDescriptorId: Buffer,
-  deleteAuthDescriptorId: Buffer
-): Operation {
-  return op(
-    "ft4.delete_auth_descriptor",
-    accountId,
-    authDescriptorId,
-    deleteAuthDescriptorId
-  );
-}
-
 export function transferV2(
   receiverId: BufferId,
   assetId: BufferId,
@@ -67,9 +54,9 @@ export function addAuthDescriptor(authDescriptor: AuthDescriptor): _Operation {
   return _op("ft4.add_auth_descriptor", authDesc.toGtv(authDescriptor));
 }
 
-export function deleteAuthDescriptorV2(authDescriptorId: BufferId): _Operation {
+export function deleteAuthDescriptor(authDescriptorId: BufferId): _Operation {
   return _op(
-    "ft4.delete_auth_descriptor_v2",
+    "ft4.delete_auth_descriptor",
     formatter.ensureBuffer(authDescriptorId)
   );
 }

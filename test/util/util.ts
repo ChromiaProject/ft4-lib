@@ -32,7 +32,7 @@ function generateAssetName(prefix = "CHROMA"): string {
 }
 
 function generateAssetSymbol(): string {
-  return `C${generateNumber()}`;
+  return `C${generateNumber()}${generateNumber()}`;
 }
 
 function generateId(): Buffer {
