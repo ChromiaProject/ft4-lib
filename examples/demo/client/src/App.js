@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import { useEffect } from 'react';
 import { gtxClient, restClient, restClientutil } from 'postchain-client';
-import { EVMKeyStore, createAmount, createKeyStoreInteractor, createWeb3ProviderEVMKeyStore, op } from 'ft3-lib';
+import { EVMKeyStore, createAmount, createKeyStoreInteractor, createWeb3ProviderEvmKeyStore } from 'ft3-lib';
 
 function App() {
   useEffect(() => {
@@ -14,7 +14,7 @@ function App() {
       []
     ))
     .then((client) => {
-      createWeb3ProviderEVMKeyStore(window.ethereum).then(async (store: EVMKeyStore) => {
+      createWeb3ProviderEvmKeyStore(window.ethereum).then(async (store: EVMKeyStore) => {
         const { getAccounts, getSession, getLoginManager } = createKeyStoreInteractor(client, store); 
   
         const accounts = await getAccounts()
