@@ -58,7 +58,7 @@ curl --request PUT \
 #         --header "Authorization: Bearer $WALLET_BRID_UPDATER"
 # fi
 
-printf "Done!\n"
+printf "\nDone!\n"
 
 curl -X POST https://chromadev.zulipchat.com/api/v1/messages \
     -u $BOT_EMAIL_ADDRESS:$BOT_API_KEY \
