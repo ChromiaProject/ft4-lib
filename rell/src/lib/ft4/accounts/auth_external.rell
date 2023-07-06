@@ -149,7 +149,7 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
         .id in op_context.get_signers()
     };
 
-    require(external_keys.size() > 0, "The proided key(s) is not a signer of this auth descriptor");
+    require(external_keys.size() > 0, "The provided key(s) is not a signer of this auth descriptor");
     for (external in external_keys) {
         require_auth(
             external.account_auth_descriptor.account,
