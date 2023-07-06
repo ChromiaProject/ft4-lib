@@ -4,17 +4,26 @@ import { Query } from "../utils/types";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 
+/**
+ * @deprecated
+ */
 export function assetByIdQuery(assetId: Buffer): Query {
   return ["ft4.get_asset_by_id", { asset_id: assetId }];
 }
 
+/**
+ * @deprecated
+ */
 export function balancesByAccountIdQuery(accountId: BufferId): Query {
   return [
-    "ft4.get_asset_balances",
+    "ft4._get_asset_balances",
     { account_id: formatter.ensureBuffer(accountId) },
   ];
 }
 
+/**
+ * @deprecated
+ */
 export function balanceQuery(accountId: Buffer, assetId: Buffer): Query {
   return [
     "ft4.get_asset_balance",
@@ -25,12 +34,18 @@ export function balanceQuery(accountId: Buffer, assetId: Buffer): Query {
   ];
 }
 
+/**
+ * @deprecated
+ */
 export function assetByNameQuery(name: string): Query {
   return ["ft4.get_asset_by_name", { name: name }];
 }
 
+/**
+ * @deprecated
+ */
 export function allAssetsQuery(): Query {
-  return ["ft4.get_all_assets", undefined];
+  return ["ft4._get_all_assets", undefined];
 }
 
 export function assetById(
@@ -51,14 +66,7 @@ export function assetBySymbol(symbol: string): QueryObject<{ symbol: string }> {
   };
 }
 
-export function assetByName(name: string): QueryObject<{ name: string }> {
-  return {
-    name: "ft4.get_asset_by_name",
-    args: { name },
-  };
-}
-
-export function assetsByNamePaginated(
+export function assetsByName(
   name: string,
   limit: number,
   cursor: OptionalPageCursor = null
@@ -68,7 +76,7 @@ export function assetsByNamePaginated(
   page_cursor: OptionalPageCursor;
 }> {
   return {
-    name: "ft4.get_assets_by_name_paginated",
+    name: "ft4.get_assets_by_name",
     args: {
       name: name,
       page_size: limit,
@@ -77,18 +85,12 @@ export function assetsByNamePaginated(
   };
 }
 
-export function allAssets(): QueryObject<undefined> {
-  return {
-    name: "ft4.get_all_assets",
-  };
-}
-
-export function allAssetsPaginated(
+export function allAssets(
   limit: number,
   cursor: OptionalPageCursor
 ): QueryObject<{ page_size: number; page_cursor: OptionalPageCursor }> {
   return {
-    name: "ft4.get_all_assets_paginated",
+    name: "ft4.get_all_assets",
     args: {
       page_size: limit,
       page_cursor: cursor,
@@ -110,17 +112,6 @@ export function balanceByAccountId(
 }
 
 export function balancesByAccountId(
-  accountId: BufferId
-): QueryObject<{ account_id: Buffer }> {
-  return {
-    name: "ft4.get_asset_balances",
-    args: {
-      account_id: formatter.ensureBuffer(accountId),
-    },
-  };
-}
-
-export function balancesByAccountIdPaginated(
   accountId: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null
@@ -130,7 +121,7 @@ export function balancesByAccountIdPaginated(
   page_cursor: OptionalPageCursor;
 }> {
   return {
-    name: "ft4.get_asset_balances_paginated",
+    name: "ft4.get_asset_balances",
     args: {
       account_id: formatter.ensureBuffer(accountId),
       page_size: limit,

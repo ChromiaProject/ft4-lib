@@ -43,11 +43,11 @@ describe("Login manager", () => {
     ).getLoginManager();
 
     const authDescriptorsBeforeLogin = await account.getAuthDescriptors();
-    expect(authDescriptorsBeforeLogin.length).toBe(1);
+    expect(authDescriptorsBeforeLogin.data.length).toBe(1);
 
     await loginManger.login({ accountId: account.id });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.length).toBe(2);
+    expect(authDescriptorAfterLogin.data.length).toBe(2);
   });
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {

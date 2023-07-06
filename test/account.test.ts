@@ -95,7 +95,7 @@ describe("Test the account", () => {
 
     await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
 
-    expect((await session.account.getAuthDescriptors()).length).toBe(2);
+    expect((await session.account.getAuthDescriptors()).data.length).toBe(2);
   });
 
   // Skipped due to a likely bug in postchain-client version 1.5.4
@@ -182,7 +182,7 @@ describe("Test the account", () => {
       .buildWithSigners(...keyHandlers);
     await _connection.client.sendTransaction(tx);
 
-    expect((await session.account.getAuthDescriptors()).length).toBe(2);
+    expect((await session.account.getAuthDescriptors()).data.length).toBe(2);
   });
 
   // Skipped due to possible bug in postchain-client
@@ -286,7 +286,7 @@ describe("Test the account", () => {
       account.id
     );
 
-    expect(accounts.length).toEqual(1);
+    expect(accounts.data.length).toEqual(1);
   });
 
   it("returns two accounts by auth descriptor id when auth descriptor is attached to two accounts", async () => {
@@ -309,7 +309,7 @@ describe("Test the account", () => {
 
     await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
     expect(
-      (await _connection.getAccountsByAuthDescriptorId(authDescriptor2.id))
+      (await _connection.getAccountsByAuthDescriptorId(authDescriptor2.id)).data
         .length
     ).toBe(2);
   });
@@ -330,19 +330,14 @@ describe("Test the account", () => {
     await addAuthDescriptorTo(_connection.client, account3.id, user3, user1);
 
     const { data: accounts1, nextCursor } =
-      await _connection.getAccountsByAuthDescriptorIdPaginated(
-        account1.id,
-        2,
-        null
-      );
+      await _connection.getAccountsByAuthDescriptorId(account1.id, 2, null);
     expect(accounts1.length).toEqual(2);
 
-    const { data: accounts2 } =
-      await _connection.getAccountsByAuthDescriptorIdPaginated(
-        account1.id,
-        2,
-        nextCursor
-      );
+    const { data: accounts2 } = await _connection.getAccountsByAuthDescriptorId(
+      account1.id,
+      2,
+      nextCursor
+    );
     expect(accounts2.length).toEqual(1);
   });
 
@@ -368,7 +363,7 @@ describe("Test the account", () => {
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const { data } = await session.account.getAuthDescriptorsPaginated(1);
+    const { data } = await session.account.getAuthDescriptors(1);
     const auth_desc = createSingleSignatureAuthDescriptor(
       AuthType.single_sig,
       singleSigArgs([FlagsType.Account], keyStore.pubKey),
@@ -399,10 +394,9 @@ describe("Test the account", () => {
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const { data, nextCursor } =
-      await session.account.getAuthDescriptorsPaginated(1);
+    const { data, nextCursor } = await session.account.getAuthDescriptors(1);
     expect(data.length).toBe(1);
-    const { data: data2 } = await session.account.getAuthDescriptorsPaginated(
+    const { data: data2 } = await session.account.getAuthDescriptors(
       1,
       nextCursor
     );
@@ -435,7 +429,7 @@ describe("Test the account", () => {
       .build();
     await _connection.client.sendTransaction(tx);
 
-    expect((await session.account.getAuthDescriptors()).length).toBe(1);
+    expect((await session.account.getAuthDescriptors()).data.length).toBe(1);
   });
 
   it("should be able to register account by directly calling 'register_account' operation", async () => {
@@ -469,7 +463,7 @@ describe("Test the account", () => {
     );
 
     await session.account.deleteAuthDescriptor(authDescriptor.id);
-    expect((await session.account.getAuthDescriptors()).length).toBe(0);
+    expect((await session.account.getAuthDescriptors()).data.length).toBe(0);
   });
 
   it("shouldn't be possible for auth descriptor to delete other auth descriptor without admin flag", async () => {

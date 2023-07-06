@@ -2,11 +2,11 @@ import ^^.assets;
 import acc: ^^.accounts;
 import ^^.utils;
 
-query get_asset_balances(account_id: byte_array) {
+query _get_asset_balances(account_id: byte_array) {
     return assets.get_asset_balances(account_id);
 }
 
-query get_asset_balances_paginated(account_id: byte_array, page_size: integer, page_cursor: text?) {
+query get_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances(account_id, page_size, page_cursor),
         page_size
@@ -27,7 +27,7 @@ query get_asset_by_name(name) {
     return assets.asset @* { name } ( extract_asset_data($) );
 }
 
-query get_assets_by_name_paginated(name, page_size: integer, page_cursor: text?) {
+query get_assets_by_name(name, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances_by_name(name, page_size, page_cursor),
         page_size
@@ -42,13 +42,13 @@ query get_asset_by_symbol(symbol: text) {
     return assets.asset @? { .symbol == symbol } ( extract_asset_data($) );
 } 
 
-query get_all_assets() {
+query _get_all_assets() {
     return assets.asset @* {} ( extract_asset_data($) );
 }
 
-query get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+query get_all_assets(page_size: integer, page_cursor: text?) {
     return utils.make_page(
-        assets.get_all_assets_paginated(page_size, page_cursor),
+        assets.get_all_assets(page_size, page_cursor),
         page_size
     );
 }

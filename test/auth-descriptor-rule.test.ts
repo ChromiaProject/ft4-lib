@@ -501,7 +501,7 @@ describe("Auth Descriptor Rule", () => {
       createAuthenticator(ad1.id, [keyHandler], authDataService)
     );
 
-    expect((await session.account.getAuthDescriptors()).length).toEqual(3);
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
 
     const tx = await session
       .transactionBuilder()
@@ -509,7 +509,7 @@ describe("Auth Descriptor Rule", () => {
       .build();
     await _connection.client.sendTransaction(tx);
 
-    expect((await session.account.getAuthDescriptors()).length).toEqual(1);
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   // Skipped due to possible bug in postchain-client 1.5.4
@@ -564,7 +564,7 @@ describe("Auth Descriptor Rule", () => {
     );
     await session.account.deleteAuthDescriptor(ad2.id);
 
-    expect((await session.account.getAuthDescriptors()).length).toEqual(1);
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("Should be able to create same rules with different value", async () => {
