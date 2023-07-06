@@ -41,8 +41,7 @@ sed -E -i 's/x"[0-9A-F]{64}" #'$which'/x"'$OLD_BRID'" #'$which'/' configs/devnet
 chr deployment pause -d $which -bc ft_deploy -s configs/devnet1.yaml
 
 PAUSED_OLD_CHAIN=$?
-echo "Old chain paused: $PAUSED_OLD_CHAIN"
-# txt_to_add=$( [ $PAUSED_OLD_CHAIN -eq 0 ] && echo "Old chain paused" || echo "Couldn't pause old chain")
+[ $PAUSED_OLD_CHAIN -eq 0 ] && echo "Old chain paused" || echo "Couldn't pause old chain"
 
 sed -E -i 'N;s/chains:\n\s+ft_deploy: x"[0-9A-F]{64}" #'$which'/#'$which'/;P;D' configs/devnet1.yaml
 
@@ -66,7 +65,7 @@ curl -X POST https://chromadev.zulipchat.com/api/v1/messages \
 
 printf "\n\nZulip message:\n${ZULIP_MESSAGE}\n\n"
 
-if [ $EXIT_EARLY -eq 0 ]; then
+if [ $EXIT_EARLY -ne 0 ]; then
     exit 1
 fi
 
