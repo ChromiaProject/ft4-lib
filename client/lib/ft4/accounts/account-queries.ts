@@ -4,18 +4,30 @@ import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 
+/*
+ * @deprecated
+ */
 export function accountAuthDescriptorsQuery(accountId: Buffer): Query {
   return ["ft4._get_account_auth_descriptors", { id: accountId }];
 }
 
+/*
+ * @deprecated
+ */
 export function accountByIdQuery(id: Buffer): Query {
   return ["ft4.get_account_by_id", { id: id }];
 }
 
+/*
+ * @deprecated
+ */
 export function accountsByParticipantIdQuery(id: Buffer): Query {
   return ["ft4.get_accounts_by_participant_id", { id: id }];
 }
 
+/*
+ * @deprecated
+ */
 export function accountsByAuthDescriptorIdQuery(id: Buffer): Query {
   return ["ft4._get_accounts_by_auth_descriptor_id", { id: id }];
 }
