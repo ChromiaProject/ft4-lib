@@ -6,5 +6,6 @@ namespace ft4 {
     import assets: ^.assets;
     import assets_ext: ^.assets.external;
     import ^.version;
+    import ^.admin;
 }
 
