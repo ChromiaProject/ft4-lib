@@ -122,19 +122,6 @@ export interface ftQuerySession {
       ids: (ids: Buffer[]) => Promise<Account[]>;
       id: (id: BufferId) => Promise<Account | null>;
     };
-    /*paymentHistory: {
-      iterator: (
-        paymentHistoryStore: PaymentHistoryStore
-      ) => PaymentHistoryIterator;
-      storeMemory: (
-        accountId: BufferId,
-        pageSize: number
-      ) => Promise<PaymentHistoryStore>;
-      storeLocal: (
-        accountId: BufferId,
-        pageSize: number
-      ) => Promise<PaymentHistoryStore>;
-    };*/
     isAuthDescriptorValid: (
       accountid: BufferId,
       authDescriptorid: BufferId

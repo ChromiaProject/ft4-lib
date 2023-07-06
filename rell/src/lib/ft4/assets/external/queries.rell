@@ -57,13 +57,13 @@ query get_transfer_history(account_id: byte_array, filter: assets.filter, page_s
     val account = acc.account @? { account_id };
     if (empty(account)) return null;
 
-    val paginated_payments = assets.get_paginated_payments(account, filter, page_size, page_cursor);
-    return utils.make_page(paginated_payments, page_size);
+    val paginated_transfers = assets.get_paginated_transfers(account, filter, page_size, page_cursor);
+    return utils.make_page(paginated_transfers, page_size);
 }
 
 query get_transfer_history_entry(rowid) {
-    val entry = assets.payment_history_entry @? { .rowid == rowid };
-    return if (empty(entry)) null else assets.extract_data_from_payment_history_entry(entry);
+    val entry = assets.transfer_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else assets.extract_data_from_transfer_history_entry(entry);
 }
 
 function extract_asset_data(assets.asset) {
