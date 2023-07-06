@@ -54,24 +54,6 @@ export interface ftUserSession {
   };
 
   account: {
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;
-      ssoAddAuthDescriptor: (
-        accountid: BufferId,
-        authDescriptor: AuthDescriptor
-      ) => Promise<Buffer>;
-    };
-    authDescriptor: {
-      add: (newUser: User, accountId: BufferId) => Promise<void>;
-      deleteAllExcluding: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-      delete: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-    };
     token: {
       burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
     };
@@ -134,9 +116,6 @@ export interface Connection {
   getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
   getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
   getAccountsByAuthDescriptorId: (
-    authDescriptorId: BufferId
-  ) => Promise<IAccount[]>;
-  getAccountsByAuthDescriptorIdPaginated: (
     id: BufferId,
     limit?: number,
     cursor?: OptionalPageCursor
@@ -144,14 +123,12 @@ export interface Connection {
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
-  getAssetsByName: (name: string) => Promise<Asset[]>;
-  getAssetsByNamePaginated: (
+  getAssetsByName: (
     name: string,
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Asset>>;
-  getAllAssets: () => Promise<Asset[]>;
-  getAllAssetsPaginated: (
+  getAllAssets: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Asset>>;

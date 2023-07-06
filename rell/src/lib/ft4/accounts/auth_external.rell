@@ -143,18 +143,20 @@ function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
 
     val account = Account(account_id);
-    val external = auth_descriptor_participant @? {
+    val external_keys = auth_descriptor_participant @* {
         .account_auth_descriptor.account == account,
         .account_auth_descriptor.id == auth_descriptor_id, 
         .id in op_context.get_signers()
     };
-    require(external, "The provided key(s) is not a signer of this auth descriptor");
 
-    require_auth(
-        external.account_auth_descriptor.account,
-        external.account_auth_descriptor,
-        list(required_flags)
-    );
+    require(external_keys.size() > 0, "The provided key(s) is not a signer of this auth descriptor");
+    for (external in external_keys) {
+        require_auth(
+            external.account_auth_descriptor.account,
+            external.account_auth_descriptor,
+            list(required_flags)
+        );
+    }
 
     return account;
 }

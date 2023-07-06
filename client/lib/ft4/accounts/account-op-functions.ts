@@ -1,12 +1,11 @@
 import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
-  addAuthDescriptorOp,
-  addAuthDescriptorV2,
+  addAuthDescriptor,
   burnOp,
   _burn as _burnOp,
   deleteAllAuthDescriptorsExclude as deleteAllAuthDescriptorsExcludeOp,
   deleteAuthDescriptorOp,
-  deleteAuthDescriptorV2,
+  deleteAuthDescriptor,
   transfer,
 } from "./account-operations";
 import { Account, User, IAuthenticatedAccount } from "./types";
@@ -22,7 +21,6 @@ import {
 } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
 import { Amount } from "../asset/interfaces";
-import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Connection } from "../types";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
@@ -205,7 +203,7 @@ async function _addAuthDescriptor(
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
-    .add(addAuthDescriptorV2(authDescriptor))
+    .add(addAuthDescriptor(authDescriptor))
     .addSigners(
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor)
     )
@@ -222,7 +220,7 @@ async function _deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    deleteAuthDescriptorV2(authDescriptorId)
+    deleteAuthDescriptor(authDescriptorId)
   );
 }
 

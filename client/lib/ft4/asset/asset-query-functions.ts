@@ -8,12 +8,10 @@ import {
   allAssetsQuery,
   balanceByAccountId,
   assetById,
-  assetByName,
-  allAssets,
   balancesByAccountId,
-  allAssetsPaginated,
+  allAssets,
   assetBySymbol,
-  assetsByNamePaginated,
+  assetsByName,
 } from "./asset-queries";
 import { Asset, Balance, BalanceResponse } from "./types";
 import { formatter } from "postchain-client";
@@ -83,14 +81,7 @@ export async function _getAssetBySymbol(
   return await connection.query<Asset>(assetBySymbol(symbol)).then(freeze);
 }
 
-export async function _getAssetsByName(
-  connection: Connection,
-  name: string
-): Promise<Asset[]> {
-  return await connection.query<Asset[]>(assetByName(name));
-}
-
-export function _getAssetsByNamePaginated(
+export function _getAssetsByName(
   connection: Connection,
   name: string,
   limit = 100,
@@ -98,24 +89,20 @@ export function _getAssetsByNamePaginated(
 ) {
   const retriever = createEntityRetriever<Asset, Asset>(
     connection,
-    assetsByNamePaginated(name, limit, cursor),
+    assetsByName(name, limit, cursor),
     (a) => a
   );
   return retriever.retrieve();
 }
 
-export async function _getAllAssets(connection: Connection): Promise<Asset[]> {
-  return await connection.query<Asset[]>(allAssets());
-}
-
-export async function _getAllAssetsPaginated(
+export async function _getAllAssets(
   connection: Connection,
-  limit: number,
+  limit = 100,
   cursor: OptionalPageCursor = null
 ): Promise<PaginatedEntity<Asset>> {
   return createEntityRetriever<Asset, Asset>(
     connection,
-    allAssetsPaginated(limit, cursor),
+    allAssets(limit, cursor),
     (a) => a
   ).retrieve();
 }

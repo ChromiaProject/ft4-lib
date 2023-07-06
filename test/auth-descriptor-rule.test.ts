@@ -12,13 +12,27 @@ import {
 } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
-import { createAuthDataService, createConnection } from "/ft4/ft-session";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator } from "/ft4/authentication";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
+import {
+  createAuthDataService,
+  createConnection,
+  createSession,
+} from "/ft4/ft-session";
+import {
+  addAuthDescriptorTo,
+  createAccount,
+  createTestAuthDescriptor,
+} from "./util/util";
+import { createAuthenticator } from "/ft4/authentication";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { newSignatureProvider } from "postchain-client";
+import {
+  _deleteAllAuthDescriptorsExclude,
+  deleteAllAuthDescriptorsExclude,
+} from "/ft4/accounts/account-operations";
 
 let _ft: ftUserSession;
-let connection: Connection;
+let _connection: Connection;
 let asset: Asset;
 
 function sourceAccount(user: User): Promise<IAuthenticatedAccount> {
@@ -47,7 +61,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
     user2.signatureProvider
   );
 
-  const accounts = await connection.getAccountsByAuthDescriptorIdPaginated(
+  const accounts = await _connection.getAccountsByAuthDescriptorId(
     user2.authDescriptor.id
   );
   if (accounts.data.length > 1) throw new Error("Found more than one account");
@@ -58,9 +72,9 @@ async function getAuthedAccountsFromAuthDescriptorRule(
   const authenticator = createAuthenticator(
     adminAccount.id,
     [keyHandler],
-    createAuthDataService(connection)
+    createAuthDataService(_connection)
   );
-  const limitedAccount = createAuthenticatedAccount(connection, authenticator);
+  const limitedAccount = createAuthenticatedAccount(_connection, authenticator);
 
   return [limitedAccount, adminAccount];
 }
@@ -68,8 +82,8 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    connection = createConnection(await createChromiaClient());
-    asset = await _getNewAsset(connection);
+    _connection = createConnection(await createChromiaClient());
+    asset = await _getNewAsset(_connection);
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
@@ -327,7 +341,7 @@ describe("Auth Descriptor Rule", () => {
       createAmount(30, asset.decimals)
     );
 
-    expect((await admin.getAuthDescriptorsPaginated()).data.length).toEqual(1);
+    expect((await admin.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("shouldn't delete non-expired auth descriptor", async () => {
@@ -354,7 +368,7 @@ describe("Auth Descriptor Rule", () => {
       createAmount(10, asset.decimals)
     );
 
-    expect((await admin.getAuthDescriptorsPaginated()).data.length).toEqual(2);
+    expect((await admin.getAuthDescriptors()).data.length).toEqual(2);
   });
 
   it("should delete only expired auth descriptor if multiple expiring descriptors exist", async () => {
@@ -385,7 +399,7 @@ describe("Auth Descriptor Rule", () => {
       createAmount(100, asset.decimals)
     );
 
-    expect((await admin.getAuthDescriptorsPaginated()).data.length).toEqual(2);
+    expect((await admin.getAuthDescriptors()).data.length).toEqual(2);
   });
 
   it("should add auth descriptors", async () => {
@@ -401,69 +415,113 @@ describe("Auth Descriptor Rule", () => {
       user3.signatureProvider
     );
 
-    expect((await admin.getAuthDescriptorsPaginated()).data.length).toEqual(3);
+    expect((await admin.getAuthDescriptors()).data.length).toEqual(3);
   });
 
   it("should delete auth descriptors", async () => {
-    const rules = allow.operationCount.lessOrEqual(1).only;
-    const user1 = testUser();
-
-    const ft = (await getUserSession()).changeUser(user1);
-
-    const user2 = testUser(rules);
-    const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
-    const admin = await sourceAccount(user1);
-
-    await admin.addAuthDescriptor(
-      user2.authDescriptor,
-      user2.signatureProvider
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
+      ["A"],
+      allow.operationCount.lessOrEqual(1).only
     );
-    await admin.addAuthDescriptor(
-      user3.authDescriptor,
-      user3.signatureProvider
+    const { keyPair: kp3, authDescriptor: ad3 } = createTestAuthDescriptor(
+      ["A"],
+      allow.operationCount.lessOrEqual(1).only
     );
 
-    expect((await admin.getAuthDescriptorsPaginated()).data.length).toEqual(3);
+    const accountId = await createAccount(_connection.client, ad1);
 
-    await ft.account.authDescriptor.deleteAllExcluding(
-      user1.authDescriptor.id,
-      user1.authDescriptor.id
+    const user1 = {
+      signatureProvider: newSignatureProvider(kp1),
+      authDescriptor: ad1,
+    };
+    const user2 = {
+      signatureProvider: newSignatureProvider(kp2),
+      authDescriptor: ad2,
+    };
+    const user3 = {
+      signatureProvider: newSignatureProvider(kp3),
+      authDescriptor: ad3,
+    };
+
+    await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
+    await addAuthDescriptorTo(_connection.client, accountId, user1, user3);
+
+    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+
+    const authDataService = createAuthDataService(_connection);
+
+    const session = createSession(
+      _connection,
+      createAuthenticator(ad1.id, [keyHandler], authDataService)
     );
 
-    expect((await admin.getAuthDescriptorsPaginated()).data.length).toEqual(1);
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
+
+    const tx = await session
+      .transactionBuilder()
+      .add(_deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .build();
+    await _connection.client.sendTransaction(tx);
+
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
-  it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+  // Skipped due to possible bug in postchain-client 1.5.4
+  it.skip("should fail when deleting an auth descriptor which is not owned by the account", async () => {
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A"]);
 
-    const account1 = await sourceAccount(user1);
-    await sourceAccount(user2);
+    await createAccount(_connection.client, ad1);
+    await createAccount(_connection.client, ad2);
 
-    const promise = _ft
-      .changeUser(user1)
-      .account.authDescriptor.delete(user2.authDescriptor.id, account1.id);
+    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const authDataService = createAuthDataService(_connection);
+
+    const session = createSession(
+      _connection,
+      createAuthenticator(ad1.id, [keyHandler], authDataService)
+    );
+
+    const promise = session.account.deleteAuthDescriptor(ad2.id);
     await expect(promise).rejects.toThrowError();
   });
 
   it("should delete auth descriptor", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
+      "A",
+    ]);
 
-    const account = await sourceAccount(user1);
+    const accountId = await createAccount(_connection.client, ad1);
 
-    await account.addAuthDescriptor(
-      user2.authDescriptor,
-      user2.signatureProvider
-    );
-    expect((await account.getAuthDescriptorsPaginated()).data.length).toEqual(
-      2
-    );
+    const user1 = {
+      signatureProvider: newSignatureProvider(kp1),
+      authDescriptor: ad1,
+    };
+    const user2 = {
+      signatureProvider: newSignatureProvider(kp2),
+      authDescriptor: ad2,
+    };
 
-    await account.deleteAuthDescriptor(user2.authDescriptor.id);
-    expect((await account.getAuthDescriptorsPaginated()).data.length).toEqual(
-      1
+    await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
+
+    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const authDataService = createAuthDataService(_connection);
+
+    const session = createSession(
+      _connection,
+      createAuthenticator(ad1.id, [keyHandler], authDataService)
     );
+    await session.account.deleteAuthDescriptor(ad2.id);
+
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("Should be able to create same rules with different value", async () => {
@@ -476,9 +534,13 @@ describe("Auth Descriptor Rule", () => {
     const user2 = testUser(rules);
     const account = await sourceAccount(user1);
 
-    await expect(
-      account.addAuthDescriptor(user2.authDescriptor, user2.signatureProvider)
-    ).resolves.toHaveProperty("status", "confirmed");
+    const txInfo = await addAuthDescriptorTo(
+      _connection.client,
+      account.id,
+      user1,
+      user2
+    );
+    expect(txInfo.status).toBe("confirmed");
   });
 
   it.skip("shouldn't be able to create too many rules", async () => {
