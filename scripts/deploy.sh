@@ -87,8 +87,7 @@ curl -s --request PUT \
     --data '{"value":"'$BRID'"}' \
     --header "Authorization: Bearer $WALLET_BRID_UPDATER"
 
-
-if [ $which == "stable" ]
+if [ $which = "stable" ]; then
     echo "test (2/4)"
     curl -s --request PUT \
         --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7B7a5611ab-075c-407a-a14b-4a2adc2e696c%7D/variables/%7B5d61e94f-0f94-4db5-b666-6e9f68c6b388%7D' \
