@@ -27,7 +27,7 @@ query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_
     });
 }
 
-query get_account_auth_descriptors(id: byte_array) {
+query _get_account_auth_descriptors(id: byte_array) {
     return acc.account_auth_descriptor @* {
         .account.id == id
     } (
@@ -37,14 +37,11 @@ query get_account_auth_descriptors(id: byte_array) {
     );
 }
 
-query get_account_auth_descriptors_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
-    val descriptors = acc.get_paginated_auth_descriptors(id, page_size, page_cursor);
-    val pagination_results = descriptors @* {} ( utils.pagination_result(data = (
-        auth_type = .auth_type,
-        args = .args,
-        rules = .rules
-    ).to_gtv_pretty(), rowid = .rowid) );
-    return utils.make_page(pagination_results, page_size);
+query get_account_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        acc.get_paginated_auth_descriptors(id, page_size, page_cursor), 
+        page_size
+    );
 }
 
 query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
@@ -71,15 +68,21 @@ query get_accounts_by_participant_id(id: byte_array) {
     return acc.auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
 }
 
-query get_accounts_by_auth_descriptor_id(id: byte_array) {
+query _get_accounts_by_auth_descriptor_id(id: byte_array) {
     return acc.account_auth_descriptor @* { id } ( .account.id );
 }
 
-query get_accounts_by_auth_descriptor_id_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
+query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         acc.get_paginated_accounts_by_ad_id(id, page_size, page_cursor),
-        page_size);
+        page_size
+    );
 }
 
-query get_ctr_for_auth_descriptor(auth_descriptor_id: byte_array) =
-    acc.account_auth_descriptor @ { .id == auth_descriptor_id }( .ctr );
+query get_auth_descriptor_nonce(
+    account_id: byte_array, 
+    auth_descriptor_id: byte_array
+) = acc.account_auth_descriptor @ { 
+        .account.id == account_id, 
+        .id == auth_descriptor_id 
+    } ( .ctr );

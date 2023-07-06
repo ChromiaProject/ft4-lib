@@ -2,8 +2,8 @@ import { gtxClient, restClient, restClientutil } from "postchain-client";
 import {
   KeyStore,
   FlagsType,
-  createWeb3ProviderEvmKeyStore,
   createKeyStoreInteractor,
+  createWeb3ProviderEvmKeyStore,
   AuthDescriptor,
   authDescriptor,
   IAccount,

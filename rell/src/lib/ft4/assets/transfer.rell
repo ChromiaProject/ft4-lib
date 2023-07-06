@@ -158,7 +158,7 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
       val args = [ins, outs];
 
       for (entry in v[0]) {
-         create payment_history_entry(
+         create transfer_history_entry(
             .account = entry.account,
             .asset = asset,
             .delta = entry.amount,
@@ -169,7 +169,7 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
          );
       }
       for (entry in v[1]) {
-         create payment_history_entry(
+         create transfer_history_entry(
             .account = entry.account,
             .asset = asset,
             .delta = entry.amount,
@@ -185,6 +185,7 @@ function _transfer(inputs: list<xfer_input>, outputs: list<xfer_output>) {
 }
 
 namespace Unsafe {
+   
    function transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
       require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
@@ -197,7 +198,7 @@ namespace Unsafe {
       before_transfer_one(from, to, asset, amount);
 
       deduct_balance(from, asset, amount);
-      create payment_history_entry(
+      create transfer_history_entry(
          .account = from,
          .asset = asset,
          .delta = amount,
@@ -208,7 +209,7 @@ namespace Unsafe {
       );
       
       ensure_balance(to, asset).amount += amount;
-      create payment_history_entry(
+      create transfer_history_entry(
          .account = to,
          .asset = asset,
          .delta = amount,

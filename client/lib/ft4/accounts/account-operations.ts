@@ -8,19 +8,6 @@ import { formatter, Operation as _Operation } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { Buffer } from "buffer";
 
-export function addAuthDescriptorOp(
-  accountId: Buffer,
-  authDescriptorId: Buffer,
-  authDescriptor: AuthDescriptor
-): Operation {
-  return op(
-    "ft4.add_auth_descriptor",
-    accountId,
-    authDescriptorId,
-    authDesc.toGtv(authDescriptor)
-  );
-}
-
 export function transferOp(
   inputs: XferInput[],
   outputs: XferOutput[]
@@ -39,27 +26,14 @@ export function burnOp(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
 
-export function deleteAllAuthDescriptorsExcludeOp(
-  accountId: Buffer,
+export function deleteAllAuthDescriptorsExclude(
+  accountId: BufferId,
   excludeAuthDescriptorId: Buffer
-): Operation {
-  return op(
+): _Operation {
+  return _op(
     "ft4.delete_all_auth_descriptors_exclude",
-    accountId,
+    formatter.ensureBuffer(accountId),
     excludeAuthDescriptorId
-  );
-}
-
-export function deleteAuthDescriptorOp(
-  accountId: Buffer,
-  authDescriptorId: Buffer,
-  deleteAuthDescriptorId: Buffer
-): Operation {
-  return op(
-    "ft4.delete_auth_descriptor",
-    accountId,
-    authDescriptorId,
-    deleteAuthDescriptorId
   );
 }
 
@@ -76,15 +50,13 @@ export function transferV2(
   );
 }
 
-export function addAuthDescriptorV2(
-  authDescriptor: AuthDescriptor
-): _Operation {
-  return _op("ft4.add_auth_descriptor_v2", authDesc.toGtv(authDescriptor));
+export function addAuthDescriptor(authDescriptor: AuthDescriptor): _Operation {
+  return _op("ft4.add_auth_descriptor", authDesc.toGtv(authDescriptor));
 }
 
-export function deleteAuthDescriptorV2(authDescriptorId: BufferId): _Operation {
+export function deleteAuthDescriptor(authDescriptorId: BufferId): _Operation {
   return _op(
-    "ft4.delete_auth_descriptor_v2",
+    "ft4.delete_auth_descriptor",
     formatter.ensureBuffer(authDescriptorId)
   );
 }

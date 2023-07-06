@@ -3,7 +3,6 @@ import {
   accountAuthDescriptorsQuery,
   accountById,
   accountByIdQuery,
-  accountsByAuthDescriptorId,
   accountsByAuthDescriptorIdQuery,
   accountsByParticipantId,
   accountsByParticipantIdQuery,
@@ -11,8 +10,7 @@ import {
   isAuthDescriptorValidQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
-  accountAuthDescriptorsPaginated,
-  accountsByAuthDescriptorIdPaginated,
+  accountsByAuthDescriptorId,
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, IAccount, RateLimit } from "./types";
@@ -20,13 +18,12 @@ import { BufferId } from "../../cryptoUtils";
 import { _getConfig, getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
-  _getBalancesByAccountId,
   createBalanceObject,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { Connection, OptionalPageCursor } from "../types";
-import { PaymentHistoryFilter } from "./payment-history/types";
-import { createPaymentHistoryRetriever } from "./payment-history/payment-history-retrieval";
+import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
+import { TransferHistoryFilter } from "./transfer-history/types";
 import {
   AuthDescriptor,
   RawAuthDescriptor,
@@ -34,7 +31,7 @@ import {
 } from "./auth-descriptor";
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
-import { balancesByAccountIdPaginated } from "../asset/asset-queries";
+import { balancesByAccountId } from "../asset/asset-queries";
 import { Buffer } from "buffer";
 import { PaginatedEntity } from "../utils/types";
 
@@ -181,7 +178,7 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId
 ): IAccount {
-  const payment_history_retriever = createPaymentHistoryRetriever(
+  const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
     accountId
   );
@@ -189,19 +186,17 @@ export function createAccountObject(
     id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: () => _getBalancesByAccountId(connection, accountId),
-    getBalancesPaginated: (limit = 100, cursor: OptionalPageCursor = null) => {
+    getBalances: (limit = 100, cursor: OptionalPageCursor = null) => {
       const retriever = createEntityRetriever<Balance, BalanceResponse>(
         connection,
-        balancesByAccountIdPaginated(accountId, limit, cursor),
+        balancesByAccountId(accountId, limit, cursor),
         (balances) => balances.map(createBalanceObject)
       );
       return retriever.retrieve(limit, cursor);
     },
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
-    getAuthDescriptorsPaginated: async (
+    getAuthDescriptors: async (
       limit = 100,
       cursor: OptionalPageCursor = null
     ) => {
@@ -210,7 +205,7 @@ export function createAccountObject(
         RawAuthDescriptor
       >(
         connection,
-        accountAuthDescriptorsPaginated(accountId, limit, cursor),
+        accountAuthDescriptors(accountId, limit, cursor),
         mapAuthDescriptors
       );
       return retriever.retrieve(limit, cursor);
@@ -220,13 +215,13 @@ export function createAccountObject(
     getRateLimit: () => _getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
-      filter: PaymentHistoryFilter = {},
+      filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null
     ) => {
-      return payment_history_retriever.retrieve(limit, filter, cursor);
+      return transferHistoryRetriever.retrieve(limit, filter, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) =>
-      payment_history_retriever.retrieveSingle(rowid),
+      transferHistoryRetriever.retrieveSingle(rowid),
   });
 }
 
@@ -251,22 +246,13 @@ export async function _getByParticipantId(
 
 export async function _getByAuthDescriptorId(
   connection: Connection,
-  id: BufferId
-): Promise<IAccount[]> {
-  const accountIds =
-    (await connection.query<Buffer[]>(accountsByAuthDescriptorId(id))) ?? [];
-  return accountIds.map((id) => createAccountObject(connection, id));
-}
-
-export async function _getByAuthDescriptorIdPaginated(
-  connection: Connection,
   id: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null
 ): Promise<PaginatedEntity<IAccount>> {
   return createEntityRetriever<IAccount, Buffer>(
     connection,
-    accountsByAuthDescriptorIdPaginated(id, limit, cursor),
+    accountsByAuthDescriptorId(id, limit, cursor),
     (accounts) => accounts.map((acc) => createAccountObject(connection, acc))
   ).retrieve();
 }
@@ -279,19 +265,6 @@ export async function _isAuthDescriptorValid(
   return (await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   ))!;
-}
-
-export async function _getAuthDescriptors(
-  connection: Connection,
-  accountId: BufferId
-): Promise<AuthDescriptor[]> {
-  return connection
-    .query<RawAuthDescriptor[]>(
-      accountAuthDescriptors(formatter.ensureBuffer(accountId))
-    )
-    .then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
-    );
 }
 
 export async function getAuthDescriptorsByParticipantId(

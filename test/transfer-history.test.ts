@@ -9,14 +9,14 @@ import {
   getUserSession,
 } from "./util/blockchain-util";
 import { createAmount } from "../client/lib/ft4/asset/amount";
-import { PaymentHistoryType } from "../client/lib/ft4/accounts/payment-history/types";
+import { TransferHistoryType } from "../client/lib/ft4/accounts/transfer-history/types";
 import {
   createConnection,
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createPaymentHistoryRetriever } from "../client/lib/ft4/accounts/payment-history/payment-history-retrieval";
+import { createTransferHistoryRetriever } from "../client/lib/ft4/accounts/transfer-history/transfer-history-retrieval";
 import { gtv } from "postchain-client";
 
 let _ft: ftUserSession;
@@ -24,15 +24,15 @@ let asset: Asset;
 let connection: Connection;
 const NULL_ACCOUNT = gtv.encode(null);
 
-describe("Payment history", () => {
+describe("Transfer history", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
     _ft = await getUserSession();
     asset = await getNewAsset(_ft);
     connection = createConnection(await createChromiaClient());
   });
-  describe("Payment history iterator", () => {
-    it("should have one payment history entry when mint is made", async () => {
+  describe("Transfer history iterator", () => {
+    it("should have one transfer history entry when mint is made", async () => {
       const keyPair = new KeyPair();
       const user = newSingleSigUser(keyPair);
       const ft = _ft.changeUser(user);
@@ -56,7 +56,7 @@ describe("Payment history", () => {
       expect(entry.transferOutputArgs[0].accountId).toEqual(account1.id);
     });
 
-    it("should have two payment history entry when mint + transfer is made", async () => {
+    it("should have two transfer history entry when mint + transfer is made", async () => {
       const keyPair = new KeyPair();
       const user = newSingleSigUser(keyPair);
       const ft = _ft.changeUser(user);
@@ -113,15 +113,15 @@ describe("Payment history", () => {
         createAmount(10, asset.decimals)
       );
 
-      const paymentHistoryEntries = await account1.getTransferHistory();
+      const transferHistoryEntries = await account1.getTransferHistory();
 
-      const [transferEntry, mintEntry] = paymentHistoryEntries.data;
+      const [transferEntry, mintEntry] = transferHistoryEntries.data;
 
       expect(mintEntry.operationName).toEqual("ft4.admin.mint");
       expect(transferEntry.operationName).toEqual("ft4.transfer_one");
     });
 
-    it("should have three payment history entries if mint + two transfers made", async () => {
+    it("should have three transfer history entries if mint + two transfers made", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
 
@@ -154,7 +154,7 @@ describe("Payment history", () => {
       expect(history.nextCursor).toEqual(null);
     });
 
-    it("should have three payment history entries when mint + transfer to self", async () => {
+    it("should have three transfer history entries when mint + transfer to self", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
 
@@ -230,7 +230,7 @@ describe("Payment history", () => {
       expect(history.nextCursor).not.toBeNull();
     });
 
-    it("is possible to get payment history from via the IAccount interface", async () => {
+    it("is possible to get transfer history from via the IAccount interface", async () => {
       const user = TestUser();
       const ft = _ft.changeUser(user);
 
@@ -304,7 +304,7 @@ describe("Payment history", () => {
     );
 
     const transferHistory = await account1.getTransferHistory(10, {
-      paymentHistoryType: PaymentHistoryType.Sent,
+      transferHistoryType: TransferHistoryType.Sent,
     });
 
     expect(transferHistory.data.length).toEqual(3);
@@ -339,13 +339,13 @@ describe("Payment history", () => {
     );
 
     const transferHistory = await account2.getTransferHistory(5, {
-      paymentHistoryType: PaymentHistoryType.Received,
+      transferHistoryType: TransferHistoryType.Received,
     });
 
     expect(transferHistory.data.length).toEqual(2);
   });
 
-  it("fetches a payment history entry by rowid", async () => {
+  it("fetches a transfer history entry by rowid", async () => {
     const user = TestUser();
     const ft = _ft.changeUser(user);
 
@@ -365,7 +365,7 @@ describe("Payment history", () => {
       createAmount(10, asset.decimals)
     );
 
-    const retreiver = createPaymentHistoryRetriever(
+    const retreiver = createTransferHistoryRetriever(
       connection.client,
       account1.id
     );

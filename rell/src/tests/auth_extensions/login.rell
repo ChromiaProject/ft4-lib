@@ -1,7 +1,7 @@
 @test
 module;
 
-import ^^.lib.ft4.auth;
+import ^^^.lib.ft4.auth;
 
 /*
  *  Tests login_config extension defined in tests/extensions/auth.rell

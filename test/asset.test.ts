@@ -33,8 +33,8 @@ describe("Asset", () => {
 
     const expectedAssets = await connection.getAssetsByName(assetName);
 
-    expect(expectedAssets.length).toEqual(1);
-    expect(expectedAssets[0]).toEqual(asset);
+    expect(expectedAssets.data.length).toEqual(1);
+    expect(expectedAssets.data[0]).toEqual(asset);
   });
 
   it("can fetch paginated assets", async () => {
@@ -45,12 +45,12 @@ describe("Asset", () => {
     await registerAsset(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
-      await connection.getAssetsByNamePaginated(assetName, 2);
+      await connection.getAssetsByName(assetName, 2);
     expect(expectedAssets.length).toEqual(2);
     expect(expectedAssets[0].name).toEqual(assetName);
     expect(expectedAssets[1].name).toEqual(assetName);
 
-    const { data: expectedAssets2 } = await connection.getAssetsByNamePaginated(
+    const { data: expectedAssets2 } = await connection.getAssetsByName(
       assetName,
       2,
       nextCursor
@@ -98,7 +98,7 @@ describe("Asset", () => {
 
     const expectedAssets = await connection.getAllAssets();
 
-    expect(expectedAssets).toEqual(
+    expect(expectedAssets.data).toEqual(
       expect.arrayContaining([asset1, asset2, asset3])
     );
   });
@@ -109,15 +109,10 @@ describe("Asset", () => {
     await getNewAsset(ft);
     await getNewAsset(ft);
 
-    const { data: page1, nextCursor } = await connection.getAllAssetsPaginated(
-      2
-    );
+    const { data: page1, nextCursor } = await connection.getAllAssets(2);
 
     expect(page1.length).toBe(2);
-    const { data: page2 } = await connection.getAllAssetsPaginated(
-      1,
-      nextCursor
-    );
+    const { data: page2 } = await connection.getAllAssets(1, nextCursor);
 
     expect(page2.length).toBe(1);
   });

@@ -1,6 +1,6 @@
-
 import acc: ^^.lib.ft4.accounts;
 import assets: ^^.lib.ft4.assets;
+import .auth;
 
 operation operation_without_auth_message_template(
     integer,
@@ -11,7 +11,7 @@ operation operation_without_auth_message_template(
     text,
     optional_text: text?
 ) {
-    acc.authenticate(set<text>());
+    acc._authenticate(set<text>());
 }
 
 operation add_ad_to_account(acc.account, acc.auth_descriptor) {
@@ -20,4 +20,8 @@ operation add_ad_to_account(acc.account, acc.auth_descriptor) {
 
 operation register_asset(name, symbol: text, decimals: integer, issuing_brid: byte_array, icon_url: text) {
     assets.Unsafe.register_asset(name, symbol, decimals, issuing_brid, icon_url);
+}
+
+operation register_account_test(acc.auth_descriptor) {
+    acc.Unsafe.create_account_with_auth(auth_descriptor);
 }

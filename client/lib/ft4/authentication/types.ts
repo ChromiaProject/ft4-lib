@@ -7,9 +7,10 @@ import { Buffer } from "buffer";
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
-
+  // TODO: check if authDataService can be removed
+  authDataService: AuthDataService;
   createSession(): AuthenticatorSession;
-  getAuthRequirements(operation: Operation): Promise<AuthData>;
+  getAuthFlags(operation: Operation): Promise<string[]>;
   getKeyHandlerForOperation(
     operation: Operation
   ): Promise<KeyHandler | undefined>;
@@ -22,10 +23,11 @@ export interface KeyHandler {
 
   satisfiesAuthRequirements(flags: string[]): boolean;
 
-  authenticate(
+  authorize(
     accountId: BufferId,
     operation: Operation,
-    authData: AuthData
+    nonce: number,
+    authDataService: AuthDataService
   ): Promise<Operation[]>;
 
   sign(transaction: TxBuilderTransaction): Promise<void>;
@@ -44,21 +46,19 @@ export interface AuthenticatorSession {
   authenticator: Authenticator;
   getUsedKeyHandlers(): Set<KeyHandler>;
   getSigners(): Set<Buffer>;
-  authenticate(operation: Operation): Promise<Operation[]>;
+  authorize(operation: Operation): Promise<Operation[]>;
   sign(transaction: TxBuilderTransaction): Promise<void>;
 }
 
 export interface AuthDataService {
-  getAuthData(operation: Operation): Promise<AuthData>;
-  // TODO: add account id argument
-  getNonce(authDescriptorId: BufferId): Promise<number | null>;
+  getAuthFlags(operation: Operation): Promise<string[]>;
+  getAuthMessageTemplate(operation: Operation): Promise<string>;
+  getNonce(
+    accountId: BufferId,
+    authDescriptorId: BufferId
+  ): Promise<number | null>;
   getLoginConfig(name: string | null): Promise<LoginConfig>;
 }
-
-export type AuthData = {
-  flags: string[];
-  message: string;
-};
 
 export type LoginConfig = {
   flags: string[];

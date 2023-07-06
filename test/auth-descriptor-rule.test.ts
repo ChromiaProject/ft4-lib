@@ -1,14 +1,33 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { ftUserSession } from "../client/lib/ft4/types";
+import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
 import { Account, User } from "../client/lib/ft4/accounts/types";
 import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
-import { getNewAsset, getUserSession } from "./util/blockchain-util";
+import {
+  createChromiaClient,
+  getNewAsset,
+  getUserSession,
+} from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
+import {
+  createAuthDataService,
+  createConnection,
+  createSession,
+} from "/ft4/ft-session";
+import {
+  addAuthDescriptorTo,
+  createAccount,
+  createTestAuthDescriptor,
+} from "./util/util";
+import { createAuthenticator } from "/ft4/authentication";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { newSignatureProvider } from "postchain-client";
+import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
 
 let _ft: ftUserSession;
+let _connection: Connection;
 let asset: Asset;
 
 function sourceAccount(user: User): Promise<Account> {
@@ -22,14 +41,6 @@ function destinationAccount(): Promise<Account> {
   return AccountBuilder.account(_ft.changeUser(testUser())).build();
 }
 
-async function addAuthDescriptorTo(
-  account: Account,
-  adminUser: User,
-  user: User
-) {
-  await _ft.changeUser(adminUser).account.authDescriptor.add(user, account.id);
-}
-
 async function getUserAndAccountFromAuthDescriptorRule(
   rule: AuthDescriptorRule
 ): Promise<[User, Account]> {
@@ -38,7 +49,7 @@ async function getUserAndAccountFromAuthDescriptorRule(
   const user2 = testUser(rule);
   const account = await sourceAccount(user1);
 
-  await addAuthDescriptorTo(account, user1, user2);
+  await addAuthDescriptorTo(_connection.client, account.id, user1, user2);
 
   const accounts = await _ft.get.account.by.authDescriptorId(
     user2.authDescriptor.id
@@ -52,6 +63,7 @@ describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
     asset = await getNewAsset(_ft);
+    _connection = createConnection(await createChromiaClient());
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
@@ -332,7 +344,7 @@ describe("Auth Descriptor Rule", () => {
     const destAccount = await destinationAccount();
 
     // add expiring auth descriptor to the account
-    await addAuthDescriptorTo(srcAccount1, user1, user2);
+    await addAuthDescriptorTo(_connection.client, srcAccount1.id, user1, user2);
 
     // get the session initialized with user2
     // object which contains expiring auth descriptor
@@ -371,7 +383,7 @@ describe("Auth Descriptor Rule", () => {
     const destAccount = await destinationAccount();
 
     // add expiring auth descriptor to the account
-    await addAuthDescriptorTo(srcAccount1, user1, user2);
+    await addAuthDescriptorTo(_connection.client, srcAccount1.id, user1, user2);
 
     // get the session initialized with user2
     // object which contains expiring auth descriptor
@@ -407,8 +419,8 @@ describe("Auth Descriptor Rule", () => {
     let srcAccount1 = await sourceAccount(user1);
     const destAccount = await destinationAccount();
 
-    await addAuthDescriptorTo(srcAccount1, user1, user2);
-    await addAuthDescriptorTo(srcAccount1, user1, user3);
+    await addAuthDescriptorTo(_connection.client, srcAccount1.id, user1, user2);
+    await addAuthDescriptorTo(_connection.client, srcAccount1.id, user1, user3);
 
     const ft2 = _ft.changeUser(user2);
 
@@ -441,8 +453,8 @@ describe("Auth Descriptor Rule", () => {
 
     let account = await sourceAccount(user1);
 
-    await addAuthDescriptorTo(account, user1, user2);
-    await addAuthDescriptorTo(account, user1, user3);
+    await addAuthDescriptorTo(_connection.client, account.id, user1, user2);
+    await addAuthDescriptorTo(_connection.client, account.id, user1, user3);
 
     account = await _ft.get.account.by.id(account.id);
 
@@ -450,55 +462,109 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should delete auth descriptors", async () => {
-    const user1 = testUser();
-    const user2 = testUser(allow.operationCount.lessOrEqual(1).only);
-    const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
+      ["A"],
+      allow.operationCount.lessOrEqual(1).only
+    );
+    const { keyPair: kp3, authDescriptor: ad3 } = createTestAuthDescriptor(
+      ["A"],
+      allow.operationCount.lessOrEqual(1).only
+    );
 
-    let account = await sourceAccount(user1);
-    await addAuthDescriptorTo(account, user1, user2);
-    await addAuthDescriptorTo(account, user1, user3);
-    account = await _ft.get.account.by.id(account.id);
+    const accountId = await createAccount(_connection.client, ad1);
 
-    await _ft
-      .changeUser(user1)
-      .account.authDescriptor.deleteAllExcluding(
-        user1.authDescriptor.id,
-        account.id
-      );
+    const user1 = {
+      signatureProvider: newSignatureProvider(kp1),
+      authDescriptor: ad1,
+    };
+    const user2 = {
+      signatureProvider: newSignatureProvider(kp2),
+      authDescriptor: ad2,
+    };
+    const user3 = {
+      signatureProvider: newSignatureProvider(kp3),
+      authDescriptor: ad3,
+    };
 
-    expect(account.authDescriptors.length).toEqual(3);
+    await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
+    await addAuthDescriptorTo(_connection.client, accountId, user1, user3);
 
-    account = await _ft.get.account.by.id(account.id);
+    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
 
-    expect(account.authDescriptors.length).toEqual(1);
+    const authDataService = createAuthDataService(_connection);
+
+    const session = createSession(
+      _connection,
+      createAuthenticator(ad1.id, [keyHandler], authDataService)
+    );
+
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
+
+    const tx = await session
+      .transactionBuilder()
+      .add(deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .build();
+    await _connection.client.sendTransaction(tx);
+
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
-  it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+  // Skipped due to possible bug in postchain-client 1.5.4
+  it.skip("should fail when deleting an auth descriptor which is not owned by the account", async () => {
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A"]);
 
-    const account1 = await sourceAccount(user1);
-    await sourceAccount(user2);
+    await createAccount(_connection.client, ad1);
+    await createAccount(_connection.client, ad2);
 
-    const promise = _ft
-      .changeUser(user1)
-      .account.authDescriptor.delete(user2.authDescriptor.id, account1.id);
+    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const authDataService = createAuthDataService(_connection);
+
+    const session = createSession(
+      _connection,
+      createAuthenticator(ad1.id, [keyHandler], authDataService)
+    );
+
+    const promise = session.account.deleteAuthDescriptor(ad2.id);
     await expect(promise).rejects.toThrowError();
   });
 
   it("should delete auth descriptor", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
+      "A",
+    ]);
 
-    let account = await sourceAccount(user1);
+    const accountId = await createAccount(_connection.client, ad1);
 
-    await addAuthDescriptorTo(account, user1, user2);
-    await _ft
-      .changeUser(user1)
-      .account.authDescriptor.delete(user2.authDescriptor.id, account.id);
+    const user1 = {
+      signatureProvider: newSignatureProvider(kp1),
+      authDescriptor: ad1,
+    };
+    const user2 = {
+      signatureProvider: newSignatureProvider(kp2),
+      authDescriptor: ad2,
+    };
 
-    account = await _ft.get.account.by.id(account.id);
-    expect(account.authDescriptors.length).toEqual(1);
+    await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
+
+    const keyHandler = createInMemoryFtKeyStore(kp1).createKeyHandler(ad1);
+    const authDataService = createAuthDataService(_connection);
+
+    const session = createSession(
+      _connection,
+      createAuthenticator(ad1.id, [keyHandler], authDataService)
+    );
+    await session.account.deleteAuthDescriptor(ad2.id);
+
+    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("Should be able to create same rules with different value", async () => {
@@ -511,9 +577,13 @@ describe("Auth Descriptor Rule", () => {
     const user2 = testUser(rules);
     const account = await sourceAccount(user1);
 
-    await expect(
-      addAuthDescriptorTo(account, user1, user2)
-    ).resolves.toBeUndefined();
+    const txInfo = await addAuthDescriptorTo(
+      _connection.client,
+      account.id,
+      user1,
+      user2
+    );
+    expect(txInfo.status).toBe("confirmed");
   });
 
   it.skip("shouldn't be able to create too many rules", async () => {
@@ -530,7 +600,7 @@ describe("Auth Descriptor Rule", () => {
     const account = await sourceAccount(user1);
 
     await expect(
-      addAuthDescriptorTo(account, user1, user2)
+      addAuthDescriptorTo(_connection.client, account.id, user1, user2)
     ).rejects.toThrowError();
   });
 

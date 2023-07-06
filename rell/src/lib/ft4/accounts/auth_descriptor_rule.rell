@@ -25,8 +25,7 @@ entity auth_descriptor_rule_variable {
 }
 
 function is_valid(auth_descriptor: account_auth_descriptor): boolean {
-	// check if rules is null (encoded null is equal to 0xa0020500)
-	if (auth_descriptor.rules == x'a0020500') {
+	if (auth_descriptor.rules == null.to_gtv().to_bytes()) {
 		return true;
 	}
 	
@@ -66,7 +65,7 @@ function handle_composed_rule(rule: gtv, variables: map<text, gtv>): boolean {
 }
 
 function is_active(account_auth_descriptor): boolean {
-	if (account_auth_descriptor.rules == x'a0020500') { //== null
+	if (account_auth_descriptor.rules == null.to_gtv().to_bytes()) { 
 		return true;
 	}
 	
@@ -138,7 +137,7 @@ function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, 
  */
 function setup_auth_descriptor_variables(account_auth_descriptor) {
 	
-	if (account_auth_descriptor.rules == x'a0020500') { // This is the "hash(null)" value
+	if (account_auth_descriptor.rules == null.to_gtv().to_bytes()) {
 		return;
 	} 
 	
@@ -192,8 +191,7 @@ function variable_value(variable: rule_variable, variables: map<text, gtv>): int
  */
  function analyze_auth_descriptor_rules(rules: gtv, hop: integer) {
  	require(hop<3, "Too many rules");
- 	val rules_bytes = rules.to_bytes(); 
- 	if (rules_bytes == x'a0020500') { // this is "hash(null)" 
+ 	if (rules == null.to_gtv()) {
 		return;
 	}
 	

@@ -65,6 +65,17 @@ export type TransactionBuilder = {
    * and which consequently should sign the transaction.
    */
   keyHandlersUsed: () => KeyHandler[];
+
+  /**
+   * Builds a transaction and signs it with the keyhandlers provided.
+   * When using this function, the builder will completely ignore any
+   * other keyhandlers previously provided.
+   * @param keyHandlers the keyhandler to user
+   * @returns a signed transaction
+   */
+  buildWithSigners: (
+    ...keyHandlers: KeyHandler[]
+  ) => Promise<SignedTransaction>;
   session: IClient;
 };
 
@@ -139,18 +150,13 @@ export function transactionBuilder(
           (await authenticator.getNonce(keyHandler.authDescriptor.id))!
         );
       }
-      const nonce = nonces.get(keyHandler.authDescriptor.id)!;
-      // FIXME `getKeyHandlerForOperation` already calls `getAuthRequirements`
-      // See if we can avoid making two calls? Perhaps it will not be a problem when we start to cache data
-      const authData = await authenticator.getAuthRequirements(operation);
-      const message = authData.message.replace("{nonce}", `${nonce}`);
-      const ops = await keyHandler.authenticate(
+
+      const nonce = nonces.get(keyHandler.authDescriptor.id);
+      const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        {
-          flags: authData.flags,
-          message,
-        }
+        nonce,
+        authenticator.authDataService
       );
       // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {
@@ -182,6 +188,15 @@ export function transactionBuilder(
     return this;
   }
 
+  async function buildWithSigners(...signers: KeyHandler[]) {
+    const tx = await this.buildUnsigned();
+    tx.signers = [
+      ...new Set(signers.map((signer) => signer.getSigners()).flat()),
+    ];
+    await Promise.all(signers.map((handler: KeyHandler) => handler.sign(tx)));
+    return gtx.serialize(tx);
+  }
+
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator
@@ -200,6 +215,7 @@ export function transactionBuilder(
   context.buildUnsigned = buildUnsigned.bind(context);
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
+  context.buildWithSigners = buildWithSigners.bind(context);
 
   return context as TransactionBuilder;
 }

@@ -130,16 +130,22 @@ class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      await Promise.all(
-        this.balances.map(async (balance) => {
-          await this.session.balance.admin.mint(
-            admin(),
-            account.id,
-            balance.asset.id,
-            balance.amount
-          );
-        })
-      );
+      const adminSignatureProvider = admin().signatureProvider;
+      const tx = this.session.get.gtxClient.newTransaction([
+        adminSignatureProvider.pubKey,
+      ]);
+
+      this.balances.forEach(async (balance) => {
+        tx.addOperation(
+          "ft4.admin.mint",
+          account.id,
+          balance.asset.id,
+          balance.amount.value
+        );
+      });
+
+      await tx.sign(adminSignatureProvider);
+      await tx.postAndWaitConfirmation();
     }
   }
 

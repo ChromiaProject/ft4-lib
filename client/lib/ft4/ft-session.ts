@@ -12,23 +12,19 @@ import { _getConfig, getVersion, _nop as nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
-  _getByAuthDescriptorId,
   _getById,
   createAccountObject,
-  _getByAuthDescriptorIdPaginated,
+  _getByAuthDescriptorId,
 } from "./accounts/account-query-functions";
 import {
-  _getAllAssets,
   _getAssetById,
   _getAssetBySymbol,
+  _getAllAssets,
   _getAssetsByName,
-  _getAllAssetsPaginated,
-  _getAssetsByNamePaginated,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
 import {
-  AuthData,
   AuthDataService,
   Authenticator,
   KeyStore,
@@ -36,8 +32,8 @@ import {
 } from "./authentication/types";
 import { createAuthenticator } from "./authentication";
 import {
-  authDataQuery,
-  defaultFTAuthData,
+  authFlags,
+  authMessageTemplate,
   loginConfig,
   nonce,
 } from "./authentication/queries";
@@ -87,26 +83,20 @@ export function createConnection(client: IClient): Connection {
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
       _getByParticipantId(connection, id),
-    getAccountsByAuthDescriptorId: (id: BufferId) =>
-      _getByAuthDescriptorId(connection, id),
-    getAccountsByAuthDescriptorIdPaginated: (
+    getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
       cursor?: OptionalPageCursor
-    ) => _getByAuthDescriptorIdPaginated(connection, id, limit, cursor),
+    ) => _getByAuthDescriptorId(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
-    getAssetsByName: (name: string) => _getAssetsByName(connection, name),
-    getAssetsByNamePaginated: (
+    getAssetsByName: (
       name: string,
       limit?: number,
       cursor?: OptionalPageCursor
-    ) => _getAssetsByNamePaginated(connection, name, limit, cursor),
-    getAllAssets: () => _getAllAssets(connection),
-    getAllAssetsPaginated: (
-      limit?: number,
-      cursor: OptionalPageCursor = null
-    ) => _getAllAssetsPaginated(connection, limit, cursor),
+    ) => _getAssetsByName(connection, name, limit, cursor),
+    getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
+      _getAllAssets(connection, limit, cursor),
   });
 
   return connection;
@@ -121,9 +111,9 @@ export function createSession(
     transactionBuilder: () =>
       transactionBuilder(authenticator, connection.client),
     call: (...operations: Operation[]) =>
-      call(connection, authenticator, ...operations, nop()),
-    callWithoutNop: (...operations: Operation[]) =>
       call(connection, authenticator, ...operations),
+    callWithoutNop: (...operations: Operation[]) =>
+      callWithoutNop(connection, authenticator, ...operations),
     ...connection,
   });
 }
@@ -135,7 +125,7 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
-export async function call(
+export async function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
@@ -144,6 +134,14 @@ export async function call(
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
   return connection.client.sendTransaction(tx);
+}
+
+export async function call(
+  connection: Connection,
+  authenticator: Authenticator,
+  ...operations: Operation[]
+): Promise<TransactionReceipt> {
+  return callWithoutNop(connection, authenticator, ...operations, nop());
 }
 
 export type KeyStoreInteractor = {
@@ -156,24 +154,14 @@ export type KeyStoreInteractor = {
 // Use `rell.get_app_structure` to get exposed queries (FT3-99)
 export function createAuthDataService(connection: Connection): AuthDataService {
   return Object.freeze({
-    getAuthData: async (operation: Operation) => {
-      let authData: AuthData | null;
-      try {
-        authData = await connection.query<AuthData>(authDataQuery(operation));
-      } catch {
-        try {
-          authData = await connection.query<AuthData>(defaultFTAuthData);
-        } catch {
-          authData = {
-            flags: [],
-            message: "",
-          };
-        }
-      }
-      return authData!;
+    getAuthFlags: async (operation: Operation) => {
+      return await connection.query<string[]>(authFlags(operation));
     },
-    getNonce: async (authDescriptorId: BufferId) =>
-      connection.query<number>(nonce(authDescriptorId)),
+    getAuthMessageTemplate: async (operation: Operation) => {
+      return await connection.query<string>(authMessageTemplate(operation));
+    },
+    getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
+      connection.query<number>(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | null = null) =>
       connection.query<LoginConfig>(loginConfig(configName)),
   });

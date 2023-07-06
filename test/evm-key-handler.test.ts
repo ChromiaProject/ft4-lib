@@ -10,7 +10,7 @@ import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAccount } from "./util/util";
 import { ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
-import { createChromiaClient, createClient } from "./util/blockchain-util";
+import { createChromiaClient } from "./util/blockchain-util";
 import { Buffer } from "buffer";
 
 describe("EVM key handler", () => {
@@ -55,10 +55,13 @@ describe("EVM key handler", () => {
       message: "Message to sign",
     };
 
-    const operations = await keyHandler.authenticate(
+    const operations = await keyHandler.authorize(
       accountId,
       _op("foo"),
-      authData
+      0,
+      createFakeAuthDataService({
+        foo: authData,
+      })
     );
 
     const signature = await keyStore.signMessage(authData.message);
@@ -125,7 +128,7 @@ describe("EVM key handler", () => {
       ["A"],
       keyStore.address
     ).andNoRules;
-    await createAccount(await createClient(), ad);
+    await createAccount(client, ad);
 
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
       ad.id
@@ -139,6 +142,6 @@ describe("EVM key handler", () => {
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const authDescriptors = await session.account.getAuthDescriptors();
-    expect(authDescriptors.length).toEqual(2);
+    expect(authDescriptors.data.length).toEqual(2);
   });
 });
