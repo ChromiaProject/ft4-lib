@@ -139,27 +139,6 @@ describe("Test the account", () => {
     await expect(promise).rejects.toBe("rejected");
   });
 
-  // No longer relevant. Admin operations don't require signatures of
-  // key pairs that are added to multisig auth descriptor
-  it.skip("should create new multisig account", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
-
-    const ad = authDescriptor.create.multiSig.withArgs(
-      [FlagsType.Account, FlagsType.Transfer],
-      2,
-      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
-    ).andNoRules;
-
-    const promise = registerAccount(
-      _ft.get.gtxClient,
-      admin.signatureProvider,
-      ad
-    );
-
-    await expect(promise).resolves.not.toThrowError();
-  });
-
   it("updates account if 2 signatures provided", async () => {
     const { keyPairs, authDescriptor } = createTestMultisigAuthDescriptor(2, [
       "A",
