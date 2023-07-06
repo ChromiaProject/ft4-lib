@@ -6,7 +6,6 @@ import {
   burnTokens,
   deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
-  // getPaymentHistoryIterator,
   givePoints,
   registerAccount,
   ssoRawTransactionAddAuthDescriptor,
@@ -22,16 +21,13 @@ import {
   isAuthDescriptorValid,
 } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
-// import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
-// import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Amount } from "../asset/interfaces";
-// import { PaymentHistoryFilter } from "./payment-history/types";
 
 export * from "./auth";
 export * from "./auth-descriptor";
-export * from "./payment-history";
+export * from "./transfer-history";
 export * from "./types";
 
 export const accountQuerySession = (pci: GtxClient) =>

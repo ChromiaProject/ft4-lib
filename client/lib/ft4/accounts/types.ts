@@ -8,10 +8,10 @@ import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId, KeyPair } from "../../cryptoUtils";
 import { KeyManager } from "./auth/types";
 import {
-  PaymentHistoryFilter,
+  TransferHistoryFilter,
   TransferHistoryResponse,
-  PaymentHistoryEntry,
-} from "./payment-history/types";
+  TransferHistoryEntry,
+} from "./transfer-history/types";
 import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
 import { OptionalPageCursor } from "../types";
@@ -73,12 +73,12 @@ export interface IAccount {
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
     limit?: number,
-    filter?: PaymentHistoryFilter,
+    filter?: TransferHistoryFilter,
     cursor?: OptionalPageCursor
   ) => Promise<TransferHistoryResponse>;
   getTransferHistoryEntry: (
     rowid: number
-  ) => Promise<PaymentHistoryEntry | null>;
+  ) => Promise<TransferHistoryEntry | null>;
 }
 
 export interface IAuthenticatedAccount extends IAccount {

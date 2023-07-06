@@ -120,9 +120,9 @@ export function createSession(
     transactionBuilder: () =>
       transactionBuilder(authenticator, connection.client),
     call: (...operations: Operation[]) =>
-      call(connection, authenticator, ...operations, nop()),
-    callWithoutNop: (...operations: Operation[]) =>
       call(connection, authenticator, ...operations),
+    callWithoutNop: (...operations: Operation[]) =>
+      callWithoutNop(connection, authenticator, ...operations),
     ...connection,
   });
 }
@@ -134,7 +134,7 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
-export async function call(
+export async function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
@@ -143,6 +143,14 @@ export async function call(
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
   return connection.client.sendTransaction(tx);
+}
+
+export async function call(
+  connection: Connection,
+  authenticator: Authenticator,
+  ...operations: Operation[]
+): Promise<TransactionReceipt> {
+  return callWithoutNop(connection, authenticator, ...operations, nop());
 }
 
 export type KeyStoreInteractor = {
