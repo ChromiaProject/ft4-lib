@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/ban-ts-comment: 0 */
 import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
   addAuthDescriptorOp,
@@ -126,35 +125,6 @@ export async function deleteAuthDescriptor(
   await tx.postAndWaitConfirmation();
 }
 
-// export async function transferInputsToOutputs(
-//   inputs: XferInput[],
-//   outputs: XferOutput[],
-//   tb: LegacyTransactionBuilder
-// ): Promise<void> {
-//   const tx = await tb.add(transferOp(inputs, outputs)).add(nop()).buildSigned();
-//   await tx.postAndWaitConfirmation();
-// }
-
-// export async function transfer(
-//   toAccountId: BufferId,
-//   assetId: BufferId,
-//   amount: Amount,
-//   tb: LegacyTransactionBuilder,
-// ): Promise<void> {
-//   //if we want to check that amount has the correct decimals, do it here
-//   await transferInputsToOutputs([input], [output], tb);
-// }
-
-// async function transfer(
-//   receiverId: BufferId,
-//   assetId: BufferId,
-//   amount: Amount,
-//   tb: LegacyTransactionBuilder,
-// ): Promise<void> {
-//   const tx = await tb.add(transferOp(receiverId, assetId, amount)).add(nop()).buildSigned();
-//   await tx.postAndWaitConfirmation();
-// }
-
 export async function burnTokens(
   assetId: BufferId,
   amount: Amount,
@@ -177,7 +147,6 @@ export async function registerAccount(
     ...user.authDescriptor.signers,
     ...adminUser.authDescriptor.signers,
   ]);
-  // @ts-ignore
   tx.addOperation(...registerOp(newAuthDesc)); //doesn't need nop
   await tx.sign(user.signatureProvider);
   await tx.sign(adminUser.signatureProvider);
@@ -196,11 +165,9 @@ export async function givePoints(
     ...user.authDescriptor.signers,
     ...adminUser.authDescriptor.signers,
   ]);
-  // @ts-ignore
   tx.addOperation(
     ...addRateLimitPointsOp(formatter.ensureBuffer(accountId), points)
   );
-  // @ts-ignore
   tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);
   await tx.sign(adminUser.signatureProvider);
@@ -258,18 +225,6 @@ async function _deleteAuthDescriptor(
     deleteAuthDescriptorV2(authDescriptorId)
   );
 }
-
-// async function _deleteAllAuthDescriptorsExclude(
-//   connection: Connection,
-//   authenticator: Authenticator,
-//   authDescriptorId: BufferId
-// ): Promise<TransactionReceipt> {
-//   return call(
-//     connection,
-//     authenticator,
-//     deleteAllAuthDescriptorsExcludeOp(authenticator.accountId, authDescriptorId)
-//   );
-// }
 
 async function _transfer(
   connection: Connection,

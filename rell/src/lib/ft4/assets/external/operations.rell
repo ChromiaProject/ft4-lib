@@ -3,17 +3,6 @@ import ^^.auth;
 
 query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
 
-// TODO: remove
-// @extend(auth.auth_handler)
-// function () = auth.add_auth_handler(
-//     scope = "ft4.transfer",
-//     flags = ["T"]
-// );
-
-// operation transfer(inputs: list<assets.xfer_input>, outputs: list<assets.xfer_output>) {
-//     assets._transfer(inputs, outputs);
-// }
-
 function transfer_message(gtv) {
     val params = struct<transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);

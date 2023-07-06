@@ -20,20 +20,6 @@ export function addAuthDescriptorOp(
   );
 }
 
-// export function transferOp(
-//   inputs: XferInput[],
-//   outputs: XferOutput[]
-// ): Operation {
-//   return op("ft4.transfer", inputs, outputs);
-// }
-
-// export function _transferOp(
-//   inputs: XferInput[],
-//   outputs: XferOutput[]
-// ): _Operation {
-//   return _op("ft4.transfer", inputs, outputs);
-// }
-
 export function burnOp(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
