@@ -192,19 +192,6 @@ export default class SSO {
 
     return [account, user];
   }
-
-  async logout(): Promise<void> {
-    const [account, user] = await this.getAccountAndUserByStoredIds();
-
-    if (account && user) {
-      await this.session.account.authDescriptor.delete(
-        user.authDescriptor.id,
-        account.id
-      );
-    }
-
-    this.clear();
-  }
 }
 
 export class SSOError extends Error {

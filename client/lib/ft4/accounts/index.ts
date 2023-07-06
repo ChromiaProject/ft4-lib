@@ -3,7 +3,6 @@ import { BufferId } from "../../cryptoUtils";
 import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {
   burnTokens,
-  deleteAuthDescriptor,
   givePoints,
   registerAccount,
   transfer,
@@ -43,14 +42,6 @@ export const accountQuerySession = (pci: GtxClient) =>
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
-    authDescriptor: {
-      delete: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAuthDescriptor(
-          authDescriptorId,
-          accountId,
-          legacyTransactionBuilder(user, pci)
-        ),
-    },
     token: {
       transfer: (
         from: BufferId,

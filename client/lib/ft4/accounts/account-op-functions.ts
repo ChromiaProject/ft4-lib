@@ -4,8 +4,7 @@ import {
   _transferOp,
   addAuthDescriptor,
   burnOp,
-  deleteAuthDescriptorOp,
-  deleteAuthDescriptorV2,
+  deleteAuthDescriptor,
   transferOp,
   transferV2,
 } from "./account-operations";
@@ -33,24 +32,6 @@ import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-mem
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
-
-export async function deleteAuthDescriptor(
-  authDescriptorId: BufferId,
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-): Promise<void> {
-  const tx = await tb
-    .add(
-      deleteAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
-        formatter.ensureBuffer(authDescriptorId)
-      )
-    )
-    .add(nop())
-    .buildSigned();
-  await tx.postAndWaitConfirmation();
-}
 
 export async function transferInputsToOutputs(
   inputs: XferInput[],
@@ -184,7 +165,7 @@ async function _deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    deleteAuthDescriptorV2(authDescriptorId)
+    deleteAuthDescriptor(authDescriptorId)
   );
 }
 
