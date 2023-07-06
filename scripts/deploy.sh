@@ -66,7 +66,7 @@ curl -X POST https://chromadev.zulipchat.com/api/v1/messages \
 
 printf "\n\nZulip message:\n${ZULIP_MESSAGE}\n\n"
 
-if [ "$EXIT_EARLY" -eq 0 ]; then
+if [ $EXIT_EARLY -eq 0 ]; then
     exit 1
 fi
 
