@@ -80,33 +80,33 @@ curl -s --request PUT \
   --header "Authorization: Bearer $BRID_DEPLOYMENT_TOKEN"
 
 echo "editing pipeline variable on wallet repo"
-echo "global (1/4)"
+echo "global (1/?)"
 curl -s --request PUT \
     --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/pipelines_config/variables/%7B'$WALLET_VARIABLE_UUID'%7D' \
     --header 'Accept: application/json' --header "Content-Type: application/json" \
     --data '{"value":"'$BRID'"}' \
     --header "Authorization: Bearer $WALLET_BRID_UPDATER"
-echo "test (2/4)"
-curl -s --request PUT \
-    --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7B7a5611ab-075c-407a-a14b-4a2adc2e696c%7D/variables/%7B5d61e94f-0f94-4db5-b666-6e9f68c6b388%7D' \
-    --header 'Accept: application/json' --header "Content-Type: application/json" \
-    --data '{"value":"'$BRID'"}' \
-    --header "Authorization: Bearer $WALLET_BRID_UPDATER"
-echo "dev (3/4)"
-curl -s --request PUT \
-    --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7Bba751f68-4454-42b3-8b8b-62ee36e22751%7D/variables/%7B580da712-f600-40c7-8bf4-37de76224006%7D' \
-    --header 'Accept: application/json' --header "Content-Type: application/json" \
-    --data '{"value":"'$BRID'"}' \
-    --header "Authorization: Bearer $WALLET_BRID_UPDATER"
-echo "prod (4/4)"
-curl -s --request PUT \
-    --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7B6714c227-673b-448e-95df-2b30ad6882fd%7D/variables/%7Be91a0ba3-4b94-47da-8d2d-5ddc1ada6ec0%7D' \
-    --header 'Accept: application/json' --header "Content-Type: application/json" \
-    --data '{"value":"'$BRID'"}' \
-    --header "Authorization: Bearer $WALLET_BRID_UPDATER"
 
 
-# if [ $which == "stable" ]
+if [ $which == "stable" ]
+    echo "test (2/4)"
+    curl -s --request PUT \
+        --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7B7a5611ab-075c-407a-a14b-4a2adc2e696c%7D/variables/%7B5d61e94f-0f94-4db5-b666-6e9f68c6b388%7D' \
+        --header 'Accept: application/json' --header "Content-Type: application/json" \
+        --data '{"value":"'$BRID'"}' \
+        --header "Authorization: Bearer $WALLET_BRID_UPDATER"
+    echo "dev (3/4)"
+    curl -s --request PUT \
+        --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7Bba751f68-4454-42b3-8b8b-62ee36e22751%7D/variables/%7B580da712-f600-40c7-8bf4-37de76224006%7D' \
+        --header 'Accept: application/json' --header "Content-Type: application/json" \
+        --data '{"value":"'$BRID'"}' \
+        --header "Authorization: Bearer $WALLET_BRID_UPDATER"
+    echo "prod (4/4)"
+    curl -s --request PUT \
+        --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/deployments_config/environments/%7B6714c227-673b-448e-95df-2b30ad6882fd%7D/variables/%7Be91a0ba3-4b94-47da-8d2d-5ddc1ada6ec0%7D' \
+        --header 'Accept: application/json' --header "Content-Type: application/json" \
+        --data '{"value":"'$BRID'"}' \
+        --header "Authorization: Bearer $WALLET_BRID_UPDATER"
 #     echo "running wallet pipeline... "
 #     curl -s --request POST \
 #         --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/pipelines' \
@@ -124,4 +124,4 @@ curl -s --request PUT \
 #                 }
 #             }' \
 #         --header "Authorization: Bearer $WALLET_BRID_UPDATER"
-# fi
+fi
