@@ -8,7 +8,7 @@ type TransferHistoryTransferArgs = {
 };
 
 export type TransferHistoryEntryResponse = {
-  id: string;
+  id: number;
   delta: bigint;
   decimals: number;
   asset: string;
@@ -24,7 +24,7 @@ export type TransferHistoryEntryResponse = {
 };
 
 export type TransferHistoryEntry = {
-  rowid: string;
+  rowid: number;
   isInput: boolean;
   delta: Amount;
   asset: AssetInfo;

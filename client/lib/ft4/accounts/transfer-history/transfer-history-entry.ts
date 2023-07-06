@@ -5,7 +5,7 @@ import { formatter, gtv } from "postchain-client";
 import { Buffer } from "buffer";
 
 export function createTransferHistoryEntry(
-  rowid: string,
+  rowid: number,
   isInput: boolean,
   delta: bigint,
   decimals: number,

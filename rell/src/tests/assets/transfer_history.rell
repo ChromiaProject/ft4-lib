@@ -226,7 +226,7 @@ function test_transfer_history_entry() {
     assert_equals(
         ft4.assets_ext.get_transfer_history_entry(entry.rowid),
         (
-            id = '%d'.format(entry.rowid),
+            id = entry.rowid,
             delta = entry.delta,
             decimals = entry.asset.decimals,
             asset = entry.asset.name,
