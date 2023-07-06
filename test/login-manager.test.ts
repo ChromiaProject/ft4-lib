@@ -13,7 +13,7 @@ import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";
 import { encryption, gtx } from "postchain-client";
-import { transferV2 } from "/ft4/accounts/account-operations";
+import { transfer } from "/ft4/accounts/account-operations";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
@@ -75,7 +75,7 @@ describe("Login manager", () => {
 
     const transaction = await session
       .transactionBuilder()
-      .add(transferV2(encryption.randomBytes(32), asset.id, createAmount(10)))
+      .add(transfer(encryption.randomBytes(32), asset.id, createAmount(10)))
       .build();
 
     const disposableAuthHandler =

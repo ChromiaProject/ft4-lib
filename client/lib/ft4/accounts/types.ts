@@ -85,7 +85,7 @@ export interface IAuthenticatedAccount extends IAccount {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
-    keyPair: KeyPair
+    keyPair: SignatureProvider | KeyPair
   ) => Promise<TransactionReceipt>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId

@@ -1,5 +1,4 @@
 import { _op, op } from "../utils";
-import { XferInput, XferOutput } from "./types";
 import { Operation } from "../utils/types";
 import { authDescriptor as authDesc } from "./auth-descriptor";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -21,32 +20,36 @@ export function addAuthDescriptorOp(
   );
 }
 
-export function transferOp(
-  inputs: XferInput[],
-  outputs: XferOutput[]
-): Operation {
-  return op("ft4.transfer", inputs, outputs);
-}
+// export function transferOp(
+//   inputs: XferInput[],
+//   outputs: XferOutput[]
+// ): Operation {
+//   return op("ft4.transfer", inputs, outputs);
+// }
 
-export function _transferOp(
-  inputs: XferInput[],
-  outputs: XferOutput[]
-): _Operation {
-  return _op("ft4.transfer", inputs, outputs);
-}
+// export function _transferOp(
+//   inputs: XferInput[],
+//   outputs: XferOutput[]
+// ): _Operation {
+//   return _op("ft4.transfer", inputs, outputs);
+// }
 
 export function burnOp(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
 
-export function deleteAllAuthDescriptorsExcludeOp(
-  accountId: Buffer,
-  excludeAuthDescriptorId: Buffer
+export function _burn(assetId: BufferId, amount: Amount): _Operation {
+  return _op("ft4.burn", formatter.ensureBuffer(assetId), amount.value);
+}
+
+export function deleteAllAuthDescriptorsExclude(
+  accountId: BufferId,
+  excludeAuthDescriptorId: BufferId
 ): Operation {
   return op(
     "ft4.delete_all_auth_descriptors_exclude",
-    accountId,
-    excludeAuthDescriptorId
+    formatter.ensureBuffer(accountId),
+    formatter.ensureBuffer(excludeAuthDescriptorId)
   );
 }
 
@@ -63,13 +66,13 @@ export function deleteAuthDescriptorOp(
   );
 }
 
-export function transferV2(
+export function transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount
-) {
+): _Operation {
   return _op(
-    "ft4.transfer_one",
+    "ft4.transfer",
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),
     amount.value

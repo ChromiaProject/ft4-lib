@@ -2,7 +2,7 @@ import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Account, User } from "../client/lib/ft4/accounts/types";
+import { User } from "../client/lib/ft4/accounts/types";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import {
   createChromiaClient,
@@ -30,14 +30,6 @@ import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/ke
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
 import { createAccount } from "./util/util";
-
-async function addAuthDescriptorTo(
-  account: Account,
-  newUser: User,
-  adminSession: ftUserSession
-) {
-  await adminSession.account.authDescriptor.add(newUser, account.id);
-}
 
 let _ft: ftUserSession;
 let _connection: Connection;
@@ -312,9 +304,14 @@ describe("Test the account", () => {
     const ft2 = _ft.changeUser(user2);
 
     const account1 = await AccountBuilder.account(ft1).build();
-    const account2 = await AccountBuilder.account(ft2).withPoints(1).build();
+    const account2 = await AccountBuilder.account(ft2)
+      .withPoints(1)
+      .buildAuthenticated();
 
-    await addAuthDescriptorTo(account2, user1, ft2);
+    await account2.addAuthDescriptor(
+      user1.authDescriptor,
+      user1.signatureProvider
+    );
 
     const accounts = await _connection.getAccountsByAuthDescriptorId(
       account1.id
@@ -332,11 +329,17 @@ describe("Test the account", () => {
     const ft3 = _ft.changeUser(user3);
 
     const account1 = await AccountBuilder.account(ft1).build();
-    const account2 = await AccountBuilder.account(ft2).build();
-    const account3 = await AccountBuilder.account(ft3).build();
+    const account2 = await AccountBuilder.account(ft2).buildAuthenticated();
+    const account3 = await AccountBuilder.account(ft3).buildAuthenticated();
 
-    await addAuthDescriptorTo(account2, user1, ft2);
-    await addAuthDescriptorTo(account3, user1, ft3);
+    await account2.addAuthDescriptor(
+      user1.authDescriptor,
+      user1.signatureProvider
+    );
+    await account3.addAuthDescriptor(
+      user1.authDescriptor,
+      user1.signatureProvider
+    );
 
     const { data: accounts1, nextCursor } =
       await _connection.getAccountsByAuthDescriptorIdPaginated(
@@ -428,14 +431,22 @@ describe("Test the account", () => {
     const user3 = testUser();
     const ft = _ft.changeUser(user1);
 
-    const account = await AccountBuilder.account(ft).withPoints(4).build();
+    const account = await AccountBuilder.account(ft)
+      .withPoints(4)
+      .buildAuthenticated();
 
-    await addAuthDescriptorTo(account, user2, ft);
-    await addAuthDescriptorTo(account, user3, ft);
+    await account.addAuthDescriptor(
+      user2.authDescriptor,
+      user2.signatureProvider
+    );
+    await account.addAuthDescriptor(
+      user3.authDescriptor,
+      user3.signatureProvider
+    );
 
     await ft.account.authDescriptor.deleteAllExcluding(
       user1.authDescriptor.id,
-      account.id
+      user1.authDescriptor.id
     );
 
     const foundAccount = await _ft.get.account.by.id(account.id);
@@ -465,7 +476,9 @@ describe("Test the account", () => {
     const user1 = testUser();
     const ft = _ft.changeUser(user1);
 
-    const account = await AccountBuilder.account(ft).withPoints(4).build();
+    const account = await AccountBuilder.account(ft)
+      .withPoints(4)
+      .buildAuthenticated();
 
     const sigProv = pcl.gtx.newSignatureProvider();
 
@@ -478,7 +491,10 @@ describe("Test the account", () => {
       keyManagers: user1.keyManagers,
     };
 
-    await addAuthDescriptorTo(account, user2, ft);
+    await account.addAuthDescriptor(
+      user2.authDescriptor,
+      user2.signatureProvider
+    );
 
     const ft2 = _ft.changeUser(user2);
 

@@ -13,12 +13,12 @@ import {
   KeyHandler,
 } from "../client/lib/ft4/authentication/types";
 import { IClient, encryption, gtx } from "postchain-client";
-import { _transferOp } from "../client/lib/ft4/accounts/account-operations";
-import { XferInput, XferOutput } from "../client/lib/ft4/accounts/types";
+import { transfer } from "../client/lib/ft4/accounts/account-operations";
 import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { _registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import { Buffer } from "buffer";
+import { createAmount } from "/ft4";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -51,56 +51,23 @@ describe("Transaction Builder", () => {
   });
 
   it("builds an unsigned transaction", async () => {
-    const input: XferInput = [
-      authenticator.accountId,
-      Buffer.alloc(32),
-      authDescriptor.id,
-      BigInt(10),
-      {},
-    ];
-    const output: XferOutput = [
-      Buffer.alloc(32),
-      Buffer.alloc(32),
-      BigInt(10),
-      {},
-    ];
-
+    const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
     const tx = await transactionBuilder(authenticator, client)
-      .add(_transferOp([input], [output]))
+      .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)))
       .buildUnsigned();
-
-    const expectedInput: any = [...input];
-    expectedInput[expectedInput.length - 1] = {};
-
-    const expectedOutput: any = [...output];
-    expectedOutput[expectedOutput.length - 1] = {};
 
     expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
         args: [authenticator.accountId, authDescriptor.id],
       },
-      { opName: "ft4.transfer", args: [[expectedInput], [expectedOutput]] },
+      { opName: "ft4.transfer", args },
     ]);
   });
 
   it("signs the transaction on build", async () => {
-    const input: XferInput = [
-      authenticator.accountId,
-      Buffer.alloc(32),
-      authDescriptor.id,
-      BigInt(10),
-      {},
-    ];
-    const output: XferOutput = [
-      Buffer.alloc(32),
-      Buffer.alloc(32),
-      BigInt(10),
-      {},
-    ];
-
     const tx = await transactionBuilder(authenticator, client)
-      .add(_transferOp([input], [output]))
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)))
       .build();
 
     expect(gtx.deserialize(tx).signers).toStrictEqual(authDescriptor.signers);
