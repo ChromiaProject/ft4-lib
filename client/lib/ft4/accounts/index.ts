@@ -2,15 +2,10 @@ import { GtxClient } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { legacyTransactionBuilder } from "../utils/transaction-builder-old";
 import {
-  addAuthDescriptorToAccount,
   burnTokens,
-  deleteAllAuthDescriptorsExclude,
   deleteAuthDescriptor,
-  // getPaymentHistoryIterator,
   givePoints,
   registerAccount,
-  ssoRawTransactionAddAuthDescriptor,
-  ssoRawTransactionRegister,
   transfer,
 } from "./account-op-functions";
 import {
@@ -22,16 +17,13 @@ import {
   isAuthDescriptorValid,
 } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
-// import { ensurePaymentHistoryStoreLocal } from "./payment-history/payment-history-store-local";
-// import { createPaymentHistoryStoreMemory } from "./payment-history/payment-history-store-memory";
 import { User } from "./types";
 import { deriveAccountId, toGtv } from "./auth-descriptor";
 import { Amount } from "../asset/interfaces";
-// import { PaymentHistoryFilter } from "./payment-history/types";
 
 export * from "./auth";
 export * from "./auth-descriptor";
-export * from "./payment-history";
+export * from "./transfer-history";
 export * from "./types";
 
 export const accountQuerySession = (pci: GtxClient) =>
@@ -51,39 +43,7 @@ export const accountQuerySession = (pci: GtxClient) =>
 
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) =>
-        ssoRawTransactionRegister(
-          authDescriptor,
-          user.authDescriptor,
-          legacyTransactionBuilder(user, pci)
-        ),
-      ssoAddAuthDescriptor: (
-        accountId: BufferId,
-        authDescriptor: AuthDescriptor
-      ) =>
-        ssoRawTransactionAddAuthDescriptor(
-          accountId,
-          authDescriptor,
-          legacyTransactionBuilder(user, pci)
-        ),
-    },
     authDescriptor: {
-      add: (
-        newUser: User,
-        accountId: BufferId //add user? needs refactoring
-      ) =>
-        addAuthDescriptorToAccount(
-          newUser,
-          accountId,
-          legacyTransactionBuilder(user, pci)
-        ),
-      deleteAllExcluding: (authDescriptorId: BufferId, accountId: BufferId) =>
-        deleteAllAuthDescriptorsExclude(
-          authDescriptorId,
-          accountId,
-          legacyTransactionBuilder(user, pci)
-        ),
       delete: (authDescriptorId: BufferId, accountId: BufferId) =>
         deleteAuthDescriptor(
           authDescriptorId,

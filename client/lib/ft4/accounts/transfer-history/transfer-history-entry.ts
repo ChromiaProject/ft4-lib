@@ -1,10 +1,10 @@
 import { BufferId } from "../../../cryptoUtils";
-import { PaymentHistoryEntry, PaymentHistoryEntryResponse } from "./types";
+import { TransferHistoryEntry, TransferHistoryEntryResponse } from "./types";
 import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
 import { Buffer } from "buffer";
 
-export function createPaymentHistoryEntry(
+export function createTransferHistoryEntry(
   rowid: string,
   isInput: boolean,
   delta: bigint,
@@ -18,7 +18,7 @@ export function createPaymentHistoryEntry(
   transactionId: BufferId,
   blockHeight: number,
   operationName: string
-): PaymentHistoryEntry {
+): TransferHistoryEntry {
   const txArgs = transferArgs.map((list) =>
     list.map((a) => ({
       amount: createAmountFromBalance(a.amount, decimals),
@@ -41,9 +41,9 @@ export function createPaymentHistoryEntry(
   });
 }
 
-export function createPaymentHistoryEntryFromResponse(
-  responseEntry: PaymentHistoryEntryResponse
-): PaymentHistoryEntry {
+export function createTransferHistoryEntryFromResponse(
+  responseEntry: TransferHistoryEntryResponse
+): TransferHistoryEntry {
   const {
     id: rowId,
     delta,
@@ -69,7 +69,7 @@ export function createPaymentHistoryEntryFromResponse(
     }))
   );
 
-  return createPaymentHistoryEntry(
+  return createTransferHistoryEntry(
     rowId,
     isInput === 1,
     delta,

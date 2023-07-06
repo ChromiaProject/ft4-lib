@@ -65,6 +65,17 @@ export type TransactionBuilder = {
    * and which consequently should sign the transaction.
    */
   keyHandlersUsed: () => KeyHandler[];
+
+  /**
+   * Builds a transaction and signs it with the keyhandlers provided.
+   * When using this function, the builder will completely ignore any
+   * other keyhandlers previously provided.
+   * @param keyHandlers the keyhandler to user
+   * @returns a signed transaction
+   */
+  buildWithSigners: (
+    ...keyHandlers: KeyHandler[]
+  ) => Promise<SignedTransaction>;
   session: IClient;
 };
 
@@ -177,6 +188,15 @@ export function transactionBuilder(
     return this;
   }
 
+  async function buildWithSigners(...signers: KeyHandler[]) {
+    const tx = await this.buildUnsigned();
+    tx.signers = [
+      ...new Set(signers.map((signer) => signer.getSigners()).flat()),
+    ];
+    await Promise.all(signers.map((handler: KeyHandler) => handler.sign(tx)));
+    return gtx.serialize(tx);
+  }
+
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator
@@ -195,6 +215,7 @@ export function transactionBuilder(
   context.buildUnsigned = buildUnsigned.bind(context);
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
+  context.buildWithSigners = buildWithSigners.bind(context);
 
   return context as TransactionBuilder;
 }
