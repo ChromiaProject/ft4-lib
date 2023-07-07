@@ -470,7 +470,7 @@ describe("Auth Descriptor Rule", () => {
   });
 
   // Skipped due to possible bug in postchain-client 1.5.4
-  it.skip("should fail when deleting an auth descriptor which is not owned by the account", async () => {
+  it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
     ]);

@@ -12,7 +12,7 @@ export function nop(): Operation {
   return ["nop", encryption.randomBytes(32)];
 }
 
-export function op(name: string, ...args: DeepReadonly<RawGtv>[]): Operation {
+export function op(name: string, ...args: readonly RawGtv[]): Operation {
   return [name, ...(args as RawGtv[])];
 }
 
@@ -20,10 +20,7 @@ export function _nop(): newOperation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
 }
 
-export function _op(
-  name: string,
-  ...args: DeepReadonly<RawGtv>[]
-): newOperation {
+export function _op(name: string, ...args: readonly RawGtv[]): newOperation {
   return { name, args: args as RawGtv[] };
 }
 
