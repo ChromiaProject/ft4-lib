@@ -11,6 +11,7 @@ function App() {
   const [accounts, setAccounts] = useState([]);
   const [assets, setAssets] = useState([]);
   const [receiverId, setReceiverId] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const url = 'http://localhost:7740';
@@ -58,6 +59,12 @@ function App() {
     getAssets();
   }, [session]);
 
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleTransfer = async () => {
     await session.account.transfer(receiverId, assets[0].id, createAmount(12, 6));
   };
@@ -78,7 +85,15 @@ return (
       accounts.map((account, index) => (
         <Typography key={index} variant="h5" component="div" gutterBottom>
           <div>Account</div>
-          <div><strong>{account.id}</strong></div>
+          <div
+            style={{ cursor: 'pointer', textDecoration: 'underline' }}
+            title="Click to copy"
+            onClick={() => handleCopy(account.id)}
+          >
+            <strong>{account.id.slice(0, 6)}...{account.id.slice(-6)}</strong>
+          </div>
+
+    {copied && <div style={{ color: 'green' }}>Copied!</div>}
         </Typography>
       ))
     ) : (
