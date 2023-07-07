@@ -2,7 +2,7 @@ import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
-import { Account, User } from "../client/lib/ft4/accounts/types";
+import { LegacyAccount, User } from "../client/lib/ft4/accounts/types";
 import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import {
   createChromiaClient,
@@ -30,20 +30,20 @@ let _ft: ftUserSession;
 let _connection: Connection;
 let asset: Asset;
 
-function sourceAccount(user: User): Promise<Account> {
+function sourceAccount(user: User): Promise<LegacyAccount> {
   return AccountBuilder.account(_ft.changeUser(user))
     .withBalance(asset, 200)
     .withPoints(5)
     .build();
 }
 
-function destinationAccount(): Promise<Account> {
+function destinationAccount(): Promise<LegacyAccount> {
   return AccountBuilder.account(_ft.changeUser(testUser())).build();
 }
 
 async function getUserAndAccountFromAuthDescriptorRule(
   rule: AuthDescriptorRule
-): Promise<[User, Account]> {
+): Promise<[User, LegacyAccount]> {
   //to be used when you don't need the admin user
   const user1 = testUser();
   const user2 = testUser(rule);

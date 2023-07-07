@@ -13,7 +13,7 @@ import {
   accountsByAuthDescriptorId,
 } from "./account-queries";
 import * as Query from "./account-queries";
-import { Account, IAccount, RateLimit } from "./types";
+import { LegacyAccount, Account, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
 import { _getConfig, getConfig } from "../utils";
 import {
@@ -38,7 +38,7 @@ import { PaginatedEntity } from "../utils/types";
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
   id: BufferId
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   const accountIds = await session.query(
     ...accountsByParticipantIdQuery(formatter.ensureBuffer(id))
   );
@@ -48,7 +48,7 @@ export async function getByParticipantId( //"by pubKey" would be more descriptiv
 export async function getByAuthDescriptorId(
   session: GtxClient,
   id: BufferId
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   const accountIds = await session.query(
     ...accountsByAuthDescriptorIdQuery(formatter.ensureBuffer(id))
   );
@@ -71,15 +71,17 @@ export async function isAuthDescriptorValid(
 export async function getByIds(
   session: GtxClient,
   ids: BufferId[]
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   const accounts = await Promise.all(ids.map((id) => getById(session, id)));
-  return accounts.filter((account): account is Account => account != null);
+  return accounts.filter(
+    (account): account is LegacyAccount => account != null
+  );
 }
 
 export async function getById(
   session: GtxClient,
   id: BufferId
-): Promise<Account | null> {
+): Promise<LegacyAccount | null> {
   const accountId = await session.query(
     ...accountByIdQuery(formatter.ensureBuffer(id))
   );
@@ -91,7 +93,7 @@ export async function getById(
 async function createAccountObjectFromId(
   session: GtxClient,
   accountId: BufferId
-): Promise<Account> {
+): Promise<LegacyAccount> {
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(session, id),
@@ -108,7 +110,7 @@ async function createAccountObjectFromId(
 async function createAccountObjectsFromIds(
   session: GtxClient,
   accountIds: BufferId[]
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   return await Promise.all(
     accountIds.map((id) => createAccountObjectFromId(session, id))
   );
@@ -177,7 +179,7 @@ export async function _getRateLimit(
 export function createAccountObject(
   connection: Connection,
   accountId: BufferId
-): IAccount {
+): Account {
   const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
     accountId
@@ -228,7 +230,7 @@ export function createAccountObject(
 export async function _getById(
   connection: Connection,
   id: BufferId
-): Promise<IAccount | null> {
+): Promise<Account | null> {
   const accountId = await connection.query<Buffer>(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
@@ -237,7 +239,7 @@ export async function _getById(
 export async function _getByParticipantId(
   connection: Connection,
   id: BufferId
-): Promise<IAccount[]> {
+): Promise<Account[]> {
   const accountIds =
     (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
 
@@ -249,8 +251,8 @@ export async function _getByAuthDescriptorId(
   id: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null
-): Promise<PaginatedEntity<IAccount>> {
-  return createEntityRetriever<IAccount, Buffer>(
+): Promise<PaginatedEntity<Account>> {
+  return createEntityRetriever<Account, Buffer>(
     connection,
     accountsByAuthDescriptorId(id, limit, cursor),
     (accounts) => accounts.map((acc) => createAccountObject(connection, acc))

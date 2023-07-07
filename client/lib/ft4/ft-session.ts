@@ -1,5 +1,5 @@
 import { accountQuerySession, accountUserSession } from "./accounts";
-import { IAccount, User } from "./accounts/types";
+import { Account, User } from "./accounts/types";
 import { assetQuerySession, assetUserSession } from "./asset";
 import {
   ftQuerySession,
@@ -145,7 +145,7 @@ export async function call(
 }
 
 export type KeyStoreInteractor = {
-  getAccounts(): Promise<IAccount[]>;
+  getAccounts(): Promise<Account[]>;
   getSession(accountId: BufferId): Promise<Session>;
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };

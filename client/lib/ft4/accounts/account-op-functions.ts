@@ -9,11 +9,11 @@ import {
   transferV2,
 } from "./account-operations";
 import {
-  Account,
+  LegacyAccount,
   XferInput,
   XferOutput,
   User,
-  IAuthenticatedAccount,
+  AuthenticatedAccount,
 } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
@@ -86,7 +86,7 @@ export async function registerAccount(
   adminUser: User,
   session: GtxClient,
   newAuthDesc: AuthDescriptor
-): Promise<Account> {
+): Promise<LegacyAccount> {
   const tx = session.newTransaction([
     ...user.authDescriptor.signers,
     ...adminUser.authDescriptor.signers,
@@ -96,7 +96,7 @@ export async function registerAccount(
   await tx.sign(user.signatureProvider);
   await tx.sign(adminUser.signatureProvider);
   await tx.postAndWaitConfirmation();
-  return <Account>await getById(session, newAuthDesc.id);
+  return <LegacyAccount>await getById(session, newAuthDesc.id);
 }
 
 export async function givePoints(
@@ -124,7 +124,7 @@ export async function givePoints(
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator
-): IAuthenticatedAccount {
+): AuthenticatedAccount {
   return {
     authenticator,
     addAuthDescriptor: (authDescriptor: AuthDescriptor, keyPair: KeyPair) =>
