@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Buffer } from 'buffer';
 import { createClient } from 'postchain-client';
 import { createAmount, createKeyStoreInteractor, createWeb3ProviderEvmKeyStore } from 'ft3-lib';
 import TextField from '@mui/material/TextField';
@@ -69,8 +70,9 @@ function App() {
     getAssets();
   }, [session]);
 
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = (id) => {
+    const hexId = Buffer.from(id).toString('hex');
+    navigator.clipboard.writeText(hexId);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -132,7 +134,7 @@ return (
       <Button
         variant="contained"
         onClick={handleTransfer}
-        disabled={!receiverId}
+        disabled={!receiverId || !assets.length}
         sx={{ fontSize: '1.2rem', padding: '0.8rem 1.6rem' }}
       >
         Transfer

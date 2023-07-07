@@ -649,18 +649,20 @@ function _validate_ft4_signature(auth_args: list&lt;gtv&gt;, required_flags: set
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
 
     val account = Account(account_id);
-    val external = auth_descriptor_participant @? {
+    val external_keys = auth_descriptor_participant @* {
         .account_auth_descriptor.account == account,
         .account_auth_descriptor.id == auth_descriptor_id, 
         .id in op_context.get_signers()
     };
-    require(external, "The provided key(s) is not a signer of this auth descriptor");
 
-    require_auth(
-        external.account_auth_descriptor.account,
-        external.account_auth_descriptor,
-        list(required_flags)
-    );
+    require(external_keys.size() &gt; 0, "The provided key(s) is not a signer of this auth descriptor");
+    for (external in external_keys) {
+        require_auth(
+            external.account_auth_descriptor.account,
+            external.account_auth_descriptor,
+            list(required_flags)
+        );
+    }
 
     return account;
 }
@@ -676,38 +678,20 @@ module;
 import ^^.assets;
 import ^^.auth;
 
-query delete_auth_descriptor_auth_data(gtv) = auth.auth_data(
-    ["A"], 
-    "Do you want to delete auth descriptor from account %s? Nonce: %s"
-);
-
-operation delete_auth_descriptor(account_id: byte_array, auth_descriptor_id: byte_array, delete_descriptor_id: byte_array) {
-    val flags = if (auth_descriptor_id == delete_descriptor_id) list&lt;text&gt;() else ["A"];
-
-    val account = acc.account_by_id(account_id);
-    acc._auth(account, 
-        acc.auth_descriptor_by_id(account, auth_descriptor_id),
-        flags
-    );
-
-    acc._delete_auth_descriptor(
-        acc.auth_descriptor_by_id(account, delete_descriptor_id)
-    );
-}
 
 function delete_auth_descriptor_message(gtv) {
-    val params = struct&lt;delete_auth_descriptor_v2&gt;.from_gtv(gtv);
+    val params = struct&lt;delete_auth_descriptor&gt;.from_gtv(gtv);
     return "Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id);
 }
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.delete_auth_descriptor_v2",
+    scope = "ft4.delete_auth_descriptor",
     flags = ["A"],
     message = delete_auth_descriptor_message(*)
 );
 
-operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
+operation delete_auth_descriptor(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list&lt;text&gt;() else ["A"];
     val account = auth.authenticate();
 
@@ -716,9 +700,16 @@ operation delete_auth_descriptor_v2(auth_descriptor_id: byte_array) {
     );    
 }
 
-query delete_all_auth_descriptors_exclude_auth_data(gtv) = auth.auth_data(
-    ["A"], 
-    "Do you want to delete all auth descriptors from account %s? Nonce: %s"
+function delete_all_auth_descriptors_exclude_message(gtv) {
+    val params = struct&lt;delete_all_auth_descriptors_exclude&gt;.from_gtv(gtv);
+    return "Please sign the message\nto delete all auth descriptors excluding:\n%s\n\n from account:\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id);
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "ft4.delete_all_auth_descriptors_exclude",
+    flags = ["A"],
+    message = delete_all_auth_descriptors_exclude_message(*)
 );
 
 operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
@@ -729,19 +720,8 @@ operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descr
     acc._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
 
-query add_auth_descriptor_auth_data(gtv) = auth.auth_data(
-    ["A"], 
-    "Do you want to add auth descriptor to account %s? Nonce: %s"
-);
-
-operation add_auth_descriptor(account_id: byte_array, auth_id: byte_array, new_desc: acc.auth_descriptor) {
-    val account = acc.account_by_id(account_id);
-    acc._auth(account, acc.auth_descriptor_by_id(account, auth_id), ["A"]);
-    acc.add_auth_descriptor_to_account(account, new_desc);
-}
-
 function add_auth_descriptor_message(gtv) {
-    val params = struct&lt;add_auth_descriptor_v2&gt;.from_gtv(gtv);
+    val params = struct&lt;add_auth_descriptor&gt;.from_gtv(gtv);
     val flags = params.new_desc.args[0];
 
     return "Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}\n\nNonce: {nonce}".format(flags);
@@ -749,12 +729,12 @@ function add_auth_descriptor_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.add_auth_descriptor_v2",
+    scope = "ft4.add_auth_descriptor",
     flags = ["A"],
     message = add_auth_descriptor_message(*)
 );
 
-operation add_auth_descriptor_v2(new_desc: acc.auth_descriptor) {
+operation add_auth_descriptor(new_desc: acc.auth_descriptor) {
     val account = auth.authenticate();
     acc.add_auth_descriptor_to_account(account, new_desc);
 }
@@ -766,15 +746,12 @@ import utils: ^^.utils;
 
 query get_config() {
     return (
-        rate_limit_active = acc.config.rate_limit_active,
-        rate_limit_max_points = acc.config.rate_limit_max_points,
-        rate_limit_recovery_time = acc.config.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = acc.config.rate_limit_points_at_account_creation
+        rate_limit = acc.get_rate_limit_config()
     );
 }
 
 query get_account_rate_limit_last_update(account_id: byte_array) {
-    if (acc.config.rate_limit_active == false) return (points = 0, last_update = 0);
+    if (acc.get_rate_limit_config().active == false) return (points = 0, last_update = 0);
     
     return acc.rl_state @ { .account.id == account_id }
     (
@@ -790,7 +767,7 @@ query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_
     });
 }
 
-query get_account_auth_descriptors(id: byte_array) {
+query _get_account_auth_descriptors(id: byte_array) {
     return acc.account_auth_descriptor @* {
         .account.id == id
     } (
@@ -800,14 +777,11 @@ query get_account_auth_descriptors(id: byte_array) {
     );
 }
 
-query get_account_auth_descriptors_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
-    val descriptors = acc.get_paginated_auth_descriptors(id, page_size, page_cursor);
-    val pagination_results = descriptors @* {} ( utils.pagination_result(data = (
-        auth_type = .auth_type,
-        args = .args,
-        rules = .rules
-    ).to_gtv_pretty(), rowid = .rowid) );
-    return utils.make_page(pagination_results, page_size);
+query get_account_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        acc.get_paginated_auth_descriptors(id, page_size, page_cursor), 
+        page_size
+    );
 }
 
 query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
@@ -834,14 +808,15 @@ query get_accounts_by_participant_id(id: byte_array) {
     return acc.auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
 }
 
-query get_accounts_by_auth_descriptor_id(id: byte_array) {
+query _get_accounts_by_auth_descriptor_id(id: byte_array) {
     return acc.account_auth_descriptor @* { id } ( .account.id );
 }
 
-query get_accounts_by_auth_descriptor_id_paginated(id: byte_array, page_size: integer, page_cursor: text?) {
+query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         acc.get_paginated_accounts_by_ad_id(id, page_size, page_cursor),
-        page_size);
+        page_size
+    );
 }
 
 query get_auth_descriptor_nonce(
@@ -915,6 +890,8 @@ entity rl_state {
 function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
     val id = auth_descriptor.hash();
 
+    analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+
     val account_auth_descriptor = create account_auth_descriptor (
         account, id,
         auth_descriptor.auth_type,
@@ -967,9 +944,9 @@ function create_account_with_auth(auth_descriptor): byte_array {
 
     add_auth_descriptor_to_account(acc, auth_descriptor);
 
-    val max_points = config.rate_limit_max_points;
-    val recovery_time = config.rate_limit_recovery_time;
-    val points_at_start = config.rate_limit_points_at_account_creation;
+    val max_points = chain_context.args.rate_limit_max_points;
+    val recovery_time = chain_context.args.rate_limit_recovery_time;
+    val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
     
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
@@ -1021,10 +998,14 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
         .account.id == id,
         .rowid &gt; (before_rowid ?: rowid(0))
     } (
-        @sort .rowid,
-        auth_type = .auth_type,
-        args = gtv.from_bytes(.args),
-        rules = gtv.from_bytes(.rules)
+        utils.pagination_result(
+            data = (
+                auth_type = .auth_type,
+                args = gtv.from_bytes(.args),
+                rules = gtv.from_bytes(.rules)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
     ) limit utils.fetch_data_size(page_size);
 }
 
@@ -1050,9 +1031,9 @@ namespace Unsafe {
         _add_auth_descriptor(
             acc, auth_descriptor
         );
-        val max_points = config.rate_limit_max_points;
-        val recovery_time = config.rate_limit_recovery_time;
-        val points_at_start = config.rate_limit_points_at_account_creation;
+        val max_points = chain_context.args.rate_limit_max_points;
+        val recovery_time = chain_context.args.rate_limit_recovery_time;
+        val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
         
         create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
         
@@ -1090,10 +1071,10 @@ namespace Unsafe {
                             </entry>
                             <entry key="lib/ft4/accounts/rate_limit.rell">
                                 <string>function rate_limit(account) {
-    if (config.rate_limit_active == false) return;
+    if (chain_context.args.rate_limit_active == false) return;
     
-    val max_counter = config.rate_limit_max_points;
-    val recovery_time = config.rate_limit_recovery_time;
+    val max_counter = chain_context.args.rate_limit_max_points;
+    val recovery_time = chain_context.args.rate_limit_recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
@@ -1128,14 +1109,14 @@ function add_rate_limit_points(account, amount: integer) {
     );
 	state.points += amount;
 }
-</string>
-                            </entry>
-                            <entry key="lib/ft4/accounts/rate_limit_config.rell">
-                                <string>object config {
-    mutable rate_limit_active: boolean = chain_context.args.rate_limit_active;
-    mutable rate_limit_max_points: integer = chain_context.args.rate_limit_max_points;
-    mutable rate_limit_recovery_time: integer = chain_context.args.rate_limit_recovery_time;
-    mutable rate_limit_points_at_account_creation: integer = chain_context.args.rate_limit_points_at_account_creation;
+
+function get_rate_limit_config() {
+    return (
+        active = chain_context.args.rate_limit_active,
+        max_points = chain_context.args.rate_limit_max_points,
+        recovery_time = chain_context.args.rate_limit_recovery_time,
+        points_at_account_creation = chain_context.args.rate_limit_points_at_account_creation
+    );
 }</string>
                             </entry>
                             <entry key="lib/ft4/admin/module.rell">
@@ -1239,7 +1220,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+function get_all_assets(page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {
         .rowid &gt; (before_rowid ?: rowid(0))
@@ -1423,13 +1404,9 @@ namespace Unsafe {
                             </entry>
                             <entry key="lib/ft4/assets/extensions.rell">
                                 <string>
-@extendable function before_transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer);
+@extendable function before_transfer(from: acc.account, to: acc.account, assets.asset, amount: big_integer);
 
-@extendable function after_transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer);
-
-@extendable function before_transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&gt;);
-
-@extendable function after_transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&gt;);
+@extendable function after_transfer(from: acc.account, to: acc.account, assets.asset, amount: big_integer);
 
 @extendable function before_mint(acc.account, asset, amount: big_integer);
 
@@ -1451,19 +1428,8 @@ import ^^.auth;
 
 query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
 
-// TODO: remove
-@extend(auth.auth_handler)
-function () = auth.add_auth_handler(
-    scope = "ft4.transfer",
-    flags = ["T"]
-);
-
-operation transfer(inputs: list&lt;assets.xfer_input&gt;, outputs: list&lt;assets.xfer_output&gt;) {
-    assets._transfer(inputs, outputs);
-}
-
 function transfer_message(gtv) {
-    val params = struct&lt;transfer_one&gt;.from_gtv(gtv);
+    val params = struct&lt;transfer&gt;.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
     return "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
@@ -1476,14 +1442,14 @@ function transfer_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.transfer_one",
+    scope = "ft4.transfer",
     flags = ["T"],
     message = transfer_message(*)
 );
 
-operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
+operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
     val account = auth.authenticate();
-    assets.Unsafe.transfer_one(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
+    assets.Unsafe.transfer(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
 }
 
 @extend(auth.auth_handler)
@@ -1515,11 +1481,11 @@ operation burn(asset_id: byte_array, amount: big_integer) {
 import acc: ^^.accounts;
 import ^^.utils;
 
-query get_asset_balances(account_id: byte_array) {
+query _get_asset_balances(account_id: byte_array) {
     return assets.get_asset_balances(account_id);
 }
 
-query get_asset_balances_paginated(account_id: byte_array, page_size: integer, page_cursor: text?) {
+query get_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances(account_id, page_size, page_cursor),
         page_size
@@ -1540,7 +1506,7 @@ query get_asset_by_name(name) {
     return assets.asset @* { name } ( extract_asset_data($) );
 }
 
-query get_assets_by_name_paginated(name, page_size: integer, page_cursor: text?) {
+query get_assets_by_name(name, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances_by_name(name, page_size, page_cursor),
         page_size
@@ -1555,13 +1521,13 @@ query get_asset_by_symbol(symbol: text) {
     return assets.asset @? { .symbol == symbol } ( extract_asset_data($) );
 } 
 
-query get_all_assets() {
+query _get_all_assets() {
     return assets.asset @* {} ( extract_asset_data($) );
 }
 
-query get_all_assets_paginated(page_size: integer, page_cursor: text?) {
+query get_all_assets(page_size: integer, page_cursor: text?) {
     return utils.make_page(
-        assets.get_all_assets_paginated(page_size, page_cursor),
+        assets.get_all_assets(page_size, page_cursor),
         page_size
     );
 }
@@ -1633,7 +1599,7 @@ function extract_operation_name(entry: transfer_history_entry): text {
 
 function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
-        id = '%d'.format(entry.rowid),
+        id = entry.rowid,
         delta = entry.delta,
         decimals = entry.asset.decimals,
         asset = entry.asset.name,
@@ -1699,172 +1665,9 @@ function deduct_balance(acc.account, asset, amount: big_integer) {
     balance.amount -= amount;
 }
 
-function consume_input (
-   i: xfer_input, 
-   idx: integer, 
-   assets: map&lt;asset, big_integer&gt;,
-   entries: map&lt;
-      asset, 
-      (
-         list&lt;(
-            amount: big_integer, 
-            account: acc.account, 
-            entry_index: integer
-         )&gt;, 
-         list&lt;(
-            amount: big_integer, 
-            account: acc.account, 
-            entry_index: integer
-         )&gt;
-      )
-   &gt;
-) {
-      val asset = asset @ { .id == i.asset_id };
-      
-      if (asset not in entries) {
-         entries[asset] = (
-            list&lt;(
-               amount: big_integer, 
-               account: acc.account, 
-               entry_index: integer
-            )&gt;(), 
-            list&lt;(
-               amount: big_integer, 
-               account: acc.account, 
-               entry_index: integer
-            )&gt;()
-         );
-      }
-
-      val account = acc.account @ { .id == i.account_id };
-      acc._auth(
-         account, 
-         acc.account_auth_descriptor @ { 
-            .id == i.auth_descriptor_id, 
-            .account == account
-         },
-         ["T"]
-      );
-      require( i.amount &gt; 0, "Tx inputs must be non 0 positive." );
-
-      deduct_balance(account, asset, i.amount);
-      assets[asset] = i.amount + if (asset in assets) assets[asset] else 0L;
-      entries[asset][0].add(
-         (amount = i.amount, account = account, entry_index = idx)
-      );
-}
-
-function process_transfer_output (
-   o: xfer_output, 
-   idx: integer, 
-   available_assets: map&lt;asset, big_integer&gt;,
-   entries: map&lt;
-      asset, 
-      (
-         list&lt;(
-            amount: big_integer, 
-            account: acc.account, 
-            entry_index: integer
-         )&gt;, 
-         list&lt;(
-            amount: big_integer, 
-            account: acc.account, 
-            entry_index: integer
-         )&gt;
-      )
-   &gt;
-) {
-      if (o.extra.contains("reg_auth_desc")) {
-          val auth_desc = acc.auth_descriptor.from_gtv(o.extra["reg_auth_desc"]);
-          require(
-            o.account_id == acc.create_account_with_auth(auth_desc),
-            "Account id in output does not match auth descriptor id to be registered"
-         );
-      }
-
-      val target_account = acc.account @ { .id == o.account_id };
-      val asset = asset @ { .id == o.asset_id };
-      require(o.amount &gt; 0, "Tx outputs must be non-zero positive");
-      require(
-         available_assets[asset] &gt;= o.amount, 
-         "Transfer output sum exceeds input sum"
-      );
-      available_assets[asset] -= o.amount;
-      val balance = ensure_balance(target_account, asset);
-      balance.amount += o.amount;
-
-      entries[asset][1].add(
-         (amount = o.amount, account = target_account, entry_index = idx)
-      );
-}
-
-function _transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&gt;) {
-   before_transfer(inputs, outputs);
-
-   val entries = map&lt;
-      asset, 
-      (
-         list&lt;(
-            amount: big_integer, 
-            account: acc.account, 
-            entry_index: integer
-         )&gt;, 
-         list&lt;(
-            amount: big_integer, 
-            account: acc.account, 
-            entry_index: integer
-         )&gt;
-      )
-   &gt; ();
-
-   val sum_inputs = map&lt;asset, big_integer&gt;();
-   var idx = 0;
-   for (i in inputs) {
-      consume_input(i, idx, sum_inputs, entries);
-      idx += 1;
-   }
-
-   idx = 0;
-   for (o in outputs) {
-      process_transfer_output(o, idx, sum_inputs, entries);
-      idx += 1;
-   }
-
-   for ((asset, v) in entries) {
-      val ins = entries[asset][0] @* {} (.amount, .account.id, .entry_index);
-      val outs = entries[asset][1] @* {} (.amount, .account.id, .entry_index);
-      val args = [ins, outs];
-
-      for (entry in v[0]) {
-         create transfer_history_entry(
-            .account = entry.account,
-            .asset = asset,
-            .delta = entry.amount,
-            .op_index = op_context.op_index,
-            .is_input = true,
-            .entry_index = entry.entry_index,
-            .transfer_args = args.to_gtv().to_bytes()
-         );
-      }
-      for (entry in v[1]) {
-         create transfer_history_entry(
-            .account = entry.account,
-            .asset = asset,
-            .delta = entry.amount,
-            .op_index = op_context.op_index,
-            .is_input = false,
-            .entry_index = entry.entry_index,
-            .transfer_args = args.to_gtv().to_bytes()
-         );
-      }
-   }
-
-   after_transfer(inputs, outputs);
-}
-
 namespace Unsafe {
    
-   function transfer_one(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
+   function transfer(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
       require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
 
@@ -1873,7 +1676,7 @@ namespace Unsafe {
          [(amount, to.id, 0)]
       ];
 
-      before_transfer_one(from, to, asset, amount);
+      before_transfer(from, to, asset, amount);
 
       deduct_balance(from, asset, amount);
       create transfer_history_entry(
@@ -1897,7 +1700,7 @@ namespace Unsafe {
          .transfer_args = args.to_gtv().to_bytes()
       );
 
-      after_transfer_one(from, to, asset, amount);
+      after_transfer(from, to, asset, amount);
    }
 }
 </string>
@@ -2094,6 +1897,7 @@ namespace ft4 {
     import acc_ext: ^.accounts.external;
     import assets_ext: ^.assets.external;
     import ^.version;
+    import ^.admin;
 }
 </string>
                             </entry>
