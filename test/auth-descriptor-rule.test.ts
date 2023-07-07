@@ -134,7 +134,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(op2Promise).rejects.toThrowError();
   });
 
-  it.skip("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
+  it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
     const limitedAccount = (
       await getAuthedAccountsFromAuthDescriptorRule(
         allow.blockTime.lessThan(Date.now() - 10000).only
@@ -185,7 +185,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).resolves.not.toThrowError();
   });
 
-  it.skip("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
+  it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
     const limitedAccount = (
       await getAuthedAccountsFromAuthDescriptorRule(
         allow.blockHeight.lessThan(1).only
@@ -202,7 +202,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
+  it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
     const limitedAccount = (
       await getAuthedAccountsFromAuthDescriptorRule(
         allow.blockTime.greaterThan(Date.now() + 10000).only
@@ -219,7 +219,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
+  it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
     const limitedAccount = (
       await getAuthedAccountsFromAuthDescriptorRule(
         allow.blockTime.greaterThan(Date.now() - 10000).only
@@ -236,7 +236,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).resolves.not.toThrowError();
   });
 
-  it.skip("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
+  it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
     const limitedAccount = (
       await getAuthedAccountsFromAuthDescriptorRule(
         allow.blockHeight.greaterThan(10000).only
@@ -287,7 +287,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).resolves.not.toThrowError();
   });
 
-  it.skip("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
+  it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
     const limitedAccount = (
       await getAuthedAccountsFromAuthDescriptorRule(
         allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only
@@ -304,7 +304,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
+  it("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
@@ -322,7 +322,7 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
+  it("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
@@ -439,7 +439,7 @@ describe("Auth Descriptor Rule", () => {
     expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(3);
   });
 
-  it.skip("should delete auth descriptors", async () => {
+  it("should delete auth descriptors", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
     ]);
@@ -563,7 +563,7 @@ describe("Auth Descriptor Rule", () => {
     expect(txInfo.status).toBe("confirmed");
   });
 
-  it.skip("shouldn't be able to create too many rules", async () => {
+  it("shouldn't be able to create too many rules", async () => {
     let rules = allow.blockHeight
       .greaterThan(1)
       .and.blockHeight.greaterThan(10000)
@@ -588,3 +588,36 @@ describe("Auth Descriptor Rule", () => {
     await expect(createPromise).rejects.toThrowError();
   });
 });
+
+/*
+ * How long they take: Total: 211.441s
+ * 
+ * Not skipping any of them to test if they work.
+ * Here we can choose which ones should be skipped
+ *
+✓ (8220 ms) should succeed when number of called operations is less than or equal to value set by operation count rule
+✓ (7999 ms) should fail when number of called operations is greater than value set by operation count rule
+✓ (7384 ms) should fail when current time is greater than time defined by 'less than' block time rule
+✓ (7838 ms) should succeed when current time is less than time defined by 'less than' block time rule
+✓ (7786 ms) should succeed when current block height is less than value defined by 'less than' block height rule
+✓ (7808 ms) should fail when current block height is greater than value defined by 'less than' block height rule
+✓ (8281 ms) should fail if operation is executed before timestamp defined by 'greater than' block time rule
+✓ (8317 ms) should succeed if operation is executed after timestamp defined by 'greater than' block time rule
+✓ (8321 ms) should fail if operation is executed before block defined by 'greater than' block height rule
+✓ (9791 ms) should succeed if operation is executed after block defined by 'greater than' block height rule
+✓ (9780 ms) should be able to create complex rules
+✓ (9885 ms) should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height
+✓ (9855 ms) should fail if block times defined by 'greater than' and 'less than' block time rules are in the past
+✓ (9806 ms) should succeed if current time is within period defined by 'greater than' and 'less than' block time rules
+✓ (11379 ms) should delete expired auth descriptor
+✓ (11407 ms) shouldn't delete non-expired auth descriptor
+✓ (13069 ms) should delete only expired auth descriptor if multiple expiring descriptors exist
+✓ (8281 ms) should add auth descriptors
+✓ (6612 ms) should delete auth descriptors
+✓ (4878 ms) should fail when deleting an auth descriptor which is not owned by the account
+✓ (4924 ms) should delete auth descriptor
+✓ (6584 ms) Should be able to create same rules with different value
+✓ (9817 ms) shouldn't be able to create too many rules
+✓ (1664 ms) shouldn't be able to create an account with an expiring auth descriptor
+ * 
+*/
