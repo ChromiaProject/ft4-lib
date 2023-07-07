@@ -2,10 +2,6 @@ import { GtxClient } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import {
   balancesByAccountIdQuery,
-  assetByIdQuery,
-  balanceQuery,
-  assetByNameQuery,
-  allAssetsQuery,
   balanceByAccountId,
   assetById,
   balancesByAccountId,
@@ -20,29 +16,6 @@ import { PaginatedEntity, freeze } from "../utils/types";
 import { createAmountFromBalance } from "./amount";
 import { createEntityRetriever } from "../utils/entity-retriever";
 
-export async function getAssetById(
-  session: GtxClient,
-  id: BufferId
-): Promise<Asset> {
-  const asset = await session.query(
-    ...assetByIdQuery(formatter.ensureBuffer(id))
-  );
-
-  return freeze(asset);
-}
-
-export async function getAllAssets(session: GtxClient): Promise<Asset[]> {
-  return await session.query(...allAssetsQuery()).then(freeze);
-}
-
-export async function getAssetsByName(
-  session: GtxClient,
-  name: string
-): Promise<Asset[]> {
-  const assets = await session.query(...assetByNameQuery(name));
-  return assets.map(freeze);
-}
-
 export async function getBalancesByAccountId(
   session: GtxClient,
   accountId: BufferId
@@ -51,20 +24,6 @@ export async function getBalancesByAccountId(
     ...balancesByAccountIdQuery(formatter.ensureBuffer(accountId))
   );
   return balances.map(createBalanceObject);
-}
-
-export async function getBalance(
-  session: GtxClient,
-  accountId: BufferId,
-  assetId: BufferId
-): Promise<Balance> {
-  const balance = await session.query(
-    ...balanceQuery(
-      formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(assetId)
-    )
-  );
-  return createBalanceObject(balance);
 }
 
 export async function _getAssetById(
@@ -95,7 +54,7 @@ export function _getAssetsByName(
   return retriever.retrieve();
 }
 
-export async function _getAllAssets(
+export async function getAllAssets(
   connection: Connection,
   limit = 100,
   cursor: OptionalPageCursor = null

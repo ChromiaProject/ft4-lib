@@ -7,45 +7,11 @@ import { Buffer } from "buffer";
 /**
  * @deprecated
  */
-export function assetByIdQuery(assetId: Buffer): Query {
-  return ["ft4.get_asset_by_id", { asset_id: assetId }];
-}
-
-/**
- * @deprecated
- */
 export function balancesByAccountIdQuery(accountId: BufferId): Query {
   return [
     "ft4._get_asset_balances",
     { account_id: formatter.ensureBuffer(accountId) },
   ];
-}
-
-/**
- * @deprecated
- */
-export function balanceQuery(accountId: Buffer, assetId: Buffer): Query {
-  return [
-    "ft4.get_asset_balance",
-    {
-      account_id: accountId,
-      asset_id: assetId,
-    },
-  ];
-}
-
-/**
- * @deprecated
- */
-export function assetByNameQuery(name: string): Query {
-  return ["ft4.get_asset_by_name", { name: name }];
-}
-
-/**
- * @deprecated
- */
-export function allAssetsQuery(): Query {
-  return ["ft4._get_all_assets", undefined];
 }
 
 export function assetById(

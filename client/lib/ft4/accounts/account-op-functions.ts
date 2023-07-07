@@ -1,4 +1,4 @@
-import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
+import { registerOp } from "./account-dev-operations";
 import {
   addAuthDescriptor as addAuthDescriptorOp,
   burnOp,
@@ -7,7 +7,7 @@ import {
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
 } from "./account-operations";
-import { LegacyAccount, User, AuthenticatedAccount } from "./types";
+import { LegacyAccount, AuthenticatedAccount } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -56,39 +56,31 @@ export async function burnTokens(
 //-------------------ADMIN OPERATIONS-------------------//
 
 export async function registerAccount(
-  user: User,
-  adminUser: User,
   session: GtxClient,
+  adminSingatureProvider: SignatureProvider,
   newAuthDesc: AuthDescriptor
 ): Promise<LegacyAccount> {
-  const tx = session.newTransaction([
-    ...user.authDescriptor.signers,
-    ...adminUser.authDescriptor.signers,
-  ]);
-  tx.addOperation(...registerOp(newAuthDesc)); //doesn't need nop
-  await tx.sign(user.signatureProvider);
-  await tx.sign(adminUser.signatureProvider);
+  const tx = session.newTransaction([adminSingatureProvider.pubKey]);
+  const op = registerOp(newAuthDesc);
+  tx.addOperation(op.name, ...op.args);
+  await tx.sign(adminSingatureProvider);
   await tx.postAndWaitConfirmation();
   return <LegacyAccount>await getById(session, newAuthDesc.id);
 }
 
 export async function givePoints(
-  user: User,
-  adminUser: User,
-  session: GtxClient,
+  client: GtxClient,
+  adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
   points: number
 ) {
-  const tx = session.newTransaction([
-    ...user.authDescriptor.signers,
-    ...adminUser.authDescriptor.signers,
-  ]);
+  const tx = client.newTransaction([adminSignatureProvider.pubKey]);
   tx.addOperation(
-    ...addRateLimitPointsOp(formatter.ensureBuffer(accountId), points)
+    "ft4.admin.add_rate_limit_points",
+    formatter.ensureBuffer(accountId),
+    points
   );
-  tx.addOperation(...nop());
-  await tx.sign(user.signatureProvider);
-  await tx.sign(adminUser.signatureProvider);
+  await tx.sign(adminSignatureProvider);
   await tx.postAndWaitConfirmation();
 }
 

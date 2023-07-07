@@ -16,7 +16,11 @@ import { ftUserSession } from "../../client/lib/ft4/types";
 import { gtx, SignatureProvider } from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft4/asset/amount";
-import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
+import {
+  createAuthenticatedAccount,
+  givePoints,
+  registerAccount,
+} from "../../client/lib/ft4/accounts/account-op-functions";
 import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../../client/lib/ft4/authentication";
 import {
@@ -120,10 +124,10 @@ class AccountBuilder {
   }
 
   /* Private functions */
-
   private async registerAccount(): Promise<LegacyAccount> {
-    return await this.session.account.admin.register(
-      admin(),
+    return await registerAccount(
+      this.session.get.gtxClient,
+      admin().signatureProvider,
       this.getAuthDescriptor()
     );
   }
@@ -151,8 +155,10 @@ class AccountBuilder {
 
   private async addPointsIfNeeded(account: LegacyAccount) {
     if (this.points > 0) {
-      await this.session.account.admin.givePoints(
-        admin(),
+      const adminSignatureProvider = admin().signatureProvider;
+      await givePoints(
+        this.session.get.gtxClient,
+        adminSignatureProvider,
         account.id,
         this.points
       );

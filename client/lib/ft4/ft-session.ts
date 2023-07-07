@@ -1,6 +1,5 @@
-import { accountQuerySession, accountUserSession } from "./accounts";
+import { accountQuerySession } from "./accounts";
 import { Account, User } from "./accounts/types";
-import { assetQuerySession, assetUserSession } from "./asset";
 import {
   ftQuerySession,
   ftUserSession,
@@ -19,7 +18,7 @@ import {
 import {
   _getAssetById,
   _getAssetBySymbol,
-  _getAllAssets,
+  getAllAssets,
   _getAssetsByName,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
@@ -58,8 +57,6 @@ export function createUserSession(pci: GtxClient, user: User): ftUserSession {
     user,
     changeUser: (newUser: User) => createUserSession(pci, newUser),
     get: createQuerySession(pci),
-    account: accountUserSession(user, pci),
-    ...assetUserSession(user, pci),
   });
 }
 
@@ -68,7 +65,6 @@ export function createQuerySession(pci: GtxClient): ftQuerySession {
     gtxClient: pci,
     createUserSession: (user: User) => createUserSession(pci, user),
     account: accountQuerySession(pci),
-    ...assetQuerySession(pci),
   });
 }
 
@@ -96,7 +92,7 @@ export function createConnection(client: IClient): Connection {
       cursor?: OptionalPageCursor
     ) => _getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
-      _getAllAssets(connection, limit, cursor),
+      getAllAssets(connection, limit, cursor),
   });
 
   return connection;

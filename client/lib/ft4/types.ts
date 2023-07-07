@@ -1,17 +1,13 @@
 import { BufferId } from "../cryptoUtils";
-import { AuthDescriptor } from "./accounts/auth-descriptor/types";
-import { Amount } from "./asset/interfaces";
 import {
-  LegacyAccount,
-  RateLimit,
   User,
   Account,
   AuthenticatedAccount,
+  LegacyAccount,
 } from "./accounts/types";
-import { Asset, Balance } from "./asset/types";
+import { Asset } from "./asset/types";
 import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
-import { Buffer } from "buffer";
 import {
   IClient,
   QueryArguments,
@@ -31,79 +27,16 @@ export interface ftUserSession {
   user: User;
   changeUser: (newUser: User) => ftUserSession;
   get: ftQuerySession;
-  asset: {
-    admin: {
-      register: (
-        adminUser: User,
-        name: string,
-        symbol: string,
-        decimals: number,
-        iconUrl: string
-      ) => Promise<Buffer>;
-    };
-  };
-  balance: {
-    admin: {
-      mint: (
-        adminUser: User,
-        assetid: BufferId,
-        accountid: BufferId,
-        amount: Amount
-      ) => Promise<void>;
-    };
-  };
-
-  account: {
-    token: {
-      burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
-    };
-    admin: {
-      register: (
-        adminUser: User,
-        authDescriptor: AuthDescriptor
-      ) => Promise<LegacyAccount>;
-      givePoints: (
-        adminUser: User,
-        accountId: BufferId,
-        points: number
-      ) => Promise<void>;
-    };
-  };
 }
 
 export interface ftQuerySession {
   gtxClient: GtxClient;
   createUserSession: (user: User) => ftUserSession;
-  asset: {
-    id: (name: string, brid: BufferId) => Buffer;
-    by: {
-      name: (name: string) => Promise<Asset[]>;
-      id: (assetId: BufferId) => Promise<Asset>;
-    };
-    all: () => Promise<Asset[]>;
-  };
-  balance: {
-    by: {
-      accountId: (accountid: BufferId) => Promise<Balance[]>;
-      accountAndAssetId: (
-        accountid: BufferId,
-        assetid: BufferId
-      ) => Promise<Balance>;
-    };
-  };
   account: {
     by: {
-      participantId: (id: BufferId) => Promise<LegacyAccount[]>;
       authDescriptorId: (id: BufferId) => Promise<LegacyAccount[]>;
-      ids: (ids: Buffer[]) => Promise<LegacyAccount[]>;
       id: (id: BufferId) => Promise<LegacyAccount | null>;
     };
-    isAuthDescriptorValid: (
-      accountid: BufferId,
-      authDescriptorid: BufferId
-    ) => Promise<boolean>;
-    rateLimit: (accountId: BufferId) => Promise<RateLimit>;
-    idFromAuthDescriptor: (firstAuthDescriptor: AuthDescriptor) => Buffer;
   };
 }
 

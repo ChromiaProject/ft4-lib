@@ -21,28 +21,8 @@ export function accountByIdQuery(id: Buffer): Query {
 /**
  * @deprecated
  */
-export function accountsByParticipantIdQuery(id: Buffer): Query {
-  return ["ft4.get_accounts_by_participant_id", { id: id }];
-}
-
-/**
- * @deprecated
- */
 export function accountsByAuthDescriptorIdQuery(id: Buffer): Query {
   return ["ft4._get_accounts_by_auth_descriptor_id", { id: id }];
-}
-
-export function isAuthDescriptorValidQuery(
-  accountId: Buffer,
-  authDescId: Buffer
-): Query {
-  return [
-    "ft4.is_auth_descriptor_valid",
-    {
-      account_id: accountId,
-      auth_descriptor_id: authDescId,
-    },
-  ];
 }
 
 export function getRateLimitQuery(

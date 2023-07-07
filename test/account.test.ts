@@ -12,7 +12,6 @@ import {
   singleSigArgs,
   toGtv,
 } from "../client/lib/ft4/accounts/auth-descriptor";
-import { registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import { op } from "../client/lib/ft4/utils";
 import adminUser from "./util/admin_user";
 import {
@@ -23,7 +22,10 @@ import {
 } from "../client/lib/ft4/ft-session";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
-import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
+import {
+  createAuthenticatedAccount,
+  registerAccount,
+} from "../client/lib/ft4/accounts/account-op-functions";
 import {
   addAuthDescriptorTo,
   createAccount,
@@ -70,9 +72,11 @@ describe("Test the account", () => {
       user.signatureProvider.pubKey
     ).andNoRules;
 
-    const account = await _ft
-      .changeUser(user)
-      .account.admin.register(adminUser(), ad);
+    const account = await registerAccount(
+      _ft.get.gtxClient,
+      adminUser().signatureProvider,
+      ad
+    );
 
     expect(account).not.toBeNull();
   });
@@ -135,28 +139,6 @@ describe("Test the account", () => {
     await expect(promise).rejects.toBe("rejected");
   });
 
-  it("should create new multisig account", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
-
-    const ad = authDescriptor.create.multiSig.withArgs(
-      [FlagsType.Account, FlagsType.Transfer],
-      2,
-      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
-    ).andNoRules;
-
-    const tx = _ft.get.gtxClient.newTransaction(
-      ad.signers.concat(admin.authDescriptor.signers)
-    );
-    tx.addOperation(...registerOp(ad));
-    await tx.sign(user1.signatureProvider);
-    await tx.sign(user2.signatureProvider);
-    await tx.sign(admin.signatureProvider);
-    const promise = tx.postAndWaitConfirmation();
-
-    await expect(promise).resolves.not.toThrowError();
-  });
-
   it("updates account if 2 signatures provided", async () => {
     const { keyPairs, authDescriptor } = createTestMultisigAuthDescriptor(2, [
       "A",
@@ -204,14 +186,7 @@ describe("Test the account", () => {
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
     ).andNoRules;
 
-    const tx = _ft.get.gtxClient.newTransaction(
-      ad.signers.concat(admin.authDescriptor.signers)
-    );
-    tx.addOperation(...registerOp(ad));
-    await tx.sign(user1.signatureProvider);
-    await tx.sign(user2.signatureProvider);
-    await tx.sign(admin.signatureProvider);
-    await tx.postAndWaitConfirmation();
+    await registerAccount(_ft.get.gtxClient, admin.signatureProvider, ad);
 
     const promise = addAuthDescriptorTo(
       _connection.client,
