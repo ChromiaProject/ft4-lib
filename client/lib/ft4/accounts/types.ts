@@ -22,7 +22,6 @@ export type Account = {
   id: Buffer;
   balances: Balance[];
   authDescriptors: AuthDescriptor[];
-  //rateLimit: RateLimit;
 };
 
 export type XferInput = [
