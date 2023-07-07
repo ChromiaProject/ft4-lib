@@ -58,10 +58,12 @@ function App() {
   useEffect(() => {
     const getAssets = async () => {
       if (session) {
-        const assetsData = await session.getAllAssets();
-        setAssets(assetsData);
+        const assetsResult = await session.getAllAssets();
+        const assetsData = assetsResult?.data;
 
-        if (!assetsData.length) {
+        if (assetsData?.length) {
+          setAssets(assetsData);
+        } else {
           console.log("No assets found");
         }
       }
