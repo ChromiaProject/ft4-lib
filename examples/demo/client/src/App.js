@@ -1,18 +1,18 @@
 import logo from './logo.svg';
 import './App.css';
 import { useEffect } from 'react';
-import { gtxClient, restClient, restClientutil } from 'postchain-client';
+import { createClient } from 'postchain-client';
 import { createAmount, createKeyStoreInteractor, createWeb3ProviderEvmKeyStore } from 'ft3-lib';
 
 function App() {
   useEffect(() => {
-    const url = "http://localhost:7740";
-    restClientutil.getBrid(url, 0)
-    .then((brid) => gtxClient.createClient(
-      restClient.createRestClient([url], brid),
-      brid,
-      []
-    ))
+    const url = 'http://localhost:7740';
+    const rid = '22F97053D106E8A2D6E2C633347CC3A0D4171003DDB3D69E53DEF79D0B9630C7';
+
+    createClient({
+        nodeURLPool: url,
+        blockchainRID: rid,
+    })
     .then((client) => {
       createWeb3ProviderEvmKeyStore(window.ethereum).then(async store => {
         const { getAccounts, getSession } = createKeyStoreInteractor(client, store); 

@@ -9,16 +9,16 @@ blockchains:
         rate_limit_points_at_account_creation: 1
       
       lib.ft4.admin:
-        admin_pubkey: 03CEE2C9EC423D754C4E2797576705CB49905324DFEFCEADD37A3089BDD0013EFE
+        admin_pubkey: 021841CEEF7CC5D32077C35909A02763C8CBC97B9A3E37BD166E53589ED704AB88
 
 
 compile:
   rellVersion: 0.12.0
 
-libs:
-  ft4:
-    registry: https://bitbucket.org/chromawallet/ft3-lib
-    path: rell/src/lib/ft4
-    tagOrBranch: ft4
-    rid: x"B63935C9635F7B67D71A4AC2A219021D2F529C926390D631CEBC2EC9C8C829A9"
-    insecure: false
+# libs:
+#   ft4:
+#     registry: https://bitbucket.org/chromawallet/ft3-lib
+#     path: rell/src/lib/ft4
+#     tagOrBranch: ft4
+#     rid: x"B63935C9635F7B67D71A4AC2A219021D2F529C926390D631CEBC2EC9C8C829A9"
+#     insecure: false

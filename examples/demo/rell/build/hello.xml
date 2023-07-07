@@ -44,7 +44,7 @@
                             <entry key="lib.ft4.admin">
                                 <dict>
                                     <entry key="admin_pubkey">
-                                        <string>03CEE2C9EC423D754C4E2797576705CB49905324DFEFCEADD37A3089BDD0013EFE</string>
+                                        <string>021841CEEF7CC5D32077C35909A02763C8CBC97B9A3E37BD166E53589ED704AB88</string>
                                     </entry>
                                 </dict>
                             </entry>
@@ -1332,7 +1332,7 @@ namespace Unsafe {
 
         require(asset.total_supply &lt;= max_asset_amount, "End total supply must be lower than 2^256");
 
-        create payment_history_entry(
+        create transfer_history_entry(
             account,
             asset,
             .delta = amount,
@@ -1370,7 +1370,7 @@ namespace Unsafe {
         balance.amount -= amount;
         asset.total_supply -= amount;
 
-        create payment_history_entry (
+        create transfer_history_entry (
             account,
             asset,
             .delta = amount,
@@ -1570,13 +1570,13 @@ query get_transfer_history(account_id: byte_array, filter: assets.filter, page_s
     val account = acc.account @? { account_id };
     if (empty(account)) return null;
 
-    val paginated_payments = assets.get_paginated_payments(account, filter, page_size, page_cursor);
-    return utils.make_page(paginated_payments, page_size);
+    val paginated_transfers = assets.get_paginated_transfers(account, filter, page_size, page_cursor);
+    return utils.make_page(paginated_transfers, page_size);
 }
 
 query get_transfer_history_entry(rowid) {
-    val entry = assets.payment_history_entry @? { .rowid == rowid };
-    return if (empty(entry)) null else assets.extract_data_from_payment_history_entry(entry);
+    val entry = assets.transfer_history_entry @? { .rowid == rowid };
+    return if (empty(entry)) null else assets.extract_data_from_transfer_history_entry(entry);
 }
 
 function extract_asset_data(assets.asset) {
@@ -1597,11 +1597,11 @@ function extract_asset_data(assets.asset) {
 import ^.assets;
 import ^.utils;
 
-@log entity payment_history_entry {
+@log entity transfer_history_entry {
     index acc.account, asset;
     delta: big_integer;
 
-    // helps to locate exact position of payment entry in transaction
+    // helps to locate exact position of transfer entry in transaction
     op_index: integer;
     is_input: boolean;
     entry_index: integer;
@@ -1617,21 +1617,21 @@ struct filter {
     transfer_type?;
 }
 
-function extract_data_from_payment_history_list(
-        entries: list&lt;payment_history_entry&gt;
+function extract_data_from_transfer_history_list(
+        entries: list&lt;transfer_history_entry&gt;
     ): list&lt;(data:gtv,rowid:rowid)&gt; {
     return entries @* {} (
-        data = extract_data_from_payment_history_entry($).to_gtv_pretty(),
+        data = extract_data_from_transfer_history_entry($).to_gtv_pretty(),
         rowid = .rowid
     );
 }
 
-function extract_operation_name(entry: payment_history_entry): text {
+function extract_operation_name(entry: transfer_history_entry): text {
     val gtx = gtx_transaction.from_gtv(gtv.from_bytes(entry.transaction.tx_data));
     return gtx.body.operations[entry.op_index].name;
 }
 
-function extract_data_from_payment_history_entry(entry: payment_history_entry) {
+function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
         id = '%d'.format(entry.rowid),
         delta = entry.delta,
@@ -1649,20 +1649,20 @@ function extract_data_from_payment_history_entry(entry: payment_history_entry) {
     );
 }
 
-function get_paginated_payments(acc.account, filter, page_size: integer, page_cursor: text?) {
+function get_paginated_transfers(acc.account, filter, page_size: integer, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
         val cursor = utils.decode_cursor(page_cursor);
         before_rowid = cursor.before_rowid;
     }
 
-    val entries = payment_history_entry @* {
+    val entries = transfer_history_entry @* {
         account,
         if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent), 
         if (before_rowid??) (.rowid &lt; before_rowid) else true
     } (@sort_desc $) limit utils.fetch_data_size(page_size);
     
-    return extract_data_from_payment_history_list(entries) @* {} (
+    return extract_data_from_transfer_history_list(entries) @* {} (
         utils.pagination_result(
             data = .data,
             rowid = .rowid
@@ -1836,7 +1836,7 @@ function _transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&
       val args = [ins, outs];
 
       for (entry in v[0]) {
-         create payment_history_entry(
+         create transfer_history_entry(
             .account = entry.account,
             .asset = asset,
             .delta = entry.amount,
@@ -1847,7 +1847,7 @@ function _transfer(inputs: list&lt;xfer_input&gt;, outputs: list&lt;xfer_output&
          );
       }
       for (entry in v[1]) {
-         create payment_history_entry(
+         create transfer_history_entry(
             .account = entry.account,
             .asset = asset,
             .delta = entry.amount,
@@ -1876,7 +1876,7 @@ namespace Unsafe {
       before_transfer_one(from, to, asset, amount);
 
       deduct_balance(from, asset, amount);
-      create payment_history_entry(
+      create transfer_history_entry(
          .account = from,
          .asset = asset,
          .delta = amount,
@@ -1887,7 +1887,7 @@ namespace Unsafe {
       );
       
       ensure_balance(to, asset).amount += amount;
-      create payment_history_entry(
+      create transfer_history_entry(
          .account = to,
          .asset = asset,
          .delta = amount,
