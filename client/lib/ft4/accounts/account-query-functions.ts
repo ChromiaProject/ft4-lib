@@ -138,11 +138,11 @@ export async function getRateLimit(
     points: rateLimit.points,
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
-      if (chainInfo.rate_limit.active) {
+      if (chainInfo.rateLimit.active) {
         const deltaTime = Date.now() - rateLimit.lastUpdate;
         const points =
-          rateLimit.points + deltaTime / chainInfo.rate_limit.recovery_time;
-        return Math.min(points, chainInfo.rate_limit.max_points);
+          rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
+        return Math.min(points, chainInfo.rateLimit.maxPoints);
       }
       return null;
     },
@@ -163,11 +163,11 @@ export async function _getRateLimit(
     points: rateLimit.points,
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
-      if (chainInfo.rate_limit.active) {
+      if (chainInfo.rateLimit.active) {
         const deltaTime = Date.now() - rateLimit.lastUpdate;
         const points =
-          rateLimit.points + deltaTime / chainInfo.rate_limit.recovery_time;
-        return Math.min(points, chainInfo.rate_limit.max_points);
+          rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
+        return Math.min(points, chainInfo.rateLimit.maxPoints);
       }
       return null;
     },

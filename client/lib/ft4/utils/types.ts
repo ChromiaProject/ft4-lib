@@ -5,11 +5,11 @@ import { Buffer } from "buffer";
 export type Operation = [string, ...RawGtv[]];
 
 export type Config = {
-  rate_limit: {
+  rateLimit: {
     active: 0 | 1;
-    max_points: number;
-    recovery_time: number;
-    points_at_account_creation: number;
+    maxPoints: number;
+    recoveryTime: number;
+    pointsAtAccountCreation: number;
   };
 };
 
