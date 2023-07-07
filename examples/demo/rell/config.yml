@@ -15,10 +15,10 @@ blockchains:
 compile:
   rellVersion: 0.12.0
 
-# libs:
-#   ft4:
-#     registry: https://bitbucket.org/chromawallet/ft3-lib
-#     path: rell/src/lib/ft4
-#     tagOrBranch: ft4
-#     rid: x"B63935C9635F7B67D71A4AC2A219021D2F529C926390D631CEBC2EC9C8C829A9"
-#     insecure: false
+libs:
+  ft4:
+    registry: https://bitbucket.org/chromawallet/ft3-lib
+    path: rell/src/lib/ft4
+    tagOrBranch: ft4
+    rid: x"B63935C9635F7B67D71A4AC2A219021D2F529C926390D631CEBC2EC9C8C829A9"
+    insecure: false
