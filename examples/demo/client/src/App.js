@@ -6,43 +6,53 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-function App() {
+const useSession = () => {
   const [session, setSession] = useState(null);
   const [accounts, setAccounts] = useState([]);
-  const [assets, setAssets] = useState([]);
-  const [receiverId, setReceiverId] = useState('');
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const url = 'http://localhost:7740';
-    const rid = '22F97053D106E8A2D6E2C633347CC3A0D4171003DDB3D69E53DEF79D0B9630C7';
-
     const initializeSession = async () => {
-      const client = await createClient({
-        nodeURLPool: url,
-        blockchainRID: rid,
-      });
+      try {
+        const url = 'http://localhost:7740';
+        const rid = '22F97053D106E8A2D6E2C633347CC3A0D4171003DDB3D69E53DEF79D0B9630C7';
 
-      const store = await createWeb3ProviderEvmKeyStore(window.ethereum);
-      const { getAccounts, getLoginManager } = createKeyStoreInteractor(client, store);
+        const client = await createClient({
+          nodeURLPool: url,
+          blockchainRID: rid,
+        });
 
-      const accountsData = await getAccounts();
-      setAccounts(accountsData);
+        const store = await createWeb3ProviderEvmKeyStore(window.ethereum);
+        const { getAccounts, getLoginManager } = createKeyStoreInteractor(client, store);
 
-      if (!accountsData.length) {
-        console.log("No accounts found");
-        return;
+        const accountsData = await getAccounts();
+        setAccounts(accountsData);
+
+        if (!accountsData.length) {
+          console.log("No accounts found");
+          return;
+        }
+
+        const newSession = await getLoginManager().login({
+          accountId: accountsData[0].id,
+        });
+
+        setSession(newSession);
+      } catch (error) {
+        console.error("Failed to initialize session:", error);
       }
-
-      const newSession = await getLoginManager().login({
-        accountId: accountsData[0].id,
-      });
-
-      setSession(newSession);
     };
 
     initializeSession();
   }, []);
+
+  return { session, accounts };
+};
+
+function App() {
+  const { session, accounts } = useSession();
+  const [assets, setAssets] = useState([]);
+  const [receiverId, setReceiverId] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const getAssets = async () => {
