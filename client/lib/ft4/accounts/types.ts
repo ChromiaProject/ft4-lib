@@ -25,7 +25,6 @@ export type LegacyAccount = {
   id: Buffer;
   balances: Balance[];
   authDescriptors: AuthDescriptor[];
-  //rateLimit: RateLimit;
 };
 
 export type XferInput = [
