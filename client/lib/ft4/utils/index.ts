@@ -28,13 +28,29 @@ export function _op(
 }
 
 export async function getConfig(session: GtxClient): Promise<Config> {
-  return Object.freeze(await session.query("ft4.get_config"));
+  const response: ConfigResponse = await session.query("ft4.get_config");
+  return Object.freeze({
+    rateLimit: {
+      active: response.rate_limit.active,
+      maxPoints: response.rate_limit.max_points,
+      recoveryTime: response.rate_limit.recovery_time,
+      pointsAtAccountCreation: response.rate_limit.points_at_account_creation,
+    },
+  });
 }
 
 export async function _getConfig(session: IClient): Promise<Config> {
-  return Object.freeze(
-    await session.query<QueryArguments, Config>("ft4.get_config")
+  const response = await session.query<QueryArguments, ConfigResponse>(
+    "ft4.get_config"
   );
+  return Object.freeze({
+    rateLimit: {
+      active: response.rate_limit.active,
+      maxPoints: response.rate_limit.max_points,
+      recoveryTime: response.rate_limit.recovery_time,
+      pointsAtAccountCreation: response.rate_limit.points_at_account_creation,
+    },
+  });
 }
 
 export async function getVersion(session: IClient): Promise<string> {
@@ -53,4 +69,13 @@ interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
 
 type DeepReadonlyObject<T> = {
   readonly [P in keyof T]: DeepReadonly<T[P]>;
+};
+
+type ConfigResponse = {
+  rate_limit: {
+    active: 0 | 1;
+    max_points: number;
+    recovery_time: number;
+    points_at_account_creation: number;
+  };
 };

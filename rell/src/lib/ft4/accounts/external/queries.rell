@@ -3,15 +3,12 @@ import utils: ^^.utils;
 
 query get_config() {
     return (
-        rate_limit_active = acc.config.rate_limit_active,
-        rate_limit_max_points = acc.config.rate_limit_max_points,
-        rate_limit_recovery_time = acc.config.rate_limit_recovery_time,
-        rate_limit_points_at_account_creation = acc.config.rate_limit_points_at_account_creation
+        rate_limit = acc.get_rate_limit_config()
     );
 }
 
 query get_account_rate_limit_last_update(account_id: byte_array) {
-    if (acc.config.rate_limit_active == false) return (points = 0, last_update = 0);
+    if (acc.get_rate_limit_config().active == false) return (points = 0, last_update = 0);
     
     return acc.rl_state @ { .account.id == account_id }
     (

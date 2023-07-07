@@ -3,55 +3,30 @@ import ^^.lib.ft4.accounts;
 
 object transfer_extensions_state {
     mutable is_before_transfer_called: boolean = false;
-    mutable before_transfer_arg_inputs: byte_array = x"";
-    mutable before_transfer_arg_outputs: byte_array = x"";
-    
-    mutable is_after_transfer_called: boolean = false;
-    mutable after_transfer_arg_inputs: byte_array = x"";
-    mutable after_transfer_arg_outputs: byte_array = x"";
-}
-
-@extend(assets.before_transfer) function(inputs: list<assets.xfer_input>, outputs: list<assets.xfer_output>) {
-    transfer_extensions_state.is_before_transfer_called = true;
-    transfer_extensions_state.before_transfer_arg_inputs = inputs.to_gtv().to_bytes();
-    transfer_extensions_state.before_transfer_arg_outputs = outputs.to_gtv().to_bytes();
-}
-
-@extend(assets.after_transfer) function(inputs: list<assets.xfer_input>, outputs: list<assets.xfer_output>) {
-    transfer_extensions_state.is_after_transfer_called = true;
-    transfer_extensions_state.after_transfer_arg_inputs = inputs.to_gtv().to_bytes();
-    transfer_extensions_state.after_transfer_arg_outputs = outputs.to_gtv().to_bytes();    
-}
-
-
-object transfer_one_extensions_state {
-    mutable is_before_transfer_called: boolean = false;
-    mutable before_transfer_from_account_id: byte_array = x"";
-    mutable before_transfer_to_account_id: byte_array = x"";
-    mutable before_transfer_asset_id: byte_array = x"";
+    mutable before_transfer_from: byte_array = x"";
+    mutable before_transfer_to: byte_array = x"";
+    mutable before_transfer_asset: byte_array = x"";
     mutable before_transfer_amount: big_integer = 0L;
     
     mutable is_after_transfer_called: boolean = false;
-    mutable after_transfer_from_account_id: byte_array = x"";
-    mutable after_transfer_to_account_id: byte_array = x"";
-    mutable after_transfer_asset_id: byte_array = x"";
+    mutable after_transfer_from: byte_array = x"";
+    mutable after_transfer_to: byte_array = x"";
+    mutable after_transfer_asset: byte_array = x"";
     mutable after_transfer_amount: big_integer = 0L;
 }
 
-@extend(assets.before_transfer_one) 
-function (from: accounts.account, to: accounts.account, assets.asset, amount: big_integer) {
-    transfer_one_extensions_state.is_before_transfer_called = true;
-    transfer_one_extensions_state.before_transfer_from_account_id = from.id;
-    transfer_one_extensions_state.before_transfer_to_account_id = to.id;
-    transfer_one_extensions_state.before_transfer_asset_id = asset.id;
-    transfer_one_extensions_state.before_transfer_amount = amount;
+@extend(assets.before_transfer) function(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
+    transfer_extensions_state.is_before_transfer_called = true;
+    transfer_extensions_state.before_transfer_from = from.id;
+    transfer_extensions_state.before_transfer_to = to.id;
+    transfer_extensions_state.before_transfer_asset = asset.id;
+    transfer_extensions_state.before_transfer_amount = amount;
 }
 
-@extend(assets.after_transfer_one) 
-function (from: accounts.account, to: accounts.account, assets.asset, amount: big_integer) {
-    transfer_one_extensions_state.is_after_transfer_called = true;
-    transfer_one_extensions_state.after_transfer_from_account_id = from.id;
-    transfer_one_extensions_state.after_transfer_to_account_id = to.id;
-    transfer_one_extensions_state.after_transfer_asset_id = asset.id;
-    transfer_one_extensions_state.after_transfer_amount = amount;
+@extend(assets.before_transfer) function(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
+    transfer_extensions_state.is_after_transfer_called = true;
+    transfer_extensions_state.after_transfer_from = from.id;
+    transfer_extensions_state.after_transfer_to = to.id;
+    transfer_extensions_state.after_transfer_asset = asset.id;
+    transfer_extensions_state.after_transfer_amount = amount;
 }

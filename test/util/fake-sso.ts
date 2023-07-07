@@ -1,5 +1,5 @@
 import { SignatureProvider } from "postchain-client";
-import { Account, User } from "../../client/lib/ft4/accounts/types";
+import { LegacyAccount, User } from "../../client/lib/ft4/accounts/types";
 import { ftUserSession } from "../../client/lib/ft4/types";
 import { createLocalStorageSignatureProvider } from "../../client/lib/ft4/utils/local-signature-provider";
 import SSO from "../../client/lib/ft4/utils/sso";
@@ -23,11 +23,11 @@ export default class FakeSSO extends SSO {
     if (signatureProvider) this.tmpSigProv = signatureProvider;
   }
 
-  async autoLogin(): Promise<[Account, User]> {
+  async autoLogin(): Promise<[LegacyAccount, User]> {
     return super.autoLogin();
   }
 
-  async finalizeLogin(tx: string): Promise<[Account, User]> {
+  async finalizeLogin(tx: string): Promise<[LegacyAccount, User]> {
     return super.finalizeLogin(tx);
   }
 }

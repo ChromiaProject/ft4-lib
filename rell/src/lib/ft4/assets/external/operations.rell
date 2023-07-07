@@ -3,19 +3,8 @@ import ^^.auth;
 
 query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
 
-// TODO: remove
-@extend(auth.auth_handler)
-function () = auth.add_auth_handler(
-    scope = "ft4.transfer",
-    flags = ["T"]
-);
-
-operation transfer(inputs: list<assets.xfer_input>, outputs: list<assets.xfer_output>) {
-    assets._transfer(inputs, outputs);
-}
-
 function transfer_message(gtv) {
-    val params = struct<transfer_one>.from_gtv(gtv);
+    val params = struct<transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
     return "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
@@ -28,14 +17,14 @@ function transfer_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.transfer_one",
+    scope = "ft4.transfer",
     flags = ["T"],
     message = transfer_message(*)
 );
 
-operation transfer_one(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
+operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
     val account = auth.authenticate();
-    assets.Unsafe.transfer_one(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
+    assets.Unsafe.transfer(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
 }
 
 @extend(auth.auth_handler)

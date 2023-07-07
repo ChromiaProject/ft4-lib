@@ -1,5 +1,5 @@
-import { accountQuerySession, accountUserSession } from "./accounts";
-import { IAccount, User } from "./accounts/types";
+import { accountQuerySession } from "./accounts";
+import { Account, User } from "./accounts/types";
 import {
   ftQuerySession,
   ftUserSession,
@@ -57,7 +57,6 @@ export function createUserSession(pci: GtxClient, user: User): ftUserSession {
     user,
     changeUser: (newUser: User) => createUserSession(pci, newUser),
     get: createQuerySession(pci),
-    account: accountUserSession(user, pci),
   });
 }
 
@@ -142,7 +141,7 @@ export async function call(
 }
 
 export type KeyStoreInteractor = {
-  getAccounts(): Promise<IAccount[]>;
+  getAccounts(): Promise<Account[]>;
   getSession(accountId: BufferId): Promise<Session>;
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };

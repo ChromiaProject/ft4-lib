@@ -9,8 +9,8 @@ import {
   SupportedNumber,
 } from "../../client/lib/ft4/asset/types";
 import {
-  Account,
-  IAuthenticatedAccount,
+  LegacyAccount,
+  AuthenticatedAccount,
 } from "../../client/lib/ft4/accounts/types";
 import { ftUserSession } from "../../client/lib/ft4/types";
 import { gtx, SignatureProvider } from "postchain-client";
@@ -98,14 +98,14 @@ class AccountBuilder {
     return this;
   }
 
-  async build(): Promise<Account> {
+  async build(): Promise<LegacyAccount> {
     const account = await this.registerAccount();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return (await this.session.get.account.by.id(account.id))!;
   }
 
-  async buildAuthenticated(): Promise<IAuthenticatedAccount> {
+  async buildAuthenticated(): Promise<AuthenticatedAccount> {
     const account = await this.registerAccount();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
@@ -124,8 +124,7 @@ class AccountBuilder {
   }
 
   /* Private functions */
-
-  private async registerAccount(): Promise<Account> {
+  private async registerAccount(): Promise<LegacyAccount> {
     return await registerAccount(
       this.session.get.gtxClient,
       admin().signatureProvider,
@@ -133,7 +132,7 @@ class AccountBuilder {
     );
   }
 
-  private async addBalanceIfNeeded(account: Account) {
+  private async addBalanceIfNeeded(account: LegacyAccount) {
     if (this.balances.length) {
       const adminSignatureProvider = admin().signatureProvider;
       const tx = this.session.get.gtxClient.newTransaction([
@@ -154,7 +153,7 @@ class AccountBuilder {
     }
   }
 
-  private async addPointsIfNeeded(account: Account) {
+  private async addPointsIfNeeded(account: LegacyAccount) {
     if (this.points > 0) {
       const adminSignatureProvider = admin().signatureProvider;
       await givePoints(

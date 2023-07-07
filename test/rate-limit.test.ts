@@ -7,6 +7,7 @@ import { createChromiaClient, getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 import { givePoints } from "/ft4/accounts/account-op-functions";
 import { _op } from "/ft4/utils";
+import { Config } from "/ft4/utils/types";
 
 jest.setTimeout(2000000);
 
@@ -26,11 +27,13 @@ describe.skip("Rate Limit", () => {
   describe("Blockchain request configuration in run.xml", () => {
     it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
       const info = await _connection.getConfig();
-      expect(info).toEqual({
-        rate_limit_active: 1,
-        rate_limit_max_points: REQUEST_MAX_COUNT,
-        rate_limit_recovery_time: RECOVERY_TIME,
-        rate_limit_points_at_account_creation: POINTS_AT_ACCOUNT_CREATION,
+      expect(info).toEqual(<Config>{
+        rateLimit: {
+          active: 1,
+          maxPoints: REQUEST_MAX_COUNT,
+          recoveryTime: RECOVERY_TIME,
+          pointsAtAccountCreation: POINTS_AT_ACCOUNT_CREATION,
+        },
       });
     });
   });
