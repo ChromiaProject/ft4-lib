@@ -23,11 +23,10 @@ const useSession = () => {
     const initializeSession = async () => {
       try {
         const url = 'http://localhost:7740';
-        const rid = '22F97053D106E8A2D6E2C633347CC3A0D4171003DDB3D69E53DEF79D0B9630C7';
 
         const client = await createClient({
           nodeURLPool: url,
-          blockchainRID: rid,
+          blockchainIID: 0,
         });
 
         const store = await createWeb3ProviderEvmKeyStore(window.ethereum);
