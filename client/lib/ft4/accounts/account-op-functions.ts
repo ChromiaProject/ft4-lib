@@ -1,13 +1,11 @@
 import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
-  addAuthDescriptor,
+  addAuthDescriptor as addAuthDescriptorOp,
   burnOp,
   _burn as _burnOp,
   deleteAllAuthDescriptorsExclude as deleteAllAuthDescriptorsExcludeOp,
-  deleteAuthDescriptorOp,
-  deleteAuthDescriptor as _deleteAuthDescriptorOp,
-  transfer,
-  addAuthDescriptorOp,
+  deleteAuthDescriptor as deleteAuthDescriptorOp,
+  transfer as transferOp,
 } from "./account-operations";
 import { Account, User, IAuthenticatedAccount } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
@@ -27,68 +25,6 @@ import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-mem
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
-import { Buffer } from "buffer";
-import { deriveAccountId, toGtv } from "./auth-descriptor";
-
-export async function ssoRawTransactionRegister(
-  newAuthDesc: AuthDescriptor,
-  authDescriptor: AuthDescriptor,
-  tb: LegacyTransactionBuilder
-): Promise<Buffer> {
-  const adId = authDescriptor.id;
-  const tx = await tb
-    .add(registerOp(authDescriptor))
-    .add(
-      addAuthDescriptorOp(
-        deriveAccountId(toGtv(authDescriptor)),
-        adId,
-        newAuthDesc
-      )
-    )
-    .buildSigned([...authDescriptor.signers, ...newAuthDesc.signers]);
-  return tx.encode();
-}
-
-export async function ssoRawTransactionAddAuthDescriptor(
-  accountId: BufferId,
-  newAuthDesc: AuthDescriptor,
-  tb: LegacyTransactionBuilder
-): Promise<Buffer> {
-  const tx = await tb
-    .add(
-      addAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
-        newAuthDesc
-      )
-    )
-    .add(nop())
-    .buildSigned();
-  return tx.encode();
-}
-
-export async function addAuthDescriptorToAccount( //maybe rename to addUserToAccount?
-  newUser: User,
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-): Promise<void> {
-  const tx = await tb
-    .add(
-      addAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
-        newUser.authDescriptor
-      )
-    )
-    .add(nop())
-    .build([
-      ...tb.user.authDescriptor.signers,
-      ...newUser.authDescriptor.signers,
-    ]);
-  await tx.sign(tb.user.signatureProvider);
-  await tx.sign(newUser.signatureProvider);
-  await tx.postAndWaitConfirmation();
-}
 
 export async function deleteAllAuthDescriptorsExclude(
   authDescriptorId: BufferId,
@@ -99,24 +35,6 @@ export async function deleteAllAuthDescriptorsExclude(
     .add(
       deleteAllAuthDescriptorsExcludeOp(
         formatter.ensureBuffer(accountId),
-        formatter.ensureBuffer(authDescriptorId)
-      )
-    )
-    .add(nop())
-    .buildSigned();
-  await tx.postAndWaitConfirmation();
-}
-
-export async function deleteAuthDescriptor(
-  authDescriptorId: BufferId,
-  accountId: BufferId,
-  tb: LegacyTransactionBuilder
-): Promise<void> {
-  const tx = await tb
-    .add(
-      deleteAuthDescriptorOp(
-        formatter.ensureBuffer(accountId),
-        tb.user.authDescriptor.id,
         formatter.ensureBuffer(authDescriptorId)
       )
     )
@@ -183,20 +101,20 @@ export function createAuthenticatedAccount(
     addAuthDescriptor: (
       authDescriptor: AuthDescriptor,
       keyPair: SignatureProvider | KeyPair
-    ) => _addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
+    ) => addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
-      _deleteAuthDescriptor(connection, authenticator, authDescriptorId),
+      deleteAuthDescriptor(connection, authenticator, authDescriptorId),
     // deleteAllAuthDescriptorsExclude: (authDescriptorId: BufferId) =>
     //   _deleteAllAuthDescriptorsExclude(connection, authenticator, authDescriptorId),
     transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
-      _transfer(connection, authenticator, receiverId, assetId, amount),
+      transfer(connection, authenticator, receiverId, assetId, amount),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
   };
 }
 
-async function _addAuthDescriptor(
+async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
@@ -205,7 +123,7 @@ async function _addAuthDescriptor(
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
-    .add(addAuthDescriptor(authDescriptor))
+    .add(addAuthDescriptorOp(authDescriptor))
     .addSigners(
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor)
     )
@@ -214,7 +132,7 @@ async function _addAuthDescriptor(
   return connection.client.sendTransaction(tx);
 }
 
-async function _deleteAuthDescriptor(
+async function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId
@@ -222,18 +140,22 @@ async function _deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    _deleteAuthDescriptorOp(authDescriptorId)
+    deleteAuthDescriptorOp(authDescriptorId)
   );
 }
 
-async function _transfer(
+async function transfer(
   connection: Connection,
   authenticator: Authenticator,
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount
 ): Promise<TransactionReceipt> {
-  return call(connection, authenticator, transfer(receiverId, assetId, amount));
+  return call(
+    connection,
+    authenticator,
+    transferOp(receiverId, assetId, amount)
+  );
 }
 
 async function burn(
