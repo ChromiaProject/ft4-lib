@@ -364,9 +364,7 @@ describe("Transfer history", () => {
       account1.id
     );
     const expectedEntry = (await retreiver.retrieve(1, null, null)).data[0];
-    const actualEntry = await retreiver.retrieveSingle(
-      parseInt(expectedEntry.rowid, 10)
-    );
+    const actualEntry = await retreiver.retrieveSingle(expectedEntry.rowid);
 
     Object.assign(BigInt.prototype, {
       toJSON: function () {
@@ -403,7 +401,7 @@ describe("Transfer history", () => {
     const history = await foundAccount.getTransferHistory();
 
     const entry = await foundAccount!.getTransferHistoryEntry(
-      parseInt(history.data[0].rowid, 10)
+      history.data[0].rowid
     );
     expect(entry!.rowid).toBe(history.data[0].rowid);
   });

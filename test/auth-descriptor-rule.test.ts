@@ -3,7 +3,7 @@ import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
-import { IAuthenticatedAccount, User } from "../client/lib/ft4/accounts/types";
+import { AuthenticatedAccount, User } from "../client/lib/ft4/accounts/types";
 import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import {
   _getNewAsset,
@@ -26,23 +26,20 @@ import {
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { newSignatureProvider } from "postchain-client";
-import {
-  _deleteAllAuthDescriptorsExclude,
-  deleteAllAuthDescriptorsExclude,
-} from "/ft4/accounts/account-operations";
+import { _deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
 
 let _ft: ftUserSession;
 let _connection: Connection;
 let asset: Asset;
 
-function sourceAccount(user: User): Promise<IAuthenticatedAccount> {
+function sourceAccount(user: User): Promise<AuthenticatedAccount> {
   return AccountBuilder.account(_ft.changeUser(user))
     .withBalance(asset, 200)
     .withPoints(5)
     .buildAuthenticated();
 }
 
-function destinationAccount(): Promise<IAuthenticatedAccount> {
+function destinationAccount(): Promise<AuthenticatedAccount> {
   return AccountBuilder.account(
     _ft.changeUser(testUser())
   ).buildAuthenticated();
@@ -50,7 +47,7 @@ function destinationAccount(): Promise<IAuthenticatedAccount> {
 
 async function getAuthedAccountsFromAuthDescriptorRule(
   rule: AuthDescriptorRule
-): Promise<[limited: IAuthenticatedAccount, admin: IAuthenticatedAccount]> {
+): Promise<[limited: AuthenticatedAccount, admin: AuthenticatedAccount]> {
   //to be used when you don't need the admin user
   const user1 = testUser();
   const user2 = testUser(rule);

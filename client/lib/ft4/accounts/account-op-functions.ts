@@ -7,7 +7,7 @@ import {
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
 } from "./account-operations";
-import { Account, User, IAuthenticatedAccount } from "./types";
+import { LegacyAccount, User, AuthenticatedAccount } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -60,7 +60,7 @@ export async function registerAccount(
   adminUser: User,
   session: GtxClient,
   newAuthDesc: AuthDescriptor
-): Promise<Account> {
+): Promise<LegacyAccount> {
   const tx = session.newTransaction([
     ...user.authDescriptor.signers,
     ...adminUser.authDescriptor.signers,
@@ -69,7 +69,7 @@ export async function registerAccount(
   await tx.sign(user.signatureProvider);
   await tx.sign(adminUser.signatureProvider);
   await tx.postAndWaitConfirmation();
-  return <Account>await getById(session, newAuthDesc.id);
+  return <LegacyAccount>await getById(session, newAuthDesc.id);
 }
 
 export async function givePoints(
@@ -95,7 +95,7 @@ export async function givePoints(
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator
-): IAuthenticatedAccount {
+): AuthenticatedAccount {
   return {
     authenticator,
     addAuthDescriptor: (
