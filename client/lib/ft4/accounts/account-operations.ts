@@ -7,19 +7,6 @@ import { formatter, Operation as _Operation } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { Buffer } from "buffer";
 
-export function addAuthDescriptorOp(
-  accountId: Buffer,
-  authDescriptorId: Buffer,
-  authDescriptor: AuthDescriptor
-): Operation {
-  return op(
-    "ft4.add_auth_descriptor",
-    accountId,
-    authDescriptorId,
-    authDesc.toGtv(authDescriptor)
-  );
-}
-
 export function burnOp(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), Number(amount));
 }
