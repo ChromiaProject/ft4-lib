@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Buffer } from 'buffer';
 import { createClient } from 'postchain-client';
-import { createAmount, createKeyStoreInteractor, createWeb3ProviderEvmKeyStore } from 'ft3-lib';
+import {
+    createAmount,
+    createKeyStoreInteractor,
+    createWeb3ProviderEvmKeyStore,
+    createSessionStorageLoginKeyStore,
+} from 'ft3-lib';
+
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
@@ -33,7 +41,7 @@ const useSession = () => {
           return;
         }
 
-        const newSession = await getLoginManager().login({
+        const newSession = await getLoginManager(createSessionStorageLoginKeyStore()).login({
           accountId: accountsData[0].id,
         });
 
@@ -54,6 +62,8 @@ function App() {
   const [assets, setAssets] = useState([]);
   const [receiverId, setReceiverId] = useState('');
   const [copied, setCopied] = useState(false);
+  const [transferMsg, setTransferMsg] = useState({ success: false, message: '' });
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const getAssets = async () => {
@@ -72,15 +82,27 @@ function App() {
     getAssets();
   }, [session]);
 
-  const handleCopy = (id) => {
-    const hexId = Buffer.from(id).toString('hex');
+  const handleCopy = (hexId) => {
     navigator.clipboard.writeText(hexId);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleTransfer = async () => {
-    await session.account.transfer(receiverId, assets[0].id, createAmount(12, 6));
+    try {
+      await session.account.transfer(receiverId, assets[0].id, createAmount(12, 6));
+      setTransferMsg({ success: true, message: "Transfer successful!" });
+    } catch (error) {
+      setTransferMsg({ success: false, message: "Transfer failed!" });
+    } finally {
+      setOpen(true);
+    }
+  };
+
+  const handleClose = (_, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
   };
 
 return (
@@ -96,20 +118,31 @@ return (
       FT4 Demo App
     </Typography>
     {accounts.length ? (
-      accounts.map((account, index) => (
-        <Typography key={index} variant="h5" component="div" gutterBottom>
-          <div>Account</div>
-          <div
-            style={{ cursor: 'pointer', textDecoration: 'underline' }}
-            title="Click to copy"
-            onClick={() => handleCopy(account.id)}
-          >
-            <strong>{account.id.slice(0, 6)}...{account.id.slice(-6)}</strong>
-          </div>
+        accounts.map((account, index) => { 
+          const hexId = Buffer.from(account.id).toString('hex');
 
-    {copied && <div style={{ color: 'green' }}>Copied!</div>}
-        </Typography>
-      ))
+          return (
+            <Typography key={index} variant="h5" component="div" gutterBottom>
+              <div>Account</div>
+
+              <div
+                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                title="Click to copy"
+                onClick={() => handleCopy(hexId)}
+              >
+                <strong>{hexId.slice(0, 20)}&hellip;{hexId.slice(-20)}</strong>
+              </div>
+
+              {copied && (
+                <Snackbar open={copied} autoHideDuration={2000} onClose={() => setCopied(false)}>
+                <Alert onClose={() => setCopied(false)} severity="success" sx={{ width: '100%' }}>
+                Copied!
+                </Alert>
+                </Snackbar>
+              )}
+            </Typography>
+          );
+        })
     ) : (
       <Typography>No accounts found</Typography>
     )}
@@ -141,6 +174,12 @@ return (
       >
         Transfer
       </Button>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity={transferMsg.success ? "success" : "error"} sx={{ width: '100%' }}>
+          {transferMsg.message}
+        </Alert>
+      </Snackbar>
+
     </Box>
   </Box>
 );

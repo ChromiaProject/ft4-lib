@@ -8,5 +8,4 @@ namespace ft4 {
     import acc_ext: ^.accounts.external;
     import assets_ext: ^.assets.external;
     import ^.version;
-    import ^.admin;
 }
