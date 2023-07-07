@@ -469,7 +469,6 @@ describe("Auth Descriptor Rule", () => {
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
-  // Skipped due to possible bug in postchain-client 1.5.4
   it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
