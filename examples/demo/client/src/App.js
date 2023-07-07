@@ -1,10 +1,15 @@
-import logo from './logo.svg';
-import './App.css';
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createClient } from 'postchain-client';
 import { createAmount, createKeyStoreInteractor, createWeb3ProviderEvmKeyStore } from 'ft3-lib';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
 
 function App() {
+  const [session, setSession] = useState(null); // define session state
+  const [accounts, setAccounts] = useState([]);
+  const [assets, setAssets] = useState([]);
+  const [receiverId, setReceiverId] = useState('');
+
   useEffect(() => {
     const url = 'http://localhost:7740';
     const rid = '22F97053D106E8A2D6E2C633347CC3A0D4171003DDB3D69E53DEF79D0B9630C7';
@@ -15,44 +20,54 @@ function App() {
     })
     .then((client) => {
       createWeb3ProviderEvmKeyStore(window.ethereum).then(async store => {
-        const { getAccounts, getSession } = createKeyStoreInteractor(client, store); 
+        const { getAccounts, getLoginManager } = createKeyStoreInteractor(client, store); 
   
-        const accounts = await getAccounts()
+        const accountsData = await getAccounts();
+        setAccounts(accountsData);
   
-        if (!accounts.length) return;
-  
-        const session = await getSession(accounts[0].id);
-        // const session = await getLoginManager().login({
-        //   accountId: accounts[0].id,
-        //   flags: ["T"]
-        // })
-  
-        const assets = await session.getAllAssets();
-  
-        await session.account.transfer("7CF257C529995C67CD3AB603E015DEBEBA69A2EE005312A77CD661A590CA4871", assets[0].id, createAmount(12, 6))
-        // await session.call(op("foo"))
-        // await session.call(op("bar", "some test", 54321));
-        // await session.call(op("foo"), op("bar", "some test", 54321))
+        if (!accountsData.length) {
+            console.log("No accounts found");
+            return;
+        }
+
+        const newSession = await getLoginManager().login({
+            accountId: accountsData[0].id,
+        })
+        setSession(newSession);
+
+        const assetsData = await session.getAllAssets();
+        setAssets(assetsData);
+
+        if (!assetsData.length) {
+          console.log("No assets found");
+        }
       });
     })
-  }, []);
+  });
+
+  const handleTransfer = async () => {
+    await session.account.transfer(receiverId, assets[0].id, createAmount(12, 6));
+  };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div>
+        {accounts.length ? accounts.map((account, index) => (
+          <p key={index}>Account: {account.id}</p>
+        )) : <p>No accounts found</p>}
+      </div>
+      <div>
+        {assets.length ? assets.map((asset, index) => (
+          <div key={index}>
+            <img src={asset.icon_url} alt={asset.name} />
+            <p>{asset.name}</p>
+          </div>
+        )) : <p>No assets found</p>}
+      </div>
+      <div>
+        <TextField label="Receiver ID" variant="outlined" onChange={e => setReceiverId(e.target.value)} />
+        <Button variant="contained" onClick={handleTransfer}>Transfer</Button>
+      </div>
     </div>
   );
 }
