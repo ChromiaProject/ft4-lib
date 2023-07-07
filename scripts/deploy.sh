@@ -106,21 +106,22 @@ if [ $which = "stable" ]; then
         --header 'Accept: application/json' --header "Content-Type: application/json" \
         --data '{"value":"'$BRID'"}' \
         --header "Authorization: Bearer $WALLET_BRID_UPDATER"
-#     printf "\nrunning wallet pipeline... \n"
-#     curl -s --request POST \
-#         --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/pipelines' \
-#         --header 'Accept: application/json' --header "Content-Type: application/json" \
-#         -d '
-#             {
-#                 "target": {
-#                     "type": "pipeline_ref_target",
-#                     "ref_type": "branch",
-#                     "ref_name": "master",
-#                     "selector": {
-#                         "type": "custom",
-#                         "pattern": "Deploy to production"
-#                     }
-#                 }
-#             }' \
-#         --header "Authorization: Bearer $WALLET_BRID_UPDATER"
+    printf "\nrunning wallet pipeline... \n"
+    curl -s --request POST \
+        --url 'https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-wallet/pipelines' \
+        --header 'Accept: application/json' --header "Content-Type: application/json" \
+        -d '
+            {
+                "target": {
+                    "type": "pipeline_ref_target",
+                    "ref_type": "branch",
+                    "ref_name": "develop",
+                    "selector": {
+                        "type": "custom",
+                        "pattern": "remote-deploy"
+                    }
+                }
+            }' \
+        --header "Authorization: Bearer $WALLET_BRID_UPDATER"
+    printf "\n\nDeployment started!\n\n"
 fi
