@@ -16,9 +16,9 @@ import { IClient, encryption, gtx } from "postchain-client";
 import { transfer } from "../client/lib/ft4/accounts/account-operations";
 import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
-import { _registerOp } from "../client/lib/ft4/accounts/account-dev-operations";
 import { Buffer } from "buffer";
-import { createAmount } from "/ft4";
+import { registerOp } from "/ft4/accounts/account-dev-operations";
+import { createAmount } from "/ft4/asset/amount";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -95,7 +95,7 @@ describe("Transaction Builder", () => {
   it("throws an error if not sufficient permissions", async () => {
     try {
       await transactionBuilder(authenticator, client)
-        .add(_registerOp(authDescriptor))
+        .add(registerOp(authDescriptor))
         .buildUnsigned();
     } catch (e) {
       expect(e instanceof AuthorizationError).toBe(true);
@@ -138,7 +138,7 @@ describe("Transaction Builder", () => {
       getNonce: jest.fn(),
     };
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(_registerOp(authDescriptor), authenticatorMock)
+      .addWithAuthenticator(registerOp(authDescriptor), authenticatorMock)
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyHandlerMock.sign).toHaveBeenCalled();

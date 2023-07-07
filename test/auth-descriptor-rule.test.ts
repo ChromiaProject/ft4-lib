@@ -12,6 +12,7 @@ import {
 } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
+import { IClient } from "postchain-client";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import {
   createAuthDataService,
@@ -31,6 +32,7 @@ import { _deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operatio
 let _ft: ftUserSession;
 let _connection: Connection;
 let asset: Asset;
+let client: IClient;
 
 function sourceAccount(user: User): Promise<AuthenticatedAccount> {
   return AccountBuilder.account(_ft.changeUser(user))
@@ -79,7 +81,8 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     _ft = await getUserSession();
-    _connection = createConnection(await createChromiaClient());
+    client = await createChromiaClient();
+    _connection = createConnection(client);
     asset = await _getNewAsset(_connection);
   });
 

@@ -1,3 +1,4 @@
+import { IClient } from "postchain-client";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { Amount } from "../client/lib/ft4/asset/interfaces";
 import { Asset } from "../client/lib/ft4/asset/types";
@@ -18,6 +19,7 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 
 let ft: ftUserSession;
 let connection: Connection;
+let client: IClient;
 let asset1: Asset;
 let asset2: Asset;
 
@@ -35,8 +37,9 @@ describe("Asset balance", () => {
   beforeAll(async () => {
     ft = await getUserSession();
     connection = createConnection(await createChromiaClient());
-    asset1 = await getNewAsset(ft);
-    asset2 = await getNewAsset(ft, undefined, undefined, 5);
+    client = await createChromiaClient();
+    asset1 = await getNewAsset(client);
+    asset2 = await getNewAsset(client, undefined, undefined, 5);
   });
 
   beforeEach(() => {
@@ -117,11 +120,10 @@ describe("Asset balance", () => {
   });
 
   it("paginates asset balances", async () => {
-    const asset1 = await getNewAsset(ft);
-    const asset2 = await getNewAsset(ft);
-    const asset3 = await getNewAsset(ft);
+    const asset1 = await getNewAsset(client);
+    const asset2 = await getNewAsset(client);
+    const asset3 = await getNewAsset(client);
 
-    const client = await createChromiaClient();
     const keyPair = new KeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
 

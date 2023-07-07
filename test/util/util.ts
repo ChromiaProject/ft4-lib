@@ -150,7 +150,7 @@ export async function addAuthDescriptorTo(
 
 export async function createAccount(client: IClient, ad: AuthDescriptor) {
   await client.signAndSendUniqueTransaction(
-    _op("register_account_test", authDescriptor.toGtv(ad) as any),
+    _op("register_account_test", authDescriptor.toGtv(ad)),
     adminUser().signatureProvider
   );
   return ad.id;

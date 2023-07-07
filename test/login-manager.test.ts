@@ -1,12 +1,8 @@
-import {
-  createChromiaClient,
-  getNewAsset,
-  getUserSession,
-} from "./util/blockchain-util";
+import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { KeyPair } from "/cryptoUtils";
 import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
-import { Connection, ftUserSession } from "/ft4/types";
+import { Connection } from "/ft4/types";
 import { createAccount } from "./util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
@@ -18,13 +14,11 @@ import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/s
 
 describe("Login manager", () => {
   let client: IClient;
-  let ft: ftUserSession;
   let connection: Connection;
 
   beforeAll(async () => {
-    ft = await getUserSession();
-    connection = createConnection(await createChromiaClient());
-    client = connection.client;
+    client = await createChromiaClient();
+    connection = createConnection(client);
   });
 
   it("adds disposable auth descriptor to account", async () => {
@@ -52,7 +46,7 @@ describe("Login manager", () => {
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = new KeyPair();
-    const asset = await getNewAsset(ft, undefined, undefined, 5);
+    const asset = await getNewAsset(client, undefined, undefined, 5);
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],

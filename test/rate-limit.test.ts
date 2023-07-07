@@ -5,6 +5,7 @@ import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import { createChromiaClient, getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
+import { givePoints } from "/ft4/accounts/account-op-functions";
 import { _op } from "/ft4/utils";
 import { Config } from "/ft4/utils/types";
 
@@ -59,8 +60,18 @@ describe.skip("Rate Limit", () => {
 
       await timeout(20000);
 
-      await ft.account.admin.givePoints(adminUser(), account.id, 1); // used to make one block
-      await ft.account.admin.givePoints(adminUser(), account.id, 1); // used to calculate the last block's timestamp (previous block).
+      await givePoints(
+        ft.get.gtxClient,
+        adminUser().signatureProvider,
+        account.id,
+        1
+      ); // used to make one block
+      await givePoints(
+        ft.get.gtxClient,
+        adminUser().signatureProvider,
+        account.id,
+        1
+      ); // used to calculate the last block's timestamp (previous block).
       // check the balance
       const foundAccount = await _connection.getAccountById(account.id);
       const rateLimit = await foundAccount!.getRateLimit();
