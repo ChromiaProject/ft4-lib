@@ -1,5 +1,9 @@
 import { generateAssetName, generateAssetSymbol } from "./util";
-import { ftQuerySession, ftUserSession } from "../../client/lib/ft4/types";
+import {
+  Connection,
+  ftQuerySession,
+  ftUserSession,
+} from "../../client/lib/ft4/types";
 import {
   gtxClient,
   restClient,
@@ -13,7 +17,8 @@ import {
 import { Asset } from "../../client/lib/ft4/asset/types";
 import singleSigUser from "./test-user";
 import { AuthDescriptorRule } from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import adminUser from "./admin_user";
+import adminUser, { adminKeyPair } from "./admin_user";
+import { _registerAssetOp } from "/ft4/asset/asset-dev-operations";
 
 export async function createClient(nodeUrl?: string) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
@@ -61,4 +66,19 @@ export async function getNewAsset(
   );
   const asset = await userSession.get.asset.by.id(id);
   return asset;
+}
+
+export async function _getNewAsset(
+  connection: Connection,
+  name = generateAssetName(),
+  symbol = generateAssetSymbol(),
+  decimals = 0,
+  iconUrl = ""
+): Promise<Asset> {
+  await connection.client.signAndSendUniqueTransaction(
+    _registerAssetOp(name, symbol, decimals, iconUrl),
+    adminKeyPair
+  );
+  const assets = await connection.getAssetsByName(name);
+  return assets.data[0];
 }

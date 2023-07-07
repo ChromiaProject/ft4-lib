@@ -1,20 +1,13 @@
-/* eslint @typescript-eslint/ban-ts-comment: 0 */
 import { addRateLimitPointsOp, registerOp } from "./account-dev-operations";
 import {
-  _transferOp,
-  addAuthDescriptor,
+  addAuthDescriptor as addAuthDescriptorOp,
   burnOp,
-  deleteAuthDescriptor,
-  transferOp,
-  transferV2,
+  _burn as _burnOp,
+  deleteAllAuthDescriptorsExclude as deleteAllAuthDescriptorsExcludeOp,
+  deleteAuthDescriptor as deleteAuthDescriptorOp,
+  transfer as transferOp,
 } from "./account-operations";
-import {
-  LegacyAccount,
-  XferInput,
-  XferOutput,
-  User,
-  AuthenticatedAccount,
-} from "./types";
+import { LegacyAccount, User, AuthenticatedAccount } from "./types";
 import { createAccountObject, getById } from "./account-query-functions";
 import { nop } from "../utils";
 import { AuthDescriptor } from "./auth-descriptor/types";
@@ -22,7 +15,7 @@ import { BufferId, KeyPair } from "../../cryptoUtils";
 import {
   formatter,
   GtxClient,
-  RawGtv,
+  SignatureProvider,
   TransactionReceipt,
 } from "postchain-client";
 import { LegacyTransactionBuilder } from "../utils/transaction-builder-old";
@@ -33,40 +26,21 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call } from "../ft-session";
 
-export async function transferInputsToOutputs(
-  inputs: XferInput[],
-  outputs: XferOutput[],
+export async function deleteAllAuthDescriptorsExclude(
+  authDescriptorId: BufferId,
+  accountId: BufferId,
   tb: LegacyTransactionBuilder
 ): Promise<void> {
-  const tx = await tb.add(transferOp(inputs, outputs)).add(nop()).buildSigned();
+  const tx = await tb
+    .add(
+      deleteAllAuthDescriptorsExcludeOp(
+        formatter.ensureBuffer(accountId),
+        formatter.ensureBuffer(authDescriptorId)
+      )
+    )
+    .add(nop())
+    .buildSigned();
   await tx.postAndWaitConfirmation();
-}
-
-export async function transfer(
-  fromAccountId: BufferId,
-  toAccountId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-  tb: LegacyTransactionBuilder,
-  extra?: { [key: string]: RawGtv }
-): Promise<void> {
-  //if we want to check that amount has the correct decimals, do it here
-  const input: XferInput = [
-    formatter.ensureBuffer(fromAccountId),
-    formatter.ensureBuffer(assetId),
-    tb.user.authDescriptor.id,
-    amount.value,
-    extra ?? {},
-  ];
-
-  const output: XferOutput = [
-    formatter.ensureBuffer(toAccountId),
-    formatter.ensureBuffer(assetId),
-    amount.value,
-    extra ?? {},
-  ];
-
-  await transferInputsToOutputs([input], [output], tb);
 }
 
 export async function burnTokens(
@@ -91,7 +65,6 @@ export async function registerAccount(
     ...user.authDescriptor.signers,
     ...adminUser.authDescriptor.signers,
   ]);
-  // @ts-ignore
   tx.addOperation(...registerOp(newAuthDesc)); //doesn't need nop
   await tx.sign(user.signatureProvider);
   await tx.sign(adminUser.signatureProvider);
@@ -110,11 +83,9 @@ export async function givePoints(
     ...user.authDescriptor.signers,
     ...adminUser.authDescriptor.signers,
   ]);
-  // @ts-ignore
   tx.addOperation(
     ...addRateLimitPointsOp(formatter.ensureBuffer(accountId), points)
   );
-  // @ts-ignore
   tx.addOperation(...nop());
   await tx.sign(user.signatureProvider);
   await tx.sign(adminUser.signatureProvider);
@@ -127,28 +98,32 @@ export function createAuthenticatedAccount(
 ): AuthenticatedAccount {
   return {
     authenticator,
-    addAuthDescriptor: (authDescriptor: AuthDescriptor, keyPair: KeyPair) =>
-      _addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
+    addAuthDescriptor: (
+      authDescriptor: AuthDescriptor,
+      keyPair: SignatureProvider | KeyPair
+    ) => addAuthDescriptor(connection, authenticator, authDescriptor, keyPair),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
-      _deleteAuthDescriptor(connection, authenticator, authDescriptorId),
+      deleteAuthDescriptor(connection, authenticator, authDescriptorId),
+    // deleteAllAuthDescriptorsExclude: (authDescriptorId: BufferId) =>
+    //   _deleteAllAuthDescriptorsExclude(connection, authenticator, authDescriptorId),
     transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
-      _transfer(connection, authenticator, receiverId, assetId, amount),
+      transfer(connection, authenticator, receiverId, assetId, amount),
     burn: (assetId: BufferId, amount: Amount) =>
-      _burn(connection, authenticator, assetId, amount),
+      burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
   };
 }
 
-async function _addAuthDescriptor(
+async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
-  keyPair: KeyPair
+  keyPair: SignatureProvider | KeyPair
 ): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
-    .add(addAuthDescriptor(authDescriptor))
+    .add(addAuthDescriptorOp(authDescriptor))
     .addSigners(
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor)
     )
@@ -157,7 +132,7 @@ async function _addAuthDescriptor(
   return connection.client.sendTransaction(tx);
 }
 
-async function _deleteAuthDescriptor(
+async function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId
@@ -165,11 +140,11 @@ async function _deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    deleteAuthDescriptor(authDescriptorId)
+    deleteAuthDescriptorOp(authDescriptorId)
   );
 }
 
-async function _transfer(
+async function transfer(
   connection: Connection,
   authenticator: Authenticator,
   receiverId: BufferId,
@@ -179,26 +154,15 @@ async function _transfer(
   return call(
     connection,
     authenticator,
-    transferV2(receiverId, assetId, amount)
+    transferOp(receiverId, assetId, amount)
   );
 }
 
-async function _burn(
+async function burn(
   connection: Connection,
   authenticator: Authenticator,
   assetId: BufferId,
   amount: Amount
 ) {
-  // FIXME: will be removed when 1-to-1 transfer operation is added
-  const keyHandler = authenticator.keyHandlers.find((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(["T"])
-  );
-  const input: XferInput = [
-    authenticator.accountId,
-    formatter.ensureBuffer(assetId),
-    keyHandler!.authDescriptor.id,
-    amount.value,
-    {},
-  ];
-  return call(connection, authenticator, _transferOp([input], []));
+  return call(connection, authenticator, _burnOp(assetId, amount));
 }

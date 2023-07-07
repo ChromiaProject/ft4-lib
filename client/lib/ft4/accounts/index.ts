@@ -5,7 +5,6 @@ import {
   burnTokens,
   givePoints,
   registerAccount,
-  transfer,
 } from "./account-op-functions";
 import {
   getByAuthDescriptorId,
@@ -43,13 +42,6 @@ export const accountQuerySession = (pci: GtxClient) =>
 export const accountUserSession = (user: User, pci: GtxClient) =>
   Object.freeze({
     token: {
-      transfer: (
-        from: BufferId,
-        to: BufferId,
-        asset: BufferId,
-        amount: Amount
-      ) =>
-        transfer(from, to, asset, amount, legacyTransactionBuilder(user, pci)),
       burn: (from: BufferId, asset: BufferId, amount: Amount) =>
         burnTokens(asset, amount, legacyTransactionBuilder(user, pci)),
     },

@@ -31,8 +31,8 @@ import {
   createTestMultisigAuthDescriptor,
 } from "./util/util";
 import {
+  _deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
-  deleteAllAuthDescriptorsExclude,
 } from "/ft4/accounts/account-operations";
 
 let _ft: ftUserSession;
@@ -323,11 +323,17 @@ describe("Test the account", () => {
     const ft3 = _ft.changeUser(user3);
 
     const account1 = await AccountBuilder.account(ft1).build();
-    const account2 = await AccountBuilder.account(ft2).build();
-    const account3 = await AccountBuilder.account(ft3).build();
+    const account2 = await AccountBuilder.account(ft2).buildAuthenticated();
+    const account3 = await AccountBuilder.account(ft3).buildAuthenticated();
 
-    await addAuthDescriptorTo(_connection.client, account2.id, user2, user1);
-    await addAuthDescriptorTo(_connection.client, account3.id, user3, user1);
+    await account2.addAuthDescriptor(
+      user1.authDescriptor,
+      user1.signatureProvider
+    );
+    await account3.addAuthDescriptor(
+      user1.authDescriptor,
+      user1.signatureProvider
+    );
 
     const { data: accounts1, nextCursor } =
       await _connection.getAccountsByAuthDescriptorId(account1.id, 2, null);
@@ -424,7 +430,7 @@ describe("Test the account", () => {
     const tx = await session
       .transactionBuilder()
       .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id)
+        _deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id)
       )
       .build();
     await _connection.client.sendTransaction(tx);

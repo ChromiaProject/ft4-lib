@@ -55,12 +55,6 @@ export interface ftUserSession {
 
   account: {
     token: {
-      transfer: (
-        from: BufferId,
-        to: BufferId,
-        asset: BufferId,
-        amount: Amount
-      ) => Promise<void>;
       burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
     };
     admin: {
