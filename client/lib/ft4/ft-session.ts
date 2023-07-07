@@ -1,5 +1,5 @@
 import { accountQuerySession, accountUserSession } from "./accounts";
-import { IAccount, User } from "./accounts/types";
+import { Account, User } from "./accounts/types";
 import { assetQuerySession, assetUserSession } from "./asset";
 import {
   ftQuerySession,
@@ -12,18 +12,15 @@ import { _getConfig, getVersion, _nop as nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
   _getByParticipantId,
-  _getByAuthDescriptorId,
   _getById,
   createAccountObject,
-  _getByAuthDescriptorIdPaginated,
+  _getByAuthDescriptorId,
 } from "./accounts/account-query-functions";
 import {
-  _getAllAssets,
   _getAssetById,
   _getAssetBySymbol,
+  _getAllAssets,
   _getAssetsByName,
-  _getAllAssetsPaginated,
-  _getAssetsByNamePaginated,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
@@ -86,26 +83,20 @@ export function createConnection(client: IClient): Connection {
     getAccountById: (id: BufferId) => _getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
       _getByParticipantId(connection, id),
-    getAccountsByAuthDescriptorId: (id: BufferId) =>
-      _getByAuthDescriptorId(connection, id),
-    getAccountsByAuthDescriptorIdPaginated: (
+    getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
       cursor?: OptionalPageCursor
-    ) => _getByAuthDescriptorIdPaginated(connection, id, limit, cursor),
+    ) => _getByAuthDescriptorId(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => _getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
-    getAssetsByName: (name: string) => _getAssetsByName(connection, name),
-    getAssetsByNamePaginated: (
+    getAssetsByName: (
       name: string,
       limit?: number,
       cursor?: OptionalPageCursor
-    ) => _getAssetsByNamePaginated(connection, name, limit, cursor),
-    getAllAssets: () => _getAllAssets(connection),
-    getAllAssetsPaginated: (
-      limit?: number,
-      cursor: OptionalPageCursor = null
-    ) => _getAllAssetsPaginated(connection, limit, cursor),
+    ) => _getAssetsByName(connection, name, limit, cursor),
+    getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
+      _getAllAssets(connection, limit, cursor),
   });
 
   return connection;
@@ -154,7 +145,7 @@ export async function call(
 }
 
 export type KeyStoreInteractor = {
-  getAccounts(): Promise<IAccount[]>;
+  getAccounts(): Promise<Account[]>;
   getSession(accountId: BufferId): Promise<Session>;
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };

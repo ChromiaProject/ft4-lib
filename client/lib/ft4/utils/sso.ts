@@ -4,7 +4,7 @@ import {
   RellOperation,
 } from "postchain-client";
 import { authDescriptor, FlagsType } from "../accounts/auth-descriptor";
-import { Account, User } from "../accounts/types";
+import { LegacyAccount, User } from "../accounts/types";
 import { ftUserSession } from "../types";
 import { localStorageSignatureProvider } from "./local-signature-provider";
 import { Buffer } from "buffer";
@@ -94,7 +94,7 @@ export default class SSO {
     this.accountId = undefined;
   }
 
-  private async getAccountAndUserByStoredIds(): Promise<[Account, User]> {
+  private async getAccountAndUserByStoredIds(): Promise<[LegacyAccount, User]> {
     if (!this.signatureProvider || !this.accountId) {
       return [null, null];
     }
@@ -119,7 +119,7 @@ export default class SSO {
     return [account, user];
   }
 
-  async autoLogin(): Promise<[Account, User]> {
+  async autoLogin(): Promise<[LegacyAccount, User]> {
     const [account, user] = await this.getAccountAndUserByStoredIds();
 
     if (!account || !user) {
@@ -153,7 +153,7 @@ export default class SSO {
     )}&cancelAction=${encodeURIComponent(cancelUrl)}&version=0.1`;
   }
 
-  async finalizeLogin(tx: string): Promise<[Account, User]> {
+  async finalizeLogin(tx: string): Promise<[LegacyAccount, User]> {
     const sigProv = this.tmpSigProv;
     this.tmpSigProv = undefined;
 
@@ -191,19 +191,6 @@ export default class SSO {
     const account = await this.session.get.account.by.id(accountId);
 
     return [account, user];
-  }
-
-  async logout(): Promise<void> {
-    const [account, user] = await this.getAccountAndUserByStoredIds();
-
-    if (account && user) {
-      await this.session.account.authDescriptor.delete(
-        user.authDescriptor.id,
-        account.id
-      );
-    }
-
-    this.clear();
   }
 }
 

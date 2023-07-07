@@ -8,36 +8,18 @@ import ^^^.lib.ft4.ft4_basic_dev.*;
 import acc: ^^^.lib.ft4.accounts;
 import test_utils: ^.utils;
 import utils: ^^^.lib.ft4.utils;
+import ^^^.lib.ft4.auth;
 
 function test_history() {
     val alice = test_utils.register_alice();
     val bob = test_utils.register_bob();
 
     val asset = test_utils.create_asset("test", "t", 5);
-
-    val inputs = [
-        assets.xfer_input(
-            account_id = alice.account.id,
-            asset_id = asset.id,
-            auth_descriptor_id = alice.auth_descriptor_id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
-    val outputs = [
-        assets.xfer_output(
-            account_id = bob.account.id, 
-            asset_id = asset.id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
     test_utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(ft4.assets_ext.transfer(inputs, outputs))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -67,30 +49,17 @@ function test_history_pagination() {
 
     val asset = test_utils.create_asset("test", "t", 0);
 
-    val inputs = [
-        assets.xfer_input(
-            account_id = alice.account.id,
-            asset_id = asset.id,
-            auth_descriptor_id = alice.auth_descriptor_id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
-    val outputs = [
-        assets.xfer_output(
-            account_id = bob.account.id, 
-            asset_id = asset.id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
-    test_utils.mint(alice.account, asset, 5L); //adds one entry to the history
+    test_utils.mint(alice.account, asset, 6L); //adds one entry to the history
 
     rell.test.tx()
-        .op(ft4.assets_ext.transfer(inputs, outputs))
-        .op(ft4.assets_ext.transfer([inputs[0], inputs[0], inputs[0]], outputs))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 2L))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 2L))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -111,9 +80,9 @@ function test_history_pagination() {
     assert_true(expected_result.size() == 2);
     assert_equals(response, expected);
 
-    //vvv entry index, checks if they're ordered LIFO vvv
-    val entry_index1 = map<text, gtv>.from_gtv(expected_data[0])['entry_index'];
-    assert_equals(entry_index1, (2).to_gtv());
+    //vvv amount, checks if they're ordered LIFO vvv
+    val amount1 = map<text, gtv>.from_gtv(expected_data[0])['delta'];
+    assert_equals(amount1, (2L).to_gtv());
 
     response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
     expected_result = assets.extract_data_from_transfer_history_list(
@@ -130,11 +99,11 @@ function test_history_pagination() {
     assert_equals(expected_result.size(), 2);
     assert_equals(response, expected);
 
-    val entry_index2 = map<text, gtv>.from_gtv(expected_data[0])['entry_index'];
-    assert_equals(entry_index2, (0).to_gtv());
+    val amount2 = map<text, gtv>.from_gtv(expected_data[0])['delta'];
+    assert_equals(amount2, (1L).to_gtv());
 
-    val entry_index3 = map<text, gtv>.from_gtv(expected_data[1])['entry_index'];
-    assert_equals(entry_index3, (0).to_gtv());
+    val amount3 = map<text, gtv>.from_gtv(expected_data[1])['delta'];
+    assert_equals(amount3, (2L).to_gtv());
 
     response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
     expected_result = assets.extract_data_from_transfer_history_list(
@@ -157,29 +126,11 @@ function test_history_filtering() {
 
     val asset = test_utils.create_asset("test", "t", 0);
 
-    val inputs = [
-        assets.xfer_input(
-            account_id = alice.account.id,
-            asset_id = asset.id,
-            auth_descriptor_id = alice.auth_descriptor_id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
-    val outputs = [
-        assets.xfer_output(
-            account_id = bob.account.id, 
-            asset_id = asset.id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(ft4.assets_ext.transfer(inputs, outputs))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -196,29 +147,11 @@ function test_transfer_history_entry() {
 
     val asset = test_utils.create_asset("test", "t", 0);
 
-    val inputs = [
-        assets.xfer_input(
-            account_id = alice.account.id,
-            asset_id = asset.id,
-            auth_descriptor_id = alice.auth_descriptor_id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
-    val outputs = [
-        assets.xfer_output(
-            account_id = bob.account.id, 
-            asset_id = asset.id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(ft4.assets_ext.transfer(inputs, outputs))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -226,7 +159,7 @@ function test_transfer_history_entry() {
     assert_equals(
         ft4.assets_ext.get_transfer_history_entry(entry.rowid),
         (
-            id = '%d'.format(entry.rowid),
+            id = entry.rowid,
             delta = entry.delta,
             decimals = entry.asset.decimals,
             asset = entry.asset.name,
@@ -249,29 +182,11 @@ function test_transfer_history_operation_name() {
 
     val asset = test_utils.create_asset("test", "t", 0);
 
-    val inputs = [
-        assets.xfer_input(
-            account_id = alice.account.id,
-            asset_id = asset.id,
-            auth_descriptor_id = alice.auth_descriptor_id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
-    val outputs = [
-        assets.xfer_output(
-            account_id = bob.account.id, 
-            asset_id = asset.id,
-            amount = 1,
-            extra = map()
-        )
-    ];
-
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(ft4.assets_ext.transfer(inputs, outputs))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
 

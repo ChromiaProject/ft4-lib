@@ -1,4 +1,3 @@
-import { addAuthDescriptorOp } from "../client/lib/ft4/accounts/account-operations";
 import { User } from "../client/lib/ft4/accounts/types";
 import { createConnection } from "../client/lib/ft4/ft-session";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
@@ -6,6 +5,8 @@ import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import { createChromiaClient, getUserSession } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
+import { _op } from "/ft4/utils";
+import { Config } from "/ft4/utils/types";
 
 jest.setTimeout(2000000);
 
@@ -25,11 +26,13 @@ describe.skip("Rate Limit", () => {
   describe("Blockchain request configuration in run.xml", () => {
     it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
       const info = await _connection.getConfig();
-      expect(info).toEqual({
-        rate_limit_active: 1,
-        rate_limit_max_points: REQUEST_MAX_COUNT,
-        rate_limit_recovery_time: RECOVERY_TIME,
-        rate_limit_points_at_account_creation: POINTS_AT_ACCOUNT_CREATION,
+      expect(info).toEqual(<Config>{
+        rateLimit: {
+          active: 1,
+          maxPoints: REQUEST_MAX_COUNT,
+          recoveryTime: RECOVERY_TIME,
+          pointsAtAccountCreation: POINTS_AT_ACCOUNT_CREATION,
+        },
       });
     });
   });
@@ -109,23 +112,22 @@ describe.skip("Rate Limit", () => {
     for (let i = 0; i < requests; i++) {
       users.push(TestUser());
     }
-    const tx = ft.get.gtxClient.newTransaction([
+
+    const operations = users.map(() =>
+      _op("ft.ft_auth", ft.user.authDescriptor.id, ft.user.authDescriptor.id)
+    );
+    const signers = [
       ft.user.signatureProvider.pubKey,
       ...users.map((user) => user.signatureProvider.pubKey),
-    ]);
-    users.forEach((user) => {
-      tx.addOperation(
-        ...addAuthDescriptorOp(
-          ft.user.authDescriptor.id,
-          ft.user.authDescriptor.id,
-          user.authDescriptor
-        )
-      );
+    ];
+    let tx: Buffer = _connection.client.encodeTransaction({
+      operations,
+      signers,
     });
-    await Promise.all(
-      [ft.user, ...users].map((user) => tx.sign(user.signatureProvider))
-    );
+    for (const user of [ft.user, ...users]) {
+      tx = await _connection.client.signTransaction(tx, user.signatureProvider);
+    }
 
-    return tx.postAndWaitConfirmation();
+    return _connection.client.sendTransaction(tx);
   };
 });

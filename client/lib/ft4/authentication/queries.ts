@@ -15,8 +15,8 @@ export function nonce(
 }
 
 export function loginConfig(
-  configName: string | null = null
-): QueryObject<{ name: string }> {
+  configName?: string
+): QueryObject<{ name?: string }> {
   return {
     name: "ft4.get_login_config",
     args: {
@@ -38,7 +38,7 @@ export function authFlags(
 
 export function authMessageTemplate(
   operation: Operation
-): QueryObject<{ op_name: string; op_args: RawGtv[] }> {
+): QueryObject<{ op_name: string; op_args?: RawGtv[] }> {
   return {
     name: "ft4.get_auth_message_template",
     args: {

@@ -18,11 +18,13 @@ import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
 import { Buffer } from "buffer";
 
-export type Account = {
+/**
+ * @deprecated use `Account` instead
+ */
+export type LegacyAccount = {
   id: Buffer;
   balances: Balance[];
   authDescriptors: AuthDescriptor[];
-  //rateLimit: RateLimit;
 };
 
 export type XferInput = [
@@ -52,18 +54,15 @@ export type User = {
   authDescriptor: AuthDescriptor;
 };
 
-// TODO: Rename to Account after deleting Account type
-export interface IAccount {
+export interface Account {
   id: Buffer;
-  getBalances: () => Promise<Balance[]>;
-  getBalancesPaginated: (
+  getBalances: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
-  getAuthDescriptors: () => Promise<AuthDescriptor[]>;
-  getAuthDescriptorsPaginated: (
+  getAuthDescriptors: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<AuthDescriptor>>;
@@ -81,11 +80,11 @@ export interface IAccount {
   ) => Promise<TransferHistoryEntry | null>;
 }
 
-export interface IAuthenticatedAccount extends IAccount {
+export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
-    keyPair: KeyPair
+    keyPair: SignatureProvider | KeyPair
   ) => Promise<TransactionReceipt>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId

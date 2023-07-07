@@ -15,10 +15,12 @@ describe("Blockchain", () => {
     const config = await connection.getConfig();
 
     expect(config).toEqual(<Config>{
-      rate_limit_active: 1,
-      rate_limit_max_points: 10,
-      rate_limit_recovery_time: 5000,
-      rate_limit_points_at_account_creation: 1,
+      rateLimit: {
+        active: 1,
+        maxPoints: 10,
+        recoveryTime: 5000,
+        pointsAtAccountCreation: 2,
+      },
     });
   });
 

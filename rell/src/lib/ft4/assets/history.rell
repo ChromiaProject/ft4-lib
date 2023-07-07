@@ -38,7 +38,7 @@ function extract_operation_name(entry: transfer_history_entry): text {
 
 function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
-        id = '%d'.format(entry.rowid),
+        id = entry.rowid,
         delta = entry.delta,
         decimals = entry.asset.decimals,
         asset = entry.asset.name,

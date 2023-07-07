@@ -3,7 +3,6 @@ import {
   accountAuthDescriptorsQuery,
   accountById,
   accountByIdQuery,
-  accountsByAuthDescriptorId,
   accountsByAuthDescriptorIdQuery,
   accountsByParticipantId,
   accountsByParticipantIdQuery,
@@ -11,16 +10,14 @@ import {
   isAuthDescriptorValidQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
-  accountAuthDescriptorsPaginated,
-  accountsByAuthDescriptorIdPaginated,
+  accountsByAuthDescriptorId,
 } from "./account-queries";
 import * as Query from "./account-queries";
-import { Account, IAccount, RateLimit } from "./types";
+import { LegacyAccount, Account, RateLimit } from "./types";
 import { BufferId } from "../../cryptoUtils";
 import { _getConfig, getConfig } from "../utils";
 import {
   _getBalanceByAccountId,
-  _getBalancesByAccountId,
   createBalanceObject,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
@@ -34,14 +31,14 @@ import {
 } from "./auth-descriptor";
 import { createEntityRetriever } from "../utils/entity-retriever";
 import { Balance, BalanceResponse } from "../asset/types";
-import { balancesByAccountIdPaginated } from "../asset/asset-queries";
+import { balancesByAccountId } from "../asset/asset-queries";
 import { Buffer } from "buffer";
 import { PaginatedEntity } from "../utils/types";
 
 export async function getByParticipantId( //"by pubKey" would be more descriptive?
   session: GtxClient,
   id: BufferId
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   const accountIds = await session.query(
     ...accountsByParticipantIdQuery(formatter.ensureBuffer(id))
   );
@@ -51,7 +48,7 @@ export async function getByParticipantId( //"by pubKey" would be more descriptiv
 export async function getByAuthDescriptorId(
   session: GtxClient,
   id: BufferId
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   const accountIds = await session.query(
     ...accountsByAuthDescriptorIdQuery(formatter.ensureBuffer(id))
   );
@@ -74,15 +71,17 @@ export async function isAuthDescriptorValid(
 export async function getByIds(
   session: GtxClient,
   ids: BufferId[]
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   const accounts = await Promise.all(ids.map((id) => getById(session, id)));
-  return accounts.filter((account): account is Account => account != null);
+  return accounts.filter(
+    (account): account is LegacyAccount => account != null
+  );
 }
 
 export async function getById(
   session: GtxClient,
   id: BufferId
-): Promise<Account | null> {
+): Promise<LegacyAccount | null> {
   const accountId = await session.query(
     ...accountByIdQuery(formatter.ensureBuffer(id))
   );
@@ -94,7 +93,7 @@ export async function getById(
 async function createAccountObjectFromId(
   session: GtxClient,
   accountId: BufferId
-): Promise<Account> {
+): Promise<LegacyAccount> {
   const id = formatter.ensureBuffer(accountId);
   const [balances, authDescriptors] = await Promise.all([
     getBalancesByAccountId(session, id),
@@ -111,7 +110,7 @@ async function createAccountObjectFromId(
 async function createAccountObjectsFromIds(
   session: GtxClient,
   accountIds: BufferId[]
-): Promise<Account[]> {
+): Promise<LegacyAccount[]> {
   return await Promise.all(
     accountIds.map((id) => createAccountObjectFromId(session, id))
   );
@@ -141,11 +140,11 @@ export async function getRateLimit(
     points: rateLimit.points,
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
-      if (chainInfo.rate_limit_active) {
+      if (chainInfo.rateLimit.active) {
         const deltaTime = Date.now() - rateLimit.lastUpdate;
         const points =
-          rateLimit.points + deltaTime / chainInfo.rate_limit_recovery_time;
-        return Math.min(points, chainInfo.rate_limit_max_points);
+          rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
+        return Math.min(points, chainInfo.rateLimit.maxPoints);
       }
       return null;
     },
@@ -166,11 +165,11 @@ export async function _getRateLimit(
     points: rateLimit.points,
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
-      if (chainInfo.rate_limit_active) {
+      if (chainInfo.rateLimit.active) {
         const deltaTime = Date.now() - rateLimit.lastUpdate;
         const points =
-          rateLimit.points + deltaTime / chainInfo.rate_limit_recovery_time;
-        return Math.min(points, chainInfo.rate_limit_max_points);
+          rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
+        return Math.min(points, chainInfo.rateLimit.maxPoints);
       }
       return null;
     },
@@ -180,7 +179,7 @@ export async function _getRateLimit(
 export function createAccountObject(
   connection: Connection,
   accountId: BufferId
-): IAccount {
+): Account {
   const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
     accountId
@@ -189,19 +188,17 @@ export function createAccountObject(
     id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       _getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: () => _getBalancesByAccountId(connection, accountId),
-    getBalancesPaginated: (limit = 100, cursor: OptionalPageCursor = null) => {
+    getBalances: (limit = 100, cursor: OptionalPageCursor = null) => {
       const retriever = createEntityRetriever<Balance, BalanceResponse>(
         connection,
-        balancesByAccountIdPaginated(accountId, limit, cursor),
+        balancesByAccountId(accountId, limit, cursor),
         (balances) => balances.map(createBalanceObject)
       );
       return retriever.retrieve(limit, cursor);
     },
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       _isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getAuthDescriptors: () => _getAuthDescriptors(connection, accountId),
-    getAuthDescriptorsPaginated: async (
+    getAuthDescriptors: async (
       limit = 100,
       cursor: OptionalPageCursor = null
     ) => {
@@ -210,7 +207,7 @@ export function createAccountObject(
         RawAuthDescriptor
       >(
         connection,
-        accountAuthDescriptorsPaginated(accountId, limit, cursor),
+        accountAuthDescriptors(accountId, limit, cursor),
         mapAuthDescriptors
       );
       return retriever.retrieve(limit, cursor);
@@ -233,7 +230,7 @@ export function createAccountObject(
 export async function _getById(
   connection: Connection,
   id: BufferId
-): Promise<IAccount | null> {
+): Promise<Account | null> {
   const accountId = await connection.query<Buffer>(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
@@ -242,7 +239,7 @@ export async function _getById(
 export async function _getByParticipantId(
   connection: Connection,
   id: BufferId
-): Promise<IAccount[]> {
+): Promise<Account[]> {
   const accountIds =
     (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
 
@@ -251,22 +248,13 @@ export async function _getByParticipantId(
 
 export async function _getByAuthDescriptorId(
   connection: Connection,
-  id: BufferId
-): Promise<IAccount[]> {
-  const accountIds =
-    (await connection.query<Buffer[]>(accountsByAuthDescriptorId(id))) ?? [];
-  return accountIds.map((id) => createAccountObject(connection, id));
-}
-
-export async function _getByAuthDescriptorIdPaginated(
-  connection: Connection,
   id: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null
-): Promise<PaginatedEntity<IAccount>> {
-  return createEntityRetriever<IAccount, Buffer>(
+): Promise<PaginatedEntity<Account>> {
+  return createEntityRetriever<Account, Buffer>(
     connection,
-    accountsByAuthDescriptorIdPaginated(id, limit, cursor),
+    accountsByAuthDescriptorId(id, limit, cursor),
     (accounts) => accounts.map((acc) => createAccountObject(connection, acc))
   ).retrieve();
 }
@@ -279,19 +267,6 @@ export async function _isAuthDescriptorValid(
   return (await connection.query<boolean>(
     Query.isAuthDescriptorValid(accountId, authDescriptorId)
   ))!;
-}
-
-export async function _getAuthDescriptors(
-  connection: Connection,
-  accountId: BufferId
-): Promise<AuthDescriptor[]> {
-  return connection
-    .query<RawAuthDescriptor[]>(
-      accountAuthDescriptors(formatter.ensureBuffer(accountId))
-    )
-    .then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
-    );
 }
 
 export async function getAuthDescriptorsByParticipantId(

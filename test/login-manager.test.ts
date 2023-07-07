@@ -1,4 +1,3 @@
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
 import {
   createChromiaClient,
   getNewAsset,
@@ -12,20 +11,20 @@ import { createAccount } from "./util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";
-import { encryption, gtx } from "postchain-client";
-import { transferV2 } from "/ft4/accounts/account-operations";
+import { transfer } from "/ft4/accounts/account-operations";
+import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
 describe("Login manager", () => {
-  let client: GtxClient;
+  let client: IClient;
   let ft: ftUserSession;
   let connection: Connection;
 
   beforeAll(async () => {
     ft = await getUserSession();
-    client = ft.get.gtxClient;
     connection = createConnection(await createChromiaClient());
+    client = connection.client;
   });
 
   it("adds disposable auth descriptor to account", async () => {
@@ -44,11 +43,11 @@ describe("Login manager", () => {
     ).getLoginManager();
 
     const authDescriptorsBeforeLogin = await account.getAuthDescriptors();
-    expect(authDescriptorsBeforeLogin.length).toBe(1);
+    expect(authDescriptorsBeforeLogin.data.length).toBe(1);
 
     await loginManger.login({ accountId: account.id });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.length).toBe(2);
+    expect(authDescriptorAfterLogin.data.length).toBe(2);
   });
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
@@ -75,7 +74,7 @@ describe("Login manager", () => {
 
     const transaction = await session
       .transactionBuilder()
-      .add(transferV2(encryption.randomBytes(32), asset.id, createAmount(10)))
+      .add(transfer(encryption.randomBytes(32), asset.id, createAmount(10)))
       .build();
 
     const disposableAuthHandler =
@@ -110,7 +109,7 @@ describe("Login manager", () => {
 
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const keyStoreInteractor = await createKeyStoreInteractor(
+    const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
       createInMemoryFtKeyStore(keyPair2)
     );

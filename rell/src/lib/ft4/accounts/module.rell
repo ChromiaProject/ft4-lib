@@ -59,6 +59,8 @@ entity rl_state {
 function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
     val id = auth_descriptor.hash();
 
+    analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
+
     val account_auth_descriptor = create account_auth_descriptor (
         account, id,
         auth_descriptor.auth_type,
@@ -111,9 +113,9 @@ function create_account_with_auth(auth_descriptor): byte_array {
 
     add_auth_descriptor_to_account(acc, auth_descriptor);
 
-    val max_points = config.rate_limit_max_points;
-    val recovery_time = config.rate_limit_recovery_time;
-    val points_at_start = config.rate_limit_points_at_account_creation;
+    val max_points = chain_context.args.rate_limit_max_points;
+    val recovery_time = chain_context.args.rate_limit_recovery_time;
+    val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
     
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
@@ -165,10 +167,14 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
         .account.id == id,
         .rowid > (before_rowid ?: rowid(0))
     } (
-        @sort .rowid,
-        auth_type = .auth_type,
-        args = gtv.from_bytes(.args),
-        rules = gtv.from_bytes(.rules)
+        utils.pagination_result(
+            data = (
+                auth_type = .auth_type,
+                args = gtv.from_bytes(.args),
+                rules = gtv.from_bytes(.rules)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
     ) limit utils.fetch_data_size(page_size);
 }
 
@@ -194,9 +200,9 @@ namespace Unsafe {
         _add_auth_descriptor(
             acc, auth_descriptor
         );
-        val max_points = config.rate_limit_max_points;
-        val recovery_time = config.rate_limit_recovery_time;
-        val points_at_start = config.rate_limit_points_at_account_creation;
+        val max_points = chain_context.args.rate_limit_max_points;
+        val recovery_time = chain_context.args.rate_limit_recovery_time;
+        val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
         
         create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
         

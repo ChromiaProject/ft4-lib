@@ -2,11 +2,11 @@ import { BufferId } from "../cryptoUtils";
 import { AuthDescriptor } from "./accounts/auth-descriptor/types";
 import { Amount } from "./asset/interfaces";
 import {
-  Account,
+  LegacyAccount,
   RateLimit,
   User,
-  IAccount,
-  IAuthenticatedAccount,
+  Account,
+  AuthenticatedAccount,
 } from "./accounts/types";
 import { Asset, Balance } from "./asset/types";
 import { Config, PaginatedEntity } from "./utils/types";
@@ -54,38 +54,14 @@ export interface ftUserSession {
   };
 
   account: {
-    sso: {
-      ssoRegister: (authDescriptor: AuthDescriptor) => Promise<Buffer>;
-      ssoAddAuthDescriptor: (
-        accountid: BufferId,
-        authDescriptor: AuthDescriptor
-      ) => Promise<Buffer>;
-    };
-    authDescriptor: {
-      add: (newUser: User, accountId: BufferId) => Promise<void>;
-      deleteAllExcluding: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-      delete: (
-        authDescriptorid: BufferId,
-        accountid: BufferId
-      ) => Promise<void>;
-    };
     token: {
-      transfer: (
-        from: BufferId,
-        to: BufferId,
-        asset: BufferId,
-        amount: Amount
-      ) => Promise<void>;
       burn: (from: BufferId, asset: BufferId, amount: Amount) => Promise<void>;
     };
     admin: {
       register: (
         adminUser: User,
         authDescriptor: AuthDescriptor
-      ) => Promise<Account>;
+      ) => Promise<LegacyAccount>;
       givePoints: (
         adminUser: User,
         accountId: BufferId,
@@ -117,10 +93,10 @@ export interface ftQuerySession {
   };
   account: {
     by: {
-      participantId: (id: BufferId) => Promise<Account[]>;
-      authDescriptorId: (id: BufferId) => Promise<Account[]>;
-      ids: (ids: Buffer[]) => Promise<Account[]>;
-      id: (id: BufferId) => Promise<Account | null>;
+      participantId: (id: BufferId) => Promise<LegacyAccount[]>;
+      authDescriptorId: (id: BufferId) => Promise<LegacyAccount[]>;
+      ids: (ids: Buffer[]) => Promise<LegacyAccount[]>;
+      id: (id: BufferId) => Promise<LegacyAccount | null>;
     };
     isAuthDescriptorValid: (
       accountid: BufferId,
@@ -137,34 +113,29 @@ export interface Connection {
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
-  getAccountById: (accountId: BufferId) => Promise<IAccount | null>;
-  getAccountsByParticipantId: (participantId: BufferId) => Promise<IAccount[]>;
+  getAccountById: (accountId: BufferId) => Promise<Account | null>;
+  getAccountsByParticipantId: (participantId: BufferId) => Promise<Account[]>;
   getAccountsByAuthDescriptorId: (
-    authDescriptorId: BufferId
-  ) => Promise<IAccount[]>;
-  getAccountsByAuthDescriptorIdPaginated: (
     id: BufferId,
     limit?: number,
     cursor?: OptionalPageCursor
-  ) => Promise<PaginatedEntity<IAccount>>;
+  ) => Promise<PaginatedEntity<Account>>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
-  getAssetsByName: (name: string) => Promise<Asset[]>;
-  getAssetsByNamePaginated: (
+  getAssetsByName: (
     name: string,
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Asset>>;
-  getAllAssets: () => Promise<Asset[]>;
-  getAllAssetsPaginated: (
+  getAllAssets: (
     limit?: number,
     cursor?: OptionalPageCursor
   ) => Promise<PaginatedEntity<Asset>>;
 }
 
 export interface Session extends Connection {
-  account: IAuthenticatedAccount;
+  account: AuthenticatedAccount;
   call: (...operations: Operation[]) => Promise<TransactionReceipt>;
   callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
   transactionBuilder: () => TransactionBuilder;

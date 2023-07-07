@@ -5,22 +5,19 @@ import {
   createUserSession,
   createKeyStoreInteractor,
 } from "./ft-session";
+import { _op as op } from "./utils";
 
 // Export public interfaces
 import { KeyStore, createWeb3ProviderEvmKeyStore } from "./authentication";
-import {
-  AuthDescriptor,
-  FlagsType,
-  IAccount,
-  authDescriptor,
-} from "./accounts";
+import { AuthDescriptor, FlagsType, Account, authDescriptor } from "./accounts";
 import { createAmount } from "./asset/amount";
 
 export {
+  op,
   KeyStore,
   AuthDescriptor,
   FlagsType,
-  IAccount,
+  Account,
   authDescriptor,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
