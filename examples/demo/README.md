@@ -2,7 +2,9 @@
 
 Welcome to the FT4 Demo App! This basic demonstration of the FT4 platform aims to provide an intuitive and practical guide to understanding its core features. For the best experience, we recommend using Google Chrome with the Metamask extension installed.
 
-![Demo Screenshot](assets/screenshot.png)
+<div align="center">
+    <img src="images/screenshot.png" alt="Screenshot of the App">
+</div>
 
 ## Prerequisites
 
