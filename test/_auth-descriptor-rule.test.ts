@@ -1,4 +1,3 @@
-/* eslint @typescript-eslint/no-unused-vars: 0 */
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Connection, ftUserSession } from "../client/lib/ft4/types";
@@ -49,13 +48,14 @@ function destinationAccount(): Promise<AuthenticatedAccount> {
 
 async function getAuthedAccountsFromAuthDescriptorRule(
   rule: AuthDescriptorRule
-): Promise<[limited: AuthenticatedAccount, admin: AuthenticatedAccount]> {
-  //to be used when you don't need the admin user
+): Promise<
+  [limitedAccount: AuthenticatedAccount, accountAdmin: AuthenticatedAccount]
+> {
   const user1 = testUser();
   const user2 = testUser(rule);
-  const adminAccount = await sourceAccount(user1);
+  const accountAdmin = await sourceAccount(user1);
 
-  await adminAccount.addAuthDescriptor(
+  await accountAdmin.addAuthDescriptor(
     user2.authDescriptor,
     user2.signatureProvider
   );
@@ -69,13 +69,13 @@ async function getAuthedAccountsFromAuthDescriptorRule(
     user2.signatureProvider
   ).createKeyHandler(user2.authDescriptor);
   const authenticator = createAuthenticator(
-    adminAccount.id,
+    accountAdmin.id,
     [keyHandler],
     createAuthDataService(_connection)
   );
   const limitedAccount = createAuthenticatedAccount(_connection, authenticator);
 
-  return [limitedAccount, adminAccount];
+  return [limitedAccount, accountAdmin];
 }
 
 describe("Auth Descriptor Rule", () => {
@@ -87,20 +87,20 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.operationCount.lessOrEqual(2).only
     );
 
     const account2 = await destinationAccount();
 
-    const op1Promise = limited.transfer(
+    const op1Promise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
     );
     await expect(op1Promise).resolves.not.toThrowError();
 
-    const op2Promise = limited.transfer(
+    const op2Promise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(20, asset.decimals)
@@ -109,20 +109,20 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when number of called operations is greater than value set by operation count rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.operationCount.lessThan(2).only
     );
 
     const account2 = await destinationAccount();
 
-    const op1Promise = limited.transfer(
+    const op1Promise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
     );
     await expect(op1Promise).resolves.not.toThrowError();
 
-    const op2Promise = limited.transfer(
+    const op2Promise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(20, asset.decimals)
@@ -130,14 +130,14 @@ describe("Auth Descriptor Rule", () => {
     await expect(op2Promise).rejects.toThrowError();
   });
 
-  it.skip("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+  it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockTime.lessThan(Date.now() - 10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -146,13 +146,13 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current time is less than time defined by 'less than' block time rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockTime.lessThan(Date.now() + 10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -161,13 +161,13 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current block height is less than value defined by 'less than' block height rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockHeight.lessThan(10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -175,14 +175,14 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).resolves.not.toThrowError();
   });
 
-  it.skip("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+  it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockHeight.lessThan(1).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -190,14 +190,14 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+  it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockTime.greaterThan(Date.now() + 10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -205,14 +205,14 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+  it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockTime.greaterThan(Date.now() - 10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -220,14 +220,14 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).resolves.not.toThrowError();
   });
 
-  it.skip("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+  it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockHeight.greaterThan(10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -236,13 +236,13 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after block defined by 'greater than' block height rule", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockHeight.greaterThan(1).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -251,13 +251,13 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should be able to create complex rules", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -265,14 +265,14 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).resolves.not.toThrowError();
   });
 
-  it.skip("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+  it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -280,17 +280,17 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
+  it("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       rules
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -298,17 +298,17 @@ describe("Auth Descriptor Rule", () => {
     await expect(opPromise).rejects.toThrowError();
   });
 
-  it.skip("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
+  it("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       rules
     );
 
     const account2 = await destinationAccount();
 
-    const opPromise = limited.transfer(
+    const opPromise = limitedAccount.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -319,13 +319,12 @@ describe("Auth Descriptor Rule", () => {
   it("should delete expired auth descriptor", async () => {
     const rules = allow.operationCount.lessThan(2).only;
 
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules
-    );
+    const [limitedAccount, accountAdmin] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const destAccount = await destinationAccount();
 
-    await limited.transfer(
+    await limitedAccount.transfer(
       destAccount.id,
       asset.id,
       createAmount(10, asset.decimals)
@@ -335,87 +334,85 @@ describe("Auth Descriptor Rule", () => {
     // this operation call will delete it.
     // any other operation, which calls require_auth internally
     // would also delete expired auth descriptor.
-    await admin.transfer(
+    await accountAdmin.transfer(
       destAccount.id,
       asset.id,
       createAmount(30, asset.decimals)
     );
 
-    expect((await admin.getAuthDescriptors()).data.length).toEqual(1);
+    expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("shouldn't delete non-expired auth descriptor", async () => {
     const rules = allow.operationCount.lessThan(10).only;
 
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules
-    );
+    const [limitedAccount, accountAdmin] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const destAccount = await destinationAccount();
 
     // perform transfer with expiring auth descriptor.
     // auth descriptor didn't expire, because it's only used 1 out of 10 times.
-    await limited.transfer(
+    await limitedAccount.transfer(
       destAccount.id,
       asset.id,
       createAmount(10, asset.decimals)
     );
 
     // perform transfer using auth descriptor without rules
-    await limited.transfer(
+    await limitedAccount.transfer(
       destAccount.id,
       asset.id,
       createAmount(10, asset.decimals)
     );
 
-    expect((await admin.getAuthDescriptors()).data.length).toEqual(2);
+    expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(2);
   });
 
   it("should delete only expired auth descriptor if multiple expiring descriptors exist", async () => {
     const rules = allow.operationCount.lessOrEqual(1).only;
     const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
 
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules
-    );
+    const [limitedAccount, accountAdmin] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const destAccount = await destinationAccount();
 
-    await admin.addAuthDescriptor(
+    await accountAdmin.addAuthDescriptor(
       user3.authDescriptor,
       user3.signatureProvider
     );
 
-    await limited.transfer(
+    await limitedAccount.transfer(
       destAccount.id,
       asset.id,
       createAmount(50, asset.decimals)
     );
 
     // this call will trigger deletion of expired auth descriptor (attached to user2)
-    await admin.transfer(
+    await accountAdmin.transfer(
       destAccount.id,
       asset.id,
       createAmount(100, asset.decimals)
     );
 
-    expect((await admin.getAuthDescriptors()).data.length).toEqual(2);
+    expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(2);
   });
 
   it("should add auth descriptors", async () => {
     const rules = allow.operationCount.lessOrEqual(1).only;
     const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
 
-    const [limited, admin] = await getAuthedAccountsFromAuthDescriptorRule(
+    const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
       rules
     );
 
-    await admin.addAuthDescriptor(
+    await accountAdmin.addAuthDescriptor(
       user3.authDescriptor,
       user3.signatureProvider
     );
 
-    expect((await admin.getAuthDescriptors()).data.length).toEqual(3);
+    expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(3);
   });
 
   it("should delete auth descriptors", async () => {
@@ -542,7 +539,7 @@ describe("Auth Descriptor Rule", () => {
     expect(txInfo.status).toBe("confirmed");
   });
 
-  it.skip("shouldn't be able to create too many rules", async () => {
+  it("shouldn't be able to create too many rules", async () => {
     let rules = allow.blockHeight
       .greaterThan(1)
       .and.blockHeight.greaterThan(10000)
