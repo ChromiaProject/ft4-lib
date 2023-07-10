@@ -88,7 +88,7 @@ function App() {
 
   const handleTransfer = async () => {
     try {
-      await session.account.transfer(receiverId, assets[0].id, createAmount(12, 6));
+      await session.account.transfer(receiverId, assets[0].id, createAmount(12, assets[0].decimals));
       setTransferMsg({ success: true, message: "Transfer successful!" });
     } catch (error) {
       setTransferMsg({ success: false, message: "Transfer failed!" });
