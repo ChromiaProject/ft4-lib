@@ -72,7 +72,7 @@ if [ -z "$opt" ]; then
     opt=""
 fi
 if [ "$test_string" ]; then
-    opt="$opt -t ${test_string%?}"
+    opt="$opt -t '${test_string%?}'"
 fi
 
 rm -rf logs
@@ -106,10 +106,15 @@ done
 printf "\n> Starting jest tests with options: $opt \n"
 
 pids=()
-for f in ./**/*.test.ts; do
-    npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+if [[ $opt == *"--runTestsByPath"* ]]; then
+    npx jest -maxWorkers=1 $opt &
     pids+=($!)
-done;
+else
+    for f in ./**/*.test.ts; do
+        npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+        pids+=($!)
+    done
+fi
 
 return_code=0
 for pid in "${pids[@]}"; do

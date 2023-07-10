@@ -6,6 +6,7 @@ export interface Amount {
   decimals: number;
 
   plus: (other: SupportedNumber) => Amount;
+
   minus: (other: SupportedNumber) => Amount;
   times: (other: string | number | bigint) => Amount;
   dividedBy: (other: string | number | bigint) => Amount;

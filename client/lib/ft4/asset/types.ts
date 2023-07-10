@@ -37,4 +37,4 @@ export enum DecimalFormat {
   mixed = "M",
 }
 
-export type SupportedNumber = string | number | bigint | Amount;
+export type SupportedNumber = string | number | Amount;
