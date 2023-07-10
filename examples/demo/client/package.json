@@ -8,12 +8,8 @@
     "@mui/material": "^5.13.7",
     "@mui/styled-engine": "^5.13.2",
     "@mui/system": "^5.13.7",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
-    "eslint": "^8.44.0",
     "ft3-lib": "https://bitbucket.org/chromawallet/ft3-lib.git#ft4",
     "path-browserify": "^1.0.1",
     "postchain-client": "^1.5.4",
@@ -24,6 +20,10 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
+    "eslint": "^8.44.0",
     "react-app-rewired": "^2.2.1"
   },
   "scripts": {
