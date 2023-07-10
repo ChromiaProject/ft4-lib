@@ -21,7 +21,7 @@ import {
   createSession,
 } from "../client/lib/ft4/ft-session";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { createAuthenticator, ftAuth } from "../client/lib/ft4/authentication";
 import {
   createAuthenticatedAccount,
   registerAccount,
@@ -31,6 +31,7 @@ import {
   createAccount,
   createTestAuthDescriptor,
   createTestMultisigAuthDescriptor,
+  rellError,
 } from "./util/util";
 import {
   _deleteAllAuthDescriptorsExclude,
@@ -102,8 +103,7 @@ describe("Test the account", () => {
     expect((await session.account.getAuthDescriptors()).data.length).toBe(2);
   });
 
-  // Skipped due to a likely bug in postchain-client version 1.5.4
-  it.skip("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
+  it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
     ]);
@@ -130,13 +130,24 @@ describe("Test the account", () => {
     };
 
     await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
-    const promise = addAuthDescriptorTo(
-      _connection.client,
-      accountId,
-      user2,
-      user3
+
+    const tx = await _connection.client.signTransaction(
+      {
+        operations: [
+          ftAuth(accountId, user2.authDescriptor.id),
+          addAuthDescriptor(user3.authDescriptor),
+        ],
+        signers: [user2.signatureProvider.pubKey],
+      },
+      user2.signatureProvider
     );
-    await expect(promise).rejects.toBe("rejected");
+
+    const promise = _connection.client.sendTransaction(tx);
+    await expect(promise).rejects.toEqual(
+      rellError(
+        "Some required flags [A] are missing on the (single sig) Auth Descriptor."
+      )
+    );
   });
 
   it("updates account if 2 signatures provided", async () => {
@@ -167,8 +178,7 @@ describe("Test the account", () => {
     expect((await session.account.getAuthDescriptors()).data.length).toBe(2);
   });
 
-  // Skipped due to possible bug in postchain-client
-  it.skip("should fail if only one signature provided", async () => {
+  it("should fail if only one signature provided", async () => {
     const user1 = testUser();
     const user2 = testUser();
     const user3 = {

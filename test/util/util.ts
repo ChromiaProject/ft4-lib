@@ -180,3 +180,9 @@ export async function registerAsset(
   );
   await txn.postAndWaitConfirmation();
 }
+
+export function rellError(message: string) {
+  return expect.objectContaining({
+    shortReason: message,
+  });
+}
