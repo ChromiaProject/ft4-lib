@@ -107,8 +107,8 @@ printf "\n> Starting jest tests with options: $opt \n"
 
 pids=()
 if $docker; then
-    for f in ./**/!(auth-descriptor-rule).test.ts; do
-        npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+    for f in ./**/[!_]*.test.ts; do
+        npx jest -maxWorkers=1 --testPathPattern="$f" --e $opt &
         pids+=($!)
     done;
 else
