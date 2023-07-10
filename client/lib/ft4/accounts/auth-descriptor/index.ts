@@ -66,20 +66,14 @@ export function fromGtv(ad: GtvAuthDescriptor): AuthDescriptor {
     id: getAuthDescriptorId(ad),
     authType,
     flags: new Set(ad[1][0]),
-    signaturesRequired:
-      authType === "S" || authType == "ES" ? 1 : (ad[1][1] as number),
-    signers:
-      (authType === "S" || authType == "ES"
-        ? [ad[1][1] as Buffer]
-        : ad[1][2]) || [],
+    signaturesRequired: authType === "S" ? 1 : (ad[1][1] as number),
+    signers: (authType === "S" ? [ad[1][1] as Buffer] : ad[1][2]) || [],
     rule: ad[2]!,
   };
 }
 
 export function toGtv(ad: AuthDescriptor): GtvAuthDescriptor {
-  return ad.authType === "S" || ad.authType === "ES"
-    ? createSingleSigAd(ad)
-    : createMultiSigAd(ad);
+  return ad.authType === "S" ? createSingleSigAd(ad) : createMultiSigAd(ad);
 }
 
 function createSingleSigAd(ad: AuthDescriptor): GtvAuthDescriptor {

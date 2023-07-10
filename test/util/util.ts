@@ -1,8 +1,6 @@
-import { randomBytes } from "crypto";
 import {
   encryption,
   gtv,
-  GtxClient,
   IClient,
   Itransaction,
   SignatureProvider,
@@ -15,7 +13,7 @@ import {
 import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 import { Buffer } from "buffer";
-import { _op } from "/ft4/utils";
+import { op } from "/ft4/utils";
 import adminUser from "./admin_user";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "/ft4/authentication";
@@ -150,7 +148,7 @@ export async function addAuthDescriptorTo(
 
 export async function createAccount(client: IClient, ad: AuthDescriptor) {
   await client.signAndSendUniqueTransaction(
-    _op("register_account_test", authDescriptor.toGtv(ad)),
+    op("register_account_test", authDescriptor.toGtv(ad)),
     adminUser().signatureProvider
   );
   return ad.id;
@@ -161,22 +159,4 @@ export function toNewTx(tx: Itransaction): TxBuilderTransaction {
     ...tx.gtx,
     signatures: tx.gtx.signatures ?? [],
   };
-}
-
-export async function registerAsset(
-  client: GtxClient,
-  assetName: string,
-  decimals = 0,
-  blockchainRID: Buffer = randomBytes(32)
-) {
-  const txn = client.newTransaction([]);
-  txn.addOperation(
-    "register_asset",
-    assetName,
-    generateAssetSymbol(),
-    decimals,
-    blockchainRID,
-    ""
-  );
-  await txn.postAndWaitConfirmation();
 }

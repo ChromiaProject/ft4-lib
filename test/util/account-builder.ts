@@ -9,18 +9,13 @@ import {
   SupportedNumber,
 } from "../../client/lib/ft4/asset/types";
 import {
-  LegacyAccount,
+  Account,
   AuthenticatedAccount,
 } from "../../client/lib/ft4/accounts/types";
-import { ftUserSession } from "../../client/lib/ft4/types";
-import { gtx, SignatureProvider } from "postchain-client";
+import { gtx, newSignatureProvider, SignatureProvider } from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft4/asset/amount";
-import {
-  createAuthenticatedAccount,
-  givePoints,
-  registerAccount,
-} from "../../client/lib/ft4/accounts/account-op-functions";
+import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
 import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../../client/lib/ft4/authentication";
 import {
@@ -28,25 +23,28 @@ import {
   createConnection,
 } from "../../client/lib/ft4/ft-session";
 import { createChromiaClient } from "./blockchain-util";
+import { Connection } from "/ft4/types";
+import {
+  addRateLimitPoints,
+  registerAccount,
+} from "/ft4/admin/admin-op-functions";
 
 class AccountBuilder {
-  private session: ftUserSession;
+  private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRule | null = null;
   private participants: SignatureProvider[] = [gtx.newSignatureProvider()];
   private requiredSignaturesCount = 1;
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points = 0;
-  private getUserFromSession = true;
 
-  constructor(session: ftUserSession) {
-    this.session = session;
-    this.participants = [session.user.signatureProvider];
+  constructor(connection: Connection) {
+    this.connection = connection;
   }
 
   /* Public functions */
-  static account(session: ftUserSession): AccountBuilder {
-    return new AccountBuilder(session);
+  static account(connection: Connection): AccountBuilder {
+    return new AccountBuilder(connection);
   }
 
   withAuthFlags(flags: FlagsType[]): AccountBuilder {
@@ -55,7 +53,6 @@ class AccountBuilder {
   }
 
   withParticipants(participants: SignatureProvider[]): AccountBuilder {
-    this.getUserFromSession = false;
     this.participants = participants;
     return this;
   }
@@ -98,49 +95,69 @@ class AccountBuilder {
     return this;
   }
 
-  async build(): Promise<LegacyAccount> {
-    const account = await this.registerAccount();
+  async buildAsAdmin(): Promise<Account> {
+    if (this.rules === null)
+      throw "You cannot add rules to admin auth descriptors.";
+    const account = await this.registerAndBuildAdminAuthenticated();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
-    return (await this.session.get.account.by.id(account.id))!;
+    return account;
   }
 
   async buildAuthenticated(): Promise<AuthenticatedAccount> {
-    const account = await this.registerAccount();
-    await this.addBalanceIfNeeded(account);
-    await this.addPointsIfNeeded(account);
+    const admin = [newSignatureProvider()];
+    const account = await this.registerAndBuildAdminAuthenticated(admin, 1);
+    const ad = this.getAuthDescriptor();
+    await account.addAuthDescriptor(ad, this.participants);
     const connection = createConnection(await createChromiaClient());
-    const { signatureProvider, authDescriptor } = this.session.user;
-    const keyHandler =
-      createInMemoryFtKeyStore(signatureProvider).createKeyHandler(
-        authDescriptor
-      );
+    const keyHandlers = this.participants.map((sig) =>
+      createInMemoryFtKeyStore(sig).createKeyHandler(ad)
+    );
     const authenticator = createAuthenticator(
       account.id,
-      [keyHandler],
+      keyHandlers,
       createAuthDataService(connection)
     );
     return createAuthenticatedAccount(connection, authenticator);
   }
 
   /* Private functions */
-  private async registerAccount(): Promise<LegacyAccount> {
-    return await registerAccount(
-      this.session.get.gtxClient,
-      admin().signatureProvider,
-      this.getAuthDescriptor()
+  private async registerAndBuildAdminAuthenticated(
+    adminSigProvs = this.participants,
+    adminSignaturesRequired = this.requiredSignaturesCount
+  ): Promise<AuthenticatedAccount> {
+    const ad = this.getAccountAdminAuthDescriptor(
+      adminSigProvs,
+      adminSignaturesRequired
     );
+    await registerAccount(
+      this.connection.client,
+      admin().signatureProvider,
+      ad
+    );
+    const account = await this.connection.getAccountById(ad.id);
+    const connection = createConnection(await createChromiaClient());
+    const keyHandlers = adminSigProvs.map((sig) =>
+      createInMemoryFtKeyStore(sig).createKeyHandler(ad)
+    );
+    const authenticator = createAuthenticator(
+      account.id,
+      keyHandlers,
+      createAuthDataService(connection)
+    );
+    return createAuthenticatedAccount(connection, authenticator);
   }
 
-  private async addBalanceIfNeeded(account: LegacyAccount) {
+  private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
       const adminSignatureProvider = admin().signatureProvider;
-      const tx = this.session.get.gtxClient.newTransaction([
-        adminSignatureProvider.pubKey,
-      ]);
+      const tx = {
+        operations: [],
+        signers: [adminSignatureProvider.pubKey],
+      };
 
       this.balances.forEach(async (balance) => {
-        tx.addOperation(
+        tx.operations.push(
           "ft4.admin.mint",
           account.id,
           balance.asset.id,
@@ -148,16 +165,18 @@ class AccountBuilder {
         );
       });
 
-      await tx.sign(adminSignatureProvider);
-      await tx.postAndWaitConfirmation();
+      await this.connection.client.signAndSendUniqueTransaction(
+        tx,
+        adminSignatureProvider
+      );
     }
   }
 
-  private async addPointsIfNeeded(account: LegacyAccount) {
+  private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
       const adminSignatureProvider = admin().signatureProvider;
-      await givePoints(
-        this.session.get.gtxClient,
+      await addRateLimitPoints(
+        this.connection.client,
         adminSignatureProvider,
         account.id,
         this.points
@@ -170,9 +189,6 @@ class AccountBuilder {
       throw new Error(
         "Number of required signatures has to be less than number of participants"
       );
-    }
-    if (this.getUserFromSession) {
-      return this.session.user.authDescriptor;
     }
     if (this.participants.length > 1) {
       return authDescriptor.create.multiSig
@@ -187,6 +203,25 @@ class AccountBuilder {
       return authDescriptor.create.singleSig
         .withArgs(this.flags, participant.pubKey)
         .andRules(this.rules);
+    }
+  }
+
+  private getAccountAdminAuthDescriptor(
+    adminSigProvs = this.participants,
+    adminSignaturesRequired = this.requiredSignaturesCount
+  ) {
+    if (adminSigProvs.length > 1) {
+      return authDescriptor.create.multiSig.withArgs(
+        this.flags,
+        adminSignaturesRequired,
+        adminSigProvs.map((participant) => participant.pubKey)
+      ).andNoRules;
+    } else {
+      const [participant] = adminSigProvs;
+      return authDescriptor.create.singleSig.withArgs(
+        this.flags,
+        participant.pubKey
+      ).andNoRules;
     }
   }
 }
