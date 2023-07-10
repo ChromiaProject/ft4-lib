@@ -2,8 +2,8 @@ import * as pcl from "postchain-client";
 import { KeyPair } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Connection, ftUserSession } from "../client/lib/ft4/types";
-import { createChromiaClient, getUserSession } from "./util/blockchain-util";
+import { Connection } from "../client/lib/ft4/types";
+import { createChromiaClient } from "./util/blockchain-util";
 import {
   authDescriptor,
   AuthType,
@@ -22,10 +22,8 @@ import {
 } from "../client/lib/ft4/ft-session";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
-import {
-  createAuthenticatedAccount,
-  registerAccount,
-} from "../client/lib/ft4/accounts/account-op-functions";
+import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
+import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
 import {
   addAuthDescriptorTo,
   createAccount,
@@ -33,19 +31,17 @@ import {
   createTestMultisigAuthDescriptor,
 } from "./util/util";
 import {
-  _deleteAllAuthDescriptorsExclude,
+  deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
 } from "/ft4/accounts/account-operations";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
 
-let _ft: ftUserSession;
 let _connection: Connection;
 const admin = adminUser();
 
 describe("Test the account", () => {
   beforeAll(async () => {
-    _ft = await getUserSession();
     _connection = createConnection(await createChromiaClient());
   });
 
@@ -418,7 +414,7 @@ describe("Test the account", () => {
     const tx = await session
       .transactionBuilder()
       .add(
-        _deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id)
+        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id)
       )
       .build();
     await _connection.client.sendTransaction(tx);
