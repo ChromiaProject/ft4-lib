@@ -25,5 +25,5 @@ rell/out
 yarn.log
 coverage
 
-# Demo App
-examples/demo/rell/build/
+# chr build directories
+build/
