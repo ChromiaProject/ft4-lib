@@ -89,7 +89,7 @@ chr tx ft4.admin.register_asset TestAsset TST 6 http://url-to-asset-icon  --awai
 Mint an asset to an account using the following command. Replace `<account_id>`, `<asset_id>`, and `<amount>` with the relevant values:
 
 ```bash
-chr tx ft4.admin.mint 
+chr tx ft4.admin.mint \
     "<account_id>" \
     "<asset_id>" \
     "<amount>" --await --secret .secret
