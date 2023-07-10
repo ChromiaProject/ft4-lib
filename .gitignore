@@ -24,3 +24,6 @@ rell/out
 
 yarn.log
 coverage
+
+# chr build directories
+build/

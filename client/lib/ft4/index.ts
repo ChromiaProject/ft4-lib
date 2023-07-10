@@ -3,6 +3,9 @@ import { version } from "../../../package.json";
 import { createKeyStoreInteractor } from "./ft-session";
 import { op } from "./utils";
 
+import { createSessionStorageLoginKeyStore } from "./authentication/login-manager/stores/session-storage";
+import { createLocalStorageLoginKeyStore } from "./authentication/login-manager/stores/local-storage";
+
 // Export public interfaces
 import { KeyStore, createWeb3ProviderEvmKeyStore } from "./authentication";
 import { AuthDescriptor, FlagsType, Account, authDescriptor } from "./accounts";
@@ -17,6 +20,8 @@ export {
   authDescriptor,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
+  createSessionStorageLoginKeyStore,
+  createLocalStorageLoginKeyStore,
   createAmount,
 };
 

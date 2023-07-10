@@ -2,6 +2,8 @@ import {
   AmountDecimalsError,
   AmountInputError,
   AmountOutOfRangeError,
+  RawAmount,
+  convertToRawAmount,
   createAmount,
   createAmountFromBalance,
   stringify,
@@ -50,6 +52,7 @@ describe("Asset amount", () => {
       createAmountFromBalance(BigInt("0x640"), 1),
     ],
   ];
+
   it.each(amounts)("should correctly build instances", async (...numbers) => {
     expect(numbers.map((num) => num.decimals)).toEqual([
       1, 0, 5, 5, 1, 2, 0, 4, 3, 15, 1,
@@ -353,5 +356,91 @@ describe("Asset amount", () => {
     expect(() => first.eq(second)).toThrow(AmountDecimalsError);
     expect(() => first.gte(second)).toThrow(AmountDecimalsError);
     expect(() => first.lte(second)).toThrow(AmountDecimalsError);
+  });
+
+  it("should handle addition with different types correctly", async () => {
+    const amount = createAmount(10, 1);
+    const otherNumber = 3;
+    const otherString = "3";
+
+    expect(amount.plus(otherNumber).value).toEqual(BigInt(130)); // 13.0 represented as 130
+    expect(amount.plus(otherString).value).toEqual(BigInt(130)); // 13.0 represented as 130
+  });
+
+  it("should handle comparison with different types correctly", async () => {
+    const amount = createAmount(10, 1);
+
+    const otherNumber = 15;
+    const otherString = "5";
+
+    expect(amount.gt(otherNumber)).toBe(false);
+    expect(amount.gt(otherString)).toBe(true);
+  });
+
+  describe("convertToRawAmount", () => {
+    const validTestCases: [
+      number | string | bigint,
+      number | undefined,
+      RawAmount
+    ][] = [
+      [100.5, undefined, { value: BigInt(1005), decimals: 1 }],
+      [100, undefined, { value: BigInt(100), decimals: 0 }],
+      [100.1234, undefined, { value: BigInt(1001234), decimals: 4 }],
+      ["100.5", undefined, { value: BigInt(1005), decimals: 1 }],
+      ["100", undefined, { value: BigInt(100), decimals: 0 }],
+      ["100.1234", undefined, { value: BigInt(1001234), decimals: 4 }],
+      [BigInt(100), 2, { value: BigInt(100), decimals: 2 }],
+    ];
+
+    it.each(validTestCases)(
+      "should correctly convert %s to RawAmount",
+      (input, decimals, expectedOutput) => {
+        const rawAmount = convertToRawAmount(input, decimals);
+        expect(rawAmount).toEqual(expectedOutput);
+      }
+    );
+
+    const invalidStringTestCases = ["abc", "10.1.2"];
+    it.each(invalidStringTestCases)(
+      "should throw error for invalid string input '%s'",
+      async (num) => {
+        expect(() => convertToRawAmount(num)).toThrow(AmountInputError);
+      }
+    );
+
+    it("should throw error for incompatible decimals", async () => {
+      expect(() => convertToRawAmount(BigInt(100), -3)).toThrow(
+        AmountDecimalsError
+      );
+    });
+
+    const invalidDecimalsTestCases = [-1, 80, 1.5];
+    it.each(invalidDecimalsTestCases)(
+      "should throw error for invalid decimals %s",
+      async (decimals) => {
+        expect(() => convertToRawAmount(100, decimals)).toThrow(
+          AmountDecimalsError
+        );
+      }
+    );
+  });
+
+  it("should not export certain arithmetic functions", async () => {
+    const myModule = await import("../client/lib/ft4/asset/amount");
+    const nonExportedFunctions = [
+      "sum",
+      "sub",
+      "div",
+      "mul",
+      "eq",
+      "gt",
+      "lt",
+      "gte",
+      "lte",
+    ];
+
+    nonExportedFunctions.forEach((funcName) => {
+      expect(myModule[funcName]).toBeUndefined();
+    });
   });
 });

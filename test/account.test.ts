@@ -21,7 +21,7 @@ import {
   createSession,
 } from "../client/lib/ft4/ft-session";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { createAuthenticator, ftAuth } from "../client/lib/ft4/authentication";
 import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
 import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
 import {
@@ -29,13 +29,12 @@ import {
   createAccount,
   createTestAuthDescriptor,
   createTestMultisigAuthDescriptor,
+  rellError,
 } from "./util/util";
 import {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
 } from "/ft4/accounts/account-operations";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -127,26 +126,24 @@ describe("Test the account", () => {
     };
 
     await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
-    const user2KeyHandler = createInMemoryFtKeyStore(kp2).createKeyHandler(ad2);
-    const authDataService = createFakeAuthDataService({
-      "ft4.add_auth_descriptor": { flags: [], message: "" },
-    });
-    const authenticator = createAuthenticator(
-      accountId,
-      [user2KeyHandler],
-      authDataService
+
+    const tx = await _connection.client.signTransaction(
+      {
+        operations: [
+          ftAuth(accountId, user2.authDescriptor.id),
+          addAuthDescriptor(user3.authDescriptor),
+        ],
+        signers: [user2.signatureProvider.pubKey],
+      },
+      user2.signatureProvider
     );
 
-    const tx = await transactionBuilder(authenticator, _connection.client)
-      .add(addAuthDescriptor(user3.authDescriptor))
-      .addSigners(user2KeyHandler)
-      .build();
-
-    try {
-      await _connection.client.sendTransaction(tx);
-    } catch (error) {
-      expect(JSON.stringify(error)).toContain("TxRejectedError");
-    }
+    const promise = _connection.client.sendTransaction(tx);
+    await expect(promise).rejects.toEqual(
+      rellError(
+        "Some required flags [A] are missing on the (single sig) Auth Descriptor."
+      )
+    );
   });
 
   it("updates account if 2 signatures provided", async () => {

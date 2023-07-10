@@ -160,3 +160,9 @@ export function toNewTx(tx: Itransaction): TxBuilderTransaction {
     signatures: tx.gtx.signatures ?? [],
   };
 }
+
+export function rellError(message: string) {
+  return expect.objectContaining({
+    shortReason: message,
+  });
+}
