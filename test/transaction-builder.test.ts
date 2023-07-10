@@ -17,7 +17,7 @@ import { transfer } from "../client/lib/ft4/accounts/account-operations";
 import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
-import { registerOp } from "/ft4/accounts/account-dev-operations";
+import { registerOp } from "../client/lib/ft4/accounts/account-admin-operations";
 import { createAmount } from "/ft4/asset/amount";
 
 describe("Transaction Builder", () => {

@@ -1,25 +1,18 @@
-import { accountQuerySession } from "./accounts";
-import { Account, User } from "./accounts/types";
-import {
-  ftQuerySession,
-  ftUserSession,
-  Connection,
-  Session,
-  OptionalPageCursor,
-} from "./types";
-import { _getConfig, getVersion, _nop as nop } from "./utils";
+import { Account } from "./accounts/types";
+import { Connection, Session, OptionalPageCursor } from "./types";
+import { getConfig, getVersion, nop } from "./utils";
 import { BufferId } from "../cryptoUtils";
 import {
-  _getByParticipantId,
-  _getById,
+  getByParticipantId,
+  getById,
   createAccountObject,
-  _getByAuthDescriptorId,
+  getByAuthDescriptorId,
 } from "./accounts/account-query-functions";
 import {
-  _getAssetById,
-  _getAssetBySymbol,
+  getAssetById,
+  getAssetBySymbol,
   getAllAssets,
-  _getAssetsByName,
+  getAssetsByName,
 } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
@@ -44,7 +37,6 @@ import {
   IClient,
   QueryObject,
   RawGtv,
-  GtxClient,
   QueryArguments,
   Operation,
   TransactionReceipt,
@@ -52,45 +44,29 @@ import {
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 
-export function createUserSession(pci: GtxClient, user: User): ftUserSession {
-  return Object.freeze({
-    user,
-    changeUser: (newUser: User) => createUserSession(pci, newUser),
-    get: createQuerySession(pci),
-  });
-}
-
-export function createQuerySession(pci: GtxClient): ftQuerySession {
-  return Object.freeze({
-    gtxClient: pci,
-    createUserSession: (user: User) => createUserSession(pci, user),
-    account: accountQuerySession(pci),
-  });
-}
-
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
     client,
     query: <T extends RawGtv>(queryObject: QueryObject<QueryArguments>) =>
       query<T>(connection, queryObject),
-    getConfig: () => _getConfig(client),
+    getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
 
-    getAccountById: (id: BufferId) => _getById(connection, id),
+    getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsByParticipantId: (id: BufferId) =>
-      _getByParticipantId(connection, id),
+      getByParticipantId(connection, id),
     getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
       cursor?: OptionalPageCursor
-    ) => _getByAuthDescriptorId(connection, id, limit, cursor),
-    getAssetById: (id: BufferId) => _getAssetById(connection, id),
-    getAssetBySymbol: (symbol: string) => _getAssetBySymbol(connection, symbol),
+    ) => getByAuthDescriptorId(connection, id, limit, cursor),
+    getAssetById: (id: BufferId) => getAssetById(connection, id),
+    getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
     getAssetsByName: (
       name: string,
       limit?: number,
       cursor?: OptionalPageCursor
-    ) => _getAssetsByName(connection, name, limit, cursor),
+    ) => getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
   });

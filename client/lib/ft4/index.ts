@@ -1,11 +1,7 @@
 import { logger } from "postchain-client";
 import { version } from "../../../package.json";
-import {
-  createQuerySession,
-  createUserSession,
-  createKeyStoreInteractor,
-} from "./ft-session";
-import { _op as op } from "./utils";
+import { createKeyStoreInteractor } from "./ft-session";
+import { op } from "./utils";
 
 // Export public interfaces
 import { KeyStore, createWeb3ProviderEvmKeyStore } from "./authentication";
@@ -27,8 +23,6 @@ export {
 export const ft = Object.freeze({
   getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
-  createUserSession,
-  createQuerySession,
   authDescriptor,
 });
 

@@ -1,42 +1,21 @@
 import {
   Operation as newOperation,
   encryption,
-  GtxClient,
   QueryArguments,
   RawGtv,
   IClient,
 } from "postchain-client";
-import { Config, Operation } from "./types";
+import { Config } from "./types";
 
-export function nop(): Operation {
-  return ["nop", encryption.randomBytes(32)];
-}
-
-export function op(name: string, ...args: readonly RawGtv[]): Operation {
-  return [name, ...(args as RawGtv[])];
-}
-
-export function _nop(): newOperation {
+export function nop(): newOperation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
 }
 
-export function _op(name: string, ...args: readonly RawGtv[]): newOperation {
+export function op(name: string, ...args: readonly RawGtv[]): newOperation {
   return { name, args: args as RawGtv[] };
 }
 
-export async function getConfig(session: GtxClient): Promise<Config> {
-  const response: ConfigResponse = await session.query("ft4.get_config");
-  return Object.freeze({
-    rateLimit: {
-      active: response.rate_limit.active,
-      maxPoints: response.rate_limit.max_points,
-      recoveryTime: response.rate_limit.recovery_time,
-      pointsAtAccountCreation: response.rate_limit.points_at_account_creation,
-    },
-  });
-}
-
-export async function _getConfig(session: IClient): Promise<Config> {
+export async function getConfig(session: IClient): Promise<Config> {
   const response = await session.query<QueryArguments, ConfigResponse>(
     "ft4.get_config"
   );

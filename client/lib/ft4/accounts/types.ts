@@ -1,8 +1,4 @@
-import {
-  SignatureProvider,
-  RawGtv,
-  TransactionReceipt,
-} from "postchain-client";
+import { SignatureProvider, TransactionReceipt } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId, KeyPair } from "../../cryptoUtils";
@@ -17,30 +13,6 @@ import { Amount } from "../asset/interfaces";
 import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
 import { Buffer } from "buffer";
-
-/**
- * @deprecated use `Account` instead
- */
-export type LegacyAccount = {
-  id: Buffer;
-  balances: Balance[];
-  authDescriptors: AuthDescriptor[];
-};
-
-export type XferInput = [
-  accountId: Buffer,
-  assetId: Buffer,
-  authDescriptorId: Buffer,
-  amount: bigint,
-  extra: { [key: string]: RawGtv }
-];
-
-export type XferOutput = [
-  accountId: Buffer,
-  assetId: Buffer,
-  amount: bigint,
-  extra: { [key: string]: RawGtv }
-];
 
 export type RateLimit = {
   points: number;
