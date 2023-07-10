@@ -8,10 +8,10 @@ Welcome to the FT4 Demo App! This basic demonstration of the FT4 platform aims t
 
 ## Prerequisites
 
-- Docker
-- Chromia Rell
-- Node.js
-- Google Chrome with Metamask extension
+- [Docker](https://docs.docker.com/get-docker/)
+- [Chromia CLI](https://docs.chromia.com/getting-started/dev-setup/backend/cli-installation)
+- [Node.js](https://nodejs.org/en/download/)
+- [Google Chrome](https://www.google.com/chrome/) with [Metamask](https://metamask.io/download.html) extension installed
 
 ## Setup Instructions
 
@@ -36,10 +36,10 @@ chr install
 
 ### Generate Keypair
 
-Several commands in this guide use the `--secret .secret` argument. To generate the `.secret` keypair file, use the following command:
+Several commands in this guide use the `--secret .admin_keypair` argument. To generate the `.admin_keypair` keypair file, use the following command:
 
 ```bash
-chr keygen --save .secret
+chr keygen --save .admin_keypair
 ```
 
 After generating the new keypair, remember to update the `admin_pubkey` field in `demo/rell.config.yml` with your new public key.
@@ -73,7 +73,7 @@ Use the following command to register an account. Replace `<Your_EVM_Address_Wit
 ```bash
 chr tx ft4.admin.register_account \                                                              
     '[0, [["A","T"], x"<Your_EVM_Address_Without_0x_Prefix>"], null]' \
-    --await --secret .secret
+    --await --secret .admin_keypair
 ```
 
 ### Register an Asset
@@ -81,7 +81,7 @@ chr tx ft4.admin.register_account \
 To register an asset, use the following command:
 
 ```bash
-chr tx ft4.admin.register_asset TestAsset TST 6 http://url-to-asset-icon  --await --secret .secret
+chr tx ft4.admin.register_asset TestAsset TST 6 http://url-to-asset-icon  --await --secret .admin_keypair
 ```
 
 ### Mint to Account
@@ -92,7 +92,7 @@ Mint an asset to an account using the following command. Replace `<account_id>`,
 chr tx ft4.admin.mint \
     "<account_id>" \
     "<asset_id>" \
-    "<amount>" --await --secret .secret
+    "<amount>" --await --secret .admin_keypair
 ```
 
 Enjoy exploring the FT4 Demo App!
