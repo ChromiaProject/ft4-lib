@@ -26,4 +26,4 @@ yarn.log
 coverage
 
 # Demo App
-examples/demo/rell/build/hello.xml
+examples/demo/rell/build/
