@@ -93,13 +93,10 @@ describe("Transaction Builder", () => {
   });
 
   it("throws an error if not sufficient permissions", async () => {
-    try {
-      await transactionBuilder(authenticator, client)
-        .add(registerOp(authDescriptor))
-        .buildUnsigned();
-    } catch (e) {
-      expect(e instanceof AuthorizationError).toBe(true);
-    }
+    const promise = transactionBuilder(authenticator, client)
+      .add(registerOp(authDescriptor))
+      .buildUnsigned();
+    await expect(promise).rejects.toThrowError(AuthorizationError);
   });
 
   it("uses additional signers provided", async () => {
