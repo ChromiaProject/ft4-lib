@@ -96,7 +96,7 @@ class AccountBuilder {
   }
 
   async buildAsAdmin(): Promise<Account> {
-    if (this.rules === null)
+    if (this.rules !== null)
       throw "You cannot add rules to admin auth descriptors.";
     const account = await this.registerAndBuildAdminAuthenticated();
     await this.addBalanceIfNeeded(account);
