@@ -87,11 +87,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.operationCount.lessOrEqual(2).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.operationCount.lessOrEqual(2).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -111,11 +109,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when number of called operations is greater than value set by operation count rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.operationCount.lessThan(2).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.operationCount.lessThan(2).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -135,11 +131,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockTime.lessThan(Date.now() - 10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockTime.lessThan(Date.now() - 10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -152,11 +146,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current time is less than time defined by 'less than' block time rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockTime.lessThan(Date.now() + 10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockTime.lessThan(Date.now() + 10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -169,11 +161,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed when current block height is less than value defined by 'less than' block height rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockHeight.lessThan(10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockHeight.lessThan(10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -186,11 +176,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockHeight.lessThan(1).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockHeight.lessThan(1).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -203,11 +191,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockTime.greaterThan(Date.now() + 10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockTime.greaterThan(Date.now() + 10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -220,11 +206,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockTime.greaterThan(Date.now() - 10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockTime.greaterThan(Date.now() - 10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -237,11 +221,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockHeight.greaterThan(10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockHeight.greaterThan(10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -254,11 +236,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if operation is executed after block defined by 'greater than' block height rule", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockHeight.greaterThan(1).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockHeight.greaterThan(1).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -271,11 +251,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should be able to create complex rules", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -288,11 +266,9 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(
-        allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only
-      )
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only
+    );
 
     const account2 = await destinationAccount();
 
@@ -308,9 +284,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(rules)
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules
+    );
 
     const account2 = await destinationAccount();
 
@@ -326,9 +302,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
-    const limitedAccount = (
-      await getAuthedAccountsFromAuthDescriptorRule(rules)
-    )[0];
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules
+    );
 
     const account2 = await destinationAccount();
 
@@ -427,9 +403,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.operationCount.lessOrEqual(1).only;
     const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
 
-    const accountAdmin = (
-      await getAuthedAccountsFromAuthDescriptorRule(rules)
-    )[1];
+    const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules
+    );
 
     await accountAdmin.addAuthDescriptor(
       user3.authDescriptor,
