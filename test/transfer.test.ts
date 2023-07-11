@@ -1,5 +1,4 @@
-import { IClient } from "postchain-client";
-import { KeyPair } from "../client/lib/cryptoUtils";
+import { newSignatureProvider } from "postchain-client";
 import {
   authDescriptor as ad,
   FlagsType,
@@ -11,43 +10,30 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
-import { ftUserSession } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
-import {
-  getNewAsset,
-  getUserSession,
-  createChromiaClient,
-} from "./util/blockchain-util";
-import TestUser, { newSingleSigUser } from "./util/test-user";
-import { registerAccount } from "/ft4/accounts/account-op-functions";
+import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
+import TestUser from "./util/test-user";
+import { registerAccount } from "/ft4/admin/admin-op-functions";
+import { Connection } from "/ft4/types";
 
-const POINTS_AT_ACCOUNT_CREATION = 1;
-let _ft: ftUserSession;
 let asset: Asset;
-let client: IClient;
+let connection: Connection;
 const admin = adminUser();
 
 describe("Transfer", () => {
   beforeAll(async () => {
-    _ft = await getUserSession();
-    client = await createChromiaClient();
-    asset = await getNewAsset(client, undefined, undefined, 5);
+    connection = createConnection(await createChromiaClient());
+    asset = await getNewAsset(connection.client, undefined, undefined, 5);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {
-    const user = TestUser();
-    const ft = _ft.changeUser(user);
-
-    const account1 = await AccountBuilder.account(ft)
-      .withParticipants([user.signatureProvider])
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .buildAuthenticated();
+      .withPoints(1)
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).buildAuthenticated();
+    const account2 = await AccountBuilder.account(connection).build();
 
     await account1.transfer(
       account2.id,
@@ -67,18 +53,12 @@ describe("Transfer", () => {
   });
 
   it.skip("should fail when balance is lower than amount to transfer", async () => {
-    const user = TestUser();
-    const ft = _ft.changeUser(user);
-
-    const account1 = await AccountBuilder.account(ft)
-      .withParticipants([user.signatureProvider])
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 5)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .buildAuthenticated();
+      .withPoints(1)
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).build();
+    const account2 = await AccountBuilder.account(connection).build();
 
     const promise = account1.transfer(
       account2.id,
@@ -90,19 +70,13 @@ describe("Transfer", () => {
   });
 
   it("should fail if auth descriptor doesn't have transfer rights", async () => {
-    const user = TestUser();
-    const ft = _ft.changeUser(user);
-
-    const account1 = await AccountBuilder.account(ft)
-      .withAuthFlags([FlagsType.Account])
-      .withParticipants([user.signatureProvider])
+    const account1 = await AccountBuilder.account(connection)
+      .withAuthFlags(FlagsType.Account)
       .withBalance(asset, 200)
       .withPoints(1)
-      .buildAuthenticated();
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).build();
+    const account2 = await AccountBuilder.account(connection).build();
 
     const promise = account1.transfer(
       account2.id,
@@ -113,16 +87,13 @@ describe("Transfer", () => {
   });
 
   it("should succeed if transferring tokens to a multisig account", async () => {
-    const user = TestUser();
-    const ft = _ft.changeUser(user);
     const user2 = TestUser();
     const user3 = TestUser();
 
-    const account1 = await AccountBuilder.account(ft)
-      .withParticipants([user.signatureProvider])
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .buildAuthenticated();
+      .withPoints(1)
+      .build();
 
     const authDescriptor = ad.create.multiSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
@@ -131,12 +102,12 @@ describe("Transfer", () => {
     ).andNoRules;
 
     await registerAccount(
-      _ft.get.gtxClient,
+      connection.client,
       admin.signatureProvider,
       authDescriptor
     );
 
-    const account2 = await createConnection(client).getAccountById(
+    const account2 = await createConnection(connection.client).getAccountById(
       authDescriptor.id
     );
 
@@ -158,15 +129,13 @@ describe("Transfer", () => {
   });
 
   it("should succeed burning tokens", async () => {
-    const keyPair = new KeyPair();
-    const user = newSingleSigUser(keyPair);
-    const ft = _ft.changeUser(user);
+    const keyPair = newSignatureProvider();
 
-    const account = await AccountBuilder.account(ft)
-      .withParticipants([user.signatureProvider])
+    const account = await AccountBuilder.account(connection)
+      .withParticipant(keyPair)
       .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .buildAuthenticated();
+      .withPoints(1)
+      .build();
 
     const session = await createKeyStoreInteractor(
       await createChromiaClient(),

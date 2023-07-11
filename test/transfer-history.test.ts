@@ -1,25 +1,19 @@
-import TestUser, { newSingleSigUser } from "./util/test-user";
+import TestUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Connection, ftUserSession } from "../client/lib/ft4/types";
+import { Connection } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
 import { LocalStorageMock } from "./util/util";
-import {
-  createChromiaClient,
-  getNewAsset,
-  getUserSession,
-} from "./util/blockchain-util";
+import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { TransferHistoryType } from "../client/lib/ft4/accounts/transfer-history/types";
 import {
   createConnection,
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
-import { KeyPair } from "../client/lib/cryptoUtils";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { IClient, gtv } from "postchain-client";
+import { IClient, gtv, newSignatureProvider } from "postchain-client";
 import { createTransferHistoryRetriever } from "../client/lib/ft4/accounts/transfer-history/transfer-history-retrieval";
 
-let _ft: ftUserSession;
 let asset: Asset;
 let connection: Connection;
 let client: IClient;
@@ -28,21 +22,19 @@ const NULL_ACCOUNT = gtv.encode(null);
 describe("Transfer history", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
-    _ft = await getUserSession();
     client = await createChromiaClient();
     asset = await getNewAsset(client);
     connection = createConnection(client);
   });
   describe("Transfer history iterator", () => {
     it("should have one transfer history entry when mint is made", async () => {
-      const keyPair = new KeyPair();
-      const user = newSingleSigUser(keyPair);
-      const ft = _ft.changeUser(user);
+      const keyPair = newSignatureProvider();
 
-      const account1 = await AccountBuilder.account(ft)
+      const account1 = await AccountBuilder.account(connection)
+        .withParticipant(keyPair)
         .withBalance(asset, 200)
         .withPoints(1)
-        .buildAuthenticated();
+        .build();
 
       const history = await account1.getTransferHistory();
 
@@ -59,18 +51,15 @@ describe("Transfer history", () => {
     });
 
     it("should have two transfer history entry when mint + transfer is made", async () => {
-      const keyPair = new KeyPair();
-      const user = newSingleSigUser(keyPair);
-      const ft = _ft.changeUser(user);
+      const keyPair = newSignatureProvider();
 
-      const account1 = await AccountBuilder.account(ft)
+      const account1 = await AccountBuilder.account(connection)
+        .withParticipant(keyPair)
         .withBalance(asset, 200)
         .withPoints(1)
-        .buildAuthenticated();
+        .build();
 
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
+      const account2 = await AccountBuilder.account(connection).build();
 
       const session = await createKeyStoreInteractor(
         connection.client,
@@ -96,18 +85,15 @@ describe("Transfer history", () => {
     });
 
     it("includes the name of the operation causing the history entry", async () => {
-      const keyPair = new KeyPair();
-      const user = newSingleSigUser(keyPair);
-      const ft = _ft.changeUser(user);
+      const keyPair = newSignatureProvider();
 
-      const account1 = await AccountBuilder.account(ft)
+      const account1 = await AccountBuilder.account(connection)
+        .withParticipant(keyPair)
         .withBalance(asset, 200)
         .withPoints(1)
-        .buildAuthenticated();
+        .build();
 
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
+      const account2 = await AccountBuilder.account(connection).build();
 
       await account1.transfer(
         account2.id,
@@ -125,17 +111,14 @@ describe("Transfer history", () => {
 
     it("should have three transfer history entries if mint + two transfers made", async () => {
       const user = TestUser();
-      const ft = _ft.changeUser(user);
 
-      const account1 = await AccountBuilder.account(ft)
-        .withParticipants([user.signatureProvider])
+      const account1 = await AccountBuilder.account(connection)
+        .withParticipant(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(2)
-        .buildAuthenticated();
+        .build();
 
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
+      const account2 = await AccountBuilder.account(connection).build();
 
       await account1.transfer(
         account2.id,
@@ -157,13 +140,12 @@ describe("Transfer history", () => {
     //not really sure why this gives the same bug, it doesn't await errors
     it.skip("should have three transfer history entries when mint + transfer to self", async () => {
       const user = TestUser();
-      const ft = _ft.changeUser(user);
 
-      const account = await AccountBuilder.account(ft)
-        .withParticipants([user.signatureProvider])
+      const account = await AccountBuilder.account(connection)
+        .withParticipant(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(1)
-        .buildAuthenticated();
+        .build();
 
       await account.transfer(
         account.id,
@@ -199,17 +181,14 @@ describe("Transfer history", () => {
 
     it("should have more than one page if number of entries is greater than page size", async () => {
       const user = TestUser();
-      const ft = _ft.changeUser(user);
 
-      const account1 = await AccountBuilder.account(ft)
-        .withParticipants([user.signatureProvider])
+      const account1 = await AccountBuilder.account(connection)
+        .withParticipant(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(4)
-        .buildAuthenticated();
+        .build();
 
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
+      const account2 = await AccountBuilder.account(connection).build();
 
       await account1.transfer(
         account2.id,
@@ -230,16 +209,14 @@ describe("Transfer history", () => {
 
     it("is possible to get transfer history from via the IAccount interface", async () => {
       const user = TestUser();
-      const ft = _ft.changeUser(user);
 
-      const account1 = await AccountBuilder.account(ft)
+      const account1 = await AccountBuilder.account(connection)
+        .withParticipant(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(1)
-        .buildAuthenticated();
+        .build();
 
-      const account2 = await AccountBuilder.account(
-        _ft.changeUser(TestUser())
-      ).build();
+      const account2 = await AccountBuilder.account(connection).build();
 
       await account1.transfer(
         account2.id,
@@ -267,14 +244,12 @@ describe("Transfer history", () => {
   });
 
   it("returns only sent transactions if that is specified", async () => {
-    const account1 = await AccountBuilder.account(_ft.changeUser(TestUser()))
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
-      .buildAuthenticated();
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).buildAuthenticated();
+    const account2 = await AccountBuilder.account(connection).build();
 
     await account1.transfer(
       account2.id,
@@ -308,14 +283,12 @@ describe("Transfer history", () => {
   });
 
   it("returns only received transactions if that is specified", async () => {
-    const account1 = await AccountBuilder.account(_ft.changeUser(TestUser()))
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
-      .buildAuthenticated();
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).buildAuthenticated();
+    const account2 = await AccountBuilder.account(connection).build();
 
     await account1.transfer(
       account2.id,
@@ -344,16 +317,14 @@ describe("Transfer history", () => {
 
   it("fetches a transfer history entry by rowid", async () => {
     const user = TestUser();
-    const ft = _ft.changeUser(user);
 
-    const account1 = await AccountBuilder.account(ft)
+    const account1 = await AccountBuilder.account(connection)
+      .withParticipant(user.signatureProvider)
       .withBalance(asset, 200)
       .withPoints(1)
-      .buildAuthenticated();
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).build();
+    const account2 = await AccountBuilder.account(connection).build();
 
     await account1.transfer(
       account2.id,
@@ -381,16 +352,14 @@ describe("Transfer history", () => {
 
   it("is possible to get a single entry from IAccount interface", async () => {
     const user = TestUser();
-    const ft = _ft.changeUser(user);
 
-    const account1 = await AccountBuilder.account(ft)
+    const account1 = await AccountBuilder.account(connection)
+      .withParticipant(user.signatureProvider)
       .withBalance(asset, 200)
       .withPoints(1)
-      .buildAuthenticated();
+      .build();
 
-    const account2 = await AccountBuilder.account(
-      _ft.changeUser(TestUser())
-    ).build();
+    const account2 = await AccountBuilder.account(connection).build();
 
     await account1.transfer(
       account2.id,

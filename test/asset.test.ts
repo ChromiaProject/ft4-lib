@@ -1,26 +1,16 @@
-import {
-  generateAssetName,
-  generateAssetSymbol,
-  registerAsset,
-} from "./util/util";
-import { Connection, ftUserSession } from "../client/lib/ft4/types";
-import {
-  createChromiaClient,
-  getNewAsset,
-  getUserSession,
-} from "./util/blockchain-util";
+import { generateAssetName, generateAssetSymbol } from "./util/util";
+import { Connection } from "../client/lib/ft4/types";
+import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft4/ft-session";
 import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 
-let ft: ftUserSession;
 let connection: Connection;
 let client: IClient;
 
 describe("Asset", () => {
   beforeAll(async () => {
-    ft = await getUserSession();
     client = await createChromiaClient();
     connection = createConnection(client);
   });
@@ -40,12 +30,12 @@ describe("Asset", () => {
     expect(expectedAssets.data[0]).toEqual(asset);
   });
 
-  it("can fetch paginated assets", async () => {
+  //doesn't work as name+brid = id which is key
+  it.skip("can fetch paginated assets by name", async () => {
     const assetName = generateAssetName();
-    const client = ft.get.gtxClient;
-    await registerAsset(client, assetName);
-    await registerAsset(client, assetName);
-    await registerAsset(client, assetName);
+    await getNewAsset(client, assetName);
+    await getNewAsset(client, assetName);
+    await getNewAsset(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByName(assetName, 2);

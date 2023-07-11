@@ -1,14 +1,14 @@
-import { encryption } from "postchain-client";
+import { Operation, encryption, gtx } from "postchain-client";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
-import { _op } from "../client/lib/ft4/utils";
+import { op } from "../client/lib/ft4/utils";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createClient } from "./util/blockchain-util";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { KeyHandler } from "../client/lib/ft4/authentication/types";
-import { createTestAuthDescriptor, toNewTx } from "./util/util";
+import { createTestAuthDescriptor, opToRellOp } from "./util/util";
 import { Buffer } from "buffer";
-import { Operation as OldOperation } from "/ft4/utils/types";
+import { createChromiaClient } from "./util/blockchain-util";
+import { TxBuilderTransaction } from "/ft4/utils/types";
 
 describe("Authenticator session", () => {
   it("should insert FT auth operation", async () => {
@@ -26,17 +26,18 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
 
-    const operations = await authenticatorSession.authorize(_op("foo"));
+    const operations = await authenticatorSession.authorize(op("foo"));
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),
-      _op("foo"),
+      op("foo"),
     ]);
   });
 
   it("should sign transaction", async () => {
     const accountId = encryption.randomBytes(32);
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
+    const client = await createChromiaClient();
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
@@ -48,20 +49,25 @@ describe("Authenticator session", () => {
       [keyHandler],
       authDataService
     ).createSession();
-    const operations: OldOperation[] = (
-      await authenticatorSession.authorize(_op("foo"))
-    ).map((op) => [op.name, ...(op.args ?? [])]);
+    const operations: Operation[] = await authenticatorSession.authorize(
+      op("foo")
+    );
 
-    const client = await createClient();
-    const transaction = client.newTransaction(authDescriptor.signers);
-    operations.forEach((operation) => transaction.addOperation(...operation));
-    const newTx = toNewTx(transaction);
-    await authenticatorSession.sign(newTx);
+    const transaction: TxBuilderTransaction = {
+      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      operations: [],
+      signers: authDescriptor.signers,
+      signatures: [],
+    };
+    operations.forEach((operation) =>
+      transaction.operations.push(opToRellOp(operation))
+    );
+    await authenticatorSession.sign(transaction);
 
-    const digestToSign = transaction.getDigestToSign();
+    const digestToSign = gtx.getDigestToSign(transaction);
     const signature = encryption.signDigest(digestToSign, keyPair.privKey);
 
-    expect(newTx.signatures).toEqual([signature]);
+    expect(transaction.signatures).toEqual([signature]);
   });
 
   it("should use key handler that satisfies operation auth requirements", async () => {
@@ -84,9 +90,7 @@ describe("Authenticator session", () => {
       [keyHandler1, keyHandler2],
       authDataService
     );
-    const keyHandler = await authenticator.getKeyHandlerForOperation(
-      _op("foo")
-    );
+    const keyHandler = await authenticator.getKeyHandlerForOperation(op("foo"));
 
     expect(keyHandler.authDescriptor).toEqual(authDescriptor2);
   });
@@ -118,8 +122,8 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
 
-    await authenticatorSession.authorize(_op("bar"));
-    await authenticatorSession.authorize(_op("foo"));
+    await authenticatorSession.authorize(op("bar"));
+    await authenticatorSession.authorize(op("foo"));
 
     const usedKeyHandlers = authenticatorSession.getUsedKeyHandlers();
 
@@ -144,7 +148,7 @@ describe("Authenticator session", () => {
     ).createSession();
 
     await expect(
-      authenticatorSession.authorize(_op("foo"))
+      authenticatorSession.authorize(op("foo"))
     ).rejects.toBeInstanceOf(Error);
   });
 
@@ -175,8 +179,8 @@ describe("Authenticator session", () => {
       authDataService
     ).createSession();
 
-    await authenticatorSession.authorize(_op("foo"));
-    await authenticatorSession.authorize(_op("bar"));
+    await authenticatorSession.authorize(op("foo"));
+    await authenticatorSession.authorize(op("bar"));
 
     const signers = authenticatorSession.getSigners();
 

@@ -1,4 +1,10 @@
-import { gtx, Operation, SignatureProvider } from "postchain-client";
+import {
+  encryption,
+  gtx,
+  KeyPair,
+  Operation,
+  SignatureProvider,
+} from "postchain-client";
 import {
   authDescriptor,
   FlagsType,
@@ -8,13 +14,12 @@ import {
   AuthDescriptorRule,
 } from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import { KeyManager } from "../../client/lib/ft4/accounts/auth/types";
-import { KeyPair } from "../../client/lib/cryptoUtils";
 import { Buffer } from "buffer";
 
 export default function singleSigUser(
   rule: AuthDescriptorRule | null = null
 ): User {
-  return newSingleSigUser(new KeyPair(), rule);
+  return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
 
 export function newSingleSigUser(

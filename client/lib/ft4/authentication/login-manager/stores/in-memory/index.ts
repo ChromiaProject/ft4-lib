@@ -1,5 +1,5 @@
+import { KeyPair, encryption } from "postchain-client";
 import { LoginKeyStore } from "../types";
-import { KeyPair } from "/cryptoUtils";
 
 export function createInMemoryLoginKeyStore(): LoginKeyStore {
   const accountIdKeyPairMap = new Map<Buffer, KeyPair>();
@@ -16,7 +16,7 @@ export function createInMemoryLoginKeyStore(): LoginKeyStore {
         );
       }
 
-      const keyPair = new KeyPair();
+      const keyPair = encryption.makeKeyPair();
       accountIdKeyPairMap.set(accountId, keyPair);
       return Promise.resolve(keyPair);
     },

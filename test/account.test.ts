@@ -1,6 +1,5 @@
-/* eslint-disable */
 import * as pcl from "postchain-client";
-import { BufferId, KeyPair } from "../client/lib/cryptoUtils";
+import { BufferId } from "../client/lib/cryptoUtils";
 import testUser, { newSingleSigUser } from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import { Connection } from "../client/lib/ft4/types";
@@ -8,7 +7,6 @@ import { createChromiaClient } from "./util/blockchain-util";
 import {
   AuthDescriptor,
   authDescriptor,
-  AuthType,
   createSingleSignatureAuthDescriptor,
   FlagsType,
   singleSigArgs,
@@ -30,8 +28,6 @@ import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
-  createTestMultisigAuthDescriptor,
-  rellError,
 } from "./util/util";
 import {
   deleteAllAuthDescriptorsExclude,
@@ -45,7 +41,7 @@ const admin = adminUser();
 async function multiSigCall(
   accountId: BufferId,
   multiSigAuthDescriptor: AuthDescriptor,
-  signers: (pcl.SignatureProvider | KeyPair)[],
+  signers: (pcl.SignatureProvider | pcl.KeyPair)[],
   ...ops: pcl.Operation[]
 ) {
   const tx = {
@@ -71,14 +67,14 @@ describe("Test the account", () => {
 
   it("Correctly creates keypair from string", () => {
     const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = new KeyPair(pcl.formatter.toString(keyPairToImport.privKey)); //!
+    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey); //!
     expect(user.privKey).toEqual(keyPairToImport.privKey);
     expect(user.pubKey).toEqual(keyPairToImport.pubKey);
   });
 
   it("Correctly creates keypair from buffer", () => {
     const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = new KeyPair(keyPairToImport.privKey);
+    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey);
     expect(user.privKey).toEqual(keyPairToImport.privKey);
     expect(user.pubKey).toEqual(keyPairToImport.pubKey);
   });
@@ -148,7 +144,7 @@ describe("Test the account", () => {
 
     expect((await account.getAuthDescriptors()).data.length).toBe(3);
   });
-  /*
+
   it("should fail if only one signature provided", async () => {
     const user1 = testUser();
     const user2 = testUser();
@@ -176,16 +172,16 @@ describe("Test the account", () => {
       user3
     );
     await expect(promise).rejects.toBeInstanceOf(Error);
-    const acc = await _connection.getAccountById(ad!.id)
-    expect((await acc.getAuthDescriptors()).data.length).toBe(
-      1
-    );
+    const acc = await _connection.getAccountById(ad!.id);
+    expect((await acc.getAuthDescriptors()).data.length).toBe(1);
   });
 
   it("should be returned when queried by participant id", async () => {
     const user = testUser();
 
-    await AccountBuilder.account(_connection).build();
+    await AccountBuilder.account(_connection)
+      .withParticipant(user.signatureProvider)
+      .build();
 
     const accounts = await _connection.getAccountsByParticipantId(
       user.signatureProvider.pubKey
@@ -195,15 +191,13 @@ describe("Test the account", () => {
   });
 
   it("should return two accounts when public key is used in two accounts", async () => {
-    const keyPair1 = new KeyPair();
+    const keyPair1 = pcl.encryption.makeKeyPair();
 
-    const acc1 = await AccountBuilder
-      .account(_connection)
-      .withParticipant([pcl.newSignatureProvider(keyPair1)])
+    await AccountBuilder.account(_connection) //owned by keyPair1
+      .withParticipant(pcl.newSignatureProvider(keyPair1))
       .build();
-    const acc2 = await AccountBuilder
-      .account(_connection)
-      .withParticipant([pcl.newSignatureProvider(keyPair1)])
+    await AccountBuilder.account(_connection) //keyPair1 is NOT the manager
+      .withParticipant(pcl.newSignatureProvider(keyPair1))
       .buildAsNonManager();
 
     const accounts = await _connection.getAccountsByParticipantId(
@@ -214,10 +208,7 @@ describe("Test the account", () => {
   });
 
   it("should return account by id", async () => {
-    const user = testUser();
-    const ft = _ft.changeUser(user);
-
-    const account = await AccountBuilder.account(ft).build();
+    const account = await AccountBuilder.account(_connection).build();
 
     const foundAccount = await _connection.getAccountById(account.id);
 
@@ -225,10 +216,7 @@ describe("Test the account", () => {
   });
 
   it("should return account by auth descriptor id", async () => {
-    const user = testUser();
-    const ft = _ft.changeUser(user);
-
-    const account = await AccountBuilder.account(ft).build();
+    const account = await AccountBuilder.account(_connection).build();
 
     const accounts = await _connection.getAccountsByAuthDescriptorId(
       account.id
@@ -240,55 +228,45 @@ describe("Test the account", () => {
   it("returns two accounts by auth descriptor id when auth descriptor is attached to two accounts", async () => {
     const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
       createTestAuthDescriptor(["A"]);
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
-      createTestAuthDescriptor(["A"]);
 
-    const keyHandler1 =
-      createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
-    const authDataService1 = createAuthDataService(_connection);
+    await AccountBuilder.account(_connection)
+      .withAuthDescriptor(authDescriptor1, [keyPair1])
+      .build();
+    await AccountBuilder.account(_connection)
+      .withAuthDescriptor(authDescriptor1, [keyPair1])
+      .build();
 
-    await createAccount(_connection.client, authDescriptor1);
-    await createAccount(_connection.client, authDescriptor2);
-
-    const session = createSession(
-      _connection,
-      createAuthenticator(authDescriptor1.id, [keyHandler1], authDataService1)
-    );
-
-    await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
     expect(
-      (await _connection.getAccountsByAuthDescriptorId(authDescriptor2.id)).data
+      (await _connection.getAccountsByAuthDescriptorId(authDescriptor1.id)).data
         .length
     ).toBe(2);
   });
 
   it("returns multiple accounts paginated when auth descriptor is attached to multiple accounts", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
-    const user3 = testUser();
-    const ft1 = _ft.changeUser(user1);
-    const ft2 = _ft.changeUser(user2);
-    const ft3 = _ft.changeUser(user3);
+    const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
+      createTestAuthDescriptor(["A"]);
 
-    const account1 = await AccountBuilder.account(ft1).build();
-    const account2 = await AccountBuilder.account(ft2).buildAuthenticated();
-    const account3 = await AccountBuilder.account(ft3).buildAuthenticated();
-
-    await account2.addAuthDescriptor(
-      user1.authDescriptor,
-      user1.signatureProvider
-    );
-    await account3.addAuthDescriptor(
-      user1.authDescriptor,
-      user1.signatureProvider
-    );
+    await AccountBuilder.account(_connection)
+      .withAuthDescriptor(authDescriptor1, [keyPair1])
+      .build();
+    await AccountBuilder.account(_connection)
+      .withAuthDescriptor(authDescriptor1, [keyPair1])
+      .build();
+    await AccountBuilder.account(_connection)
+      .withAuthDescriptor(authDescriptor1, [keyPair1])
+      .build();
 
     const { data: accounts1, nextCursor } =
-      await _connection.getAccountsByAuthDescriptorId(account1.id, 2, null);
+      await _connection.getAccountsByAuthDescriptorId(
+        authDescriptor1.id,
+        2,
+        null
+      );
     expect(accounts1.length).toEqual(2);
+    expect(nextCursor).not.toBeNull();
 
     const { data: accounts2 } = await _connection.getAccountsByAuthDescriptorId(
-      account1.id,
+      authDescriptor1.id,
       2,
       nextCursor
     );
@@ -296,7 +274,7 @@ describe("Test the account", () => {
   });
 
   it("has correct format when fetching paginated auth descriptors", async () => {
-    const keyPair = new KeyPair();
+    const keyPair = pcl.encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
@@ -310,7 +288,7 @@ describe("Test the account", () => {
       keyStore
     ).getSession(ad.id);
 
-    const keyPair2 = new KeyPair();
+    const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
       keyPair2.pubKey
@@ -319,7 +297,6 @@ describe("Test the account", () => {
 
     const { data } = await session.account.getAuthDescriptors(1);
     const auth_desc = createSingleSignatureAuthDescriptor(
-      AuthType.single_sig,
       singleSigArgs([FlagsType.Account], keyStore.pubKey),
       null
     );
@@ -327,7 +304,7 @@ describe("Test the account", () => {
   });
 
   it("can fetch paginated auth descriptors", async () => {
-    const keyPair = new KeyPair();
+    const keyPair = pcl.encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
@@ -341,7 +318,7 @@ describe("Test the account", () => {
       keyStore
     ).getSession(ad.id);
 
-    const keyPair2 = new KeyPair();
+    const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
       keyPair2.pubKey
@@ -389,44 +366,49 @@ describe("Test the account", () => {
   it("should be able to register account by directly calling 'register_account' operation", async () => {
     const user = testUser();
 
-    const tx = _ft.get.gtxClient.newTransaction(
-      user.authDescriptor.signers.concat(admin.authDescriptor.signers)
+    const tx = {
+      operations: [
+        op("ft4.admin.register_account", toGtv(user.authDescriptor)),
+      ],
+      signers: user.authDescriptor.signers.concat(admin.authDescriptor.signers),
+    };
+    let signed = await _connection.client.signTransaction(
+      tx,
+      user.signatureProvider
     );
-    tx.addOperation(
-      ...op("ft4.admin.register_account", toGtv(user.authDescriptor))
+    signed = await _connection.client.signTransaction(
+      signed,
+      admin.signatureProvider
     );
-    await tx.sign(user.signatureProvider);
-    await tx.sign(admin.signatureProvider);
-    await tx.postAndWaitConfirmation();
+    await _connection.client.sendTransaction(signed);
 
-    const account = await _ft.get.account.by.id(user.authDescriptor.id);
+    const account = await _connection.getAccountById(user.authDescriptor.id);
 
     expect(account).not.toBeNull();
   });
 
-  it.skip("is possible for auth descriptor to delete itself without admin flag", async () => {
-    const { keyPair, authDescriptor } = createTestAuthDescriptor(["T"]);
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const authDataService = createAuthDataService(_connection);
-    await createAccount(_connection.client, authDescriptor);
+  it("is possible for auth descriptor to delete itself without admin flag", async () => {
+    const user = testUser();
 
-    const session = createSession(
-      _connection,
-      createAuthenticator(authDescriptor.id, [keyHandler], authDataService)
+    const acc = await AccountBuilder.account(_connection)
+      .withParticipant(user.signatureProvider)
+      .buildAsNonManager();
+
+    //vv this isn't paginated? vv
+    const ads = await acc.getAuthDescriptorsByParticipantId(
+      user.signatureProvider.pubKey
     );
 
-    await session.account.deleteAuthDescriptor(authDescriptor.id);
-    expect((await session.account.getAuthDescriptors()).data.length).toBe(0);
+    expect((await acc.getAuthDescriptors()).data.length).toBe(2);
+    await acc.deleteAuthDescriptor(ads[0].id);
+    expect((await acc.getAuthDescriptors()).data.length).toBe(1);
   });
 
   it("shouldn't be possible for auth descriptor to delete other auth descriptor without admin flag", async () => {
-    const keyPair1 = new KeyPair();
+    const keyPair1 = pcl.encryption.makeKeyPair();
     const user1 = newSingleSigUser(keyPair1);
-    const ft = _ft.changeUser(user1);
-
-    const account = await AccountBuilder.account(ft)
-      .withParticipant([user1.signatureProvider])
+    const account = await AccountBuilder.account(_connection)
+      .withParticipant(user1.signatureProvider)
       .withPoints(4)
       .build();
 
@@ -436,7 +418,7 @@ describe("Test the account", () => {
     );
     const session = await getSession(account.id);
 
-    const keyPair2 = new KeyPair();
+    const keyPair2 = pcl.encryption.makeKeyPair();
     const authDescriptor2 = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Transfer],
       keyPair2.pubKey
@@ -444,7 +426,7 @@ describe("Test the account", () => {
 
     await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
 
-    const keyPair3 = new KeyPair();
+    const keyPair3 = pcl.encryption.makeKeyPair();
     const authDescriptor3 = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Transfer],
       keyPair3.pubKey
@@ -470,5 +452,5 @@ describe("Test the account", () => {
     );
 
     await expect(promise).rejects.toThrowError();
-  });*/
+  });
 });

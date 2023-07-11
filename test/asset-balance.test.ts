@@ -1,4 +1,4 @@
-import { IClient } from "postchain-client";
+import { IClient, encryption } from "postchain-client";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { Amount } from "../client/lib/ft4/asset/interfaces";
 import { Asset } from "../client/lib/ft4/asset/types";
@@ -9,7 +9,6 @@ import {
 import { Connection } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
-import { KeyPair } from "/cryptoUtils";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 
 let connection: Connection;
@@ -111,7 +110,7 @@ describe("Asset balance", () => {
     const asset2 = await getNewAsset(client);
     const asset3 = await getNewAsset(client);
 
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
     const account = await AccountBuilder.account(connection)

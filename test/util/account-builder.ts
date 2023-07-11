@@ -15,7 +15,12 @@ import {
   Account,
   AuthenticatedAccount,
 } from "../../client/lib/ft4/accounts/types";
-import { gtx, newSignatureProvider, SignatureProvider } from "postchain-client";
+import {
+  gtx,
+  KeyPair,
+  newSignatureProvider,
+  SignatureProvider,
+} from "postchain-client";
 import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft4/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
@@ -34,7 +39,6 @@ import {
   addRateLimitPoints,
   registerAccount,
 } from "/ft4/admin/admin-op-functions";
-import { KeyPair } from "/cryptoUtils";
 import { nop } from "/ft4/utils";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
 import { op } from "/ft4";
@@ -66,6 +70,7 @@ class AccountBuilder {
   }
 
   withAuthDescriptor(
+    //this will never be the manager
     authDescriptor: AuthDescriptor,
     signers: (SignatureProvider | KeyPair)[]
   ): AccountBuilder {
@@ -124,16 +129,18 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const account = await this.registerAndBuildManagerAuthenticated(manager);
+    const accountManager = await this.registerAndBuildManagerAuthenticated(
+      manager
+    );
     const ad = this.getAuthDescriptor();
-    await account.addAuthDescriptor(ad, this.participant);
+    await accountManager.addAuthDescriptor(ad, this.participant);
 
     const connection = createConnection(await createChromiaClient());
     const keyHandler = createInMemoryFtKeyStore(
       this.participant
     ).createKeyHandler(ad);
     const authenticator = createAuthenticator(
-      account.id,
+      accountManager.id,
       [keyHandler],
       createAuthDataService(connection)
     );
@@ -163,7 +170,7 @@ class AccountBuilder {
 
     const acc = createAuthenticatedAccount(connection, authenticator);
 
-    this.addAuthDescriptorIfNeeded(acc, managerSigProv);
+    await this.addAuthDescriptorIfNeeded(acc, managerSigProv);
 
     return acc;
   }
@@ -245,7 +252,7 @@ class AccountBuilder {
 
   private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
     return authDescriptor.create.singleSig.withArgs(
-      this.flags,
+      [...new Set(this.flags.concat(FlagsType.Account))],
       managerSigProv.pubKey
     ).andNoRules;
   }
