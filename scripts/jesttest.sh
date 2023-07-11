@@ -82,17 +82,16 @@ if $docker; then
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > ./logs/postgres.log;
 fi
 
-echo "Building and running postchain node..."
+echo -n "Building and running postchain node..."
     chr build -s configs/jest-test.yml > /dev/null
 
 chr node start -s configs/jest-test.yml --wipe \
     -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
 prc=$!
-echo process ID: $prc
 
 printf "done!\n\n"
 i=0
-max=5
+max=15
 while [ $i -lt $max ]
 do
     printf "Waiting to start tests... $(( $max - $i )) \r"
@@ -108,7 +107,6 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
     pids+=($!)
 else
     if $docker; then
-                     #[!_]*
         for f in ./**/[!_]*.test.ts; do
             npx jest -maxWorkers=1 --testPathPattern="$f" $opt -t "${test_string%?}" &
             pids+=($!)
