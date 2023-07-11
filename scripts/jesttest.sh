@@ -108,7 +108,8 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
     pids+=($!)
 else
     if $docker; then
-        for f in ./**/_*.test.ts; do
+                     #[!_]*
+        for f in ./**/[!_]*.test.ts; do
             npx jest -maxWorkers=1 --testPathPattern="$f" $opt -t "${test_string%?}" &
             pids+=($!)
         done;

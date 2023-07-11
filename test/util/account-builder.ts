@@ -228,7 +228,10 @@ class AccountBuilder {
         managerSigProvider
       );
       for (const signer of this.authDescInfo.signers) {
-        signedTx = await this.connection.client.signTransaction(tx, signer);
+        signedTx = await this.connection.client.signTransaction(
+          signedTx,
+          signer
+        );
       }
       await this.connection.client.sendTransaction(signedTx);
     }

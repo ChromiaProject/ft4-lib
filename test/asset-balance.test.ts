@@ -6,18 +6,12 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
-import { Connection, ftUserSession } from "../client/lib/ft4/types";
+import { Connection } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
-import {
-  createChromiaClient,
-  getNewAsset,
-  getUserSession,
-} from "./util/blockchain-util";
-import testUser from "./util/test-user";
+import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { KeyPair } from "/cryptoUtils";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 
-let ft: ftUserSession;
 let connection: Connection;
 let client: IClient;
 let asset1: Asset;
@@ -35,27 +29,21 @@ function makeAmountBareBones(amount: Amount): {
 
 describe("Asset balance", () => {
   beforeAll(async () => {
-    ft = await getUserSession();
     connection = createConnection(await createChromiaClient());
     client = await createChromiaClient();
     asset1 = await getNewAsset(client);
     asset2 = await getNewAsset(client, undefined, undefined, 5);
   });
 
-  beforeEach(() => {
-    ft = ft.changeUser(testUser());
-  });
-
   it("should be returned when queried by account id", async () => {
-    const account = await AccountBuilder.account(ft)
+    const account = await AccountBuilder.account(connection)
       .withBalances([
         { amount: 10, asset: asset1 },
         { amount: 20, asset: asset2 },
       ])
       .build();
 
-    const foundAccount = await connection.getAccountById(account.id);
-    const balances = (await foundAccount.getBalances()).data.map((b) => ({
+    const balances = (await account.getBalances()).data.map((b) => ({
       asset: b.asset,
       amount: makeAmountBareBones(b.amount),
     }));
@@ -89,15 +77,14 @@ describe("Asset balance", () => {
   });
 
   it("should return balance for specific asset", async () => {
-    const account = await AccountBuilder.account(ft)
+    const account = await AccountBuilder.account(connection)
       .withBalances([
         { amount: 40, asset: asset1 },
         { amount: 50, asset: asset2 },
       ])
       .build();
 
-    const foundAccount = await connection.getAccountById(account.id);
-    const balance = await foundAccount!.getBalanceByAssetId(asset2.id);
+    const balance = await account.getBalanceByAssetId(asset2.id);
 
     expect({
       asset: balance.asset,
@@ -127,7 +114,7 @@ describe("Asset balance", () => {
     const keyPair = new KeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
-    const account = await AccountBuilder.account(ft)
+    const account = await AccountBuilder.account(connection)
       .withBalances([
         { amount: 10, asset: asset1 },
         { amount: 10, asset: asset2 },
@@ -135,9 +122,8 @@ describe("Asset balance", () => {
       ])
       .build();
 
-    const ad = account.authDescriptors[0];
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      ad.id
+      account.id
     );
 
     const { data, nextCursor } = await session.account.getBalances(2);
