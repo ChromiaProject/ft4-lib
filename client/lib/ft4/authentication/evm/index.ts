@@ -3,8 +3,10 @@ import { BufferId } from "../../../cryptoUtils";
 import { KeyStore } from "../types";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
+import { createEvmKeyHandler } from "./key-handler";
 
 export * from "./key-stores";
+export { createEvmKeyHandler };
 
 export function evmAuth(
   accountId: BufferId,
