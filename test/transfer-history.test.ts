@@ -137,48 +137,6 @@ describe("Transfer history", () => {
       expect(history.nextCursor).toEqual(null);
     });
 
-    //not really sure why this gives the same bug, it doesn't await errors
-    it.skip("should have three transfer history entries when mint + transfer to self", async () => {
-      const user = TestUser();
-
-      const account = await AccountBuilder.account(connection)
-        .withParticipant(user.signatureProvider)
-        .withBalance(asset, 200)
-        .withPoints(1)
-        .build();
-
-      await account.transfer(
-        account.id,
-        asset.id,
-        createAmount(20, asset.decimals)
-      );
-
-      const history = await account.getTransferHistory();
-
-      expect(history.data.length).toEqual(3);
-      expect(history.nextCursor).toEqual(null);
-
-      const [entry1, entry2, mintEntry] = history.data;
-
-      expect(entry1.isInput).toEqual(false);
-      expect(entry1.transferInputArgs.length).toEqual(1);
-      expect(entry1.transferOutputArgs.length).toEqual(1);
-      expect(entry1.transferInputArgs[0].accountId).toEqual(account.id);
-      expect(entry1.transferOutputArgs[0].accountId).toEqual(account.id);
-
-      expect(entry2.isInput).toEqual(true);
-      expect(entry2.transferInputArgs.length).toEqual(1);
-      expect(entry2.transferOutputArgs.length).toEqual(1);
-      expect(entry2.transferInputArgs[0].accountId).toEqual(account.id);
-      expect(entry2.transferOutputArgs[0].accountId).toEqual(account.id);
-
-      expect(mintEntry.isInput).toEqual(false);
-      expect(mintEntry.transferInputArgs.length).toEqual(1);
-      expect(mintEntry.transferOutputArgs.length).toEqual(1);
-      expect(mintEntry.transferInputArgs[0].accountId).toEqual(NULL_ACCOUNT);
-      expect(mintEntry.transferOutputArgs[0].accountId).toEqual(account.id);
-    });
-
     it("should have more than one page if number of entries is greater than page size", async () => {
       const user = TestUser();
 

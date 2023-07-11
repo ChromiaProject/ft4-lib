@@ -142,27 +142,5 @@ describe.skip("Rate Limit", () => {
     };
 
     return client.signAndSendUniqueTransaction(tx, user.signatureProvider);
-
-    // const users: User[] = [];
-    // for (let i = 0; i < requests; i++) {
-    //   users.push(TestUser());
-    // }
-
-    // const operations = users.map(() =>
-    //   ftAuth(ft.user.authDescriptor.id, ft.user.authDescriptor.id)
-    // );
-    // const signers = [
-    //   ft.user.signatureProvider.pubKey,
-    //   ...users.map((user) => user.signatureProvider.pubKey),
-    // ];
-    // let tx: Buffer = _connection.client.encodeTransaction({
-    //   operations,
-    //   signers,
-    // });
-    // for (const user of [ft.user, ...users]) {
-    //   tx = await _connection.client.signTransaction(tx, user.signatureProvider);
-    // }
-
-    // return _connection.client.sendTransaction(tx);
   };
 });
