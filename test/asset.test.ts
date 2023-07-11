@@ -5,9 +5,35 @@ import { createConnection } from "../client/lib/ft4/ft-session";
 import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
+import { randomBytes } from "crypto";
+import { op } from "/ft4";
+import { adminKeyPair } from "./util/admin_user";
 
 let connection: Connection;
 let client: IClient;
+
+//used only to have different issuing_brid until we have xchain
+async function registerAsset(
+  client: IClient,
+  assetName: string,
+  decimals = 0,
+  blockchainRID: Buffer = randomBytes(32)
+) {
+  const txn = {
+    operations: [
+      op(
+        "register_asset",
+        assetName,
+        generateAssetSymbol(),
+        decimals,
+        blockchainRID,
+        ""
+      ),
+    ],
+    signers: [adminKeyPair.pubKey],
+  };
+  await client.signAndSendUniqueTransaction(txn, adminKeyPair);
+}
 
 describe("Asset", () => {
   beforeAll(async () => {
@@ -30,12 +56,11 @@ describe("Asset", () => {
     expect(expectedAssets.data[0]).toEqual(asset);
   });
 
-  //doesn't work as name+brid = id which is key
-  it.skip("can fetch paginated assets by name", async () => {
+  it("can fetch paginated assets by name", async () => {
     const assetName = generateAssetName();
-    await getNewAsset(client, assetName);
-    await getNewAsset(client, assetName);
-    await getNewAsset(client, assetName);
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
+    await registerAsset(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByName(assetName, 2);
