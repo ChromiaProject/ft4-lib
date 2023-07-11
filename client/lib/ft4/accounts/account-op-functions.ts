@@ -24,9 +24,9 @@ export function createAuthenticatedAccount(
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AuthDescriptor,
-      newSigners: (SignatureProvider | KeyPair)[]
+      newSigner: SignatureProvider | KeyPair
     ) =>
-      addAuthDescriptor(connection, authenticator, authDescriptor, newSigners),
+      addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
       deleteAuthDescriptor(connection, authenticator, authDescriptorId),
     // deleteAllAuthDescriptorsExclude: (authDescriptorId: BufferId) =>
@@ -43,16 +43,14 @@ async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
-  newSigners: (SignatureProvider | KeyPair)[]
+  newSigner: SignatureProvider | KeyPair
 ): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptor))
     .addSigners(
-      ...newSigners.map((kp) =>
-        createInMemoryFtKeyStore(kp).createKeyHandler(authDescriptor)
-      )
+      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor)
     )
     .build();
 

@@ -56,7 +56,7 @@ export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
-    newSigners: (SignatureProvider | KeyPair)[]
+    newSigner: SignatureProvider | KeyPair
   ) => Promise<TransactionReceipt>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId

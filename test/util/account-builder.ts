@@ -2,7 +2,10 @@ import {
   authDescriptor,
   FlagsType,
 } from "../../client/lib/ft4/accounts/auth-descriptor";
-import { AuthDescriptorRule } from "../../client/lib/ft4/accounts/auth-descriptor/types";
+import {
+  AuthDescriptor,
+  AuthDescriptorRule,
+} from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import {
   Asset,
   Balance,
@@ -17,7 +20,10 @@ import admin from "./admin_user";
 import { createAmount } from "../../client/lib/ft4/asset/amount";
 import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
 import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator } from "../../client/lib/ft4/authentication";
+import {
+  createAuthenticator,
+  ftAuth,
+} from "../../client/lib/ft4/authentication";
 import {
   createAuthDataService,
   createConnection,
@@ -28,13 +34,19 @@ import {
   addRateLimitPoints,
   registerAccount,
 } from "/ft4/admin/admin-op-functions";
+import { KeyPair } from "/cryptoUtils";
+import { nop } from "/ft4/utils";
+import { addAuthDescriptor } from "/ft4/accounts/account-operations";
 
 class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRule | null = null;
-  private participants: SignatureProvider[] = [gtx.newSignatureProvider()];
-  private requiredSignaturesCount = 1;
+  private participant: SignatureProvider = gtx.newSignatureProvider();
+  private authDescInfo: {
+    authDescriptor: AuthDescriptor;
+    signers: (SignatureProvider | KeyPair)[];
+  };
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
   private points = 0;
 
@@ -52,8 +64,16 @@ class AccountBuilder {
     return this;
   }
 
-  withParticipants(participants: SignatureProvider[]): AccountBuilder {
-    this.participants = participants;
+  withAuthDescriptor(
+    authDescriptor: AuthDescriptor,
+    signers: (SignatureProvider | KeyPair)[]
+  ): AccountBuilder {
+    this.authDescInfo = { authDescriptor, signers };
+    return this;
+  }
+
+  withParticipant(participant: SignatureProvider): AccountBuilder {
+    this.participant = participant;
     return this;
   }
 
@@ -90,46 +110,39 @@ class AccountBuilder {
     return this;
   }
 
-  withRequiredSignatures(count: number): AccountBuilder {
-    this.requiredSignaturesCount = count;
-    return this;
-  }
-
-  async buildAsAdmin(): Promise<Account> {
+  async buildAsManager(): Promise<AuthenticatedAccount> {
     if (this.rules !== null)
-      throw "You cannot add rules to admin auth descriptors.";
-    const account = await this.registerAndBuildAdminAuthenticated();
+      throw "You cannot add rules to manager auth descriptors.";
+    const account = await this.registerAndBuildManagerAuthenticated();
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return account;
   }
 
   async buildAuthenticated(): Promise<AuthenticatedAccount> {
-    const admin = [newSignatureProvider()];
-    const account = await this.registerAndBuildAdminAuthenticated(admin, 1);
+    const manager = newSignatureProvider();
+    const account = await this.registerAndBuildManagerAuthenticated(manager);
+
     const ad = this.getAuthDescriptor();
-    await account.addAuthDescriptor(ad, this.participants);
+    await account.addAuthDescriptor(ad, this.participant);
+
     const connection = createConnection(await createChromiaClient());
-    const keyHandlers = this.participants.map((sig) =>
-      createInMemoryFtKeyStore(sig).createKeyHandler(ad)
-    );
+    const keyHandler = createInMemoryFtKeyStore(
+      this.participant
+    ).createKeyHandler(ad);
     const authenticator = createAuthenticator(
       account.id,
-      keyHandlers,
+      [keyHandler],
       createAuthDataService(connection)
     );
     return createAuthenticatedAccount(connection, authenticator);
   }
 
   /* Private functions */
-  private async registerAndBuildAdminAuthenticated(
-    adminSigProvs = this.participants,
-    adminSignaturesRequired = this.requiredSignaturesCount
+  private async registerAndBuildManagerAuthenticated(
+    managerSigProv = this.participant
   ): Promise<AuthenticatedAccount> {
-    const ad = this.getAccountAdminAuthDescriptor(
-      adminSigProvs,
-      adminSignaturesRequired
-    );
+    const ad = this.getAccountManagerAuthDescriptor(managerSigProv);
     await registerAccount(
       this.connection.client,
       admin().signatureProvider,
@@ -137,15 +150,20 @@ class AccountBuilder {
     );
     const account = await this.connection.getAccountById(ad.id);
     const connection = createConnection(await createChromiaClient());
-    const keyHandlers = adminSigProvs.map((sig) =>
-      createInMemoryFtKeyStore(sig).createKeyHandler(ad)
-    );
+    const keyHandler =
+      createInMemoryFtKeyStore(managerSigProv).createKeyHandler(ad);
+
     const authenticator = createAuthenticator(
       account.id,
-      keyHandlers,
+      [keyHandler],
       createAuthDataService(connection)
     );
-    return createAuthenticatedAccount(connection, authenticator);
+
+    const acc = createAuthenticatedAccount(connection, authenticator);
+
+    this.addAuthDescriptorIfNeeded(acc, managerSigProv);
+
+    return acc;
   }
 
   private async addBalanceIfNeeded(account: Account) {
@@ -184,45 +202,45 @@ class AccountBuilder {
     }
   }
 
-  private getAuthDescriptor() {
-    if (this.requiredSignaturesCount > this.participants.length) {
-      throw new Error(
-        "Number of required signatures has to be less than number of participants"
+  private async addAuthDescriptorIfNeeded(
+    account: Account,
+    managerSigProvider: SignatureProvider
+  ) {
+    if (this.authDescInfo) {
+      const tx = {
+        operations: [
+          ftAuth(account.id, account.id),
+          addAuthDescriptor(this.authDescInfo.authDescriptor),
+          nop(),
+        ],
+        signers: [
+          managerSigProvider.pubKey,
+          ...this.authDescInfo.signers.map((s) => s.pubKey),
+        ],
+      };
+
+      let signedTx = await this.connection.client.signTransaction(
+        tx,
+        managerSigProvider
       );
-    }
-    if (this.participants.length > 1) {
-      return authDescriptor.create.multiSig
-        .withArgs(
-          this.flags,
-          this.requiredSignaturesCount,
-          this.participants.map((participant) => participant.pubKey)
-        )
-        .andRules(this.rules);
-    } else {
-      const [participant] = this.participants;
-      return authDescriptor.create.singleSig
-        .withArgs(this.flags, participant.pubKey)
-        .andRules(this.rules);
+      for (const signer of this.authDescInfo.signers) {
+        signedTx = await this.connection.client.signTransaction(tx, signer);
+      }
+      await this.connection.client.sendTransaction(signedTx);
     }
   }
 
-  private getAccountAdminAuthDescriptor(
-    adminSigProvs = this.participants,
-    adminSignaturesRequired = this.requiredSignaturesCount
-  ) {
-    if (adminSigProvs.length > 1) {
-      return authDescriptor.create.multiSig.withArgs(
-        this.flags,
-        adminSignaturesRequired,
-        adminSigProvs.map((participant) => participant.pubKey)
-      ).andNoRules;
-    } else {
-      const [participant] = adminSigProvs;
-      return authDescriptor.create.singleSig.withArgs(
-        this.flags,
-        participant.pubKey
-      ).andNoRules;
-    }
+  private getAuthDescriptor() {
+    return authDescriptor.create.singleSig
+      .withArgs(this.flags, this.participant.pubKey)
+      .andRules(this.rules);
+  }
+
+  private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
+    return authDescriptor.create.singleSig.withArgs(
+      this.flags,
+      managerSigProv.pubKey
+    ).andNoRules;
   }
 }
 
