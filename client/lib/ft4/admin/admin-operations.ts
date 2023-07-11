@@ -1,5 +1,5 @@
 import { op } from "../utils";
-import { Operation } from "postchain-client";
+import { Operation, formatter } from "postchain-client";
 import { authDescriptor as authDesc } from "../accounts/auth-descriptor";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { BufferId } from "/cryptoUtils";
@@ -14,7 +14,11 @@ export function addRateLimitPoints(
   accountId: BufferId,
   amount: number
 ): Operation {
-  return op("ft4.admin.add_rate_limit_points", accountId, amount);
+  return op(
+    "ft4.admin.add_rate_limit_points",
+    formatter.ensureBuffer(accountId),
+    amount
+  );
 }
 
 export function registerAsset(
@@ -27,9 +31,14 @@ export function registerAsset(
 }
 
 export function mint(
-  accountId: Buffer,
-  assetId: Buffer,
+  accountId: BufferId,
+  assetId: BufferId,
   amount: Amount
 ): Operation {
-  return op("ft4.admin.mint", accountId, assetId, amount.value);
+  return op(
+    "ft4.admin.mint",
+    formatter.ensureBuffer(accountId),
+    formatter.ensureBuffer(assetId),
+    amount.value
+  );
 }

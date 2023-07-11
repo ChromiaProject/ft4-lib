@@ -3,7 +3,7 @@ import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 
-export function getRateLimit(
+export function RateLimit(
   accountId: BufferId
 ): QueryObject<{ account_id: Buffer }> {
   return {

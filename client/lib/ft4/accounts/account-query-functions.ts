@@ -2,7 +2,7 @@ import { formatter, IClient } from "postchain-client";
 import {
   accountById,
   accountsByParticipantId,
-  getRateLimit as getRateLimitQuery,
+  RateLimit as RateLimitQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
   accountsByAuthDescriptorId,
@@ -38,7 +38,7 @@ export async function getRateLimit(
   const rateLimit = await session.query<
     { account_id: Buffer },
     Omit<RateLimit, "getAvailablePoints">
-  >(getRateLimitQuery(accountId));
+  >(RateLimitQuery(accountId));
 
   const chainInfo = await getConfig(session);
 

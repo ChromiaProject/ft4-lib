@@ -48,8 +48,8 @@ export function registerAsset(
 export function mint(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
-  accountId: Buffer,
-  assetId: Buffer,
+  accountId: BufferId,
+  assetId: BufferId,
   amount: Amount
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
