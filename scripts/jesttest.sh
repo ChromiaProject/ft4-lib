@@ -71,9 +71,6 @@ done
 if [ -z "$opt" ]; then
     opt=""
 fi
-if [ "$test_string" ]; then
-    opt="$opt -t '${test_string%?}'"
-fi
 
 rm -rf logs
 mkdir logs
@@ -85,16 +82,17 @@ if $docker; then
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > ./logs/postgres.log;
 fi
 
-echo -n "Building and running postchain node..."
+echo "Building and running postchain node..."
     chr build -s configs/jest-test.yml > /dev/null
 
 chr node start -s configs/jest-test.yml --wipe \
     -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
 prc=$!
+echo process ID: $prc
 
 printf "done!\n\n"
 i=0
-max=15
+max=5
 while [ $i -lt $max ]
 do
     printf "Waiting to start tests... $(( $max - $i )) \r"
@@ -102,8 +100,7 @@ do
     sleep 1
 done
 
-
-printf "\n> Starting jest tests with options: $opt \n"
+printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 
 pids=()
 if [[ $opt == *"--runTestsByPath"* ]]; then
@@ -111,8 +108,8 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
     pids+=($!)
 else
     if $docker; then
-        for f in ./**/[!_]*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" --e $opt &
+        for f in ./**/_*.test.ts; do
+            npx jest -maxWorkers=1 --testPathPattern="$f" $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else

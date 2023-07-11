@@ -37,6 +37,7 @@ import {
 import { KeyPair } from "/cryptoUtils";
 import { nop } from "/ft4/utils";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
+import { op } from "/ft4";
 
 class AccountBuilder {
   private connection: Connection;
@@ -59,7 +60,7 @@ class AccountBuilder {
     return new AccountBuilder(connection);
   }
 
-  withAuthFlags(flags: FlagsType[]): AccountBuilder {
+  withAuthFlags(...flags: FlagsType[]): AccountBuilder {
     this.flags = flags;
     return this;
   }
@@ -110,19 +111,20 @@ class AccountBuilder {
     return this;
   }
 
-  async buildAsManager(): Promise<AuthenticatedAccount> {
+  async build(): Promise<AuthenticatedAccount> {
     if (this.rules !== null)
       throw "You cannot add rules to manager auth descriptors.";
+
     const account = await this.registerAndBuildManagerAuthenticated();
+
     await this.addBalanceIfNeeded(account);
     await this.addPointsIfNeeded(account);
     return account;
   }
 
-  async buildAuthenticated(): Promise<AuthenticatedAccount> {
+  async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
     const account = await this.registerAndBuildManagerAuthenticated(manager);
-
     const ad = this.getAuthDescriptor();
     await account.addAuthDescriptor(ad, this.participant);
 
@@ -176,10 +178,12 @@ class AccountBuilder {
 
       this.balances.forEach(async (balance) => {
         tx.operations.push(
-          "ft4.admin.mint",
-          account.id,
-          balance.asset.id,
-          balance.amount.value
+          op(
+            "ft4.admin.mint",
+            account.id,
+            balance.asset.id,
+            balance.amount.value
+          )
         );
       });
 

@@ -1,10 +1,12 @@
-import { gtx, Operation } from "postchain-client";
+import { gtx, Operation, SignatureProvider } from "postchain-client";
 import {
   authDescriptor,
   FlagsType,
 } from "../../client/lib/ft4/accounts/auth-descriptor";
-import { AuthDescriptorRule } from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import { User } from "../../client/lib/ft4/accounts/types";
+import {
+  AuthDescriptor,
+  AuthDescriptorRule,
+} from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import { KeyManager } from "../../client/lib/ft4/accounts/auth/types";
 import { KeyPair } from "../../client/lib/cryptoUtils";
 import { Buffer } from "buffer";
@@ -42,3 +44,9 @@ export function newSingleSigUser(
     authDescriptor: singleSigAuthDescriptor,
   };
 }
+
+export type User = {
+  signatureProvider: SignatureProvider;
+  keyManagers: KeyManager[];
+  authDescriptor: AuthDescriptor;
+};

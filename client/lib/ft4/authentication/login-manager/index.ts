@@ -143,7 +143,7 @@ async function addDisposableAuthDescriptor(
     keyPair.pubKey
   ).andNoRules;
 
-  await session.account.addAuthDescriptor(ad, keyPair);
+  await session.account.addAuthDescriptor(ad, [keyPair]);
 
   return ks.createKeyHandler(ad);
 }
