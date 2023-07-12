@@ -1,6 +1,10 @@
 import { logger } from "postchain-client";
 import { version } from "../../../package.json";
-import { createKeyStoreInteractor, KeyStoreInteractor } from "./ft-session";
+import {
+  createKeyStoreInteractor,
+  KeyStoreInteractor,
+  createConnection,
+} from "./ft-session";
 import { op } from "./utils";
 
 import { createSessionStorageLoginKeyStore } from "./authentication/login-manager/stores/session-storage";
@@ -36,6 +40,7 @@ export {
   EvmKeyStore,
   FtKeyStore,
   authDescriptor,
+  createConnection,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
   createSessionStorageLoginKeyStore,
