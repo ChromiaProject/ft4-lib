@@ -29,6 +29,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
     },
     getKeyPair: (accountId: Buffer) => {
       const privateKey = loadData()[ensureString(accountId)];
+      if (!privateKey) return Promise.resolve(null);
       return Promise.resolve(encryption.makeKeyPair(privateKey));
     },
     createKeyPair: (accountId: Buffer) => {
