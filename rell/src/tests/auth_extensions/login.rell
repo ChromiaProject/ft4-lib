@@ -1,0 +1,26 @@
+@test
+module;
+
+import ^^^.lib.ft4.auth;
+
+/*
+ *  Tests login_config extension defined in tests/extensions/auth.rell
+ */
+function test_default_login_config_can_be_overriden() {
+    val config = auth.get_login_config("default");
+
+    assert_equals(config, auth._login_config(flags = ["B"]));
+}
+
+function test_querying_login_config_without_name_returns_default_config() {
+    val config = auth.get_login_config();
+
+    assert_equals(config, auth._login_config(flags = ["B"]));
+}
+
+function test_custom_login_config_can_be_fetched() {
+    val config = auth.get_login_config("custom_config");
+
+    assert_equals(config, auth._login_config(flags = ["X", "Y"]));
+}
+

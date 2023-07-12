@@ -1,0 +1,200 @@
+@test
+module;
+
+import ^^^.main.*;
+import ^^.extensions.*;
+import ^^^.lib.ft4.assets;
+import ^^^.lib.ft4.ft4_basic_dev.*;
+import acc: ^^^.lib.ft4.accounts;
+import test_utils: ^.utils;
+import utils: ^^^.lib.ft4.utils;
+import ^^^.lib.ft4.auth;
+
+function test_history() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 5);
+    test_utils.mint(alice.account, asset, 1);
+
+    rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val filter = assets.filter(null);
+    val start_cursor = utils.encode_cursor(utils.page_cursor());
+    val response_small = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 10, start_cursor);
+    val response_big = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 110, start_cursor);
+    val expected_data = assets.extract_data_from_transfer_history_list(
+            assets.transfer_history_entry @* {
+                acc.account @ { .id == alice.account.id }
+            } (@sort_desc @omit .rowid, $) limit 2
+        ) @* {} (.data);
+    val expected = utils.paged_result(
+        next_cursor = null, 
+        data = expected_data
+    );
+    
+    assert_equals(response_small, expected);
+    assert_equals(response_big, expected);
+    assert_true(response_small!!.data.size() == 2);
+    assert_true(response_big!!.data.size() == 2);
+}
+
+function test_history_pagination() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 0);
+
+    test_utils.mint(alice.account, asset, 6L); //adds one entry to the history
+
+    rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 2L))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 2L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    val filter = assets.filter(null);
+    var response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, utils.encode_cursor(utils.page_cursor()));
+    var expected_result = assets.extract_data_from_transfer_history_list(
+            assets.transfer_history_entry @* {
+                acc.account @ { .id == alice.account.id }
+            } (@sort_desc @omit .rowid, $) limit 2
+        );
+    var expected_data = expected_result @* {} (.data);
+    var next_cursor = utils.encode_cursor(utils.page_cursor(expected_result[1].rowid));
+    var expected = utils.paged_result(
+        next_cursor = next_cursor,
+        data = expected_data
+    );
+    
+    assert_true(expected_result.size() == 2);
+    assert_equals(response, expected);
+
+    //vvv amount, checks if they're ordered LIFO vvv
+    val amount1 = map<text, gtv>.from_gtv(expected_data[0])['delta'];
+    assert_equals(amount1, (2L).to_gtv());
+
+    response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
+    expected_result = assets.extract_data_from_transfer_history_list(
+            assets.transfer_history_entry @* {
+                acc.account @ { .id == alice.account.id }
+            } (@sort_desc @omit .rowid, $) offset 2 limit 2
+        );
+    expected_data = expected_result @* {} (.data);
+    next_cursor = utils.encode_cursor(utils.page_cursor(expected_result[1].rowid));;
+    expected = utils.paged_result(
+        next_cursor = next_cursor,
+        data = expected_data
+    );
+    assert_equals(expected_result.size(), 2);
+    assert_equals(response, expected);
+
+    val amount2 = map<text, gtv>.from_gtv(expected_data[0])['delta'];
+    assert_equals(amount2, (1L).to_gtv());
+
+    val amount3 = map<text, gtv>.from_gtv(expected_data[1])['delta'];
+    assert_equals(amount3, (2L).to_gtv());
+
+    response = ft4.assets_ext.get_transfer_history(alice.account.id, filter, 2, next_cursor);
+    expected_result = assets.extract_data_from_transfer_history_list(
+            assets.transfer_history_entry @* {
+                acc.account @ { .id == alice.account.id }
+            } (@sort_desc @omit .rowid, $) offset 4 limit 2
+        );
+    expected_data = expected_result @* {} (.data);
+    expected = utils.paged_result(
+        next_cursor = null, 
+        data = expected_data
+    );
+    assert_true(expected_result.size() == 1);
+    assert_equals(response, expected);
+}
+
+function test_history_filtering() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 0);
+
+    test_utils.mint(alice.account, asset, 5L);
+
+    rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val cursor = utils.encode_cursor(utils.page_cursor());
+    assert_equals(ft4.assets_ext.get_transfer_history(alice.account.id, assets.filter(assets.transfer_type.sent), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft4.assets_ext.get_transfer_history(alice.account.id, assets.filter(assets.transfer_type.received), 10, cursor)!!.data.size(), 1);
+    assert_equals(ft4.assets_ext.get_transfer_history(bob.account.id, assets.filter(assets.transfer_type.sent), 10, cursor)!!.data.size(), 0);
+    assert_equals(ft4.assets_ext.get_transfer_history(bob.account.id, assets.filter(assets.transfer_type.received), 10, cursor)!!.data.size(), 1);
+}
+
+function test_transfer_history_entry() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 0);
+
+    test_utils.mint(alice.account, asset, 5L);
+
+    rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    val entry = assets.transfer_history_entry @* {}[0];
+    assert_equals(
+        ft4.assets_ext.get_transfer_history_entry(entry.rowid),
+        (
+            id = entry.rowid,
+            delta = entry.delta,
+            decimals = entry.asset.decimals,
+            asset = entry.asset.name,
+            asset_id = entry.asset.id,
+            is_input = entry.is_input,
+            timestamp = entry.transaction.block.timestamp,
+            block_height = entry.transaction.block.block_height,
+            entry_index = entry.entry_index,
+            transfer_args = entry.transfer_args,
+            tx_rid = entry.transaction.tx_rid,
+            tx_data = entry.transaction.tx_data,
+            operation_name = "ft4.admin.mint"
+        )
+    );
+}
+
+function test_transfer_history_operation_name() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 0);
+
+    test_utils.mint(alice.account, asset, 5L);
+
+    rell.test.tx()
+        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val entries = assets.transfer_history_entry @* {};
+    assert_equals(
+        ft4.assets_ext.get_transfer_history_entry(entries[0].rowid)!!.operation_name, "ft4.admin.mint"
+    );
+    assert_equals(
+        ft4.assets_ext.get_transfer_history_entry(entries[1].rowid)!!.operation_name, "ft4.transfer"
+    );
+}

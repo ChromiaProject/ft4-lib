@@ -1,0 +1,24 @@
+blockchains:
+  hello:
+    module: main
+    moduleArgs:
+      lib.ft4.accounts:
+        rate_limit_active: 1
+        rate_limit_max_points: 20
+        rate_limit_recovery_time: 5000
+        rate_limit_points_at_account_creation: 1
+      
+      lib.ft4.admin:
+        admin_pubkey: 021841CEEF7CC5D32077C35909A02763C8CBC97B9A3E37BD166E53589ED704AB88
+
+
+compile:
+  rellVersion: 0.12.0
+
+libs:
+  ft4:
+    registry: https://bitbucket.org/chromawallet/ft3-lib
+    path: rell/src/lib/ft4
+    tagOrBranch: ft4
+    rid: x"451F4492BFA1FC8C0BFB617EC31C5FF8D4AEFF3A9AA270BBB94EA18B6CB2FF04"
+    insecure: false

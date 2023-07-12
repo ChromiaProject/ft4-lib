@@ -1,0 +1,27 @@
+module;
+
+import lib.ft4.ft4_basic_dev.*;
+
+query get_all_accounts() = ft4.acc.account @* {} (.id);
+
+@extend(ft4.auth.auth_handler)
+function () = ft4.auth.add_auth_handler(
+  scope = "foo",
+  flags = ["T"]
+);
+
+operation foo() {
+  val account = ft4.auth.authenticate();
+  print("-------------- Calling foo with account %s".format(account.id));
+}
+
+@extend(ft4.auth.auth_handler)
+function () = ft4.auth.add_auth_handler(
+  scope = "bar",
+  flags = ["T"]
+);
+
+operation bar(arg1: text, arg2: integer) {
+  val account = ft4.auth.authenticate();
+  print("-------------- Calling bar with account %s".format(account.id));
+}
