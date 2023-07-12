@@ -1,8 +1,11 @@
-import { SignatureProvider, TransactionReceipt } from "postchain-client";
+import {
+  SignatureProvider,
+  TransactionReceipt,
+  KeyPair,
+} from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId, KeyPair } from "../../cryptoUtils";
-import { KeyManager } from "./auth/types";
+import { BufferId } from "../../cryptoUtils";
 import {
   TransferHistoryFilter,
   TransferHistoryResponse,
@@ -18,12 +21,6 @@ export type RateLimit = {
   points: number;
   lastUpdate: number;
   getAvailablePoints: () => number | null;
-};
-
-export type User = {
-  signatureProvider: SignatureProvider;
-  keyManagers: KeyManager[];
-  authDescriptor: AuthDescriptor;
 };
 
 export interface Account {

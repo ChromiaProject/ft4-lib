@@ -1,5 +1,4 @@
 import { encryption } from "postchain-client";
-import { KeyPair } from "/cryptoUtils";
 import { AuthDescriptor, authDescriptor } from "/ft4";
 import { createAuthenticator } from "/ft4/authentication";
 import {
@@ -7,12 +6,12 @@ import {
   createFtKeyHandler,
 } from "/ft4/authentication/ft/key-handler";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { _op as op } from "/ft4/utils";
+import { op } from "/ft4/utils";
 
 describe("Authenticator", () => {
   it("uses non-interactive key store if both non-interactive and interactive auth handlers satisfy auth requirements", async () => {
-    const keyPair1 = new KeyPair();
-    const keyPair2 = new KeyPair();
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
 
     const authDescriptor1 = authDescriptor.create.singleSig.withArgs(
       ["T"],

@@ -1,5 +1,6 @@
+import { encryption } from "postchain-client";
 import { LoginKeyStore } from "../types";
-import { BufferId, KeyPair } from "/cryptoUtils";
+import { BufferId } from "/cryptoUtils";
 
 const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 
@@ -28,7 +29,8 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
     },
     getKeyPair: (accountId: Buffer) => {
       const privateKey = loadData()[ensureString(accountId)];
-      return Promise.resolve(new KeyPair(privateKey));
+      if (!privateKey) return Promise.resolve(null);
+      return Promise.resolve(encryption.makeKeyPair(privateKey));
     },
     createKeyPair: (accountId: Buffer) => {
       const values = loadData();
@@ -39,7 +41,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
         );
       }
 
-      const keyPair = new KeyPair();
+      const keyPair = encryption.makeKeyPair();
       values[accountIdString] = ensureString(keyPair.privKey);
       saveData(values);
       return Promise.resolve(keyPair);

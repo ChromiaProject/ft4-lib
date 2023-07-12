@@ -7,8 +7,12 @@ import {
 import { AuthenticatedAccount } from "./types";
 import { createAccountObject } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId, KeyPair } from "../../cryptoUtils";
-import { SignatureProvider, TransactionReceipt } from "postchain-client";
+import { BufferId } from "../../cryptoUtils";
+import {
+  SignatureProvider,
+  TransactionReceipt,
+  KeyPair,
+} from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { Connection } from "../types";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";

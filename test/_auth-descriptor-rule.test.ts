@@ -1,14 +1,10 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Connection, ftUserSession } from "../client/lib/ft4/types";
+import { Connection } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
-import { AuthenticatedAccount, User } from "../client/lib/ft4/accounts/types";
+import { AuthenticatedAccount } from "../client/lib/ft4/accounts/types";
 import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
-import {
-  _getNewAsset,
-  createChromiaClient,
-  getUserSession,
-} from "./util/blockchain-util";
+import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { IClient } from "postchain-client";
@@ -26,24 +22,24 @@ import {
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { newSignatureProvider } from "postchain-client";
-import { _deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
+import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
+import { registerAccount } from "/ft4/admin/admin-op-functions";
+import adminUser from "./util/admin_user";
+import { authDescriptor } from "/ft4";
 
-let _ft: ftUserSession;
 let _connection: Connection;
 let asset: Asset;
 let client: IClient;
 
-function sourceAccount(user: User): Promise<AuthenticatedAccount> {
-  return AccountBuilder.account(_ft.changeUser(user))
+function sourceAccount(): Promise<AuthenticatedAccount> {
+  return AccountBuilder.account(_connection)
     .withBalance(asset, 200)
     .withPoints(5)
-    .buildAuthenticated();
+    .build();
 }
 
 function destinationAccount(): Promise<AuthenticatedAccount> {
-  return AccountBuilder.account(
-    _ft.changeUser(testUser())
-  ).buildAuthenticated();
+  return AccountBuilder.account(_connection).build();
 }
 
 async function getAuthedAccountsFromAuthDescriptorRule(
@@ -51,9 +47,8 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 ): Promise<
   [limitedAccount: AuthenticatedAccount, accountAdmin: AuthenticatedAccount]
 > {
-  const user1 = testUser();
   const user2 = testUser(rule);
-  const accountAdmin = await sourceAccount(user1);
+  const accountAdmin = await sourceAccount();
 
   await accountAdmin.addAuthDescriptor(
     user2.authDescriptor,
@@ -80,10 +75,9 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 
 describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
-    _ft = await getUserSession();
     client = await createChromiaClient();
     _connection = createConnection(client);
-    asset = await _getNewAsset(_connection);
+    asset = await getNewAsset(_connection.client);
   });
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
@@ -459,7 +453,7 @@ describe("Auth Descriptor Rule", () => {
 
     const tx = await session
       .transactionBuilder()
-      .add(_deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .add(deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
       .build();
     await _connection.client.sendTransaction(tx);
 
@@ -526,17 +520,9 @@ describe("Auth Descriptor Rule", () => {
       .and.blockHeight.greaterThan(10000)
       .and.blockTime.greaterOrEqual(122222999).only;
 
-    const user1 = testUser();
-    const user2 = testUser(rules);
-    const account = await sourceAccount(user1);
+    const promise = getAuthedAccountsFromAuthDescriptorRule(rules);
 
-    const txInfo = await addAuthDescriptorTo(
-      _connection.client,
-      account.id,
-      user1,
-      user2
-    );
-    expect(txInfo.status).toBe("confirmed");
+    await expect(promise).resolves.toBeInstanceOf(Array);
   });
 
   it("shouldn't be able to create too many rules", async () => {
@@ -548,19 +534,28 @@ describe("Auth Descriptor Rule", () => {
       rules = rules.and.blockHeight.greaterOrEqual(i);
     }
 
-    const user1 = testUser();
-    const user2 = testUser(rules.only);
-    const account = await sourceAccount(user1);
+    const user = testUser(rules.only);
+    const account = await sourceAccount();
 
     await expect(
-      account.addAuthDescriptor(user2.authDescriptor, user2.signatureProvider)
+      account.addAuthDescriptor(user.authDescriptor, user.signatureProvider)
     ).rejects.toThrowError();
   });
 
-  it("shouldn't be able to create an account with an expiring auth descriptor", async () => {
-    const user = testUser(allow.operationCount.lessOrEqual(2).only);
+  it("shouldn't be able to create an account with a limited auth descriptor", async () => {
+    const rules = allow.operationCount.lessOrEqual(2).only;
+    const sp = newSignatureProvider();
 
-    const createPromise = sourceAccount(user);
-    await expect(createPromise).rejects.toThrowError();
+    const ad = authDescriptor.create.singleSig
+      .withArgs(["A", "T"], sp.pubKey)
+      .andRules(rules);
+
+    const promise = registerAccount(
+      _connection.client,
+      adminUser().signatureProvider,
+      ad
+    );
+
+    await expect(promise).rejects.toThrowError();
   });
 });

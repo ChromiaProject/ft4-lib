@@ -71,9 +71,6 @@ done
 if [ -z "$opt" ]; then
     opt=""
 fi
-if [ "$test_string" ]; then
-    opt="$opt -t '${test_string%?}'"
-fi
 
 rm -rf logs
 mkdir logs
@@ -102,17 +99,16 @@ do
     sleep 1
 done
 
-
-printf "\n> Starting jest tests with options: $opt \n"
+printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 
 pids=()
 if [[ $opt == *"--runTestsByPath"* ]]; then
-    npx jest -maxWorkers=1 $opt &
+    npx jest -maxWorkers=1 $opt -t "${test_string%?}" &
     pids+=($!)
 else
     if $docker; then
         for f in ./**/[!_]*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" --e $opt &
+            npx jest -maxWorkers=1 --testPathPattern="$f" $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else
@@ -136,11 +132,12 @@ else
     echo "Tests failed"
 fi
 
+kill $prc
+
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 
     $DOCKER rm ft4_jest_test > /dev/null
 fi
-kill $prc
 
 # If we are in interactive mode, return the exit code
 if echo "$-" | grep -q "i"; then

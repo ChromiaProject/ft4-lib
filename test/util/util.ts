@@ -2,16 +2,16 @@ import {
   encryption,
   gtv,
   IClient,
-  Itransaction,
   SignatureProvider,
+  KeyPair,
+  Operation,
+  RellOperation,
 } from "postchain-client";
-import { KeyPair } from "../../client/lib/cryptoUtils";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
 } from "../../client/lib/ft4/accounts/auth-descriptor/types";
 import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
-import { TxBuilderTransaction } from "/ft4/utils/types";
 import { Buffer } from "buffer";
 import { op } from "/ft4/utils";
 import adminUser from "./admin_user";
@@ -85,7 +85,7 @@ export function createTestAuthDescriptor(
   keyPair: KeyPair;
   authDescriptor: AuthDescriptor;
 } {
-  const keyPair = new KeyPair();
+  const keyPair = encryption.makeKeyPair();
   const ad = authDescriptor.create.singleSig.withArgs(flags, keyPair.pubKey);
   const descriptor = rules ? ad.andRules(rules) : ad.andNoRules;
 
@@ -99,9 +99,8 @@ export function createTestMultisigAuthDescriptor(
   keyPairs: KeyPair[];
   authDescriptor: AuthDescriptor;
 } {
-  const keyPairs = Array.from(
-    { length: requiredSignatures },
-    () => new KeyPair()
+  const keyPairs = Array.from({ length: requiredSignatures }, () =>
+    encryption.makeKeyPair()
   );
   const descriptor = authDescriptor.create.multiSig.withArgs(
     flags,
@@ -154,15 +153,15 @@ export async function createAccount(client: IClient, ad: AuthDescriptor) {
   return ad.id;
 }
 
-export function toNewTx(tx: Itransaction): TxBuilderTransaction {
-  return {
-    ...tx.gtx,
-    signatures: tx.gtx.signatures ?? [],
-  };
-}
-
 export function rellError(message: string) {
   return expect.objectContaining({
     shortReason: message,
   });
+}
+
+export function opToRellOp(operation: Operation): RellOperation {
+  return {
+    opName: operation.name,
+    args: operation.args,
+  };
 }

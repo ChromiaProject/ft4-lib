@@ -1,7 +1,6 @@
-import { KeyPair } from "../client/lib/cryptoUtils";
 import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
 import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
-import { _op } from "../client/lib/ft4/utils";
+import { op } from "../client/lib/ft4/utils";
 import { evmAuth } from "../client/lib/ft4/authentication/evm";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
@@ -21,7 +20,7 @@ describe("EVM key handler", () => {
   });
 
   it("should sign message", async () => {
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const message = "Message to sign";
 
     const walletSignedMessage = await new ethers.Wallet(
@@ -43,7 +42,7 @@ describe("EVM key handler", () => {
 
   it("should insert evm_auth operation", async () => {
     const accountId = encryption.randomBytes(32);
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [],
@@ -57,7 +56,7 @@ describe("EVM key handler", () => {
 
     const operations = await keyHandler.authorize(
       accountId,
-      _op("foo"),
+      op("foo"),
       0,
       createFakeAuthDataService({
         foo: authData,
@@ -67,13 +66,13 @@ describe("EVM key handler", () => {
     const signature = await keyStore.signMessage(authData.message);
     expect(operations).toEqual([
       evmAuth(accountId, ad.id, [signature]),
-      _op("foo"),
+      op("foo"),
     ]);
   });
 
   it("should increment nonce", async () => {
     const accountId = encryption.randomBytes(32);
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
@@ -97,8 +96,8 @@ describe("EVM key handler", () => {
     );
 
     const tx = await transactionBuilder(authenticator, client)
-      .add(_op("foo"))
-      .add(_op("foo"))
+      .add(op("foo"))
+      .add(op("foo"))
       .build();
 
     expect(gtx.deserialize(tx).operations).toEqual([
@@ -122,7 +121,7 @@ describe("EVM key handler", () => {
   });
 
   it("should add FT auth descriptor", async () => {
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
@@ -134,7 +133,7 @@ describe("EVM key handler", () => {
       ad.id
     );
 
-    const keyPair2 = new KeyPair();
+    const keyPair2 = encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
       keyPair2.pubKey

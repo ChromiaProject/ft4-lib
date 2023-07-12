@@ -36,8 +36,8 @@ export type TransactionBuilder = {
     authenticator: Authenticator
   ) => TransactionBuilder;
   /**
-   * Add key handlers that will also be included as signers to this operation
-   * if `build` is called, the key handlers will also sign the transaction
+   * Add key handlers that will also be included as signers to this operation.
+   * If `build` is called, the key handlers will also sign the transaction
    * @param keyHandlers the key handlers to use for signing
    * @returns an instance of the transaction builder object
    */
@@ -51,7 +51,7 @@ export type TransactionBuilder = {
    */
   build: () => Promise<SignedTransaction>;
   /**
-   * Builds an unsigned transaction containgin the previously added
+   * Builds an unsigned transaction containing the previously added
    * transactions, as well as any authhorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
@@ -140,7 +140,7 @@ export function transactionBuilder(
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          `No keyhandler registered to handle operation <${operation[0]}>`
+          `No keyhandler registered to handle operation <${operation.name}>`
         );
       }
       keyHandlers.push(keyHandler);
