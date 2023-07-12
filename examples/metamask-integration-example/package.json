@@ -1,0 +1,29 @@
+{
+  "name": "metamask-integration-example",
+  "version": "1.0.0",
+  "description": "An example project to show how to use metamask to perform authentiation with the ft library",
+  "main": "./src/index.ts",
+  "scripts": {
+    "start": "webpack-dev-server .",
+    "build": "webpack . --env mode=prod",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chromaway",
+  "license": "BSD-2-Clause-FreeBSD",
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "ft3-lib": "git+https://bitbucket.org/chromawallet/ft3-lib.git#example-app-for-evm-authentication",
+    "postchain-client": "^1.3.2",
+    "stream-browserify": "^3.0.0",
+    "url": "^0.11.0",
+    "vm-browserify": "^1.1.2"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack-cli": "^5.1.1",
+    "webpack-dev-server": "^4.15.0"
+  }
+}
