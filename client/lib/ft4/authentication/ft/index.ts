@@ -5,13 +5,13 @@ import { Buffer } from "buffer";
 
 export function ftAuth(
   accountId: BufferId,
-  authDesriptorId: BufferId
+  authDescriptorId: BufferId
 ): Operation {
   return {
     name: "ft4.ft_auth",
     args: [
       formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(authDesriptorId),
+      formatter.ensureBuffer(authDescriptorId),
     ],
   };
 }

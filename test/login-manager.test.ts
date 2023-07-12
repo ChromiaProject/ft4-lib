@@ -1,5 +1,4 @@
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
-import { KeyPair } from "/cryptoUtils";
 import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
@@ -22,7 +21,7 @@ describe("Login manager", () => {
   });
 
   it("adds disposable auth descriptor to account", async () => {
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
@@ -45,7 +44,7 @@ describe("Login manager", () => {
   });
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
-    const keyPair = new KeyPair();
+    const keyPair = encryption.makeKeyPair();
     const asset = await getNewAsset(client, undefined, undefined, 5);
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
@@ -82,7 +81,7 @@ describe("Login manager", () => {
   });
 
   it("does not login when account does not have admin auth descriptor that corresponds to used key store", async () => {
-    const keyPair1 = new KeyPair();
+    const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
@@ -95,7 +94,7 @@ describe("Login manager", () => {
       keyStore
     ).getSession(accountId);
 
-    const keyPair2 = new KeyPair();
+    const keyPair2 = encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["X"],
       keyPair2.pubKey
@@ -117,7 +116,7 @@ describe("Login manager", () => {
   });
 
   it("uses key pair stored in login key store", async () => {
-    const keyPair1 = new KeyPair();
+    const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],

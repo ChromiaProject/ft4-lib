@@ -1,18 +1,7 @@
 import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
-import { Query } from "../utils/types";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
-
-/**
- * @deprecated
- */
-export function balancesByAccountIdQuery(accountId: BufferId): Query {
-  return [
-    "ft4._get_asset_balances",
-    { account_id: formatter.ensureBuffer(accountId) },
-  ];
-}
 
 export function assetById(
   assetId: BufferId

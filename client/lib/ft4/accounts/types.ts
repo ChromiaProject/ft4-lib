@@ -1,12 +1,11 @@
 import {
   SignatureProvider,
-  RawGtv,
   TransactionReceipt,
+  KeyPair,
 } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId, KeyPair } from "../../cryptoUtils";
-import { KeyManager } from "./auth/types";
+import { BufferId } from "../../cryptoUtils";
 import {
   TransferHistoryFilter,
   TransferHistoryResponse,
@@ -18,40 +17,10 @@ import { OptionalPageCursor } from "../types";
 import { PaginatedEntity } from "../utils/types";
 import { Buffer } from "buffer";
 
-/**
- * @deprecated use `Account` instead
- */
-export type LegacyAccount = {
-  id: Buffer;
-  balances: Balance[];
-  authDescriptors: AuthDescriptor[];
-};
-
-export type XferInput = [
-  accountId: Buffer,
-  assetId: Buffer,
-  authDescriptorId: Buffer,
-  amount: bigint,
-  extra: { [key: string]: RawGtv }
-];
-
-export type XferOutput = [
-  accountId: Buffer,
-  assetId: Buffer,
-  amount: bigint,
-  extra: { [key: string]: RawGtv }
-];
-
 export type RateLimit = {
   points: number;
   lastUpdate: number;
   getAvailablePoints: () => number | null;
-};
-
-export type User = {
-  signatureProvider: SignatureProvider;
-  keyManagers: KeyManager[];
-  authDescriptor: AuthDescriptor;
 };
 
 export interface Account {
@@ -84,7 +53,7 @@ export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
-    keyPair: SignatureProvider | KeyPair
+    newSigner: SignatureProvider | KeyPair
   ) => Promise<TransactionReceipt>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId

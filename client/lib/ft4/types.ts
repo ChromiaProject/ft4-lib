@@ -1,10 +1,5 @@
 import { BufferId } from "../cryptoUtils";
-import {
-  User,
-  Account,
-  AuthenticatedAccount,
-  LegacyAccount,
-} from "./accounts/types";
+import { Account, AuthenticatedAccount } from "./accounts/types";
 import { Asset } from "./asset/types";
 import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
@@ -12,7 +7,6 @@ import {
   IClient,
   QueryArguments,
   QueryObject,
-  GtxClient,
   Operation,
   TransactionReceipt,
 } from "postchain-client";
@@ -23,22 +17,6 @@ export type PagedResponse<T> = {
   data: T[];
   next_cursor: OptionalPageCursor;
 };
-export interface ftUserSession {
-  user: User;
-  changeUser: (newUser: User) => ftUserSession;
-  get: ftQuerySession;
-}
-
-export interface ftQuerySession {
-  gtxClient: GtxClient;
-  createUserSession: (user: User) => ftUserSession;
-  account: {
-    by: {
-      authDescriptorId: (id: BufferId) => Promise<LegacyAccount[]>;
-      id: (id: BufferId) => Promise<LegacyAccount | null>;
-    };
-  };
-}
 
 export interface Connection {
   client: IClient;

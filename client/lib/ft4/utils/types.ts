@@ -1,8 +1,6 @@
-import { RawGtv, RellOperation } from "postchain-client";
+import { RellOperation } from "postchain-client";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
-
-export type Operation = [string, ...RawGtv[]];
 
 export type Config = {
   rateLimit: {
@@ -28,13 +26,6 @@ export type ExternalWalletConnection = {
     message: string;
     account: string;
   }) => Promise<string>;
-};
-
-export type Query = [string, { [property: string]: RawGtv }];
-
-export type QueryObject = {
-  name: string;
-  args: { [property: string]: RawGtv };
 };
 
 export function freeze<T>(object: T): T {

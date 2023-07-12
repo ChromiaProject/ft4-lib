@@ -1,4 +1,4 @@
-import { KeyPair } from "/cryptoUtils";
+import { KeyPair } from "postchain-client";
 
 export interface LoginKeyStore {
   clear(accountId: Buffer);

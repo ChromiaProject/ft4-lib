@@ -31,26 +31,4 @@ describe("Blockchain", () => {
 
     expect(ft.getClientVersion()).toEqual(version);
   });
-
-  it.skip("should successfully post raw transactions", async () => {
-    /*
-    const user = testUser();
-    const vault = testUser();
-    const session = ftSession.changeUser(user);
-
-    const rawTransaction = await ssoRawTransactionRegister(
-      vault.authDescriptor,
-      user.authDescriptor,
-      legacyTransactionBuilder(user, session.get.gtxClient)
-    );
-
-    await ftSession.get.gtxClient
-      .transactionFromRawTransaction(rawTransaction)
-      .postAndWaitConfirmation();
-
-    const account = await session.get.account.by.id(user.authDescriptor.id);
-
-    expect(account).not.toBeNull();
-    */
-  });
 });

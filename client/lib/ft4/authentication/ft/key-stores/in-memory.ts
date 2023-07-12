@@ -1,8 +1,11 @@
-import { KeyPair } from "../../../../cryptoUtils";
 import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
 import { createFtKeyHandler } from "../key-handler";
 import { FtKeyStore } from "..";
-import { SignatureProvider, newSignatureProvider } from "postchain-client";
+import {
+  SignatureProvider,
+  newSignatureProvider,
+  KeyPair,
+} from "postchain-client";
 import { Buffer } from "buffer";
 
 export function createInMemoryFtKeyStore(

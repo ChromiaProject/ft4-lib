@@ -3,9 +3,9 @@ import {
   authDescriptor,
   FlagsType,
 } from "../../client/lib/ft4/accounts/auth-descriptor";
-import { User } from "../../client/lib/ft4/accounts/types";
 import { KeyManager } from "../../client/lib/ft4/accounts/auth/types";
 import { Buffer } from "buffer";
+import { User } from "./test-user";
 
 export default function adminUser(): User {
   const km = {

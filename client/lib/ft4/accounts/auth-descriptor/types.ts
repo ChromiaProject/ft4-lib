@@ -3,8 +3,6 @@ import { Buffer } from "buffer";
 export enum AuthType {
   single_sig = "S",
   multi_sig = "M",
-  external_single_sig = "ES",
-  external_multi_sig = "EM",
 }
 
 export type AuthDescriptorSimpleRule = readonly [string, string, number];

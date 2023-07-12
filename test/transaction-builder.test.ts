@@ -7,7 +7,7 @@ import {
   transactionBuilder,
 } from "../client/lib/ft4/utils/transaction-builder";
 import { createChromiaClient } from "./util/blockchain-util";
-import { _nop } from "../client/lib/ft4/utils";
+import { nop } from "../client/lib/ft4/utils";
 import {
   Authenticator,
   KeyHandler,
@@ -17,7 +17,7 @@ import { transfer } from "../client/lib/ft4/accounts/account-operations";
 import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
-import { registerOp } from "/ft4/accounts/account-dev-operations";
+import { registerAccount } from "../client/lib/ft4/admin/admin-operations";
 import { createAmount } from "/ft4/asset/amount";
 
 describe("Transaction Builder", () => {
@@ -75,7 +75,7 @@ describe("Transaction Builder", () => {
   });
 
   it("can build transactions with a nop", async () => {
-    const operation = _nop();
+    const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
       .buildUnsigned();
@@ -84,7 +84,7 @@ describe("Transaction Builder", () => {
   });
 
   it("does not sign transaction with only a nop on build", async () => {
-    const operation = _nop();
+    const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
       .build();
@@ -94,13 +94,13 @@ describe("Transaction Builder", () => {
 
   it("throws an error if not sufficient permissions", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(registerOp(authDescriptor))
+      .add(registerAccount(authDescriptor))
       .buildUnsigned();
     await expect(promise).rejects.toThrowError(AuthorizationError);
   });
 
   it("uses additional signers provided", async () => {
-    const operation = _nop();
+    const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
       .addSigners(keyHandler)
@@ -135,7 +135,7 @@ describe("Transaction Builder", () => {
       getNonce: jest.fn(),
     };
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(registerOp(authDescriptor), authenticatorMock)
+      .addWithAuthenticator(registerAccount(authDescriptor), authenticatorMock)
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyHandlerMock.sign).toHaveBeenCalled();

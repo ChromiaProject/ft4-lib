@@ -1,10 +1,10 @@
-import { encryption } from "postchain-client";
-import { createTestAuthDescriptor, toNewTx } from "./util/util";
+import { encryption, gtx } from "postchain-client";
+import { createTestAuthDescriptor } from "./util/util";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { _op } from "../client/lib/ft4/utils";
+import { op } from "../client/lib/ft4/utils";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
-import { createClient } from "./util/blockchain-util";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createChromiaClient } from "./util/blockchain-util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -15,32 +15,36 @@ describe("FT key handler", () => {
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const operations = await keyHandler.authorize(
       accountId,
-      _op("foo"),
+      op("foo"),
       0,
       createFakeAuthDataService({})
     );
 
     expect(operations).toEqual([
       ftAuth(accountId, authDescriptor.id),
-      _op("foo"),
+      op("foo"),
     ]);
   });
 
   it("should sign transaction", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const client = await createClient();
-    const transaction = client.newTransaction(authDescriptor.signers);
-    transaction.addOperation("foo");
+    const client = await createChromiaClient();
+    const transaction = {
+      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      operations: [],
+      signers: authDescriptor.signers,
+      signatures: [],
+    };
+    transaction.operations.push(op("foo"));
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    const newTx = toNewTx(transaction);
-    await keyHandler.sign(newTx);
+    await keyHandler.sign(transaction);
 
-    const digestToSign = transaction.getDigestToSign();
+    const digestToSign = gtx.getDigestToSign(transaction);
     const signature = encryption.signDigest(digestToSign, keyPair.privKey);
 
-    expect(newTx.signatures).toEqual([signature]);
+    expect(transaction.signatures).toEqual([signature]);
   });
 });

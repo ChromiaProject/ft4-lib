@@ -10,17 +10,19 @@ import {
 } from "./types";
 
 export function createSingleSignatureAuthDescriptor(
-  type: AuthType.single_sig | AuthType.external_single_sig,
   args: SingleSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null
 ): AuthDescriptor {
   return Object.freeze(
-    authDescriptor.fromGtv([serializeAuthType(type), args, rules])
+    authDescriptor.fromGtv([
+      serializeAuthType(AuthType.single_sig),
+      args,
+      rules,
+    ])
   );
 }
 
 export function createMultiSignatureAuthDescriptor(
-  type: AuthType.multi_sig | AuthType.external_multi_sig,
   args: MultiSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null
 ): AuthDescriptor {
@@ -64,23 +66,21 @@ export function multiSigArgs(
   ]);
 }
 
-function singleSigObj(
-  type: AuthType.single_sig | AuthType.external_single_sig
-) {
+function singleSigObj() {
   return {
     authDescriptor: createSingleSignatureAuthDescriptor,
     withArgs: (flags: string[], signerPubKey: BufferId) => {
       const args = singleSigArgs(flags, signerPubKey);
       return {
         andRules: (rules: AuthDescriptorRule | null) =>
-          createSingleSignatureAuthDescriptor(type, args, rules),
-        andNoRules: createSingleSignatureAuthDescriptor(type, args, null),
+          createSingleSignatureAuthDescriptor(args, rules),
+        andNoRules: createSingleSignatureAuthDescriptor(args, null),
       };
     },
   };
 }
 
-function multiSigObj(type: AuthType.multi_sig | AuthType.external_multi_sig) {
+function multiSigObj() {
   return {
     authDescriptor: createMultiSignatureAuthDescriptor,
     withArgs: (
@@ -91,16 +91,14 @@ function multiSigObj(type: AuthType.multi_sig | AuthType.external_multi_sig) {
       const args = multiSigArgs(flags, requiredSignatures, signerPubKeys);
       return {
         andRules: (rules: AuthDescriptorRule | null) =>
-          createMultiSignatureAuthDescriptor(type, args, rules),
-        andNoRules: createMultiSignatureAuthDescriptor(type, args, null),
+          createMultiSignatureAuthDescriptor(args, rules),
+        andNoRules: createMultiSignatureAuthDescriptor(args, null),
       };
     },
   };
 }
 
 export const create = {
-  singleSig: singleSigObj(AuthType.single_sig),
-  singleSigEvm: singleSigObj(AuthType.external_single_sig),
-  multiSig: multiSigObj(AuthType.multi_sig),
-  multiSigEvm: multiSigObj(AuthType.external_multi_sig),
+  singleSig: singleSigObj(),
+  multiSig: multiSigObj(),
 };
