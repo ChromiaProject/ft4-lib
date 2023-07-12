@@ -31,9 +31,9 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            - printf $DEPLOYMENT_KEYS > .secret
+            - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
-            - rm .secret
+            - rm .chromia/config
   custom:
     deploy-to-stable:
       - step:
@@ -45,9 +45,9 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            - printf $DEPLOYMENT_KEYS > .secret
+            - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:stable
-            - rm .secret
+            - rm .chromia/config
     deploy-to-latest:
       - step:
           name: deploy:latest
@@ -58,9 +58,9 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            - printf $DEPLOYMENT_KEYS > .secret
+            - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
-            - rm .secret
+            - rm .chromia/config
 
 definitions: 
   services: 
