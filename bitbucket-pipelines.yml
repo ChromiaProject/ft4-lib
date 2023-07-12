@@ -1,22 +1,76 @@
 image: node:18
 
-options:
-  docker: true
-
 pipelines:
   pull-requests:
     '**':
       - step:
+          size: 2x
           name: Test
           caches:
-            - pip
             - node
           script:
             - apt update
-            - apt install -y python3-pip
-            - pip3 install docker-compose
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
             - npm install
-            - npm test
+            - npm run test:pipeline
 
           services:
-            - docker
+            - postgres
+  branches:
+    ft4:
+      - step:
+          name: deploy:latest
+          script:
+            - apt update
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
+            - mkdir .chromia
+            - printf $DEPLOYMENT_KEYS > .chromia/config
+            - npm run deploy:latest
+            - rm .chromia/config
+  custom:
+    deploy-to-stable:
+      - step:
+          name: deploy:stable
+          script:
+            - apt update
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
+            - mkdir .chromia
+            - printf $DEPLOYMENT_KEYS > .chromia/config
+            - npm run deploy:stable
+            - rm .chromia/config
+    deploy-to-latest:
+      - step:
+          name: deploy:latest
+          script:
+            - apt update
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
+            - mkdir .chromia
+            - printf $DEPLOYMENT_KEYS > .chromia/config
+            - npm run deploy:latest
+            - rm .chromia/config
+
+definitions: 
+  services: 
+    postgres: 
+      image: postgres 
+      variables: 
+        POSTGRES_DB: 'postchain' 
+        POSTGRES_USER: 'postchain'
+        POSTGRES_PASSWORD: 'postchain'
+        POSTGRES_INITDB_ARGS: '--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8'

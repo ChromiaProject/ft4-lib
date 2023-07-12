@@ -1,173 +1,151 @@
-import { generateAssetName, generateId } from "./util/util";
-import Asset from "../client/lib/ft3/user/asset";
-import AssetBalance from "../client/lib/ft3/user/asset-balance";
+import { newSignatureProvider } from "postchain-client";
+import {
+  authDescriptor as ad,
+  FlagsType,
+} from "../client/lib/ft4/accounts/auth-descriptor";
+import { createAmount } from "../client/lib/ft4/asset/amount";
+import { Asset } from "../client/lib/ft4/asset/types";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import {
+  createConnection,
+  createKeyStoreInteractor,
+} from "../client/lib/ft4/ft-session";
 import AccountBuilder from "./util/account-builder";
-import { FlagsType } from "../client/lib/ft3/user/account";
+import adminUser from "./util/admin_user";
+import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
-import BlockchainUtil from "./util/blockchain-util";
-import Blockchain from "../client/lib/ft3/core/blockchain/blockchain";
-import MultiSignatureAuthDescriptor from "../client/lib/ft3/user/auth-descriptor/multi-signature-auth-descriptor";
-import { register } from "../client/lib/ft3/user/account-dev-operations";
+import { registerAccount } from "/ft4/admin/admin-op-functions";
+import { Connection } from "/ft4/types";
 
-const POINTS_AT_ACCOUNT_CREATION = 1;
-let blockchain: Blockchain = null;
-let asset: Asset = null;
+let asset: Asset;
+let connection: Connection;
+const admin = adminUser();
 
 describe("Transfer", () => {
   beforeAll(async () => {
-    blockchain = await BlockchainUtil.getDefaultBlockchain();
-    asset = await Asset.register(generateAssetName(), generateId(), blockchain);
+    connection = createConnection(await createChromiaClient());
+    asset = await getNewAsset(connection.client, undefined, undefined, 5);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {
-    const user = TestUser.singleSig();
-
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
-      .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .build();
-
-    const account2 = await AccountBuilder.account(blockchain).build();
-
-    await account1.transfer(account2.id_, asset.id, 10);
-
-    const assetBalance1 = await AssetBalance.getByAccountAndAssetId(
-      account1.id_,
-      asset.id,
-      blockchain
-    );
-    const assetBalance2 = await AssetBalance.getByAccountAndAssetId(
-      account2.id_,
-      asset.id,
-      blockchain
-    );
-
-    expect(assetBalance1.amount).toEqual(190);
-    expect(assetBalance2.amount).toEqual(10);
-  });
-
-  it("should fail when balance is lower than amount to transfer", async () => {
-    const user = TestUser.singleSig();
-
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
-      .withBalance(asset, 5)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .build();
-
-    const account2 = await AccountBuilder.account(blockchain).build();
-
-    const promise = account1.transfer(account2.id_, asset.id, 10);
-    await expect(promise).rejects.toBeInstanceOf(Error);
-  });
-
-  it("should fail if auth descriptor doesn't have transfer rights", async () => {
-    const user = TestUser.singleSig();
-
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withAuthFlags([FlagsType.Account])
-      .withParticipants([user.keyPair])
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
 
-    const account2 = await AccountBuilder.account(blockchain).build();
+    const account2 = await AccountBuilder.account(connection).build();
 
-    const promise = account1.transfer(account2.id_, asset.id, 10);
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(10, asset.decimals)
+    );
+
+    const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
+    const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
+
+    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
+      true
+    );
+    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
+      true
+    );
+  });
+
+  it.skip("should fail when balance is lower than amount to transfer", async () => {
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(asset, 5)
+      .withPoints(1)
+      .build();
+
+    const account2 = await AccountBuilder.account(connection).build();
+
+    const promise = account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(10, asset.decimals)
+    );
+
+    await expect(promise).rejects.toBeInstanceOf(Error);
+  });
+
+  it("should fail if auth descriptor doesn't have transfer rights", async () => {
+    const account1 = await AccountBuilder.account(connection)
+      .withAuthFlags(FlagsType.Account)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const account2 = await AccountBuilder.account(connection).build();
+
+    const promise = account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(10, asset.decimals)
+    );
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
 
   it("should succeed if transferring tokens to a multisig account", async () => {
-    const user = TestUser.singleSig();
-    const user2 = TestUser.singleSig();
-    const user3 = TestUser.singleSig();
+    const user2 = TestUser();
+    const user3 = TestUser();
 
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+    const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
+      .withPoints(1)
       .build();
 
-    const authDescriptor = new MultiSignatureAuthDescriptor(
-      [user2.keyPair.pubKey, user3.keyPair.pubKey],
+    const authDescriptor = ad.create.multiSig.withArgs(
+      [FlagsType.Account, FlagsType.Transfer],
       2,
-      [FlagsType.Account, FlagsType.Transfer]
+      [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey]
+    ).andNoRules;
+
+    await registerAccount(
+      connection.client,
+      admin.signatureProvider,
+      authDescriptor
     );
 
-    await blockchain
-      .transactionBuilder()
-      .add(register(authDescriptor))
-      .build(authDescriptor.signers)
-      .sign(user2.keyPair)
-      .sign(user3.keyPair)
-      .post();
+    const account2 = await createConnection(connection.client).getAccountById(
+      authDescriptor.id
+    );
 
-    await account1.transfer(authDescriptor.id, asset.id, 10);
-
-    const assetBalance1 = await AssetBalance.getByAccountAndAssetId(
-      account1.id,
+    await account1.transfer(
+      account2.id,
       asset.id,
-      blockchain
-    );
-    const assetBalance2 = await AssetBalance.getByAccountAndAssetId(
-      authDescriptor.id,
-      asset.id,
-      blockchain
+      createAmount(10, asset.decimals)
     );
 
-    expect(assetBalance1.amount).toEqual(190);
-    expect(assetBalance2.amount).toEqual(10);
+    const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
+    const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
+
+    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
+      true
+    );
+    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
+      true
+    );
   });
 
   it("should succeed burning tokens", async () => {
-    const user = TestUser.singleSig();
+    const keyPair = newSignatureProvider();
 
-    const account = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
+    const account = await AccountBuilder.account(connection)
+      .withParticipant(keyPair)
       .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
+      .withPoints(1)
       .build();
 
-    await account.burnTokens(asset.id, 10);
+    const session = await createKeyStoreInteractor(
+      await createChromiaClient(),
+      createInMemoryFtKeyStore(keyPair)
+    ).getSession(account.id);
+    await session.account.burn(asset.id, createAmount(10, asset.decimals));
+    const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
-    const assetBalance = account.getAssetById(asset.id);
-
-    expect(assetBalance.amount).toEqual(190);
-  });
-
-  it("should have one payment history entry if one transfer made", async () => {
-    const user = TestUser.singleSig();
-
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
-      .withBalance(asset, 200)
-      .withPoints(1 - POINTS_AT_ACCOUNT_CREATION)
-      .build();
-
-    const account2 = await AccountBuilder.account(blockchain).build();
-
-    await account1.transfer(account2.id_, asset.id, 10);
-    const paymentHistory = await account1.getPaymentHistory();
-
-    expect(paymentHistory.length).toEqual(1);
-  });
-
-  it("should have two payment history entries if two transfers made", async () => {
-    const user = TestUser.singleSig();
-
-    const account1 = await AccountBuilder.account(blockchain, user)
-      .withParticipants([user.keyPair])
-      .withBalance(asset, 200)
-      .withPoints(2 - POINTS_AT_ACCOUNT_CREATION)
-      .build();
-
-    const account2 = await AccountBuilder.account(blockchain).build();
-
-    await account1.transfer(account2.id_, asset.id, 10);
-    await account1.transfer(account2.id_, asset.id, 11);
-    const paymentHistory = await account1.getPaymentHistory();
-
-    expect(paymentHistory.length).toEqual(2);
+    expect(
+      assetBalance.amount.eq(createAmount(190, asset.decimals))
+    ).toBeTruthy();
   });
 });

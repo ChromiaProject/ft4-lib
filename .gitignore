@@ -4,6 +4,10 @@
 .DS_STORE
 .idea/*
 .project
+.vscode/*
+.secret
+.pmc
+.chromia
 
 db.log
 
@@ -20,3 +24,7 @@ rell/target
 rell/out
 
 yarn.log
+coverage
+
+# chr build directories
+build/
