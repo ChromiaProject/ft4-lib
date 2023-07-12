@@ -31,6 +31,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
+            - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
@@ -45,6 +46,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
+            - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:stable
             - rm .chromia/config
@@ -58,6 +60,7 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
+            - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
