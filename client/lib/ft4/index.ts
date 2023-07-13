@@ -11,10 +11,15 @@ import { createSessionStorageLoginKeyStore } from "./authentication/login-manage
 import { createLocalStorageLoginKeyStore } from "./authentication/login-manager/stores/local-storage";
 
 // Export public interfaces
-import { KeyStore, createWeb3ProviderEvmKeyStore } from "./authentication";
+import {
+  KeyStore,
+  createWeb3ProviderEvmKeyStore,
+  createInMemoryEvmKeyStore,
+} from "./authentication";
 import { AuthDescriptor, FlagsType, Account, authDescriptor } from "./accounts";
 import { createAmount } from "./asset/amount";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
+import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
 import { Session } from "./types";
 import {
   TransferHistoryEntry,
@@ -43,6 +48,8 @@ export {
   createConnection,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
   createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
   createEvmKeyHandler,
