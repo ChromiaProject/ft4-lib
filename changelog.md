@@ -1,13 +1,14 @@
 Version 0.1.2
 # Changelog
 
-## [0.1.3] - 2023-07-14
+## [0.1.3] - 2023-07-13
 
 ### Added
-- update changelog.md
+- license file
 
 ### Changed
-- update README
+- license 
+- update changelog.md
 - update `demo` app to install `v0.1.0` version of FT4 rell module
 
 ### Fixed 
