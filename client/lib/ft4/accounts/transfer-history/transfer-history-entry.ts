@@ -3,14 +3,14 @@ import { TransferHistoryEntry, TransferHistoryEntryResponse } from "./types";
 import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
 import { Buffer } from "buffer";
+import { AssetResponse } from "/ft4/asset/types";
+import { createAssetObject } from "/ft4/asset/asset-query-functions";
 
 export function createTransferHistoryEntry(
   rowid: number,
   isInput: boolean,
   delta: bigint,
-  decimals: number,
-  assetName: string,
-  assetId: BufferId,
+  asset: AssetResponse,
   entryIndex: number,
   data: Buffer | string,
   transferArgs: { amount: bigint; accountId: BufferId }[][],
@@ -21,15 +21,15 @@ export function createTransferHistoryEntry(
 ): TransferHistoryEntry {
   const txArgs = transferArgs.map((list) =>
     list.map((a) => ({
-      amount: createAmountFromBalance(a.amount, decimals),
+      amount: createAmountFromBalance(a.amount, asset.decimals),
       accountId: formatter.ensureBuffer(a.accountId),
     }))
   );
   return Object.freeze({
     rowid,
     isInput,
-    delta: createAmountFromBalance(delta, decimals),
-    asset: { name: assetName, id: formatter.ensureBuffer(assetId) },
+    delta: createAmountFromBalance(delta, asset.decimals),
+    asset: createAssetObject(asset),
     entryIndex,
     data: formatter.ensureBuffer(data),
     transferInputArgs: txArgs[0],
@@ -47,9 +47,7 @@ export function createTransferHistoryEntryFromResponse(
   const {
     id: rowId,
     delta,
-    decimals,
-    asset: assetName,
-    asset_id: assetId,
+    asset,
     is_input: isInput,
     timestamp,
     block_height: blockHeight,
@@ -73,9 +71,7 @@ export function createTransferHistoryEntryFromResponse(
     rowId,
     isInput === 1,
     delta,
-    decimals,
-    assetName,
-    assetId,
+    asset,
     entryIndex,
     txData,
     args,

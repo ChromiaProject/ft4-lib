@@ -1,6 +1,7 @@
 import { Amount } from "../../asset/interfaces";
 import { PageCursor } from "../../types";
 import { Buffer } from "buffer";
+import { Asset, AssetResponse } from "/ft4/asset/types";
 
 type TransferHistoryTransferArgs = {
   amount: Amount;
@@ -10,9 +11,7 @@ type TransferHistoryTransferArgs = {
 export type TransferHistoryEntryResponse = {
   id: number;
   delta: bigint;
-  decimals: number;
-  asset: string;
-  asset_id: Buffer;
+  asset: AssetResponse;
   is_input: number;
   timestamp: number;
   block_height: number;
@@ -27,7 +26,7 @@ export type TransferHistoryEntry = {
   rowid: number;
   isInput: boolean;
   delta: Amount;
-  asset: AssetInfo;
+  asset: Asset;
   entryIndex: number;
   data: Buffer;
   transferInputArgs: TransferHistoryTransferArgs[];
@@ -41,11 +40,6 @@ export type TransferHistoryEntry = {
 export type TransferHistoryResponse = {
   data: TransferHistoryEntry[];
   nextCursor: PageCursor | null;
-};
-
-type AssetInfo = {
-  name: string;
-  id: Buffer;
 };
 
 export enum TransferHistoryType {

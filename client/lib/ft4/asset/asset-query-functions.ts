@@ -7,7 +7,7 @@ import {
   assetBySymbol,
   assetsByName,
 } from "./asset-queries";
-import { Asset, Balance, BalanceResponse } from "./types";
+import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalPageCursor } from "../types";
 import { PaginatedEntity, freeze } from "../utils/types";
 import { createAmountFromBalance } from "./amount";
@@ -17,14 +17,18 @@ export async function getAssetById(
   connection: Connection,
   id: BufferId
 ): Promise<Asset> {
-  return await connection.query<Asset>(assetById(id)).then(freeze);
+  return await connection
+    .query<AssetResponse>(assetById(id))
+    .then((a) => freeze(createAssetObject(a)));
 }
 
 export async function getAssetBySymbol(
   connection: Connection,
   symbol: string
 ): Promise<Asset> {
-  return await connection.query<Asset>(assetBySymbol(symbol)).then(freeze);
+  return await connection
+    .query<AssetResponse>(assetBySymbol(symbol))
+    .then((a) => freeze(createAssetObject(a)));
 }
 
 export function getAssetsByName(
@@ -33,10 +37,10 @@ export function getAssetsByName(
   limit = 100,
   cursor: OptionalPageCursor = null
 ) {
-  const retriever = createEntityRetriever<Asset, Asset>(
+  const retriever = createEntityRetriever<Asset, AssetResponse>(
     connection,
     assetsByName(name, limit, cursor),
-    (a) => a
+    (a) => a.map(createAssetObject)
   );
   return retriever.retrieve();
 }
@@ -46,10 +50,10 @@ export async function getAllAssets(
   limit = 100,
   cursor: OptionalPageCursor = null
 ): Promise<PaginatedEntity<Asset>> {
-  return createEntityRetriever<Asset, Asset>(
+  return createEntityRetriever<Asset, AssetResponse>(
     connection,
     allAssets(limit, cursor),
-    (a) => a
+    (a) => a.map(createAssetObject)
   ).retrieve();
 }
 
@@ -60,7 +64,7 @@ export async function getBalanceByAccountId(
 ): Promise<Balance> {
   return await connection
     .query<BalanceResponse>(balanceByAccountId(accountId, assetId))
-    .then(createBalanceObject);
+    .then((b) => freeze(createBalanceObject(b)));
 }
 
 export async function getBalancesByAccountId(
@@ -70,7 +74,7 @@ export async function getBalancesByAccountId(
   const balances = await connection.query<BalanceResponse[]>(
     balancesByAccountId(accountId)
   );
-  return balances.map(createBalanceObject);
+  return balances.map((b) => freeze(createBalanceObject(b)));
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
@@ -85,5 +89,17 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
       iconUrl: balance.asset.icon_url,
     },
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
+  };
+}
+
+export function createAssetObject(asset: AssetResponse): Asset {
+  return {
+    id: asset.id,
+    name: asset.name,
+    symbol: asset.symbol,
+    decimals: asset.decimals,
+    brid: asset.brid,
+    supply: asset.supply,
+    iconUrl: asset.icon_url,
   };
 }
