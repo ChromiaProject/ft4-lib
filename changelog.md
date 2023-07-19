@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Assets are now always returned as AssetResponse objects from postchain.
 - Transfer history's asset properties are now of the Asset type
 
+### Fixed
+- Asset queries now return Asset type with `iconUrl`, not `icon_url`
+
 ## [0.1.3] - 2023-07-13
 
 ### Added
