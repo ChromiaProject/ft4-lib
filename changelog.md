@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
+- Balance queries now return frozen objects
 
 ## [0.1.3] - 2023-07-13
 
