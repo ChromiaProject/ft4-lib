@@ -30,6 +30,18 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0L);
 }
 
+function get_asset_data(asset: asset) {
+    return (
+        id = asset.id,
+        name = asset.name,
+        symbol = asset.symbol,
+        decimals = asset.decimals,
+        brid = asset.issuing_brid,
+        icon_url = asset.icon_url,
+        supply = asset.total_supply
+    );
+}
+
 function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?): list<utils.pagination_result> {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
@@ -38,15 +50,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     } (
         utils.pagination_result(
             data = (
-                asset = (
-                    id = .asset.id,
-                    name = .asset.name,
-                    symbol = .asset.symbol,
-                    decimals = .asset.decimals,
-                    brid = .asset.issuing_brid,
-                    supply = .asset.total_supply,
-                    icon_url = .asset.icon_url
-                ),
+                asset = get_asset_data(.asset),
                 amount = .amount
             ).to_gtv_pretty(),
             rowid = .rowid
@@ -60,15 +64,7 @@ function get_all_assets(page_size: integer, page_cursor: text?) {
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
-            data = (
-                id = .id,
-                symbol = .symbol,
-                name = .name,
-                decimals = .decimals,
-                brid = .issuing_brid,
-                icon_url = .icon_url,
-                supply = .total_supply
-            ).to_gtv_pretty(),
+            data = (get_asset_data($)).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);
@@ -76,13 +72,7 @@ function get_all_assets(page_size: integer, page_cursor: text?) {
 
 function get_asset_balances(account_id: byte_array) {
     return balance @* { .account.id == account_id } (
-        asset = (
-            id = .asset.id,
-            name = .asset.name,
-            decimals = .asset.decimals,
-            brid = .asset.issuing_brid,
-            supply = .asset.total_supply
-        ),
+        asset = get_asset_data(.asset),
         amount = .amount
     );
 }
@@ -107,15 +97,7 @@ function get_paginated_asset_balances_by_name(name, page_size: integer, page_cur
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
-            data = (
-                id = .id,
-                name = .name,
-                symbol = .symbol,
-                decimals = .decimals,
-                brid = .issuing_brid,
-                icon_url = .icon_url,
-                supply = .total_supply
-            ).to_gtv_pretty(),
+            data = (get_asset_data($)).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);

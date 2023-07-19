@@ -161,9 +161,7 @@ function test_transfer_history_entry() {
         (
             id = entry.rowid,
             delta = entry.delta,
-            decimals = entry.asset.decimals,
-            asset = entry.asset.name,
-            asset_id = entry.asset.id,
+            asset = assets.get_asset_data(entry.asset),
             is_input = entry.is_input,
             timestamp = entry.transaction.block.timestamp,
             block_height = entry.transaction.block.block_height,
