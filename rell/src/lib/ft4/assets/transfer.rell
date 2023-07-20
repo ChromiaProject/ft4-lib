@@ -1,20 +1,5 @@
 import acc: ^.accounts;
 
-struct xfer_input {
-   account_id: byte_array;
-   asset_id: byte_array;
-   auth_descriptor_id: byte_array;
-   amount: big_integer;
-   extra: map<text, gtv>;
-}
-
-struct xfer_output {
-   account_id: byte_array;
-   asset_id: byte_array;
-   amount: big_integer;
-   extra: map<text, gtv>;
-}
-
 function deduct_balance(acc.account, asset, amount: big_integer) {
     val balance = balance @ { account, asset };
     require(balance.amount >= amount, "Balance is too low");
