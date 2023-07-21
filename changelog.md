@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- createGenericEvmKeyStore: it receives an address and a sign function, to allow for custom implementations with any web3 library. Metamask is still supported through ethers for ease of setup.
+- fixed examples
+
 ## [0.1.3] - 2023-07-13
 
 ### Added
