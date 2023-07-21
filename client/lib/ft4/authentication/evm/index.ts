@@ -38,7 +38,10 @@ export async function signMessage(
   message: string,
   signer: ethers.Signer
 ): Promise<Signature> {
-  const signature = await signer.signMessage(message);
+  return signer.signMessage(message).then(sliceSignature);
+}
+
+export function sliceSignature(signature: string | `0x${string}`): Signature {
   const { r, s, v } = ethers.Signature.from(signature);
   return {
     r: Buffer.from(r.slice(2), "hex"),
