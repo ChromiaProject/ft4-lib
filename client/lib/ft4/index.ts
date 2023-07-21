@@ -14,6 +14,7 @@ import { createLocalStorageLoginKeyStore } from "./authentication/login-manager/
 import {
   KeyStore,
   createWeb3ProviderEvmKeyStore,
+  createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
 } from "./authentication";
 import { AuthDescriptor, FlagsType, Account, authDescriptor } from "./accounts";
@@ -48,6 +49,7 @@ export {
   createConnection,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
+  createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
   createSessionStorageLoginKeyStore,

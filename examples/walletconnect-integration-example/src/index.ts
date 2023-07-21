@@ -1,6 +1,6 @@
 import { Account, FlagsType, KeyStore, authDescriptor, createKeyStoreInteractor } from "@chromia/ft4"
 import { createClient, encryption, newSignatureProvider } from "postchain-client"
-import { createGenericEvmKeyStore } from "../../../dist/client/lib/ft4/authentication"
+import { createGenericEvmKeyStore } from "../../../dist/client/lib/ft4"
 import { registerAccount } from "../../../dist/client/lib/ft4/admin/admin-op-functions"
 import { Address, signMessage, watchAccount } from "@wagmi/core"
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
