@@ -169,7 +169,7 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
     } (
         utils.pagination_result(
             data = (
-                descriptor_id = .hash(),
+                id = .id,
                 auth_type = .auth_type,
                 args = gtv.from_bytes(.args),
                 rules = gtv.from_bytes(.rules)
