@@ -6,6 +6,13 @@ import acc_external: ^^^.lib.ft4.accounts.external;
 import test_utils: ^^.assets.utils;
 import test_op: ^^.operations;
 
+struct gtv_auth_descriptor {
+    descriptor_id: byte_array;
+    acc.auth_type;
+    args: gtv;
+    rules: gtv;
+}
+
 function setup_account_with_many_ads() {
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
   test_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
@@ -29,6 +36,10 @@ function get_single_sig_args(gtv): acc.single_sig_args {
 function test_auth_descriptors_are_returned_in_correct_order() {
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors(account.id, 4, null);
+
+  val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
+  val descriptor = gtv_auth_descriptor.from_gtv_pretty(descriptors.data[0]);
+  assert_equals(descriptor.descriptor_id, alice_ad_id);
 
   assert_equals(get_single_sig_args(descriptors.data[0]).pubkey, rell.test.keypairs.alice.pub);
   assert_equals(get_single_sig_args(descriptors.data[1]).pubkey, rell.test.keypairs.bob.pub);
