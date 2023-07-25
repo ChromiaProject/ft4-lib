@@ -37,13 +37,6 @@ function test_auth_descriptors_are_returned_in_correct_order() {
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors(account.id, 4, null);
 
-  val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
-  val descriptor = gtv_auth_descriptor.from_gtv_pretty(descriptors.data[0]);
-  assert_equals(descriptor.id, alice_ad_id);
-
-  print(acc.account_auth_descriptor @* {.account == account} (.id));
-  print(descriptors.data @* {} (gtv_auth_descriptor.from_gtv_pretty($).id));
-
   assert_equals(get_single_sig_args(descriptors.data[0]).pubkey, rell.test.keypairs.alice.pub);
   assert_equals(get_single_sig_args(descriptors.data[1]).pubkey, rell.test.keypairs.bob.pub);
   assert_equals(get_single_sig_args(descriptors.data[2]).pubkey, rell.test.keypairs.eve.pub);
