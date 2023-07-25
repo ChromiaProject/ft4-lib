@@ -62,4 +62,6 @@ export const ft = Object.freeze({
   authDescriptor,
 });
 
+export { ftEventEmitter } from "./events";
+
 ft.setLogLevel(0);
