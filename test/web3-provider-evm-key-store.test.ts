@@ -9,43 +9,38 @@ interface MockEip1193Provider extends ethers.Eip1193Provider {
   on: jest.Mock;
 }
 
+const mockSigner = {
+  getAddress: jest.fn(),
+};
+
+const mockEip1193Provider: MockEip1193Provider = {
+  request: jest.fn(),
+  getSigner: jest.fn().mockResolvedValue(mockSigner),
+  on: jest.fn(),
+};
+
+const mockEthAddress = "0xabc123";
+
 jest.mock("ethers", () => {
   const ActualEthers = jest.requireActual("ethers");
-
-  const mockSend = jest.fn();
-
-  function MockBrowserProvider() {
-    this.send = mockSend;
-    this.getSigner = jest.fn().mockResolvedValue({
-      getAddress: jest.fn().mockResolvedValue("fake-address"),
-    });
-  }
 
   return {
     ...ActualEthers,
     ethers: {
       ...ActualEthers.ethers,
-      BrowserProvider: MockBrowserProvider,
+      BrowserProvider: jest.fn().mockImplementation(() => ({
+        send: jest.fn(),
+        getSigner: jest.fn().mockResolvedValue({
+          getAddress: jest.fn().mockResolvedValue(mockEthAddress),
+        }),
+      })),
     },
   };
 });
 
 describe("Web3 Provider EVM Key Store", () => {
-  const mockSigner = {
-    getAddress: jest.fn(),
-  };
-
-  const mockEip1193Provider: MockEip1193Provider = {
-    request: jest.fn(),
-    getSigner: jest.fn().mockResolvedValue(mockSigner),
-    on: jest.fn(),
-  };
-
-  const mockEthAddress = "0xabc123";
-
   beforeEach(() => {
-    jest.resetAllMocks();
-    mockSigner.getAddress.mockResolvedValue(mockEthAddress);
+    jest.clearAllMocks();
   });
 
   it("creates a EvmKeyStore", async () => {
