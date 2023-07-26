@@ -1,0 +1,26 @@
+import ^.assets;
+import ^.accounts;
+
+
+entity asset_origin {
+   key assets.asset;
+   origin_brid: byte_array;
+}
+
+function blockchain_account_id(brid: byte_array): byte_array {
+   return ("B", brid).hash();
+}
+
+function ensure_blockchain_account(brid: byte_array): acc.account {
+   val blockchain_account_id = blockchain_account_id(brid);
+   val acc = accounts.account @? { .id == blockchain_account_id };
+   return if (acc??) acc
+   else create accounts.account (id = blockchain_account_id);
+}
+
+function get_blockchain_account(brid: byte_array): acc.account {
+   return require(
+      accounts.account @? { .id == blockchain_account_id(brid) },
+      "Account not found"
+   );
+}

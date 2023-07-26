@@ -2,10 +2,14 @@ module;
 
 namespace ft4 {
     import acc: ^.accounts;
+    import ^.accounts;
     import ^.assets;
     import ^.auth;
     import ^.admin;
+    import ^.crosschain;
+    import crosschain_ext: ^.crosschain.external;
     import acc_ext: ^.accounts.external;
+    import accounts_ext: ^.accounts.external;
     import assets_ext: ^.assets.external;
     import ^.version;
 }
