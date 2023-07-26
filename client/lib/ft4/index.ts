@@ -56,12 +56,16 @@ export {
   createAmount,
 };
 
+export {
+  onAccountAddressChange,
+  offAccountAddressChange,
+  Listener,
+} from "./events";
+
 export const ft = Object.freeze({
   getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
   authDescriptor,
 });
-
-export { ftEventEmitter } from "./events";
 
 ft.setLogLevel(0);
