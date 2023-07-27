@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- added exports of admin functions
+
 ## [0.1.3] - 2023-07-13
 
 ### Added
