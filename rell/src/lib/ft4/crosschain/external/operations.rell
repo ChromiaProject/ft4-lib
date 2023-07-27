@@ -1,17 +1,49 @@
 import ^^.assets;
-import ^;
+import ^^.accounts;
+import ^^.auth;
+import crosschain: ^;
+
+function init_transfer_message(gtv) {
+    val params = struct<init_transfer>.from_gtv(gtv);
+    val asset = assets.Asset(params.asset_id);
+
+    return "Please sign the message\n"+
+    "to transfer %s %s\n\n"+
+    "from:\n-account {account_id}\n-chain: %s\n\n"+
+    "to:\n-account %s\n-chain: %s\n\nNonce: {nonce}"
+        .format(
+            assets.format_amount_with_decimals(params.amount, asset.decimals),
+            asset.name,
+            chain_context.blockchain_rid,
+            params.receiver_id,
+            params.hops[params.hops.size()-1]
+        );
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "ft4.crosschain.init_transfer",
+    flags = ["T"],
+    message = init_transfer_message(*)
+);
 
 operation init_transfer(
-    // source: assets.transfer_input,
-    target: crosschain.crosschain_target,
+    receiver_id: byte_array,
+    asset_id: byte_array,
+    amount: big_integer,
     hops: list<byte_array>
 ) {
-    //assets.consume_input(source, 0, map<assets.asset, integer>());
+    val account = auth.authenticate();
     val asset = require(
-        assets.asset @? { .id == source.asset_id }, 
-        "Asset not found '%s'".format(source.asset_id)
+        assets.asset @? { .id == asset_id }, 
+        "Asset not found '%s'".format(asset_id)
     );
-    crosschain.add_to_blockchain_balance( hops[0], asset, source.amount );
+    crosschain.Unsafe.transfer(
+        account,
+        hops[0],
+        asset,
+        amount
+    );
 }
 
 operation apply_transfer(
@@ -37,7 +69,6 @@ operation apply_transfer(
     );
 
     val my_brid = chain_context.blockchain_rid;
-    val source = init_args.source;
 
     require(
         init_args.hops.size() > hop_index,
@@ -80,43 +111,30 @@ operation apply_transfer(
     }
 
     val asset = require(
-        assets.asset @? { .id == source.asset_id },
-        "Asset not found '%s'".format(source.asset_id)
+        assets.asset @? { .id == init_args.asset_id },
+        "Asset not found '%s'".format(init_args.asset_id)
     );
     val origin_brid = require(
         crosschain.asset_origin @? { asset } .origin_brid,
         "Asset origin not found. Did you register the crosschain asset '%s'?".format(asset.id)
     );
 
-    // process "from" side
-    if (from_brid == origin_brid) {
-        // asset comes from origin -- do nothing
-    } else {
-        assets.deduct_balance(
-            crosschain.get_blockchain_account( from_brid ),
-            asset, source.amount
-        );
-    }
-
-    // process "to" side
     if (init_args.hops.size() > hop_index + 1) {
         // this hop is not last
         val next_hop = init_args.hops[hop_index + 1];
-        crosschain.add_to_blockchain_balance(next_hop, asset, source.amount);
+        crosschain.Unsafe.transfer(
+            accounts.account @ { from_brid },
+            next_hop,
+            asset,
+            init_args.amount
+        );
     } else {
         // final hop -- send money to recipient account
-        val available_assets = map<assets.asset, big_integer>();
-        available_assets[asset] = source.amount;
-        val target = init_args.target;
-        /*assets.process_transfer_output(
-            assets.transfer_output(
-                account_id = target.account_id,
-                asset_id = source.asset_id,
-                amount = source.amount,
-                extra = target.extra
-            ),
-            0,
-            available_assets
-        );*/
+        assets.Unsafe.transfer(
+            accounts.account @ { from_brid },
+            accounts.account @ { init_args.receiver_id },
+            asset,
+            init_args.amount
+        );
     }
 }

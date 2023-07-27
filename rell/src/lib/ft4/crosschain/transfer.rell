@@ -1,31 +1,43 @@
 import ^.assets;
-
-struct crosschain_target {
-    account_id: byte_array;
-    extra: map<text, gtv>;
-}
-
-function add_to_blockchain_balance(brid: byte_array, assets.asset, amount: big_integer) {
-    require(
-        chain_context.blockchain_rid != brid,
-        "Cannot add to own account"
-    );
-
-    val origin_brid = asset_origin @? { asset } .origin_brid;
-
-    if (exists(origin_brid) and (brid == origin_brid)) {
-       // do nothing. in future we might track origin
-    } else {
-         val bc_acc = ensure_blockchain_account(brid);
-         assets.ensure_balance(bc_acc, asset).amount += amount;
-    }
-}
-
+import ^.accounts;
 
 struct init_transfer_args {
-    //source: assets.transfer_input;
-    target: crosschain_target;
+    receiver_id: byte_array;
+    asset_id: byte_array;
+    amount: big_integer;
     hops: list<byte_array>;
 }
 
 entity applied_transfers { key tx_rid: byte_array; }
+
+    
+namespace Unsafe {
+    function transfer(
+        accounts.account,
+        brid: byte_array,
+        assets.asset,
+        amount: big_integer
+    ) {
+        require(
+            chain_context.blockchain_rid != brid,
+            "Cannot transfer to own account"
+        );
+
+        val origin_brid = asset_origin @? { asset } .origin_brid;
+
+        val bc_acc = ensure_blockchain_account(brid);
+        if (
+            exists(origin_brid)
+            and is_blockchain(account.id)
+            and origin_brid == account.id
+        ) {
+            // origin_brid always has enough to transfer
+            update assets.balance @ { account, asset } ( amount );
+        }
+        assets.Unsafe.transfer(account, bc_acc, asset, amount);
+        if (exists(origin_brid) and origin_brid == brid ) {
+            // always forget the balance of the owner of the asset
+            update assets.balance @ { bc_acc, asset } ( .amount = 0 );
+        }
+    }
+}
