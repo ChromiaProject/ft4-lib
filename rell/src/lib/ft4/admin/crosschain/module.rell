@@ -1,3 +1,6 @@
+@mount("ft4.admin")
+module;
+
 import ^^.crosschain;
 import ^^.assets;
 import admin: ^;
