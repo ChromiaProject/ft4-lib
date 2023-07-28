@@ -1,0 +1,9 @@
+import ^^.assets;
+import crosschain: ^;
+
+query get_asset_origin_by_id(asset_id: byte_array) {
+    return require(
+        crosschain.asset_origin @? { assets.Asset(asset_id) },
+        "Asset <%s> is not a cross-chain asset".format(asset_id)
+    );
+}
