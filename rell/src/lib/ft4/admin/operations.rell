@@ -9,25 +9,6 @@ operation register_asset(name, symbol: text, decimals: integer, icon_url: text) 
     assets.Unsafe.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url);
 }
 
-operation register_crosschain_asset(
-    name,
-    symbol: text,
-    issuing_blockchain_id: byte_array,
-    from_blockchain_id: byte_array,
-    decimals: integer,
-    icon_url: text
-) {
-    require_admin();
-    val asset = assets.Unsafe.register_asset(
-        name,
-        symbol,
-        decimals,
-        issuing_blockchain_id,
-        icon_url
-    );
-    create crosschain.asset_origin(asset, from_blockchain_id);
-}
-
 operation mint(account_id: byte_array, asset_id: byte_array, amount: big_integer) {
     require_admin();
     assets.Unsafe.mint(accounts.Account(account_id), assets.Asset(asset_id), amount);

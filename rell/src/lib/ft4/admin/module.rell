@@ -3,7 +3,6 @@ module;
 
 import ^.accounts;
 import ^.assets;
-import ^.crosschain;
 import ^.utils;
 
 struct module_args {
