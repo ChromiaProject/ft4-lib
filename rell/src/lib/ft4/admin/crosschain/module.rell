@@ -1,4 +1,3 @@
-module;
 import ^^.crosschain;
 import ^^.assets;
 import admin: ^;
