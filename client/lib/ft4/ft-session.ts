@@ -58,14 +58,14 @@ export function createConnection(client: IClient): Connection {
     getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
-      cursor?: OptionalPageCursor
+      cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
     getAssetsByName: (
       name: string,
       limit?: number,
-      cursor?: OptionalPageCursor
+      cursor?: OptionalPageCursor,
     ) => getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
@@ -76,7 +76,7 @@ export function createConnection(client: IClient): Connection {
 
 export function createSession(
   connection: Connection,
-  authenticator: Authenticator
+  authenticator: Authenticator,
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
@@ -92,9 +92,46 @@ export function createSession(
 
 async function query<T extends RawGtv>(
   connection: Connection,
-  queryObject: QueryObject<QueryArguments>
+  queryObject: QueryObject<QueryArguments>,
 ): Promise<T | null> {
   return await connection.client.query<QueryArguments, T>(queryObject);
+}
+
+interface Module {
+  operations?: Record<string, unknown>;
+}
+
+interface AppStructure {
+  modules: Module[];
+}
+
+export function getAppStructureQuery(): QueryObject<null> {
+  return {
+    name: "rell.get_app_structure",
+  };
+}
+
+let exposedOperations: Set<string>;
+
+async function fetchAndSetExposedOperations(
+  connection: Connection,
+): Promise<void> {
+  const appStructureQuery = getAppStructureQuery();
+  const appStructure = await connection.query<AppStructure>(appStructureQuery);
+
+  if (!appStructure || !appStructure.modules) {
+    throw new Error("Failed to fetch the app structure from Rell");
+  }
+
+  exposedOperations = new Set<string>();
+
+  for (const module of appStructure.modules) {
+    if (module.operations) {
+      for (const operation in module.operations) {
+        exposedOperations.add(operation);
+      }
+    }
+  }
 }
 
 export async function callWithoutNop(
@@ -102,6 +139,16 @@ export async function callWithoutNop(
   authenticator: Authenticator,
   ...operations: Operation[]
 ): Promise<TransactionReceipt> {
+  if (!exposedOperations) {
+    await fetchAndSetExposedOperations(connection);
+  }
+
+  for (const operation of operations) {
+    if (!exposedOperations.has(operation.name)) {
+      throw new Error(`Operation ${operation.name} does not exist`);
+    }
+  }
+
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
@@ -141,7 +188,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
 
 export function createKeyStoreInteractor(
   client: IClient,
-  keyStore: KeyStore
+  keyStore: KeyStore,
 ): KeyStoreInteractor {
   const connection = createConnection(client);
   return Object.freeze({
@@ -149,15 +196,15 @@ export function createKeyStoreInteractor(
     getSession: async (accountId: Buffer) => {
       const account = createAccountObject(connection, accountId);
       const authDescriptors = await account.getAuthDescriptorsByParticipantId(
-        keyStore.id
+        keyStore.id,
       );
       const keyHandlers = authDescriptors.map((authDescriptor) =>
-        keyStore.createKeyHandler(authDescriptor)
+        keyStore.createKeyHandler(authDescriptor),
       );
       const authenticator = createAuthenticator(
         accountId,
         keyHandlers,
-        createAuthDataService(connection)
+        createAuthDataService(connection),
       );
 
       return createSession(connection, authenticator);
