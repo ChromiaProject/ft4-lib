@@ -43,6 +43,7 @@ import {
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
+import { AppStructure, getAppStructureQuery } from "./queries";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -95,20 +96,6 @@ async function query<T extends RawGtv>(
   queryObject: QueryObject<QueryArguments>,
 ): Promise<T | null> {
   return await connection.client.query<QueryArguments, T>(queryObject);
-}
-
-interface Module {
-  operations?: Record<string, unknown>;
-}
-
-interface AppStructure {
-  modules: Module[];
-}
-
-export function getAppStructureQuery(): QueryObject<null> {
-  return {
-    name: "rell.get_app_structure",
-  };
 }
 
 let exposedOperations: Set<string>;
