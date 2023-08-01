@@ -98,7 +98,7 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
-let exposedOperations: Set<string>;
+export let exposedOperations: Set<string> | null = null;
 
 async function fetchAndSetExposedOperations(
   connection: Connection,
@@ -119,6 +119,10 @@ async function fetchAndSetExposedOperations(
       }
     }
   }
+}
+
+export async function resetExposedOperations() {
+  exposedOperations = null;
 }
 
 export async function callWithoutNop(

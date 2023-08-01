@@ -1,4 +1,7 @@
-import { callWithoutNop } from "../client/lib/ft4/ft-session";
+import {
+  callWithoutNop,
+  resetExposedOperations,
+} from "../client/lib/ft4/ft-session";
 import { Authenticator } from "../client/lib/ft4/authentication/types";
 import {
   IClient,
@@ -12,12 +15,25 @@ import { Connection } from "../client/lib/ft4/types";
 const mockConnection: Partial<Connection> = {
   query: jest.fn(),
   client: {
+    config: {
+      blockchainRID: "mockBlockchainRID",
+    },
     sendTransaction: jest.fn(),
   } as unknown as IClient,
 };
 
 // Mock the authenticator
-const mockAuthenticator: Partial<Authenticator> = {};
+const mockAuthenticator: Partial<Authenticator> = {
+  getKeyHandlerForOperation: jest.fn().mockResolvedValue({
+    sign: jest.fn(),
+    authDescriptor: {
+      id: "mockId",
+    },
+    authorize: jest.fn().mockResolvedValue([]),
+    getSigners: jest.fn(),
+  }),
+  getNonce: jest.fn().mockResolvedValue(1),
+};
 
 // Mock the operation
 const mockOperation: Operation = {
@@ -26,7 +42,8 @@ const mockOperation: Operation = {
 
 describe("ft-session.ts", () => {
   afterEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
+    resetExposedOperations();
   });
 
   test("callWithoutNop should throw an error if the operation does not exist", async () => {
