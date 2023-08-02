@@ -1,4 +1,4 @@
-import { ftEventEmitter } from "./emitter";
+import { ftEventEmitter } from "./ftEventEmitter";
 import { Listener } from "./types";
 
 /**

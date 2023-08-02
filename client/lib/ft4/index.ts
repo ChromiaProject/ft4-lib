@@ -75,6 +75,7 @@ export {
   onAccountAddressChange,
   offAccountAddressChange,
   Listener,
+  EventEmitter,
 } from "./events";
 
 export const ft = Object.freeze({

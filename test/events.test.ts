@@ -3,7 +3,7 @@ import {
   onAccountAddressChange,
   offAccountAddressChange,
 } from "../client/lib/ft4/events";
-import { ftEventEmitter } from "../client/lib/ft4/events/emitter";
+import { ftEventEmitter } from "../client/lib/ft4/events";
 
 describe("EventEmitter functionality", () => {
   let listener: Listener<[string]>;

@@ -1,4 +1,4 @@
-import { FTEvents, Listener } from "./types";
+import { Listener } from "./types";
 
 export class EventEmitter<T extends Record<string, any[]>> {
   private events: Partial<Record<keyof T, Listener<T[keyof T]>[]>> = {};
@@ -52,7 +52,3 @@ export class EventEmitter<T extends Record<string, any[]>> {
     });
   }
 }
-
-class FTEventEmitter extends EventEmitter<FTEvents> {}
-
-export const ftEventEmitter = new FTEventEmitter();
