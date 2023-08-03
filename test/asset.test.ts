@@ -148,7 +148,7 @@ describe("Asset", () => {
   });
 
   // Update after addding new admin functions
-  it.skip("should fail to register with invalid icon URL", async () => {
+  it("should fail to register with invalid icon URL", async () => {
     const invalidUrl = "not-a-valid-url";
     await expect(
       getNewAsset(client, "Test Asset 2", "TST2", 0, invalidUrl)
