@@ -12,7 +12,7 @@ export interface Authenticator {
   createSession(): AuthenticatorSession;
   getAuthFlags(operation: Operation): Promise<string[]>;
   getKeyHandlerForOperation(
-    operation: Operation
+    operation: Operation,
   ): Promise<KeyHandler | undefined>;
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
@@ -27,7 +27,7 @@ export interface KeyHandler {
     accountId: BufferId,
     operation: Operation,
     nonce: number,
-    authDataService: AuthDataService
+    authDataService: AuthDataService,
   ): Promise<Operation[]>;
 
   sign(transaction: TxBuilderTransaction): Promise<void>;
@@ -42,6 +42,7 @@ export interface KeyStore {
   isInteractive: boolean;
   createKeyHandler(authDescriptor: AuthDescriptor): KeyHandler;
 }
+
 export interface AuthenticatorSession {
   authenticator: Authenticator;
   getUsedKeyHandlers(): Set<KeyHandler>;
@@ -55,7 +56,7 @@ export interface AuthDataService {
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   getNonce(
     accountId: BufferId,
-    authDescriptorId: BufferId
+    authDescriptorId: BufferId,
   ): Promise<number | null>;
   getLoginConfig(name: string | null): Promise<LoginConfig>;
 }
