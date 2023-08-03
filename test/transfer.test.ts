@@ -52,7 +52,7 @@ describe("Transfer", () => {
     );
   });
 
-  it.skip("should fail when balance is lower than amount to transfer", async () => {
+  it("fails when balance is lower than amount to transfer", async () => {
     const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 5)
       .withPoints(1)
