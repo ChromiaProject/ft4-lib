@@ -78,15 +78,21 @@ export function createConnection(client: IClient): Connection {
 export function createSession(
   connection: Connection,
   authenticator: Authenticator,
+  exposedOperations: Set<string>,
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
     transactionBuilder: () =>
-      transactionBuilder(authenticator, connection.client),
+      transactionBuilder(authenticator, connection.client, exposedOperations),
     call: (...operations: Operation[]) =>
-      call(connection, authenticator, ...operations),
+      call(connection, authenticator, exposedOperations, ...operations),
     callWithoutNop: (...operations: Operation[]) =>
-      callWithoutNop(connection, authenticator, ...operations),
+      callWithoutNop(
+        connection,
+        authenticator,
+        exposedOperations,
+        ...operations,
+      ),
     ...connection,
   });
 }
@@ -98,11 +104,9 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
-export let exposedOperations: Set<string> | null = null;
-
-async function fetchAndSetExposedOperations(
+async function fetchExposedOperations(
   connection: Connection,
-): Promise<void> {
+): Promise<Set<string>> {
   const appStructureQuery = getAppStructureQuery();
   const appStructure = await connection.query<AppStructure>(appStructureQuery);
 
@@ -110,7 +114,7 @@ async function fetchAndSetExposedOperations(
     throw new Error("Failed to fetch the app structure from Rell");
   }
 
-  exposedOperations = new Set<string>();
+  const exposedOperations = new Set<string>();
 
   for (const module of appStructure.modules) {
     if (module.operations) {
@@ -119,39 +123,38 @@ async function fetchAndSetExposedOperations(
       }
     }
   }
-}
-
-export async function resetExposedOperations() {
-  exposedOperations = null;
-}
-
-export async function callWithoutNop(
-  connection: Connection,
-  authenticator: Authenticator,
-  ...operations: Operation[]
-): Promise<TransactionReceipt> {
-  if (!exposedOperations) {
-    await fetchAndSetExposedOperations(connection);
-  }
-
-  for (const operation of operations) {
-    if (!exposedOperations.has(operation.name)) {
-      throw new Error(`Operation ${operation.name} does not exist`);
-    }
-  }
-
-  const tb = transactionBuilder(authenticator, connection.client);
-  operations.forEach((operation: Operation) => tb.add(operation));
-  const tx = await tb.build();
-  return connection.client.sendTransaction(tx);
+  return exposedOperations;
 }
 
 export async function call(
   connection: Connection,
   authenticator: Authenticator,
+  exposedOperations?: Set<string>,
   ...operations: Operation[]
 ): Promise<TransactionReceipt> {
-  return callWithoutNop(connection, authenticator, ...operations, nop());
+  return callWithoutNop(
+    connection,
+    authenticator,
+    exposedOperations,
+    ...operations,
+    nop(),
+  );
+}
+
+export async function callWithoutNop(
+  connection: Connection,
+  authenticator: Authenticator,
+  exposedOperations?: Set<string>,
+  ...operations: Operation[]
+): Promise<TransactionReceipt> {
+  const tb = transactionBuilder(
+    authenticator,
+    connection.client,
+    exposedOperations,
+  );
+  operations.forEach((operation: Operation) => tb.add(operation));
+  const tx = await tb.build();
+  return connection.client.sendTransaction(tx);
 }
 
 export type KeyStoreInteractor = {
@@ -198,7 +201,9 @@ export function createKeyStoreInteractor(
         createAuthDataService(connection),
       );
 
-      return createSession(connection, authenticator);
+      const exposedOperations = await fetchExposedOperations(connection);
+
+      return createSession(connection, authenticator, exposedOperations);
     },
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
