@@ -22,13 +22,13 @@ import { call } from "../ft-session";
 
 export function createAuthenticatedAccount(
   connection: Connection,
-  authenticator: Authenticator
+  authenticator: Authenticator,
 ): AuthenticatedAccount {
   return {
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AuthDescriptor,
-      newSigner: SignatureProvider | KeyPair
+      newSigner: SignatureProvider | KeyPair,
     ) =>
       addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
@@ -47,14 +47,14 @@ async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
-  newSigner: SignatureProvider | KeyPair
+  newSigner: SignatureProvider | KeyPair,
 ): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptor))
     .addSigners(
-      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor)
+      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor),
     )
     .build();
 
@@ -64,12 +64,13 @@ async function addAuthDescriptor(
 async function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  authDescriptorId: BufferId
+  authDescriptorId: BufferId,
 ): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
-    deleteAuthDescriptorOp(authDescriptorId)
+    undefined,
+    deleteAuthDescriptorOp(authDescriptorId),
   );
 }
 
@@ -78,12 +79,13 @@ async function transfer(
   authenticator: Authenticator,
   receiverId: BufferId,
   assetId: BufferId,
-  amount: Amount
+  amount: Amount,
 ): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
-    transferOp(receiverId, assetId, amount)
+    undefined,
+    transferOp(receiverId, assetId, amount),
   );
 }
 
@@ -91,7 +93,7 @@ async function burn(
   connection: Connection,
   authenticator: Authenticator,
   assetId: BufferId,
-  amount: Amount
+  amount: Amount,
 ) {
-  return call(connection, authenticator, burnOp(assetId, amount));
+  return call(connection, authenticator, undefined, burnOp(assetId, amount));
 }

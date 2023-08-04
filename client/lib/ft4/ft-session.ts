@@ -78,7 +78,7 @@ export function createConnection(client: IClient): Connection {
 export function createSession(
   connection: Connection,
   authenticator: Authenticator,
-  exposedOperations: Set<string>,
+  exposedOperations?: Set<string>,
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),

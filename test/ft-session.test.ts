@@ -1,7 +1,4 @@
-import {
-  callWithoutNop,
-  resetExposedOperations,
-} from "../client/lib/ft4/ft-session";
+import { createSession } from "../client/lib/ft4/ft-session";
 import { Authenticator } from "../client/lib/ft4/authentication/types";
 import {
   IClient,
@@ -24,6 +21,7 @@ const mockConnection: Partial<Connection> = {
 
 // Mock the authenticator
 const mockAuthenticator: Partial<Authenticator> = {
+  accountId: Buffer.from("mockAccountId"),
   getKeyHandlerForOperation: jest.fn().mockResolvedValue({
     sign: jest.fn(),
     authDescriptor: {
@@ -43,21 +41,22 @@ const mockOperation: Operation = {
 describe("ft-session.ts", () => {
   afterEach(() => {
     jest.clearAllMocks();
-    resetExposedOperations();
   });
 
   test("callWithoutNop should throw an error if the operation does not exist", async () => {
+    const session = createSession(
+      mockConnection as Connection,
+      mockAuthenticator as Authenticator,
+      new Set(),
+    );
+
     (mockConnection.query as jest.Mock).mockResolvedValueOnce({
       modules: [],
     });
 
-    await expect(
-      callWithoutNop(
-        mockConnection as Connection,
-        mockAuthenticator as Authenticator,
-        mockOperation,
-      ),
-    ).rejects.toThrow(`Operation ${mockOperation.name} does not exist`);
+    await expect(session.callWithoutNop(mockOperation)).rejects.toThrow(
+      `Operation ${mockOperation.name} does not exist`,
+    );
   });
 
   test("callWithoutNop should send a transaction if the operation exists", async () => {
@@ -81,11 +80,13 @@ describe("ft-session.ts", () => {
       mockTransactionReceipt,
     );
 
-    const result = await callWithoutNop(
+    const session = createSession(
       mockConnection as Connection,
       mockAuthenticator as Authenticator,
-      mockOperation,
+      new Set(["testOperation"]),
     );
+
+    const result = await session.callWithoutNop(mockOperation);
 
     expect(result).toBe(mockTransactionReceipt);
   });
