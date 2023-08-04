@@ -2,6 +2,7 @@ import { Authenticator, KeyHandler } from "../authentication/types";
 import { Buffer } from "buffer";
 import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
+import { OperationNotExistError } from "./errors";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -92,7 +93,9 @@ export function transactionBuilder(
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
     if (exposedOperations && !exposedOperations.has(operation.name)) {
-      throw new Error(`Operation ${operation.name} does not exist`);
+      throw new OperationNotExistError(
+        `Operation ${operation.name} does not exist`,
+      );
     }
     this._operations.push([operation, authenticator]);
     return this;

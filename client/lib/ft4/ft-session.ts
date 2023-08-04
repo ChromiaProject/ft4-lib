@@ -43,7 +43,8 @@ import {
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
-import { AppStructure, getAppStructureQuery } from "./queries";
+import { RellAppStructure, rellAppStructure } from "./queries";
+import { FetchAppStructureError } from "./errors";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -107,11 +108,15 @@ async function query<T extends RawGtv>(
 async function fetchExposedOperations(
   connection: Connection,
 ): Promise<Set<string>> {
-  const appStructureQuery = getAppStructureQuery();
-  const appStructure = await connection.query<AppStructure>(appStructureQuery);
+  const appStructureQuery = rellAppStructure();
+  const appStructure = await connection.query<RellAppStructure>(
+    appStructureQuery,
+  );
 
   if (!appStructure || !appStructure.modules) {
-    throw new Error("Failed to fetch the app structure from Rell");
+    throw new FetchAppStructureError(
+      "Failed to fetch the app structure from Rell",
+    );
   }
 
   const exposedOperations = new Set<string>();

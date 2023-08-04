@@ -1,14 +1,14 @@
 import { QueryObject } from "postchain-client";
 
-interface Module {
+export interface RellModuleStructure {
   operations?: Record<string, unknown>;
 }
 
-export interface AppStructure {
-  modules: Record<string, Module>;
+export interface RellAppStructure {
+  modules: Record<string, RellModuleStructure>;
 }
 
-export function getAppStructureQuery(): QueryObject<null> {
+export function rellAppStructure(): QueryObject<null> {
   return {
     name: "rell.get_app_structure",
   };
