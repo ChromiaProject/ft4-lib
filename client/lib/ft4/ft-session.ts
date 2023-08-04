@@ -116,7 +116,7 @@ async function fetchExposedOperations(
 
   const exposedOperations = new Set<string>();
 
-  for (const module of appStructure.modules) {
+  for (const [, module] of Object.entries(appStructure.modules)) {
     if (module.operations) {
       for (const operation in module.operations) {
         exposedOperations.add(operation);

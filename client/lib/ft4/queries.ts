@@ -5,7 +5,7 @@ interface Module {
 }
 
 export interface AppStructure {
-  modules: Module[];
+  modules: Record<string, Module>;
 }
 
 export function getAppStructureQuery(): QueryObject<null> {

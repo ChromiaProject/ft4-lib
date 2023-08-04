@@ -44,15 +44,15 @@ describe("ft-session.ts", () => {
   });
 
   test("callWithoutNop should throw an error if the operation does not exist", async () => {
+    (mockConnection.query as jest.Mock).mockResolvedValueOnce({
+      modules: {},
+    });
+
     const session = createSession(
       mockConnection as Connection,
       mockAuthenticator as Authenticator,
       new Set(),
     );
-
-    (mockConnection.query as jest.Mock).mockResolvedValueOnce({
-      modules: [],
-    });
 
     await expect(session.callWithoutNop(mockOperation)).rejects.toThrow(
       `Operation ${mockOperation.name} does not exist`,
@@ -67,13 +67,13 @@ describe("ft-session.ts", () => {
     };
 
     (mockConnection.query as jest.Mock).mockResolvedValueOnce({
-      modules: [
-        {
+      modules: {
+        module1: {
           operations: {
             testOperation: {},
           },
         },
-      ],
+      },
     });
 
     (mockConnection.client.sendTransaction as jest.Mock).mockResolvedValueOnce(
