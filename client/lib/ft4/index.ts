@@ -71,6 +71,13 @@ export {
   mint,
 };
 
+export {
+  onAccountAddressChange,
+  offAccountAddressChange,
+  Listener,
+  EventEmitter,
+} from "./events";
+
 export const ft = Object.freeze({
   getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
