@@ -206,7 +206,13 @@ export function createKeyStoreInteractor(
         createAuthDataService(connection),
       );
 
+      const startTime = new Date().getTime(); // Capture start time
+
       const exposedOperations = await fetchExposedOperations(connection);
+
+      const endTime = new Date().getTime(); // Capture end time
+
+      console.log(`fetchExposedOperations took: ${endTime - startTime}ms`);
 
       return createSession(connection, authenticator, exposedOperations);
     },

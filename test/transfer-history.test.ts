@@ -66,7 +66,6 @@ describe("Transfer history", () => {
         createInMemoryFtKeyStore(keyPair),
       ).getSession(account1.id);
 
-      console.error("Calling transfer");
       await session.account.transfer(
         account2.id,
         asset.id,

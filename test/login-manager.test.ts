@@ -87,34 +87,27 @@ describe("Login manager", () => {
       [FlagsType.Account],
       keyStore.id,
     ).andNoRules;
-    console.log("Calling createAccount()");
     const accountId = await createAccount(client, ad);
 
-    console.log("Calling createKeyStoreInteractor()");
     const session = await createKeyStoreInteractor(
       connection.client,
       keyStore,
     ).getSession(accountId);
 
-    console.log("Calling makeKeyPair()");
     const keyPair2 = encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["X"],
       keyPair2.pubKey,
     ).andNoRules;
 
-    console.log("Calling addAuthDescriptor()");
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    console.log("Calling createKeyStoreInteractor()");
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
       createInMemoryFtKeyStore(keyPair2),
     );
-    console.log("Calling getLoginManager()");
     const loginManger = keyStoreInteractor.getLoginManager();
 
-    console.log("Calling login()");
     expect(loginManger.login({ accountId })).rejects.toThrowError(
       `Admin auth descriptor does not exist for provided key store <${keyPair2.pubKey.toString(
         "hex",
