@@ -25,14 +25,14 @@ describe("Login manager", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
-      keyStore.address
+      keyStore.address,
     ).andNoRules;
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
     const loginManger = createKeyStoreInteractor(
       connection.client,
-      keyStore
+      keyStore,
     ).getLoginManager();
 
     const authDescriptorsBeforeLogin = await account.getAuthDescriptors();
@@ -49,13 +49,13 @@ describe("Login manager", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
-      keyStore.address
+      keyStore.address,
     ).andNoRules;
     const accountId = await createAccount(client, ad);
 
     const loginManger = createKeyStoreInteractor(
       connection.client,
-      keyStore
+      keyStore,
     ).getLoginManager();
 
     const session = await loginManger.login({
@@ -72,11 +72,11 @@ describe("Login manager", () => {
 
     const disposableAuthHandler =
       session.account.authenticator.keyHandlers.filter(
-        (keyHandler) => keyHandler.authDescriptor.id !== keyStore.address
+        (keyHandler) => keyHandler.authDescriptor.id !== keyStore.address,
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(
-      disposableAuthHandler.authDescriptor.signers
+      disposableAuthHandler.authDescriptor.signers,
     );
   });
 
@@ -85,33 +85,40 @@ describe("Login manager", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
-      keyStore.id
+      keyStore.id,
     ).andNoRules;
+    console.log("Calling createAccount()");
     const accountId = await createAccount(client, ad);
 
+    console.log("Calling createKeyStoreInteractor()");
     const session = await createKeyStoreInteractor(
       connection.client,
-      keyStore
+      keyStore,
     ).getSession(accountId);
 
+    console.log("Calling makeKeyPair()");
     const keyPair2 = encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["X"],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
 
+    console.log("Calling addAuthDescriptor()");
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
+    console.log("Calling createKeyStoreInteractor()");
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2)
+      createInMemoryFtKeyStore(keyPair2),
     );
+    console.log("Calling getLoginManager()");
     const loginManger = keyStoreInteractor.getLoginManager();
 
+    console.log("Calling login()");
     expect(loginManger.login({ accountId })).rejects.toThrowError(
       `Admin auth descriptor does not exist for provided key store <${keyPair2.pubKey.toString(
-        "hex"
-      )}>`
+        "hex",
+      )}>`,
     );
   });
 
@@ -120,12 +127,12 @@ describe("Login manager", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
-      keyStore.id
+      keyStore.id,
     ).andNoRules;
     const accountId = await createAccount(client, ad);
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
-      keyStore
+      keyStore,
     );
     const session = await keyStoreInteractor.getSession(accountId);
 
@@ -133,7 +140,7 @@ describe("Login manager", () => {
     const keyPair2 = await loginKeyStore.createKeyPair(accountId);
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["X"],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
@@ -141,7 +148,7 @@ describe("Login manager", () => {
     const session2 = await loginManger.login({ accountId });
 
     const keyStoreIds = session2.account.authenticator.keyHandlers.map(
-      (keyHandler) => keyHandler.keyStore.id
+      (keyHandler) => keyHandler.keyStore.id,
     );
     expect(keyStoreIds).toMatchObject([keyPair2.pubKey, keyStore.id]);
   });
