@@ -105,9 +105,15 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
+let cachedExposedOperations: Set<string> | null = null;
+
 async function fetchExposedOperations(
   connection: Connection,
 ): Promise<Set<string>> {
+  if (cachedExposedOperations) {
+    return cachedExposedOperations;
+  }
+
   const appStructureQuery = rellAppStructure();
 
   const appStructure = await connection.query<RellAppStructure>(
@@ -129,6 +135,9 @@ async function fetchExposedOperations(
       }
     }
   }
+
+  cachedExposedOperations = exposedOperations;
+
   return exposedOperations;
 }
 
@@ -186,8 +195,6 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   });
 }
 
-let cachedExposedOperations: Set<string> | null = null;
-
 export function createKeyStoreInteractor(
   client: IClient,
   keyStore: KeyStore,
@@ -209,11 +216,9 @@ export function createKeyStoreInteractor(
         createAuthDataService(connection),
       );
 
-      if (!cachedExposedOperations) {
-        cachedExposedOperations = await fetchExposedOperations(connection);
-      }
+      const exposedOperations = await fetchExposedOperations(connection);
 
-      return createSession(connection, authenticator, cachedExposedOperations);
+      return createSession(connection, authenticator, exposedOperations);
     },
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
