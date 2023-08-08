@@ -109,6 +109,7 @@ async function fetchExposedOperations(
   connection: Connection,
 ): Promise<Set<string>> {
   const appStructureQuery = rellAppStructure();
+
   const appStructure = await connection.query<RellAppStructure>(
     appStructureQuery,
   );
@@ -185,6 +186,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   });
 }
 
+let cachedExposedOperations: Set<string> | null = null;
+
 export function createKeyStoreInteractor(
   client: IClient,
   keyStore: KeyStore,
@@ -206,15 +209,11 @@ export function createKeyStoreInteractor(
         createAuthDataService(connection),
       );
 
-      const startTime = new Date().getTime(); // Capture start time
+      if (!cachedExposedOperations) {
+        cachedExposedOperations = await fetchExposedOperations(connection);
+      }
 
-      const exposedOperations = await fetchExposedOperations(connection);
-
-      const endTime = new Date().getTime(); // Capture end time
-
-      console.log(`fetchExposedOperations took: ${endTime - startTime}ms`);
-
-      return createSession(connection, authenticator, exposedOperations);
+      return createSession(connection, authenticator, cachedExposedOperations);
     },
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
