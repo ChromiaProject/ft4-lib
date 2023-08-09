@@ -10,7 +10,10 @@ export class EventEmitter<T extends Record<string, any[]>> {
    * @param listener - The listener callback.
    * @returns A function that removes the listener when called.
    */
-  on<K extends keyof T>(event: K, listener: Listener<T[K]>): () => void {
+  on<K extends keyof T>(
+    event: K,
+    listener: Listener<T[K] | T[K][0]>
+  ): () => void {
     const listeners = (this.events[event] = this.events[event] || []);
     listeners.push(listener);
 
@@ -23,7 +26,7 @@ export class EventEmitter<T extends Record<string, any[]>> {
    * @param event - The event name.
    * @param listener - The listener callback.
    */
-  off<K extends keyof T>(event: K, listener: Listener<T[K]>) {
+  off<K extends keyof T>(event: K, listener: Listener<T[K] | T[K][0]>) {
     const listeners = this.events[event];
     if (!listeners) return;
 
@@ -45,7 +48,7 @@ export class EventEmitter<T extends Record<string, any[]>> {
 
     listeners.forEach((listener) => {
       try {
-        listener(...args);
+        Array.isArray(args) ? listener(...args) : listener(args);
       } catch (err) {
         console.error(`Error in listener for event "${String(event)}":`, err);
       }

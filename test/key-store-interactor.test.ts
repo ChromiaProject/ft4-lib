@@ -1,14 +1,21 @@
 import { newSignatureProvider } from "postchain-client";
-import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
-import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
+import {
+  FlagsType,
+  authDescriptor,
+} from "../client/lib/ft4/accounts/auth-descriptor";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import {
+  KeyStoreInteractor,
   createConnection,
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
 import AccountBuilder from "./util/account-builder";
 import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
+import {
+  InjectedProvider,
+  createWeb3ProviderEvmKeyStore,
+} from "/ft4/authentication";
 
 let connection: Connection;
 
@@ -102,5 +109,41 @@ describe("Key store interactor", () => {
     ).getSession(account.id);
 
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);
+  });
+
+  describe("account updates", () => {
+    it("emits a new interactor on account change", async () => {
+      let handler = undefined;
+      const providerMock: Partial<InjectedProvider> = {
+        request: jest
+          .fn()
+          .mockReturnValueOnce(["0x13376a16794B18CC3287635116BF842e34e9940C"])
+          .mockReturnValue(["0xabcfD2cFecb42f72096BA436f091add0fb757104"]),
+        once: (eventName: string, h: (...args: any[]) => void) => {
+          expect(eventName).toBe("accountsChanged");
+          handler = h;
+          return this;
+        },
+      };
+      const keyStore = await createWeb3ProviderEvmKeyStore(
+        providerMock as InjectedProvider
+      );
+      const { onKeyStoreChanged } = createKeyStoreInteractor(
+        connection.client,
+        keyStore
+      );
+
+      const promise = new Promise((resolve) => {
+        onKeyStoreChanged((newKeyInteractor: KeyStoreInteractor) => {
+          resolve(newKeyInteractor);
+        });
+      });
+
+      handler();
+
+      // If the event is emitted, this will resolve and the test will pass,
+      // otherwise the test will fail due to a timeout
+      await promise;
+    });
   });
 });
