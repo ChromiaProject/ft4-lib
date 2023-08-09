@@ -69,7 +69,6 @@ async function deleteAuthDescriptor(
   return call(
     connection,
     authenticator,
-    undefined,
     deleteAuthDescriptorOp(authDescriptorId),
   );
 }
@@ -84,7 +83,6 @@ async function transfer(
   return call(
     connection,
     authenticator,
-    undefined,
     transferOp(receiverId, assetId, amount),
   );
 }
@@ -95,5 +93,5 @@ async function burn(
   assetId: BufferId,
   amount: Amount,
 ) {
-  return call(connection, authenticator, undefined, burnOp(assetId, amount));
+  return call(connection, authenticator, burnOp(assetId, amount));
 }

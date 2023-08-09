@@ -43,8 +43,6 @@ import {
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
-import { RellAppStructure, rellAppStructure } from "./queries";
-import { FetchAppStructureError } from "./errors";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -79,21 +77,15 @@ export function createConnection(client: IClient): Connection {
 export function createSession(
   connection: Connection,
   authenticator: Authenticator,
-  exposedOperations?: Set<string>,
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
     transactionBuilder: () =>
-      transactionBuilder(authenticator, connection.client, exposedOperations),
+      transactionBuilder(authenticator, connection.client),
     call: (...operations: Operation[]) =>
-      call(connection, authenticator, exposedOperations, ...operations),
+      call(connection, authenticator, ...operations),
     callWithoutNop: (...operations: Operation[]) =>
-      callWithoutNop(
-        connection,
-        authenticator,
-        exposedOperations,
-        ...operations,
-      ),
+      callWithoutNop(connection, authenticator, ...operations),
     ...connection,
   });
 }
@@ -105,68 +97,20 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
-let cachedExposedOperations: Set<string> | null = null;
-
-async function fetchExposedOperations(
-  connection: Connection,
-): Promise<Set<string>> {
-  if (cachedExposedOperations) {
-    return cachedExposedOperations;
-  }
-
-  const appStructureQuery = rellAppStructure();
-
-  const appStructure = await connection.query<RellAppStructure>(
-    appStructureQuery,
-  );
-
-  if (!appStructure || !appStructure.modules) {
-    throw new FetchAppStructureError(
-      "Failed to fetch the app structure from Rell",
-    );
-  }
-
-  const exposedOperations = new Set<string>();
-
-  for (const [, module] of Object.entries(appStructure.modules)) {
-    if (module.operations) {
-      for (const operation in module.operations) {
-        exposedOperations.add(operation);
-      }
-    }
-  }
-
-  cachedExposedOperations = exposedOperations;
-
-  return exposedOperations;
-}
-
 export async function call(
   connection: Connection,
   authenticator: Authenticator,
-  exposedOperations?: Set<string>,
   ...operations: Operation[]
 ): Promise<TransactionReceipt> {
-  return callWithoutNop(
-    connection,
-    authenticator,
-    exposedOperations,
-    ...operations,
-    nop(),
-  );
+  return callWithoutNop(connection, authenticator, ...operations, nop());
 }
 
 export async function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
-  exposedOperations?: Set<string>,
   ...operations: Operation[]
 ): Promise<TransactionReceipt> {
-  const tb = transactionBuilder(
-    authenticator,
-    connection.client,
-    exposedOperations,
-  );
+  const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
   return connection.client.sendTransaction(tx);
@@ -216,9 +160,7 @@ export function createKeyStoreInteractor(
         createAuthDataService(connection),
       );
 
-      const exposedOperations = await fetchExposedOperations(connection);
-
-      return createSession(connection, authenticator, exposedOperations);
+      return createSession(connection, authenticator);
     },
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),

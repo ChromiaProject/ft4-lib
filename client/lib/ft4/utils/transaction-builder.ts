@@ -3,6 +3,7 @@ import { Buffer } from "buffer";
 import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
 import { OperationNotExistError } from "./errors";
+import { isOperationExposed } from "./operation/operation";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -89,10 +90,9 @@ export type TransactionBuilder = {
 export function transactionBuilder(
   authenticator: Authenticator,
   client: IClient,
-  exposedOperations?: Set<string>,
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
-    if (exposedOperations && !exposedOperations.has(operation.name)) {
+    if (!isOperationExposed(operation.name, client)) {
       throw new OperationNotExistError(
         `Operation ${operation.name} does not exist`,
       );
