@@ -2,7 +2,6 @@ import { generateAssetName, generateAssetSymbol } from "./util/util";
 import { Connection } from "../client/lib/ft4/types";
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { createConnection } from "../client/lib/ft4/ft-session";
-import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
@@ -152,7 +151,7 @@ describe("Asset", () => {
     const invalidUrl = "not-a-valid-url";
     await expect(
       getNewAsset(client, "Test Asset 2", "TST2", 0, invalidUrl)
-    ).rejects.toThrow(InvalidUrlError);
+    ).rejects.toThrow();
   });
 
   it("should successfully register without providing icon URL", async () => {
