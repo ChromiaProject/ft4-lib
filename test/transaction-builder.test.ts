@@ -68,10 +68,6 @@ describe("Transaction Builder", () => {
     client = await createChromiaClient();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("builds an unsigned transaction", async () => {
     const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
     const tx = await transactionBuilder(authenticator, client)
