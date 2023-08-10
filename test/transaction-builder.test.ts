@@ -9,6 +9,7 @@ import {
 import { createChromiaClient } from "./util/blockchain-util";
 import { nop } from "../client/lib/ft4/utils";
 import {
+  AuthDataService,
   Authenticator,
   KeyHandler,
 } from "../client/lib/ft4/authentication/types";
@@ -25,43 +26,45 @@ describe("Transaction Builder", () => {
   let client: IClient;
   let authDescriptor: AuthDescriptor;
   let keyHandler: KeyHandler;
+  let authDataService: AuthDataService;
 
   const mockOperation: Operation = {
     name: "testOperation",
   };
 
-  function setupOperationMockForClientQuery(response: any) {
-    // const actualModule = jest.requireActual('/ft4/utils/operation/operation');
-    // jest.doMock('/ft4/utils/operation/operation', actualModule);
-
-    //  jest.resetModules();
-    // jest.mock('/ft4/utils/operation/operation',
-    //     jest.requireActual('/ft4/utils/operation/operation')
-    // );
-    client.query = jest.fn().mockResolvedValueOnce(response);
-  }
-
-  beforeEach(async () => {
+  function setupTestEnvironment(
+    exposureLogicFn?: (operationName: string) => Promise<boolean>,
+  ) {
     const accountId = encryption.randomBytes(32);
+
     const { keyPair, authDescriptor: ad } = createTestAuthDescriptor([
       FlagsType.Transfer,
     ]);
     authDescriptor = ad;
 
     keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ad);
-    const authDataService = createFakeAuthDataService({
-      ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
-      ["ft4.admin.register_account"]: {
-        flags: [FlagsType.Account],
-        message: "",
+
+    authDataService = createFakeAuthDataService(
+      {
+        ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
+        ["ft4.admin.register_account"]: {
+          flags: [FlagsType.Account],
+          message: "",
+        },
+        ["testOperation"]: { flags: [], message: "" },
       },
-    });
+      exposureLogicFn,
+    );
+
     authenticator = createAuthenticator(
       accountId,
       [keyHandler],
       authDataService,
     );
+  }
 
+  beforeEach(async () => {
+    setupTestEnvironment();
     client = await createChromiaClient();
   });
 
@@ -160,10 +163,8 @@ describe("Transaction Builder", () => {
     expect(keyHandlerMock.sign).toHaveBeenCalled();
   });
 
-  it.skip("should throw an error if the operation does not exist", async () => {
-    setupOperationMockForClientQuery({
-      modules: {},
-    });
+  it("should throw an error if the operation does not exist", async () => {
+    setupTestEnvironment(() => Promise.resolve(false));
 
     const builder = transactionBuilder(authenticator, client);
     builder.add(mockOperation);
@@ -173,16 +174,10 @@ describe("Transaction Builder", () => {
     );
   });
 
-  it.skip("should not throw an error if the operation exists", async () => {
-    setupOperationMockForClientQuery({
-      modules: {
-        module1: {
-          operations: {
-            testOperation: {},
-          },
-        },
-      },
-    });
+  it("should not throw an error if the operation exists", async () => {
+    setupTestEnvironment((operationName) =>
+      Promise.resolve(operationName === mockOperation.name),
+    );
 
     const builder = transactionBuilder(authenticator, client);
     builder.add(mockOperation);
