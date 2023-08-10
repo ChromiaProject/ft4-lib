@@ -35,7 +35,7 @@ export function freeze<T>(object: T): T {
 export type EntityRetriever<T> = {
   retrieve: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<T>>;
 };
 
@@ -50,3 +50,16 @@ export type TxBuilderTransaction = {
   signers: Buffer[];
   signatures: Buffer[];
 };
+
+export interface RellAppStructure {
+  modules: Record<string, RellModuleStructure>;
+}
+
+export interface RellModuleStructure {
+  operations?: { [key: string]: RellOperationStructure };
+}
+
+export interface RellOperationStructure {
+  mount: string;
+  parameters: any[];
+}

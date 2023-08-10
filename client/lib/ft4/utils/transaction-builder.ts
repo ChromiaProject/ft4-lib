@@ -3,7 +3,6 @@ import { Buffer } from "buffer";
 import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
 import { OperationNotExistError } from "./errors";
-import { isOperationExposed } from "./operation/operation";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -129,11 +128,15 @@ export function transactionBuilder(
     const keyHandlers: KeyHandler[] = [];
     const nonces = new Map<Buffer, number>();
     const processedOperations: Operation[][] = [];
+
     for (const tuple of operations) {
       const [operation, authenticator] = tuple;
 
-      // Check if the operation is exposed
-      if (!(await isOperationExposed(operation.name, client))) {
+      if (
+        !(await authenticator.authDataService.isOperationExposed(
+          operation.name,
+        ))
+      ) {
         throw new OperationNotExistError(
           `Operation ${operation.name} does not exist`,
         );

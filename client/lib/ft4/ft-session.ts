@@ -43,6 +43,7 @@ import {
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
+import { fetchExposedOperations } from "./utils/exposed-operations";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -122,10 +123,20 @@ export type KeyStoreInteractor = {
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
 };
 
-// TODO: Improve error handling
-// Use `rell.get_app_structure` to get exposed queries (FT3-99)
 export function createAuthDataService(connection: Connection): AuthDataService {
+  let exposedOperations: Set<string> | null = null;
+
+  const fetchAndCacheOperations = async () => {
+    exposedOperations = await fetchExposedOperations(connection);
+  };
+
   return Object.freeze({
+    isOperationExposed: async (operationName: string): Promise<boolean> => {
+      if (!exposedOperations) {
+        await fetchAndCacheOperations();
+      }
+      return exposedOperations!.has(operationName);
+    },
     getAuthFlags: async (operation: Operation) => {
       return await connection.query<string[]>(authFlags(operation));
     },

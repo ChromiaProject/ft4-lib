@@ -1,1 +1,0 @@
-export { isOperationExposed } from "./operation";

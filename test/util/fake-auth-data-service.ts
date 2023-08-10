@@ -6,6 +6,7 @@ export function createFakeAuthDataService(data: {
   [operation: string]: AuthData;
 }): AuthDataService {
   return {
+    isOperationExposed: () => Promise.resolve(true),
     getAuthFlags: (operation: Operation) =>
       Promise.resolve(data[operation.name].flags),
     getAuthMessageTemplate: (operation: Operation) =>
