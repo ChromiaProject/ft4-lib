@@ -12,7 +12,7 @@ import {
   Authenticator,
   KeyHandler,
 } from "../client/lib/ft4/authentication/types";
-import { IClient, encryption, gtx } from "postchain-client";
+import { IClient, Operation, encryption, gtx } from "postchain-client";
 import { transfer } from "../client/lib/ft4/accounts/account-operations";
 import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
 import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
@@ -25,6 +25,21 @@ describe("Transaction Builder", () => {
   let client: IClient;
   let authDescriptor: AuthDescriptor;
   let keyHandler: KeyHandler;
+
+  const mockOperation: Operation = {
+    name: "testOperation",
+  };
+
+  function setupOperationMockForClientQuery(response: any) {
+    // const actualModule = jest.requireActual('/ft4/utils/operation/operation');
+    // jest.doMock('/ft4/utils/operation/operation', actualModule);
+
+    //  jest.resetModules();
+    // jest.mock('/ft4/utils/operation/operation',
+    //     jest.requireActual('/ft4/utils/operation/operation')
+    // );
+    client.query = jest.fn().mockResolvedValueOnce(response);
+  }
 
   beforeEach(async () => {
     const accountId = encryption.randomBytes(32);
@@ -44,10 +59,14 @@ describe("Transaction Builder", () => {
     authenticator = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     );
 
     client = await createChromiaClient();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it("builds an unsigned transaction", async () => {
@@ -120,7 +139,7 @@ describe("Transaction Builder", () => {
       authorize: jest
         .fn()
         .mockImplementation((accountId, operation) =>
-          Promise.resolve([operation])
+          Promise.resolve([operation]),
         ),
       sign: jest.fn(),
       getSigners: jest.fn(),
@@ -139,5 +158,35 @@ describe("Transaction Builder", () => {
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyHandlerMock.sign).toHaveBeenCalled();
+  });
+
+  it.skip("should throw an error if the operation does not exist", async () => {
+    setupOperationMockForClientQuery({
+      modules: {},
+    });
+
+    const builder = transactionBuilder(authenticator, client);
+    builder.add(mockOperation);
+
+    await expect(builder.build()).rejects.toThrow(
+      `Operation ${mockOperation.name} does not exist`,
+    );
+  });
+
+  it.skip("should not throw an error if the operation exists", async () => {
+    setupOperationMockForClientQuery({
+      modules: {
+        module1: {
+          operations: {
+            testOperation: {},
+          },
+        },
+      },
+    });
+
+    const builder = transactionBuilder(authenticator, client);
+    builder.add(mockOperation);
+
+    await expect(builder.build()).resolves.not.toThrow();
   });
 });

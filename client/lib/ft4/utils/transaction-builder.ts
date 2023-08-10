@@ -92,11 +92,6 @@ export function transactionBuilder(
   client: IClient,
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
-    if (!isOperationExposed(operation.name, client)) {
-      throw new OperationNotExistError(
-        `Operation ${operation.name} does not exist`,
-      );
-    }
     this._operations.push([operation, authenticator]);
     return this;
   }
@@ -136,6 +131,14 @@ export function transactionBuilder(
     const processedOperations: Operation[][] = [];
     for (const tuple of operations) {
       const [operation, authenticator] = tuple;
+
+      // Check if the operation is exposed
+      if (!(await isOperationExposed(operation.name, client))) {
+        throw new OperationNotExistError(
+          `Operation ${operation.name} does not exist`,
+        );
+      }
+
       if (operation.name === "nop") {
         processedOperations.push([operation]);
         continue;

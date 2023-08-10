@@ -6,6 +6,10 @@ module.exports = {
         "^.+\\.tsx?$": "ts-jest"
     },
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "moduleDirectories": [
+      "node_modules",
+      "<rootDir>/test/__mocks__"
+    ],
     "moduleFileExtensions": [
         "ts",
         "tsx",
@@ -15,7 +19,8 @@ module.exports = {
         "node"
     ],
     "setupFilesAfterEnv": [
-        "<rootDir>/jest.setup.js"
+        "<rootDir>/jest.setup.js",
+        "<rootDir>/test/setupMocks.ts"
     ],
     /*
      * https://github.com/jestjs/jest/issues/11617

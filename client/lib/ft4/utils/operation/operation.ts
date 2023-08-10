@@ -10,7 +10,13 @@ export async function isOperationExposed(
   client: IClient,
 ): Promise<boolean> {
   const exposedOperations = await fetchExposedOperations(client);
-  console.log("exposedOperations", operation, exposedOperations);
+  console.error(
+    "exposedOperations",
+    exposedOperations,
+    operation,
+    exposedOperations.has(operation),
+  );
+
   return exposedOperations.has(operation);
 }
 
@@ -34,6 +40,7 @@ async function fetchExposedOperations(client: IClient): Promise<Set<string>> {
   const exposedOperations = new Set<string>();
 
   for (const [, module] of Object.entries(appStructure.modules)) {
+    console.error("module", module);
     if (module.operations) {
       for (const operation in module.operations) {
         exposedOperations.add(operation);
