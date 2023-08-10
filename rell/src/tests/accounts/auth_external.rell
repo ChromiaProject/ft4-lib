@@ -15,7 +15,7 @@ function test_authenticate_v2_and_rate_limit_call() {
   // Perform the transaction
   rell.test.tx()
       .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation("Some message"))
+      .op(test_op.test_authenticated_operation())
       .sign(rell.test.keypairs.alice)
       .run();
 

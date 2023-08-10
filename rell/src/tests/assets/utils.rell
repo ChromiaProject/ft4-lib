@@ -172,7 +172,7 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
 
 function add_auth_op(rell.test.tx, message: text) {
     return tx
-        .op(operations.auth.test_authenticated_operation(message));
+        .op(operations.auth.test_authenticated_operation());
 }
 
 function perform_large_transfer(rell.test.tx, amount: integer, to_address: text) {
