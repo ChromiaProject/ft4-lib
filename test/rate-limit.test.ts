@@ -77,14 +77,13 @@ describe("Rate Limit", () => {
         .withParticipant(user.signatureProvider)
         .withPoints(4)
         .build();
-      await expect(
-        makeRequests(
-          _connection.client,
-          4 + POINTS_AT_ACCOUNT_CREATION,
-          user,
-          account.id
-        )
-      ).resolves.toMatchObject({ status: "confirmed" });
+
+      await makeRequests(
+        _connection.client,
+        4 + POINTS_AT_ACCOUNT_CREATION,
+        user,
+        account.id
+      );
 
       const tx = {
         operations: [

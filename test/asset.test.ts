@@ -1,18 +1,20 @@
 import { generateAssetName, generateAssetSymbol } from "./util/util";
 import { Connection } from "../client/lib/ft4/types";
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
+import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
 import { createConnection } from "../client/lib/ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
 import { op } from "/ft4";
-import { adminKeyPair } from "./util/admin_user";
+import adminUser, { adminKeyPair } from "./util/admin_user";
+import { registerAsset } from "/ft4/admin/admin-op-functions";
 
 let connection: Connection;
 let client: IClient;
 
 //used only to have different issuing_brid until we have xchain
-async function registerAsset(
+async function registerAssetWithRandomBrid(
   client: IClient,
   assetName: string,
   decimals = 0,
@@ -57,9 +59,9 @@ describe("Asset", () => {
 
   it("can fetch paginated assets by name", async () => {
     const assetName = generateAssetName();
-    await registerAsset(client, assetName);
-    await registerAsset(client, assetName);
-    await registerAsset(client, assetName);
+    await registerAssetWithRandomBrid(client, assetName);
+    await registerAssetWithRandomBrid(client, assetName);
+    await registerAssetWithRandomBrid(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByName(assetName, 2);
@@ -148,10 +150,18 @@ describe("Asset", () => {
 
   // Update after addding new admin functions
   it("should fail to register with invalid icon URL", async () => {
-    const invalidUrl = "not-a-valid-url";
-    await expect(
-      getNewAsset(client, "Test Asset 2", "TST2", 0, invalidUrl)
-    ).rejects.toThrow();
+    const adminSignatureProvider = adminUser().signatureProvider;
+    const wrapper = async () =>
+      registerAsset(
+        client,
+        adminSignatureProvider,
+        "Test Asset 2",
+        "TST2",
+        0,
+        "not-a-valid-url"
+      );
+
+    await expect(wrapper()).rejects.toThrow(InvalidUrlError);
   });
 
   it("should successfully register without providing icon URL", async () => {

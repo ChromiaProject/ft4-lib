@@ -6,7 +6,7 @@ import {
 import { AuthDescriptor } from "../accounts/auth-descriptor";
 import * as ops from "./admin-operations";
 import { BufferId } from "../../cryptoUtils";
-import { Amount } from "../asset/interfaces";
+import { Amount, InvalidUrlError } from "../asset/interfaces";
 
 export function registerAccount(
   chromiaClient: IClient,
@@ -39,10 +39,23 @@ export function registerAsset(
   decimals: number,
   iconUrl: string
 ): Promise<TransactionReceipt> {
+  assertValidUrl(iconUrl);
   return chromiaClient.signAndSendUniqueTransaction(
     ops.registerAsset(name, symbol, decimals, iconUrl),
     adminSignatureProvider
   );
+}
+
+function assertValidUrl(url: string): boolean {
+  if (url === "") return true;
+  if (!url.startsWith("https") && !url.startsWith("ipfs"))
+    throw new InvalidUrlError(`'${url}' does not use a valid protocol`);
+  try {
+    new URL(url);
+  } catch {
+    throw new InvalidUrlError(`'${url}' is not a valud url`);
+  }
+  return true;
 }
 
 export function mint(
