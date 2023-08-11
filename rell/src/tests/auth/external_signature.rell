@@ -12,7 +12,7 @@ val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96
 function test_operation_without_auth_operation() {
   utils.register_alice();
   rell.test.tx()
-    .op(test_operations.auth.test_empty_auth_message())
+    .op(test_operations.test_auth.test_empty_auth_message())
     .run_must_fail("Expected at least two operations");
 }
 
@@ -22,7 +22,7 @@ function test_fails_if_insufficient_permissions() {
 
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature]))
-    .op(test_operations.auth.test_empty_auth_message())
+    .op(test_operations.test_auth.test_empty_auth_message())
     .run_must_fail("The auth descriptor does not have the required permissions");
 }
 
@@ -32,7 +32,7 @@ function test_it_rejects_messages_without_nonce() {
 
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature]))
-    .op(test_operations.auth.test_empty_auth_message())
+    .op(test_operations.test_auth.test_empty_auth_message())
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Message template has to include '{nonce}'");
 }
@@ -43,7 +43,7 @@ function test_it_rejects_wrong_eth_signatures() {
   
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [wrong_signature]))
-    .op(test_operations.auth.test_authenticated_operation())
+    .op(test_operations.test_auth.test_authenticated_operation())
     .sign(rell.test.keypairs.alice)
     .run_must_fail("Invalid signature");
 }
@@ -60,7 +60,7 @@ function test_perform_eth_auth_transaction() {
 
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -99,7 +99,7 @@ function test_multisig_external_signature() {
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -138,7 +138,7 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Minimum number of valid signatures not reached");
 }
@@ -174,7 +174,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Invalid signature");
 }
@@ -198,9 +198,9 @@ function test_works_with_correct_ctr() {
 
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature0]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature1]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -224,14 +224,14 @@ function test_rejects_wrong_ctr() {
 
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature0]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature0]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Invalid signature");
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [signature1]))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
     .run_must_fail("Invalid signature");
 }
@@ -251,7 +251,7 @@ function test_ft_auth_fails_if_key_invalid() {
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.ft_auth(auth_descriptor_id, auth_descriptor_id))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.bob.priv)
     .run_must_fail("The provided key(s) is not a signer of this auth descriptor");
 }
@@ -272,7 +272,7 @@ function test_perform_ft_auth_transaction() {
   val auth_descriptor_id = auth_descriptor.hash();
   rell.test.tx()
     .op(auth.ft_auth(auth_descriptor_id, auth_descriptor_id))
-    .op(test_operations.auth.test_perform_large_transfer(1000, to_addr))
+    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(external_key.priv)
     .run();
 }
@@ -376,46 +376,46 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
   );
 }
 
-// function test_operation_without_auth_message_template_can_be_evm_authenticated() {
-//   val alice = utils.evm_register_alice();
+function test_operation_without_auth_message_template_can_be_evm_authenticated() {
+  val alice = utils.evm_register_alice();
 
-//   var message = "Please sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
-//   message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
+  var message = "Please sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
+  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
 
-//   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
+  val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 
-//   rell.test.tx()
-//     .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-//     // Operation internally calls authenticate but doesn't pass auth message template
-//     .op(test_operations.operation_without_auth_message_template(
-//       10,
-//       100L,
-//       1000.1,
-//       false,
-//       x"abcdef",
-//       "text value",
-//       null
-//     ))
-//     .run();
-// }
+  rell.test.tx()
+    .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+    // Operation internally calls authenticate but doesn't pass auth message template
+    .op(test_operations.operation_without_auth_message_template(
+      10,
+      100L,
+      1000.1,
+      false,
+      x"abcdef",
+      "text value",
+      null
+    ))
+    .run();
+}
 
-// function test_evm_authenticated_operation_without_message_template_fails_if_signature_is_based_on_invalid_message() {
-//   val alice = utils.evm_register_alice();
+function test_evm_authenticated_operation_without_message_template_fails_if_signature_is_based_on_invalid_message() {
+  val alice = utils.evm_register_alice();
 
-//   var message = "Invalid message template. Nonce: {nonce}";
-//   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
+  var message = "Invalid message template. Nonce: {nonce}";
+  val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 
-//   rell.test.tx()
-//     .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-//     // Operation internally calls authenticate but doesn't pass auth message template
-//     .op(test_operations.operation_without_auth_message_template(
-//       10,
-//       100L,
-//       1000.1,
-//       false,
-//       x"abcdef",
-//       "text value",
-//       null
-//     ))
-//     .run_must_fail("Invalid signature");
-// }
+  rell.test.tx()
+    .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+    // Operation internally calls authenticate but doesn't pass auth message template
+    .op(test_operations.operation_without_auth_message_template(
+      10,
+      100L,
+      1000.1,
+      false,
+      x"abcdef",
+      "text value",
+      null
+    ))
+    .run_must_fail("Invalid signature");
+}

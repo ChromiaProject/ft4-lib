@@ -1,18 +1,24 @@
 import acc: ^^.lib.ft4.accounts;
 import assets: ^^.lib.ft4.assets;
-import .auth;
+import auth: ^^.lib.ft4.auth;
+import test_auth: .auth;
 
-// operation operation_without_auth_message_template(
-//     integer,
-//     big_integer,
-//     decimal,
-//     boolean,
-//     byte_array,
-//     text,
-//     optional_text: text?
-// ) {
-//     authentication.authenticate();
-// }
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    flags = ["T"]
+);
+
+operation operation_without_auth_message_template(
+    integer,
+    big_integer,
+    decimal,
+    boolean,
+    byte_array,
+    text,
+    optional_text: text?
+) {
+    auth.authenticate(strict = false);
+}
 
 operation add_ad_to_account(acc.account, acc.auth_descriptor) {
     acc.add_auth_descriptor_to_account(account, auth_descriptor);
