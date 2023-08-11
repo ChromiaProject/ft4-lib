@@ -1,8 +1,8 @@
 import acc: ^^.ft4.accounts;
 
-function authenticate() {
+function authenticate(strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
-    val flags = get_auth_flags(op.name);
+    val flags = get_auth_flags(op.name, strict);
 
     require(op_context.op_index > 0, "Expected at least two operations");
 
@@ -13,7 +13,7 @@ function authenticate() {
     );
 
     val account = when (previous_op.name) {
-        "ft4.evm_auth" -> _validate_eth_signature(previous_op, set(flags));
+        "ft4.evm_auth" -> _validate_eth_signature(previous_op, set(flags), strict);
         "ft4.ft_auth" -> _validate_ft4_signature(previous_op.args, set(flags));
         else -> null;
     };
@@ -25,9 +25,9 @@ function authenticate() {
     return valid_account;
 }
 
-function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<text>): acc.account {
+function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<text>, strict: boolean): acc.account {
     val op = op_context.get_all_operations()[op_context.op_index];
-    val message_template = get_auth_message_template(op.name, op.args.to_gtv());
+    val message_template = get_auth_message_template(op.name, op.args.to_gtv(), strict);
     val validated_args = _validate_eth_arguments(auth_op.args, required_flags);
     val op_to_auth = op_context.get_all_operations()[op_context.op_index];
     val message = create_message_from_template(

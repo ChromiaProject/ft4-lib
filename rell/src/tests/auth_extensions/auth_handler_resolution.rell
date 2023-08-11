@@ -20,35 +20,39 @@ import ^^^.lib.ft4.auth;
 
 
 function test_auth_handler_resolves_to_operation_scope_auth_handler_when_auth_handler_defined_for_operation() {
-    val auth_handler_flags = auth.get_auth_flags("a.b.foo");
+    val auth_handler_flags = auth.get_auth_flags("a.b.foo", strict=true);
     assert_equals(auth_handler_flags, ["F"]);
 }
 
 function test_auth_handler_resolves_to_mount_scope_auth_handler() {
-    val auth_handler_flags = auth.get_auth_flags("a.b.bar");
+    val auth_handler_flags = auth.get_auth_flags("a.b.bar", strict=false);
     assert_equals(auth_handler_flags, ["B"]);    
 }
 
 function test_auth_handler_resolves_to_parent_mount_scope_auth_handler() {
-    val auth_handler_flags = auth.get_auth_flags("a.b.c.foo");
+    val auth_handler_flags = auth.get_auth_flags("a.b.c.foo", strict=false);
     assert_equals(auth_handler_flags, ["B"]);
 }
 
 function test_auth_handler_resolves_to_grand_parent_mount_scope_auth_handler() {
-    val auth_handler_flags = auth.get_auth_flags("a.b.c.d.foo");
+    val auth_handler_flags = auth.get_auth_flags("a.b.c.d.foo", strict=false);
     assert_equals(auth_handler_flags, ["B"]);
 }
 
 function test_auth_handler_resolves_to_app_scope_auth_handler_when_no_operation_or_mount_scope_auth_handlers() {
-    val auth_handler_flags = auth.get_auth_flags("x.y.z.foo");
+    val auth_handler_flags = auth.get_auth_flags("x.y.z.foo", strict=false);
     assert_equals(auth_handler_flags, ["X"]);
 }
 
 function test_get_auth_flags_throws_error_when_name_ends_with_period() {
     // `try_call` returns null when a function/query fails
-    assert_null(try_call(auth.get_auth_flags("x.y.z.", *)));
+    assert_null(try_call(auth.get_auth_flags("x.y.z.", strict=false, *)));
 }
 
 function test_get_auth_flags_throws_error_when_name_starts_with_period() {
-    assert_null(try_call(auth.get_auth_flags(".x.y.z", *)));
+    assert_null(try_call(auth.get_auth_flags(".x.y.z", strict=false, *)));
+}
+
+function test_does_not_resolve_inexact_module_in_strict_mode() {
+    assert_null(try_call(auth.get_auth_flags("a.b.bar", strict=true, *)));
 }
