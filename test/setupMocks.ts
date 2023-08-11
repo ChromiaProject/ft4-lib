@@ -2,12 +2,12 @@
  * Mocking fetchExposedOperations for consistent test results.
  *
  * Why:
- * - `rell.get_app_structure` exhibits delays, particularly in the test pipeline,
- *   due to its dynamic nature and JVM startup time.
- * - Discussions in Rell-dev Zulip stream highlight these issues and emphasize
- *   the need for optimization. [Zulip Discussion](https://chromadev.zulipchat.com/#narrow/stream/144722-Rell-dev/topic/rell.2Eget_app_structure.20Timeouts)
+ * - `rell.get_app_structure` occasionally exhibits delays, especially in the test pipeline,
+ *   due to its dynamic nature.
+ * - Issues related to these delays are discussed in the Rell-dev Zulip stream, emphasizing
+ *   the necessity for optimization. [Zulip Discussion](https://chromadev.zulipchat.com/#narrow/stream/144722-Rell-dev/topic/rell.2Eget_app_structure.20Timeouts)
  *
- * This mock bypasses the delays, ensuring fast and reliable test outcomes.
+ * This mock provides a way to bypass these delays, ensuring fast and reliable test outcomes.
  */
 jest.mock("/ft4/utils/exposed-operations", () => ({
   fetchExposedOperations: jest

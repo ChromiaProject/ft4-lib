@@ -159,7 +159,7 @@ describe("Transaction Builder", () => {
     expect(keyHandlerMock.sign).toHaveBeenCalled();
   });
 
-  it("should throw an error if the operation does not exist", async () => {
+  it("throws an error when the operation does not exist", async () => {
     setupTestEnvironment(() => Promise.resolve(false));
 
     const builder = transactionBuilder(authenticator, client);
@@ -170,7 +170,7 @@ describe("Transaction Builder", () => {
     );
   });
 
-  it("should not throw an error if the operation exists", async () => {
+  it("does not throw an error when the operation exists", async () => {
     setupTestEnvironment((operationName) =>
       Promise.resolve(operationName === mockOperation.name),
     );
