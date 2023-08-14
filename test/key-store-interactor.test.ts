@@ -133,17 +133,18 @@ describe("Key store interactor", () => {
         keyStore
       );
 
+      const callback = jest.fn();
       const promise = new Promise((resolve) => {
         onKeyStoreChanged((newKeyInteractor: KeyStoreInteractor) => {
+          callback();
           resolve(newKeyInteractor);
         });
       });
 
       handler();
 
-      // If the event is emitted, this will resolve and the test will pass,
-      // otherwise the test will fail due to a timeout
       await promise;
+      expect(callback).toHaveBeenCalled();
     });
   });
 });

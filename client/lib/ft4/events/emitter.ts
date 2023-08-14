@@ -45,7 +45,7 @@ export class EventEmitter<T extends Record<string, any[]>> {
 
     listeners.forEach((listener) => {
       try {
-        Array.isArray(args) ? listener(...args) : listener(args);
+        listener(...args);
       } catch (err) {
         console.error(`Error in listener for event "${String(event)}":`, err);
       }

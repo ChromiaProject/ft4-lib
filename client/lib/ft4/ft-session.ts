@@ -178,8 +178,8 @@ export function createKeyStoreInteractor(
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
     onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
-      ftEventEmitter.on("KeyStoreChanged", (newKeyStore: [KeyStore]) =>
-        handler(createKeyStoreInteractor(client, newKeyStore[0]))
+      ftEventEmitter.on("KeyStoreChanged", (newKeyStore: KeyStore) =>
+        handler(createKeyStoreInteractor(client, newKeyStore))
       );
     },
   });
