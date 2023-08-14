@@ -168,7 +168,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
             asset_id.to_gtv(), 
             amount.to_gtv()
         ].to_gtv(),
-        strict = true
+        is_strict = true
     );
     val message = utils.create_auth_message(template, alice);
     val signature = utils.metamask_sign(message, alice.keypair.priv);

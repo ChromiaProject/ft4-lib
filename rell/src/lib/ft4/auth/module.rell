@@ -33,12 +33,12 @@ function auth_handler(): map<name, _auth_handler>;
 /*
  * Finds auth handler for provided operation name.
  */
-function get_auth_handler(op_name: name, strict: boolean) {
+function get_auth_handler(op_name: name, is_strict: boolean) {
     require_valid_scope_name(op_name);
     val auth_handlers = auth_handler();
     if (op_name in auth_handlers) return auth_handlers[op_name];
 
-    require(not strict, "Strict mode is used and no auth handler matches exactly <%s>".format(op_name));
+    require(not is_strict, "Strict mode is used and no auth handler matches exactly <%s>".format(op_name));
 
     val handler = get_mount_scope_auth_handler(auth_handlers, op_name);
     if (handler??) return handler;

@@ -17,7 +17,7 @@ operation operation_without_auth_message_template(
     text,
     optional_text: text?
 ) {
-    auth.authenticate(strict = false);
+    auth.authenticate(is_strict = false);
 }
 
 operation add_ad_to_account(acc.account, acc.auth_descriptor) {
