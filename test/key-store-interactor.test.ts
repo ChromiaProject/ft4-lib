@@ -13,7 +13,7 @@ import AccountBuilder from "./util/account-builder";
 import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
 import {
-  InjectedProvider,
+  Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
 } from "/ft4/authentication";
 
@@ -114,7 +114,7 @@ describe("Key store interactor", () => {
   describe("account updates", () => {
     it("emits a new interactor on account change", async () => {
       let handler = undefined;
-      const providerMock: Partial<InjectedProvider> = {
+      const providerMock: Partial<Eip1193Provider> = {
         request: jest
           .fn()
           .mockReturnValueOnce(["0x13376a16794B18CC3287635116BF842e34e9940C"])
@@ -126,7 +126,7 @@ describe("Key store interactor", () => {
         },
       };
       const keyStore = await createWeb3ProviderEvmKeyStore(
-        providerMock as InjectedProvider
+        providerMock as Eip1193Provider
       );
       const { onKeyStoreChanged } = createKeyStoreInteractor(
         connection.client,

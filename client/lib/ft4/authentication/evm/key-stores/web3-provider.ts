@@ -6,12 +6,10 @@ import { Buffer } from "buffer";
 import { ftEventEmitter } from "/ft4/events";
 import { EventEmitter } from "events";
 
-export interface InjectedProvider
-  extends ethers.Eip1193Provider,
-    EventEmitter {}
+export interface Eip1193Provider extends ethers.Eip1193Provider, EventEmitter {}
 
 export async function createWeb3ProviderEvmKeyStore(
-  externalProvider: InjectedProvider
+  externalProvider: Eip1193Provider
 ): Promise<EvmKeyStore> {
   const provider = new ethers.BrowserProvider(externalProvider);
   await provider.send("eth_requestAccounts", []);
