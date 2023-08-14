@@ -14,7 +14,7 @@ let connection: Connection;
 let client: IClient;
 
 //used only to have different issuing_brid until we have xchain
-async function registerAssetWithRandomBrid(
+async function registerAssetWithCustomBrid(
   client: IClient,
   assetName: string,
   decimals = 0,
@@ -59,9 +59,9 @@ describe("Asset", () => {
 
   it("can fetch paginated assets by name", async () => {
     const assetName = generateAssetName();
-    await registerAssetWithRandomBrid(client, assetName);
-    await registerAssetWithRandomBrid(client, assetName);
-    await registerAssetWithRandomBrid(client, assetName);
+    await registerAssetWithCustomBrid(client, assetName);
+    await registerAssetWithCustomBrid(client, assetName);
+    await registerAssetWithCustomBrid(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByName(assetName, 2);
@@ -150,11 +150,10 @@ describe("Asset", () => {
 
   // Update after addding new admin functions
   it("should fail to register with invalid icon URL", async () => {
-    const adminSignatureProvider = adminUser().signatureProvider;
     const wrapper = async () =>
       registerAsset(
         client,
-        adminSignatureProvider,
+        adminUser().signatureProvider,
         "Test Asset 2",
         "TST2",
         0,

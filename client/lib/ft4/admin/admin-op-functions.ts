@@ -46,16 +46,37 @@ export function registerAsset(
   );
 }
 
-function assertValidUrl(url: string): boolean {
-  if (url === "") return true;
-  if (!url.startsWith("https") && !url.startsWith("ipfs"))
-    throw new InvalidUrlError(`'${url}' does not use a valid protocol`);
+function assertValidUrl(url: string) {
+  if (!url) return;
+
+  let parsedUrl: URL;
+
+  // Validate URL format
   try {
-    new URL(url);
+    parsedUrl = new URL(url);
   } catch {
-    throw new InvalidUrlError(`'${url}' is not a valud url`);
+    throw new InvalidUrlError(`'${url}' is not a valid URL`);
   }
-  return true;
+
+  // Check for valid protocols
+  const validProtocols = ["https:", "http:", "ipfs:"];
+  if (!validProtocols.includes(parsedUrl.protocol)) {
+    throw new InvalidUrlError(
+      `'${url}' does not use a valid protocol, valid protocols are: [${validProtocols.join(
+        ", "
+      )}]`
+    );
+  }
+
+  if (
+    parsedUrl.protocol === "http" &&
+    parsedUrl.hostname !== "localhost" &&
+    parsedUrl.hostname !== "127.0.0.1"
+  ) {
+    throw new InvalidUrlError(
+      "Insecure protocol (http) is only allowed on localhost or 127.0.0.1"
+    );
+  }
 }
 
 export function mint(
