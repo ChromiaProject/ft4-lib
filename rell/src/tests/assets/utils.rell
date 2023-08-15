@@ -187,9 +187,11 @@ function mint_to_account(account_data, assets.asset, amount: big_integer) {
 }
 
 function create_auth_message(template: text, account_data) {
-    val nonce = acc.account_auth_descriptor @ { 
-        account_data.account,
-        .id == account_data.auth_descriptor_id
+    val nonce = acc.account_auth_descriptor_nonce @ {
+        acc.account_auth_descriptor @ { 
+            account_data.account,
+            .id == account_data.auth_descriptor_id
+        }
     }.ctr;
 
     return template
