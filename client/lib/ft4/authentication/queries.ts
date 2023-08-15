@@ -27,25 +27,23 @@ export function loginConfig(
 
 export function authFlags(
   operation: Operation
-): QueryObject<{ op_name: string; is_strict: boolean }> {
+): QueryObject<{ op_name: string }> {
   return {
     name: "ft4.get_auth_flags",
     args: {
       op_name: operation.name,
-      is_strict: true,
     },
   };
 }
 
 export function authMessageTemplate(
   operation: Operation
-): QueryObject<{ op_name: string; op_args?: RawGtv[]; is_strict: boolean }> {
+): QueryObject<{ op_name: string; op_args?: RawGtv[] }> {
   return {
     name: "ft4.get_auth_message_template",
     args: {
       op_name: operation.name,
       op_args: operation.args,
-      is_strict: true,
     },
   };
 }
