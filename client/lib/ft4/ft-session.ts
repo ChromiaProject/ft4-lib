@@ -44,6 +44,7 @@ import {
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import { fetchExposedOperations } from "./utils/exposed-operations";
+import { ftEventEmitter } from "./events";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -121,6 +122,7 @@ export type KeyStoreInteractor = {
   getAccounts(): Promise<Account[]>;
   getSession(accountId: BufferId): Promise<Session>;
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
+  onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
 };
 
 export function createAuthDataService(connection: Connection): AuthDataService {
@@ -175,5 +177,10 @@ export function createKeyStoreInteractor(
     },
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
+    onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
+      ftEventEmitter.on("KeyStoreChanged", (newKeyStore: KeyStore) =>
+        handler(createKeyStoreInteractor(client, newKeyStore))
+      );
+    },
   });
 }
