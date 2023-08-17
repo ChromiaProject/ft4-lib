@@ -1,5 +1,6 @@
 import {
   AuthDescriptor,
+  AuthDescriptorResponse,
   AuthType,
   GtvAuthDescriptor,
   RawAuthDescriptor,
@@ -32,22 +33,22 @@ export enum FlagsType {
   Transfer = "T", // Transfer balance
 }
 
-export function hashAuthDescriptor(ad: GtvAuthDescriptor) {
+export function hashAuthDescriptor(ad: RawAuthDescriptor) {
   return gtv.gtvHash(ad);
 }
 
-export function getAuthDescriptorId(ad: GtvAuthDescriptor): Buffer {
+export function getAuthDescriptorId(ad: RawAuthDescriptor): Buffer {
   return hashAuthDescriptor(ad);
 }
 
 export function deriveAccountId(
-  firstAuthDescriptor: GtvAuthDescriptor
+  firstAuthDescriptor: RawAuthDescriptor
 ): Buffer {
   return hashAuthDescriptor(firstAuthDescriptor);
 }
 
 export function getAuthDescriptorSigners(ad: GtvAuthDescriptor): Buffer[] {
-  const args = ad[1];
+  const args = ad[2];
   let signers: Buffer[];
   if (args.length === 2) {
     signers = [args[1]];
@@ -61,49 +62,61 @@ export function getAuthDescriptorSigners(ad: GtvAuthDescriptor): Buffer[] {
 }
 
 export function fromGtv(ad: GtvAuthDescriptor): AuthDescriptor {
-  const authType = deserializeAuthType(ad[0]);
+  const authType = deserializeAuthType(ad[1]);
   return {
-    id: getAuthDescriptorId(ad),
+    id: ad[0],
     authType,
-    flags: new Set(ad[1][0]),
-    signaturesRequired: authType === "S" ? 1 : (ad[1][1] as number),
-    signers: (authType === "S" ? [ad[1][1] as Buffer] : ad[1][2]) || [],
-    rule: ad[2]!,
+    flags: new Set(ad[2][0]),
+    signaturesRequired: authType === "S" ? 1 : (ad[2][1] as number),
+    signers: (authType === "S" ? [ad[2][1] as Buffer] : ad[2][2]) || [],
+    rule: ad[3]!,
+    created: ad[4],
   };
 }
 
 export function toGtv(ad: AuthDescriptor): GtvAuthDescriptor {
-  return ad.authType === "S" ? createSingleSigAd(ad) : createMultiSigAd(ad);
+  return ad.authType === AuthType.single_sig
+    ? createSingleSigAd(ad)
+    : createMultiSigAd(ad);
 }
 
 function createSingleSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
   return [
+    ad.id,
     serializeAuthType(ad.authType as AuthType),
     [[...ad.flags], ad.signers[0]],
     ad.rule,
+    ad.created,
   ];
 }
 
 function createMultiSigAd(ad: AuthDescriptor): GtvAuthDescriptor {
   return [
+    ad.id,
     serializeAuthType(ad.authType as AuthType),
     [[...ad.flags], ad.signaturesRequired, ad.signers],
     ad.rule,
+    ad.created,
   ];
 }
 
-export function mapAuthDescriptor(raw: RawAuthDescriptor): AuthDescriptor {
-  const { auth_type, args, rules } = raw as RawAuthDescriptor;
-  return Object.freeze(
+export function mapAuthDescriptor(raw: AuthDescriptorResponse): AuthDescriptor {
+  const { id, auth_type, args, rules, created } = raw;
+  const res = Object.freeze(
     fromGtv([
+      id,
       serializeAuthType(auth_type as AuthType),
       args,
       rules,
+      created,
     ] as GtvAuthDescriptor)
   );
+  return res;
 }
 
-export function mapAuthDescriptors(raw: RawAuthDescriptor[]): AuthDescriptor[] {
+export function mapAuthDescriptors(
+  raw: AuthDescriptorResponse[]
+): AuthDescriptor[] {
   return raw.map(mapAuthDescriptor);
 }
 

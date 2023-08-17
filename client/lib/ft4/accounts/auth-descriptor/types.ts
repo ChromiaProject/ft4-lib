@@ -18,17 +18,20 @@ export type AuthDescriptorRule = AuthDescriptorAnyRule;
 
 export type AuthDescriptor = {
   id: Buffer;
-  authType: string;
+  authType: AuthType;
   flags: Set<string>;
   signaturesRequired: number;
   signers: Buffer[];
   rule: AuthDescriptorRule;
+  created: number;
 };
 
 export type GtvAuthDescriptor = readonly [
+  id: Buffer,
   authType: number,
   args: AuthDescriptorArgs,
-  rule: AuthDescriptorRule | null
+  rule: AuthDescriptorRule | null,
+  created: number
 ];
 
 export type MultiSigAuthDescriptorArgs = readonly [
@@ -46,8 +49,16 @@ export type AuthDescriptorArgs =
   | SingleSigAuthDescriptorArgs
   | MultiSigAuthDescriptorArgs;
 
-export type RawAuthDescriptor = {
-  auth_type: string;
+export type RawAuthDescriptor = [
+  auth_type: number,
+  args: AuthDescriptorArgs,
+  rules: AuthDescriptorRule | null
+];
+
+export type AuthDescriptorResponse = {
   args: AuthDescriptorArgs;
+  auth_type: string;
+  created: number;
+  id: Buffer;
   rules: AuthDescriptorRule | null;
 };

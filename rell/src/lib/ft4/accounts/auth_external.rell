@@ -2,7 +2,6 @@
 struct eth_auth_args {
     account;
     account_auth_descriptor;
-    account_auth_descriptor_nonce;
     signatures: list<auth.signature>;
 }
 
@@ -47,14 +46,14 @@ function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<tex
         validated_args, 
         template, 
         op_to_auth.args, 
-        validated_args.account_auth_descriptor_nonce.ctr
+        validated_args.account_auth_descriptor.ctr
     );
 
     var recovered_keys = 
         if (validated_args.account_auth_descriptor.auth_type in [auth_type.ES, auth_type.S]) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
         else _recover_multiple_eth_keys(message, validated_args.signatures, validated_args.account_auth_descriptor);
     
-    validated_args.account_auth_descriptor_nonce.ctr += 1;
+    validated_args.account_auth_descriptor.ctr += 1;
     
     return validated_args.account;
 }
@@ -97,9 +96,7 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     
     require(has_all_flags, "The auth descriptor does not have the required permissions");
 
-    val ad_nonce = account_auth_descriptor_nonce @ { .account_auth_descriptor == auth_descriptor };
-
-    return eth_auth_args(account, auth_descriptor, signatures, ad_nonce);
+    return eth_auth_args(account, auth_descriptor, signatures);
 }
 
 function _recover_multiple_eth_keys(message: text, signatures: list<auth.signature>, account_auth_descriptor) {

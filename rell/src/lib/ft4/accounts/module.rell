@@ -39,12 +39,8 @@ entity account_auth_descriptor {
     auth_type;
     args: byte_array;
     rules: byte_array;
-    created: timestamp;
-}
-
-entity account_auth_descriptor_nonce {
-    key account_auth_descriptor;
     mutable ctr: integer;
+    created: timestamp;
 }
 
 entity auth_descriptor_participant {
@@ -71,15 +67,14 @@ function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes(),
         rules = auth_descriptor.rules.to_gtv().to_bytes(),
-        op_context.last_block_time
+        created = op_context.last_block_time,
+        ctr = 0
     );
      
     when (auth_descriptor.auth_type) {
         S, M -> _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor);
         ES, EM -> _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor);
     }
-
-    create account_auth_descriptor_nonce(account_auth_descriptor, 0);
 
     setup_auth_descriptor_variables(account_auth_descriptor);
     return id;
@@ -89,7 +84,6 @@ function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
     require(auth_descriptor.account.id != auth_descriptor.id, "Can't delete initial auth descriptor");
     delete auth_descriptor_rule_variable @* { auth_descriptor };
     delete auth_descriptor_participant @* { auth_descriptor };
-    delete account_auth_descriptor_nonce @* { auth_descriptor };
     delete auth_descriptor;
 }
 
@@ -105,9 +99,6 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
         ad.id != auth_descriptor.account.id,
         ad.id != auth_descriptor.id,
         adp.account_auth_descriptor == ad
-    };
-    delete (adn: account_auth_descriptor_nonce, ad: account_auth_descriptor) @* {
-        adn.account_auth_descriptor != ad
     };
     delete account_auth_descriptor @* {
        .account == auth_descriptor.account,
@@ -242,14 +233,13 @@ namespace Unsafe {
             auth_descriptor.auth_type,
             args = auth_descriptor.args.to_gtv().to_bytes(),
             rules = auth_descriptor.rules.to_gtv().to_bytes(),
-            op_context.last_block_time
+            created = op_context.last_block_time,
+            ctr = 0
         );
         
         for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
             create auth_descriptor_participant(account_auth_descriptor, id = participant);
         }
-
-        create account_auth_descriptor_nonce(account_auth_descriptor, 0);
         
         setup_auth_descriptor_variables(account_auth_descriptor);
         return id;
