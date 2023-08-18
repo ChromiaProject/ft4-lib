@@ -175,22 +175,19 @@ function setOriginAssetsQueryResponses(
   startToRoot: BufferId[],
   endToRoot: BufferId[],
 ) {
-  const zippedArray = Array.from(
-    // Array as long as the biggest of the two
-    { length: Math.max(startToRoot.length, endToRoot.length) },
-    // fill it with tuples of elements from the two arrays
-    // some will be undefined
-    (_, i) => [startToRoot[i], endToRoot[i]],
-    // unpack tuples and remove undefined values
-  )
-    .flat()
-    .filter((x) => x !== undefined);
+  for (let i = 0; i < Math.max(startToRoot.length, endToRoot.length); i++) {
+    if (i < startToRoot.length) {
+      assetOriginQueryMock.mockReturnValueOnce(
+        formatter.ensureBuffer(startToRoot[i]),
+      );
+    }
 
-  zippedArray.map((nextBrid) =>
-    // changes return type for tests, but allows usage of explicit strings
-    // defined on top of the file.
-    assetOriginQueryMock.mockReturnValueOnce(formatter.ensureBuffer(nextBrid)),
-  );
+    if (i < endToRoot.length) {
+      assetOriginQueryMock.mockReturnValueOnce(
+        formatter.ensureBuffer(endToRoot[i]),
+      );
+    }
+  }
 }
 
 // A-B-C-X-Y-Z
