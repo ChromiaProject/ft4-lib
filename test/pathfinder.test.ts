@@ -1,8 +1,8 @@
 // Not BRIDS, but allows for easier testing
-const startingChainBrid = "STARTING CHAIN";
-const endingChainBrid = "ENDING CHAIN";
-const rootChainBrid = "ROOT CHAIN";
-const commonChainBrid = "COMMON CHAIN";
+const startingChainBrid = Buffer.from("00", "hex");
+const endingChainBrid = Buffer.from("ff", "hex");
+const rootChainBrid = Buffer.from("11", "hex");
+const commonChainBrid = Buffer.from("88", "hex");
 
 const assetOriginQueryMock = jest.fn();
 const createClientMock = jest.fn();
@@ -29,12 +29,13 @@ jest.mock("postchain-client", () => {
 });
 
 import { generateId } from "./util/util";
-import { IClient } from "postchain-client";
+import { IClient, formatter } from "postchain-client";
 import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
 import { createConnection } from "/ft4";
 import { Asset } from "/ft4/asset/types";
 import { PathfinderError, findPathToChain } from "/ft4/crosschain/pathfinder";
+import { BufferId } from "/cryptoUtils";
 
 createClientMock.mockImplementation(
   async () =>
@@ -60,15 +61,27 @@ describe("Pathfinder", () => {
 
   it("finds a path", async () => {
     const asset = getMockAsset();
-    setPathsByLength(3, 2, 2, asset.brid.toString("hex"));
+    setOriginAssetsQueryResponsesByLength(3, 2, 2, asset.brid.toString("hex"));
+    // start
+    //   ↳ 2           end
+    //     ↳ 3        4 ↲
+    //       ↳ common ↲
+    //           ↳ 1
+    //             ↳ root
     const path = await findPathToChain(connection, asset, endingChainBrid);
 
-    expect(path.length).toEqual(5);
+    expect(path.map((buf) => buf.toString("hex"))).toEqual([
+      "2222",
+      "3333",
+      commonChainBrid.toString("hex"),
+      "4444",
+      endingChainBrid.toString("hex"),
+    ]);
   });
 
   it("finds a path with no duplicate hops", async () => {
     const asset = getMockAsset();
-    setPathsByLength(3, 2, 2, asset.brid.toString("hex"));
+    setOriginAssetsQueryResponsesByLength(3, 2, 2, asset.brid.toString("hex"));
     const path = await findPathToChain(connection, asset, endingChainBrid);
 
     expect(path.length).toEqual(5);
@@ -77,10 +90,21 @@ describe("Pathfinder", () => {
 
   it("finds a path through root if no common nodes exist", async () => {
     const asset = getMockAsset();
-    setPathsByLength(7, 3, 0, asset.brid.toString("hex"));
+    setOriginAssetsQueryResponsesByLength(7, 3, 0, asset.brid.toString("hex"));
     const path = await findPathToChain(connection, asset, endingChainBrid);
 
-    expect(path.length).toEqual(10);
+    expect(path.map((buf) => buf.toString("hex"))).toEqual([
+      "1111",
+      "2222",
+      "3333",
+      "4444",
+      "5555",
+      "6666",
+      rootChainBrid.toString("hex"),
+      "8888",
+      "7777",
+      endingChainBrid.toString("hex"),
+    ]);
   });
 
   it("throws when blockchain doesn't exist", async () => {
@@ -93,9 +117,64 @@ describe("Pathfinder", () => {
 
     await expect(promise).rejects.toThrow(PathfinderError);
   });
+
+  it("finds a path if both are on the same branch", async () => {
+    const asset = getMockAsset();
+    setOriginAssetsQueryResponses(
+      [
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        endingChainBrid,
+        "5555",
+        "6666",
+        rootChainBrid,
+      ],
+      ["5555", "6666", rootChainBrid],
+    );
+    const path = await findPathToChain(connection, asset, endingChainBrid);
+
+    expect(path.map((buf) => buf.toString("hex"))).toEqual([
+      "1111",
+      "2222",
+      "3333",
+      "4444",
+      endingChainBrid.toString("hex"),
+    ]);
+  });
+
+  it("works when second node is downstream of first node", async () => {
+    const asset = getMockAsset();
+    setOriginAssetsQueryResponses(
+      ["5555", "6666", rootChainBrid],
+      [
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        startingChainBrid,
+        "5555",
+        "6666",
+        rootChainBrid,
+      ],
+    );
+    const path = await findPathToChain(connection, asset, endingChainBrid);
+
+    expect(path.map((buf) => buf.toString("hex"))).toEqual([
+      "4444",
+      "3333",
+      "2222",
+      "1111",
+      endingChainBrid.toString("hex"),
+    ]);
+  });
 });
 
-function setPaths(startToRoot: string[], endToRoot: string[]) {
+function setOriginAssetsQueryResponses(
+  startToRoot: BufferId[],
+  endToRoot: BufferId[],
+) {
   const zippedArray = Array.from(
     // Array as long as the biggest of the two
     { length: Math.max(startToRoot.length, endToRoot.length) },
@@ -110,7 +189,7 @@ function setPaths(startToRoot: string[], endToRoot: string[]) {
   zippedArray.map((nextBrid) =>
     // changes return type for tests, but allows usage of explicit strings
     // defined on top of the file.
-    assetOriginQueryMock.mockReturnValueOnce(nextBrid),
+    assetOriginQueryMock.mockReturnValueOnce(formatter.ensureBuffer(nextBrid)),
   );
 }
 
@@ -119,35 +198,35 @@ function setPaths(startToRoot: string[], endToRoot: string[]) {
 //   D-E
 // Sending A->D with X in common and
 // Z as root, will have these parameters
-// (3, 2, 2, Z.brid.toString("hex"))
-function setPathsByLength(
+// (3, 2, 2, Z.brid)
+function setOriginAssetsQueryResponsesByLength(
   startToCommonHops: number,
   endToCommonHops: number,
   commonToRootHops: number,
-  rootBrid: string,
+  rootBrid: BufferId,
 ) {
+  let i = 0;
+  const nextChain = () => Buffer.from(String(++i).repeat(4), "hex");
   // X-Y-Z
   const commonToRootArray = commonToRootHops
     ? [commonChainBrid]
-        .concat(
-          Array.from({ length: commonToRootHops - 1 }, () =>
-            generateId().toString("hex"),
-          ),
-        )
-        .concat(rootBrid)
-    : [rootBrid];
+        .concat(Array.from({ length: commonToRootHops - 1 }, nextChain))
+        .concat(formatter.ensureBuffer(rootBrid))
+    : [formatter.ensureBuffer(rootBrid)];
 
   //B-C-X-Y-Z
-  const startToRoot = Array.from({ length: startToCommonHops - 1 }, () =>
-    generateId().toString("hex"),
+  const startToRoot = Array.from(
+    { length: startToCommonHops - 1 },
+    nextChain,
   ).concat(commonToRootArray);
 
   //E-X-Y-Z
-  const endToRoot = Array.from({ length: endToCommonHops - 1 }, () =>
-    generateId().toString("hex"),
+  const endToRoot = Array.from(
+    { length: endToCommonHops - 1 },
+    nextChain,
   ).concat(commonToRootArray);
 
-  setPaths(startToRoot, endToRoot);
+  setOriginAssetsQueryResponses(startToRoot, endToRoot);
 }
 
 function getMockAsset() {

@@ -3,13 +3,13 @@ import { IClient, createClient, formatter } from "postchain-client";
 import { createConnection } from "../ft-session";
 import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
+import { Buffer } from "buffer";
 import { Asset } from "../asset/types";
 import { getAssetOriginById } from "./crosschain-query-functions";
 
 export class PathfinderError extends Error {
   constructor(msg?) {
     super(msg);
-    this.message = msg;
     this.name = "PathfinderError";
   }
 }
@@ -19,32 +19,16 @@ export async function findPathToChain(
   asset: Asset,
   blockchainRID: BufferId,
 ) {
-  // could the root node be !== issuing_brid?
-  // example:
-  // - root is where x-chain txs happen, issuer is the game so
-  //   game isn't slowed down by x-chain txs but can still mint
-  //   without using ICMF/ICCF.
-  //
-  //                       Root dapp
-  //                       /   |    \
-  //                   game  dapp1  dapp2
-  //
-  //   game mints, dapp1 sends to dapp2 through root and not game
-  const rootNode = formatter.toString(asset.brid);
+  const rootNode = asset.brid;
 
   let foundPath = false;
   const pathSourceToRoot = [
-    connection.client.config.blockchainRID.toUpperCase(),
+    formatter.toBuffer(connection.client.config.blockchainRID),
   ];
-  const pathEndToRoot = [
-    (typeof blockchainRID === "string"
-      ? blockchainRID
-      : formatter.toString(blockchainRID)
-    ).toUpperCase(),
-  ];
+  const pathEndToRoot = [formatter.ensureBuffer(blockchainRID)];
 
-  let lastNode: string;
-  let commonNode: string;
+  let lastNode: Buffer;
+  let commonNode: Buffer;
   let isSearchingSource = true;
 
   // Should we stop before N iterations?
@@ -54,7 +38,7 @@ export async function findPathToChain(
 
     lastNode = currentArray[currentArray.length - 1];
 
-    if (lastNode !== rootNode) {
+    if (lastNode.compare(rootNode)) {
       // Get the origin chain from the one we're currently exploring.
       // If the config is broken, two scenarios may arise:
       // 1. No origin chain. This call throws.
@@ -81,7 +65,9 @@ export async function findPathToChain(
       } catch (error) {
         // if (error instanceof BlockchainUrlUndefinedException) {
         throw new PathfinderError(
-          `Blockchain ${lastNode} does not exist on the current network.`,
+          `Blockchain ${lastNode.toString(
+            "hex",
+          )} does not exist on the current network.`,
         );
         // } else {
         //   throw error;
@@ -95,13 +81,13 @@ export async function findPathToChain(
       //
       // all these errors are instances of UnexpectedStatusError
       // we either match on the message to rethrow or let it through unhandled
-      const nextHop = formatter.toString(
-        await getAssetOriginById(tmpConnection, asset.id),
-      );
+      const nextHop = await getAssetOriginById(tmpConnection, asset.id);
 
       currentArray.push(nextHop);
       if (
-        (isSearchingSource ? pathEndToRoot : pathSourceToRoot).includes(nextHop)
+        (isSearchingSource ? pathEndToRoot : pathSourceToRoot).some(
+          (x) => !x.compare(nextHop),
+        )
       ) {
         foundPath = true;
         commonNode = nextHop;
@@ -111,18 +97,23 @@ export async function findPathToChain(
 
     // switch branch only if the other hasn't reached root node yet
     isSearchingSource = isSearchingSource
-      ? pathEndToRoot[pathEndToRoot.length - 1] === rootNode
-      : pathSourceToRoot[pathSourceToRoot.length - 1] !== rootNode;
+      ? !pathEndToRoot[pathEndToRoot.length - 1].compare(rootNode)
+      : !!pathSourceToRoot[pathSourceToRoot.length - 1].compare(rootNode);
   }
 
   const pathRootToEnd = pathEndToRoot.reverse();
 
   return pathSourceToRoot
     .slice(
-      1, // remove the starting chain
-      pathSourceToRoot.indexOf(commonNode),
+      0,
+      pathSourceToRoot.findIndex((x) => !x.compare(commonNode)),
     )
-    .concat(pathRootToEnd.slice(pathRootToEnd.indexOf(commonNode)));
+    .concat(
+      pathRootToEnd.slice(
+        pathRootToEnd.findIndex((x) => !x.compare(commonNode)),
+      ),
+    )
+    .slice(1); // remove starting chain
 }
 
 async function createConnectionToBrid(oldClient: IClient, newBrid: BufferId) {
