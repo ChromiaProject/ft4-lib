@@ -3,9 +3,8 @@ import ^.auth.external;
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
-    val flags = get_auth_flags(op.name, is_strict);
 
-    require(op_context.op_index > 0, "Expected at least two operations");
+    require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
@@ -14,8 +13,8 @@ function authenticate(is_strict: boolean = true) {
     );
 
     val account = when (previous_op.name) {
-        "ft4.evm_auth" -> _validate_eth_signature(previous_op, set(flags), is_strict);
-        "ft4.ft_auth" -> _validate_ft4_signature(previous_op.args, set(flags));
+        "ft4.evm_auth" -> _validate_eth_signature(previous_op, is_strict);
+        "ft4.ft_auth" -> _validate_ft4_signature(previous_op.args);
         else -> null;
     };
 
@@ -37,20 +36,20 @@ function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boole
     ));
 }
 
-function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<text>, is_strict: boolean): acc.account {
+function _validate_eth_signature(auth_op: gtx_operation, is_strict: boolean): acc.account {
     val op = op_context.get_all_operations()[op_context.op_index];
+    val flags = get_auth_flags(op.name, is_strict);
     val message_template = get_auth_message_template(op.name, op.args.to_gtv(), is_strict);
-    val validated_args = _validate_eth_arguments(auth_op.args, required_flags);
-    val op_to_auth = op_context.get_all_operations()[op_context.op_index];
+    val validated_args = _validate_eth_arguments(auth_op.args, set(flags));
     val message = create_message_from_template(
         validated_args, 
         message_template, 
-        op_to_auth.args, 
+        op.args, 
         validated_args.account_auth_descriptor.ctr
     );
 
     var recovered_keys = 
-        if (validated_args.account_auth_descriptor.auth_type in [acc.auth_type.ES, acc.auth_type.S]) [_recover_eth_key(message, validated_args.signatures[0], validated_args.account_auth_descriptor.id)] 
+        if (validated_args.account_auth_descriptor.auth_type in [acc.auth_type.S, acc.auth_type.ES]) [_recover_eth_address(message, validated_args.signatures[0], validated_args.account_auth_descriptor)] 
         else _recover_multiple_eth_keys(message, validated_args.signatures, validated_args.account_auth_descriptor);
     
     validated_args.account_auth_descriptor.ctr += 1;
@@ -99,30 +98,22 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     return acc.eth_auth_args(account, auth_descriptor, signatures);
 }
 
-function _validate_ft4_signature(auth_args: list<gtv>, required_flags: set<text>): acc.account {
+function _validate_ft4_signature(auth_args: list<gtv>): acc.account {
     val account_id = byte_array.from_gtv(auth_args[0]);
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
+    val flags = get_auth_flags(op_context.get_all_operations()[op_context.op_index].name, is_strict=false);
 
     val account = acc.Account(account_id);
-    val external_keys = acc.auth_descriptor_participant @* {
-        .account_auth_descriptor.account == account,
-        .account_auth_descriptor.id == auth_descriptor_id, 
-        .id in op_context.get_signers()
-    };
+    val auth_descriptor = require(
+        acc.account_auth_descriptor @? { .account == account, .id == auth_descriptor_id },
+        "Cannot find auth descriptor <%s> for account <%s>".format(auth_descriptor_id, account_id)
+    );
 
-    require(external_keys.size() > 0, "The provided key(s) is not a signer of this auth descriptor");
-    for (external in external_keys) {
-        acc.require_auth(
-            external.account_auth_descriptor.account,
-            external.account_auth_descriptor,
-            list(required_flags)
-        );
-    }
-
+    acc.require_auth(account, auth_descriptor, list(flags));
     return account;
 }
 
-function _recover_eth_key(message: text, signature, auth_descriptor_id: byte_array) {
+function _recover_eth_address(message: text, signature, acc.account_auth_descriptor) {
     require(message != "", "Empty messages are not allowed");
 
     val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
@@ -135,7 +126,7 @@ function _recover_eth_key(message: text, signature, auth_descriptor_id: byte_arr
 
     val recovered_address = keccak256(eth_pubkey).sub(12);
     val participant = acc.auth_descriptor_participant @? {
-        .account_auth_descriptor.id == auth_descriptor_id,
+        .account_auth_descriptor == account_auth_descriptor,
         .id == recovered_address
     };
     require(participant, "Invalid signature");
@@ -147,10 +138,10 @@ function _recover_multiple_eth_keys(message: text, signatures: list<signature>, 
     var recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
         recovered_keys.add(
-            _recover_eth_key(
+            _recover_eth_address(
                 message,
                 signatures[i],
-                account_auth_descriptor.id
+                account_auth_descriptor
             )
         );
     }

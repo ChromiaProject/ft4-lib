@@ -161,14 +161,13 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val asset_id = asset.id;
     val amount = 5L;
 
-    val template = auth.get_auth_message_template(
+    val template = auth_ext.get_auth_message_template(
         "ft4.transfer", 
         [
             receiver_id.to_gtv(), 
             asset_id.to_gtv(), 
             amount.to_gtv()
-        ].to_gtv(),
-        is_strict = true
+        ].to_gtv()
     );
     val message = utils.create_auth_message(template, alice);
     val signature = utils.metamask_sign(message, alice.keypair.priv);
@@ -193,14 +192,13 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
     val asset_id = asset.id;
     val amount = 10L;
 
-    val template = auth.get_auth_message_template(
+    val template = auth_ext.get_auth_message_template(
         "ft4.transfer", 
         [
             receiver_id.to_gtv(), 
             asset_id.to_gtv(), 
             amount.to_gtv()
-        ].to_gtv(),
-        true
+        ].to_gtv()
     );
     val message = utils.create_auth_message(template, alice);
     val invalid_signature = utils.metamask_sign(message, bob.keypair.priv);

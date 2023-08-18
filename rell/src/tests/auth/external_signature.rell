@@ -68,7 +68,7 @@ function test_perform_eth_auth_transaction() {
 
 function test_multisig_external_signature() {
   val desc = acc.auth_descriptor(
-    acc.auth_type.EM,
+    acc.auth_type.M,
     [
       set(["A"]).to_gtv(),
       0x2.to_gtv(),
@@ -107,7 +107,7 @@ function test_multisig_external_signature() {
 
 function test_it_rejects_transactions_if_not_enough_signatures() {
   val desc = acc.auth_descriptor(
-    acc.auth_type.EM,
+    acc.auth_type.M,
     [
       set(["A"]).to_gtv(),
       0x3.to_gtv(),
@@ -146,7 +146,7 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
 
 function test_it_rejects_signatures_not_part_of_a_d() {
   val desc = acc.auth_descriptor(
-    acc.auth_type.EM,
+    acc.auth_type.M,
     [
       set(["A"]).to_gtv(),
       0x1.to_gtv(),
@@ -254,7 +254,7 @@ function test_ft_auth_fails_if_key_invalid() {
     .op(auth_ext.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.bob.priv)
-    .run_must_fail("The provided key(s) is not a signer of this auth descriptor");
+    .run_must_fail("The participant is not the signer of this transaction.");
 }
 
 function test_perform_ft_auth_transaction() {
