@@ -17,8 +17,20 @@ import {
   createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
 } from "./authentication";
-import { AuthDescriptor, FlagsType, Account, authDescriptor } from "./accounts";
+import {
+  AuthDescriptor,
+  FlagsType,
+  Account,
+  authDescriptor,
+  GtvAuthDescriptor,
+} from "./accounts";
 import { createAmount } from "./asset/amount";
+import {
+  registerAccount,
+  addRateLimitPoints,
+  registerAsset,
+  mint,
+} from "./admin/admin-op-functions";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
 import { Session } from "./types";
@@ -27,7 +39,6 @@ import {
   TransferHistoryResponse,
   TransferHistoryType,
 } from "./accounts/transfer-history/types";
-import { GtvAuthDescriptor } from "./accounts";
 import { DecimalFormat } from "./asset/types";
 
 export {
@@ -56,7 +67,13 @@ export {
   createLocalStorageLoginKeyStore,
   createEvmKeyHandler,
   createAmount,
+  registerAccount,
+  addRateLimitPoints,
+  registerAsset,
+  mint,
 };
+
+export { Listener, EventEmitter } from "./events";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,
