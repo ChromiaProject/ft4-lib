@@ -46,14 +46,13 @@ function test_auth_handler_resolves_to_app_scope_auth_handler_when_no_operation_
 }
 
 function test_get_auth_flags_throws_error_when_name_ends_with_period() {
-    // `try_call` returns null when a function/query fails
-    assert_null(try_call(auth_ext.get_auth_flags("x.y.z.", *)));
+    assert_fails(auth_ext.get_auth_flags("x.y.z.", *));
 }
 
 function test_get_auth_flags_throws_error_when_name_starts_with_period() {
-    assert_null(try_call(auth_ext.get_auth_flags(".x.y.z", *)));
+    assert_fails(auth_ext.get_auth_flags(".x.y.z", *));
 }
 
 function test_does_not_resolve_inexact_module_in_strict_mode() {
-    assert_null(try_call(auth.get_auth_handler("a.b.bar", is_strict=true, *)));
+    assert_fails(auth.get_auth_handler("a.b.bar", is_strict=true, *));
 }
