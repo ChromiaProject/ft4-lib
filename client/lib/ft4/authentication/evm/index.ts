@@ -11,7 +11,7 @@ export { createEvmKeyHandler };
 export function evmAuth(
   accountId: BufferId,
   authDesriptorId: BufferId,
-  signatures: Signature[]
+  signatures: Signature[],
 ): Operation {
   return {
     name: "ft4.evm_auth",
@@ -36,12 +36,12 @@ export interface EvmKeyStore extends KeyStore {
 
 export async function signMessage(
   message: string,
-  signer: ethers.Signer
+  signer: ethers.Signer,
 ): Promise<Signature> {
-  return signer.signMessage(message).then(sliceSignature);
+  return sliceSignature(await signer.signMessage(message));
 }
 
-export function sliceSignature(signature: string | `0x${string}`): Signature {
+export function sliceSignature(signature: string): Signature {
   const { r, s, v } = ethers.Signature.from(signature);
   return {
     r: Buffer.from(r.slice(2), "hex"),
