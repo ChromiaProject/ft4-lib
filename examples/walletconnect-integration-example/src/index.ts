@@ -10,6 +10,12 @@ import { arbitrum, mainnet, polygon } from '@wagmi/core/chains'
 
 const projectId = '7a27a19adcb9a590e19013d28780325b'
 const chains = [arbitrum, mainnet, polygon]
+let client = undefined;
+
+createClient({
+  nodeURLPool: "http://localhost:7741",
+  blockchainIID: 0
+}).then(c => {client = c});
 
 const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
 const wagmiConfig = createConfig({
@@ -42,11 +48,6 @@ async function toHtml(account: Account) {
 }
 
 document.getElementById("authentication-button")?.addEventListener("click", onClick)
-const client = await createClient({
-  nodeURLPool: "http://localhost:7741",
-  blockchainIID: 0
-});
-
 
 async function onClick(e: Event) {
   e.preventDefault();
@@ -58,6 +59,11 @@ async function login(account: { address: Address }) {
   if (!account.address) {
     const wrapper = document.getElementById("account-id-container")
     wrapper.innerHTML = "No account registered"
+    return
+  }
+  if (!client) {
+    const wrapper = document.getElementById("account-id-container")
+    wrapper.innerHTML = "Client isn't ready. Retry after a few seconds"
     return
   }
   // Create a keystore for holding the evm key
