@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
+
 ### Changed
 - Assets are now always returned as AssetResponse objects from postchain.
 - Transfer history's asset properties are now of the Asset type
@@ -15,9 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
 - Balance queries now return frozen objects
 - Exports of admin functions.
-
-### Added
-- Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
 
 ## [0.1.3] - 2023-07-13
 
