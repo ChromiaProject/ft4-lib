@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from
+- findPathToChain: traverses the tree structure of the linked chains to find the path to a certain asset.
+
 ## [0.1.3] - 2023-07-13
 
 ### Added
