@@ -168,7 +168,6 @@ export function transactionBuilder(
       const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        Buffer.from(client.config.blockchainRID, "hex"),
         nonce,
         authenticator.authDataService,
       );

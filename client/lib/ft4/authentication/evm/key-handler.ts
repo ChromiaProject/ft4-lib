@@ -18,7 +18,6 @@ export function createEvmKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
-      brid: Buffer,
       nonce: number,
       authDataService: AuthDataService,
     ) =>
@@ -26,7 +25,6 @@ export function createEvmKeyHandler(
         accountId,
         authDescriptor.id,
         operation,
-        brid,
         nonce,
         authDataService,
         keyStore,
@@ -40,7 +38,6 @@ async function authorize(
   accountId: BufferId,
   authDescriptorId: BufferId,
   operation: Operation,
-  brid: Buffer,
   nonce: number,
   authDataService: AuthDataService,
   keyStore: EvmKeyStore,
@@ -48,6 +45,7 @@ async function authorize(
   const messageTemplate = await authDataService.getAuthMessageTemplate(
     operation,
   );
+  const brid = await authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(

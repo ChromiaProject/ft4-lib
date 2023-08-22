@@ -1,12 +1,11 @@
 import ^^.assets;
 import ^^.auth;
-import ^^.utils;
 
 function transfer_message(gtv) {
     val params = struct<transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return utils.make_auth_message("Please sign the message\nto transfer %s %s\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n%s")
+    return "Please sign the message\nto transfer %s %s\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n%s"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
@@ -38,7 +37,7 @@ function burn_message(gtv) {
     val params = struct<burn>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return utils.make_auth_message("Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}")
+    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name

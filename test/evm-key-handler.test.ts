@@ -57,7 +57,6 @@ describe("EVM key handler", () => {
     const operations = await keyHandler.authorize(
       accountId,
       op("foo"),
-      Buffer.from(client.config.blockchainRID, "hex"),
       0,
       createFakeAuthDataService({
         foo: authData,

@@ -296,7 +296,7 @@ function test_auth_message_is_generated_without_arguments_when_operation_has_no_
 
   assert_equals(
     auth.generate_auth_message_template(x"", op), 
-    "Please sign the message to call\noperation:\n- foo\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nNonce: {nonce}"
   );
 }
 
@@ -311,7 +311,7 @@ function test_auth_message_is_generated_with_arguments_when_operation_has_argume
 
   assert_equals(
     auth.generate_auth_message_template(x"", op), 
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n- text_value\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n- text_value\n\nNonce: {nonce}"
   );
 }
 
@@ -323,7 +323,7 @@ function test_auth_message_is_correctly_generated_with_byte_array_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op), 
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0123456789ABCDEF\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0123456789ABCDEF\n\nNonce: {nonce}"
   );
 }
 
@@ -335,7 +335,7 @@ function test_auth_message_is_correctly_generated_with_decimal_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 3.14\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 3.14\n\nNonce: {nonce}"
   );
 }
 
@@ -347,7 +347,7 @@ function test_auth_message_is_correctly_generated_with_enum_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0\n\nNonce: {nonce}"
   );
 }
 
@@ -359,7 +359,7 @@ function test_auth_message_is_correctly_generated_with_boolean_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n\nNonce: {nonce}"
   );
 }
 
@@ -371,7 +371,7 @@ function test_auth_message_is_correctly_generated_with_big_integer_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nNonce: {nonce}"
   );
 }
 
@@ -383,15 +383,15 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- null\n\nBlockchain: {brid}\n\nNonce: {nonce}"
+    "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- null\n\nNonce: {nonce}"
   );
 }
 
 function test_operation_without_auth_message_template_can_be_evm_authenticated() {
   val alice = utils.evm_register_alice();
 
-  var message = "Please sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
-  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nBlockchain: {brid}\n\nNonce: {nonce}";
+  var message = "Blockchain: {brid}\n\nPlease sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
+  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
 
   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 

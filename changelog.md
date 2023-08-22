@@ -4,6 +4,7 @@
 
 ### Added
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
+- External signing messages now includes rid of the blockchain to which the tx is being submitted.
 
 ### Fixed
 - Exports of admin functions.

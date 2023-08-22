@@ -26,7 +26,6 @@ export interface KeyHandler {
   authorize(
     accountId: BufferId,
     operation: Operation,
-    brid: Buffer,
     nonce: number,
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
@@ -61,6 +60,7 @@ export interface AuthDataService {
     authDescriptorId: BufferId,
   ): Promise<number | null>;
   getLoginConfig(name: string | null): Promise<LoginConfig>;
+  getBrid(): Buffer;
 }
 
 export type LoginConfig = {
