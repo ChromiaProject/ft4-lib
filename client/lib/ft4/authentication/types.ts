@@ -26,6 +26,7 @@ export interface KeyHandler {
   authorize(
     accountId: BufferId,
     operation: Operation,
+    brid: Buffer,
     nonce: number,
     authDataService: AuthDataService,
   ): Promise<Operation[]>;

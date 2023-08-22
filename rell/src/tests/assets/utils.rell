@@ -195,6 +195,7 @@ function create_auth_message(template: text, account_data) {
     return template
         .replace("{account_id}", account_data.account.id.to_hex())
         .replace("{auth_descriptor_id}", account_data.auth_descriptor_id.to_hex())
+        .replace("{brid}", chain_context.blockchain_rid.to_hex())
         .replace("{nonce}", nonce.to_text());
 }
 

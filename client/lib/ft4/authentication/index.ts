@@ -16,7 +16,7 @@ export * from "./types";
 export function createAuthenticator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
-  authDataService: AuthDataService
+  authDataService: AuthDataService,
 ): Authenticator {
   const authenticator = Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
@@ -37,7 +37,7 @@ export function createAuthenticator(
 
 async function getAuthFlags(
   authDataService: AuthDataService,
-  operation: Operation
+  operation: Operation,
 ): Promise<string[]> {
   return await authDataService.getAuthFlags(operation);
 }
@@ -45,16 +45,16 @@ async function getAuthFlags(
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
-  operation: Operation
+  operation: Operation,
 ): Promise<KeyHandler | null> {
   const flags = await getAuthFlags(authDataService, operation);
 
   const handlers = keyHandlers.filter((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(flags)
+    keyHandler.satisfiesAuthRequirements(flags),
   );
 
   const nonInteractiveHandlers = handlers.filter(
-    (keyHandler) => !keyHandler.keyStore.isInteractive
+    (keyHandler) => !keyHandler.keyStore.isInteractive,
   );
 
   if (nonInteractiveHandlers.length !== 0) {
@@ -70,7 +70,7 @@ async function getKeyHandlerForOperation(
 
 function createAuthenticatorSession(
   authenticator: Authenticator,
-  authDataService: AuthDataService
+  authDataService: AuthDataService,
 ): AuthenticatorSession {
   const usedKeyHandlers = new Set<KeyHandler>();
 
@@ -84,13 +84,13 @@ function createAuthenticatorSession(
           (signers = new Set([
             ...keyHandler.authDescriptor.signers,
             ...signers,
-          ]))
+          ])),
       );
       return signers;
     },
     authorize: async (operation: Operation) => {
       const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation
+        operation,
       );
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
@@ -99,15 +99,16 @@ function createAuthenticatorSession(
       return await keyHandler.authorize(
         authenticator.accountId,
         operation,
+        Buffer.from(""),
         0,
-        authDataService
+        authDataService,
       );
     },
     sign: async (transaction: TxBuilderTransaction) => {
       await Promise.all(
         Array.from(usedKeyHandlers).map((keyHandler) =>
-          keyHandler.sign(transaction)
-        )
+          keyHandler.sign(transaction),
+        ),
       );
     },
   });

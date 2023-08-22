@@ -1,11 +1,12 @@
 import acc: ^^.accounts;
 import ^^.assets;
 import ^^.auth;
+import ^^.utils;
 
 
 function delete_auth_descriptor_message(gtv) {
     val params = struct<delete_auth_descriptor>.from_gtv(gtv);
-    return "Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id);
+    return utils.make_auth_message("Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}").format(params.auth_descriptor_id);
 }
 
 @extend(auth.auth_handler)
@@ -26,7 +27,7 @@ operation delete_auth_descriptor(auth_descriptor_id: byte_array) {
 
 function delete_all_auth_descriptors_exclude_message(gtv) {
     val params = struct<delete_all_auth_descriptors_exclude>.from_gtv(gtv);
-    return "Please sign the message\nto delete all auth descriptors excluding:\n%s\n\n from account:\n{account_id}\n\nNonce: {nonce}".format(params.auth_descriptor_id);
+    return utils.make_auth_message("Please sign the message\nto delete all auth descriptors excluding:\n%s\n\n from account:\n{account_id}").format(params.auth_descriptor_id);
 }
 
 @extend(auth.auth_handler)
@@ -48,7 +49,7 @@ function add_auth_descriptor_message(gtv) {
     val params = struct<add_auth_descriptor>.from_gtv(gtv);
     val flags = params.new_desc.args[0];
 
-    return "Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}\n\nNonce: {nonce}".format(flags);
+    return utils.make_auth_message("Please sign the message\nto add auth descriptor\nwith flags:\n%s\n\nto account:\n{account_id}").format(flags);
 }
 
 @extend(auth.auth_handler)

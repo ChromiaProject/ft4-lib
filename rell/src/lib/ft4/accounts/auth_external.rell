@@ -60,6 +60,7 @@ function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<tex
 
 function create_message_from_template(eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
+    require(message_template.contains("{brid}"), "Message template has to include '{brid}'");
     var message = message_template;
     
     // TODO: check if this is still needed
@@ -70,6 +71,7 @@ function create_message_from_template(eth_auth_args, message_template: text, arg
     return message
         .replace("{account_id}", eth_auth_args.account.id.to_hex())
         .replace("{auth_descriptor_id}", eth_auth_args.account_auth_descriptor.id.to_hex())
+        .replace("{brid}", chain_context.blockchain_rid.to_hex())
         .replace("{nonce}", ctr.to_text().replace("\"", ""));
 }
 

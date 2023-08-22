@@ -10,3 +10,7 @@ struct validation_result {
 val VALID = validation_result(true, null);
 
 function invalid(error: text) = validation_result(false, error);
+
+function make_auth_message(message: text) {
+    return message + "\n\nBlockchain: {brid}\n\nNonce: {nonce}";
+}

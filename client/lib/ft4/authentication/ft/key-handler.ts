@@ -8,7 +8,7 @@ import { TxBuilderTransaction } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptor: AuthDescriptor,
-  keyStore: FtKeyStore
+  keyStore: FtKeyStore,
 ): KeyHandler {
   return Object.freeze({
     authDescriptor,
@@ -19,9 +19,11 @@ export function createFtKeyHandler(
       accountId: BufferId,
       operation: Operation,
       //eslint-disable-next-line @typescript-eslint/no-unused-vars
+      brid: Buffer,
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
       nonce: number,
       //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      authDataService: AuthDataService
+      authDataService: AuthDataService,
     ) => authorize(accountId, authDescriptor.id, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
     getSigners: () => authDescriptor.signers,
@@ -31,14 +33,14 @@ export function createFtKeyHandler(
 async function authorize(
   accountId: BufferId,
   authDescriptorId: BufferId,
-  operation: Operation
+  operation: Operation,
 ): Promise<Operation[]> {
   return [ftAuth(accountId, authDescriptorId), operation];
 }
 
 async function sign(
   transaction: TxBuilderTransaction,
-  keyStore: FtKeyStore
+  keyStore: FtKeyStore,
 ): Promise<void> {
   transaction.signatures.push(
     await keyStore.sign(
@@ -46,14 +48,14 @@ async function sign(
         blockchainRID: transaction.blockchainRID,
         signers: transaction.signers,
         operations: transaction.operations,
-      })
-    )
+      }),
+    ),
   );
 }
 
 export function hasAuthDescriptorFlags(
   authDescriptor: AuthDescriptor,
-  requiredFlags: string[]
+  requiredFlags: string[],
 ): boolean {
   return requiredFlags.every((flag) => authDescriptor.flags.has(flag));
 }

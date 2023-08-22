@@ -49,6 +49,6 @@ operation test_perform_large_transfer(
   amount: integer,
   to: text
 ) {
-  val msg_template = "Do you want to send {0} CHR to {1}? Nonce: {nonce}";
+  val msg_template = "Do you want to send {0} CHR to {1}? Brid: {brid} Nonce: {nonce}";
   acc._authenticate(set(["A"]), msg_template);
 }

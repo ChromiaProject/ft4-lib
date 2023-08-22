@@ -2,6 +2,7 @@
 module;
 
 import ^.accounts;
+import ^.utils;
 
 struct auth_data {
     flags: list<text>;
@@ -75,21 +76,22 @@ function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, o
 
 /*
  * Creates message from operation name and arguments.
- * It is used when `evm_auth` is used to authenticate a user, 
+ * It is used when `evm_auth` is used to authenticate a user, 
  * but auth message is not specified in the auth handler of the operation.
  */
 function generate_auth_message_template(brid: byte_array, op: gtx_operation) {
-    var message = "Please sign the message to call\noperation:\n- %s\n\n".format(op.name);
+    var message = "Please sign the message to call\noperation:\n- %s".format(op.name);
 
     if (op.args.size() > 0) {
+        message = message + "\n\n";
         var arguments = "with arguments:\n";
         for (arg in op.args) {
             arguments = arguments + "- %s\n".format(arg).replace("\"", "");
         }
-        message = message + arguments + "\n";
+        message = message + arguments.sub(0, arguments.size() - 1);
     }
     
-    return message + "Nonce: {nonce}";
+    return utils.make_auth_message(message);
 }
 
 function join_text_list(components: list<text>, count: integer) {

@@ -43,7 +43,7 @@ function test_it_rejects_wrong_eth_signatures() {
   
   rell.test.tx()
     .op(auth.evm_auth(external_auth_data.auth_descriptor_id, external_auth_data.auth_descriptor_id, [wrong_signature]))
-    .op(test_operations.auth.test_authenticated_operation("Some message {nonce}"))
+    .op(test_operations.auth.test_authenticated_operation("Some message {brid}{nonce}"))
     .sign(rell.test.keypairs.alice)
     .run_must_fail("Invalid signature");
 }
@@ -51,8 +51,9 @@ function test_it_rejects_wrong_eth_signatures() {
 function test_perform_eth_auth_transaction() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val signature = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     external_auth_data.keypair.priv
@@ -82,15 +83,17 @@ function test_multisig_external_signature() {
   utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
 
   val signature0 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     rell.test.keypairs.alice.priv
   );
   val signature1 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     rell.test.keypairs.bob.priv 
@@ -121,18 +124,20 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
   utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
 
   val signature0 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     rell.test.keypairs.alice.priv
   );
   val signature1 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
-    rell.test.keypairs.bob.priv
+    rell.test.keypairs.bob.priv 
   );
 
   val auth_descriptor_id = desc.hash();
@@ -157,18 +162,20 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
 
   val signature0 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     rell.test.keypairs.alice.priv
   );
   val signature1 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
-    rell.test.keypairs.bob.priv
+    rell.test.keypairs.bob.priv 
   );
 
   val auth_descriptor_id = desc.hash();
@@ -182,15 +189,17 @@ function test_it_rejects_signatures_not_part_of_a_d() {
 function test_works_with_correct_ctr() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val signature0 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     external_auth_data.keypair.priv
   );
   val signature1 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "1"
     ),
     external_auth_data.keypair.priv
@@ -208,18 +217,20 @@ function test_works_with_correct_ctr() {
 function test_rejects_wrong_ctr() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val signature0 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "0"
     ),
     external_auth_data.keypair.priv
   );
   val signature1 = utils.metamask_sign(
-    "Do you want to send 1000 CHR to %s? Nonce: %s".format(
+    "Do you want to send 1000 CHR to %s? Brid: %s Nonce: %s".format(
       to_addr,
+      chain_context.blockchain_rid.to_hex(),
       "1"
     ),
-    external_auth_data.keypair.priv
+    external_auth_data.keypair.priv 
   );
 
   rell.test.tx()
@@ -285,7 +296,7 @@ function test_auth_message_is_generated_without_arguments_when_operation_has_no_
 
   assert_equals(
     auth.generate_auth_message_template(x"", op), 
-    "Please sign the message to call\noperation:\n- foo\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -300,7 +311,7 @@ function test_auth_message_is_generated_with_arguments_when_operation_has_argume
 
   assert_equals(
     auth.generate_auth_message_template(x"", op), 
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n- text_value\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n- text_value\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -312,7 +323,7 @@ function test_auth_message_is_correctly_generated_with_byte_array_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op), 
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0123456789ABCDEF\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0123456789ABCDEF\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -324,7 +335,7 @@ function test_auth_message_is_correctly_generated_with_decimal_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 3.14\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 3.14\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -336,7 +347,7 @@ function test_auth_message_is_correctly_generated_with_enum_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -348,7 +359,7 @@ function test_auth_message_is_correctly_generated_with_boolean_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -360,7 +371,7 @@ function test_auth_message_is_correctly_generated_with_big_integer_argument() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -372,7 +383,7 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
 
   assert_equals(
     auth.generate_auth_message_template(x"", op),
-    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- null\n\nNonce: {nonce}"
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- null\n\nBlockchain: {brid}\n\nNonce: {nonce}"
   );
 }
 
@@ -380,7 +391,7 @@ function test_operation_without_auth_message_template_can_be_evm_authenticated()
   val alice = utils.evm_register_alice();
 
   var message = "Please sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
-  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
+  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nBlockchain: {brid}\n\nNonce: {nonce}";
 
   val signature = utils.metamask_sign(utils.create_auth_message(message, alice), alice.keypair.priv);
 
