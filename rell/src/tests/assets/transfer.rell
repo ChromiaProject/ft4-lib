@@ -172,8 +172,6 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val message = utils.create_auth_message(template, alice);
     val signature = utils.metamask_sign(message, alice.keypair.priv);
 
-    print(template);
-
     rell.test.tx()
         .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 5))
