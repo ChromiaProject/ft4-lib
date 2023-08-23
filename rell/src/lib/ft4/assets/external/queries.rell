@@ -18,13 +18,13 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
         .account.id == account_id,
         .asset.id == asset_id
     } (
-        asset = assets.get_asset_data(.asset),
+        asset = assets.map_asset(.asset),
         amount = .amount
     );
 }
 
 query get_asset_by_name(name) {
-    return assets.asset @* { name } ( assets.get_asset_data($) );
+    return assets.asset @* { name } ( assets.map_asset($) );
 }
 
 query get_assets_by_name(name, page_size: integer, page_cursor: text?) {
@@ -35,15 +35,15 @@ query get_assets_by_name(name, page_size: integer, page_cursor: text?) {
 }
 
 query get_asset_by_id(asset_id: byte_array) {
-    return assets.asset @? { .id == asset_id } ( assets.get_asset_data($) );
+    return assets.asset @? { .id == asset_id } ( assets.map_asset($) );
 }
 
 query get_asset_by_symbol(symbol: text) {
-    return assets.asset @? { .symbol == symbol } ( assets.get_asset_data($) );
+    return assets.asset @? { .symbol == symbol } ( assets.map_asset($) );
 } 
 
 query _get_all_assets() {
-    return assets.asset @* {} ( assets.get_asset_data($) );
+    return assets.asset @* {} ( assets.map_asset($) );
 }
 
 query get_all_assets(page_size: integer, page_cursor: text?) {

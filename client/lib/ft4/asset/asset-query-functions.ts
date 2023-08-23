@@ -15,32 +15,32 @@ import { createEntityRetriever } from "../utils/entity-retriever";
 
 export async function getAssetById(
   connection: Connection,
-  id: BufferId
+  id: BufferId,
 ): Promise<Asset> {
   return await connection
     .query<AssetResponse>(assetById(id))
-    .then((a) => freeze(createAssetObject(a)));
+    .then(createAssetObject);
 }
 
 export async function getAssetBySymbol(
   connection: Connection,
-  symbol: string
+  symbol: string,
 ): Promise<Asset> {
   return await connection
     .query<AssetResponse>(assetBySymbol(symbol))
-    .then((a) => freeze(createAssetObject(a)));
+    .then(createAssetObject);
 }
 
 export function getAssetsByName(
   connection: Connection,
   name: string,
   limit = 100,
-  cursor: OptionalPageCursor = null
+  cursor: OptionalPageCursor = null,
 ) {
   const retriever = createEntityRetriever<Asset, AssetResponse>(
     connection,
     assetsByName(name, limit, cursor),
-    (a) => a.map(createAssetObject)
+    (a) => a.map(createAssetObject),
   );
   return retriever.retrieve();
 }
@@ -48,37 +48,37 @@ export function getAssetsByName(
 export async function getAllAssets(
   connection: Connection,
   limit = 100,
-  cursor: OptionalPageCursor = null
+  cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
   return createEntityRetriever<Asset, AssetResponse>(
     connection,
     allAssets(limit, cursor),
-    (a) => a.map(createAssetObject)
+    (a) => a.map(createAssetObject),
   ).retrieve();
 }
 
 export async function getBalanceByAccountId(
   connection: Connection,
   accountId: BufferId,
-  assetId: BufferId
+  assetId: BufferId,
 ): Promise<Balance> {
   return await connection
     .query<BalanceResponse>(balanceByAccountId(accountId, assetId))
-    .then((b) => freeze(createBalanceObject(b)));
+    .then(createBalanceObject);
 }
 
 export async function getBalancesByAccountId(
   connection: Connection,
-  accountId: BufferId
+  accountId: BufferId,
 ): Promise<Balance[]> {
   const balances = await connection.query<BalanceResponse[]>(
-    balancesByAccountId(accountId)
+    balancesByAccountId(accountId),
   );
-  return balances.map((b) => freeze(createBalanceObject(b)));
+  return balances.map(createBalanceObject);
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
-  return {
+  return freeze({
     asset: {
       id: balance.asset.id,
       name: balance.asset.name,
@@ -89,11 +89,11 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
       iconUrl: balance.asset.icon_url,
     },
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
-  };
+  });
 }
 
 export function createAssetObject(asset: AssetResponse): Asset {
-  return {
+  return freeze({
     id: asset.id,
     name: asset.name,
     symbol: asset.symbol,
@@ -101,5 +101,5 @@ export function createAssetObject(asset: AssetResponse): Asset {
     brid: asset.brid,
     supply: asset.supply,
     iconUrl: asset.icon_url,
-  };
+  });
 }

@@ -30,7 +30,7 @@ function ensure_balance(acc.account, asset): balance {
     else return create balance(account, asset, amount = 0L);
 }
 
-function get_asset_data(asset: asset) {
+function map_asset(asset: asset) {
     return (
         id = asset.id,
         name = asset.name,
@@ -50,7 +50,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     } (
         utils.pagination_result(
             data = (
-                asset = get_asset_data(.asset),
+                asset = map_asset(.asset),
                 amount = .amount
             ).to_gtv_pretty(),
             rowid = .rowid
@@ -64,7 +64,7 @@ function get_all_assets(page_size: integer, page_cursor: text?) {
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
-            data = (get_asset_data($)).to_gtv_pretty(),
+            data = (map_asset($)).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);
@@ -72,7 +72,7 @@ function get_all_assets(page_size: integer, page_cursor: text?) {
 
 function get_asset_balances(account_id: byte_array) {
     return balance @* { .account.id == account_id } (
-        asset = get_asset_data(.asset),
+        asset = map_asset(.asset),
         amount = .amount
     );
 }
@@ -97,7 +97,7 @@ function get_paginated_asset_balances_by_name(name, page_size: integer, page_cur
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
-            data = (get_asset_data($)).to_gtv_pretty(),
+            data = (map_asset($)).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);

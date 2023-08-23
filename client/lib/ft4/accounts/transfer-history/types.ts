@@ -11,7 +11,19 @@ type TransferHistoryTransferArgs = {
 export type TransferHistoryEntryResponse = {
   id: number;
   delta: bigint;
-  asset: AssetResponse;
+  /**
+   * @deprecated Use `asset_data.decimals` instead
+   */
+  decimals: number;
+  /**
+   * @deprecated Use `asset_data` instead
+   */
+  asset: string;
+  /**
+   * @deprecated Use `asset_data.id` instead
+   */
+  asset_id: Buffer;
+  asset_data: AssetResponse;
   is_input: number;
   timestamp: number;
   block_height: number;
@@ -26,7 +38,11 @@ export type TransferHistoryEntry = {
   rowid: number;
   isInput: boolean;
   delta: Amount;
-  asset: Asset;
+  /**
+   * @deprecated Use `asset_data` instead
+   */
+  asset: AssetInfo;
+  asset_data: Asset;
   entryIndex: number;
   data: Buffer;
   transferInputArgs: TransferHistoryTransferArgs[];
@@ -49,4 +65,9 @@ export enum TransferHistoryType {
 
 export type TransferHistoryFilter = {
   transferHistoryType?: TransferHistoryType;
+};
+
+type AssetInfo = {
+  name: string;
+  id: Buffer;
 };
