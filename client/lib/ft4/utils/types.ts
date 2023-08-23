@@ -50,3 +50,16 @@ export type TxBuilderTransaction = {
   signers: Buffer[];
   signatures: Buffer[];
 };
+
+export interface RellAppStructure {
+  modules: Record<string, RellModuleStructure>;
+}
+
+export interface RellModuleStructure {
+  operations?: { [key: string]: RellOperationStructure };
+}
+
+export interface RellOperationStructure {
+  mount: string;
+  parameters: any[];
+}

@@ -53,6 +53,17 @@ function test_after_transfer_extension_is_called() {
     assert_equals(transfer_extensions_state.after_transfer_amount, 1L);
 }
 
+function test_correct_auth_message_is_used() {
+    val asset = utils.create_asset("test", "TEST", 1);
+    val args = struct<ft4.assets_ext.transfer>(
+        receiver_id=x"abcd",
+        asset_id=asset.id,
+        10L
+    );
+    val expected_msg = "Please sign the message\nto transfer 1.0 test\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n0xabcd\n\nNonce: {nonce}".format(asset.id);
+    assert_equals(ft4.assets_ext.transfer_message(args.to_gtv()), expected_msg);
+}
+
 function test_transfer_fails_when_insufficient_balance() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();

@@ -42,6 +42,7 @@ export interface KeyStore {
   isInteractive: boolean;
   createKeyHandler(authDescriptor: AuthDescriptor): KeyHandler;
 }
+
 export interface AuthenticatorSession {
   authenticator: Authenticator;
   getUsedKeyHandlers(): Set<KeyHandler>;
@@ -51,6 +52,7 @@ export interface AuthenticatorSession {
 }
 
 export interface AuthDataService {
+  isOperationExposed(operationName: string): Promise<boolean>;
   getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   getNonce(
