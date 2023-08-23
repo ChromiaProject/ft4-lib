@@ -7,6 +7,7 @@
 
 ### Fixed
 - Exports of admin functions.
+- `authenticate()` function will now try to match operation name exactly when searching for auth handlers and throw an error if none is found. The old behaviour where scope path was traversed to the root can be aquired again by calling `authenticate(strict = false)`
 
 ## [0.1.3] - 2023-07-13
 
