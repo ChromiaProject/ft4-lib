@@ -7,10 +7,11 @@ function transfer_message(gtv) {
     val params = struct<transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
+    return "Please sign the message\nto transfer %s %s\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
+            asset.id,
             params.receiver_id
         );
 }

@@ -43,6 +43,8 @@ import {
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
+import { fetchExposedOperations } from "./utils/exposed-operations";
+import { ftEventEmitter } from "./events";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -97,6 +99,14 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
+export async function call(
+  connection: Connection,
+  authenticator: Authenticator,
+  ...operations: Operation[]
+): Promise<TransactionReceipt> {
+  return callWithoutNop(connection, authenticator, ...operations, nop());
+}
+
 export async function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
@@ -108,24 +118,27 @@ export async function callWithoutNop(
   return connection.client.sendTransaction(tx);
 }
 
-export async function call(
-  connection: Connection,
-  authenticator: Authenticator,
-  ...operations: Operation[]
-): Promise<TransactionReceipt> {
-  return callWithoutNop(connection, authenticator, ...operations, nop());
-}
-
 export type KeyStoreInteractor = {
   getAccounts(): Promise<Account[]>;
   getSession(accountId: BufferId): Promise<Session>;
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
+  onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
 };
 
-// TODO: Improve error handling
-// Use `rell.get_app_structure` to get exposed queries (FT3-99)
 export function createAuthDataService(connection: Connection): AuthDataService {
+  let exposedOperations: Set<string> | null = null;
+
+  const fetchAndCacheOperations = async () => {
+    exposedOperations = await fetchExposedOperations(connection);
+  };
+
   return Object.freeze({
+    isOperationExposed: async (operationName: string): Promise<boolean> => {
+      if (!exposedOperations) {
+        await fetchAndCacheOperations();
+      }
+      return exposedOperations!.has(operationName);
+    },
     getAuthFlags: async (operation: Operation) => {
       return await connection.query<string[]>(authFlags(operation));
     },
@@ -164,5 +177,10 @@ export function createKeyStoreInteractor(
     },
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
+    onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
+      ftEventEmitter.on("KeyStoreChanged", (newKeyStore: KeyStore) =>
+        handler(createKeyStoreInteractor(client, newKeyStore))
+      );
+    },
   });
 }
