@@ -14,7 +14,7 @@ export class PathfinderError extends Error {
   }
 }
 
-export async function findPathToChain(
+export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
   blockchainRID: BufferId,
@@ -79,9 +79,16 @@ export async function findPathToChain(
       // 2. asset does not exist
       // 3. asset is not a cross-chain asset (origin does not exist)
       //
-      // all these errors are instances of UnexpectedStatusError
+      // The first two errors are instances of UnexpectedStatusError
       // we either match on the message to rethrow or let it through unhandled
       const nextHop = await getAssetOriginById(tmpConnection, asset.id);
+      if (nextHop === null) {
+        throw new PathfinderError(
+          `The asset is not a cross-chain asset on chain ${lastNode.toString(
+            "hex",
+          )}`,
+        );
+      }
 
       currentArray.push(nextHop);
       if (
