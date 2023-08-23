@@ -41,7 +41,7 @@ function _authenticate(required_flags: set<text>, message_template: text? = null
 function _validate_eth_signature(auth_op: gtx_operation, required_flags: set<text>, auth_message_template: text?): account {
     val validated_args = _validate_eth_arguments(auth_op.args, required_flags);
     val op_to_auth = op_context.get_all_operations()[op_context.op_index];
-    val template = auth_message_template ?: auth.generate_auth_message_template(chain_context.blockchain_rid, op_to_auth);
+    val template = auth_message_template ?: auth.generate_operation_auth_message(chain_context.blockchain_rid, op_to_auth);
     val message = create_message_from_template(
         validated_args, 
         template, 

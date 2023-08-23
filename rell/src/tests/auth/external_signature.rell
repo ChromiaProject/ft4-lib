@@ -295,8 +295,8 @@ function test_auth_message_is_generated_without_arguments_when_operation_has_no_
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op), 
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op), 
+    "Please sign the message to call\noperation:\n- foo"
   );
 }
 
@@ -310,8 +310,8 @@ function test_auth_message_is_generated_with_arguments_when_operation_has_argume
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op), 
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n- text_value\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op), 
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n- text_value"
   );
 }
 
@@ -322,8 +322,8 @@ function test_auth_message_is_correctly_generated_with_byte_array_argument() {
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op), 
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0123456789ABCDEF\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op), 
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0123456789ABCDEF"
   );
 }
 
@@ -334,8 +334,8 @@ function test_auth_message_is_correctly_generated_with_decimal_argument() {
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op),
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 3.14\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op),
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 3.14"
   );
 }
 
@@ -346,8 +346,8 @@ function test_auth_message_is_correctly_generated_with_enum_argument() {
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op),
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op),
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 0"
   );
 }
 
@@ -358,8 +358,8 @@ function test_auth_message_is_correctly_generated_with_boolean_argument() {
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op),
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op),
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1"
   );
 }
 
@@ -370,8 +370,8 @@ function test_auth_message_is_correctly_generated_with_big_integer_argument() {
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op),
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op),
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- 1234567890L"
   );
 }
 
@@ -382,8 +382,8 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
   );
 
   assert_equals(
-    auth.generate_auth_message_template(x"", op),
-    "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- foo\n\nwith arguments:\n- null\n\nNonce: {nonce}"
+    auth.generate_operation_auth_message(x"", op),
+    "Please sign the message to call\noperation:\n- foo\n\nwith arguments:\n- null"
   );
 }
 
