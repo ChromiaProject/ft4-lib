@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
 
 ### Changed
-- Assets are now always returned as AssetResponse objects from postchain.
 - Transfer history's asset properties are now of the Asset type
 
 ### Fixed

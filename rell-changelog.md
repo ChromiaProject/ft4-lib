@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Assets are now always returned as AssetResponse objects from postchain.
+
 ## [0.1.0r] - 2023-07-12
 
 Initial release
