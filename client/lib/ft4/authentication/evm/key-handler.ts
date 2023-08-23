@@ -18,14 +18,12 @@ export function createEvmKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
-      nonce: number,
       authDataService: AuthDataService
     ) =>
       authorize(
         accountId,
         authDescriptor.id,
         operation,
-        nonce,
         authDataService,
         keyStore
       ),
@@ -38,13 +36,13 @@ async function authorize(
   accountId: BufferId,
   authDescriptorId: BufferId,
   operation: Operation,
-  nonce: number,
   authDataService: AuthDataService,
   keyStore: EvmKeyStore
 ): Promise<Operation[]> {
   const messageTemplate = await authDataService.getAuthMessageTemplate(
     operation
   );
+  const nonce = await authDataService.getNonce(accountId, authDescriptorId);
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(

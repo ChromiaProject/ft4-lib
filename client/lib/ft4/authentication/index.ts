@@ -99,7 +99,6 @@ function createAuthenticatorSession(
       return await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        0,
         authDataService
       );
     },

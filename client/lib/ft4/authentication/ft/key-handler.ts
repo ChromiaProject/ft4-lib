@@ -19,8 +19,6 @@ export function createFtKeyHandler(
       accountId: BufferId,
       operation: Operation,
       //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      nonce: number,
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
       authDataService: AuthDataService
     ) => authorize(accountId, authDescriptor.id, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),

@@ -4,8 +4,9 @@ import { AuthDataService } from "../../client/lib/ft4/authentication/types";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
-  isOperationExposedFn?: (operationName: string) => Promise<boolean>,
+  isOperationExposedFn?: (operationName: string) => Promise<boolean>
 ): AuthDataService {
+  const generator = numberGenerator();
   return {
     isOperationExposed: isOperationExposedFn || (() => Promise.resolve(true)),
     getAuthFlags: (operation: Operation) =>
@@ -13,10 +14,18 @@ export function createFakeAuthDataService(
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),
     // eslint-disable-next-line
-    getNonce: (authDescriptorId: BufferId) => Promise.resolve(0),
+    getNonce: (accountId: BufferId, authDescriptorId: BufferId) =>
+      generator.next().value,
     // eslint-disable-next-line
     getLoginConfig: (configName: string) => Promise.resolve({ flags: [] }),
   };
+}
+
+function* numberGenerator(): Generator<Promise<number>> {
+  let count = 0;
+  while (true) {
+    yield Promise.resolve(count++);
+  }
 }
 
 export type AuthData = {
