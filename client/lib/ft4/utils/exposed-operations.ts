@@ -4,17 +4,17 @@ import { RellAppStructure } from "./types";
 import { Connection } from "../types";
 
 export async function fetchExposedOperations(
-  connection: Connection
+  connection: Connection,
 ): Promise<Set<string>> {
   const appStructureQuery = rellAppStructure();
 
   const appStructure = await connection.query<RellAppStructure>(
-    appStructureQuery
+    appStructureQuery,
   );
 
   if (!appStructure || !appStructure.modules) {
     throw new FetchAppStructureError(
-      "Failed to fetch the app structure from Rell"
+      "Failed to fetch the app structure from Rell",
     );
   }
 

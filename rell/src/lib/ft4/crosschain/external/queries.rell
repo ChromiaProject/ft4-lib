@@ -1,0 +1,6 @@
+import ^^.assets;
+import crosschain: ^;
+
+query get_asset_origin_by_id(asset_id: byte_array) {
+    return crosschain.asset_origin @? { assets.Asset(asset_id) };
+}

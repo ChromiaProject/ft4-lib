@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## [Unreleased]
 
 ### Added
+- assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from
+- findPathToChainForAsset: traverses the tree structure of the linked chains to find the path to a certain asset.
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
 
 ### Fixed

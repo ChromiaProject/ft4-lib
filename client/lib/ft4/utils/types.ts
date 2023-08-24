@@ -35,7 +35,7 @@ export function freeze<T>(object: T): T {
 export type EntityRetriever<T> = {
   retrieve: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<T>>;
 };
 

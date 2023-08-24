@@ -34,6 +34,6 @@ jest.mock("/ft4/utils/exposed-operations", () => ({
         "test_auth",
         "test_authenticated_operation",
         "test_perform_large_transfer",
-      ])
+      ]),
     ),
 }));

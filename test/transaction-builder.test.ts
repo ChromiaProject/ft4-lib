@@ -33,7 +33,7 @@ describe("Transaction Builder", () => {
   };
 
   function setupTestEnvironment(
-    exposureLogicFn?: (operationName: string) => Promise<boolean>
+    exposureLogicFn?: (operationName: string) => Promise<boolean>,
   ) {
     const accountId = encryption.randomBytes(32);
 
@@ -53,13 +53,13 @@ describe("Transaction Builder", () => {
         },
         ["testOperation"]: { flags: [], message: "" },
       },
-      exposureLogicFn
+      exposureLogicFn,
     );
 
     authenticator = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     );
   }
 
@@ -138,7 +138,7 @@ describe("Transaction Builder", () => {
       authorize: jest
         .fn()
         .mockImplementation((accountId, operation) =>
-          Promise.resolve([operation])
+          Promise.resolve([operation]),
         ),
       sign: jest.fn(),
       getSigners: jest.fn(),
@@ -166,13 +166,13 @@ describe("Transaction Builder", () => {
     builder.add(mockOperation);
 
     await expect(builder.build()).rejects.toThrow(
-      `Operation ${mockOperation.name} does not exist`
+      `Operation ${mockOperation.name} does not exist`,
     );
   });
 
   it("does not throw an error when the operation exists", async () => {
     setupTestEnvironment((operationName) =>
-      Promise.resolve(operationName === mockOperation.name)
+      Promise.resolve(operationName === mockOperation.name),
     );
 
     const builder = transactionBuilder(authenticator, client);

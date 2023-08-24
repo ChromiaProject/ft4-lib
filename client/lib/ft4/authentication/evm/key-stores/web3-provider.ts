@@ -9,7 +9,7 @@ import { EventEmitter } from "events";
 export interface Eip1193Provider extends ethers.Eip1193Provider, EventEmitter {}
 
 export async function createWeb3ProviderEvmKeyStore(
-  externalProvider: Eip1193Provider
+  externalProvider: Eip1193Provider,
 ): Promise<EvmKeyStore> {
   const provider = new ethers.BrowserProvider(externalProvider);
   await provider.send("eth_requestAccounts", []);
@@ -20,7 +20,7 @@ export async function createWeb3ProviderEvmKeyStore(
 
   externalProvider.once("accountsChanged", () => {
     createWeb3ProviderEvmKeyStore(externalProvider).then((keyStore) =>
-      ftEventEmitter.emit("KeyStoreChanged", keyStore)
+      ftEventEmitter.emit("KeyStoreChanged", keyStore),
     );
   });
 

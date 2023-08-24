@@ -4,7 +4,7 @@ import { AuthDataService } from "../../client/lib/ft4/authentication/types";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
-  isOperationExposedFn?: (operationName: string) => Promise<boolean>
+  isOperationExposedFn?: (operationName: string) => Promise<boolean>,
 ): AuthDataService {
   return {
     isOperationExposed: isOperationExposedFn || (() => Promise.resolve(true)),

@@ -60,14 +60,14 @@ export function createConnection(client: IClient): Connection {
     getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
-      cursor?: OptionalPageCursor
+      cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
     getAssetsByName: (
       name: string,
       limit?: number,
-      cursor?: OptionalPageCursor
+      cursor?: OptionalPageCursor,
     ) => getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
@@ -78,7 +78,7 @@ export function createConnection(client: IClient): Connection {
 
 export function createSession(
   connection: Connection,
-  authenticator: Authenticator
+  authenticator: Authenticator,
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
@@ -94,7 +94,7 @@ export function createSession(
 
 async function query<T extends RawGtv>(
   connection: Connection,
-  queryObject: QueryObject<QueryArguments>
+  queryObject: QueryObject<QueryArguments>,
 ): Promise<T | null> {
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
@@ -154,7 +154,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
 
 export function createKeyStoreInteractor(
   client: IClient,
-  keyStore: KeyStore
+  keyStore: KeyStore,
 ): KeyStoreInteractor {
   const connection = createConnection(client);
   return Object.freeze({
@@ -162,15 +162,15 @@ export function createKeyStoreInteractor(
     getSession: async (accountId: Buffer) => {
       const account = createAccountObject(connection, accountId);
       const authDescriptors = await account.getAuthDescriptorsByParticipantId(
-        keyStore.id
+        keyStore.id,
       );
       const keyHandlers = authDescriptors.map((authDescriptor) =>
-        keyStore.createKeyHandler(authDescriptor)
+        keyStore.createKeyHandler(authDescriptor),
       );
       const authenticator = createAuthenticator(
         accountId,
         keyHandlers,
-        createAuthDataService(connection)
+        createAuthDataService(connection),
       );
 
       return createSession(connection, authenticator);
@@ -179,7 +179,7 @@ export function createKeyStoreInteractor(
       createLoginManager(connection, keyStore, loginKeyStore),
     onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
       ftEventEmitter.on("KeyStoreChanged", (newKeyStore: KeyStore) =>
-        handler(createKeyStoreInteractor(client, newKeyStore))
+        handler(createKeyStoreInteractor(client, newKeyStore)),
       );
     },
   });
