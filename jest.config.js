@@ -15,7 +15,8 @@ module.exports = {
         "node"
     ],
     "setupFilesAfterEnv": [
-        "<rootDir>/jest.setup.js"
+        "<rootDir>/jest.setup.js",
+        "<rootDir>/test/setupMocks.ts"
     ],
     /*
      * https://github.com/jestjs/jest/issues/11617
