@@ -34,7 +34,10 @@ import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
 import { createConnection } from "/ft4";
 import { Asset } from "/ft4/asset/types";
-import { PathfinderError, findPathToChain } from "/ft4/crosschain/pathfinder";
+import {
+  PathfinderError,
+  findPathToChainForAsset,
+} from "/ft4/crosschain/pathfinder";
 import { BufferId } from "/cryptoUtils";
 
 createClientMock.mockImplementation(
@@ -68,7 +71,11 @@ describe("Pathfinder", () => {
     //       ↳ common ↲
     //           ↳ 1
     //             ↳ root
-    const path = await findPathToChain(connection, asset, endingChainBrid);
+    const path = await findPathToChainForAsset(
+      connection,
+      asset,
+      endingChainBrid,
+    );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
       "2222",
@@ -82,7 +89,11 @@ describe("Pathfinder", () => {
   it("finds a path with no duplicate hops", async () => {
     const asset = getMockAsset();
     setOriginAssetsQueryResponsesByLength(3, 2, 2, asset.brid.toString("hex"));
-    const path = await findPathToChain(connection, asset, endingChainBrid);
+    const path = await findPathToChainForAsset(
+      connection,
+      asset,
+      endingChainBrid,
+    );
 
     expect(path.length).toEqual(5);
     expect(new Set(path).size).toEqual(path.length);
@@ -91,7 +102,11 @@ describe("Pathfinder", () => {
   it("finds a path through root if no common nodes exist", async () => {
     const asset = getMockAsset();
     setOriginAssetsQueryResponsesByLength(7, 3, 0, asset.brid.toString("hex"));
-    const path = await findPathToChain(connection, asset, endingChainBrid);
+    const path = await findPathToChainForAsset(
+      connection,
+      asset,
+      endingChainBrid,
+    );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
       "1111",
@@ -113,7 +128,7 @@ describe("Pathfinder", () => {
     createClientMock.mockImplementationOnce(
       jest.requireActual("postchain-client").createClient,
     );
-    const promise = findPathToChain(connection, asset, endingChainBrid);
+    const promise = findPathToChainForAsset(connection, asset, endingChainBrid);
 
     await expect(promise).rejects.toThrow(PathfinderError);
   });
@@ -133,7 +148,11 @@ describe("Pathfinder", () => {
       ],
       ["5555", "6666", rootChainBrid],
     );
-    const path = await findPathToChain(connection, asset, endingChainBrid);
+    const path = await findPathToChainForAsset(
+      connection,
+      asset,
+      endingChainBrid,
+    );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
       "1111",
@@ -159,7 +178,11 @@ describe("Pathfinder", () => {
         rootChainBrid,
       ],
     );
-    const path = await findPathToChain(connection, asset, endingChainBrid);
+    const path = await findPathToChainForAsset(
+      connection,
+      asset,
+      endingChainBrid,
+    );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
       "4444",
