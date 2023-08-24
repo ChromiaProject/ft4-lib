@@ -41,7 +41,7 @@ export function createTransferHistoryEntryFromResponse(
     isInput: isInput === 1,
     delta: createAmountFromBalance(delta, asset.decimals),
     asset: { name: asset.name, id: formatter.ensureBuffer(asset.id) },
-    asset_data: createAssetObject(asset),
+    assetData: createAssetObject(asset),
     entryIndex,
     data: formatter.ensureBuffer(txData),
     transferInputArgs: txArgs[0],

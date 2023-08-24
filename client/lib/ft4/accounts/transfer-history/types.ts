@@ -42,7 +42,7 @@ export type TransferHistoryEntry = {
    * @deprecated Use `asset_data` instead
    */
   asset: AssetInfo;
-  asset_data: Asset;
+  assetData: Asset;
   entryIndex: number;
   data: Buffer;
   transferInputArgs: TransferHistoryTransferArgs[];

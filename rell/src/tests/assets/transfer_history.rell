@@ -164,7 +164,15 @@ function test_transfer_history_entry() {
             decimals = entry.asset.decimals,
             asset = entry.asset.name,
             asset_id = entry.asset.id,
-            asset_data = assets.map_asset(entry.asset),
+            asset_data = (
+                id = entry.asset.id,
+                name = entry.asset.name,
+                symbol = entry.asset.symbol,
+                decimals = entry.asset.decimals,
+                brid = entry.asset.issuing_brid,
+                icon_url = entry.asset.icon_url,
+                supply = entry.asset.total_supply
+            ),
             is_input = entry.is_input,
             timestamp = entry.transaction.block.timestamp,
             block_height = entry.transaction.block.block_height,
