@@ -33,7 +33,7 @@ describe("Key store interactor", () => {
 
     const accounts = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1),
     ).getAccounts();
 
     expect(accounts.length).toEqual(1);
@@ -51,15 +51,13 @@ describe("Key store interactor", () => {
       .build();
 
     await account1.addAuthDescriptor(
-      (
-        await account2.getAuthDescriptors()
-      ).data[0],
-      keyPair2
+      (await account2.getAuthDescriptors()).data[0],
+      keyPair2,
     );
 
     const accounts = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2)
+      createInMemoryFtKeyStore(keyPair2),
     ).getAccounts();
 
     expect(accounts.length).toEqual(2);
@@ -74,7 +72,7 @@ describe("Key store interactor", () => {
 
     const { getAccounts, getSession } = createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1),
     );
     const accounts = await getAccounts();
     expect(accounts.length).toEqual(1);
@@ -93,19 +91,19 @@ describe("Key store interactor", () => {
 
     const ad1 = authDescriptor.create.singleSig.withArgs(
       ["M"],
-      keyPair1.pubKey
+      keyPair1.pubKey,
     ).andNoRules;
     await account.addAuthDescriptor(ad1, keyPair1);
 
     const ad2 = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Transfer],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
     await account.addAuthDescriptor(ad2, keyPair2);
 
     const session = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1),
     ).getSession(account.id);
 
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);
@@ -126,11 +124,11 @@ describe("Key store interactor", () => {
         },
       };
       const keyStore = await createWeb3ProviderEvmKeyStore(
-        providerMock as Eip1193Provider
+        providerMock as Eip1193Provider,
       );
       const { onKeyStoreChanged } = createKeyStoreInteractor(
         connection.client,
-        keyStore
+        keyStore,
       );
 
       const callback = jest.fn();

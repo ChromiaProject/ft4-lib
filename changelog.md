@@ -1,11 +1,21 @@
 # Changelog
 
-## Unreleased
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
 
 ### Added
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
 
+### Changed
+- Transfer history's asset properties are now of the Asset type
+
 ### Fixed
+- Asset queries now return Asset type with `iconUrl`, not `icon_url`
+- Balance queries now return frozen objects
 - Exports of admin functions.
 - `authenticate()` function will now try to match operation name exactly when searching for auth handlers and throw an error if none is found. The old behaviour where scope path was traversed to the root can be aquired again by calling `authenticate(strict = false)`
 

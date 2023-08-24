@@ -97,7 +97,8 @@ describe("Asset", () => {
     const assetSymbol = generateAssetSymbol();
     const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
     const assetId = gtv.gtvHash([assetName, brid]);
-    await getNewAsset(client, assetName, assetSymbol, 3);
+    const iconUrl = "http://example.com/";
+    await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
 
     const result = (await connection.getAssetBySymbol(assetSymbol))!;
 
@@ -106,6 +107,7 @@ describe("Asset", () => {
       id: assetId,
       decimals: 3,
       brid,
+      iconUrl,
     });
   });
 
@@ -145,6 +147,7 @@ describe("Asset", () => {
       validUrl
     );
     expect(asset).not.toBeNull();
+    expect(asset.iconUrl).toBe(validUrl);
   });
 
   // Update after addding new admin functions

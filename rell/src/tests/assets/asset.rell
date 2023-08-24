@@ -362,8 +362,8 @@ function test_it_gets_asset_by_symbol() {
         actual_asset,
         (
             id = asset1.id,
-            symbol = "TST1",
             name = "test1",
+            symbol = "TST1",
             decimals = 0,
             brid = asset1.issuing_brid,
             icon_url = "",
