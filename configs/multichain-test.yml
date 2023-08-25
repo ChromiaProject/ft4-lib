@@ -1,0 +1,10 @@
+blockchains:
+  ft4_multichain_test:
+    config:
+      blockstrategy:
+        blockdelay: 2000
+        maxblocktime: 2000
+        maxblocktransactions: 500
+
+compile:
+  target: ../rell/out
