@@ -28,3 +28,6 @@ coverage
 
 # chr build directories
 build/
+
+# Rell dependencies
+rell/dep
