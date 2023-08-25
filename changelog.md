@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- createGenericEvmKeyStore: it receives an address and a sign function, to allow for custom implementations with any web3 library. Metamask is still supported through ethers for ease of setup.
+- fixed examples
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
 
 ### Changed
