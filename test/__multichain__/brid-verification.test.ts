@@ -1,4 +1,4 @@
-import Brids from "../brids.json";
+import Brids from "./brids.json";
 
 describe("BRIDs verification", () => {
   for (const [name, brid] of Object.entries(Brids)) {

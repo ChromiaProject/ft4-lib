@@ -22,22 +22,81 @@ trap "exitfn" 2
 if ! command -v pmc &> /dev/null || ! command -v chr &> /dev/null
 then
     echo "pmc and chr commands must be installed."
+
+    # Check if the system is macOS
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "You are running macOS. If you haven't installed pmc and chr, please do so using:"
+        echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
+        echo "% brew install pmc"
+    fi
+
     exit 1
 fi
 
 # Run Postgres
-docker run --name ft4-multichain-test-postgres -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" -e POSTGRES_PASSWORD=postchain -e POSTGRES_USER=postchain -p 5432:5432 -d postgres
+docker run \
+    --name ft4-multichain-test-postgres \
+    -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
+    -e POSTGRES_PASSWORD=postchain \
+    -e POSTGRES_USER=postchain \
+    -p 5432:5432 \
+    -d postgres
 
 # Clone Directory Chain dependency
 mkdir -p rell/dep
-git clone --branch 1.9.2 --single-branch --depth 1 https://gitlab.com/chromaway/core/directory-chain.git rell/dep/directory-chain
+
+if [ -d "rell/dep/directory-chain" ]; then
+  echo "'directory-chain' directory already exists. Skipping the cloning operation."
+else
+    git clone \
+        -c advice.detachedHead=false \
+        --branch 1.9.2 \
+        --single-branch \
+        --depth 1 \
+        https://gitlab.com/chromaway/core/directory-chain.git rell/dep/directory-chain
+  if [ $? -ne 0 ]; then
+    echo "Failed to clone the repository. Please check your network connection or repository URL."
+    exit 1
+  fi
+fi
 
 # Build Directory Chain
 chr build --settings rell/dep/directory-chain/config.yml
 
-# Build Multichain dApp Chain
-chr build -s configs/multichain-test.yml > /dev/null
+# Build Multichain dApps
 
+for (( i=0; i<$NUM_BLOCKCHAINS; i++ )); do
+    chain_num=$(printf "%02d" $i)
+
+    # Generate the YML filename and module name
+    yml_filename="./rell/dep/multichain-test-$chain_num.yml"
+    module_name="multichain.app_module$chain_num"
+
+    # Write the YML content to the file
+    cat <<- EOM > $yml_filename
+blockchains:
+    ft4_multichain_test_$chain_num:
+        module: $module_name
+compile:
+    source: ./
+    target: ../out
+EOM
+
+    # Create the corresponding RELL file with unique content
+    rell_filepath="./rell/dep/multichain/app_module$chain_num.rell"
+
+    mkdir -p $(dirname $rell_filepath)
+
+    echo "module;" > $rell_filepath
+    echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
+
+    echo "Generated $yml_filename and $rell_filepath"
+
+    # Build the Multichain dApp Chain for each blockchain
+    chr build -s $yml_filename > /dev/null
+done
+
+exitfn
 # Run the node
 docker run \
     --name ft4-multichain-test-node \
@@ -56,6 +115,7 @@ docker run \
 
 # Get the manager chain BRID
 BRID=$(curl http://localhost:7740/brid/iid_0)
+echo "BRID: $BRID"
 
 # Save the BRID to the config
 pmc config --file $PMC_CONFIG --set brid="$BRID"
