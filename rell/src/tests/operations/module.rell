@@ -25,3 +25,5 @@ operation register_asset(name, symbol: text, decimals: integer, issuing_brid: by
 operation register_account_test(acc.auth_descriptor) {
     acc.Unsafe.create_account_with_auth(auth_descriptor);
 }
+
+operation empty_op() {}
