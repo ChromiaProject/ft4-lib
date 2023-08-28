@@ -7,7 +7,6 @@ POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
 NODE_VERSION='3.11.2'
-PMC_CONFIG="rell/config/jest-test/multichain/.pmc/config"
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
