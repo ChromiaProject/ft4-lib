@@ -30,6 +30,9 @@ then
         echo "% brew install pmc"
     fi
 
+    # TODO: Add some more instructions for Linus
+    # ...
+
     exit 1
 fi
 
@@ -63,11 +66,10 @@ fi
 # Build Directory Chain
 chr build --settings rell/dep/directory-chain/config.yml
 
-# Build Multichain dApps
+# Build Multichain dApp Chains
 
-for (( i=0; i<$NUM_BLOCKCHAINS; i++ )); do
-    chain_num=$(printf "%02d" $i)
-
+for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+do
     # Generate the YML filename and module name
     yml_filename="./rell/dep/multichain-test-$chain_num.yml"
     module_name="multichain.app_module$chain_num"
@@ -96,7 +98,6 @@ EOM
     chr build -s $yml_filename > /dev/null
 done
 
-exitfn
 # Run the node
 docker run \
     --name ft4-multichain-test-node \
@@ -114,36 +115,69 @@ docker run \
     run-node
 
 # Get the manager chain BRID
-BRID=$(curl http://localhost:7740/brid/iid_0)
-echo "BRID: $BRID"
+BRID=""
+retry_count=0
+
+# Loop until BRID receives a non-empty value or until 10 tries
+while [ -z "$BRID" ] && [ $retry_count -lt 10 ]; do
+  # Attempt to fetch the value
+  BRID=$(curl -s http://localhost:7740/brid/iid_0)
+  
+  # Increment retry counter
+  ((retry_count++))
+  
+  # Wait for the correct BRID
+  if [ ${#BRID} -ne 64 ]; then
+    BRID=""
+    sleep 1
+  fi
+done
+
+echo "Got manager chain BRID: $BRID"
 
 # Save the BRID to the config
 pmc config --file $PMC_CONFIG --set brid="$BRID"
 
+echo "Initializing the network..."
+
 # Initialize the network
-pmc network initialize --system-anchoring-config rell/dep/directory-chain/build/system_anchoring.xml --cluster-anchoring-config rell/dep/directory-chain/build/cluster_anchoring.xml -cfg $PMC_CONFIG
+pmc network initialize \
+    --system-anchoring-config rell/dep/directory-chain/build/system_anchoring.xml \
+    --cluster-anchoring-config rell/dep/directory-chain/build/cluster_anchoring.xml \
+    -cfg $PMC_CONFIG
 
 # Verify the network
 VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
-echo "$VERIFY_OUTPUT"
+
 if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
     echo "Verification failed. Exiting."
     exit 1
 fi
 
-# Add a container for the multichain test blockchains
-pmc container add --name ft4-multichain-test --cluster system --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG)
+echo "Network verified successfully."
 
-# Add blockchains and save the blockchain BRIDs to a JSON file
-BRIDS_JSON="{"
-for i in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+# Add a container for the multichain test blockchains
+pmc container add \
+    --name ft4_multichain_test \
+    --cluster system \
+    --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
+    -cfg $PMC_CONFIG
+
+# Add blockchains
+
+for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
 do
-    MULTICHAIN_DAPP_BRID=$(pmc blockchain add --quiet --name multichain$i --container ft4-multichain-test --blockchain-config rell/out/multichain-test.xml -cfg $PMC_CONFIG)
-    BRIDS_JSON+="\"multichain$i\": \"$MULTICHAIN_DAPP_BRID\","
+    MULTICHAIN_DAPP_BRID=$(
+        pmc blockchain add \
+            --quiet \
+            --name multichain$chain_num \
+            --container ft4_multichain_test \
+            --blockchain-config rell/out/ft4_multichain_test_$chain_num.xml \
+            -cfg $PMC_CONFIG
+    )
+
+    echo "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
 done
-BRIDS_JSON="${BRIDS_JSON%?}}"
-BRIDS_JSON+="}"
-echo $BRIDS_JSON > "./test/__multichain__/brids.json"
 
 # Run the Jest tests
 if [[ "$1" == "-f" || "$1" == "--file" ]]; then
@@ -151,7 +185,12 @@ if [[ "$1" == "-f" || "$1" == "--file" ]]; then
 else
     FILE_OPTION=""
 fi
-npx jest -maxWorkers=1 $FILE_OPTION -t "./test/__multichain__/*"
+
+npx jest \
+    --config=jest.config.multichain.js \
+    --maxWorkers=1 \
+    --testPathPattern=__multichain__ \
+    $FILE_OPTION
 
 # Cleanup
 exitfn
