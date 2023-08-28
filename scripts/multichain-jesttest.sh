@@ -1,27 +1,64 @@
 #!/bin/bash
 
+LOG_LEVEL=${LOG_LEVEL:-"DEBUG"}
+
 NUM_BLOCKCHAINS=3
+POSTGRES_PORT=5432
+NODE_PORT=9870
+API_PORT=7740
+NODE_VERSION='3.11.2'
 PMC_CONFIG="rell/config/jest-test/multichain/.pmc/config"
 
+BASE_CONFIG_DIR="rell/config/jest-test/multichain"
+DEPENDENCIES_PATH="rell/dep"
+PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
+PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
+
+DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
+DOCKER_NODE_NAME='ft4-multichain-test-node'
+DIRECTORY_CHAIN_VERSION='1.9.2'
+
+log() {
+    echo "[INFO] $1"
+}
+
+err() {
+    echo "[ERROR] $1"
+}
+
+debug() {
+    if [ "$LOG_LEVEL" == "DEBUG" ]; then
+        echo "[DEBUG] $1"
+    fi
+}
+
 forceexit() {
-    echo "Forcing exit. Please remember to clean up manually."
+    log "Forcing exit. Please remember to clean up manually."
     exit 2
 }
 
+# Clean exit function
 exitfn() {
     trap "forceexit" 2
-    echo 'Stopping and cleaning up. Hit Ctrl+C to force quit.'
-    docker stop ft4-multichain-test-postgres ft4-multichain-test-node
-    docker rm ft4-multichain-test-postgres ft4-multichain-test-node
-    exit 2
+
+    log 'Stopping and cleaning up. Hit Ctrl+C to force quit.'
+    docker stop $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
+    docker rm $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
+
+    # If we are in interactive mode, return the exit code
+    if echo "$-" | grep -q "i"; then
+        return $return_code
+    else
+        exit $return_code
+    fi
 }
 
-trap "exitfn" 2
+trap "exitfn" EXIT 2
 
-# Check if pmc and chr commands are installed
+debug "Checking for required commands..."
 if ! command -v pmc &> /dev/null || ! command -v chr &> /dev/null
 then
-    echo "pmc and chr commands must be installed."
+    err "pmc and chr commands must be installed."
 
     # Check if the system is macOS
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -36,42 +73,57 @@ then
     exit 1
 fi
 
-# Run Postgres
+log "Running Postgres container..."
 docker run \
-    --name ft4-multichain-test-postgres \
+    --name $DOCKER_POSTGRES_NAME \
     -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
     -e POSTGRES_PASSWORD=postchain \
     -e POSTGRES_USER=postchain \
-    -p 5432:5432 \
-    -d postgres
+    -p $POSTGRES_PORT:5432 \
+    -d postgres > /dev/null
 
-# Clone Directory Chain dependency
-mkdir -p rell/dep
+debug "Creating PMC config..."
 
-if [ -d "rell/dep/directory-chain" ]; then
-  echo "'directory-chain' directory already exists. Skipping the cloning operation."
+# Create the directory for PMC config if it doesn't exist
+PMC_CONFIG_DIR=$(dirname $PMC_CONFIG)
+mkdir -p $PMC_CONFIG_DIR
+
+# Copy the PMC config template to the destination path
+cp $PMC_CONFIG_TEMPLATE $PMC_CONFIG
+if [ $? -ne 0 ]; then
+    err "Failed to create PMC config. Check if the template and destination directories are correct."
+    exit 1
+else
+    log "Successfully created PMC config."
+fi
+
+log "Cloning Directory Chain dependency..."
+mkdir -p $DEPENDENCIES_PATH
+
+if [ -d "$DEPENDENCIES_PATH/directory-chain" ]; then
+    log "Directory Chain already installed."
 else
     git clone \
         -c advice.detachedHead=false \
-        --branch 1.9.2 \
+        --branch $DIRECTORY_CHAIN_VERSION \
         --single-branch \
         --depth 1 \
-        https://gitlab.com/chromaway/core/directory-chain.git rell/dep/directory-chain
-  if [ $? -ne 0 ]; then
-    echo "Failed to clone the repository. Please check your network connection or repository URL."
-    exit 1
-  fi
+        https://gitlab.com/chromaway/core/directory-chain.git $DEPENDENCIES_PATH/directory-chain
+
+    if [ $? -ne 0 ]; then
+        log "Failed to install Directory Chain. Check your network or repository URL."
+        exit 1
+    fi
 fi
 
-# Build Directory Chain
-chr build --settings rell/dep/directory-chain/config.yml
+log "Building Directory Chain..."
+chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
 
-# Build Multichain dApp Chains
-
+log "Building Multichain dApp Chains..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
 do
     # Generate the YML filename and module name
-    yml_filename="./rell/dep/multichain-test-$chain_num.yml"
+    yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
     module_name="multichain.app_module$chain_num"
 
     # Write the YML content to the file
@@ -85,36 +137,36 @@ compile:
 EOM
 
     # Create the corresponding RELL file with unique content
-    rell_filepath="./rell/dep/multichain/app_module$chain_num.rell"
+    rell_filepath="$DEPENDENCIES_PATH/multichain/app_module$chain_num.rell"
 
     mkdir -p $(dirname $rell_filepath)
 
     echo "module;" > $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
-    echo "Generated $yml_filename and $rell_filepath"
+    debug "Generated $yml_filename and $rell_filepath"
 
     # Build the Multichain dApp Chain for each blockchain
     chr build -s $yml_filename > /dev/null
 done
 
-# Run the node
+log "Running node container..."
 docker run \
-    --name ft4-multichain-test-node \
+    --name $DOCKER_NODE_NAME \
     --restart unless-stopped \
-    --mount type=bind,source="$(pwd)/rell/config/jest-test/multichain",target=/config,readonly \
-    --mount type=bind,source="$(pwd)/rell/dep/directory-chain/build",target=/build,readonly \
+    --mount type=bind,source="$(pwd)/$BASE_CONFIG_DIR",target=/config,readonly \
+    --mount type=bind,source="$(pwd)/$DEPENDENCIES_PATH/directory-chain/build",target=/build,readonly \
     -e JAVA_TOOL_OPTIONS="-Xmx16g" \
     -e POSTCHAIN_DEBUG=true \
     -e POSTCHAIN_CONFIG=/config/config.0.properties \
     -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
-    -p 9870:9870/tcp \
-    -p 127.0.0.1:7740:7740/tcp \
+    -p $NODE_PORT:9870/tcp \
+    -p 127.0.0.1:$API_PORT:7740/tcp \
     -d \
-    registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:3.11.2 \
-    run-node
+    registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
+    run-node > /dev/null
 
-# Get the manager chain BRID
+debug "Fetching manager chain BRID..."
 BRID=""
 retry_count=0
 
@@ -133,38 +185,35 @@ while [ -z "$BRID" ] && [ $retry_count -lt 10 ]; do
   fi
 done
 
-echo "Got manager chain BRID: $BRID"
+log "Got manager chain BRID: $BRID"
 
-# Save the BRID to the config
+debug "Saving manager chain BRID to PMC config"
 pmc config --file $PMC_CONFIG --set brid="$BRID"
 
-echo "Initializing the network..."
-
-# Initialize the network
+log "Initializing the network..."
 pmc network initialize \
-    --system-anchoring-config rell/dep/directory-chain/build/system_anchoring.xml \
-    --cluster-anchoring-config rell/dep/directory-chain/build/cluster_anchoring.xml \
+    --system-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml \
+    --cluster-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/cluster_anchoring.xml \
     -cfg $PMC_CONFIG
 
-# Verify the network
+debug "Verifying the network"
 VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
 if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
-    echo "Verification failed. Exiting."
+    err "Verification failed. Exiting."
     exit 1
 fi
 
-echo "Network verified successfully."
+log "Network verified successfully."
 
-# Add a container for the multichain test blockchains
+debug "Adding container for the multichain test blockchains"
 pmc container add \
     --name ft4_multichain_test \
     --cluster system \
     --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
     -cfg $PMC_CONFIG
 
-# Add blockchains
-
+log "Adding blockchains to the container..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
 do
     MULTICHAIN_DAPP_BRID=$(
@@ -176,10 +225,10 @@ do
             -cfg $PMC_CONFIG
     )
 
-    echo "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
+    debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
 done
 
-# Run the Jest tests
+log "Running Jest tests..."
 if [[ "$1" == "-f" || "$1" == "--file" ]]; then
     FILE_OPTION="--runTestsByPath $2"
 else
@@ -191,13 +240,3 @@ npx jest \
     --maxWorkers=1 \
     --testPathPattern=__multichain__ \
     $FILE_OPTION
-
-# Cleanup
-exitfn
-
-# If we are in interactive mode, return the exit code
-if echo "$-" | grep -q "i"; then
-    return $return_code
-else
-    exit $return_code
-fi
