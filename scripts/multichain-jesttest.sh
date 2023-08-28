@@ -6,7 +6,9 @@ NUM_BLOCKCHAINS=3
 POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
+
 NODE_VERSION='3.11.2'
+DIRECTORY_CHAIN_VERSION='1.9.2'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
@@ -15,7 +17,6 @@ PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
-DIRECTORY_CHAIN_VERSION='1.9.2'
 
 log() {
     echo "[INFO] $1"
