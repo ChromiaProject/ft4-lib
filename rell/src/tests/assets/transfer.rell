@@ -6,7 +6,7 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.ft4_basic_dev.*;
-import ^^^.lib.ft4.auth;
+import auth_ext: ^^^.lib.ft4.auth.external;
 import ^.utils;
 
 val too_big = assets.max_asset_amount + 1;
@@ -20,7 +20,7 @@ function test_before_transfer_extension_is_called() {
     utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -41,7 +41,7 @@ function test_after_transfer_extension_is_called() {
     utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -72,7 +72,7 @@ function test_transfer_fails_when_insufficient_balance() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 11))
         .sign(alice.keypair)
         .run_must_fail("Balance is too low");
@@ -86,7 +86,7 @@ function test_transfer_fails_when_amount_is_negative() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, -1))
         .sign(alice.keypair)
         .run_must_fail("Parameter amount: value must be non-zero positive, actual: %d".format(-1));
@@ -99,7 +99,7 @@ function test_transfer_fails_when_amount_is_too_high() {
     val asset = utils.create_asset("test", "TEST", 1);
 
     val tx = rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, too_big))
         .sign(alice.keypair)
         .run_must_fail("Parameter amount: value must be lower than 2^256, actual: %d".format(too_big));
@@ -112,7 +112,7 @@ function test_transfer_fails_when_sender_is_same_as_receiver() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(alice.account.id, asset.id, 5))
         .sign(alice.keypair)
         .run_must_fail("Sender and receiver have to be different");
@@ -126,7 +126,7 @@ function test_transfer_succeeds_when_enough_balance() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 3))
         .sign(alice.keypair)
         .run();
@@ -144,7 +144,7 @@ function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() 
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1))
         .sign(alice.keypair)
         .run_must_fail("Some required flags [T] are missing on the (single sig) Auth Descriptor.");
@@ -161,7 +161,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val asset_id = asset.id;
     val amount = 5L;
 
-    val template = auth.get_auth_message_template(
+    val template = auth_ext.get_auth_message_template(
         "ft4.transfer", 
         [
             receiver_id.to_gtv(), 
@@ -173,7 +173,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
     val signature = utils.metamask_sign(message, alice.keypair.priv);
 
     rell.test.tx()
-        .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+        .op(auth_ext.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 5))
         .run();
 
@@ -192,7 +192,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
     val asset_id = asset.id;
     val amount = 10L;
 
-    val template = auth.get_auth_message_template(
+    val template = auth_ext.get_auth_message_template(
         "ft4.transfer", 
         [
             receiver_id.to_gtv(), 
@@ -204,7 +204,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
     val invalid_signature = utils.metamask_sign(message, bob.keypair.priv);
 
     rell.test.tx()
-        .op(auth.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
+        .op(auth_ext.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
         .op(ft4.assets_ext.transfer(receiver_id, asset_id, amount))
         .run_must_fail("Invalid signature");
 }
