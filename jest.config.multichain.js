@@ -18,21 +18,6 @@ module.exports = {
         "<rootDir>/jest.setup.js",
         "<rootDir>/test/setupMocks.ts"
     ],
-    "testPathIgnorePatterns": [
-      "<rootDir>/test/__multichain__/"
-    ],
-    /*
-     * https://github.com/jestjs/jest/issues/11617
-     * commenting out all lines when tests pass works.
-     * when you get errors which return BNs, jest crashes.
-     * this is suggested, but doesn't work on my machine:
-     */
-    //"workerThreads": true
-    /*
-     * this makes it slower, but preserves error messages.
-     * I removed it for the pipeline (no parallel tests):
-     */
-    //"maxWorkers": 1,
     'moduleNameMapper': {
         '^/(.*)$': ['<rootDir>/client/lib/$1', '<rootDir>/test/$1']
     }
