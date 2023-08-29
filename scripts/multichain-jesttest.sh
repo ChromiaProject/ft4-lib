@@ -15,20 +15,21 @@ DEPENDENCIES_PATH="rell/dep"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
+DOCKER=${DOCKER:-docker}
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
 log() {
-    echo "[INFO] $1"
+    printf "\033[32m[INFO]\033[0m %s\n" "$1"  # Green
 }
 
 err() {
-    echo "[ERROR] $1"
+    printf "\033[31m[ERROR]\033[0m %s\n" "$1"  # Red
 }
 
 debug() {
     if [ "$LOG_LEVEL" == "DEBUG" ]; then
-        echo "[DEBUG] $1"
+        printf "\033[34m[DEBUG]\033[0m %s\n" "$1"  # Blue
     fi
 }
 
@@ -42,8 +43,8 @@ exitfn() {
     trap "forceexit" 2
 
     log 'Stopping and cleaning up. Hit Ctrl+C to force quit.'
-    docker stop $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
-    docker rm $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
+    $DOCKER stop $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
+    $DOCKER rm $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
 
     # If we are in interactive mode, return the exit code
     if echo "$-" | grep -q "i"; then
@@ -74,7 +75,7 @@ then
 fi
 
 log "Running Postgres container..."
-docker run \
+$DOCKER run \
     --name $DOCKER_POSTGRES_NAME \
     -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
     -e POSTGRES_PASSWORD=postchain \
@@ -151,7 +152,7 @@ EOM
 done
 
 log "Running node container..."
-docker run \
+$DOCKER run \
     --name $DOCKER_NODE_NAME \
     --restart unless-stopped \
     --mount type=bind,source="$(pwd)/$BASE_CONFIG_DIR",target=/config,readonly \
