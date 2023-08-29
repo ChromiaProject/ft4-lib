@@ -9,10 +9,21 @@ blockchains:
         rate_limit_points_at_account_creation: 1
       lib.ft4.admin:
         admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
 
 compile:
   source: ../rell/src
   target: ../rell/out
+
+libs:
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.9.1
+    rid: x"593D6EBA650BAC473E105C047B2C43A099164870304B3E5E324F714FF2F3F82F"
 
 deployments:
   latest:

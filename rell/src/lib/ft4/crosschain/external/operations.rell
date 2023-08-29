@@ -2,6 +2,7 @@ import ^^.assets;
 import ^^.accounts;
 import ^^.auth;
 import crosschain: ^;
+import ^^^.iccf;
 
 function init_transfer_message(gtv) {
     val params = struct<init_transfer>.from_gtv(gtv);
@@ -57,7 +58,7 @@ operation apply_transfer(
         tx_hash == init_tx_rid, 
         "Argument mismatch: init_tx (%s) and init_tx_rid (%s)".format(tx_hash, init_tx_rid)
     );
-    crosschain.verify_transaction_proof( init_tx );
+    iccf.check_iccf_proof( init_tx );
     create crosschain.applied_transfers (init_tx_rid);
 
     require(
@@ -80,7 +81,7 @@ operation apply_transfer(
             .format(init_args.hops[hop_index])
     );
 
-    val from_brid: byte_array;
+    val from_brid: byte_array; 
 
     if (hop_index > 0) {
         from_brid = init_args.hops[hop_index - 1];
@@ -89,7 +90,7 @@ operation apply_transfer(
             prev_hop, 
             "Argument mismatch: prev_hop is null, but hop_index > 0 (%d)".format(hop_index)
         );
-        crosschain.verify_transaction_proof(prev_hop);
+        iccf.check_iccf_proof(prev_hop, init_tx_rid);
         require(
             prev_hop.tx.body.brid == from_brid,
             "Argument mismatch: prev_hop brid (%s) and init_args.hops (%s) don't correspond"
@@ -110,14 +111,7 @@ operation apply_transfer(
         from_brid = init_tx.tx.body.brid;
     }
 
-    val asset = require(
-        assets.asset @? { .id == init_args.asset_id },
-        "Asset not found '%s'".format(init_args.asset_id)
-    );
-    val origin_brid = require(
-        crosschain.asset_origin @? { asset } .origin_brid,
-        "Asset origin not found. Did you register the crosschain asset '%s'?".format(asset.id)
-    );
+    val asset = assets.Asset(init_args.asset_id);
 
     if (init_args.hops.size() > hop_index + 1) {
         // this hop is not last
@@ -130,11 +124,41 @@ operation apply_transfer(
         );
     } else {
         // final hop -- send money to recipient account
-        assets.Unsafe.transfer(
-            accounts.account @ { from_brid },
-            accounts.account @ { init_args.receiver_id },
-            asset,
-            init_args.amount
-        );
+        val origin = crosschain.asset_origin @? { asset } .origin_brid;
+        val receiver = accounts.account @ { init_args.receiver_id };
+        if (exists(origin) and origin == from_brid) {
+            assets.ensure_balance(receiver, asset).amount += init_args.amount;
+
+            val args = [
+                [(init_args.amount, from_brid, 0)],
+                [(init_args.amount, init_args.receiver_id, 0)]
+            ];
+
+            create assets.transfer_history_entry(
+                .account = crosschain.ensure_blockchain_account(from_brid),
+                .asset = asset,
+                .delta = init_args.amount,
+                .op_index = op_context.op_index,
+                .is_input = true,
+                .entry_index = 0,
+                .transfer_args = args.to_gtv().to_bytes()
+            );
+            create assets.transfer_history_entry(
+                .account = receiver,
+                .asset = asset,
+                .delta = init_args.amount,
+                .op_index = op_context.op_index,
+                .is_input = false,
+                .entry_index = 0,
+                .transfer_args = args.to_gtv().to_bytes()
+            );
+        } else {
+            assets.Unsafe.transfer(
+                accounts.account @ { from_brid },
+                accounts.account @ { init_args.receiver_id },
+                asset,
+                init_args.amount
+            );
+        }
     }
 }

@@ -22,6 +22,8 @@ postchain/runtime
 dist/
 rell/target
 rell/out
+rell/src/lib
+!rell/src/lib/ft4
 
 yarn.log
 coverage

@@ -10,7 +10,6 @@ struct init_transfer_args {
 
 entity applied_transfers { key tx_rid: byte_array; }
 
-    
 namespace Unsafe {
     function transfer(
         accounts.account,
@@ -22,22 +21,48 @@ namespace Unsafe {
             chain_context.blockchain_rid != brid,
             "Cannot transfer to own account"
         );
+        assets.require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
 
         val origin_brid = asset_origin @? { asset } .origin_brid;
-
         val bc_acc = ensure_blockchain_account(brid);
+
+        require(account != bc_acc, "Sender and receiver have to be different");
+        
+        val args = [
+            [(amount, account.id, 0)],
+            [(amount, bc_acc.id, 0)]
+        ];
+
         if (
-            exists(origin_brid)
-            and is_blockchain(account.id)
-            and origin_brid == account.id
+            not exists(origin_brid)
+            or origin_brid != account.id
         ) {
-            // origin_brid always has enough to transfer
-            update assets.balance @ { account, asset } ( amount );
+            assets.deduct_balance(account, asset, amount);
         }
-        assets.Unsafe.transfer(account, bc_acc, asset, amount);
-        if (exists(origin_brid) and origin_brid == brid ) {
+
+        create assets.transfer_history_entry(
+            .account = account,
+            .asset = asset,
+            .delta = amount,
+            .op_index = op_context.op_index,
+            .is_input = true,
+            .entry_index = 0,
+            .transfer_args = args.to_gtv().to_bytes()
+        );
+
+        if (not exists(origin_brid) or origin_brid != brid ) {
             // always forget the balance of the owner of the asset
-            update assets.balance @ { bc_acc, asset } ( .amount = 0 );
+            assets.ensure_balance(bc_acc, asset).amount += amount;
         }
+        
+        create assets.transfer_history_entry(
+            .account = bc_acc,
+            .asset = asset,
+            .delta = amount,
+            .op_index = op_context.op_index,
+            .is_input = false,
+            .entry_index = 0,
+            .transfer_args = args.to_gtv().to_bytes()
+        );
     }
 }

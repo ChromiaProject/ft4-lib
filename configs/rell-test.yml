@@ -18,6 +18,10 @@ blockchains:
 
         tests.assets.utils:
           admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
 
   ft4_rell_auth: # Runs separate test chain to test auth extensions
     module: tests.assets.app_module_2 #Entrypoint to the project
@@ -36,6 +40,17 @@ blockchains:
 
         tests.assets.utils:
           admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE          
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
+
+libs:
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.9.1
+    rid: x"593D6EBA650BAC473E105C047B2C43A099164870304B3E5E324F714FF2F3F82F"
 
 compile:
   source: ../rell/src
