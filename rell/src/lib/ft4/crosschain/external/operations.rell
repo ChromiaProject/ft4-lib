@@ -58,7 +58,6 @@ operation apply_transfer(
         tx_hash == init_tx_rid, 
         "Argument mismatch: init_tx (%s) and init_tx_rid (%s)".format(tx_hash, init_tx_rid)
     );
-    iccf.check_iccf_proof( init_tx );
     create crosschain.applied_transfers (init_tx_rid);
 
     require(
