@@ -89,7 +89,7 @@ operation apply_transfer(
             prev_hop, 
             "Argument mismatch: prev_hop is null, but hop_index > 0 (%d)".format(hop_index)
         );
-        iccf.check_iccf_proof(prev_hop, init_tx_rid);
+        iccf.check_iccf_proof(prev_hop.tx.body.brid, init_tx_rid);
         require(
             prev_hop.tx.body.brid == from_brid,
             "Argument mismatch: prev_hop brid (%s) and init_args.hops (%s) don't correspond"
