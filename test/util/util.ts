@@ -10,8 +10,8 @@ import {
 import {
   AuthDescriptor,
   AuthDescriptorRule,
-} from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
+} from "/ft4/accounts/auth-descriptor/types";
+import { authDescriptor } from "/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
 import { op } from "/ft4/utils";
 import adminUser from "./admin_user";
@@ -80,7 +80,7 @@ export {
 
 export function createTestAuthDescriptor(
   flags: string[] = [],
-  rules?: AuthDescriptorRule
+  rules?: AuthDescriptorRule,
 ): {
   keyPair: KeyPair;
   authDescriptor: AuthDescriptor;
@@ -94,18 +94,18 @@ export function createTestAuthDescriptor(
 
 export function createTestMultisigAuthDescriptor(
   requiredSignatures: number,
-  flags: string[] = []
+  flags: string[] = [],
 ): {
   keyPairs: KeyPair[];
   authDescriptor: AuthDescriptor;
 } {
   const keyPairs = Array.from({ length: requiredSignatures }, () =>
-    encryption.makeKeyPair()
+    encryption.makeKeyPair(),
   );
   const descriptor = authDescriptor.create.multiSig.withArgs(
     flags,
     requiredSignatures,
-    keyPairs.map((kp) => kp.pubKey)
+    keyPairs.map((kp) => kp.pubKey),
   ).andNoRules;
 
   return { keyPairs, authDescriptor: descriptor };
@@ -121,21 +121,21 @@ export async function addAuthDescriptorTo(
   newUser: {
     signatureProvider: SignatureProvider;
     authDescriptor: AuthDescriptor;
-  }
+  },
 ) {
   const keyHandlerUser1 = createInMemoryFtKeyStore(
-    user.signatureProvider
+    user.signatureProvider,
   ).createKeyHandler(user.authDescriptor);
 
   const keyHandlerUser2 = createInMemoryFtKeyStore(
-    newUser.signatureProvider
+    newUser.signatureProvider,
   ).createKeyHandler(newUser.authDescriptor);
 
   const authDataService = createAuthDataService(createConnection(client));
   const authenticator = createAuthenticator(
     accountId,
     [keyHandlerUser1],
-    authDataService
+    authDataService,
   );
 
   const tx = await transactionBuilder(authenticator, client)
@@ -148,7 +148,7 @@ export async function addAuthDescriptorTo(
 export async function createAccount(client: IClient, ad: AuthDescriptor) {
   await client.signAndSendUniqueTransaction(
     op("register_account_test", authDescriptor.toGtv(ad)),
-    adminUser().signatureProvider
+    adminUser().signatureProvider,
   );
   return ad.id;
 }
@@ -164,4 +164,8 @@ export function opToRellOp(operation: Operation): RellOperation {
     opName: operation.name,
     args: operation.args,
   };
+}
+
+export function emptyOp(): Operation {
+  return { name: "empty_op", args: [] };
 }

@@ -1,10 +1,10 @@
-import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
-import { op } from "../client/lib/ft4/utils";
-import { evmAuth } from "../client/lib/ft4/authentication/evm";
-import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
-import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { authDescriptor } from "/ft4/accounts/auth-descriptor";
+import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
+import { op } from "/ft4/utils";
+import { evmAuth } from "/ft4/authentication/evm";
+import { createKeyStoreInteractor } from "/ft4/ft-session";
+import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import { createAuthenticator } from "/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAccount } from "./util/util";
 import { ethers } from "ethers";
@@ -24,7 +24,7 @@ describe("EVM key handler", () => {
     const message = "Message to sign";
 
     const walletSignedMessage = await new ethers.Wallet(
-      keyPair.privKey.toString("hex")
+      keyPair.privKey.toString("hex"),
     ).signMessage(message);
     const { r, s, v } = ethers.Signature.from(walletSignedMessage);
     const expectedSignature = {
@@ -33,9 +33,8 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
-      message
-    );
+    const signedMessage =
+      await createInMemoryEvmKeyStore(keyPair).signMessage(message);
 
     expect(signedMessage).toEqual(expectedSignature);
   });
@@ -46,7 +45,7 @@ describe("EVM key handler", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [],
-      keyStore.address
+      keyStore.address,
     ).andNoRules;
     const keyHandler = keyStore.createKeyHandler(ad);
     const authData = {
@@ -60,7 +59,7 @@ describe("EVM key handler", () => {
       0,
       createFakeAuthDataService({
         foo: authData,
-      })
+      }),
     );
 
     const signature = await keyStore.signMessage(authData.message);
@@ -77,7 +76,7 @@ describe("EVM key handler", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyStore.address
+      keyStore.address,
     ).andNoRules;
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
@@ -85,14 +84,14 @@ describe("EVM key handler", () => {
     const authenticator = createAuthenticator(
       accountId,
       [keyStore.createKeyHandler(ad)],
-      authService
+      authService,
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0")
+      message.replace("{nonce}", "0"),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1")
+      message.replace("{nonce}", "1"),
     );
 
     const tx = await transactionBuilder(authenticator, client)
@@ -125,18 +124,18 @@ describe("EVM key handler", () => {
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
-      keyStore.address
+      keyStore.address,
     ).andNoRules;
     await createAccount(client, ad);
 
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      ad.id
+      ad.id,
     );
 
     const keyPair2 = encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
