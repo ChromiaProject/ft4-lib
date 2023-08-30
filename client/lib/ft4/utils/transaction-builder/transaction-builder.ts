@@ -165,7 +165,7 @@ export function transactionBuilder(
     if (operationsWithHandlers.length) {
       new Promise((resolve) =>
         resolve(
-          waitUntillAnchored(operationsWithHandlers, reciept.transactionRID),
+          waitUntilAnchored(operationsWithHandlers, reciept.transactionRID),
         ),
       );
     }
@@ -173,7 +173,7 @@ export function transactionBuilder(
     return reciept;
   }
 
-  async function waitUntillAnchored(
+  async function waitUntilAnchored(
     operations: OperationContext[],
     txRid: Buffer,
   ) {

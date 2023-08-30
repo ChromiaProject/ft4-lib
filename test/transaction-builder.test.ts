@@ -225,7 +225,31 @@ describe("Transaction Builder", () => {
       expect(callback).toHaveBeenCalledWith(emptyOp(), null);
     });
 
-    it("calls callbacks iven if block is not anchored immediately", async () => {
+    it("calls all registered handler when block is anchored", async () => {
+      (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
+      const { authenticatorMock } = getMocks();
+      let callback = null;
+      let callback2 = null;
+      const promise = new Promise((resolve) => {
+        transactionBuilder(authenticatorMock, client)
+          .add(
+            emptyOp(),
+            (callback = jest.fn().mockImplementation((op) => resolve(op))),
+          )
+          .add(
+            emptyOp(),
+            (callback2 = jest.fn().mockImplementation((op) => resolve(op))),
+          )
+          .add(nop())
+          .buildAndSend();
+      });
+      await promise;
+
+      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback2).toHaveBeenCalledWith(emptyOp(), null);
+    });
+
+    it("calls callbacks even if block is not anchored immediately", async () => {
       (isBlockAnchored as any)
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
