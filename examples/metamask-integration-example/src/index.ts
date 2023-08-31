@@ -1,36 +1,27 @@
-import { gtxClient, restClient, restClientutil } from "postchain-client";
-import {
-  KeyStore,
+import { 
+  Account,
   FlagsType,
-  createKeyStoreInteractor,
-  createWeb3ProviderEvmKeyStore,
-  AuthDescriptor,
+  KeyStore,
   authDescriptor,
-  IAccount,
-} from "ft3-lib";
-import { GtxClient } from "postchain-client/built/src/gtx/interfaces";
+  createKeyStoreInteractor,
+  createWeb3ProviderEvmKeyStore 
+} from "@chromia/ft4";
+import { createClient, encryption, newSignatureProvider } from "postchain-client";
+import { registerAccount } from "../../../dist/client/lib/ft4/admin/admin-op-functions"
 
 declare global {
   interface Window { ethereum: any }
 }
 
-async function createClient(nodeUrl?: string) {
-  const url = nodeUrl || "http://localhost:7740";
-  const brid = await restClientutil.getBrid(url, 0);
-  return gtxClient.createClient(
-    restClient.createRestClient([url], brid),
-    brid,
-    []
-  );
+async function createChromiaClient(nodeUrl?: string) {
+  const url = nodeUrl || "http://localhost:7741";
+  return createClient({
+    nodeURLPool: url,
+    blockchainIID: 0
+  });
 }
 
-async function createAccount(client: GtxClient, ad: AuthDescriptor) {
-  const tx = client.newTransaction([]);
-  tx.addOperation("ft4.register_account_test", authDescriptor.toGtv(ad) as any);
-  await tx.postAndWaitConfirmation();
-}
-
-async function toHtml(account: IAccount) {
+async function toHtml(account: Account) {
     const balances = await account.getBalances()
     const wrapper = document.createElement("div")
     wrapper.classList.add("account")
@@ -40,7 +31,7 @@ async function toHtml(account: IAccount) {
     wrapper.appendChild(accountId)
       
     const assetList = document.createElement("ul")
-    balances.forEach(balance => {
+    balances.data.forEach(balance => {
       const item = document.createElement("li")
       item.innerHTML = `${balance.asset.name}: ${balance.amount}`
       assetList.appendChild(item)
@@ -50,7 +41,7 @@ async function toHtml(account: IAccount) {
 }
 
 document.getElementById("authentication-button")?.addEventListener("click", onClick)
-const client = await createClient();
+const client = await createChromiaClient();
 
 
 async function onClick(e: Event) {
@@ -66,7 +57,7 @@ async function onClick(e: Event) {
   // If we do not already have an account
   if (accounts.length === 0) {
     // Create an auth descriptor which is allowed to administrate the account
-    const descriptor = authDescriptor.create.singleSigEvm.withArgs(
+    const descriptor = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account],
       evmKeyStore.id,
     ).andNoRules;
@@ -74,7 +65,15 @@ async function onClick(e: Event) {
     // Create an account using the auth descriptor
     // Note: Here we are using the dev method of creating an account, in a production system
     // you will want to use one of the admin based creation methods, or create your own
-    await createAccount(client, descriptor);
+    await registerAccount(
+      client,
+      newSignatureProvider(
+        encryption.makeKeyPair(
+          "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
+        )
+      ),
+      descriptor
+    );
 
     // Fetch all accounts again, to get the newly created account
     accounts = await getAccounts();

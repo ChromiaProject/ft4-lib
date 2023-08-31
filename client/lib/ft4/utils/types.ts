@@ -63,3 +63,7 @@ export interface RellOperationStructure {
   mount: string;
   parameters: any[];
 }
+
+export type RequireTogether<T, Keys extends keyof T> = T & {
+  [K in Keys]-?: T[K];
+};

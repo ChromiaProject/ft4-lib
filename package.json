@@ -12,6 +12,7 @@
     "test:js-coverage": "./scripts/jesttest.sh -- --coverage",
     "test:js": "./scripts/jesttest.sh",
     "test:rell": "./scripts/relltest.sh",
+    "test:multichain": "./scripts/multichain-jesttest.sh",
     "test": "./scripts/test.sh",
     "test:pipeline": "./scripts/test.sh --no-docker",
     "stop-postchain:jest": "docker stop ft4_jest_test; docker rm ft4_jest_test",
@@ -39,9 +40,8 @@
   "license": "Apache-2.0",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
-    "@walletconnect/client": "^1.8.0",
     "ethers": "^6.4.1",
-    "postchain-client": "^1.5.6"
+    "postchain-client": "^1.5.8"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",
