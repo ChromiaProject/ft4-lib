@@ -120,35 +120,33 @@ fi
 log "Building Directory Chain..."
 chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
 
+debug  "Copy ft library dependency to source folder"
+rm -rf "$DEPENDENCIES_PATH/multichain"
+mkdir -p "$DEPENDENCIES_PATH/multichain/lib"
+cp -R "rell/src/lib/ft4" "$DEPENDENCIES_PATH/multichain/lib/"
+
 log "Building Multichain dApp Chains..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
 do
     # Generate the YML filename and module name
     yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
-    module_name="multichain.app_module$chain_num"
+    module_name="app_module$chain_num"
 
     # Write the YML content to the file
     cat <<- EOM > $yml_filename
 blockchains:
     ft4_multichain_test_$chain_num:
         module: $module_name
-        test: #Not default
-            modules: #List of the test modules in your project
-                - tests.accounts
-                - tests.assets        
-                - tests.auth
-            moduleArgs:
-                multichain.src.lib.ft4.accounts:
-                    rate_limit_active: 1
-                    rate_limit_max_points: 10
-                    rate_limit_recovery_time: 5000
-                    rate_limit_points_at_account_creation: 1
-                multichain.src.lib.ft4.admin:
-                    admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
-                tests.assets.utils:
-                    admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
+        moduleArgs:
+            lib.ft4.accounts:
+                rate_limit_active: 1
+                rate_limit_max_points: 10
+                rate_limit_recovery_time: 5000
+                rate_limit_points_at_account_creation: 1
+            lib.ft4.admin:
+                admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
 compile:
-    source: ./
+    source: ./multichain
     target: ../out
 EOM
 
@@ -158,14 +156,11 @@ EOM
     mkdir -p $(dirname $rell_filepath)
 
     echo "module;" > $rell_filepath
-    echo "import ^.src.main;" >> $rell_filepath
+    echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
     echo "operation empty_op() {}" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
     debug "Generated $yml_filename and $rell_filepath"
-
-    debug  "Copy ft library dependency to source folder"
-    cp -R "rell/src" "$DEPENDENCIES_PATH/multichain" 
 
     # Build the Multichain dApp Chain for each blockchain
     chr build -s $yml_filename > /dev/null
