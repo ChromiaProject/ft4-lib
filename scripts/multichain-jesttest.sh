@@ -132,6 +132,21 @@ do
 blockchains:
     ft4_multichain_test_$chain_num:
         module: $module_name
+        test: #Not default
+            modules: #List of the test modules in your project
+                - tests.accounts
+                - tests.assets        
+                - tests.auth
+            moduleArgs:
+                multichain.src.lib.ft4.accounts:
+                    rate_limit_active: 1
+                    rate_limit_max_points: 10
+                    rate_limit_recovery_time: 5000
+                    rate_limit_points_at_account_creation: 1
+                multichain.src.lib.ft4.admin:
+                    admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
+                tests.assets.utils:
+                    admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
 compile:
     source: ./
     target: ../out
@@ -143,9 +158,14 @@ EOM
     mkdir -p $(dirname $rell_filepath)
 
     echo "module;" > $rell_filepath
+    echo "import ^.src.main;" >> $rell_filepath
+    echo "operation empty_op() {}" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
     debug "Generated $yml_filename and $rell_filepath"
+
+    debug  "Copy ft library dependency to source folder"
+    cp -R "rell/src" "$DEPENDENCIES_PATH/multichain" 
 
     # Build the Multichain dApp Chain for each blockchain
     chr build -s $yml_filename > /dev/null
@@ -172,7 +192,7 @@ BRID=""
 retry_count=0
 
 # Loop until BRID receives a non-empty value or until 10 tries
-while [ -z "$BRID" ] && [ $retry_count -lt 10 ]; do
+while [ -z "$BRID" ] && [ $retry_count -lt 1000 ]; do
   # Attempt to fetch the value
   BRID=$(curl -s http://localhost:7740/brid/iid_0)
   
@@ -197,6 +217,7 @@ pmc network initialize \
     --cluster-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/cluster_anchoring.xml \
     -cfg $PMC_CONFIG
 
+sleep 1
 debug "Verifying the network"
 VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
