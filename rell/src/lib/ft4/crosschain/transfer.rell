@@ -1,47 +1,64 @@
 import ^.assets;
 import ^.accounts;
 
-struct init_transfer_args {
-    receiver_id: byte_array;
-    asset_id: byte_array;
-    amount: big_integer;
-    hops: list<byte_array>;
+entity applied_transfers { 
+    key tx_rid, op_index; 
+    tx_rid: byte_array;
+    op_index: integer;
 }
 
-entity applied_transfers { key tx_rid: byte_array; }
-
 namespace Unsafe {
-    function transfer(
-        accounts.account,
-        brid: byte_array,
+
+    function update_balances_if_needed(
+        sender: accounts.account,
+        receiver: accounts.account,
         assets.asset,
         amount: big_integer
     ) {
         require(
-            chain_context.blockchain_rid != brid,
+            sender != receiver,
             "Cannot transfer to own account"
         );
-        assets.require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
+        require(
+            chain_context.blockchain_rid != sender.id,
+            "Cannot transfer from this blockchain's account"
+        );
+        assets.require_zero_exclusive_asset_amount_limits(
+            amount,
+            "Parameter amount"
+        );
+        require(
+            chain_context.blockchain_rid != receiver.id,
+            "Cannot transfer to this blockchain's account"
+        );
+        assets.require_zero_exclusive_asset_amount_limits(
+            amount,
+            "Parameter amount"
+        );
 
         val origin_brid = asset_origin @? { asset } .origin_brid;
-        val bc_acc = ensure_blockchain_account(brid);
-
-        require(account != bc_acc, "Sender and receiver have to be different");
+        val is_sender_blockchain = exists(blockchain_account @? { sender });
+        val is_receiver_blockchain = exists(blockchain_account @? { receiver });
         
         val args = [
-            [(amount, account.id, 0)],
-            [(amount, bc_acc.id, 0)]
+            [(amount, sender.id, 0)],
+            [(amount, receiver.id, 0)]
         ];
 
         if (
             not exists(origin_brid)
-            or origin_brid != account.id
+            or not is_sender_blockchain
+            or origin_brid != sender.id
         ) {
-            assets.deduct_balance(account, asset, amount);
+            assets.deduct_balance(
+                sender,
+                asset, 
+                amount
+            );
         }
 
         create assets.transfer_history_entry(
-            .account = account,
+            .account = sender,
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,
@@ -50,13 +67,16 @@ namespace Unsafe {
             .transfer_args = args.to_gtv().to_bytes()
         );
 
-        if (not exists(origin_brid) or origin_brid != brid ) {
-            // always forget the balance of the owner of the asset
-            assets.ensure_balance(bc_acc, asset).amount += amount;
+        if (
+            not exists(origin_brid)
+            or not is_receiver_blockchain
+            or origin_brid != receiver.id
+        ) {
+            assets.ensure_balance(receiver, asset).amount += amount;
         }
-        
+
         create assets.transfer_history_entry(
-            .account = bc_acc,
+            .account = receiver,
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,

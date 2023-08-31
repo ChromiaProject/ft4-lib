@@ -17,6 +17,10 @@ function is_blockchain(account_id: byte_array): boolean {
 function ensure_blockchain_account(brid: byte_array): accounts.account {
    val acc = accounts.account @? { .id == brid };
    if (acc??) {
+      require(
+         exists(blockchain_account @? { acc }),
+         "The account already exists, but it's not a blockchain account"
+      );
       return acc;
    } else {
       val bc_acc = create accounts.account (id = brid);
