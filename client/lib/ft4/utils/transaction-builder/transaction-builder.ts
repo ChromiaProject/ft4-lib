@@ -189,6 +189,8 @@ export function transactionBuilder(
     );
 
     for (let i = 0; i < config.retryCount; ++i) {
+      await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
+
       let isAnchored = false;
       try {
         isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
@@ -206,7 +208,6 @@ export function transactionBuilder(
         });
         return;
       }
-      await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
     }
 
     operations.forEach((op) => {
