@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Transfer history's asset properties are now of the Asset type
+- Blockchain rid is now part of signing message when using external signatures
 
 ### Fixed
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
