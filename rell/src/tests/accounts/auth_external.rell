@@ -2,7 +2,7 @@
 module;
 
 import ^^.assets.utils;
-import ^^^.lib.ft4.auth;
+import auth_ext: ^^^.lib.ft4.auth.external;
 import acc: ^^^.lib.ft4.accounts;
 import test_op: ^^.operations.auth;
 
@@ -14,8 +14,8 @@ function test_authenticate_v2_and_rate_limit_call() {
 
   // Perform the transaction
   rell.test.tx()
-      .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation("Some message"))
+      .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+      .op(test_op.test_authenticated_operation())
       .sign(rell.test.keypairs.alice)
       .run();
 

@@ -17,7 +17,7 @@ async function registerAsset(
   client: IClient,
   assetName: string,
   decimals = 0,
-  blockchainRID: Buffer = randomBytes(32)
+  blockchainRID: Buffer = randomBytes(32),
 ) {
   const txn = {
     operations: [
@@ -27,7 +27,7 @@ async function registerAsset(
         generateAssetSymbol(),
         decimals,
         blockchainRID,
-        ""
+        "",
       ),
     ],
     signers: [adminKeyPair.pubKey],
@@ -71,7 +71,7 @@ describe("Asset", () => {
     const { data: expectedAssets2 } = await connection.getAssetsByName(
       assetName,
       2,
-      nextCursor
+      nextCursor,
     );
     expect(expectedAssets2.length).toEqual(1);
     expect(expectedAssets2[0].name).toEqual(assetName);
@@ -97,7 +97,8 @@ describe("Asset", () => {
     const assetSymbol = generateAssetSymbol();
     const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
     const assetId = gtv.gtvHash([assetName, brid]);
-    await getNewAsset(client, assetName, assetSymbol, 3);
+    const iconUrl = "http://example.com/";
+    await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
 
     const result = (await connection.getAssetBySymbol(assetSymbol))!;
 
@@ -106,6 +107,7 @@ describe("Asset", () => {
       id: assetId,
       decimals: 3,
       brid,
+      iconUrl,
     });
   });
 
@@ -117,7 +119,7 @@ describe("Asset", () => {
     const expectedAssets = await connection.getAllAssets();
 
     expect(expectedAssets.data).toEqual(
-      expect.arrayContaining([asset1, asset2, asset3])
+      expect.arrayContaining([asset1, asset2, asset3]),
     );
   });
 
@@ -142,16 +144,17 @@ describe("Asset", () => {
       "Test Asset 1",
       "TST1",
       0,
-      validUrl
+      validUrl,
     );
     expect(asset).not.toBeNull();
+    expect(asset.iconUrl).toBe(validUrl);
   });
 
   // Update after addding new admin functions
   it.skip("should fail to register with invalid icon URL", async () => {
     const invalidUrl = "not-a-valid-url";
     await expect(
-      getNewAsset(client, "Test Asset 2", "TST2", 0, invalidUrl)
+      getNewAsset(client, "Test Asset 2", "TST2", 0, invalidUrl),
     ).rejects.toThrow(InvalidUrlError);
   });
 

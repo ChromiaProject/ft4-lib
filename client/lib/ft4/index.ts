@@ -14,6 +14,7 @@ import { createLocalStorageLoginKeyStore } from "./authentication/login-manager/
 import {
   KeyStore,
   createWeb3ProviderEvmKeyStore,
+  createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
 } from "./authentication";
 import {
@@ -59,6 +60,7 @@ export {
   createConnection,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
+  createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
   createSessionStorageLoginKeyStore,
@@ -71,12 +73,7 @@ export {
   mint,
 };
 
-export {
-  onAccountAddressChange,
-  offAccountAddressChange,
-  Listener,
-  EventEmitter,
-} from "./events";
+export { Listener, EventEmitter } from "./events";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,

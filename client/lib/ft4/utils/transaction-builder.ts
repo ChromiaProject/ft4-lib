@@ -2,6 +2,7 @@ import { Authenticator, KeyHandler } from "../authentication/types";
 import { Buffer } from "buffer";
 import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
+import { OperationNotExistError } from "./errors";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -33,7 +34,7 @@ export type TransactionBuilder = {
    */
   addWithAuthenticator: (
     operation: Operation,
-    authenticator: Authenticator
+    authenticator: Authenticator,
   ) => TransactionBuilder;
   /**
    * Add key handlers that will also be included as signers to this operation.
@@ -87,7 +88,7 @@ export type TransactionBuilder = {
  */
 export function transactionBuilder(
   authenticator: Authenticator,
-  client: IClient
+  client: IClient,
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
     this._operations.push([operation, authenticator]);
@@ -103,7 +104,7 @@ export function transactionBuilder(
 
   async function buildUnsigned() {
     const [operations, keyHandlers] = await authenticateOperations(
-      this._operations
+      this._operations,
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
@@ -122,32 +123,43 @@ export function transactionBuilder(
   }
 
   async function authenticateOperations(
-    operations: OpAuthPair[]
+    operations: OpAuthPair[],
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
     const nonces = new Map<Buffer, number>();
     const processedOperations: Operation[][] = [];
+
     for (const tuple of operations) {
       const [operation, authenticator] = tuple;
+
+      if (
+        !(await authenticator.authDataService.isOperationExposed(
+          operation.name,
+        ))
+      ) {
+        throw new OperationNotExistError(
+          `Operation ${operation.name} does not exist`,
+        );
+      }
+
       if (operation.name === "nop") {
         processedOperations.push([operation]);
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          `No keyhandler registered to handle operation <${operation.name}>`
+          `No keyhandler registered to handle operation <${operation.name}>`,
         );
       }
       keyHandlers.push(keyHandler);
       if (!nonces.has(keyHandler.authDescriptor.id)) {
         nonces.set(
           keyHandler.authDescriptor.id,
-          (await authenticator.getNonce(keyHandler.authDescriptor.id))!
+          (await authenticator.getNonce(keyHandler.authDescriptor.id))!,
         );
       }
 
@@ -156,7 +168,7 @@ export function transactionBuilder(
         authenticator.accountId,
         operation,
         nonce,
-        authenticator.authDataService
+        authenticator.authDataService,
       );
       // consider keeping nonce value in corresponding key handler
       ops.forEach((op) => {
@@ -178,7 +190,7 @@ export function transactionBuilder(
   async function build() {
     const tx = await this.buildUnsigned();
     await Promise.all(
-      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx))
+      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
     );
     return gtx.serialize(tx);
   }
@@ -199,7 +211,7 @@ export function transactionBuilder(
 
   function addWithAuthenticator(
     operation: Operation,
-    authenticator: Authenticator
+    authenticator: Authenticator,
   ): TransactionBuilder {
     this._operations.push([operation, authenticator]);
     return this;

@@ -60,6 +60,7 @@ entity rl_state {
 function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
     val id = auth_descriptor.hash();
 
+    validate_auth_descriptor_args(auth_descriptor);
     analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
 
     val account_auth_descriptor = create account_auth_descriptor (
@@ -70,11 +71,8 @@ function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
         created = op_context.last_block_time,
         ctr = 0
     );
-     
-    when (auth_descriptor.auth_type) {
-        S, M -> _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor);
-        ES, EM -> _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor);
-    }
+
+    _add_auth_participant(account, auth_descriptor, account_auth_descriptor);
 
     setup_auth_descriptor_variables(account_auth_descriptor);
     return id;
@@ -124,7 +122,7 @@ function create_account_with_auth(auth_descriptor): byte_array {
     return id;
 }
 
-function _add_ft_auth_participant(account, auth_descriptor, account_auth_descriptor) {
+function _add_auth_participant(account, auth_descriptor, account_auth_descriptor) {
     val participants = get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
     require(op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
     for (participant in participants) {
@@ -199,6 +197,13 @@ function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, pag
     ) limit utils.fetch_data_size(page_size);
 }
 
+function validate_auth_descriptor_args(auth_descriptor) {
+    when (auth_descriptor.auth_type) {
+        S, ES -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        M, EM -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+    }
+}
+
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth(auth_descriptor): byte_array {
@@ -221,12 +226,8 @@ namespace Unsafe {
     function _add_auth_descriptor(account, auth_descriptor): byte_array {
         val id = auth_descriptor.hash();
         
+        validate_auth_descriptor_args(auth_descriptor);
         analyze_auth_descriptor_rules(auth_descriptor.rules, 0);
-     
-        when (auth_descriptor.auth_type) {
-            S, ES -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-            M, EM -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-        }
         
         val account_auth_descriptor = create account_auth_descriptor (
             account, id,
