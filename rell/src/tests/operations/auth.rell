@@ -1,7 +1,8 @@
 module;
 
 import ^^^.lib.ft4.admin;
-import acc: ^^^.lib.ft4.accounts; 
+import acc: ^^^.lib.ft4.accounts;
+import auth: ^^^.lib.ft4.auth;
 
 /*
  * We can store the error message in this singleton, and later check it in our tests.
@@ -37,18 +38,52 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
     }
 }
 
-operation test_authenticated_operation(message_template: text) {
-  acc._authenticate(set<text>(["A"]), message_template);
+function test_authenticated_operation_message(gtv) {
+    return "{nonce}";
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "test_authenticated_operation",
+    flags = ["A"],
+    message = test_authenticated_operation_message(*)
+);
+operation test_authenticated_operation() {
+  auth.authenticate();
+}
+
+function empty_message(gtv) {
+  return "";
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "test_empty_auth_message",
+    flags = ["A"],
+    message = empty_message(*)
+);
+operation test_empty_auth_message() {
+  auth.authenticate();
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
   acc.add_auth_descriptor_to_account(account, desc);
 }
 
+function test_perform_large_transfer_message(gtv) {
+  val args = struct<test_perform_large_transfer>.from_gtv(gtv);
+  return "Do you want to send %s CHR to %s?".format(args.amount, args.to);
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "test_perform_large_transfer",
+    flags = ["A"],
+    message = test_perform_large_transfer_message(*)
+);
 operation test_perform_large_transfer(
   amount: integer,
   to: text
 ) {
-  val msg_template = "Do you want to send {0} CHR to {1}? Brid: {brid} Nonce: {nonce}";
-  acc._authenticate(set(["A"]), msg_template);
+  auth.authenticate();
 }

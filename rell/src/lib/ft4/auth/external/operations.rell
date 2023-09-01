@@ -1,8 +1,9 @@
+import ^^.auth;
 
 operation evm_auth(
     account_id: byte_array,
     auth_descriptor_id: byte_array,
-    signatures: list<signature>
+    signatures: list<auth.signature>
 ) {}
 
 operation ft_auth(

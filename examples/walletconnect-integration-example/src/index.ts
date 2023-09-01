@@ -1,25 +1,30 @@
-import { 
-  Account,
-  FlagsType,
-  KeyStore,
-  authDescriptor,
-  createKeyStoreInteractor,
-  createWeb3ProviderEvmKeyStore 
-} from "@chromia/ft4";
-import { createClient, encryption, newSignatureProvider } from "postchain-client";
+import { Account, FlagsType, KeyStore, authDescriptor, createKeyStoreInteractor } from "@chromia/ft4"
+import { createClient, encryption, newSignatureProvider } from "postchain-client"
+import { createGenericEvmKeyStore } from "../../../dist/client/lib/ft4"
 import { registerAccount } from "../../../dist/client/lib/ft4/admin/admin-op-functions"
+import { Address, signMessage, watchAccount } from "@wagmi/core"
+import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
+import { Web3Modal } from '@web3modal/html'
+import { configureChains, createConfig } from '@wagmi/core'
+import { arbitrum, mainnet, polygon } from '@wagmi/core/chains'
 
-declare global {
-  interface Window { ethereum: any }
-}
+const projectId = '7a27a19adcb9a590e19013d28780325b'
+const chains = [arbitrum, mainnet, polygon]
+let client = undefined;
 
-async function createChromiaClient(nodeUrl?: string) {
-  const url = nodeUrl || "http://localhost:7741";
-  return createClient({
-    nodeURLPool: url,
-    blockchainIID: 0
-  });
-}
+createClient({
+  nodeURLPool: "http://localhost:7741",
+  blockchainIID: 0
+}).then(c => {client = c});
+
+const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: w3mConnectors({ projectId, chains }),
+  publicClient
+})
+const ethereumClient = new EthereumClient(wagmiConfig, chains)
+const web3modal = new Web3Modal({ projectId }, ethereumClient)
 
 async function toHtml(account: Account) {
     const balances = await account.getBalances()
@@ -31,6 +36,8 @@ async function toHtml(account: Account) {
     wrapper.appendChild(accountId)
       
     const assetList = document.createElement("ul")
+
+    // it will only show up to 100, but it's just a demo
     balances.data.forEach(balance => {
       const item = document.createElement("li")
       item.innerHTML = `${balance.asset.name}: ${balance.amount}`
@@ -41,14 +48,29 @@ async function toHtml(account: Account) {
 }
 
 document.getElementById("authentication-button")?.addEventListener("click", onClick)
-const client = await createChromiaClient();
-
 
 async function onClick(e: Event) {
   e.preventDefault();
+  await web3modal.openModal()
+  watchAccount(login)
+}
 
+async function login(account: { address: Address }) {
+  if (!account.address) {
+    const wrapper = document.getElementById("account-id-container")
+    wrapper.innerHTML = "No account registered"
+    return
+  }
+  if (!client) {
+    const wrapper = document.getElementById("account-id-container")
+    wrapper.innerHTML = "Client isn't ready. Retry after a few seconds"
+    return
+  }
   // Create a keystore for holding the evm key
-  const evmKeyStore: KeyStore = await createWeb3ProviderEvmKeyStore(window.ethereum);
+  const evmKeyStore: KeyStore = await createGenericEvmKeyStore({
+    address: account.address,
+    signMessage: (msg) => signMessage({message: msg})
+  });
   
   // Wrap the keystore in an interactor, to be able to fetch accounts
   const { getAccounts } = createKeyStoreInteractor(client, evmKeyStore);
@@ -63,8 +85,8 @@ async function onClick(e: Event) {
     ).andNoRules;
   
     // Create an account using the auth descriptor
-    // Note: Here we are using the dev method of creating an account, in a production system
-    // you will want to use one of the admin based creation methods, or create your own
+    // Note: Here we are using the admin based creation methods,
+    // which in prod would allow people to spam your chain.
     await registerAccount(
       client,
       newSignatureProvider(

@@ -22,11 +22,11 @@ function test_happy_valid() {
     val alice = utils.register_alice();
 
     rell.test.tx()
-        .op(test_operations.auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.alice)
         .run();
     
-    assert_equals(test_operations.auth.test_error.msg, "valid");
+    assert_equals(test_operations.test_auth.test_error.msg, "valid");
 }
 
 function test_invalid_required_flags() {
@@ -35,32 +35,32 @@ function test_invalid_required_flags() {
     val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
 
     rell.test.tx()
-        .op(test_operations.auth.test_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
+        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
         .sign(rell.test.keypairs.alice)
         .run();
     
-    assert_equals(test_operations.auth.test_error.msg, "Some required flags [A] are missing on the (single sig) Auth Descriptor.");
+    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [A] are missing on the (single sig) Auth Descriptor.");
 }
 
 function test_invalid_single_signer() {
     val alice = utils.register_alice();
 
     rell.test.tx()
-        .op(test_operations.auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .sign(rell.test.keypairs.bob) // <---- We sign with wrong user "Bob"
         .run();
     
-    assert_equals(test_operations.auth.test_error.msg, "The participant is not the signer of this transaction.");
+    assert_equals(test_operations.test_auth.test_error.msg, "The participant is not the signer of this transaction.");
 }
 
 function test_not_signed() {
     val alice = utils.register_alice();
 
     rell.test.tx()
-        .op(test_operations.auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .run(); // <--- No signing at all
 
-    assert_equals(test_operations.auth.test_error.msg, "The participant is not the signer of this transaction.");
+    assert_equals(test_operations.test_auth.test_error.msg, "The participant is not the signer of this transaction.");
 }
 
 /*
