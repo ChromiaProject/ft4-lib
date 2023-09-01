@@ -6,6 +6,8 @@ import {
   IClient,
   isBlockAnchored,
   getAnchoringClient,
+  createClient,
+  BlockAnchoringException,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -177,10 +179,27 @@ export function transactionBuilder(
     operations: OperationContext[],
     txRid: Buffer,
   ) {
-    const anchoringClient = await getAnchoringClient(client);
+    const systemClient = await createClient({
+      nodeURLPool: client.config.endpointPool.slice(),
+      blockchainIID: 0,
+    });
+    const anchoringClient = await getAnchoringClient(
+      systemClient,
+      client.config.blockchainRID,
+    );
 
     for (let i = 0; i < config.retryCount; ++i) {
-      const isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
+      let isAnchored = false;
+      try {
+        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
+      } catch (error) {
+        if (error instanceof BlockAnchoringException) {
+          isAnchored = false;
+        } else {
+          throw error;
+        }
+      }
+
       if (isAnchored) {
         operations.forEach((op: OperationContext) => {
           op.onAnchoredHandler(op.operation, null);

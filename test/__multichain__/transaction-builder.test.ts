@@ -1,3 +1,5 @@
+jest.unmock("postchain-client");
+
 import { IClient, createClient } from "postchain-client";
 import { nop } from "/ft4/utils";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
@@ -52,7 +54,6 @@ describe("transaction builder", () => {
   });
 
   it("calls registered handler when block is anchored", async () => {
-    console.log(JSON.stringify(await client.query("rell.get_app_structure")));
     const { authenticatorMock } = getMocks();
     let callback = null;
     const promise = new Promise((resolve) => {
