@@ -123,7 +123,10 @@ export async function findPathToChainForAsset(
     .slice(1); // remove starting chain
 }
 
-async function createConnectionToBrid(oldClient: IClient, newBrid: BufferId) {
+export async function createConnectionToBrid(
+  oldClient: IClient,
+  newBrid: BufferId,
+) {
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise

@@ -1,8 +1,14 @@
 import { KeyStore } from "../authentication";
+import { BufferId } from "/cryptoUtils";
 
 export type Listener<T extends any[]> = (...args: T) => void;
 
 export type FTEvents = {
   // Define other events here as arrays of their argument types.
-  KeyStoreChanged: [KeyStore];
+  NoOp: [string];
+  KeyStoreChange: [KeyStore];
+  TransferInit: [BufferId];
+  TransferHop: [BufferId];
+  TransferEnd: [];
+  TransferError: [OrchestratorError];
 };
