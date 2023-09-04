@@ -38,21 +38,21 @@ describe("Transfer", () => {
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals)
+      createAmount(10, asset.decimals),
     );
 
     const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
     const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
 
     expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
-      true
+      true,
     );
     expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
-      true
+      true,
     );
   });
 
-  it.skip("should fail when balance is lower than amount to transfer", async () => {
+  it("fails when balance is lower than amount to transfer", async () => {
     const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 5)
       .withPoints(1)
@@ -63,7 +63,7 @@ describe("Transfer", () => {
     const promise = account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals)
+      createAmount(10, asset.decimals),
     );
 
     await expect(promise).rejects.toBeInstanceOf(Error);
@@ -81,7 +81,7 @@ describe("Transfer", () => {
     const promise = account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals)
+      createAmount(10, asset.decimals),
     );
     await expect(promise).rejects.toBeInstanceOf(Error);
   });
@@ -98,33 +98,33 @@ describe("Transfer", () => {
     const authDescriptor = ad.create.multiSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
       2,
-      [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey]
+      [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey],
     ).andNoRules;
 
     await registerAccount(
       connection.client,
       admin.signatureProvider,
-      authDescriptor
+      authDescriptor,
     );
 
     const account2 = await createConnection(connection.client).getAccountById(
-      authDescriptor.id
+      authDescriptor.id,
     );
 
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals)
+      createAmount(10, asset.decimals),
     );
 
     const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
     const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
 
     expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
-      true
+      true,
     );
     expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
-      true
+      true,
     );
   });
 
@@ -139,13 +139,13 @@ describe("Transfer", () => {
 
     const session = await createKeyStoreInteractor(
       await createChromiaClient(),
-      createInMemoryFtKeyStore(keyPair)
+      createInMemoryFtKeyStore(keyPair),
     ).getSession(account.id);
     await session.account.burn(asset.id, createAmount(10, asset.decimals));
     const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
     expect(
-      assetBalance.amount.eq(createAmount(190, asset.decimals))
+      assetBalance.amount.eq(createAmount(190, asset.decimals)),
     ).toBeTruthy();
   });
 });
