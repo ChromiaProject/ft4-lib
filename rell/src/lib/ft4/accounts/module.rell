@@ -40,6 +40,7 @@ entity account_auth_descriptor {
     args: byte_array;
     rules: byte_array;
     mutable ctr: integer;
+    created: timestamp;
 }
 
 entity auth_descriptor_participant {
@@ -67,11 +68,12 @@ function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes(),
         rules = auth_descriptor.rules.to_gtv().to_bytes(),
-        0
+        created = op_context.last_block_time,
+        ctr = 0
     );
 
     _add_auth_participant(account, auth_descriptor, account_auth_descriptor);
-     
+
     setup_auth_descriptor_variables(account_auth_descriptor);
     return id;
 }
@@ -166,15 +168,20 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
-            data = (
-                id = .id,
-                auth_type = .auth_type,
-                args = gtv.from_bytes(.args),
-                rules = gtv.from_bytes(.rules)
-            ).to_gtv_pretty(),
+            data = get_auth_descriptor_data($).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);
+}
+
+function get_auth_descriptor_data(ad: account_auth_descriptor) {
+    return (
+        id = ad.id,
+        auth_type = ad.auth_type,
+        args = gtv.from_bytes(ad.args),
+        rules = gtv.from_bytes(ad.rules),
+        created = ad.created
+    );
 }
 
 function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, page_cursor: text?) {
@@ -227,7 +234,8 @@ namespace Unsafe {
             auth_descriptor.auth_type,
             args = auth_descriptor.args.to_gtv().to_bytes(),
             rules = auth_descriptor.rules.to_gtv().to_bytes(),
-            0
+            created = op_context.last_block_time,
+            ctr = 0
         );
         
         for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {

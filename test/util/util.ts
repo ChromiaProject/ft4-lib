@@ -145,12 +145,16 @@ export async function addAuthDescriptorTo(
   return client.sendTransaction(tx);
 }
 
-export async function createAccount(client: IClient, ad: AuthDescriptor) {
+export async function createAccount(
+  client: IClient,
+  descriptor: AuthDescriptor
+) {
+  const ad = authDescriptor.toGtv(descriptor);
   await client.signAndSendUniqueTransaction(
-    op("register_account_test", authDescriptor.toGtv(ad)),
+    op("register_account_test", [ad[1], ad[2], ad[3]]),
     adminUser().signatureProvider
   );
-  return ad.id;
+  return descriptor.id;
 }
 
 export function rellError(message: string) {

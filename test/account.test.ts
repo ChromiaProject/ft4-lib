@@ -298,7 +298,8 @@ describe("Test the account", () => {
     const { data } = await session.account.getAuthDescriptors(1);
     const auth_desc = createSingleSignatureAuthDescriptor(
       singleSigArgs([FlagsType.Account], keyStore.pubKey),
-      null
+      null,
+      data[0].created
     );
     expect(data[0]).toStrictEqual(auth_desc);
   });
@@ -366,9 +367,10 @@ describe("Test the account", () => {
   it("should be able to register account by directly calling 'register_account' operation", async () => {
     const user = testUser();
 
+    const adGtv = toGtv(user.authDescriptor);
     const tx = {
       operations: [
-        op("ft4.admin.register_account", toGtv(user.authDescriptor)),
+        op("ft4.admin.register_account", [adGtv[1], adGtv[2], adGtv[3]]),
       ],
       signers: user.authDescriptor.signers.concat(admin.authDescriptor.signers),
     };

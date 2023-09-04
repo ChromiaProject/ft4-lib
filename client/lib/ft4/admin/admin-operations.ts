@@ -7,7 +7,7 @@ import { Amount } from "../asset/interfaces";
 
 export function registerAccount(authDescriptor: AuthDescriptor): Operation {
   const ad = authDesc.toGtv(authDescriptor);
-  return op("ft4.admin.register_account", ad);
+  return op("ft4.admin.register_account", [ad[1], ad[2], ad[3]]);
 }
 
 export function addRateLimitPoints(
