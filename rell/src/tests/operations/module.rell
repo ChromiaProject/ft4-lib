@@ -31,3 +31,14 @@ operation register_asset(name, symbol: text, decimals: integer, issuing_brid: by
 operation register_account_test(acc.auth_descriptor) {
     acc.Unsafe.create_account_with_auth(auth_descriptor);
 }
+
+operation consume_point(account_id: byte_array) {
+    var state = require(
+        acc.rl_state @? { acc.account @ { .id == account_id } },
+        "Rate limiter state not found for the account with ID: %s".format(account_id)
+    );
+
+    require(state.points > 0, "Insufficient rate limiter points");
+
+	state.points -= 1;
+}
