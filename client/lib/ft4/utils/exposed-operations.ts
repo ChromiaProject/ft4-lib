@@ -8,9 +8,8 @@ export async function fetchExposedOperations(
 ): Promise<Set<string>> {
   const appStructureQuery = rellAppStructure();
 
-  const appStructure = await connection.query<RellAppStructure>(
-    appStructureQuery,
-  );
+  const appStructure =
+    await connection.query<RellAppStructure>(appStructureQuery);
 
   if (!appStructure || !appStructure.modules) {
     throw new FetchAppStructureError(

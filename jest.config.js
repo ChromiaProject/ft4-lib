@@ -18,6 +18,9 @@ module.exports = {
         "<rootDir>/jest.setup.js",
         "<rootDir>/test/setupMocks.ts"
     ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/test/__multichain__/"
+    ],
     /*
      * https://github.com/jestjs/jest/issues/11617
      * commenting out all lines when tests pass works.

@@ -1,6 +1,12 @@
 import acc: ^^.lib.ft4.accounts;
 import assets: ^^.lib.ft4.assets;
-import .auth;
+import auth: ^^.lib.ft4.auth;
+import test_auth: .auth;
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    flags = ["T"]
+);
 
 operation operation_without_auth_message_template(
     integer,
@@ -11,7 +17,7 @@ operation operation_without_auth_message_template(
     text,
     optional_text: text?
 ) {
-    acc._authenticate(set<text>());
+    auth.authenticate(is_strict = false);
 }
 
 operation add_ad_to_account(acc.account, acc.auth_descriptor) {
@@ -24,4 +30,15 @@ operation register_asset(name, symbol: text, decimals: integer, issuing_brid: by
 
 operation register_account_test(acc.auth_descriptor) {
     acc.Unsafe.create_account_with_auth(auth_descriptor);
+}
+
+operation consume_point(account_id: byte_array) {
+    var state = require(
+        acc.rl_state @? { acc.account @ { .id == account_id } },
+        "Rate limiter state not found for the account with ID: %s".format(account_id)
+    );
+
+    require(state.points > 0, "Insufficient rate limiter points");
+
+	state.points -= 1;
 }

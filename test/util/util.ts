@@ -80,7 +80,7 @@ export {
 
 export function createTestAuthDescriptor(
   flags: string[] = [],
-  rules?: AuthDescriptorRule
+  rules?: AuthDescriptorRule,
 ): {
   keyPair: KeyPair;
   authDescriptor: AuthDescriptor;
@@ -94,18 +94,18 @@ export function createTestAuthDescriptor(
 
 export function createTestMultisigAuthDescriptor(
   requiredSignatures: number,
-  flags: string[] = []
+  flags: string[] = [],
 ): {
   keyPairs: KeyPair[];
   authDescriptor: AuthDescriptor;
 } {
   const keyPairs = Array.from({ length: requiredSignatures }, () =>
-    encryption.makeKeyPair()
+    encryption.makeKeyPair(),
   );
   const descriptor = authDescriptor.create.multiSig.withArgs(
     flags,
     requiredSignatures,
-    keyPairs.map((kp) => kp.pubKey)
+    keyPairs.map((kp) => kp.pubKey),
   ).andNoRules;
 
   return { keyPairs, authDescriptor: descriptor };
@@ -121,21 +121,21 @@ export async function addAuthDescriptorTo(
   newUser: {
     signatureProvider: SignatureProvider;
     authDescriptor: AuthDescriptor;
-  }
+  },
 ) {
   const keyHandlerUser1 = createInMemoryFtKeyStore(
-    user.signatureProvider
+    user.signatureProvider,
   ).createKeyHandler(user.authDescriptor);
 
   const keyHandlerUser2 = createInMemoryFtKeyStore(
-    newUser.signatureProvider
+    newUser.signatureProvider,
   ).createKeyHandler(newUser.authDescriptor);
 
   const authDataService = createAuthDataService(createConnection(client));
   const authenticator = createAuthenticator(
     accountId,
     [keyHandlerUser1],
-    authDataService
+    authDataService,
   );
 
   const tx = await transactionBuilder(authenticator, client)
@@ -145,12 +145,16 @@ export async function addAuthDescriptorTo(
   return client.sendTransaction(tx);
 }
 
-export async function createAccount(client: IClient, ad: AuthDescriptor) {
+export async function createAccount(
+  client: IClient,
+  descriptor: AuthDescriptor,
+) {
+  const ad = authDescriptor.toGtv(descriptor);
   await client.signAndSendUniqueTransaction(
-    op("register_account_test", authDescriptor.toGtv(ad)),
-    adminUser().signatureProvider
+    op("register_account_test", [ad[1], ad[2], ad[3]]),
+    adminUser().signatureProvider,
   );
-  return ad.id;
+  return descriptor.id;
 }
 
 export function rellError(message: string) {

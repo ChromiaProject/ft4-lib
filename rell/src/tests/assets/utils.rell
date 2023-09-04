@@ -172,12 +172,12 @@ function _sign_many(op: rell.test.op, keys: list<rell.test.keypair>) {
 
 function add_auth_op(rell.test.tx, message: text) {
     return tx
-        .op(operations.auth.test_authenticated_operation(message));
+        .op(operations.test_auth.test_authenticated_operation());
 }
 
 function perform_large_transfer(rell.test.tx, amount: integer, to_address: text) {
     return tx
-        .op(operations.auth.test_perform_large_transfer(1000, to_address));
+        .op(operations.test_auth.test_perform_large_transfer(1000, to_address));
 }
 
 function mint_to_account(account_data, assets.asset, amount: big_integer) {
@@ -195,6 +195,7 @@ function create_auth_message(template: text, account_data) {
     return template
         .replace("{account_id}", account_data.account.id.to_hex())
         .replace("{auth_descriptor_id}", account_data.auth_descriptor_id.to_hex())
+        .replace("{brid}", chain_context.blockchain_rid.to_hex())
         .replace("{nonce}", nonce.to_text());
 }
 

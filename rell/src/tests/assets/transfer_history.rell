@@ -8,7 +8,7 @@ import ^^^.lib.ft4.ft4_basic_dev.*;
 import acc: ^^^.lib.ft4.accounts;
 import test_utils: ^.utils;
 import utils: ^^^.lib.ft4.utils;
-import ^^^.lib.ft4.auth;
+import auth_ext: ^^^.lib.ft4.auth.external;
 
 function test_history() {
     val alice = test_utils.register_alice();
@@ -18,7 +18,7 @@ function test_history() {
     test_utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -52,13 +52,13 @@ function test_history_pagination() {
     test_utils.mint(alice.account, asset, 6L); //adds one entry to the history
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 2L))
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 2L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -129,7 +129,7 @@ function test_history_filtering() {
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -150,7 +150,7 @@ function test_transfer_history_entry() {
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -164,6 +164,15 @@ function test_transfer_history_entry() {
             decimals = entry.asset.decimals,
             asset = entry.asset.name,
             asset_id = entry.asset.id,
+            asset_data = (
+                id = entry.asset.id,
+                name = entry.asset.name,
+                symbol = entry.asset.symbol,
+                decimals = entry.asset.decimals,
+                brid = entry.asset.issuing_brid,
+                icon_url = entry.asset.icon_url,
+                supply = entry.asset.total_supply
+            ),
             is_input = entry.is_input,
             timestamp = entry.transaction.block.timestamp,
             block_height = entry.transaction.block.block_height,
@@ -185,7 +194,7 @@ function test_transfer_history_operation_name() {
     test_utils.mint(alice.account, asset, 5L);
 
     rell.test.tx()
-        .op(auth.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();

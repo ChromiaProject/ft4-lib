@@ -11,35 +11,36 @@ export function burn(assetId: BufferId, amount: Amount): Operation {
 
 export function deleteAllAuthDescriptorsExclude(
   accountId: BufferId,
-  excludeAuthDescriptorId: BufferId
+  excludeAuthDescriptorId: BufferId,
 ): Operation {
   return op(
     "ft4.delete_all_auth_descriptors_exclude",
     formatter.ensureBuffer(accountId),
-    formatter.ensureBuffer(excludeAuthDescriptorId)
+    formatter.ensureBuffer(excludeAuthDescriptorId),
   );
 }
 
 export function transfer(
   receiverId: BufferId,
   assetId: BufferId,
-  amount: Amount
+  amount: Amount,
 ): Operation {
   return op(
     "ft4.transfer",
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),
-    amount.value
+    amount.value,
   );
 }
 
 export function addAuthDescriptor(authDescriptor: AuthDescriptor): Operation {
-  return op("ft4.add_auth_descriptor", authDesc.toGtv(authDescriptor));
+  const ad = authDesc.toGtv(authDescriptor);
+  return op("ft4.add_auth_descriptor", [ad[1], ad[2], ad[3]]);
 }
 
 export function deleteAuthDescriptor(authDescriptorId: BufferId): Operation {
   return op(
     "ft4.delete_auth_descriptor",
-    formatter.ensureBuffer(authDescriptorId)
+    formatter.ensureBuffer(authDescriptorId),
   );
 }

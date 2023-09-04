@@ -83,13 +83,13 @@ describe("Test the account", () => {
     const user = testUser();
     const ad = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
-      user.signatureProvider.pubKey
+      user.signatureProvider.pubKey,
     ).andNoRules;
 
     const account = await registerAccount(
       _connection.client,
       adminUser().signatureProvider,
-      ad
+      ad,
     );
 
     expect(account).not.toBeNull();
@@ -117,7 +117,7 @@ describe("Test the account", () => {
       createTestAuthDescriptor(["A"]);
 
     await expect(
-      account.addAuthDescriptor(authDescriptor2, keyPair2)
+      account.addAuthDescriptor(authDescriptor2, keyPair2),
     ).rejects.toThrow(AuthorizationError);
   });
 
@@ -139,7 +139,7 @@ describe("Test the account", () => {
       account.id,
       ad,
       [kp1, kp2, keyPair],
-      addAuthDescriptor(ad2)
+      addAuthDescriptor(ad2),
     );
 
     expect((await account.getAuthDescriptors()).data.length).toBe(3);
@@ -151,7 +151,7 @@ describe("Test the account", () => {
     const user3 = {
       authDescriptor: authDescriptor.create.singleSig.withArgs(
         [FlagsType.Transfer],
-        user1.signatureProvider.pubKey
+        user1.signatureProvider.pubKey,
       ).andNoRules,
       signatureProvider: user1.signatureProvider,
       keyManagers: user1.keyManagers,
@@ -160,7 +160,7 @@ describe("Test the account", () => {
     const ad = authDescriptor.create.multiSig.withArgs(
       [FlagsType.Account, FlagsType.Transfer],
       2,
-      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey]
+      [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
     ).andNoRules;
 
     await registerAccount(_connection.client, admin.signatureProvider, ad);
@@ -169,7 +169,7 @@ describe("Test the account", () => {
       _connection.client,
       ad.id,
       user1,
-      user3
+      user3,
     );
     await expect(promise).rejects.toBeInstanceOf(Error);
     const acc = await _connection.getAccountById(ad!.id);
@@ -184,7 +184,7 @@ describe("Test the account", () => {
       .build();
 
     const accounts = await _connection.getAccountsByParticipantId(
-      user.signatureProvider.pubKey
+      user.signatureProvider.pubKey,
     );
 
     expect(accounts.length).toEqual(1);
@@ -201,7 +201,7 @@ describe("Test the account", () => {
       .buildAsNonManager();
 
     const accounts = await _connection.getAccountsByParticipantId(
-      keyPair1.pubKey
+      keyPair1.pubKey,
     );
 
     expect(accounts.length).toEqual(2);
@@ -219,7 +219,7 @@ describe("Test the account", () => {
     const account = await AccountBuilder.account(_connection).build();
 
     const accounts = await _connection.getAccountsByAuthDescriptorId(
-      account.id
+      account.id,
     );
 
     expect(accounts.data.length).toEqual(1);
@@ -238,7 +238,7 @@ describe("Test the account", () => {
 
     expect(
       (await _connection.getAccountsByAuthDescriptorId(authDescriptor1.id)).data
-        .length
+        .length,
     ).toBe(2);
   });
 
@@ -260,7 +260,7 @@ describe("Test the account", () => {
       await _connection.getAccountsByAuthDescriptorId(
         authDescriptor1.id,
         2,
-        null
+        null,
       );
     expect(accounts1.length).toEqual(2);
     expect(nextCursor).not.toBeNull();
@@ -268,7 +268,7 @@ describe("Test the account", () => {
     const { data: accounts2 } = await _connection.getAccountsByAuthDescriptorId(
       authDescriptor1.id,
       2,
-      nextCursor
+      nextCursor,
     );
     expect(accounts2.length).toEqual(1);
   });
@@ -278,27 +278,28 @@ describe("Test the account", () => {
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
-      keyStore.pubKey
+      keyStore.pubKey,
     ).andNoRules;
 
     await createAccount(_connection.client, ad);
 
     const session = await createKeyStoreInteractor(
       _connection.client,
-      keyStore
+      keyStore,
     ).getSession(ad.id);
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const { data } = await session.account.getAuthDescriptors(1);
     const auth_desc = createSingleSignatureAuthDescriptor(
       singleSigArgs([FlagsType.Account], keyStore.pubKey),
-      null
+      null,
+      data[0].created,
     );
     expect(data[0]).toStrictEqual(auth_desc);
   });
@@ -308,20 +309,20 @@ describe("Test the account", () => {
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       ["A"],
-      keyStore.pubKey
+      keyStore.pubKey,
     ).andNoRules;
 
     await createAccount(_connection.client, ad);
 
     const session = await createKeyStoreInteractor(
       _connection.client,
-      keyStore
+      keyStore,
     ).getSession(ad.id);
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
@@ -329,7 +330,7 @@ describe("Test the account", () => {
     expect(data.length).toBe(1);
     const { data: data2 } = await session.account.getAuthDescriptors(
       1,
-      nextCursor
+      nextCursor,
     );
     expect(data2.length).toBe(1);
   });
@@ -344,7 +345,7 @@ describe("Test the account", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(authDescriptor.id, [keyHandler], authDataService)
+      createAuthenticator(authDescriptor.id, [keyHandler], authDataService),
     );
 
     const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
@@ -355,7 +356,7 @@ describe("Test the account", () => {
     const tx = await session
       .transactionBuilder()
       .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id)
+        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
       )
       .build();
     await _connection.client.sendTransaction(tx);
@@ -366,19 +367,20 @@ describe("Test the account", () => {
   it("should be able to register account by directly calling 'register_account' operation", async () => {
     const user = testUser();
 
+    const adGtv = toGtv(user.authDescriptor);
     const tx = {
       operations: [
-        op("ft4.admin.register_account", toGtv(user.authDescriptor)),
+        op("ft4.admin.register_account", [adGtv[1], adGtv[2], adGtv[3]]),
       ],
       signers: user.authDescriptor.signers.concat(admin.authDescriptor.signers),
     };
     let signed = await _connection.client.signTransaction(
       tx,
-      user.signatureProvider
+      user.signatureProvider,
     );
     signed = await _connection.client.signTransaction(
       signed,
-      admin.signatureProvider
+      admin.signatureProvider,
     );
     await _connection.client.sendTransaction(signed);
 
@@ -396,7 +398,7 @@ describe("Test the account", () => {
 
     //vv this isn't paginated? vv
     const ads = await acc.getAuthDescriptorsByParticipantId(
-      user.signatureProvider.pubKey
+      user.signatureProvider.pubKey,
     );
 
     expect((await acc.getAuthDescriptors()).data.length).toBe(2);
@@ -414,14 +416,14 @@ describe("Test the account", () => {
 
     const { getSession } = createKeyStoreInteractor(
       _connection.client,
-      createInMemoryFtKeyStore(keyPair1)
+      createInMemoryFtKeyStore(keyPair1),
     );
     const session = await getSession(account.id);
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const authDescriptor2 = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Transfer],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
 
     await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
@@ -429,7 +431,7 @@ describe("Test the account", () => {
     const keyPair3 = pcl.encryption.makeKeyPair();
     const authDescriptor3 = authDescriptor.create.singleSig.withArgs(
       [FlagsType.Transfer],
-      keyPair3.pubKey
+      keyPair3.pubKey,
     ).andNoRules;
 
     await session.account.addAuthDescriptor(authDescriptor3, keyPair3);
@@ -439,16 +441,16 @@ describe("Test the account", () => {
     const authenticator3 = createAuthenticator(
       account.id,
       [keyHandler3],
-      createAuthDataService(_connection)
+      createAuthDataService(_connection),
     );
 
     const authenticatedAccount3 = createAuthenticatedAccount(
       _connection,
-      authenticator3
+      authenticator3,
     );
 
     const promise = authenticatedAccount3.deleteAuthDescriptor(
-      authDescriptor2.id
+      authDescriptor2.id,
     );
 
     await expect(promise).rejects.toThrowError();
