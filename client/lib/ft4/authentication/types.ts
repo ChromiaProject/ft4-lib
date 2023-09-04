@@ -60,6 +60,7 @@ export interface AuthDataService {
     authDescriptorId: BufferId,
   ): Promise<number | null>;
   getLoginConfig(name: string | null): Promise<LoginConfig>;
+  getBrid(): Buffer;
 }
 
 export type LoginConfig = {

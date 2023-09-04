@@ -60,7 +60,7 @@ function test_correct_auth_message_is_used() {
         asset_id=asset.id,
         10L
     );
-    val expected_msg = "Please sign the message\nto transfer 1.0 test\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n0xabcd\n\nNonce: {nonce}".format(asset.id);
+    val expected_msg = "Please sign the message\nto transfer 1.0 test\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n0xabcd".format(asset.id);
     assert_equals(ft4.assets_ext.transfer_message(args.to_gtv()), expected_msg);
 }
 

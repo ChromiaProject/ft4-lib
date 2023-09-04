@@ -72,7 +72,7 @@ operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_d
 
 function test_perform_large_transfer_message(gtv) {
   val args = struct<test_perform_large_transfer>.from_gtv(gtv);
-  return "Do you want to send %s CHR to %s? Nonce: {nonce}".format(args.amount, args.to);
+  return "Do you want to send %s CHR to %s?".format(args.amount, args.to);
 }
 
 @extend(auth.auth_handler)

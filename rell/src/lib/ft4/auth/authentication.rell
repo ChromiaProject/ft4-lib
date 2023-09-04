@@ -30,10 +30,12 @@ function get_auth_flags(op_name: name, is_strict: boolean) = get_auth_handler(op
 function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boolean) {
     val formatter = get_auth_handler(op_name, is_strict).message_formatter;
 
-    return if (formatter??) formatter(op_args) else generate_auth_message_template(chain_context.blockchain_rid, gtx_operation(
+    val message = if (formatter??) formatter(op_args) else generate_operation_auth_message(chain_context.blockchain_rid, gtx_operation(
         name = op_name,
         args = list<gtv>.from_gtv(op_args)
     ));
+
+    return utils.make_auth_message(message);
 }
 
 function _validate_eth_signature(auth_op: gtx_operation, is_strict: boolean): acc.account {
@@ -59,6 +61,7 @@ function _validate_eth_signature(auth_op: gtx_operation, is_strict: boolean): ac
 
 function create_message_from_template(acc.eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
+    require(message_template.contains("{brid}"), "Message template has to include '{brid}'");
     var message = message_template;
     
     // TODO: check if this is still needed
@@ -69,7 +72,8 @@ function create_message_from_template(acc.eth_auth_args, message_template: text,
     return message
         .replace("{account_id}", eth_auth_args.account.id.to_hex())
         .replace("{auth_descriptor_id}", eth_auth_args.account_auth_descriptor.id.to_hex())
-        .replace("{nonce}", ctr.to_text().replace("\"", ""));
+        .replace("{nonce}", ctr.to_text().replace("\"", ""))
+        .replace("{brid}", chain_context.blockchain_rid.to_hex());
 }
 
 function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): acc.eth_auth_args {
