@@ -2,6 +2,7 @@ import ^^.assets;
 import ^^.accounts;
 import ^^.auth;
 import crosschain: ^;
+import ^^^.iccf;
 
 function init_transfer_message(gtv) {
     val params = struct<init_transfer>.from_gtv(gtv);
@@ -38,35 +39,45 @@ operation init_transfer(
         assets.asset @? { .id == asset_id }, 
         "Asset not found '%s'".format(asset_id)
     );
-    crosschain.Unsafe.transfer(
+    crosschain.Unsafe.update_balances_if_needed(
         account,
-        hops[0],
+        crosschain.ensure_blockchain_account(hops[0]),
         asset,
         amount
     );
 }
 
 operation apply_transfer(
-    init_tx_rid: byte_array,
-    init_tx: crosschain.transaction_proof,
-    prev_hop: crosschain.transaction_proof?,
+    init_args: struct<init_transfer>,
+    tx: gtx_transaction,
+    op_index: integer,
     hop_index: integer
 ) {
-    val tx_hash = init_tx.tx.hash();
-    require(
-        tx_hash == init_tx_rid, 
-        "Argument mismatch: init_tx (%s) and init_tx_rid (%s)".format(tx_hash, init_tx_rid)
-    );
-    crosschain.verify_transaction_proof( init_tx );
-    create crosschain.applied_transfers (init_tx_rid);
+    create crosschain.applied_transfers(tx.to_gtv().hash(), op_index);
 
-    require(
-        init_tx.tx.body.operations[0].name == "ft4.crosschain.init_transfer", 
-        "init_tx is not the start of a crosschain transaction"
-    );
-    val init_args = crosschain.init_transfer_args.from_gtv(
-        init_tx.tx.body.operations[0].args.to_full().to_gtv()
-    );
+    if (hop_index == 0){
+        require(
+            tx.body.operations[op_index].name == "ft4.crosschain.init_transfer", 
+            "The operation at number %s from tx is not init_transfer".format(op_index)
+        );
+        require(
+            init_args == struct<init_transfer>.from_gtv(
+                tx.body.operations[op_index].args.to_gtv()
+            ),
+            "Parameter init_args does not match init_transfer arguments"
+        );
+    } else {
+        require(
+            tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer", 
+            "The operation at number %s from tx is not apply_transfer, ".format(op_index)
+        );
+        require(
+            init_args == struct<init_transfer>.from_gtv(
+                tx.body.operations[op_index].args[0].to_gtv()
+            ),
+            "Parameter init_args does not match the one passed to the last apply_transfer"
+        );
+    }
 
     val my_brid = chain_context.blockchain_rid;
 
@@ -80,61 +91,39 @@ operation apply_transfer(
             .format(init_args.hops[hop_index])
     );
 
-    val from_brid: byte_array;
+    val from_brid = tx.body.blockchain_rid; 
 
     if (hop_index > 0) {
-        from_brid = init_args.hops[hop_index - 1];
-
         require(
-            prev_hop, 
-            "Argument mismatch: prev_hop is null, but hop_index > 0 (%d)".format(hop_index)
+            from_brid == init_args.hops[hop_index - 1],
+            "Argument mismatch: init_args.hops (%s) and tx blockchain_rid (%s) don't correspond"
+                .format(
+                    init_args.hops[hop_index - 1], from_brid
+                )
         );
-        crosschain.verify_transaction_proof(prev_hop);
-        require(
-            prev_hop.tx.body.brid == from_brid,
-            "Argument mismatch: prev_hop brid (%s) and init_args.hops (%s) don't correspond"
-                .format(prev_hop.tx.body.brid, from_brid)
-        );
-        require(
-            prev_hop.tx.body.operations[0].name == "ft4.crosschain.apply_transfer",
-            "prev_hop didn't start with ft4.crosschain.apply_transfer"
-        );
-
-        val prev_hop_init_tx_rid = byte_array.from_gtv(prev_hop.tx.body.operations[0].args[0]);
-        require(
-            prev_hop_init_tx_rid == init_tx_rid,
-            "Argument mismatch: prev_hop had a different init_tx_rid (%s). Should be '%s'"
-                .format(prev_hop_init_tx_rid, init_tx_rid)
-        );
-    } else {
-        from_brid = init_tx.tx.body.brid;
     }
 
-    val asset = require(
-        assets.asset @? { .id == init_args.asset_id },
-        "Asset not found '%s'".format(init_args.asset_id)
-    );
-    val origin_brid = require(
-        crosschain.asset_origin @? { asset } .origin_brid,
-        "Asset origin not found. Did you register the crosschain asset '%s'?".format(asset.id)
+    require(
+        iccf.check_iccf_proof(from_brid, tx.hash()),
+        "The previous hop has not been anchored yet."
     );
 
+    val asset = assets.Asset(init_args.asset_id);
+
+    val receiver: accounts.account;
     if (init_args.hops.size() > hop_index + 1) {
         // this hop is not last
         val next_hop = init_args.hops[hop_index + 1];
-        crosschain.Unsafe.transfer(
-            accounts.account @ { from_brid },
-            next_hop,
-            asset,
-            init_args.amount
-        );
+        receiver = crosschain.ensure_blockchain_account(next_hop);
     } else {
         // final hop -- send money to recipient account
-        assets.Unsafe.transfer(
-            accounts.account @ { from_brid },
-            accounts.account @ { init_args.receiver_id },
-            asset,
-            init_args.amount
-        );
+        receiver = accounts.account @ { init_args.receiver_id };
     }
+
+    crosschain.Unsafe.update_balances_if_needed(
+        crosschain.ensure_blockchain_account(from_brid),
+        receiver,
+        asset,
+        init_args.amount
+    );
 }

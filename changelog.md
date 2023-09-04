@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - createGenericEvmKeyStore: it receives an address and a sign function, to allow for custom implementations with any web3 library. Metamask is still supported through ethers for ease of setup.
 - fixed examples
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
+- `TransactionBuilder` now has a function `buildAndSend` which immediately submits the built transaction
+- Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
 
 ### Changed
 - Transfer history's asset properties are now of the Asset type
