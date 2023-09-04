@@ -51,10 +51,9 @@ export function createOrchestrator(
     });
   }
 
-  function applyTransfer(targetChainBrid: BufferId): Promise<void> {
+  function applyTransfer(targetChainBrid: Buffer): Promise<void> {
     return new Promise((resolve) => {
       const tb = transactionBuilder(authenticator, connection.client);
-      const normalizedTargetChainBrid = formatter.ensureBuffer(targetChainBrid);
 
       tb.add(
         applyTransferOp(
@@ -63,7 +62,7 @@ export function createOrchestrator(
           amount,
           normalizedPath,
           state.tx,
-          normalizedPath.indexOf(normalizedTargetChainBrid),
+          normalizedPath.indexOf(targetChainBrid),
         ),
         () => {
           resolve();
@@ -82,6 +81,9 @@ export function createOrchestrator(
 
   async function transfer() {
     try {
+      ftEventEmitter.emit("TransferInit");
+      await initTransfer();
+
       for (
         let pathIndex = state.current;
         pathIndex < normalizedPath.length;
@@ -89,12 +91,7 @@ export function createOrchestrator(
       ) {
         const brid = normalizedPath[pathIndex];
 
-        if (pathIndex === 0) {
-          ftEventEmitter.emit("TransferInit", brid);
-          await initTransfer();
-        } else {
-          await applyTransfer(brid);
-        }
+        await applyTransfer(brid);
 
         state.current++;
         ftEventEmitter.emit("TransferHop", brid);
@@ -109,11 +106,11 @@ export function createOrchestrator(
 
   /* Cross-Chain Transfer convenience event handlers */
 
-  function onTransferInit(listener: Listener<[BufferId]>) {
+  function onTransferInit(listener: Listener<[]>) {
     return ftEventEmitter.on("TransferInit", listener);
   }
 
-  function offTransferInit(listener: Listener<[BufferId]>) {
+  function offTransferInit(listener: Listener<[]>) {
     return ftEventEmitter.off("TransferInit", listener);
   }
 
