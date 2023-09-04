@@ -4,10 +4,10 @@ import { IClient, createClient } from "postchain-client";
 import { nop } from "/ft4/utils";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { createTestAuthDescriptor, emptyOp } from "/util/util";
-import { createChromiaClient } from "/util/blockchain-util";
 import { FlagsType, createInMemoryFtKeyStore } from "/ft4";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
 import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { fetchBlockchains } from "./util/blockchain";
 
 function getMocks() {
   const { authDescriptor, keyPair } = createTestAuthDescriptor([
@@ -19,9 +19,7 @@ function getMocks() {
     satisfiesAuthRequirements: jest.fn(),
     authorize: jest
       .fn()
-      .mockImplementation((accountId, operation) =>
-        Promise.resolve([operation]),
-      ),
+      .mockImplementation((_, operation) => Promise.resolve([operation])),
     sign: jest.fn(),
     getSigners: jest.fn(),
   };
@@ -41,12 +39,13 @@ describe("transaction builder", () => {
   let client: IClient;
 
   beforeEach(async () => {
-    const systemClient = await createChromiaClient();
-    const blockchains = await systemClient.query<
-      { include_inactive: boolean },
-      { name: string; rid: Buffer }[]
-    >("get_blockchains", { include_inactive: true });
-    const dAppChain = blockchains.find((bc) => bc.name === "multichain00");
+    const blockchains = await fetchBlockchains();
+    const dAppChain = blockchains["multichain00"];
+
+    if (!dAppChain) {
+      throw new Error("multichain00 not found");
+    }
+
     client = await createClient({
       nodeURLPool: "http://127.0.0.1:7740",
       blockchainRID: dAppChain.rid.toString("hex"),
@@ -56,6 +55,7 @@ describe("transaction builder", () => {
   it("calls registered handler when block is anchored", async () => {
     const { authenticatorMock } = getMocks();
     let callback = null;
+
     const promise = new Promise((resolve) => {
       transactionBuilder(authenticatorMock, client)
         .add(
@@ -65,8 +65,8 @@ describe("transaction builder", () => {
         .add(nop())
         .buildAndSend();
     });
-    await promise;
 
+    await promise;
     expect(callback).toHaveBeenCalledWith(emptyOp(), null);
   });
 });
