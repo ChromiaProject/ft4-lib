@@ -11,11 +11,11 @@ import { Amount, InvalidUrlError } from "../asset/interfaces";
 export function registerAccount(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
-  authDescriptor: AuthDescriptor
+  authDescriptor: AuthDescriptor,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.registerAccount(authDescriptor),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }
 
@@ -23,11 +23,11 @@ export function addRateLimitPoints(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
-  amount: number
+  amount: number,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.addRateLimitPoints(accountId, amount),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }
 
@@ -37,12 +37,12 @@ export function registerAsset(
   name: string,
   symbol: string,
   decimals: number,
-  iconUrl: string
+  iconUrl: string,
 ): Promise<TransactionReceipt> {
   assertValidUrl(iconUrl);
   return chromiaClient.signAndSendUniqueTransaction(
     ops.registerAsset(name, symbol, decimals, iconUrl),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }
 
@@ -63,8 +63,8 @@ function assertValidUrl(url: string) {
   if (!validProtocols.includes(parsedUrl.protocol)) {
     throw new InvalidUrlError(
       `'${url}' does not use a valid protocol, valid protocols are: [${validProtocols.join(
-        ", "
-      )}]`
+        ", ",
+      )}]`,
     );
   }
 
@@ -74,7 +74,7 @@ function assertValidUrl(url: string) {
     parsedUrl.hostname !== "127.0.0.1"
   ) {
     throw new InvalidUrlError(
-      "Insecure protocol (http) is only allowed on localhost or 127.0.0.1"
+      "Insecure protocol (http) is only allowed on localhost or 127.0.0.1",
     );
   }
 }
@@ -84,10 +84,10 @@ export function mint(
   adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
   assetId: BufferId,
-  amount: Amount
+  amount: Amount,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.mint(accountId, assetId, amount),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }

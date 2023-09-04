@@ -62,8 +62,8 @@ describe("Rate Limit", () => {
           _connection.client,
           4 + POINTS_AT_ACCOUNT_CREATION,
           user,
-          account.id
-        )
+          account.id,
+        ),
       ).resolves.toMatchObject({ status: "confirmed" });
       const foundAccount = await _connection.getAccountById(account.id);
       const rateLimit = await foundAccount!.getRateLimit();
@@ -82,7 +82,7 @@ describe("Rate Limit", () => {
         _connection.client,
         4 + POINTS_AT_ACCOUNT_CREATION,
         user,
-        account.id
+        account.id,
       );
 
       const tx = {
@@ -96,8 +96,8 @@ describe("Rate Limit", () => {
       await expect(
         _connection.client.signAndSendUniqueTransaction(
           tx,
-          user.signatureProvider
-        )
+          user.signatureProvider,
+        ),
       ).rejects.toBeInstanceOf(Error);
     });
   });
@@ -106,13 +106,13 @@ describe("Rate Limit", () => {
     client: IClient,
     requests: number,
     user: User,
-    accountId: BufferId
+    accountId: BufferId,
   ): Promise<any> => {
     const tx: Transaction = {
       operations: Array(requests).fill(
         op("consume_point", accountId),
         0,
-        requests
+        requests,
       ),
       signers: [user.signatureProvider.pubKey],
     };

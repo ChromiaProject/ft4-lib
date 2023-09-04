@@ -18,7 +18,7 @@ async function registerAssetWithCustomBrid(
   client: IClient,
   assetName: string,
   decimals = 0,
-  blockchainRID: Buffer = randomBytes(32)
+  blockchainRID: Buffer = randomBytes(32),
 ) {
   const txn = {
     operations: [
@@ -28,7 +28,7 @@ async function registerAssetWithCustomBrid(
         generateAssetSymbol(),
         decimals,
         blockchainRID,
-        ""
+        "",
       ),
     ],
     signers: [adminKeyPair.pubKey],
@@ -72,7 +72,7 @@ describe("Asset", () => {
     const { data: expectedAssets2 } = await connection.getAssetsByName(
       assetName,
       2,
-      nextCursor
+      nextCursor,
     );
     expect(expectedAssets2.length).toEqual(1);
     expect(expectedAssets2[0].name).toEqual(assetName);
@@ -120,7 +120,7 @@ describe("Asset", () => {
     const expectedAssets = await connection.getAllAssets();
 
     expect(expectedAssets.data).toEqual(
-      expect.arrayContaining([asset1, asset2, asset3])
+      expect.arrayContaining([asset1, asset2, asset3]),
     );
   });
 
@@ -145,7 +145,7 @@ describe("Asset", () => {
       "Test Asset 1",
       "TST1",
       0,
-      validUrl
+      validUrl,
     );
     expect(asset).not.toBeNull();
     expect(asset.iconUrl).toBe(validUrl);
@@ -160,7 +160,7 @@ describe("Asset", () => {
         "Test Asset 2",
         "TST2",
         0,
-        "not-a-valid-url"
+        "not-a-valid-url",
       );
 
     await expect(wrapper()).rejects.toThrow(InvalidUrlError);
