@@ -14,7 +14,7 @@ jest.setTimeout(2000000);
 let _connection: Connection;
 
 const REQUEST_MAX_COUNT = 10;
-const RECOVERY_TIME = 5000;
+const RECOVERY_TIME = 50000;
 const POINTS_AT_ACCOUNT_CREATION = 2;
 
 describe("Rate Limit", () => {

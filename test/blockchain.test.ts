@@ -18,7 +18,7 @@ describe("Blockchain", () => {
       rateLimit: {
         active: 1,
         maxPoints: 10,
-        recoveryTime: 5000,
+        recoveryTime: 50000,
         pointsAtAccountCreation: 2,
       },
     });
