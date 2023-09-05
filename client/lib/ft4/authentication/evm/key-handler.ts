@@ -6,6 +6,11 @@ import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
+export const nonces = {};
+
+const getNonceId = (v1: BufferId, v2: BufferId) =>
+  v1.toString("hex") + v2.toString("hex");
+
 export function createEvmKeyHandler(
   authDescriptor: AuthDescriptor,
   keyStore: EvmKeyStore,
@@ -41,8 +46,8 @@ async function authorize(
 ): Promise<Operation[]> {
   const messageTemplate =
     await authDataService.getAuthMessageTemplate(operation);
-  const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-  const brid = await authDataService.getBrid();
+  const nonce = await getNonce(authDataService, accountId, authDescriptorId);
+  const brid = authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
@@ -64,3 +69,20 @@ async function sign(
   // return transaction.sign(keyStore);
 }
 /* eslint-enable */
+
+async function getNonce(
+  authDataService: AuthDataService,
+  accountId: BufferId,
+  authDescriptorId: BufferId,
+) {
+  const nonce = await authDataService.getNonce(accountId, authDescriptorId);
+  const cahcedNonce = nonces[getNonceId(accountId, authDescriptorId)];
+
+  if (!cahcedNonce || nonce > cahcedNonce) {
+    nonces[getNonceId(accountId, authDescriptorId)] = nonce;
+  } else {
+    nonces[getNonceId(accountId, authDescriptorId)] += 1;
+  }
+
+  return nonces[getNonceId(accountId, authDescriptorId)];
+}
