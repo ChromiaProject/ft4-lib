@@ -18,7 +18,7 @@ export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
   blockchainRID: BufferId,
-) {
+): Promise<Buffer[]> {
   const rootNode = asset.brid;
 
   let foundPath = false;

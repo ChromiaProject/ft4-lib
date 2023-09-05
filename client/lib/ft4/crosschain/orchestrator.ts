@@ -1,14 +1,14 @@
 import { formatter } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
-import { transactionBuilder } from "../utils/transaction-builder";
-import { createConnectionToBrid } from "./pathfinder";
-import { Listener, ftEventEmitter } from "../events";
+import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
+import { Listener, EventEmitter } from "../events";
 import { OrchestratorError } from "./errors";
 import {
   initTransfer as initTransferOp,
   applyTransfer as applyTransferOp,
 } from "./operations";
+import { Session } from "../types";
 
 type State = {
   current: number;
@@ -16,24 +16,28 @@ type State = {
   tx?: any;
 };
 
-export function createOrchestrator(
+export async function createOrchestrator(
+  targetChainId: BufferId,
   recipientId: BufferId,
   amount: Amount,
   assetId: BufferId,
-  path: BufferId[],
-  authenticator: any,
-  connection: any,
+  session: Session,
 ) {
+  const asset = await session.getAssetById(assetId);
+  const path = await findPathToChainForAsset(session, asset, targetChainId);
   const normalizedPath = path.map(formatter.ensureBuffer);
+
+  // Create a local event emitter instance for this orchestrator.
+  const localEmitter = new EventEmitter();
 
   const state: State = {
     current: 0,
     path: normalizedPath,
   };
 
-  async function initTransfer(): Promise<void> {
+  function initTransfer(): Promise<void> {
     return new Promise((resolve) => {
-      const tb = transactionBuilder(authenticator, connection.client);
+      const tb = session.transactionBuilder();
 
       const tx = tb
         .add(
@@ -43,17 +47,16 @@ export function createOrchestrator(
             resolve();
           },
         )
-        .build()
+        .buildAndSend()
         .then((tx) => {
           state.tx = tx;
-          connection.client.sendTransaction(tx);
         });
     });
   }
 
   function applyTransfer(targetChainBrid: Buffer): Promise<void> {
     return new Promise((resolve) => {
-      const tb = transactionBuilder(authenticator, connection.client);
+      const tb = session.transactionBuilder();
 
       tb.add(
         applyTransferOp(
@@ -68,20 +71,17 @@ export function createOrchestrator(
           resolve();
         },
       )
-        .build()
+        .buildAndSend()
         .then((tx) => {
           state.tx = tx;
-          return createConnectionToBrid(connection.client, targetChainBrid);
-        })
-        .then((connection) => {
-          connection.client.sendTransaction(state.tx);
+          return createConnectionToBrid(session.client, targetChainBrid);
         });
     });
   }
 
   async function transfer() {
     try {
-      ftEventEmitter.emit("TransferInit");
+      localEmitter.emit("TransferInit");
       await initTransfer();
 
       for (
@@ -94,52 +94,53 @@ export function createOrchestrator(
         await applyTransfer(brid);
 
         state.current++;
-        ftEventEmitter.emit("TransferHop", brid);
+        localEmitter.emit("TransferHop", brid);
       }
 
-      ftEventEmitter.emit("TransferEnd");
+      localEmitter.emit("TransferEnd");
     } catch (error) {
       const orchError = new OrchestratorError(error.message, "generalError");
-      ftEventEmitter.emit("TransferError", orchError);
+      localEmitter.emit("TransferError", orchError);
     }
   }
 
   /* Cross-Chain Transfer convenience event handlers */
 
   function onTransferInit(listener: Listener<[]>) {
-    return ftEventEmitter.on("TransferInit", listener);
+    return localEmitter.on("TransferInit", listener);
   }
 
   function offTransferInit(listener: Listener<[]>) {
-    return ftEventEmitter.off("TransferInit", listener);
+    return localEmitter.off("TransferInit", listener);
   }
 
   function onTransferHop(listener: Listener<[BufferId]>) {
-    return ftEventEmitter.on("TransferHop", listener);
+    return localEmitter.on("TransferHop", listener);
   }
 
   function offTransferHop(listener: Listener<[BufferId]>) {
-    return ftEventEmitter.off("TransferHop", listener);
+    return localEmitter.off("TransferHop", listener);
   }
 
   function onTransferEnd(listener: Listener<[]>) {
-    return ftEventEmitter.on("TransferEnd", listener);
+    return localEmitter.on("TransferEnd", listener);
   }
 
   function offTransferEnd(listener: Listener<[]>) {
-    return ftEventEmitter.off("TransferEnd", listener);
+    return localEmitter.off("TransferEnd", listener);
   }
 
   function onTransferError(listener: Listener<[OrchestratorError]>) {
-    return ftEventEmitter.on("TransferError", listener);
+    return localEmitter.on("TransferError", listener);
   }
 
   function offTransferError(listener: Listener<[OrchestratorError]>) {
-    return ftEventEmitter.off("TransferError", listener);
+    return localEmitter.off("TransferError", listener);
   }
 
   return {
     transfer,
+    eventEmitter: localEmitter,
     onTransferInit,
     offTransferInit,
     onTransferHop,
