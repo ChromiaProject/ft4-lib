@@ -16,6 +16,38 @@ type State = {
   tx?: any;
 };
 
+/**
+ * Creates an orchestrator instance for managing cross-chain transfers.
+ *
+ * @async
+ * @param {BufferId} targetChainId - ID of the target blockchain.
+ * @param {BufferId} recipientId - ID of the recipient.
+ * @param {Amount} amount - The amount to be transferred.
+ * @param {BufferId} assetId - ID of the asset to be transferred.
+ * @param {Session} session - The current user session.
+ * @returns {{
+ *   transfer: Function,
+ *   eventEmitter: EventEmitter,
+ *   onTransferInit: Function,
+ *   offTransferInit: Function,
+ *   onTransferHop: Function,
+ *   offTransferHop: Function,
+ *   onTransferEnd: Function,
+ *   offTransferEnd: Function,
+ *   onTransferError: Function,
+ *   offTransferError: Function
+ * }} The orchestrator instance.
+ * @property {Function} transfer - Initiates the transfer process.
+ * @property {EventEmitter} eventEmitter - Local EventEmitter instance for this orchestrator.
+ * @property {Function} onTransferInit - Subscribes to the 'TransferInit' event.
+ * @property {Function} offTransferInit - Unsubscribes from the 'TransferInit' event.
+ * @property {Function} onTransferHop - Subscribes to the 'TransferHop' event.
+ * @property {Function} offTransferHop - Unsubscribes from the 'TransferHop' event.
+ * @property {Function} onTransferEnd - Subscribes to the 'TransferEnd' event.
+ * @property {Function} offTransferEnd - Unsubscribes from the 'TransferEnd' event.
+ * @property {Function} onTransferError - Subscribes to the 'TransferError' event.
+ * @property {Function} offTransferError - Unsubscribes from the 'TransferError' event.
+ */
 export async function createOrchestrator(
   targetChainId: BufferId,
   recipientId: BufferId,
@@ -35,6 +67,10 @@ export async function createOrchestrator(
     path: normalizedPath,
   };
 
+  /**
+   * Initialize the transfer by creating the initial transaction.
+   * @returns {Promise<void>}
+   */
   function initTransfer(): Promise<void> {
     return new Promise((resolve) => {
       const tb = session.transactionBuilder();
@@ -54,6 +90,11 @@ export async function createOrchestrator(
     });
   }
 
+  /**
+   * Apply the transfer operation targeting a specific bridge.
+   * @param {Buffer} targetChainBrid - The ID of the target bridge.
+   * @returns {Promise<void>}
+   */
   function applyTransfer(targetChainBrid: Buffer): Promise<void> {
     return new Promise((resolve) => {
       const tb = session.transactionBuilder();
@@ -79,7 +120,12 @@ export async function createOrchestrator(
     });
   }
 
-  async function transfer() {
+  /**
+   * Execute the transfer operation across all steps.
+   * @async
+   * @returns {Promise<void>}
+   */
+  async function transfer(): Promise<void> {
     try {
       localEmitter.emit("TransferInit");
       await initTransfer();
