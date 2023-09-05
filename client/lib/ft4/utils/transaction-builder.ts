@@ -34,7 +34,7 @@ export type TransactionBuilder = {
    */
   addWithAuthenticator: (
     operation: Operation,
-    authenticator: Authenticator
+    authenticator: Authenticator,
   ) => TransactionBuilder;
   /**
    * Add key handlers that will also be included as signers to this operation.
@@ -71,7 +71,7 @@ export type TransactionBuilder = {
    * Builds a transaction and signs it with the keyhandlers provided.
    * When using this function, the builder will completely ignore any
    * other keyhandlers previously provided.
-   * @param keyHandlers the keyhandler to user
+   * @param keyHandlers the keyhandler to user.
    * @returns a signed transaction
    */
   buildWithSigners: (
@@ -88,7 +88,7 @@ export type TransactionBuilder = {
  */
 export function transactionBuilder(
   authenticator: Authenticator,
-  client: IClient
+  client: IClient,
 ): TransactionBuilder {
   function add(operation: Operation): TransactionBuilder {
     this._operations.push([operation, authenticator]);
@@ -104,7 +104,7 @@ export function transactionBuilder(
 
   async function buildUnsigned() {
     const [operations, keyHandlers] = await authenticateOperations(
-      this._operations
+      this._operations,
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
@@ -123,7 +123,7 @@ export function transactionBuilder(
   }
 
   async function authenticateOperations(
-    operations: OpAuthPair[]
+    operations: OpAuthPair[],
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
     const processedOperations: Operation[][] = [];
@@ -133,11 +133,11 @@ export function transactionBuilder(
 
       if (
         !(await authenticator.authDataService.isOperationExposed(
-          operation.name
+          operation.name,
         ))
       ) {
         throw new OperationNotExistError(
-          `Operation ${operation.name} does not exist`
+          `Operation ${operation.name} does not exist`,
         );
       }
 
@@ -146,20 +146,19 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          `No keyhandler registered to handle operation <${operation.name}>`
+          `No keyhandler registered to handle operation <${operation.name}>`,
         );
       }
       keyHandlers.push(keyHandler);
       const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        authenticator.authDataService
+        authenticator.authDataService,
       );
       processedOperations.push(ops);
     }
@@ -175,7 +174,7 @@ export function transactionBuilder(
   async function build() {
     const tx = await this.buildUnsigned();
     await Promise.all(
-      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx))
+      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
     );
     return gtx.serialize(tx);
   }
@@ -196,7 +195,7 @@ export function transactionBuilder(
 
   function addWithAuthenticator(
     operation: Operation,
-    authenticator: Authenticator
+    authenticator: Authenticator,
   ): TransactionBuilder {
     this._operations.push([operation, authenticator]);
     return this;
