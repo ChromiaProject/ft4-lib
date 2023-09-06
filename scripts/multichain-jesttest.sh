@@ -120,10 +120,12 @@ fi
 log "Building Directory Chain..."
 chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
 
-debug  "Copy ft library dependency to source folder"
 rm -rf "$DEPENDENCIES_PATH/multichain"
 mkdir -p "$DEPENDENCIES_PATH/multichain/"
-cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/lib/"
+
+debug "Copying FT library dependency to source folder"
+cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/"
+cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
 
 log "Building Multichain dApp Chains..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
@@ -134,9 +136,9 @@ do
 
     # Write the YML content to the file
     cp configs/jest-test.yml $yml_filename
-    sed -i 's/module:.*/module: '${module_name}'/' $yml_filename
-    sed -i 's/source:.*/source: .\/multichain/' $yml_filename
-    sed -i 's/target:.*/target: ..\/out/' $yml_filename
+    sed -i '' 's/module:.*/module: '${module_name}'/' $yml_filename
+    sed -i '' 's/source:.*/source: .\/multichain/' $yml_filename
+    sed -i '' 's/target:.*/target: ..\/out/' $yml_filename
 
     # Create the corresponding RELL file with unique content
     rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
@@ -145,7 +147,7 @@ do
 
     echo "module;" > $rell_filepath
     echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
-    echo "operation empty_op() {}" >> $rell_filepath
+    echo "import tests.operations.*;" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
     debug "Generated $yml_filename and $rell_filepath"
@@ -240,6 +242,7 @@ else
     FILE_OPTION=""
 fi
 
+sleep 30000
 npx jest \
     --config=jest.config.multichain.js \
     --maxWorkers=1 \
