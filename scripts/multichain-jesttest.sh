@@ -122,8 +122,8 @@ chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
 
 debug  "Copy ft library dependency to source folder"
 rm -rf "$DEPENDENCIES_PATH/multichain"
-mkdir -p "$DEPENDENCIES_PATH/multichain/lib"
-cp -R "rell/src/lib/ft4" "$DEPENDENCIES_PATH/multichain/lib/"
+mkdir -p "$DEPENDENCIES_PATH/multichain/"
+cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/lib/"
 
 log "Building Multichain dApp Chains..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
@@ -133,25 +133,13 @@ do
     module_name="app_module$chain_num"
 
     # Write the YML content to the file
-    cat <<- EOM > $yml_filename
-blockchains:
-    ft4_multichain_test_$chain_num:
-        module: $module_name
-        moduleArgs:
-            lib.ft4.accounts:
-                rate_limit_active: 1
-                rate_limit_max_points: 10
-                rate_limit_recovery_time: 5000
-                rate_limit_points_at_account_creation: 1
-            lib.ft4.admin:
-                admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
-compile:
-    source: ./multichain
-    target: ../out
-EOM
+    cp configs/jest-test.yml $yml_filename
+    sed -i 's/module:.*/module: '${module_name}'/' $yml_filename
+    sed -i 's/source:.*/source: .\/multichain/' $yml_filename
+    sed -i 's/target:.*/target: ..\/out/' $yml_filename
 
     # Create the corresponding RELL file with unique content
-    rell_filepath="$DEPENDENCIES_PATH/multichain/app_module$chain_num.rell"
+    rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
 
     mkdir -p $(dirname $rell_filepath)
 
