@@ -1,4 +1,4 @@
-import { formatter } from "postchain-client";
+import { SignedTransaction, formatter } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
@@ -9,11 +9,13 @@ import {
   applyTransfer as applyTransferOp,
 } from "./operations";
 import { Session } from "../types";
+import { transactionBuilder } from "../utils/transaction-builder";
+import { createAuthenticator } from "../authentication";
 
 type State = {
   current: number;
   path: BufferId[];
-  tx?: any;
+  tx?: SignedTransaction;
 };
 
 /**
@@ -75,16 +77,13 @@ export async function createOrchestrator(
     return new Promise((resolve) => {
       const tb = session.transactionBuilder();
 
-      const tx = tb
+      tb
         .add(
           initTransferOp(recipientId, assetId, amount, normalizedPath),
-          () => {
-            state.tx = tx;
-            resolve();
-          },
+          () => resolve(),
         )
         .buildAndSend()
-        .then((tx) => {
+        .then(({ tx }) => {
           state.tx = tx;
         });
     });
@@ -96,8 +95,14 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   function applyTransfer(targetChainBrid: Buffer): Promise<void> {
-    return new Promise((resolve) => {
-      const tb = session.transactionBuilder();
+    return new Promise(async (resolve) => {
+
+  // accountId: BufferId,
+  // keyHandlers: KeyHandler[],
+  // authDataService: AuthDataService
+
+      const connection = await createConnectionToBrid(session.client, targetChainBrid);
+      const tb = transactionBuilder(createAuthenticator(), connection.client);
 
       tb.add(
         applyTransferOp(

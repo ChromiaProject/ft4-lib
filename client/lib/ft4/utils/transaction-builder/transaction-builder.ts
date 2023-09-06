@@ -8,6 +8,8 @@ import {
   getAnchoringClient,
   createClient,
   BlockAnchoringException,
+  SignedTransaction,
+  TransactionReceipt,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -157,9 +159,9 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
-  async function buildAndSend() {
+  async function buildAndSend(): Promise<{ tx: SignedTransaction, receipt: TransactionReceipt }> {
     const tx = await (this as TransactionBuilder).build();
-    const reciept = await client.sendTransaction(tx);
+    const receipt = await client.sendTransaction(tx);
     const operationsWithHandlers = this._operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
@@ -167,12 +169,12 @@ export function transactionBuilder(
     if (operationsWithHandlers.length) {
       new Promise((resolve) =>
         resolve(
-          waitUntilAnchored(operationsWithHandlers, reciept.transactionRID),
+          waitUntilAnchored(operationsWithHandlers, receipt.transactionRID),
         ),
       );
     }
 
-    return reciept;
+    return { tx, receipt };
   }
 
   async function waitUntilAnchored(
