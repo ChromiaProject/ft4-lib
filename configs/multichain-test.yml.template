@@ -1,5 +1,5 @@
 blockchains:
-  ft4_multichain_test:
+  ft4_multichain_test_{chain_number}:
     module: {module_name} #will be updated to hold the correct module name
     moduleArgs:
       lib.ft4.accounts:

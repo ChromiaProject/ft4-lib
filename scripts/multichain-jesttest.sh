@@ -133,8 +133,8 @@ do
     module_name="app_module$chain_num"
 
     # Write the YML content to the file
-    cp configs/multichain-test.yml $yml_filename
-    sed -i.bak 's/module:.*/module: '${module_name}'/' $yml_filename
+    sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
+        configs/multichain-test.yml.template > ${yml_filename}
 
     # Create the corresponding RELL file with unique content
     rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
@@ -213,7 +213,7 @@ log "Network verified successfully."
 
 debug "Adding container for the multichain test blockchains"
 pmc container add \
-    --name ft4multichaintest \
+    --name ft4_multichain_test \
     --cluster system \
     --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
     -cfg $PMC_CONFIG
@@ -225,7 +225,7 @@ do
         pmc blockchain add \
             --quiet \
             --name multichain$chain_num \
-            --container ft4multichaintest \
+            --container ft4_multichain_test \
             --blockchain-config rell/out/ft4_multichain_test_$chain_num.xml \
             -cfg $PMC_CONFIG
     )
