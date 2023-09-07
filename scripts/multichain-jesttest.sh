@@ -134,9 +134,9 @@ do
 
     # Write the YML content to the file
     cp configs/jest-test.yml $yml_filename
-    sed -i 's/module:.*/module: '${module_name}'/' $yml_filename
-    sed -i 's/source:.*/source: .\/multichain/' $yml_filename
-    sed -i 's/target:.*/target: ..\/out/' $yml_filename
+    sed -i.bak 's/module:.*/module: '${module_name}'/' $yml_filename
+    sed -i.bak 's/source:.*/source: .\/multichain/' $yml_filename
+    sed -i.bak 's/target:.*/target: ..\/out/' $yml_filename
 
     # Create the corresponding RELL file with unique content
     rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
