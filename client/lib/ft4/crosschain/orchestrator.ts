@@ -1,4 +1,4 @@
-import { SignedTransaction, formatter } from "postchain-client";
+import { SignedTransaction, formatter, gtv } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
@@ -95,14 +95,15 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   function applyTransfer(targetChainBrid: Buffer): Promise<void> {
-    return new Promise(async (resolve) => {
+    return new Promise(resolve => {
 
   // accountId: BufferId,
   // keyHandlers: KeyHandler[],
   // authDataService: AuthDataService
 
-      const connection = await createConnectionToBrid(session.client, targetChainBrid);
-      const tb = transactionBuilder(createAuthenticator(), connection.client);
+      // const connection = await createConnectionToBrid(session.client, targetChainBrid);
+      // const tb = transactionBuilder(createAuthenticator(), connection.client);
+      const tb = session.transactionBuilder();
 
       tb.add(
         applyTransferOp(
@@ -117,11 +118,7 @@ export async function createOrchestrator(
           resolve();
         },
       )
-        .buildAndSend()
-        .then((tx) => {
-          state.tx = tx;
-          return createConnectionToBrid(session.client, targetChainBrid);
-        });
+        .buildAndSend();
     });
   }
 

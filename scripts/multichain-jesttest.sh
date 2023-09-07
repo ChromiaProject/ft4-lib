@@ -147,7 +147,8 @@ do
 
     echo "module;" > $rell_filepath
     echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
-    echo "import tests.operations.*;" >> $rell_filepath
+    # echo "import tests.operations.*;" >> $rell_filepath
+    echo "operation empty_op() {}" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
     debug "Generated $yml_filename and $rell_filepath"
@@ -242,7 +243,6 @@ else
     FILE_OPTION=""
 fi
 
-sleep 30000
 npx jest \
     --config=jest.config.multichain.js \
     --maxWorkers=1 \

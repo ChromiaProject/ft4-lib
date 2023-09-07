@@ -1,4 +1,4 @@
-import { Operation, formatter } from "postchain-client";
+import { Operation, SignedTransaction, formatter, gtv } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { BufferId } from "/cryptoUtils";
 import { op } from "../utils";
@@ -23,7 +23,7 @@ export function applyTransfer(
   assetId: BufferId,
   amount: Amount,
   path: BufferId[],
-  stateTx: any,
+  tx: SignedTransaction,
   targetChainIndex: number,
 ): Operation {
   return op(
@@ -34,7 +34,8 @@ export function applyTransfer(
       amount.encodeGtv(),
       path.map((item) => formatter.ensureBuffer(item)),
     ],
-    stateTx,
+    gtv.decode(tx),
+    tx,
     0,
     targetChainIndex,
   );
