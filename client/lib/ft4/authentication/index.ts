@@ -5,9 +5,11 @@ import {
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
+  KeyStore,
 } from "./types";
 import { TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
+import { AuthDescriptor } from "../accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -16,7 +18,7 @@ export * from "./types";
 export function createAuthenticator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
-  authDataService: AuthDataService
+  authDataService: AuthDataService,
 ): Authenticator {
   const authenticator = Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
@@ -24,8 +26,6 @@ export function createAuthenticator(
     keyHandlers,
     createSession: () =>
       createAuthenticatorSession(authenticator, authDataService),
-    getAuthFlags: (operation: Operation) =>
-      getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
@@ -35,9 +35,62 @@ export function createAuthenticator(
   return authenticator;
 }
 
+export function nopAuthenticator(
+  authDataService: AuthDataService,
+): Authenticator {
+  const authenticator = Object.freeze({
+    accountId: Buffer.alloc(32),
+    keyHandlers: [nopKeyHandler],
+    authDataService,
+    createSession: () =>
+      createAuthenticatorSession(authenticator, authDataService),
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getKeyHandlerForOperation: (operation: Operation) =>
+      Promise.resolve(nopKeyHandler),
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getNonce: (authDescriptorId: BufferId) => Promise.resolve(null),
+  });
+
+  return authenticator;
+}
+
+const nullKeyStore: KeyStore = Object.freeze({
+  id: Buffer.alloc(32),
+  isInteractive: false,
+  //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  createKeyHandler: (authDescriptor: AuthDescriptor) => nopKeyHandler,
+});
+
+const nullAuthDescriptor: AuthDescriptor = Object.freeze({
+  id: Buffer.alloc(0),
+  authType: "S",
+  flags: new Set<string>(),
+  signaturesRequired: 0,
+  signers: [],
+  rule: null,
+});
+
+const nopKeyHandler: KeyHandler = Object.freeze({
+  authDescriptor: nullAuthDescriptor,
+  keyStore: nullKeyStore,
+  //eslint-disable-next-line @typescript-eslint/no-unused-vars
+  satisfiesAuthRequirements: (flags: string[]) => true,
+  authorize: (
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    accountId: BufferId,
+    operation: Operation,
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    nonce: number,
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
+    authDataService: AuthDataService,
+  ) => Promise.resolve([operation]),
+  sign: () => Promise.resolve(),
+  getSigners: (): Buffer[] => [],
+});
+
 async function getAuthFlags(
   authDataService: AuthDataService,
-  operation: Operation
+  operation: Operation,
 ): Promise<string[]> {
   return await authDataService.getAuthFlags(operation);
 }
@@ -45,16 +98,16 @@ async function getAuthFlags(
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
-  operation: Operation
+  operation: Operation,
 ): Promise<KeyHandler | null> {
   const flags = await getAuthFlags(authDataService, operation);
 
   const handlers = keyHandlers.filter((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(flags)
+    keyHandler.satisfiesAuthRequirements(flags),
   );
 
   const nonInteractiveHandlers = handlers.filter(
-    (keyHandler) => !keyHandler.keyStore.isInteractive
+    (keyHandler) => !keyHandler.keyStore.isInteractive,
   );
 
   if (nonInteractiveHandlers.length !== 0) {
@@ -70,7 +123,7 @@ async function getKeyHandlerForOperation(
 
 function createAuthenticatorSession(
   authenticator: Authenticator,
-  authDataService: AuthDataService
+  authDataService: AuthDataService,
 ): AuthenticatorSession {
   const usedKeyHandlers = new Set<KeyHandler>();
 
@@ -84,14 +137,13 @@ function createAuthenticatorSession(
           (signers = new Set([
             ...keyHandler.authDescriptor.signers,
             ...signers,
-          ]))
+          ])),
       );
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }
@@ -100,14 +152,14 @@ function createAuthenticatorSession(
         authenticator.accountId,
         operation,
         0,
-        authDataService
+        authDataService,
       );
     },
     sign: async (transaction: TxBuilderTransaction) => {
       await Promise.all(
         Array.from(usedKeyHandlers).map((keyHandler) =>
-          keyHandler.sign(transaction)
-        )
+          keyHandler.sign(transaction),
+        ),
       );
     },
   });
