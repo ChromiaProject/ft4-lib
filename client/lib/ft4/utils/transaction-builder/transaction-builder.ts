@@ -97,8 +97,9 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -159,7 +160,10 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
-  async function buildAndSend(): Promise<{ tx: SignedTransaction, receipt: TransactionReceipt }> {
+  async function buildAndSend(): Promise<{
+    tx: SignedTransaction;
+    receipt: TransactionReceipt;
+  }> {
     const tx = await (this as TransactionBuilder).build();
     const receipt = await client.sendTransaction(tx);
     const operationsWithHandlers = this._operations.filter(

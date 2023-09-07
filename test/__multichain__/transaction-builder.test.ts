@@ -39,16 +39,11 @@ describe("transaction builder", () => {
   let client: IClient;
 
   beforeEach(async () => {
-    const blockchains = await fetchBlockchains();
-    const dAppChain = blockchains["multichain00"];
-
-    if (!dAppChain) {
-      throw new Error("multichain00 not found");
-    }
+    const { multichain00 } = await fetchBlockchains();
 
     client = await createClient({
       nodeURLPool: "http://127.0.0.1:7740",
-      blockchainRID: dAppChain.rid.toString("hex"),
+      blockchainRID: multichain00.rid.toString("hex"),
     });
   });
 
