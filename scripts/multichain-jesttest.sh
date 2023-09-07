@@ -124,8 +124,8 @@ rm -rf "$DEPENDENCIES_PATH/multichain"
 mkdir -p "$DEPENDENCIES_PATH/multichain/"
 
 debug "Copying FT library dependency to source folder"
-cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/"
-cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
+cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/lib/"
+# cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/tests/"
 
 log "Building Multichain dApp Chains..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
