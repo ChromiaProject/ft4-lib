@@ -136,8 +136,8 @@ do
 
     # Write the YML content to the file
     cp configs/multichain-jesttest.yml.template $yml_filename
-    sed -i "" "s/{chain_num}/$chain_num/g" $yml_filename
-    sed -i "" "s/{module_name}/$module_name/g" $yml_filename
+    sed -i.bak "s/{chain_num}/$chain_num/g" $yml_filename
+    sed -i.bak "s/{module_name}/$module_name/g" $yml_filename
 
     # Create the corresponding RELL file with unique content
     rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
@@ -155,6 +155,8 @@ do
     # Build the Multichain dApp Chain for each blockchain
     chr build -s $yml_filename > /dev/null
 done
+
+rm $DEPENDENCIES_PATH/*.bak
 
 log "Running node container..."
 $DOCKER run \
