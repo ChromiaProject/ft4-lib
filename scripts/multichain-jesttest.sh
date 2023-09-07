@@ -213,7 +213,7 @@ log "Network verified successfully."
 
 debug "Adding container for the multichain test blockchains"
 pmc container add \
-    --name ft4_multichain_test \
+    --name ft4multichaintest \
     --cluster system \
     --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
     -cfg $PMC_CONFIG
@@ -225,7 +225,7 @@ do
         pmc blockchain add \
             --quiet \
             --name multichain$chain_num \
-            --container ft4_multichain_test \
+            --container ft4multichaintest \
             --blockchain-config rell/out/ft4_multichain_test_$chain_num.xml \
             -cfg $PMC_CONFIG
     )
