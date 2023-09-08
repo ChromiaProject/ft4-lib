@@ -152,8 +152,6 @@ do
     chr build -s $yml_filename > /dev/null
 done
 
-rm $DEPENDENCIES_PATH/*.bak
-
 log "Running node container..."
 $DOCKER run \
     --name $DOCKER_NODE_NAME \
