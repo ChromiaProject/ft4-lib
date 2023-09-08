@@ -33,7 +33,7 @@ import {
 } from "./admin/admin-op-functions";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
-import { Session } from "./types";
+import { Session, Connection } from "./types";
 import {
   TransferHistoryEntry,
   TransferHistoryResponse,
@@ -49,6 +49,7 @@ export {
   FlagsType,
   Account,
   Session,
+  Connection,
   DecimalFormat,
   GtvAuthDescriptor,
   TransferHistoryEntry,
