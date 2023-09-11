@@ -1,6 +1,11 @@
 blockchains:
+<<<<<<<< HEAD:configs/multichain-jesttest.yml.template
   ft4_multichain_test_{chain_num}:
     module: {module_name}  # Will be updated to hold the correct module name
+========
+  ft4_multichain_test_{chain_number}:
+    module: {module_name} #will be updated to hold the correct module name
+>>>>>>>> add-simple-tests-xchain:configs/multichain-test.yml.template
     moduleArgs:
       lib.ft4.accounts:
         rate_limit_active: 1
