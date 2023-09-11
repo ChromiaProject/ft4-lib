@@ -2,7 +2,6 @@ import {
   IClient,
   Operation,
   SignedTransaction,
-  Transaction,
   TransactionReceipt,
 } from "postchain-client";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
@@ -82,7 +81,10 @@ export type TransactionBuilder = {
    * function will also trigger any registered `OnAnchoredHandler`s.
    * @returns transaction reciept
    */
-  buildAndSend: () => Promise<{ tx: SignedTransaction, receipt: TransactionReceipt }>;
+  buildAndSend: () => Promise<{
+    tx: SignedTransaction;
+    receipt: TransactionReceipt;
+  }>;
 
   session: IClient;
 };
