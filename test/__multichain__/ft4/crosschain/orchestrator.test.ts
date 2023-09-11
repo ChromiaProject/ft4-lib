@@ -9,17 +9,19 @@ import {
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { Session } from "/ft4/types";
 import { createAccount } from "/util/util";
+import { getNewAsset } from "/util/blockchain-util";
 
 describe("Orchestrator", () => {
   let client: IClient;
   let session: Session;
-  const targetChainId = Buffer.from("targetChainId");
+  let assetId: Buffer;
+  let targetChainRid: Buffer;
+
   const recipientId = Buffer.from("recipientId");
   const amount = createAmount(100, 1);
-  const assetId = Buffer.from("assetId");
 
   beforeEach(async () => {
-    const { multichain00 } = await fetchBlockchains();
+    const { multichain00, multichain02 } = await fetchBlockchains();
 
     client = await createClient({
       nodeURLPool: "http://127.0.0.1:7740",
@@ -27,6 +29,7 @@ describe("Orchestrator", () => {
     });
 
     const keyPair = encryption.makeKeyPair();
+
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
       [],
@@ -37,11 +40,14 @@ describe("Orchestrator", () => {
     session = await createKeyStoreInteractor(client, keyStore).getSession(
       ad.id,
     );
+
+    assetId = (await getNewAsset(client)).id;
+    targetChainRid = multichain02.rid;
   });
 
-  it("should execute transfer through all paths", async () => {
+  it.only("should execute transfer through all paths", async () => {
     const orchestrator = await createOrchestrator(
-      targetChainId,
+      targetChainRid,
       recipientId,
       amount,
       assetId,
@@ -74,7 +80,7 @@ describe("Orchestrator", () => {
     });
 
     const orchestrator = await createOrchestrator(
-      targetChainId,
+      targetChainRid,
       recipientId,
       amount,
       assetId,

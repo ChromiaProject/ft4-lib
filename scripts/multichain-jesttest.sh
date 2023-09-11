@@ -146,7 +146,6 @@ debug  "Copying FT library dependency to source folder..."
 rm -rf "$DEPENDENCIES_PATH/multichain"
 mkdir -p "$DEPENDENCIES_PATH/multichain/"
 
-debug "Copying FT library dependency to source folder"
 cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/"
 cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
 
@@ -265,7 +264,7 @@ fi
 
 debug "Running tests..."
 
-npx jest \
+NODE_OPTIONS='--stack-trace-limit=100' npx jest \
     --config=jest.config.multichain.js \
     --maxWorkers=1 \
     --testPathPattern=__multichain__ \
