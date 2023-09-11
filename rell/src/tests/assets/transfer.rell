@@ -20,7 +20,7 @@ function test_before_transfer_extension_is_called() {
     utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(alice.ft_auth())
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -41,7 +41,7 @@ function test_after_transfer_extension_is_called() {
     utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(alice.ft_auth())
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
