@@ -68,7 +68,7 @@ then
         echo "% brew install pmc"
     fi
 
-    # TODO: Add some more instructions for Linus
+    # TODO: Add some more instructions for Linux
     # ...
 
     exit 1
@@ -164,9 +164,8 @@ $DOCKER run \
     -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
     -p $NODE_PORT:9870/tcp \
     -p 127.0.0.1:$API_PORT:7740/tcp \
-    -d \
     registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
-    run-node > /dev/null
+    run-node >> logs/multichain-postchain.log &
 
 debug "Fetching manager chain BRID..."
 BRID=""
@@ -203,6 +202,7 @@ debug "Verifying the network"
 VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
 if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
+    echo $VERIFY_OUTPUT
     err "Verification failed. Exiting."
     exit 1
 fi

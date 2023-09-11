@@ -30,6 +30,7 @@ import {
   addRateLimitPoints,
   registerAsset,
   mint,
+  registerCrosschainAsset,
 } from "./admin/admin-op-functions";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
@@ -40,6 +41,14 @@ import {
   TransferHistoryType,
 } from "./accounts/transfer-history/types";
 import { DecimalFormat } from "./asset/types";
+import {
+  getAssetOriginById,
+  initTransfer,
+  applyTransfer,
+  getInitTransferArgs,
+  findPathToChainForAsset,
+  PathfinderError,
+} from "./crosschain";
 
 export {
   op,
@@ -71,6 +80,13 @@ export {
   addRateLimitPoints,
   registerAsset,
   mint,
+  registerCrosschainAsset,
+  getAssetOriginById,
+  initTransfer,
+  applyTransfer,
+  getInitTransferArgs,
+  findPathToChainForAsset,
+  PathfinderError,
 };
 
 export { Listener, EventEmitter } from "./events";

@@ -1,0 +1,31 @@
+blockchains:
+  ft4_multichain_test_00:
+    module: app_module00
+    moduleArgs:
+      lib.ft4.accounts:
+        rate_limit_active: 1
+        rate_limit_max_points: 10
+        rate_limit_recovery_time: 5000
+        rate_limit_points_at_account_creation: 2
+
+      lib.ft4.admin:
+        admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD
+
+libs:
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.9.1
+    rid: x"593D6EBA650BAC473E105C047B2C43A099164870304B3E5E324F714FF2F3F82F"
+
+compile:
+  source: ./multichain
+  target: ../out
+
+deployments:
+  local:
+    url: http://localhost:7740
+    brid: x"261D95F368B3143411BE87083C99FB51D6C5D4A1293AB1CEC39C9080AE79E38B"
+    container: system
+    chains:
+      ft4_multichain_test_00: x"1E81DD48C8B63FB6A8594850D3AE5FA857C41AF0C700FEF724CB5ABC98F3CAF8"
