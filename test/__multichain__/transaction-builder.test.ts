@@ -28,7 +28,6 @@ function getMocks() {
     keyHandlers: [keyHandlerMock],
     authDataService: createFakeAuthDataService({}),
     createSession: jest.fn(),
-    getAuthFlags: jest.fn().mockReturnValue([]),
     getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
     getNonce: jest.fn(),
   };
