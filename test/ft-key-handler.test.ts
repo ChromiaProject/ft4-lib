@@ -17,7 +17,7 @@ describe("FT key handler", () => {
       accountId,
       op("foo"),
       0,
-      createFakeAuthDataService({})
+      createFakeAuthDataService({}),
     );
 
     expect(operations).toEqual([

@@ -6,28 +6,37 @@ import {
   AuthDescriptorRule,
   AuthType,
   MultiSigAuthDescriptorArgs,
+  RawAuthDescriptor,
   SingleSigAuthDescriptorArgs,
 } from "./types";
 
 export function createSingleSignatureAuthDescriptor(
   args: SingleSigAuthDescriptorArgs,
-  rules: AuthDescriptorRule | null
+  rules: AuthDescriptorRule | null,
+  created?: number
 ): AuthDescriptor {
+  const fields: RawAuthDescriptor = [
+    serializeAuthType(AuthType.single_sig),
+    args,
+    rules,
+  ];
   return Object.freeze(
-    authDescriptor.fromGtv([
-      serializeAuthType(AuthType.single_sig),
-      args,
-      rules,
-    ])
+    authDescriptor.fromGtv([authDescriptor.getId(fields), ...fields, created])
   );
 }
 
 export function createMultiSignatureAuthDescriptor(
   args: MultiSigAuthDescriptorArgs,
-  rules: AuthDescriptorRule | null
+  rules: AuthDescriptorRule | null,
+  created?: number
 ): AuthDescriptor {
+  const fields: RawAuthDescriptor = [
+    serializeAuthType(AuthType.multi_sig),
+    args,
+    rules,
+  ];
   return Object.freeze(
-    authDescriptor.fromGtv([serializeAuthType(AuthType.multi_sig), args, rules])
+    authDescriptor.fromGtv([authDescriptor.getId(fields), ...fields, created])
   );
 }
 

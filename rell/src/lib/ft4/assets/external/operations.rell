@@ -1,16 +1,15 @@
 import ^^.assets;
 import ^^.auth;
 
-query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
-
 function transfer_message(gtv) {
     val params = struct<transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return "Please sign the message\nto transfer %s %s\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
+    return "Please sign the message\nto transfer %s %s\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n%s"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
+            asset.id,
             params.receiver_id
         );
 }
@@ -38,7 +37,7 @@ function burn_message(gtv) {
     val params = struct<burn>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}\n\nNonce: {nonce}"
+    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name

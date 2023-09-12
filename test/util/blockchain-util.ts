@@ -11,7 +11,7 @@ import adminUser from "./admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
 
 export async function createChromiaClient(nodeUrl?: string) {
-  const url = nodeUrl || process.env.TEST_NODE_URL || "http://localhost:7740";
+  const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return chromiaClient({
     nodeURLPool: url,
     blockchainIID: 0,
@@ -23,7 +23,7 @@ export async function getNewAsset(
   name = generateAssetName(),
   symbol = generateAssetSymbol(),
   decimals = 0,
-  iconUrl = ""
+  iconUrl = "",
 ): Promise<Asset> {
   const adminSignatureProvider = adminUser().signatureProvider;
   await registerAsset(
@@ -32,7 +32,7 @@ export async function getNewAsset(
     name,
     symbol,
     decimals,
-    iconUrl
+    iconUrl,
   );
   const id = gtv.gtvHash([
     name,

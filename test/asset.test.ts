@@ -1,23 +1,24 @@
 import { generateAssetName, generateAssetSymbol } from "./util/util";
 import { Connection } from "../client/lib/ft4/types";
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
-import { createConnection } from "../client/lib/ft4/ft-session";
 import { InvalidUrlError } from "../client/lib/ft4/asset/interfaces";
+import { createConnection } from "../client/lib/ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
 import { op } from "/ft4";
-import { adminKeyPair } from "./util/admin_user";
+import adminUser, { adminKeyPair } from "./util/admin_user";
+import { registerAsset } from "/ft4/admin/admin-op-functions";
 
 let connection: Connection;
 let client: IClient;
 
 //used only to have different issuing_brid until we have xchain
-async function registerAsset(
+async function registerAssetWithCustomBrid(
   client: IClient,
   assetName: string,
   decimals = 0,
-  blockchainRID: Buffer = randomBytes(32)
+  blockchainRID: Buffer = randomBytes(32),
 ) {
   const txn = {
     operations: [
@@ -27,7 +28,7 @@ async function registerAsset(
         generateAssetSymbol(),
         decimals,
         blockchainRID,
-        ""
+        "",
       ),
     ],
     signers: [adminKeyPair.pubKey],
@@ -58,9 +59,9 @@ describe("Asset", () => {
 
   it("can fetch paginated assets by name", async () => {
     const assetName = generateAssetName();
-    await registerAsset(client, assetName);
-    await registerAsset(client, assetName);
-    await registerAsset(client, assetName);
+    await registerAssetWithCustomBrid(client, assetName);
+    await registerAssetWithCustomBrid(client, assetName);
+    await registerAssetWithCustomBrid(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByName(assetName, 2);
@@ -71,7 +72,7 @@ describe("Asset", () => {
     const { data: expectedAssets2 } = await connection.getAssetsByName(
       assetName,
       2,
-      nextCursor
+      nextCursor,
     );
     expect(expectedAssets2.length).toEqual(1);
     expect(expectedAssets2[0].name).toEqual(assetName);
@@ -97,7 +98,8 @@ describe("Asset", () => {
     const assetSymbol = generateAssetSymbol();
     const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
     const assetId = gtv.gtvHash([assetName, brid]);
-    await getNewAsset(client, assetName, assetSymbol, 3);
+    const iconUrl = "http://example.com/";
+    await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
 
     const result = (await connection.getAssetBySymbol(assetSymbol))!;
 
@@ -106,6 +108,7 @@ describe("Asset", () => {
       id: assetId,
       decimals: 3,
       brid,
+      iconUrl,
     });
   });
 
@@ -117,7 +120,7 @@ describe("Asset", () => {
     const expectedAssets = await connection.getAllAssets();
 
     expect(expectedAssets.data).toEqual(
-      expect.arrayContaining([asset1, asset2, asset3])
+      expect.arrayContaining([asset1, asset2, asset3]),
     );
   });
 
@@ -142,17 +145,25 @@ describe("Asset", () => {
       "Test Asset 1",
       "TST1",
       0,
-      validUrl
+      validUrl,
     );
     expect(asset).not.toBeNull();
+    expect(asset.iconUrl).toBe(validUrl);
   });
 
   // Update after addding new admin functions
-  it.skip("should fail to register with invalid icon URL", async () => {
-    const invalidUrl = "not-a-valid-url";
-    await expect(
-      getNewAsset(client, "Test Asset 2", "TST2", 0, invalidUrl)
-    ).rejects.toThrow(InvalidUrlError);
+  it("should fail to register with invalid icon URL", async () => {
+    const wrapper = async () =>
+      registerAsset(
+        client,
+        adminUser().signatureProvider,
+        "Test Asset 2",
+        "TST2",
+        0,
+        "not-a-valid-url",
+      );
+
+    await expect(wrapper()).rejects.toThrow(InvalidUrlError);
   });
 
   it("should successfully register without providing icon URL", async () => {

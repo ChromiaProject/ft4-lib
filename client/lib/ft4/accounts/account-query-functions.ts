@@ -20,7 +20,7 @@ import { createTransferHistoryRetriever } from "./transfer-history/transfer-hist
 import { TransferHistoryFilter } from "./transfer-history/types";
 import {
   AuthDescriptor,
-  RawAuthDescriptor,
+  AuthDescriptorResponse,
   mapAuthDescriptors,
 } from "./auth-descriptor";
 import { createEntityRetriever } from "../utils/entity-retriever";
@@ -85,7 +85,7 @@ export function createAccountObject(
     ) => {
       const retriever = createEntityRetriever<
         AuthDescriptor,
-        RawAuthDescriptor
+        AuthDescriptorResponse
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
@@ -156,7 +156,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId
 ): Promise<AuthDescriptor[]> {
   return connection
-    .query<RawAuthDescriptor[]>(
+    .query<AuthDescriptorResponse[]>(
       accountAuthDescriptorsByParticipantId(accountId, participantId)
     )
     .then((authDescriptors) =>

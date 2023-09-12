@@ -34,7 +34,8 @@ export function transfer(
 }
 
 export function addAuthDescriptor(authDescriptor: AuthDescriptor): Operation {
-  return op("ft4.add_auth_descriptor", authDesc.toGtv(authDescriptor));
+  const ad = authDesc.toGtv(authDescriptor);
+  return op("ft4.add_auth_descriptor", [ad[1], ad[2], ad[3]]);
 }
 
 export function deleteAuthDescriptor(authDescriptorId: BufferId): Operation {

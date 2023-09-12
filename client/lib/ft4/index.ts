@@ -14,19 +14,31 @@ import { createLocalStorageLoginKeyStore } from "./authentication/login-manager/
 import {
   KeyStore,
   createWeb3ProviderEvmKeyStore,
+  createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
 } from "./authentication";
-import { AuthDescriptor, FlagsType, Account, authDescriptor } from "./accounts";
+import {
+  AuthDescriptor,
+  FlagsType,
+  Account,
+  authDescriptor,
+  GtvAuthDescriptor,
+} from "./accounts";
 import { createAmount } from "./asset/amount";
+import {
+  registerAccount,
+  addRateLimitPoints,
+  registerAsset,
+  mint,
+} from "./admin/admin-op-functions";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
-import { Session } from "./types";
+import { Session, Connection } from "./types";
 import {
   TransferHistoryEntry,
   TransferHistoryResponse,
   TransferHistoryType,
 } from "./accounts/transfer-history/types";
-import { GtvAuthDescriptor } from "./accounts";
 import { DecimalFormat } from "./asset/types";
 
 export {
@@ -37,6 +49,7 @@ export {
   FlagsType,
   Account,
   Session,
+  Connection,
   DecimalFormat,
   GtvAuthDescriptor,
   TransferHistoryEntry,
@@ -48,13 +61,20 @@ export {
   createConnection,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
+  createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
   createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
   createEvmKeyHandler,
   createAmount,
+  registerAccount,
+  addRateLimitPoints,
+  registerAsset,
+  mint,
 };
+
+export { Listener, EventEmitter } from "./events";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,

@@ -6,6 +6,14 @@ import acc_external: ^^^.lib.ft4.accounts.external;
 import test_utils: ^^.assets.utils;
 import test_op: ^^.operations;
 
+struct gtv_auth_descriptor {
+    id: byte_array;
+    acc.auth_type;
+    args: gtv;
+    rules: gtv;
+    created: timestamp;
+}
+
 function setup_account_with_many_ads() {
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
   test_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
@@ -23,7 +31,7 @@ function setup_account_with_many_ads() {
 }
 
 function get_single_sig_args(gtv): acc.single_sig_args {
-  return acc.single_sig_args.from_gtv(acc.auth_descriptor.from_gtv_pretty(gtv).args.to_gtv());
+  return acc.single_sig_args.from_gtv(gtv_auth_descriptor.from_gtv_pretty(gtv).args.to_gtv());
 }
 
 function test_auth_descriptors_are_returned_in_correct_order() {
@@ -53,8 +61,16 @@ function test_paginated_items_have_the_correct_return_format() {
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors(account.id, 1, null);
 
+  val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
-  assert_equals(descriptors.data[0], alice_ad.to_gtv_pretty());
+  val alice_gtv_ad = gtv_auth_descriptor(
+    id = alice_ad_id,
+    auth_type = alice_ad.auth_type,
+    args = alice_ad.args.to_gtv_pretty(),
+    rules = alice_ad.rules.to_gtv_pretty(),
+    created = acc.account_auth_descriptor @ { .id == alice_ad_id }( .created )
+  );
+  assert_equals(descriptors.data[0], alice_gtv_ad.to_gtv_pretty());
 }
 
 function test_accounts_by_ad_id_are_paginated() {
