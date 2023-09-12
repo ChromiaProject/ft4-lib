@@ -10,7 +10,7 @@ export function initTransfer(
   path: BufferId[],
 ): Operation {
   return op(
-    "ft4.init_transfer",
+    "ft4.crosschain.init_transfer",
     formatter.ensureBuffer(recipientId),
     formatter.ensureBuffer(assetId),
     amount.encodeGtv(),
@@ -27,7 +27,7 @@ export function applyTransfer(
   targetChainIndex: number,
 ): Operation {
   return op(
-    "ft4.apply_transfer",
+    "ft4.crosschain.apply_transfer",
     [
       formatter.ensureBuffer(recipientId),
       formatter.ensureBuffer(assetId),
@@ -35,7 +35,6 @@ export function applyTransfer(
       path.map((item) => formatter.ensureBuffer(item)),
     ],
     gtv.decode(tx),
-    tx,
     1,
     targetChainIndex,
   );
