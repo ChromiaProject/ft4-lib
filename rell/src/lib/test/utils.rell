@@ -1,0 +1,10 @@
+@test
+module;
+
+import lib.ft4.accounts;
+import auth_ext: lib.ft4.auth.external;
+
+function auth_operation_for_pubkey(pubkey) {
+    val desc = accounts.auth_descriptor_participant @ { pubkey }.account_auth_descriptor;
+    return auth_ext.ft_auth(desc.account.id, desc.id);
+}

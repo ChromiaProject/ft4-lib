@@ -6,8 +6,9 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.ft4_basic_dev.*;
-import auth_ext: ^^^.lib.ft4.auth.external;
 import ^.utils;
+import auth_ext: ^^^.lib.ft4.auth.external;
+import test_utils: ^^^.lib.test.utils;
 
 val too_big = assets.max_asset_amount + 1;
 
@@ -72,7 +73,7 @@ function test_transfer_fails_when_insufficient_balance() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(test_utils.auth_operation_for_pubkey(alice.keypair.pub))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 11))
         .sign(alice.keypair)
         .run_must_fail("Balance is too low");
