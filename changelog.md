@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `authenticate()` function will now try to match operation name exactly when searching for auth handlers and throw an error if none is found. The old behaviour where scope path was traversed to the root can be aquired again by calling `authenticate(strict = false)`
 - `Connection` interface is now exported and part of the public interface
 
+## [0.1.4] - 2023-07-21
+
+### Changed
+- README
+
 ## [0.1.3] - 2023-07-13
 
 ### Added
