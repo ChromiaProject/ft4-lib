@@ -1,0 +1,3588 @@
+{
+    "modules": {
+        "app_module00": {
+            "name": "app_module00",
+            "operations": {
+                "empty_op": {
+                    "mount": "empty_op",
+                    "parameters": []
+                }
+            }
+        },
+        "lib.ft4.accounts": {
+            "entities": {
+                "account": {
+                    "attributes": {
+                        "id": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "id"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft.account"
+                },
+                "account_auth_descriptor": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        "args": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        },
+                        "auth_type": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:auth_type"
+                        },
+                        "ctr": {
+                            "mutable": 1,
+                            "type": "integer"
+                        },
+                        "id": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        },
+                        "rules": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [
+                        {
+                            "attributes": [
+                                "id"
+                            ]
+                        }
+                    ],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "account",
+                                "id"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft.account_auth_descriptor"
+                },
+                "account_meta": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        "meta_key": {
+                            "mutable": 0,
+                            "type": "text"
+                        },
+                        "value": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [
+                        {
+                            "attributes": [
+                                "account",
+                                "meta_key"
+                            ]
+                        },
+                        {
+                            "attributes": [
+                                "meta_key",
+                                "value"
+                            ]
+                        }
+                    ],
+                    "keys": [],
+                    "log": 0,
+                    "mount": "ft.account_meta"
+                },
+                "auth_descriptor_participant": {
+                    "attributes": {
+                        "account_auth_descriptor": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        },
+                        "id": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "account_auth_descriptor",
+                                "id"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft.auth_descriptor_participant"
+                },
+                "auth_descriptor_rule_variable": {
+                    "attributes": {
+                        "account_auth_descriptor": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        },
+                        "name": {
+                            "mutable": 0,
+                            "type": "text"
+                        },
+                        "value": {
+                            "mutable": 1,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "account_auth_descriptor",
+                                "name"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft.auth_descriptor_rule_variable"
+                },
+                "rl_state": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        "last_update": {
+                            "mutable": 1,
+                            "type": "integer"
+                        },
+                        "max_points": {
+                            "mutable": 1,
+                            "type": "integer"
+                        },
+                        "points": {
+                            "mutable": 1,
+                            "type": "integer"
+                        },
+                        "recovery_time": {
+                            "mutable": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "account"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft.rl_state"
+                }
+            },
+            "enums": {
+                "auth_type": {
+                    "values": {
+                        "EM": {
+                            "value": 3
+                        },
+                        "ES": {
+                            "value": 2
+                        },
+                        "M": {
+                            "value": 1
+                        },
+                        "S": {
+                            "value": 0
+                        }
+                    }
+                },
+                "rule_operator": {
+                    "values": {
+                        "eq": {
+                            "value": 2
+                        },
+                        "ge": {
+                            "value": 3
+                        },
+                        "gt": {
+                            "value": 4
+                        },
+                        "le": {
+                            "value": 1
+                        },
+                        "lt": {
+                            "value": 0
+                        }
+                    }
+                },
+                "rule_variable": {
+                    "values": {
+                        "block_height": {
+                            "value": 0
+                        },
+                        "block_time": {
+                            "value": 1
+                        },
+                        "op_count": {
+                            "value": 2
+                        }
+                    }
+                }
+            },
+            "functions": {
+                "Account": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "AuthDescriptor": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account_auth_descriptor"
+                },
+                "Unsafe._add_auth_descriptor": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ],
+                    "type": "byte_array"
+                },
+                "Unsafe.create_account_with_auth": {
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ],
+                    "type": "byte_array"
+                },
+                "_add_auth_participant": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        },
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "_add_eth_auth_participant": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        },
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "_auth": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "_delete_all_auth_descriptors_exclude": {
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "_delete_auth_descriptor": {
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "account_by_id": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "add_auth_descriptor_to_account": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ],
+                    "type": "byte_array"
+                },
+                "add_rate_limit_points": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "analyze_auth_descriptor_rules": {
+                    "parameters": [
+                        {
+                            "name": "rules",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "hop",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "auth_descriptor_by_id": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account_auth_descriptor"
+                },
+                "check_auth_args": {
+                    "parameters": [
+                        {
+                            "name": "a_t",
+                            "type": "lib.ft4.accounts:auth_type"
+                        },
+                        {
+                            "name": "args",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "participants",
+                            "type": {
+                                "type": "list",
+                                "value": "byte_array"
+                            }
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:validation_result"
+                },
+                "check_multi_sig_auth": {
+                    "parameters": [
+                        {
+                            "name": "args",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "participants",
+                            "type": {
+                                "type": "list",
+                                "value": "byte_array"
+                            }
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:validation_result"
+                },
+                "check_required_flags": {
+                    "parameters": [
+                        {
+                            "name": "flags",
+                            "type": {
+                                "type": "set",
+                                "value": "text"
+                            }
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "check_single_sig_auth": {
+                    "parameters": [
+                        {
+                            "name": "args",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "participants",
+                            "type": {
+                                "type": "list",
+                                "value": "byte_array"
+                            }
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:validation_result"
+                },
+                "create_account_with_auth": {
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ],
+                    "type": "byte_array"
+                },
+                "delete_expired_auth_descriptors": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "evaluate_int_variable_rule": {
+                    "parameters": [
+                        {
+                            "name": "rule",
+                            "type": "lib.ft4.accounts:rule_expression"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "get_flags_from_args": {
+                    "parameters": [
+                        {
+                            "name": "a_t",
+                            "type": "lib.ft4.accounts:auth_type"
+                        },
+                        {
+                            "name": "args",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "set",
+                        "value": "text"
+                    }
+                },
+                "get_paginated_accounts_by_ad_id": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "lib.ft4.utils:pagination_result"
+                    }
+                },
+                "get_paginated_auth_descriptors": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "lib.ft4.utils:pagination_result"
+                    }
+                },
+                "get_participants": {
+                    "parameters": [
+                        {
+                            "name": "a_t",
+                            "type": "lib.ft4.accounts:auth_type"
+                        },
+                        {
+                            "name": "args",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "byte_array"
+                    }
+                },
+                "get_rate_limit_config": {
+                    "parameters": [],
+                    "type": {
+                        "fields": [
+                            {
+                                "name": "active",
+                                "type": "boolean"
+                            },
+                            {
+                                "name": "max_points",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "recovery_time",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "points_at_account_creation",
+                                "type": "integer"
+                            }
+                        ],
+                        "type": "tuple"
+                    }
+                },
+                "get_variable_names_set": {
+                    "parameters": [
+                        {
+                            "name": "rules",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": {
+                        "type": "set",
+                        "value": "text"
+                    }
+                },
+                "handle_composed_rule": {
+                    "parameters": [
+                        {
+                            "name": "rule",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "handle_single_rule": {
+                    "parameters": [
+                        {
+                            "name": "rule",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_active": {
+                    "parameters": [
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_block_height_rule_active": {
+                    "parameters": [
+                        {
+                            "name": "r",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_block_time_rule_active": {
+                    "parameters": [
+                        {
+                            "name": "r",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_op_count_rule_active": {
+                    "parameters": [
+                        {
+                            "name": "rule",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_rule_active": {
+                    "parameters": [
+                        {
+                            "name": "r",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_rule_valid": {
+                    "parameters": [
+                        {
+                            "name": "rule",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_simple_rule_active": {
+                    "parameters": [
+                        {
+                            "name": "rule",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "is_valid": {
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "boolean"
+                },
+                "load_variables": {
+                    "parameters": [
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": {
+                        "key": "text",
+                        "type": "map",
+                        "value": "gtv"
+                    }
+                },
+                "op_count_variable_initial_value": {
+                    "parameters": [],
+                    "type": "gtv"
+                },
+                "rate_limit": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "require_auth": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "setup_auth_descriptor_variables": {
+                    "parameters": [
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "single_sig_auth_descriptor": {
+                    "parameters": [
+                        {
+                            "name": "pubkey",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "type": "set",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:auth_descriptor"
+                },
+                "update_auth_descriptor_rule_variables": {
+                    "parameters": [
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "update_variables": {
+                    "parameters": [
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "validate_auth_descriptor_args": {
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "variable_value": {
+                    "parameters": [
+                        {
+                            "name": "variable",
+                            "type": "lib.ft4.accounts:rule_variable"
+                        },
+                        {
+                            "name": "variables",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "integer"
+                }
+            },
+            "name": "lib.ft4.accounts",
+            "structs": {
+                "auth_descriptor": {
+                    "attributes": {
+                        "args": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "gtv"
+                            }
+                        },
+                        "auth_type": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:auth_type"
+                        },
+                        "rules": {
+                            "mutable": 0,
+                            "type": "gtv"
+                        }
+                    }
+                },
+                "eth_auth_args": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        "account_auth_descriptor": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        },
+                        "signatures": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "lib.ft4.auth:signature"
+                            }
+                        }
+                    }
+                },
+                "module_args": {
+                    "attributes": {
+                        "rate_limit_active": {
+                            "mutable": 0,
+                            "type": "boolean"
+                        },
+                        "rate_limit_max_points": {
+                            "mutable": 0,
+                            "type": "integer"
+                        },
+                        "rate_limit_points_at_account_creation": {
+                            "mutable": 0,
+                            "type": "integer"
+                        },
+                        "rate_limit_recovery_time": {
+                            "mutable": 0,
+                            "type": "integer"
+                        }
+                    }
+                },
+                "multi_sig_args": {
+                    "attributes": {
+                        "flags": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "set",
+                                "value": "text"
+                            }
+                        },
+                        "pubkeys": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "byte_array"
+                            }
+                        },
+                        "signatures_required": {
+                            "mutable": 0,
+                            "type": "integer"
+                        }
+                    }
+                },
+                "rule_expression": {
+                    "attributes": {
+                        "operator": {
+                            "mutable": 0,
+                            "type": "text"
+                        },
+                        "value": {
+                            "mutable": 0,
+                            "type": "gtv"
+                        },
+                        "variable": {
+                            "mutable": 0,
+                            "type": "text"
+                        }
+                    }
+                },
+                "single_sig_args": {
+                    "attributes": {
+                        "flags": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "set",
+                                "value": "text"
+                            }
+                        },
+                        "pubkey": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    }
+                }
+            }
+        },
+        "lib.ft4.accounts.external": {
+            "functions": {
+                "add_auth_descriptor_message": {
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "delete_all_auth_descriptors_exclude_message": {
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "delete_auth_descriptor_message": {
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                }
+            },
+            "name": "lib.ft4.accounts.external",
+            "operations": {
+                "add_auth_descriptor": {
+                    "mount": "ft4.add_auth_descriptor",
+                    "parameters": [
+                        {
+                            "name": "new_desc",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ]
+                },
+                "delete_all_auth_descriptors_exclude": {
+                    "mount": "ft4.delete_all_auth_descriptors_exclude",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "auth_descriptor_id",
+                            "type": "byte_array"
+                        }
+                    ]
+                },
+                "delete_auth_descriptor": {
+                    "mount": "ft4.delete_auth_descriptor",
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor_id",
+                            "type": "byte_array"
+                        }
+                    ]
+                }
+            },
+            "queries": {
+                "_get_account_auth_descriptors": {
+                    "mount": "ft4._get_account_auth_descriptors",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "auth_type",
+                                    "type": "lib.ft4.accounts:auth_type"
+                                },
+                                {
+                                    "name": "args",
+                                    "type": "gtv"
+                                },
+                                {
+                                    "name": "rules",
+                                    "type": "gtv"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "_get_accounts_by_auth_descriptor_id": {
+                    "mount": "ft4._get_accounts_by_auth_descriptor_id",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "byte_array"
+                    }
+                },
+                "get_account_auth_descriptors": {
+                    "mount": "ft4.get_account_auth_descriptors",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:paged_result"
+                },
+                "get_account_auth_descriptors_by_participant_id": {
+                    "mount": "ft4.get_account_auth_descriptors_by_participant_id",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "participant_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "auth_type",
+                                    "type": "lib.ft4.accounts:auth_type"
+                                },
+                                {
+                                    "name": "args",
+                                    "type": "gtv"
+                                },
+                                {
+                                    "name": "rules",
+                                    "type": "gtv"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_account_by_auth_descriptor": {
+                    "mount": "ft4.get_account_by_auth_descriptor",
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": "byte_array"
+                    }
+                },
+                "get_account_by_id": {
+                    "mount": "ft4.get_account_by_id",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": "byte_array"
+                    }
+                },
+                "get_account_rate_limit_last_update": {
+                    "mount": "ft4.get_account_rate_limit_last_update",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "fields": [
+                            {
+                                "name": "points",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "last_update",
+                                "type": "integer"
+                            }
+                        ],
+                        "type": "tuple"
+                    }
+                },
+                "get_accounts_by_auth_descriptor_id": {
+                    "mount": "ft4.get_accounts_by_auth_descriptor_id",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:paged_result"
+                },
+                "get_accounts_by_participant_id": {
+                    "mount": "ft4.get_accounts_by_participant_id",
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "byte_array"
+                    }
+                },
+                "get_auth_descriptor_nonce": {
+                    "mount": "ft4.get_auth_descriptor_nonce",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "auth_descriptor_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "integer"
+                },
+                "get_config": {
+                    "mount": "ft4.get_config",
+                    "parameters": [],
+                    "type": {
+                        "fields": [
+                            {
+                                "name": "rate_limit",
+                                "type": {
+                                    "fields": [
+                                        {
+                                            "name": "active",
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "name": "max_points",
+                                            "type": "integer"
+                                        },
+                                        {
+                                            "name": "recovery_time",
+                                            "type": "integer"
+                                        },
+                                        {
+                                            "name": "points_at_account_creation",
+                                            "type": "integer"
+                                        }
+                                    ],
+                                    "type": "tuple"
+                                }
+                            }
+                        ],
+                        "type": "tuple"
+                    }
+                },
+                "is_auth_descriptor_valid": {
+                    "mount": "ft4.is_auth_descriptor_valid",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "auth_descriptor_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "boolean"
+                }
+            }
+        },
+        "lib.ft4.admin": {
+            "functions": {
+                "require_admin": {
+                    "parameters": [],
+                    "type": "unit"
+                }
+            },
+            "name": "lib.ft4.admin",
+            "operations": {
+                "add_rate_limit_points": {
+                    "mount": "ft4.admin.add_rate_limit_points",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "mint": {
+                    "mount": "ft4.admin.mint",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ]
+                },
+                "register_account": {
+                    "mount": "ft4.admin.register_account",
+                    "parameters": [
+                        {
+                            "name": "auth_descriptor",
+                            "type": "lib.ft4.accounts:auth_descriptor"
+                        }
+                    ]
+                },
+                "register_asset": {
+                    "mount": "ft4.admin.register_asset",
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "symbol",
+                            "type": "text"
+                        },
+                        {
+                            "name": "decimals",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "icon_url",
+                            "type": "text"
+                        }
+                    ]
+                }
+            },
+            "structs": {
+                "module_args": {
+                    "attributes": {
+                        "admin_pubkey": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    }
+                }
+            }
+        },
+        "lib.ft4.admin.crosschain": {
+            "name": "lib.ft4.admin.crosschain",
+            "operations": {
+                "register_crosschain_asset": {
+                    "mount": "ft4.admin.register_crosschain_asset",
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "symbol",
+                            "type": "text"
+                        },
+                        {
+                            "name": "decimals",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "issuing_blockchain_rid",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "icon_url",
+                            "type": "text"
+                        },
+                        {
+                            "name": "origin_blockchain_rid",
+                            "type": "byte_array"
+                        }
+                    ]
+                }
+            }
+        },
+        "lib.ft4.assets": {
+            "constants": {
+                "max_asset_amount": {
+                    "type": "big_integer"
+                }
+            },
+            "entities": {
+                "asset": {
+                    "attributes": {
+                        "decimals": {
+                            "mutable": 0,
+                            "type": "integer"
+                        },
+                        "icon_url": {
+                            "mutable": 0,
+                            "type": "text"
+                        },
+                        "id": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        },
+                        "issuing_brid": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        },
+                        "name": {
+                            "mutable": 0,
+                            "type": "text"
+                        },
+                        "symbol": {
+                            "mutable": 0,
+                            "type": "text"
+                        },
+                        "total_supply": {
+                            "mutable": 1,
+                            "type": "big_integer"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "id"
+                            ]
+                        },
+                        {
+                            "attributes": [
+                                "symbol"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft4.asset"
+                },
+                "balance": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        "amount": {
+                            "mutable": 1,
+                            "type": "big_integer"
+                        },
+                        "asset": {
+                            "mutable": 0,
+                            "type": "lib.ft4.assets:asset"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "account",
+                                "asset"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft4.balance"
+                },
+                "transfer_history_entry": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        "asset": {
+                            "mutable": 0,
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        "delta": {
+                            "mutable": 0,
+                            "type": "big_integer"
+                        },
+                        "entry_index": {
+                            "mutable": 0,
+                            "type": "integer"
+                        },
+                        "is_input": {
+                            "mutable": 0,
+                            "type": "boolean"
+                        },
+                        "op_index": {
+                            "mutable": 0,
+                            "type": "integer"
+                        },
+                        "transaction": {
+                            "mutable": 0,
+                            "type": "transaction"
+                        },
+                        "transfer_args": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [
+                        {
+                            "attributes": [
+                                "account",
+                                "asset"
+                            ]
+                        }
+                    ],
+                    "keys": [],
+                    "log": 1,
+                    "mount": "ft4.transfer_history_entry"
+                }
+            },
+            "enums": {
+                "transfer_type": {
+                    "values": {
+                        "received": {
+                            "value": 1
+                        },
+                        "sent": {
+                            "value": 0
+                        }
+                    }
+                }
+            },
+            "functions": {
+                "Asset": {
+                    "parameters": [
+                        {
+                            "name": "id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.assets:asset"
+                },
+                "Unsafe.burn": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "Unsafe.mint": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "Unsafe.register_asset": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "symbol",
+                            "type": "text"
+                        },
+                        {
+                            "name": "decimals",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "blockchain_rid",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "icon_url",
+                            "type": "text"
+                        }
+                    ],
+                    "type": "lib.ft4.assets:asset"
+                },
+                "Unsafe.transfer": {
+                    "parameters": [
+                        {
+                            "name": "from",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "to",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "after_burn": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "after_mint": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "after_transfer": {
+                    "parameters": [
+                        {
+                            "name": "from",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "to",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "before_burn": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "before_mint": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "before_transfer": {
+                    "parameters": [
+                        {
+                            "name": "from",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "to",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "deduct_balance": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "ensure_balance": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        }
+                    ],
+                    "type": "lib.ft4.assets:balance"
+                },
+                "extract_data_from_transfer_history_entry": {
+                    "parameters": [
+                        {
+                            "name": "entry",
+                            "type": "lib.ft4.assets:transfer_history_entry"
+                        }
+                    ],
+                    "type": {
+                        "fields": [
+                            {
+                                "name": "id",
+                                "type": "rowid"
+                            },
+                            {
+                                "name": "delta",
+                                "type": "big_integer"
+                            },
+                            {
+                                "name": "decimals",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "asset",
+                                "type": "text"
+                            },
+                            {
+                                "name": "asset_id",
+                                "type": "byte_array"
+                            },
+                            {
+                                "name": "asset_data",
+                                "type": {
+                                    "fields": [
+                                        {
+                                            "name": "id",
+                                            "type": "byte_array"
+                                        },
+                                        {
+                                            "name": "name",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "name": "symbol",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "name": "decimals",
+                                            "type": "integer"
+                                        },
+                                        {
+                                            "name": "brid",
+                                            "type": "byte_array"
+                                        },
+                                        {
+                                            "name": "icon_url",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "name": "supply",
+                                            "type": "big_integer"
+                                        }
+                                    ],
+                                    "type": "tuple"
+                                }
+                            },
+                            {
+                                "name": "is_input",
+                                "type": "boolean"
+                            },
+                            {
+                                "name": "timestamp",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "block_height",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "entry_index",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "transfer_args",
+                                "type": "byte_array"
+                            },
+                            {
+                                "name": "tx_rid",
+                                "type": "byte_array"
+                            },
+                            {
+                                "name": "tx_data",
+                                "type": "byte_array"
+                            },
+                            {
+                                "name": "operation_name",
+                                "type": "text"
+                            }
+                        ],
+                        "type": "tuple"
+                    }
+                },
+                "extract_data_from_transfer_history_list": {
+                    "parameters": [
+                        {
+                            "name": "entries",
+                            "type": {
+                                "type": "list",
+                                "value": "lib.ft4.assets:transfer_history_entry"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "data",
+                                    "type": "gtv"
+                                },
+                                {
+                                    "name": "rowid",
+                                    "type": "rowid"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "extract_operation_name": {
+                    "parameters": [
+                        {
+                            "name": "entry",
+                            "type": "lib.ft4.assets:transfer_history_entry"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "format_amount_with_decimals": {
+                    "parameters": [
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        },
+                        {
+                            "name": "decimals",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "get_all_assets": {
+                    "parameters": [
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "lib.ft4.utils:pagination_result"
+                    }
+                },
+                "get_asset_balances": {
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "asset",
+                                    "type": {
+                                        "fields": [
+                                            {
+                                                "name": "id",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "name",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "symbol",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "decimals",
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "name": "brid",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "icon_url",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "supply",
+                                                "type": "big_integer"
+                                            }
+                                        ],
+                                        "type": "tuple"
+                                    }
+                                },
+                                {
+                                    "name": "amount",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_paginated_asset_balances": {
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "lib.ft4.utils:pagination_result"
+                    }
+                },
+                "get_paginated_asset_balances_by_name": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "lib.ft4.utils:pagination_result"
+                    }
+                },
+                "get_paginated_transfers": {
+                    "parameters": [
+                        {
+                            "name": "account",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "filter",
+                            "type": "lib.ft4.assets:filter"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "lib.ft4.utils:pagination_result"
+                    }
+                },
+                "map_asset": {
+                    "parameters": [
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        }
+                    ],
+                    "type": {
+                        "fields": [
+                            {
+                                "name": "id",
+                                "type": "byte_array"
+                            },
+                            {
+                                "name": "name",
+                                "type": "text"
+                            },
+                            {
+                                "name": "symbol",
+                                "type": "text"
+                            },
+                            {
+                                "name": "decimals",
+                                "type": "integer"
+                            },
+                            {
+                                "name": "brid",
+                                "type": "byte_array"
+                            },
+                            {
+                                "name": "icon_url",
+                                "type": "text"
+                            },
+                            {
+                                "name": "supply",
+                                "type": "big_integer"
+                            }
+                        ],
+                        "type": "tuple"
+                    }
+                },
+                "require_zero_exclusive_asset_amount_limits": {
+                    "parameters": [
+                        {
+                            "name": "value",
+                            "type": "big_integer"
+                        },
+                        {
+                            "name": "name",
+                            "type": "text"
+                        }
+                    ],
+                    "type": "unit"
+                }
+            },
+            "name": "lib.ft4.assets",
+            "structs": {
+                "filter": {
+                    "attributes": {
+                        "transfer_type": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "nullable",
+                                "value": "lib.ft4.assets:transfer_type"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "lib.ft4.assets.external": {
+            "functions": {
+                "burn_message": {
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "transfer_message": {
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                }
+            },
+            "name": "lib.ft4.assets.external",
+            "operations": {
+                "burn": {
+                    "mount": "ft4.burn",
+                    "parameters": [
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ]
+                },
+                "transfer": {
+                    "mount": "ft4.transfer",
+                    "parameters": [
+                        {
+                            "name": "receiver_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ]
+                }
+            },
+            "queries": {
+                "_get_all_assets": {
+                    "mount": "ft4._get_all_assets",
+                    "parameters": [],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "id",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "name",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "symbol",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "decimals",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "brid",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "icon_url",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "supply",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "_get_asset_balances": {
+                    "mount": "ft4._get_asset_balances",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "asset",
+                                    "type": {
+                                        "fields": [
+                                            {
+                                                "name": "id",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "name",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "symbol",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "decimals",
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "name": "brid",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "icon_url",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "supply",
+                                                "type": "big_integer"
+                                            }
+                                        ],
+                                        "type": "tuple"
+                                    }
+                                },
+                                {
+                                    "name": "amount",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_all_assets": {
+                    "mount": "ft4.get_all_assets",
+                    "parameters": [
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:paged_result"
+                },
+                "get_asset_balance": {
+                    "mount": "ft4.get_asset_balance",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "asset",
+                                    "type": {
+                                        "fields": [
+                                            {
+                                                "name": "id",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "name",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "symbol",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "decimals",
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "name": "brid",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "icon_url",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "supply",
+                                                "type": "big_integer"
+                                            }
+                                        ],
+                                        "type": "tuple"
+                                    }
+                                },
+                                {
+                                    "name": "amount",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_asset_balances": {
+                    "mount": "ft4.get_asset_balances",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:paged_result"
+                },
+                "get_asset_by_id": {
+                    "mount": "ft4.get_asset_by_id",
+                    "parameters": [
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "id",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "name",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "symbol",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "decimals",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "brid",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "icon_url",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "supply",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_asset_by_name": {
+                    "mount": "ft4.get_asset_by_name",
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "id",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "name",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "symbol",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "decimals",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "brid",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "icon_url",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "supply",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_asset_by_symbol": {
+                    "mount": "ft4.get_asset_by_symbol",
+                    "parameters": [
+                        {
+                            "name": "symbol",
+                            "type": "text"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "id",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "name",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "symbol",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "decimals",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "brid",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "icon_url",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "supply",
+                                    "type": "big_integer"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "get_assets_by_name": {
+                    "mount": "ft4.get_assets_by_name",
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.utils:paged_result"
+                },
+                "get_transfer_history": {
+                    "mount": "ft4.get_transfer_history",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "filter",
+                            "type": "lib.ft4.assets:filter"
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": "lib.ft4.utils:paged_result"
+                    }
+                },
+                "get_transfer_history_entry": {
+                    "mount": "ft4.get_transfer_history_entry",
+                    "parameters": [
+                        {
+                            "name": "rowid",
+                            "type": "rowid"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": {
+                            "fields": [
+                                {
+                                    "name": "id",
+                                    "type": "rowid"
+                                },
+                                {
+                                    "name": "delta",
+                                    "type": "big_integer"
+                                },
+                                {
+                                    "name": "decimals",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "asset",
+                                    "type": "text"
+                                },
+                                {
+                                    "name": "asset_id",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "asset_data",
+                                    "type": {
+                                        "fields": [
+                                            {
+                                                "name": "id",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "name",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "symbol",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "decimals",
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "name": "brid",
+                                                "type": "byte_array"
+                                            },
+                                            {
+                                                "name": "icon_url",
+                                                "type": "text"
+                                            },
+                                            {
+                                                "name": "supply",
+                                                "type": "big_integer"
+                                            }
+                                        ],
+                                        "type": "tuple"
+                                    }
+                                },
+                                {
+                                    "name": "is_input",
+                                    "type": "boolean"
+                                },
+                                {
+                                    "name": "timestamp",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "block_height",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "entry_index",
+                                    "type": "integer"
+                                },
+                                {
+                                    "name": "transfer_args",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "tx_rid",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "tx_data",
+                                    "type": "byte_array"
+                                },
+                                {
+                                    "name": "operation_name",
+                                    "type": "text"
+                                }
+                            ],
+                            "type": "tuple"
+                        }
+                    }
+                },
+                "transfer_auth_data": {
+                    "mount": "ft4.transfer_auth_data",
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "lib.ft4.auth:auth_data"
+                }
+            }
+        },
+        "lib.ft4.auth": {
+            "constants": {
+                "APP_SCOPE": {
+                    "type": "text",
+                    "value": "app"
+                },
+                "DEFAULT_LOGIN_CONFIG_NAME": {
+                    "type": "text",
+                    "value": "default"
+                }
+            },
+            "functions": {
+                "_recover_eth_address": {
+                    "parameters": [
+                        {
+                            "name": "message",
+                            "type": "text"
+                        },
+                        {
+                            "name": "signature",
+                            "type": "lib.ft4.auth:signature"
+                        },
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": "byte_array"
+                },
+                "_recover_multiple_eth_keys": {
+                    "parameters": [
+                        {
+                            "name": "message",
+                            "type": "text"
+                        },
+                        {
+                            "name": "signatures",
+                            "type": {
+                                "type": "list",
+                                "value": "lib.ft4.auth:signature"
+                            }
+                        },
+                        {
+                            "name": "account_auth_descriptor",
+                            "type": "lib.ft4.accounts:account_auth_descriptor"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "byte_array"
+                    }
+                },
+                "_validate_eth_arguments": {
+                    "parameters": [
+                        {
+                            "name": "auth_args",
+                            "type": {
+                                "type": "list",
+                                "value": "gtv"
+                            }
+                        },
+                        {
+                            "name": "required_flags",
+                            "type": {
+                                "type": "set",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:eth_auth_args"
+                },
+                "_validate_eth_signature": {
+                    "parameters": [
+                        {
+                            "name": "auth_op",
+                            "type": "gtx_operation"
+                        },
+                        {
+                            "name": "is_strict",
+                            "type": "boolean"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "_validate_ft4_signature": {
+                    "parameters": [
+                        {
+                            "name": "auth_args",
+                            "type": {
+                                "type": "list",
+                                "value": "gtv"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "add_auth_handler": {
+                    "parameters": [
+                        {
+                            "name": "scope",
+                            "type": "text"
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        },
+                        {
+                            "name": "message",
+                            "type": {
+                                "type": "nullable",
+                                "value": {
+                                    "params": [
+                                        "gtv"
+                                    ],
+                                    "result": "text",
+                                    "type": "function"
+                                }
+                            }
+                        }
+                    ],
+                    "type": {
+                        "key": "text",
+                        "type": "map",
+                        "value": "lib.ft4.auth:_auth_handler"
+                    }
+                },
+                "add_login_config": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "flags",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "key": "text",
+                        "type": "map",
+                        "value": "lib.ft4.auth:_login_config"
+                    }
+                },
+                "args": {
+                    "parameters": [],
+                    "type": "gtv"
+                },
+                "auth_handler": {
+                    "parameters": [],
+                    "type": {
+                        "key": "text",
+                        "type": "map",
+                        "value": "lib.ft4.auth:_auth_handler"
+                    }
+                },
+                "authenticate": {
+                    "parameters": [
+                        {
+                            "name": "is_strict",
+                            "type": "boolean"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "create_message_from_template": {
+                    "parameters": [
+                        {
+                            "name": "eth_auth_args",
+                            "type": "lib.ft4.accounts:eth_auth_args"
+                        },
+                        {
+                            "name": "message_template",
+                            "type": "text"
+                        },
+                        {
+                            "name": "args",
+                            "type": {
+                                "type": "list",
+                                "value": "gtv"
+                            }
+                        },
+                        {
+                            "name": "ctr",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "generate_auth_message_template": {
+                    "parameters": [
+                        {
+                            "name": "brid",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "op",
+                            "type": "gtx_operation"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "get_auth_flags": {
+                    "parameters": [
+                        {
+                            "name": "op_name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "is_strict",
+                            "type": "boolean"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "text"
+                    }
+                },
+                "get_auth_handler": {
+                    "parameters": [
+                        {
+                            "name": "op_name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "is_strict",
+                            "type": "boolean"
+                        }
+                    ],
+                    "type": "lib.ft4.auth:_auth_handler"
+                },
+                "get_auth_message_template": {
+                    "parameters": [
+                        {
+                            "name": "op_name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "op_args",
+                            "type": "gtv"
+                        },
+                        {
+                            "name": "is_strict",
+                            "type": "boolean"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "get_mount_scope_auth_handler": {
+                    "parameters": [
+                        {
+                            "name": "auth_handlers",
+                            "type": {
+                                "key": "text",
+                                "type": "map",
+                                "value": "lib.ft4.auth:_auth_handler"
+                            }
+                        },
+                        {
+                            "name": "op_name",
+                            "type": "text"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": "lib.ft4.auth:_auth_handler"
+                    }
+                },
+                "join_text_list": {
+                    "parameters": [
+                        {
+                            "name": "components",
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        },
+                        {
+                            "name": "count",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "login_config": {
+                    "parameters": [],
+                    "type": {
+                        "key": "text",
+                        "type": "map",
+                        "value": "lib.ft4.auth:_login_config"
+                    }
+                },
+                "require_valid_scope_name": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": "text"
+                        }
+                    ],
+                    "type": "unit"
+                }
+            },
+            "name": "lib.ft4.auth",
+            "queries": {
+                "get_login_config": {
+                    "mount": "ft4.get_login_config",
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": "lib.ft4.auth:_login_config"
+                }
+            },
+            "structs": {
+                "_auth_handler": {
+                    "attributes": {
+                        "flags": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        },
+                        "message_formatter": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "nullable",
+                                "value": {
+                                    "params": [
+                                        "gtv"
+                                    ],
+                                    "result": "text",
+                                    "type": "function"
+                                }
+                            }
+                        }
+                    }
+                },
+                "_login_config": {
+                    "attributes": {
+                        "flags": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        }
+                    }
+                },
+                "auth_data": {
+                    "attributes": {
+                        "flags": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "text"
+                            }
+                        },
+                        "message": {
+                            "mutable": 0,
+                            "type": "text"
+                        }
+                    }
+                },
+                "signature": {
+                    "attributes": {
+                        "r": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        },
+                        "s": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        },
+                        "v": {
+                            "mutable": 0,
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
+        "lib.ft4.auth.external": {
+            "name": "lib.ft4.auth.external",
+            "operations": {
+                "evm_auth": {
+                    "mount": "ft4.evm_auth",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "auth_descriptor_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "signatures",
+                            "type": {
+                                "type": "list",
+                                "value": "lib.ft4.auth:signature"
+                            }
+                        }
+                    ]
+                },
+                "ft_auth": {
+                    "mount": "ft4.ft_auth",
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "auth_descriptor_id",
+                            "type": "byte_array"
+                        }
+                    ]
+                }
+            },
+            "queries": {
+                "get_auth_flags": {
+                    "mount": "ft4.get_auth_flags",
+                    "parameters": [
+                        {
+                            "name": "op_name",
+                            "type": "text"
+                        }
+                    ],
+                    "type": {
+                        "type": "list",
+                        "value": "text"
+                    }
+                },
+                "get_auth_message_template": {
+                    "mount": "ft4.get_auth_message_template",
+                    "parameters": [
+                        {
+                            "name": "op_name",
+                            "type": "text"
+                        },
+                        {
+                            "name": "op_args",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                }
+            }
+        },
+        "lib.ft4.crosschain": {
+            "entities": {
+                "applied_transfers": {
+                    "attributes": {
+                        "op_index": {
+                            "mutable": 0,
+                            "type": "integer"
+                        },
+                        "tx_rid": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "tx_rid",
+                                "op_index"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft4.crosschain.applied_transfers"
+                },
+                "asset_origin": {
+                    "attributes": {
+                        "asset": {
+                            "mutable": 0,
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        "origin_brid": {
+                            "mutable": 0,
+                            "type": "byte_array"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "asset"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft4.crosschain.asset_origin"
+                },
+                "blockchain_account": {
+                    "attributes": {
+                        "account": {
+                            "mutable": 0,
+                            "type": "lib.ft4.accounts:account"
+                        }
+                    },
+                    "indexes": [],
+                    "keys": [
+                        {
+                            "attributes": [
+                                "account"
+                            ]
+                        }
+                    ],
+                    "log": 0,
+                    "mount": "ft4.crosschain.blockchain_account"
+                }
+            },
+            "functions": {
+                "Unsafe.update_balances_if_needed": {
+                    "parameters": [
+                        {
+                            "name": "sender",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "receiver",
+                            "type": "lib.ft4.accounts:account"
+                        },
+                        {
+                            "name": "asset",
+                            "type": "lib.ft4.assets:asset"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        }
+                    ],
+                    "type": "unit"
+                },
+                "ensure_blockchain_account": {
+                    "parameters": [
+                        {
+                            "name": "brid",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "get_blockchain_account": {
+                    "parameters": [
+                        {
+                            "name": "brid",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "lib.ft4.accounts:account"
+                },
+                "is_blockchain": {
+                    "parameters": [
+                        {
+                            "name": "account_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": "boolean"
+                }
+            },
+            "name": "lib.ft4.crosschain"
+        },
+        "lib.ft4.crosschain.external": {
+            "functions": {
+                "init_transfer_message": {
+                    "parameters": [
+                        {
+                            "name": "gtv",
+                            "type": "gtv"
+                        }
+                    ],
+                    "type": "text"
+                }
+            },
+            "name": "lib.ft4.crosschain.external",
+            "operations": {
+                "apply_transfer": {
+                    "mount": "ft4.crosschain.apply_transfer",
+                    "parameters": [
+                        {
+                            "name": "init_args",
+                            "type": {
+                                "definition": "lib.ft4.crosschain.external:init_transfer",
+                                "definition_type": "OPERATION",
+                                "mutable": 0,
+                                "type": "struct"
+                            }
+                        },
+                        {
+                            "name": "tx",
+                            "type": "gtx_transaction"
+                        },
+                        {
+                            "name": "op_index",
+                            "type": "integer"
+                        },
+                        {
+                            "name": "hop_index",
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "init_transfer": {
+                    "mount": "ft4.crosschain.init_transfer",
+                    "parameters": [
+                        {
+                            "name": "receiver_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "amount",
+                            "type": "big_integer"
+                        },
+                        {
+                            "name": "hops",
+                            "type": {
+                                "type": "list",
+                                "value": "byte_array"
+                            }
+                        }
+                    ]
+                }
+            },
+            "queries": {
+                "get_asset_origin_by_id": {
+                    "mount": "ft4.crosschain.get_asset_origin_by_id",
+                    "parameters": [
+                        {
+                            "name": "asset_id",
+                            "type": "byte_array"
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": "lib.ft4.crosschain:asset_origin"
+                    }
+                }
+            }
+        },
+        "lib.ft4.ft4_basic_dev": {
+            "name": "lib.ft4.ft4_basic_dev"
+        },
+        "lib.ft4.utils": {
+            "constants": {
+                "MAX_PAGE_SIZE": {
+                    "type": "integer",
+                    "value": 100
+                },
+                "VALID": {
+                    "type": "lib.ft4.utils:validation_result"
+                }
+            },
+            "functions": {
+                "before_rowid": {
+                    "parameters": [
+                        {
+                            "name": "page_cursor",
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    ],
+                    "type": {
+                        "type": "nullable",
+                        "value": "rowid"
+                    }
+                },
+                "decode_cursor": {
+                    "parameters": [
+                        {
+                            "name": "cursor",
+                            "type": "text"
+                        }
+                    ],
+                    "type": "lib.ft4.utils:page_cursor"
+                },
+                "encode_cursor": {
+                    "parameters": [
+                        {
+                            "name": "page_cursor",
+                            "type": "lib.ft4.utils:page_cursor"
+                        }
+                    ],
+                    "type": "text"
+                },
+                "fetch_data_size": {
+                    "parameters": [
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "integer"
+                },
+                "invalid": {
+                    "parameters": [
+                        {
+                            "name": "error",
+                            "type": "text"
+                        }
+                    ],
+                    "type": "lib.ft4.utils:validation_result"
+                },
+                "make_page": {
+                    "parameters": [
+                        {
+                            "name": "pagination_results",
+                            "type": {
+                                "type": "list",
+                                "value": "lib.ft4.utils:pagination_result"
+                            }
+                        },
+                        {
+                            "name": "page_size",
+                            "type": "integer"
+                        }
+                    ],
+                    "type": "lib.ft4.utils:paged_result"
+                },
+                "null_page": {
+                    "parameters": [],
+                    "type": "lib.ft4.utils:paged_result"
+                }
+            },
+            "name": "lib.ft4.utils",
+            "structs": {
+                "page_cursor": {
+                    "attributes": {
+                        "before_rowid": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "nullable",
+                                "value": "rowid"
+                            }
+                        }
+                    }
+                },
+                "paged_result": {
+                    "attributes": {
+                        "data": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "list",
+                                "value": "gtv"
+                            }
+                        },
+                        "next_cursor": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        }
+                    }
+                },
+                "pagination_result": {
+                    "attributes": {
+                        "data": {
+                            "mutable": 0,
+                            "type": "gtv"
+                        },
+                        "rowid": {
+                            "mutable": 0,
+                            "type": "rowid"
+                        }
+                    }
+                },
+                "validation_result": {
+                    "attributes": {
+                        "error": {
+                            "mutable": 0,
+                            "type": {
+                                "type": "nullable",
+                                "value": "text"
+                            }
+                        },
+                        "valid": {
+                            "mutable": 0,
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
+        "lib.ft4.version": {
+            "name": "lib.ft4.version",
+            "queries": {
+                "get_version": {
+                    "mount": "ft4.get_version",
+                    "parameters": [],
+                    "type": "text"
+                }
+            }
+        },
+        "lib.iccf": {
+            "constants": {
+                "iccf_op_name": {
+                    "type": "text",
+                    "value": "iccf_proof"
+                },
+                "num_intra_network_iccf_op_args": {
+                    "type": "integer",
+                    "value": 6
+                }
+            },
+            "functions": {
+                "check_iccf_proof": {
+                    "parameters": [
+                        {
+                            "name": "blockchain_rid",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "tx_hash",
+                            "type": "byte_array"
+                        },
+                        {
+                            "name": "require_intra_network_iccf_op",
+                            "type": "boolean"
+                        }
+                    ],
+                    "type": "boolean"
+                }
+            },
+            "name": "lib.iccf"
+        }
+    }
+}

@@ -1,4 +1,4 @@
-import { IClient, SignedTransaction, gtx } from "postchain-client";
+import { IClient, gtx } from "postchain-client";
 import {
   createChromiaClient,
   createChromiaClientToMultichain,
@@ -48,10 +48,7 @@ describe("Crosschain transfer", () => {
     const connection01 = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
-    console.log(
-      (<any>await connection00.query({ name: "rell.get_app_structure" }))
-        .modules["lib.ft4.crosschain.external"].operations,
-    );
+
     const asset00 = await getNewAsset(connection00.client);
     await registerCrosschainAsset(
       connection01.client,
@@ -76,7 +73,6 @@ describe("Crosschain transfer", () => {
       createAmount(100, asset00.decimals),
     );
 
-    let tx: Promise<SignedTransaction>;
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
     await new Promise<void>((resolve) => {
@@ -87,8 +83,8 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler = async () => {
-        connection01.client.signAndSendUniqueTransaction(
+      const onAnchoringHandler = async (_, tx) => {
+        await connection01.client.signAndSendUniqueTransaction(
           applyTransferOp(
             getInitTransferArgs(
               account01.id,
@@ -96,8 +92,8 @@ describe("Crosschain transfer", () => {
               createAmount(100, asset00.decimals),
               [multichain01.rid],
             ),
-            await tx,
-            0,
+            tx,
+            1,
             0,
           ),
           gtx.newSignatureProvider(),
@@ -105,13 +101,10 @@ describe("Crosschain transfer", () => {
         resolve();
       };
 
-      tx = tb
-        .add(initOperation, onAnchoringHandler)
-        .buildAndSend()
-        .then((txInfo) => txInfo.tx);
+      tb.add(initOperation, onAnchoringHandler).buildAndSend();
     });
 
-    expect(account01.getBalanceByAssetId(asset00.id)).toEqual(
+    expect(await account01.getBalanceByAssetId(asset00.id)).toEqual(
       createAmount(100, asset00.decimals),
     );
   });

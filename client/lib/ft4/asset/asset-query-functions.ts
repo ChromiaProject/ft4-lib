@@ -78,6 +78,7 @@ export async function getBalancesByAccountId(
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
+  console.log(balance);
   return freeze({
     asset: {
       id: balance.asset.id,
