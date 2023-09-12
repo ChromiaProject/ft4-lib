@@ -109,6 +109,7 @@ export type TransactionBuilderConfig = RequireTogether<
 >;
 export type OnAnchoredHandler = (
   operation: Operation | null,
+  transaction: SignedTransaction,
   error: Error | null,
 ) => void;
 
