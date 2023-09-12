@@ -1,57 +1,80 @@
-import { IClient, createClient, encryption } from "postchain-client";
 import { fetchBlockchains } from "/__multichain__/util/blockchain";
 import {
-  authDescriptor,
+  FlagsType,
   createAmount,
-  createInMemoryEvmKeyStore,
-  createKeyStoreInteractor,
+  createConnection,
+  mint,
+  registerCrosschainAsset,
 } from "/ft4";
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
-import { Session } from "/ft4/types";
-import { createAccount } from "/util/util";
-import { getNewAsset } from "/util/blockchain-util";
+import { Connection, Session } from "/ft4/types";
+import {
+  createChromiaClientToMultichain,
+  getNewAsset,
+} from "/util/blockchain-util";
+import { Asset } from "/ft4/asset/types";
+import adminUser from "/util/admin_user";
+import AccountBuilder from "/util/account-builder";
+import { createSession } from "/ft4/ft-session";
+import { AuthenticatedAccount } from "/ft4/accounts";
 
 describe("Orchestrator", () => {
-  let client: IClient;
-  let session: Session;
-  let assetId: Buffer;
-  let targetChainRid: Buffer;
+  let connection0: Connection, connection2: Connection;
+  let account0: AuthenticatedAccount, account2: AuthenticatedAccount;
+  let session0: Session, session2: Session;
+  let asset: Asset;
+  let multichain0Rid: Buffer, multichain2Rid: Buffer;
 
-  const recipientId = Buffer.from("recipientId");
-  const amount = createAmount(100, 1);
+  const amount = createAmount(10, 1);
 
   beforeEach(async () => {
     const { multichain00, multichain02 } = await fetchBlockchains();
 
-    client = await createClient({
-      nodeURLPool: "http://127.0.0.1:7740",
-      blockchainRID: multichain00.rid.toString("hex"),
-    });
-
-    const keyPair = encryption.makeKeyPair();
-
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
-      [],
-      keyStore.address,
-    ).andNoRules;
-    await createAccount(client, ad);
-
-    session = await createKeyStoreInteractor(client, keyStore).getSession(
-      ad.id,
+    connection0 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+    connection2 = createConnection(
+      await createChromiaClientToMultichain(multichain02.rid),
     );
 
-    assetId = (await getNewAsset(client)).id;
-    targetChainRid = multichain02.rid;
+    asset = await getNewAsset(connection0.client);
+    await registerCrosschainAsset(
+      connection2.client,
+      adminUser().signatureProvider,
+      asset,
+      multichain00.rid,
+    );
+
+    account0 = await AccountBuilder.account(connection0)
+      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .build();
+
+    account2 = await AccountBuilder.account(connection2)
+      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .build();
+
+    session0 = createSession(connection0, account0.authenticator);
+    session2 = createSession(connection2, account2.authenticator);
+
+    await mint(
+      connection0.client,
+      adminUser().signatureProvider,
+      account0.id,
+      asset.id,
+      createAmount(100, asset.decimals),
+    );
+
+    multichain0Rid = multichain00.rid;
+    multichain2Rid = multichain02.rid;
   });
 
   it.only("should execute transfer through all paths", async () => {
     const orchestrator = await createOrchestrator(
-      targetChainRid,
-      recipientId,
+      multichain2Rid,
+      account2.id,
       amount,
-      assetId,
-      session,
+      asset.id,
+      session0,
     );
 
     const initListener = jest.fn();
@@ -80,11 +103,11 @@ describe("Orchestrator", () => {
     });
 
     const orchestrator = await createOrchestrator(
-      targetChainRid,
-      recipientId,
+      multichain0Rid,
+      account0.id,
       amount,
-      assetId,
-      session,
+      asset.id,
+      session2,
     );
     const errorListener = jest.fn();
 
