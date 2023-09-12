@@ -12,6 +12,7 @@ import { Session } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
+import { Orchestrator } from "./types";
 
 type State = {
   current: number;
@@ -21,35 +22,14 @@ type State = {
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
- *
  * @async
  * @param {BufferId} targetChainId - ID of the target blockchain.
  * @param {BufferId} recipientId - ID of the recipient.
  * @param {Amount} amount - The amount to be transferred.
  * @param {BufferId} assetId - ID of the asset to be transferred.
  * @param {Session} session - The current user session.
- * @returns {{
- *   transfer: Function,
- *   eventEmitter: EventEmitter,
- *   onTransferInit: Function,
- *   offTransferInit: Function,
- *   onTransferHop: Function,
- *   offTransferHop: Function,
- *   onTransferEnd: Function,
- *   offTransferEnd: Function,
- *   onTransferError: Function,
- *   offTransferError: Function
- * }} The orchestrator instance.
- * @property {Function} transfer - Initiates the transfer process.
- * @property {EventEmitter} eventEmitter - Local EventEmitter instance for this orchestrator.
- * @property {Function} onTransferInit - Subscribes to the 'TransferInit' event.
- * @property {Function} offTransferInit - Unsubscribes from the 'TransferInit' event.
- * @property {Function} onTransferHop - Subscribes to the 'TransferHop' event.
- * @property {Function} offTransferHop - Unsubscribes from the 'TransferHop' event.
- * @property {Function} onTransferEnd - Subscribes to the 'TransferEnd' event.
- * @property {Function} offTransferEnd - Unsubscribes from the 'TransferEnd' event.
- * @property {Function} onTransferError - Subscribes to the 'TransferError' event.
- * @property {Function} offTransferError - Unsubscribes from the 'TransferError' event.
+ * @returns {Orchestrator} The orchestrator instance with functionalities like initiating transfers,
+ * subscribing/unsubscribing to various transfer events.
  */
 export async function createOrchestrator(
   targetChainId: BufferId,
@@ -57,7 +37,7 @@ export async function createOrchestrator(
   amount: Amount,
   assetId: BufferId,
   session: Session,
-) {
+): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
 
   const path = await findPathToChainForAsset(session, asset, targetChainId);

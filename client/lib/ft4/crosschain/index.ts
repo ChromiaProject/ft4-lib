@@ -6,3 +6,5 @@ export {
   getInitTransferArgs,
 } from "./crosschain-op-functions";
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
+
+export { Orchestrator } from "./types";

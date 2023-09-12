@@ -91,7 +91,7 @@ export {
 
 export { Listener, EventEmitter } from "./events";
 
-export { createOrchestrator } from "./crosschain";
+export { Orchestrator, createOrchestrator } from "./crosschain";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,

@@ -68,7 +68,7 @@ describe("Orchestrator", () => {
     multichain2Rid = multichain02.rid;
   });
 
-  it.only("should execute transfer through all paths", async () => {
+  it("executes transfer through all paths", async () => {
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
@@ -80,19 +80,22 @@ describe("Orchestrator", () => {
     const initListener = jest.fn();
     const hopListener = jest.fn();
     const endListener = jest.fn();
+    const errorListener = jest.fn();
 
     orchestrator.onTransferInit(initListener);
     orchestrator.onTransferHop(hopListener);
     orchestrator.onTransferEnd(endListener);
+    orchestrator.onTransferError(errorListener);
 
     await orchestrator.transfer();
 
     expect(initListener).toHaveBeenCalled();
     expect(hopListener).toHaveBeenCalledTimes(2);
     expect(endListener).toHaveBeenCalled();
+    expect(errorListener).not.toHaveBeenCalled();
   });
 
-  it("should emit error event on failure", async () => {
+  it.only("emits error event on transfer failure", async () => {
     // This is a mock to induce an error in the transfer
     jest.mock("/ft4/utils/transaction-builder", () => {
       return {
