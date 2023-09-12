@@ -82,6 +82,7 @@ export async function findPathToChainForAsset(
       // The first two errors are instances of UnexpectedStatusError
       // we either match on the message to rethrow or let it through unhandled
       const nextHop = await getAssetOriginById(tmpConnection, asset.id);
+
       if (nextHop === null) {
         throw new PathfinderError(
           `The asset is not a cross-chain asset on chain ${lastNode.toString(

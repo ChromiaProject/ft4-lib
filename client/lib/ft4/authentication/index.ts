@@ -35,20 +35,18 @@ export function createAuthenticator(
   return authenticator;
 }
 
-export function nopAuthenticator(
+export function createNoopAuthenticator(
   authDataService: AuthDataService,
 ): Authenticator {
   const authenticator = Object.freeze({
     accountId: Buffer.alloc(32),
-    keyHandlers: [nopKeyHandler],
+    keyHandlers: [noopKeyHandler],
     authDataService,
     createSession: () =>
       createAuthenticatorSession(authenticator, authDataService),
-    //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getKeyHandlerForOperation: (operation: Operation) =>
-      Promise.resolve(nopKeyHandler),
-    //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getNonce: (authDescriptorId: BufferId) => Promise.resolve(null),
+    getKeyHandlerForOperation: (_operation: Operation) =>
+      Promise.resolve(noopKeyHandler),
+    getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
   });
 
   return authenticator;
@@ -57,8 +55,7 @@ export function nopAuthenticator(
 const nullKeyStore: KeyStore = Object.freeze({
   id: Buffer.alloc(32),
   isInteractive: false,
-  //eslint-disable-next-line @typescript-eslint/no-unused-vars
-  createKeyHandler: (authDescriptor: AuthDescriptor) => nopKeyHandler,
+  createKeyHandler: (_authDescriptor: AuthDescriptor) => noopKeyHandler,
 });
 
 const nullAuthDescriptor: AuthDescriptor = Object.freeze({
@@ -70,19 +67,15 @@ const nullAuthDescriptor: AuthDescriptor = Object.freeze({
   rule: null,
 });
 
-const nopKeyHandler: KeyHandler = Object.freeze({
+const noopKeyHandler: KeyHandler = Object.freeze({
   authDescriptor: nullAuthDescriptor,
   keyStore: nullKeyStore,
-  //eslint-disable-next-line @typescript-eslint/no-unused-vars
-  satisfiesAuthRequirements: (flags: string[]) => true,
+  satisfiesAuthRequirements: (_flags: string[]) => true,
   authorize: (
-    //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    accountId: BufferId,
+    _accountId: BufferId,
     operation: Operation,
-    //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    nonce: number,
-    //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    authDataService: AuthDataService,
+    _nonce: number,
+    _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
   sign: () => Promise.resolve(),
   getSigners: (): Buffer[] => [],

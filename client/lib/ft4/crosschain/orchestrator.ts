@@ -1,4 +1,4 @@
-import { SignedTransaction, formatter, gtv } from "postchain-client";
+import { SignedTransaction, formatter } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
@@ -10,7 +10,8 @@ import {
 } from "./operations";
 import { Session } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
-import { createAuthenticator } from "../authentication";
+import { createNoopAuthenticator } from "../authentication";
+import { createAuthDataService } from "../ft-session";
 
 type State = {
   current: number;
@@ -58,6 +59,7 @@ export async function createOrchestrator(
   session: Session,
 ) {
   const asset = await session.getAssetById(assetId);
+
   const path = await findPathToChainForAsset(session, asset, targetChainId);
   const normalizedPath = path.map(formatter.ensureBuffer);
 
@@ -73,15 +75,13 @@ export async function createOrchestrator(
    * Initialize the transfer by creating the initial transaction.
    * @returns {Promise<void>}
    */
-  function initTransfer(): Promise<void> {
+  async function initTransfer(): Promise<void> {
     return new Promise((resolve) => {
       const tb = session.transactionBuilder();
 
-      tb
-        .add(
-          initTransferOp(recipientId, assetId, amount, normalizedPath),
-          () => resolve(),
-        )
+      tb.add(initTransferOp(recipientId, assetId, amount, normalizedPath), () =>
+        resolve(),
+      )
         .buildAndSend()
         .then(({ tx }) => {
           state.tx = tx;
@@ -94,16 +94,16 @@ export async function createOrchestrator(
    * @param {Buffer} targetChainBrid - The ID of the target bridge.
    * @returns {Promise<void>}
    */
-  function applyTransfer(targetChainBrid: Buffer): Promise<void> {
-    return new Promise(resolve => {
+  async function applyTransfer(targetChainBrid: Buffer): Promise<void> {
+    const connection = await createConnectionToBrid(
+      session.client,
+      targetChainBrid,
+    );
 
-  // accountId: BufferId,
-  // keyHandlers: KeyHandler[],
-  // authDataService: AuthDataService
-
-      // const connection = await createConnectionToBrid(session.client, targetChainBrid);
-      // const tb = transactionBuilder(createAuthenticator(), connection.client);
-      const tb = session.transactionBuilder();
+    return new Promise((resolve) => {
+      const authDataService = createAuthDataService(connection);
+      const noopAuthenticator = createNoopAuthenticator(authDataService);
+      const tb = transactionBuilder(noopAuthenticator, connection.client);
 
       tb.add(
         applyTransferOp(
@@ -117,8 +117,7 @@ export async function createOrchestrator(
         () => {
           resolve();
         },
-      )
-        .buildAndSend();
+      ).buildAndSend();
     });
   }
 

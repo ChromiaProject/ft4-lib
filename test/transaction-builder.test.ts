@@ -1,7 +1,10 @@
 import { createTestAuthDescriptor, emptyOp } from "./util/util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAuthenticator, nopAuthenticator } from "/ft4/authentication";
+import {
+  createAuthenticator,
+  createNoopAuthenticator,
+} from "/ft4/authentication";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -316,7 +319,7 @@ describe("Transaction Builder", () => {
       const tx = await transactionBuilder(authenticator, client)
         .addWithAuthenticator(
           transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
-          nopAuthenticator(createFakeAuthDataService({})),
+          createNoopAuthenticator(createFakeAuthDataService({})),
         )
         .buildUnsigned();
 

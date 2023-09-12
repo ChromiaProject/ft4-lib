@@ -36,7 +36,7 @@ export function applyTransfer(
     ],
     gtv.decode(tx),
     tx,
-    0,
+    1,
     targetChainIndex,
   );
 }
