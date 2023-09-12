@@ -1,0 +1,18 @@
+@test
+module;
+
+import ^^.accounts;
+import auth_ext: ^^.auth.external;
+
+/*
+ * Creates an ft_auth operation for a specific pubkey.
+ * If more than one auth_desciptor exists for the pubkey, first one found is chosen.
+ */
+function ft_auth_operation_for(pubkey) {
+    val descriptor = require(
+        accounts.auth_descriptor_participant @? { pubkey }.account_auth_descriptor limit 1,
+        "No auth descriptor found for pubkey %s".format(pubkey)
+    );
+
+    return auth_ext.ft_auth(descriptor.account.id, descriptor.id);
+}
