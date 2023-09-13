@@ -1,4 +1,10 @@
-import { IClient, createIccfProofTx, gtv, gtx } from "postchain-client";
+import {
+  IClient,
+  IccfProof,
+  createIccfProofTx,
+  gtv,
+  gtx,
+} from "postchain-client";
 import {
   createChromiaClient,
   createChromiaClientToMultichain,
@@ -29,6 +35,12 @@ interface Blockchain {
   rid: Buffer;
   state: string;
   system: number;
+}
+
+function temporaryFixForIccfProof(proof: IccfProof) {
+  const newTx = proof.iccfTx;
+  newTx.operations[0].args[2] = gtv.encode(newTx.operations[0].args[2]);
+  return newTx;
 }
 
 describe("Crosschain transfer", () => {
@@ -101,8 +113,7 @@ describe("Crosschain transfer", () => {
           multichain00.rid.toString("hex"),
           multichain01.rid.toString("hex"),
         );
-        const newTx = proofTx.iccfTx;
-        console.log(newTx.operations[0].args);
+        const newTx = temporaryFixForIccfProof(proofTx);
         newTx.operations.push(
           applyTransferOp(
             getInitTransferArgs(
@@ -123,8 +134,8 @@ describe("Crosschain transfer", () => {
       tb.add(initOperation, onAnchoringHandler).buildAndSend();
     });
 
-    expect(await account01.getBalanceByAssetId(asset00.id)).toEqual(
-      createAmount(100, asset00.decimals),
-    );
+    expect(
+      (await account01.getBalanceByAssetId(asset00.id)).amount.value,
+    ).toEqual(createAmount(100, asset00.decimals).value);
   });
 });
