@@ -21,7 +21,7 @@ import { AuthenticatedAccount } from "/ft4/accounts";
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
   let account0: AuthenticatedAccount, account2: AuthenticatedAccount;
-  let session0: Session, session2: Session;
+  let session0: Session;
   let asset: Asset;
   let multichain0Rid: Buffer, multichain2Rid: Buffer;
 
@@ -54,7 +54,6 @@ describe("Orchestrator", () => {
       .build();
 
     session0 = createSession(connection0, account0.authenticator);
-    session2 = createSession(connection2, account2.authenticator);
 
     await mint(
       connection0.client,
@@ -95,22 +94,20 @@ describe("Orchestrator", () => {
     expect(errorListener).not.toHaveBeenCalled();
   });
 
-  it.only("emits error event on transfer failure", async () => {
-    // This is a mock to induce an error in the transfer
-    jest.mock("/ft4/utils/transaction-builder", () => {
-      return {
-        transactionBuilder: () => {
-          throw new Error("Mocked Error");
-        },
-      };
-    });
+  it("emits error event on transfer failure", async () => {
+    const mockSession = {
+      ...createSession(connection2, account2.authenticator),
+      transactionBuilder: jest.fn().mockImplementation(() => {
+        throw new Error("Mocked Error");
+      }),
+    };
 
     const orchestrator = await createOrchestrator(
       multichain0Rid,
       account0.id,
       amount,
       asset.id,
-      session2,
+      mockSession,
     );
     const errorListener = jest.fn();
 
