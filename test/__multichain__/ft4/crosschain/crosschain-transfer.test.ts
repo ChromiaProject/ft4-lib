@@ -1,4 +1,4 @@
-import { IClient, gtx } from "postchain-client";
+import { IClient, createIccfProofTx, gtv, gtx } from "postchain-client";
 import {
   createChromiaClient,
   createChromiaClientToMultichain,
@@ -18,7 +18,11 @@ import {
   applyTransfer as applyTransferOp,
   initTransfer,
 } from "/ft4/crosschain/crosschain-operations";
-import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import {
+  OnAnchoredHandler,
+  transactionBuilder,
+} from "/ft4/utils/transaction-builder";
+import { getTransactionRID } from "/ft4/utils";
 
 interface Blockchain {
   name: string;
@@ -39,9 +43,13 @@ describe("Crosschain transfer", () => {
       include_inactive: false,
     })) as unknown as Blockchain[];
 
+    const anchoring = blockchains.find((b) => b.name === "c0");
     const multichain00 = blockchains.find((b) => b.name === "multichain00");
     const multichain01 = blockchains.find((b) => b.name === "multichain01");
 
+    const clientAnchoring = await createChromiaClientToMultichain(
+      anchoring.rid,
+    );
     const connection00 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
@@ -83,8 +91,19 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler = async (_, tx) => {
-        await connection01.client.signAndSendUniqueTransaction(
+      const onAnchoringHandler: OnAnchoredHandler = async (_, tx) => {
+        const decodedTx = gtx.deserialize(tx);
+        const proofTx = await createIccfProofTx(
+          clientAnchoring,
+          getTransactionRID(tx),
+          gtv.gtvHash(decodedTx),
+          decodedTx.signers,
+          multichain00.rid.toString("hex"),
+          multichain01.rid.toString("hex"),
+        );
+        const newTx = proofTx.iccfTx;
+        console.log(newTx.operations[0].args);
+        newTx.operations.push(
           applyTransferOp(
             getInitTransferArgs(
               account01.id,
@@ -96,8 +115,8 @@ describe("Crosschain transfer", () => {
             1,
             0,
           ),
-          gtx.newSignatureProvider(),
         );
+        await connection01.client.sendTransaction(newTx);
         resolve();
       };
 

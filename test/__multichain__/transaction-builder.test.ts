@@ -67,6 +67,6 @@ describe("transaction builder", () => {
     });
     await promise;
 
-    expect(callback).toHaveBeenCalledWith(emptyOp(), null);
+    expect(callback).toHaveBeenCalledWith(emptyOp(), expect.any(Buffer), null);
   });
 });
