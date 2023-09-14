@@ -1,4 +1,13 @@
-import { SignedTransaction, formatter } from "postchain-client";
+import {
+  IccfProof,
+  Operation,
+  SignedTransaction,
+  createClient,
+  createIccfProofTx,
+  formatter,
+  gtv,
+  gtx,
+} from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
@@ -13,12 +22,19 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Orchestrator } from "./types";
+import { getTransactionRID } from "../utils";
 
 type State = {
   current: number;
   path: BufferId[];
   tx?: SignedTransaction;
 };
+
+function temporaryFixForIccfProof(proof: IccfProof) {
+  const newTx = proof.iccfTx;
+  newTx.operations[0].args[2] = gtv.encode(newTx.operations[0].args[2]);
+  return newTx;
+}
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -74,7 +90,10 @@ export async function createOrchestrator(
    * @param {Buffer} targetChainBrid - The ID of the target bridge.
    * @returns {Promise<void>}
    */
-  async function applyTransfer(targetChainBrid: Buffer): Promise<void> {
+  async function applyTransfer(
+    targetChainBrid: Buffer,
+    iccfOp: Operation,
+  ): Promise<void> {
     const connection = await createConnectionToBrid(
       session.client,
       targetChainBrid,
@@ -85,19 +104,24 @@ export async function createOrchestrator(
       const noopAuthenticator = createNoopAuthenticator(authDataService);
       const tb = transactionBuilder(noopAuthenticator, connection.client);
 
-      tb.add(
-        applyTransferOp(
-          recipientId,
-          assetId,
-          amount,
-          normalizedPath,
-          state.tx,
-          normalizedPath.indexOf(targetChainBrid),
-        ),
-        () => {
-          resolve();
-        },
-      ).buildAndSend();
+      tb.add(iccfOp)
+        .add(
+          applyTransferOp(
+            recipientId,
+            assetId,
+            amount,
+            normalizedPath,
+            state.tx,
+            normalizedPath.indexOf(targetChainBrid),
+          ),
+          () => {
+            resolve();
+          },
+        )
+        .buildAndSend()
+        .then(({ tx }) => {
+          state.tx = tx;
+        });
     });
   }
 
@@ -107,6 +131,13 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function transfer(): Promise<void> {
+    const directoryClient = await createClient({
+      directoryNodeURLPool: session.client.config.endpointPool.slice(),
+      blockchainRID:
+        "261D95F368B3143411BE87083C99FB51D6C5D4A1293AB1CEC39C9080AE79E38B",
+      // blockchainIID: 0,
+    });
+
     try {
       localEmitter.emit("TransferInit");
       await initTransfer();
@@ -118,7 +149,27 @@ export async function createOrchestrator(
       ) {
         const brid = normalizedPath[pathIndex];
 
-        await applyTransfer(brid);
+        const decodedTx = gtx.deserialize(state.tx);
+
+        const sourceBlockchainRid =
+          pathIndex === 0
+            ? session.client.config.blockchainRID
+            : normalizedPath[pathIndex - 1];
+
+        const proofTx = await createIccfProofTx(
+          directoryClient,
+          getTransactionRID(state.tx),
+          gtv.gtvHash(decodedTx),
+          decodedTx.signers,
+          sourceBlockchainRid.toString("hex"),
+          brid.toString("hex"),
+        );
+
+        // TODO: Replace with const { iccfTx } = proofTx
+        const iccfTx = temporaryFixForIccfProof(proofTx);
+
+        const iccfOp = iccfTx.operations[0];
+        await applyTransfer(brid, iccfOp);
 
         state.current++;
         localEmitter.emit("TransferHop", brid);

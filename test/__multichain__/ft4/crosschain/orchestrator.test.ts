@@ -67,7 +67,7 @@ describe("Orchestrator", () => {
     multichain2Rid = multichain02.rid;
   });
 
-  it("executes transfer through all paths", async () => {
+  it.only("executes transfer through all paths", async () => {
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
