@@ -67,7 +67,7 @@ describe("Orchestrator", () => {
     multichain2Rid = multichain02.rid;
   });
 
-  it.only("executes transfer through all paths", async () => {
+  it("executes transfer through all paths", async () => {
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
@@ -89,7 +89,7 @@ describe("Orchestrator", () => {
     await orchestrator.transfer();
 
     expect(initListener).toHaveBeenCalled();
-    expect(hopListener).toHaveBeenCalledTimes(2);
+    expect(hopListener).toHaveBeenCalledTimes(1);
     expect(endListener).toHaveBeenCalled();
     expect(errorListener).not.toHaveBeenCalled();
   });
