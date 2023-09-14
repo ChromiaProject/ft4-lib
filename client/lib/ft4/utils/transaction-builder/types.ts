@@ -79,7 +79,7 @@ export type TransactionBuilder = {
    * Build the transaction and submits it to the blockchain. Will return
    * when transaction is included in a block, or is rejected. Using this
    * function will also trigger any registered `OnAnchoredHandler`s.
-   * @returns transaction reciept
+   * @returns an object containing the signed transaction and its receipt
    */
   buildAndSend: () => Promise<{
     tx: SignedTransaction;

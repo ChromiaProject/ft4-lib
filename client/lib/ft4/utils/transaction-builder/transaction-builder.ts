@@ -177,7 +177,10 @@ export function transactionBuilder(
       );
     }
 
-    return { tx, receipt };
+    return {
+      tx,
+      receipt,
+    };
   }
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {

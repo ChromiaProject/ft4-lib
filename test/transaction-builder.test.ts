@@ -204,8 +204,11 @@ describe("Transaction Builder", () => {
           .add(nop())
           .buildAndSend(),
       ).resolves.toMatchObject({
-        status: "confirmed",
-        statusCode: 200,
+        tx: expect.any(Buffer),
+        receipt: {
+          status: "confirmed",
+          statusCode: 200,
+        },
       });
     });
 
@@ -224,7 +227,11 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
     });
 
     it("calls all registered handler when block is anchored", async () => {
@@ -247,8 +254,16 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
-      expect(callback2).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
+      expect(callback2).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
     });
 
     it("calls callbacks even if block is not anchored immediately", async () => {
@@ -268,7 +283,11 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
     });
     it("calls callback with an error if polling times out", async () => {
       (isBlockAnchored as any)
@@ -292,6 +311,7 @@ describe("Transaction Builder", () => {
 
       expect(callback).toHaveBeenCalledWith(
         null,
+        expect.any(Buffer),
         expect.any(AnchoringTimeoutError),
       );
     });
@@ -299,7 +319,7 @@ describe("Transaction Builder", () => {
       const { authenticatorMock } = getMocks();
       //eslint-disable-next-line no-async-promise-executor
       const promise = new Promise(async (resolve) => {
-        const receipt = await transactionBuilder(authenticatorMock, client, {
+        const txInfo = await transactionBuilder(authenticatorMock, client, {
           retryCount: 2,
           waitTimeMs: 1,
         })
@@ -309,7 +329,7 @@ describe("Transaction Builder", () => {
           )
           .add(nop())
           .buildAndSend();
-        expect(receipt).toMatchObject({ status: "confirmed" });
+        expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
       });
       await promise;
     });
