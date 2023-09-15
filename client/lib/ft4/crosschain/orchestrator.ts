@@ -132,10 +132,10 @@ export async function createOrchestrator(
    */
   async function transfer(): Promise<void> {
     const directoryClient = await createClient({
-      directoryNodeURLPool: session.client.config.endpointPool.slice(),
-      blockchainRID:
-        "261D95F368B3143411BE87083C99FB51D6C5D4A1293AB1CEC39C9080AE79E38B",
-      // blockchainIID: 0,
+      // TODO: Replace with directoryNodeURLPool after Postchain Client release
+      nodeURLPool: session.client.config.endpointPool.slice(),
+      // directoryNodeURLPool: session.client.config.endpointPool.slice(),
+      blockchainIID: 0,
     });
 
     try {
