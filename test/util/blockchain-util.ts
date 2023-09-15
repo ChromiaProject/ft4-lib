@@ -39,5 +39,8 @@ export async function getNewAsset(
     formatter.ensureBuffer(client.config.blockchainRID),
   ]);
   const asset = await createConnection(client).getAssetById(id);
+  if (!asset) {
+    throw new Error("Unable to fetch the new asset");
+  }
   return asset;
 }

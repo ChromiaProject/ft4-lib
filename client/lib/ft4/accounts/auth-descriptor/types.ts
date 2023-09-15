@@ -1,64 +1,129 @@
 import { Buffer } from "buffer";
 
-export enum AuthType {
-  single_sig = "S",
-  multi_sig = "M",
+export enum FlagsType {
+  Account = "A", // Change Account settings
+  Transfer = "T", // Transfer balance
 }
 
-export type AuthDescriptorSimpleRule = readonly [string, string, number];
-export type AuthDescriptorCompositeRule = readonly [
-  AuthDescriptorAnyRule,
-  "and",
-  AuthDescriptorAnyRule
-];
-type AuthDescriptorAnyRule =
-  | AuthDescriptorCompositeRule
-  | AuthDescriptorSimpleRule;
-export type AuthDescriptorRule = AuthDescriptorAnyRule;
+export enum AuthType {
+  SingleSig = "S",
+  MultiSig = "M",
+}
 
-export type AuthDescriptor = {
-  id: Buffer;
-  authType: AuthType;
-  flags: Set<string>;
-  signaturesRequired: number;
-  signers: Buffer[];
-  rule: AuthDescriptorRule;
-  created: number;
+export enum RuleVariable {
+  BlockHeight = "block_height",
+  BlockTime = "block_time",
+  OpCount = "op_count",
+}
+
+export enum RuleOperator {
+  LessThan = "lt",
+  LessOrEqual = "le",
+  Equals = "eq",
+  GreaterThan = "gt",
+  GreaterOrEqual = "ge",
+}
+
+export class AuthDescriptorError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.name = "AuthDescriptorError";
+  }
+}
+
+// ======== Client side data model ============
+
+export type SimpleRuleExpression = {
+  variable: RuleVariable;
+  operator: RuleOperator;
+  value: number;
 };
 
-export type GtvAuthDescriptor = readonly [
-  id: Buffer,
-  authType: number,
-  args: AuthDescriptorArgs,
-  rule: AuthDescriptorRule | null,
-  created: number
-];
+export type CompositeRuleExpression = {
+  lhs: SimpleRuleExpression | CompositeRuleExpression;
+  rhs: SimpleRuleExpression | CompositeRuleExpression;
+};
 
-export type MultiSigAuthDescriptorArgs = readonly [
+export type AuthDescriptorRule = SimpleRuleExpression | CompositeRuleExpression;
+
+export type AuthDescriptor<T extends AnySig> = {
+  id: Buffer;
+  authType: AuthType;
+  rule: AuthDescriptorRule | null;
+  created: number;
+  args: T;
+};
+
+export type AuthDescriptorRegistration<T extends AnySig> = {
+  authType: AuthType;
+  args: T;
+  rule: AuthDescriptorRule | null;
+};
+
+export type AnyAuthDescriptor =
+  | AuthDescriptor<SingleSig>
+  | AuthDescriptor<MultiSig>;
+export type AnyAuthDescriptorRegistration =
+  | AuthDescriptorRegistration<SingleSig>
+  | AuthDescriptorRegistration<MultiSig>;
+
+export type AnySig = SingleSig | MultiSig;
+export type SingleSig = SingleSigAuthDescriptorArgs;
+export type MultiSig = MultiSigAuthDescriptorArgs;
+
+export type SingleSigAuthDescriptorArgs = {
+  flags: string[];
+  signer: Buffer;
+};
+
+export type MultiSigAuthDescriptorArgs = {
+  flags: string[];
+  signaturesRequired: number;
+  signers: Buffer[];
+};
+
+// ======== Server side =======================
+export type GtvAuthDescriptorSimpleRule = readonly [string, string, number];
+export type GtvAuthDescriptorCompositeRule = readonly [
+  GtvAuthDescriptorAnyRule,
+  "and",
+  GtvAuthDescriptorAnyRule,
+];
+type GtvAuthDescriptorAnyRule =
+  | GtvAuthDescriptorCompositeRule
+  | GtvAuthDescriptorSimpleRule;
+export type GtvAuthDescriptorRule = GtvAuthDescriptorAnyRule;
+
+export type GtvMultiSigAuthDescriptorArgs = readonly [
   flags: string[],
   signaturesRequired: number,
-  signers: Buffer[]
+  signers: Buffer[],
 ];
 
-export type SingleSigAuthDescriptorArgs = readonly [
+export type GtvSingleSigAuthDescriptorArgs = readonly [
   flags: string[],
-  signer: Buffer
+  signer: Buffer,
 ];
 
-export type AuthDescriptorArgs =
-  | SingleSigAuthDescriptorArgs
-  | MultiSigAuthDescriptorArgs;
+export type GtvAuthDescriptorArgs =
+  | GtvSingleSigAuthDescriptorArgs
+  | GtvMultiSigAuthDescriptorArgs;
 
-export type RawAuthDescriptor = [
-  auth_type: number,
-  args: AuthDescriptorArgs,
-  rules: AuthDescriptorRule | null
-];
+// ======== Server side request model =========
 
-export type AuthDescriptorResponse = {
-  args: AuthDescriptorArgs;
+export type GtvAuthDescriptorRegistration<T extends GtvAuthDescriptorArgs> =
+  readonly [auth_type: number, args: T, rules: GtvAuthDescriptorRule | null];
+
+export type GtvAnyAuthDescriptorRegistration =
+  | GtvAuthDescriptorRegistration<GtvSingleSigAuthDescriptorArgs>
+  | GtvAuthDescriptorRegistration<GtvMultiSigAuthDescriptorArgs>;
+
+// ======== Server side response model ========
+
+export type GtvAuthDescriptorResponse<T extends GtvAuthDescriptorArgs> = {
+  args: T;
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: AuthDescriptorRule | null;
+  rules: GtvAuthDescriptorRule | null;
 };

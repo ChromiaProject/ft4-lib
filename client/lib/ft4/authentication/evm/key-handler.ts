@@ -1,20 +1,21 @@
-import { BufferId } from "../../../cryptoUtils";
-import { AuthDataService, KeyHandler, KeyStore } from "../types";
-import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
+import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
+import { BufferId } from "../../../cryptoUtils";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { formatter, Operation } from "postchain-client";
+import { AuthDataService, KeyHandler, KeyStore } from "../types";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
 import { TxBuilderTransaction } from "/ft4/utils/types";
+import { gtv, deriveAccountId } from "/ft4/accounts/auth-descriptor";
 
 export function createEvmKeyHandler(
-  authDescriptor: AuthDescriptor,
+  authDescriptorRegistration: AnyAuthDescriptorRegistration,
   keyStore: EvmKeyStore,
 ): KeyHandler {
   return Object.freeze({
-    authDescriptor,
+    authDescriptorRegistration,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptorRegistration, requiredFlags),
     authorize: (
       accountId: BufferId,
       operation: Operation,
@@ -23,7 +24,9 @@ export function createEvmKeyHandler(
     ) =>
       authorize(
         accountId,
-        authDescriptor.id,
+        deriveAccountId(
+          gtv.authDescriptorRegistrationToGtv(authDescriptorRegistration),
+        ),
         operation,
         nonce,
         authDataService,
@@ -42,10 +45,9 @@ async function authorize(
   authDataService: AuthDataService,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
-  const brid = await authDataService.getBrid();
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
+  const brid = authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(

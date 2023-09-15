@@ -1,24 +1,25 @@
 import {
+  KeyPair,
+  SignatureProvider,
+  TransactionReceipt,
+} from "postchain-client";
+import { BufferId } from "../../cryptoUtils";
+import { Amount } from "../asset/interfaces";
+import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
+import { Authenticator } from "../authentication/types";
+import { call } from "../ft-session";
+import { Connection } from "../types";
+import { transactionBuilder } from "../utils/transaction-builder";
+import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
 } from "./account-operations";
-import { AuthenticatedAccount } from "./types";
 import { createAccountObject } from "./account-query-functions";
-import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId } from "../../cryptoUtils";
-import {
-  SignatureProvider,
-  TransactionReceipt,
-  KeyPair,
-} from "postchain-client";
-import { Amount } from "../asset/interfaces";
-import { Connection } from "../types";
-import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
-import { transactionBuilder } from "../utils/transaction-builder";
-import { Authenticator } from "../authentication/types";
-import { call } from "../ft-session";
+import { AuthenticatedAccount } from "./types";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
+import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -27,7 +28,7 @@ export function createAuthenticatedAccount(
   return {
     authenticator,
     addAuthDescriptor: (
-      authDescriptor: AuthDescriptor,
+      authDescriptor: AnyAuthDescriptorRegistration,
       newSigner: SignatureProvider | KeyPair,
     ) =>
       addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
@@ -46,16 +47,15 @@ export function createAuthenticatedAccount(
 async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  authDescriptor: AuthDescriptor,
+  ad: AnyAuthDescriptorRegistration,
   newSigner: SignatureProvider | KeyPair,
 ): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
+  const registration = authDescriptorRegistrationToGtv(ad);
   const tx = await tb
-    .add(addAuthDescriptorOp(authDescriptor))
-    .addSigners(
-      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor),
-    )
+    .add(addAuthDescriptorOp(registration))
+    .addSigners(createInMemoryFtKeyStore(newSigner).createKeyHandler(ad))
     .build();
 
   return connection.client.sendTransaction(tx);

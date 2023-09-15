@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import {
   encryption,
   gtx,
@@ -5,26 +6,24 @@ import {
   Operation,
   SignatureProvider,
 } from "postchain-client";
+import { KeyManager } from "/ft4/accounts/auth/types";
 import {
-  authDescriptor,
-  FlagsType,
-} from "../../client/lib/ft4/accounts/auth-descriptor";
-import {
-  AuthDescriptor,
+  AuthDescriptorRegistration,
   AuthDescriptorRule,
-} from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import { KeyManager } from "../../client/lib/ft4/accounts/auth/types";
-import { Buffer } from "buffer";
+  FlagsType,
+  SingleSigAuthDescriptorArgs,
+  createSingleSignatureAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 
 export default function singleSigUser(
-  rule: AuthDescriptorRule | null = null
+  rule: AuthDescriptorRule | null = null,
 ): User {
   return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
 
 export function newSingleSigUser(
   keyPair: KeyPair,
-  rule: AuthDescriptorRule | null = null
+  rule: AuthDescriptorRule | null = null,
 ): User {
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),
@@ -36,22 +35,27 @@ export function newSingleSigUser(
     ...km,
     pubKey: Buffer.from(
       "036CED8CC605AD61F95A79CCCB5A5C8CCB734A106FD67D54809A69C4BEB5103F28",
-      "hex"
+      "hex",
     ),
     sign: (gtx: Buffer) => Promise.resolve(gtx),
   };
-  const singleSigAuthDescriptor = authDescriptor.create.singleSig
-    .withArgs([FlagsType.Account, FlagsType.Transfer], signatureProvider.pubKey)
-    .andRules(rule);
+  const singleSigAuthDescriptor =
+    createSingleSignatureAuthDescriptorRegistration(
+      {
+        flags: [FlagsType.Account, FlagsType.Transfer],
+        signer: signatureProvider.pubKey,
+      },
+      rule,
+    );
   return {
     signatureProvider,
     keyManagers: [keymanager],
-    authDescriptor: singleSigAuthDescriptor,
+    authDescriptorRegistration: singleSigAuthDescriptor,
   };
 }
 
 export type User = {
   signatureProvider: SignatureProvider;
   keyManagers: KeyManager[];
-  authDescriptor: AuthDescriptor;
+  authDescriptorRegistration: AuthDescriptorRegistration<SingleSigAuthDescriptorArgs>;
 };

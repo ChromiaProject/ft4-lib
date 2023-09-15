@@ -1,15 +1,13 @@
 import { newSignatureProvider } from "postchain-client";
 import {
-  authDescriptor as ad,
   FlagsType,
-} from "../client/lib/ft4/accounts/auth-descriptor";
-import { createAmount } from "../client/lib/ft4/asset/amount";
-import { Asset } from "../client/lib/ft4/asset/types";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import {
-  createConnection,
-  createKeyStoreInteractor,
-} from "../client/lib/ft4/ft-session";
+  deriveAccountId,
+  createMultiSignatureAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
+import { createAmount } from "/ft4/asset/amount";
+import { Asset } from "/ft4/asset/types";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
@@ -95,12 +93,17 @@ describe("Transfer", () => {
       .withPoints(1)
       .build();
 
-    const authDescriptor = ad.create.multiSig.withArgs(
-      [FlagsType.Account, FlagsType.Transfer],
-      2,
-      [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey],
-    ).andNoRules;
-
+    const authDescriptor = createMultiSignatureAuthDescriptorRegistration(
+      {
+        flags: [FlagsType.Account, FlagsType.Transfer],
+        signaturesRequired: 2,
+        signers: [
+          user2.signatureProvider.pubKey,
+          user3.signatureProvider.pubKey,
+        ],
+      },
+      null,
+    );
     await registerAccount(
       connection.client,
       admin.signatureProvider,
@@ -108,17 +111,17 @@ describe("Transfer", () => {
     );
 
     const account2 = await createConnection(connection.client).getAccountById(
-      authDescriptor.id,
+      deriveAccountId(authDescriptor),
     );
 
     await account1.transfer(
-      account2.id,
+      account2!.id,
       asset.id,
       createAmount(10, asset.decimals),
     );
 
     const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
-    const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
+    const assetBalance2 = await account2!.getBalanceByAssetId(asset.id);
 
     expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
       true,

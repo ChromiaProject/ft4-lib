@@ -16,14 +16,35 @@ import {
   createWeb3ProviderEvmKeyStore,
   createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
+  EvmKeyStore,
+  FtKeyStore,
+  createEvmKeyHandler,
 } from "./authentication";
+import { Account } from "./accounts";
 import {
-  AuthDescriptor,
+  AnyAuthDescriptor,
   FlagsType,
-  Account,
-  authDescriptor,
-  GtvAuthDescriptor,
-} from "./accounts";
+  SingleSig,
+  MultiSig,
+  AnySig,
+  AuthType,
+  AuthDescriptor,
+  RuleVariable,
+  RuleOperator,
+  AuthDescriptorError,
+  SimpleRuleExpression,
+  CompositeRuleExpression,
+  AuthDescriptorRule,
+  AuthDescriptorRegistration,
+  AnyAuthDescriptorRegistration,
+  SingleSigAuthDescriptorArgs,
+  MultiSigAuthDescriptorArgs,
+  aggregateSigners,
+  createCompositeRule,
+  createSimpleRule,
+  createMultiSignatureAuthDescriptorRegistration,
+  createSingleSignatureAuthDescriptorRegistration,
+} from "./accounts/auth-descriptor";
 import { createAmount } from "./asset/amount";
 import {
   registerAccount,
@@ -31,7 +52,6 @@ import {
   registerAsset,
   mint,
 } from "./admin/admin-op-functions";
-import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
 import { Session } from "./types";
 import {
@@ -47,16 +67,34 @@ export {
   KeyStoreInteractor,
   AuthDescriptor,
   FlagsType,
+  AnyAuthDescriptor,
+  SingleSig,
+  MultiSig,
+  AnySig,
+  AuthType,
+  RuleVariable,
+  RuleOperator,
+  AuthDescriptorError,
+  SimpleRuleExpression,
+  CompositeRuleExpression,
+  AuthDescriptorRule,
+  AuthDescriptorRegistration,
+  AnyAuthDescriptorRegistration,
+  SingleSigAuthDescriptorArgs,
+  MultiSigAuthDescriptorArgs,
   Account,
   Session,
   DecimalFormat,
-  GtvAuthDescriptor,
   TransferHistoryEntry,
   TransferHistoryResponse,
   TransferHistoryType,
   EvmKeyStore,
   FtKeyStore,
-  authDescriptor,
+  createSingleSignatureAuthDescriptorRegistration,
+  createMultiSignatureAuthDescriptorRegistration,
+  createSimpleRule,
+  createCompositeRule,
+  aggregateSigners,
   createConnection,
   createKeyStoreInteractor,
   createWeb3ProviderEvmKeyStore,
@@ -78,7 +116,6 @@ export { Listener, EventEmitter } from "./events";
 export const ft = Object.freeze({
   getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
-  authDescriptor,
 });
 
 ft.setLogLevel(0);

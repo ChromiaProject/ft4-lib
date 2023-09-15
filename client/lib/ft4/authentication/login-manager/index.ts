@@ -1,21 +1,25 @@
 import { createAuthenticator } from "..";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import { LoginManger, LoginOptions } from "./types";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
-import { FlagsType, authDescriptor } from "/ft4/accounts/auth-descriptor";
+import {
+  FlagsType,
+  createSingleSignatureAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 import { createAuthDataService, createSession } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
-import { hasAuthDescriptorFlags } from "../ft/key-handler";
+import { getPubkey } from "/ft4/utils";
 
 export * from "./types";
 
 export function createLoginManager(
   connection: Connection,
   keyStore: KeyStore,
-  loginKeyStore: LoginKeyStore | null = null
+  loginKeyStore: LoginKeyStore | null = null,
 ): LoginManger {
   const usedLoginKeyStore = loginKeyStore || createInMemoryLoginKeyStore();
 
@@ -25,24 +29,24 @@ export function createLoginManager(
 
       // Get all auth descriptors that can be used with the provided key store
       const authDescriptors = await account.getAuthDescriptorsByParticipantId(
-        keyStore.id
+        keyStore.id,
       );
 
       // We need need an auth descriptor with admin flag in order to add a
       // disposable key
       const adminAuthDescriptor = authDescriptors.find((authDescriptor) =>
-        authDescriptor.flags.has(FlagsType.Account)
+        authDescriptor.args.flags.includes(FlagsType.Account),
       );
 
       if (!adminAuthDescriptor) {
         throw new Error(
           `Admin auth descriptor does not exist for provided key store <${keyStore.id.toString(
-            "hex"
-          )}>`
+            "hex",
+          )}>`,
         );
       }
 
-      let disposableKeyHandlers = [];
+      let disposableKeyHandlers: KeyHandler[] = [];
 
       const authDataService = createAuthDataService(connection);
       // Get list of flags that will be added to new auth descriptor
@@ -56,15 +60,15 @@ export function createLoginManager(
       if (keyPair) {
         const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
         const disposableAuthDescriptors =
-          await account.getAuthDescriptorsByParticipantId(keyPair.pubKey);
+          await account.getAuthDescriptorsByParticipantId(getPubkey(keyPair));
         disposableKeyHandlers = disposableAuthDescriptors
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
             // If
-            hasAuthDescriptorFlags(authDescriptor, flags)
+            hasAuthDescriptorFlags(authDescriptor, flags),
           )
           .map((authDescriptor) =>
-            disposableKeyStore.createKeyHandler(authDescriptor)
+            disposableKeyStore.createKeyHandler(authDescriptor),
           );
       }
 
@@ -77,20 +81,20 @@ export function createLoginManager(
           usedLoginKeyStore,
           account.id,
           keyStore.createKeyHandler(adminAuthDescriptor),
-          flags
+          flags,
         );
         disposableKeyHandlers = [disposableKeyHandler];
       }
 
       // Initialize key handlers that correspond to master key store
       const masterKeyHandlers = authDescriptors.map((authDescriptor) =>
-        keyStore.createKeyHandler(authDescriptor)
+        keyStore.createKeyHandler(authDescriptor),
       );
 
       const authenticator = createAuthenticator(
         loginOptions.accountId,
         [...disposableKeyHandlers, ...masterKeyHandlers],
-        authDataService
+        authDataService,
       );
 
       return createSession(connection, authenticator);
@@ -108,15 +112,15 @@ export function createLoginManager(
  */
 async function getFlags(
   authDataService: AuthDataService,
-  options: LoginOptions
+  options: LoginOptions,
 ): Promise<string[]> {
   if (options.config) {
     return options.config.flags;
   } else {
     const loginConfig = await authDataService.getLoginConfig(
-      options.configName
+      options.configName,
     );
-    return loginConfig.flags;
+    return loginConfig?.flags ?? [];
   }
 }
 
@@ -125,12 +129,12 @@ async function addDisposableAuthDescriptor(
   loginKeyStore: LoginKeyStore,
   accountId: Buffer,
   adminAuthHandler: KeyHandler,
-  flags: string[]
+  flags: string[],
 ): Promise<KeyHandler> {
   const authenticator = createAuthenticator(
     accountId,
     [adminAuthHandler],
-    createAuthDataService(connection)
+    createAuthDataService(connection),
   );
 
   const session = createSession(connection, authenticator);
@@ -138,10 +142,13 @@ async function addDisposableAuthDescriptor(
   const keyPair = await loginKeyStore.createKeyPair(accountId);
   const ks = createInMemoryFtKeyStore(keyPair);
 
-  const ad = authDescriptor.create.singleSig.withArgs(
-    flags,
-    keyPair.pubKey
-  ).andNoRules;
+  const ad = createSingleSignatureAuthDescriptorRegistration(
+    {
+      flags,
+      signer: getPubkey(keyPair),
+    },
+    null,
+  );
 
   await session.account.addAuthDescriptor(ad, keyPair);
 

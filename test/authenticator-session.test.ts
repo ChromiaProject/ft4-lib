@@ -5,62 +5,70 @@ import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/ke
 import { createAuthenticator } from "../client/lib/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { KeyHandler } from "../client/lib/ft4/authentication/types";
-import { createTestAuthDescriptor, opToRellOp } from "./util/util";
+import { createTestAuthDescriptorRegistration, opToRellOp } from "./util/util";
 import { Buffer } from "buffer";
 import { createChromiaClient } from "./util/blockchain-util";
 import { TxBuilderTransaction } from "/ft4/utils/types";
+import {
+  aggregateSigners,
+  deriveAccountId,
+} from "/ft4/accounts/auth-descriptor";
 
 describe("Authenticator session", () => {
   it("should insert FT auth operation", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair, authDescriptor } = createTestAuthDescriptor();
+    const { keyPair, authDescriptorRegistration } =
+      createTestAuthDescriptorRegistration();
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
+      authDescriptorRegistration,
+    );
     const authDataService = createFakeAuthDataService({
       foo: { flags: [], message: "" },
     });
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     ).createSession();
 
     const operations = await authenticatorSession.authorize(op("foo"));
 
     expect(operations).toEqual([
-      ftAuth(accountId, authDescriptor.id),
+      ftAuth(accountId, deriveAccountId(authDescriptorRegistration)),
       op("foo"),
     ]);
   });
 
   it("should sign transaction", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair, authDescriptor } = createTestAuthDescriptor();
+    const { keyPair, authDescriptorRegistration } =
+      createTestAuthDescriptorRegistration();
     const client = await createChromiaClient();
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
+      authDescriptorRegistration,
+    );
     const authDataService = createFakeAuthDataService({
       foo: { flags: [], message: "" },
     });
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     ).createSession();
     const operations: Operation[] = await authenticatorSession.authorize(
-      op("foo")
+      op("foo"),
     );
 
     const transaction: TxBuilderTransaction = {
       blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
       operations: [],
-      signers: authDescriptor.signers,
+      signers: aggregateSigners(authDescriptorRegistration),
       signatures: [],
     };
     operations.forEach((operation) =>
-      transaction.operations.push(opToRellOp(operation))
+      transaction.operations.push(opToRellOp(operation)),
     );
     await authenticatorSession.sign(transaction);
 
@@ -72,10 +80,10 @@ describe("Authenticator session", () => {
 
   it("should use key handler that satisfies operation auth requirements", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
-      createTestAuthDescriptor(["b"]);
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
-      createTestAuthDescriptor(["f"]);
+    const { keyPair: keyPair1, authDescriptorRegistration: authDescriptor1 } =
+      createTestAuthDescriptorRegistration(["b"]);
+    const { keyPair: keyPair2, authDescriptorRegistration: authDescriptor2 } =
+      createTestAuthDescriptorRegistration(["f"]);
 
     const keyHandler1 =
       createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
@@ -88,21 +96,21 @@ describe("Authenticator session", () => {
     const authenticator = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2],
-      authDataService
+      authDataService,
     );
     const keyHandler = await authenticator.getKeyHandlerForOperation(op("foo"));
 
-    expect(keyHandler.authDescriptor).toEqual(authDescriptor2);
+    expect(keyHandler!.authDescriptorRegistration).toEqual(authDescriptor2);
   });
 
   it("should get list of used key handlers", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
-      createTestAuthDescriptor(["b"]);
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
-      createTestAuthDescriptor(["f"]);
-    const { keyPair: keyPair3, authDescriptor: authDescriptor3 } =
-      createTestAuthDescriptor(["a"]);
+    const { keyPair: keyPair1, authDescriptorRegistration: authDescriptor1 } =
+      createTestAuthDescriptorRegistration(["b"]);
+    const { keyPair: keyPair2, authDescriptorRegistration: authDescriptor2 } =
+      createTestAuthDescriptorRegistration(["f"]);
+    const { keyPair: keyPair3, authDescriptorRegistration: authDescriptor3 } =
+      createTestAuthDescriptorRegistration(["a"]);
 
     const keyHandler1 =
       createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
@@ -119,7 +127,7 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2, keyHandler3],
-      authDataService
+      authDataService,
     ).createSession();
 
     await authenticatorSession.authorize(op("bar"));
@@ -128,38 +136,40 @@ describe("Authenticator session", () => {
     const usedKeyHandlers = authenticatorSession.getUsedKeyHandlers();
 
     expect(usedKeyHandlers).toEqual(
-      new Set<KeyHandler>([keyHandler2, keyHandler3])
+      new Set<KeyHandler>([keyHandler2, keyHandler3]),
     );
   });
 
   it("should throw an error when there is no key handler that satisfies operation auth requirements", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair, authDescriptor } = createTestAuthDescriptor(["a"]);
+    const { keyPair, authDescriptorRegistration } =
+      createTestAuthDescriptorRegistration(["a"]);
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
+      authDescriptorRegistration,
+    );
     const authDataService = createFakeAuthDataService({
       foo: { flags: ["b"], message: "" },
     });
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     ).createSession();
 
     await expect(
-      authenticatorSession.authorize(op("foo"))
+      authenticatorSession.authorize(op("foo")),
     ).rejects.toBeInstanceOf(Error);
   });
 
   it("should get list of signers", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
-      createTestAuthDescriptor(["a"]);
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
-      createTestAuthDescriptor(["b"]);
-    const { keyPair: keyPair3, authDescriptor: authDescriptor3 } =
-      createTestAuthDescriptor(["f"]);
+    const { keyPair: keyPair1, authDescriptorRegistration: authDescriptor1 } =
+      createTestAuthDescriptorRegistration(["a"]);
+    const { keyPair: keyPair2, authDescriptorRegistration: authDescriptor2 } =
+      createTestAuthDescriptorRegistration(["b"]);
+    const { keyPair: keyPair3, authDescriptorRegistration: authDescriptor3 } =
+      createTestAuthDescriptorRegistration(["f"]);
 
     const keyHandler1 =
       createInMemoryFtKeyStore(keyPair1).createKeyHandler(authDescriptor1);
@@ -176,7 +186,7 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2, keyHandler3],
-      authDataService
+      authDataService,
     ).createSession();
 
     await authenticatorSession.authorize(op("foo"));
@@ -186,9 +196,11 @@ describe("Authenticator session", () => {
 
     expect(signers).toEqual(
       new Set<Buffer>([
-        ...keyHandler2.authDescriptor.signers,
-        ...keyHandler3.authDescriptor.signers,
-      ])
+        ...aggregateSigners(
+          keyHandler2.authDescriptorRegistration,
+          keyHandler3.authDescriptorRegistration,
+        ),
+      ]),
     );
   });
 });

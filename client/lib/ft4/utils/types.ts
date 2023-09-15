@@ -1,6 +1,6 @@
+import { Buffer } from "buffer";
 import { RellOperation } from "postchain-client";
 import { OptionalPageCursor } from "../types";
-import { Buffer } from "buffer";
 
 export type Config = {
   rateLimit: {

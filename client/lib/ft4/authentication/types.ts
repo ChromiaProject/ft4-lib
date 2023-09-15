@@ -1,8 +1,8 @@
+import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { TxBuilderTransaction } from "../utils/types";
-import { AuthDescriptor } from "../accounts/auth-descriptor/types";
-import { Buffer } from "buffer";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -11,14 +11,12 @@ export interface Authenticator {
   authDataService: AuthDataService;
   createSession(): AuthenticatorSession;
   getAuthFlags(operation: Operation): Promise<string[]>;
-  getKeyHandlerForOperation(
-    operation: Operation,
-  ): Promise<KeyHandler | undefined>;
+  getKeyHandlerForOperation(operation: Operation): Promise<KeyHandler | null>;
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
 
 export interface KeyHandler {
-  authDescriptor: AuthDescriptor;
+  authDescriptorRegistration: AnyAuthDescriptorRegistration;
   keyStore: KeyStore;
 
   satisfiesAuthRequirements(flags: string[]): boolean;
@@ -33,14 +31,14 @@ export interface KeyHandler {
   sign(transaction: TxBuilderTransaction): Promise<void>;
 
   // FIXME
-  getSigners(): Buffer[];
+  getSigners(): Buffer[] | null;
 }
 
 export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;
-  createKeyHandler(authDescriptor: AuthDescriptor): KeyHandler;
+  createKeyHandler(authDescriptor: AnyAuthDescriptorRegistration): KeyHandler;
 }
 
 export interface AuthenticatorSession {
@@ -59,7 +57,7 @@ export interface AuthDataService {
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;
-  getLoginConfig(name: string | null): Promise<LoginConfig>;
+  getLoginConfig(name: string | undefined): Promise<LoginConfig | null>;
   getBrid(): Buffer;
 }
 

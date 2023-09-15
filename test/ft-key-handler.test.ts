@@ -1,18 +1,22 @@
 import { encryption, gtx } from "postchain-client";
-import { createTestAuthDescriptor } from "./util/util";
+import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { op } from "../client/lib/ft4/utils";
-import { ftAuth } from "../client/lib/ft4/authentication/ft";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createChromiaClient } from "./util/blockchain-util";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createTestAuthDescriptorRegistration } from "./util/util";
+import { aggregateSigners, deriveAccountId } from "/ft4/accounts";
+import { TxBuilderTransaction } from "/ft4/utils/types";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair, authDescriptor } = createTestAuthDescriptor();
+    const { keyPair, authDescriptorRegistration } =
+      createTestAuthDescriptorRegistration();
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
+      authDescriptorRegistration,
+    );
     const operations = await keyHandler.authorize(
       accountId,
       op("foo"),
@@ -21,25 +25,27 @@ describe("FT key handler", () => {
     );
 
     expect(operations).toEqual([
-      ftAuth(accountId, authDescriptor.id),
+      ftAuth(accountId, deriveAccountId(authDescriptorRegistration)),
       op("foo"),
     ]);
   });
 
   it("should sign transaction", async () => {
-    const { keyPair, authDescriptor } = createTestAuthDescriptor();
+    const { keyPair, authDescriptorRegistration } =
+      createTestAuthDescriptorRegistration();
 
     const client = await createChromiaClient();
-    const transaction = {
+    const transaction: TxBuilderTransaction = {
       blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
       operations: [],
-      signers: authDescriptor.signers,
+      signers: aggregateSigners(authDescriptorRegistration),
       signatures: [],
     };
-    transaction.operations.push(op("foo"));
+    transaction.operations.push({ opName: "foo", args: [] });
 
-    const keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
+    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
+      authDescriptorRegistration,
+    );
     await keyHandler.sign(transaction);
 
     const digestToSign = gtx.getDigestToSign(transaction);

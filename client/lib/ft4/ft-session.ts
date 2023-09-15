@@ -140,14 +140,16 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       return exposedOperations!.has(operationName);
     },
     getAuthFlags: async (operation: Operation) => {
-      return await connection.query<string[]>(authFlags(operation));
+      return (await connection.query<string[]>(authFlags(operation))) ?? [];
     },
     getAuthMessageTemplate: async (operation: Operation) => {
-      return await connection.query<string>(authMessageTemplate(operation));
+      return (
+        (await connection.query<string>(authMessageTemplate(operation))) ?? ""
+      );
     },
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
       connection.query<number>(nonce(accountId, authDescriptorId)),
-    getLoginConfig: async (configName: string | null = null) =>
+    getLoginConfig: async (configName: string | undefined = undefined) =>
       connection.query<LoginConfig>(loginConfig(configName)),
     getBrid: () => Buffer.from(connection.client.config.blockchainRID, "hex"),
   });

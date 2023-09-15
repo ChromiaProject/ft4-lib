@@ -3,6 +3,7 @@ import { Buffer } from "buffer";
 import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
 import { TxBuilderTransaction } from "./types";
 import { OperationNotExistError } from "./errors";
+import { deriveAccountId } from "../accounts";
 
 type OpAuthPair = [Operation, Authenticator];
 
@@ -98,7 +99,7 @@ export function transactionBuilder(
   function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
     return keyHandlers
       .map((handler) => handler.getSigners())
-      .filter((pubKey) => pubKey)
+      .filter((pubKey): pubKey is Buffer[] => !!pubKey)
       .flat();
   }
 
@@ -106,7 +107,9 @@ export function transactionBuilder(
     const [operations, keyHandlers] = await authenticateOperations(
       this._operations,
     );
+
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
+
     const txn: TxBuilderTransaction = {
       blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
       operations: [],
@@ -114,7 +117,7 @@ export function transactionBuilder(
       signatures: [],
     };
     const addOperation = (op: Operation) => {
-      txn.operations.push({ opName: op.name, args: op.args });
+      txn.operations.push({ opName: op.name, args: op.args || [] });
     };
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
@@ -126,7 +129,7 @@ export function transactionBuilder(
     operations: OpAuthPair[],
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
-    const nonces = new Map<Buffer, number>();
+    const nonces = new Map<string, number>();
     const processedOperations: Operation[][] = [];
 
     for (const tuple of operations) {
@@ -156,27 +159,27 @@ export function transactionBuilder(
         );
       }
       keyHandlers.push(keyHandler);
-      if (!nonces.has(keyHandler.authDescriptor.id)) {
-        nonces.set(
-          keyHandler.authDescriptor.id,
-          (await authenticator.getNonce(keyHandler.authDescriptor.id))!,
-        );
+      const adId = deriveAccountId(keyHandler.authDescriptorRegistration);
+      if (!nonces.has(adId.toString("hex"))) {
+        nonces.set(adId.toString("hex"), (await authenticator.getNonce(adId))!);
       }
 
-      const nonce = nonces.get(keyHandler.authDescriptor.id);
-      const ops = await keyHandler.authorize(
-        authenticator.accountId,
-        operation,
-        nonce,
-        authenticator.authDataService,
-      );
-      // consider keeping nonce value in corresponding key handler
-      ops.forEach((op) => {
-        if (op.name === "ft4.evm_auth") {
-          nonces.set(keyHandler.authDescriptor.id, nonce + 1);
-        }
-      });
-      processedOperations.push(ops);
+      const nonce = nonces.get(adId.toString("hex"));
+      if (nonce || nonce === 0) {
+        const ops = await keyHandler.authorize(
+          authenticator.accountId,
+          operation,
+          nonce,
+          authenticator.authDataService,
+        );
+        // consider keeping nonce value in corresponding key handler
+        ops.forEach((op) => {
+          if (op.name === "ft4.evm_auth") {
+            nonces.set(adId.toString("hex"), nonce + 1);
+          }
+        });
+        processedOperations.push(ops);
+      }
     }
     let opsToReturn: Operation[] = [];
     processedOperations.forEach((item) => {

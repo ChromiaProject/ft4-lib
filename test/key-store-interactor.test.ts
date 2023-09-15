@@ -1,8 +1,5 @@
 import { newSignatureProvider } from "postchain-client";
-import {
-  FlagsType,
-  authDescriptor,
-} from "../client/lib/ft4/accounts/auth-descriptor";
+import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import {
   KeyStoreInteractor,
@@ -16,6 +13,7 @@ import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
 } from "/ft4/authentication";
+import { createSingleSignatureAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
 
 let connection: Connection;
 
@@ -89,16 +87,22 @@ describe("Key store interactor", () => {
       .withParticipant(keyPair1)
       .build();
 
-    const ad1 = authDescriptor.create.singleSig.withArgs(
-      ["M"],
-      keyPair1.pubKey,
-    ).andNoRules;
+    const ad1 = createSingleSignatureAuthDescriptorRegistration(
+      {
+        flags: ["M"],
+        signer: keyPair1.pubKey,
+      },
+      null,
+    );
     await account.addAuthDescriptor(ad1, keyPair1);
 
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      [FlagsType.Transfer],
-      keyPair2.pubKey,
-    ).andNoRules;
+    const ad2 = createSingleSignatureAuthDescriptorRegistration(
+      {
+        flags: [FlagsType.Transfer],
+        signer: keyPair2.pubKey,
+      },
+      null,
+    );
     await account.addAuthDescriptor(ad2, keyPair2);
 
     const session = await createKeyStoreInteractor(
@@ -111,7 +115,7 @@ describe("Key store interactor", () => {
 
   describe("account updates", () => {
     it("emits a new interactor on account change", async () => {
-      let handler = undefined;
+      let handler: ((...args: any[]) => void) | undefined = undefined;
       const providerMock: Partial<Eip1193Provider> = {
         request: jest
           .fn()
@@ -120,7 +124,7 @@ describe("Key store interactor", () => {
         once: (eventName: string, h: (...args: any[]) => void) => {
           expect(eventName).toBe("accountsChanged");
           handler = h;
-          return this;
+          return {} as Eip1193Provider;
         },
       };
       const keyStore = await createWeb3ProviderEvmKeyStore(
@@ -139,7 +143,7 @@ describe("Key store interactor", () => {
         });
       });
 
-      handler();
+      handler!();
 
       await promise;
       expect(callback).toHaveBeenCalled();

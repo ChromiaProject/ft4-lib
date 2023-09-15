@@ -3,18 +3,22 @@ import {
   SignatureProvider,
   TransactionReceipt,
 } from "postchain-client";
-import { AuthDescriptor } from "../accounts/auth-descriptor";
-import * as ops from "./admin-operations";
 import { BufferId } from "../../cryptoUtils";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
+import * as ops from "./admin-operations";
+import {
+  AnyAuthDescriptorRegistration,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
 
 export function registerAccount(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptorRegistration,
 ): Promise<TransactionReceipt> {
+  const ad = gtv.authDescriptorRegistrationToGtv(authDescriptor);
   return chromiaClient.signAndSendUniqueTransaction(
-    ops.registerAccount(authDescriptor),
+    ops.registerAccount(ad),
     adminSignatureProvider,
   );
 }

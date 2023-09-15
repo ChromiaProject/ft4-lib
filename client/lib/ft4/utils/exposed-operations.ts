@@ -11,7 +11,7 @@ export async function fetchExposedOperations(
   const appStructure =
     await connection.query<RellAppStructure>(appStructureQuery);
 
-  if (!appStructure || !appStructure.modules) {
+  if (!appStructure?.modules) {
     throw new FetchAppStructureError(
       "Failed to fetch the app structure from Rell",
     );

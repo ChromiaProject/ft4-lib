@@ -1,6 +1,6 @@
 import {
   encryption,
-  gtv,
+  gtv as pclGtv,
   IClient,
   SignatureProvider,
   KeyPair,
@@ -8,10 +8,12 @@ import {
   RellOperation,
 } from "postchain-client";
 import {
-  AuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  AuthDescriptorRegistration,
   AuthDescriptorRule,
-} from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
+  MultiSig,
+  SingleSig,
+} from "/ft4/accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
 import { op } from "/ft4/utils";
 import adminUser from "./admin_user";
@@ -20,6 +22,12 @@ import { createAuthenticator } from "/ft4/authentication";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
 import { createAuthDataService, createConnection } from "/ft4/ft-session";
+import {
+  gtv,
+  deriveAccountId,
+  createMultiSignatureAuthDescriptorRegistration,
+  createSingleSignatureAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -38,7 +46,7 @@ function generateId(): Buffer {
 }
 
 function blockchainAccountId(brid: Buffer) {
-  return gtv.gtvHash(["B", brid]);
+  return pclGtv.gtvHash(["B", brid]);
 }
 
 class LocalStorageMock implements Storage {
@@ -78,37 +86,44 @@ export {
   LocalStorageMock,
 };
 
-export function createTestAuthDescriptor(
+export function createTestAuthDescriptorRegistration(
   flags: string[] = [],
-  rules?: AuthDescriptorRule
+  rules: AuthDescriptorRule | null = null,
 ): {
   keyPair: KeyPair;
-  authDescriptor: AuthDescriptor;
+  authDescriptorRegistration: AuthDescriptorRegistration<SingleSig>;
 } {
   const keyPair = encryption.makeKeyPair();
-  const ad = authDescriptor.create.singleSig.withArgs(flags, keyPair.pubKey);
-  const descriptor = rules ? ad.andRules(rules) : ad.andNoRules;
-
-  return { keyPair, authDescriptor: descriptor };
+  const ad = createSingleSignatureAuthDescriptorRegistration(
+    {
+      flags,
+      signer: keyPair.pubKey,
+    },
+    rules,
+  );
+  return { keyPair, authDescriptorRegistration: ad };
 }
 
-export function createTestMultisigAuthDescriptor(
-  requiredSignatures: number,
-  flags: string[] = []
+export function createTestMultisigAuthDescriptorRegistration(
+  signaturesRequired: number,
+  flags: string[] = [],
 ): {
   keyPairs: KeyPair[];
-  authDescriptor: AuthDescriptor;
+  authDescriptorRegistration: AuthDescriptorRegistration<MultiSig>;
 } {
-  const keyPairs = Array.from({ length: requiredSignatures }, () =>
-    encryption.makeKeyPair()
+  const keyPairs = Array.from({ length: signaturesRequired }, () =>
+    encryption.makeKeyPair(),
   );
-  const descriptor = authDescriptor.create.multiSig.withArgs(
-    flags,
-    requiredSignatures,
-    keyPairs.map((kp) => kp.pubKey)
-  ).andNoRules;
+  const descriptor = createMultiSignatureAuthDescriptorRegistration(
+    {
+      flags,
+      signaturesRequired,
+      signers: keyPairs.map((kp) => kp.pubKey),
+    },
+    null,
+  );
 
-  return { keyPairs, authDescriptor: descriptor };
+  return { keyPairs, authDescriptorRegistration: descriptor };
 }
 
 export async function addAuthDescriptorTo(
@@ -116,30 +131,34 @@ export async function addAuthDescriptorTo(
   accountId: Buffer,
   user: {
     signatureProvider: SignatureProvider;
-    authDescriptor: AuthDescriptor;
+    authDescriptorRegistration: AnyAuthDescriptorRegistration;
   },
   newUser: {
     signatureProvider: SignatureProvider;
-    authDescriptor: AuthDescriptor;
-  }
+    authDescriptorRegistration: AnyAuthDescriptorRegistration;
+  },
 ) {
   const keyHandlerUser1 = createInMemoryFtKeyStore(
-    user.signatureProvider
-  ).createKeyHandler(user.authDescriptor);
+    user.signatureProvider,
+  ).createKeyHandler(user.authDescriptorRegistration);
 
   const keyHandlerUser2 = createInMemoryFtKeyStore(
-    newUser.signatureProvider
-  ).createKeyHandler(newUser.authDescriptor);
+    newUser.signatureProvider,
+  ).createKeyHandler(newUser.authDescriptorRegistration);
 
   const authDataService = createAuthDataService(createConnection(client));
   const authenticator = createAuthenticator(
     accountId,
     [keyHandlerUser1],
-    authDataService
+    authDataService,
   );
 
   const tx = await transactionBuilder(authenticator, client)
-    .add(addAuthDescriptor(newUser.authDescriptor))
+    .add(
+      addAuthDescriptor(
+        gtv.authDescriptorRegistrationToGtv(newUser.authDescriptorRegistration),
+      ),
+    )
     .addSigners(keyHandlerUser2)
     .build();
   return client.sendTransaction(tx);
@@ -147,14 +166,16 @@ export async function addAuthDescriptorTo(
 
 export async function createAccount(
   client: IClient,
-  descriptor: AuthDescriptor
+  descriptor: AnyAuthDescriptorRegistration,
 ) {
-  const ad = authDescriptor.toGtv(descriptor);
   await client.signAndSendUniqueTransaction(
-    op("register_account_test", [ad[1], ad[2], ad[3]]),
-    adminUser().signatureProvider
+    op(
+      "register_account_test",
+      gtv.authDescriptorRegistrationToGtv(descriptor),
+    ),
+    adminUser().signatureProvider,
   );
-  return descriptor.id;
+  return deriveAccountId(descriptor);
 }
 
 export function rellError(message: string) {
@@ -166,6 +187,6 @@ export function rellError(message: string) {
 export function opToRellOp(operation: Operation): RellOperation {
   return {
     opName: operation.name,
-    args: operation.args,
+    args: operation.args ?? [],
   };
 }

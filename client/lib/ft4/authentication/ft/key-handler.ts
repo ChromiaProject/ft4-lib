@@ -1,20 +1,29 @@
+import { Buffer } from "buffer";
+import { Operation, SignatureProvider, gtx } from "postchain-client";
+import { ftAuth } from ".";
 import { BufferId } from "../../../cryptoUtils";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
-import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
-import { Operation, SignatureProvider, gtx } from "postchain-client";
-import { Buffer } from "buffer";
-import { ftAuth } from ".";
+import {
+  aggregateSigners,
+  gtv,
+  deriveAccountId,
+  AnyAuthDescriptorRegistration,
+  AnyAuthDescriptor,
+} from "/ft4/accounts/auth-descriptor";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
-  authDescriptor: AuthDescriptor,
+  authDescriptorRegistration: AnyAuthDescriptorRegistration,
   keyStore: FtKeyStore,
 ): KeyHandler {
+  const adId = deriveAccountId(
+    gtv.authDescriptorRegistrationToGtv(authDescriptorRegistration),
+  );
   return Object.freeze({
-    authDescriptor,
+    authDescriptorRegistration,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptorRegistration, requiredFlags),
     authorize: (
       accountId: BufferId,
       operation: Operation,
@@ -22,9 +31,9 @@ export function createFtKeyHandler(
       nonce: number,
       //eslint-disable-next-line @typescript-eslint/no-unused-vars
       authDataService: AuthDataService,
-    ) => authorize(accountId, authDescriptor.id, operation),
+    ) => authorize(accountId, adId, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
-    getSigners: () => authDescriptor.signers,
+    getSigners: () => aggregateSigners(authDescriptorRegistration),
   });
 }
 
@@ -52,10 +61,12 @@ async function sign(
 }
 
 export function hasAuthDescriptorFlags(
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
   requiredFlags: string[],
 ): boolean {
-  return requiredFlags.every((flag) => authDescriptor.flags.has(flag));
+  return requiredFlags.every((flag) =>
+    authDescriptor.args.flags.includes(flag),
+  );
 }
 
 export interface FtKeyStore extends KeyStore, SignatureProvider {

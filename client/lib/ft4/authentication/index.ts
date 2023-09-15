@@ -1,13 +1,14 @@
+import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
+import { TxBuilderTransaction } from "../utils/types";
 import {
   AuthDataService,
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
 } from "./types";
-import { TxBuilderTransaction } from "../utils/types";
-import { Buffer } from "buffer";
+import { aggregateSigners } from "/ft4/accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -82,16 +83,15 @@ function createAuthenticatorSession(
       usedKeyHandlers.forEach(
         (keyHandler) =>
           (signers = new Set([
-            ...keyHandler.authDescriptor.signers,
+            ...aggregateSigners(keyHandler.authDescriptorRegistration),
             ...signers,
           ])),
       );
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }

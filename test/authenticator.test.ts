@@ -1,11 +1,16 @@
 import { encryption } from "postchain-client";
-import { AuthDescriptor, authDescriptor } from "/ft4";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import {
+  FlagsType,
+  createSingleSignatureAuthDescriptorRegistration,
+  AnyAuthDescriptorRegistration,
+  deriveAccountId,
+} from "/ft4/accounts/auth-descriptor";
 import { createAuthenticator } from "/ft4/authentication";
 import {
   FtKeyStore,
   createFtKeyHandler,
 } from "/ft4/authentication/ft/key-handler";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { op } from "/ft4/utils";
 
 describe("Authenticator", () => {
@@ -13,14 +18,20 @@ describe("Authenticator", () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyPair2 = encryption.makeKeyPair();
 
-    const authDescriptor1 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
-      keyPair1.pubKey
-    ).andNoRules;
-    const authDescriptor2 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
-      keyPair2.pubKey
-    ).andNoRules;
+    const authDescriptor1 = createSingleSignatureAuthDescriptorRegistration(
+      {
+        flags: [FlagsType.Transfer],
+        signer: keyPair1.pubKey,
+      },
+      null,
+    );
+    const authDescriptor2 = createSingleSignatureAuthDescriptorRegistration(
+      {
+        flags: [FlagsType.Transfer],
+        signer: keyPair2.pubKey,
+      },
+      null,
+    );
 
     const interactiveKeyStore: FtKeyStore = {
       isInteractive: true,
@@ -28,8 +39,8 @@ describe("Authenticator", () => {
       id: keyPair1.pubKey,
       createKeyHandler: jest
         .fn()
-        .mockImplementation((authDescriptor: AuthDescriptor) =>
-          createFtKeyHandler(authDescriptor, interactiveKeyStore)
+        .mockImplementation((authDescriptor: AnyAuthDescriptorRegistration) =>
+          createFtKeyHandler(authDescriptor, interactiveKeyStore),
         ),
       sign: jest.fn(),
     };
@@ -40,8 +51,8 @@ describe("Authenticator", () => {
       id: keyPair2.pubKey,
       createKeyHandler: jest
         .fn()
-        .mockImplementation((authDescriptor: AuthDescriptor) =>
-          createFtKeyHandler(authDescriptor, nonInteractiveKeyStore)
+        .mockImplementation((authDescriptor: AnyAuthDescriptorRegistration) =>
+          createFtKeyHandler(authDescriptor, nonInteractiveKeyStore),
         ),
       sign: jest.fn(),
     };
@@ -59,15 +70,15 @@ describe("Authenticator", () => {
     const authenticator = createAuthenticator(
       accountId,
       [authHandler1, authHandler2],
-      authDataService
+      authDataService,
     );
 
     const authHandler = await authenticator.getKeyHandlerForOperation(
-      op("foo")
+      op("foo"),
     );
 
-    expect(authHandler2.authDescriptor.id).toEqual(
-      authHandler.authDescriptor.id
+    expect(deriveAccountId(authHandler2.authDescriptorRegistration)).toEqual(
+      deriveAccountId(authHandler!.authDescriptorRegistration),
     );
   });
 });

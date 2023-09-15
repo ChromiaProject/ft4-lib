@@ -1,30 +1,35 @@
-import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { Buffer } from "buffer";
+import { IClient, Operation, encryption, gtx } from "postchain-client";
+import { transfer } from "/ft4/accounts/account-operations";
 import {
-  AuthorizationError,
-  transactionBuilder,
-} from "../client/lib/ft4/utils/transaction-builder";
-import { createChromiaClient } from "./util/blockchain-util";
-import { nop } from "../client/lib/ft4/utils";
+  FlagsType,
+  aggregateSigners,
+  gtv,
+  deriveAccountId,
+} from "/ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
+import { registerAccount } from "/ft4/admin/admin-operations";
+import { createAuthenticator } from "/ft4/authentication";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import {
   AuthDataService,
   Authenticator,
   KeyHandler,
-} from "../client/lib/ft4/authentication/types";
-import { IClient, Operation, encryption, gtx } from "postchain-client";
-import { transfer } from "../client/lib/ft4/accounts/account-operations";
-import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
-import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
-import { Buffer } from "buffer";
-import { registerAccount } from "../client/lib/ft4/admin/admin-operations";
+} from "/ft4/authentication/types";
+import { nop } from "/ft4/utils";
+import {
+  AuthorizationError,
+  transactionBuilder,
+} from "/ft4/utils/transaction-builder";
+import { createChromiaClient } from "./util/blockchain-util";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createTestAuthDescriptorRegistration } from "./util/util";
 import { createAmount } from "/ft4/asset/amount";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
   let client: IClient;
-  let authDescriptor: AuthDescriptor;
+  let authDescriptor: AnyAuthDescriptorRegistration;
   let keyHandler: KeyHandler;
   let authDataService: AuthDataService;
 
@@ -37,9 +42,8 @@ describe("Transaction Builder", () => {
   ) {
     const accountId = encryption.randomBytes(32);
 
-    const { keyPair, authDescriptor: ad } = createTestAuthDescriptor([
-      FlagsType.Transfer,
-    ]);
+    const { keyPair, authDescriptorRegistration: ad } =
+      createTestAuthDescriptorRegistration([FlagsType.Transfer]);
     authDescriptor = ad;
 
     keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ad);
@@ -77,7 +81,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
-        args: [authenticator.accountId, authDescriptor.id],
+        args: [authenticator.accountId, deriveAccountId(authDescriptor)],
       },
       { opName: "ft4.transfer", args },
     ]);
@@ -88,7 +92,9 @@ describe("Transaction Builder", () => {
       .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)))
       .build();
 
-    expect(gtx.deserialize(tx).signers).toStrictEqual(authDescriptor.signers);
+    expect(gtx.deserialize(tx).signers).toStrictEqual(
+      aggregateSigners(authDescriptor),
+    );
     expect(gtx.deserialize(tx).signatures).toBeDefined();
   });
 
@@ -112,7 +118,7 @@ describe("Transaction Builder", () => {
 
   it("throws an error if not sufficient permissions", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(registerAccount(authDescriptor))
+      .add(registerAccount(gtv.authDescriptorRegistrationToGtv(authDescriptor)))
       .buildUnsigned();
     await expect(promise).rejects.toThrowError(AuthorizationError);
   });
@@ -128,11 +134,10 @@ describe("Transaction Builder", () => {
   });
 
   it("uses custom authenticator if provided", async () => {
-    const { authDescriptor, keyPair } = createTestAuthDescriptor([
-      FlagsType.Account,
-    ]);
+    const { authDescriptorRegistration, keyPair } =
+      createTestAuthDescriptorRegistration([FlagsType.Account]);
     const keyHandlerMock: KeyHandler = {
-      authDescriptor,
+      authDescriptorRegistration,
       keyStore: createInMemoryFtKeyStore(keyPair),
       satisfiesAuthRequirements: jest.fn(),
       authorize: jest
@@ -150,10 +155,15 @@ describe("Transaction Builder", () => {
       createSession: jest.fn(),
       getAuthFlags: jest.fn().mockReturnValue([]),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
-      getNonce: jest.fn(),
+      getNonce: jest.fn().mockReturnValue(0),
     };
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(registerAccount(authDescriptor), authenticatorMock)
+      .addWithAuthenticator(
+        registerAccount(
+          gtv.authDescriptorRegistrationToGtv(authDescriptorRegistration),
+        ),
+        authenticatorMock,
+      )
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyHandlerMock.sign).toHaveBeenCalled();

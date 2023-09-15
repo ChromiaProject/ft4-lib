@@ -1,39 +1,40 @@
+import { Buffer } from "buffer";
 import { formatter, IClient } from "postchain-client";
+import { BufferId } from "../../cryptoUtils";
+import { balancesByAccountId } from "../asset/asset-queries";
 import {
-  accountById,
-  accountsByParticipantId,
-  RateLimit as RateLimitQuery,
+  createBalanceObject,
+  getBalanceByAccountId,
+} from "../asset/asset-query-functions";
+import { Balance, BalanceResponse } from "../asset/types";
+import { Connection, OptionalPageCursor } from "../types";
+import { getConfig } from "../utils";
+import { createEntityRetriever } from "../utils/entity-retriever";
+import { PaginatedEntity } from "../utils/types";
+import * as Query from "./account-queries";
+import {
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
+  accountById,
   accountsByAuthDescriptorId,
+  accountsByParticipantId,
+  RateLimit as RateLimitQuery,
 } from "./account-queries";
-import * as Query from "./account-queries";
-import { Account, RateLimit } from "./types";
-import { BufferId } from "../../cryptoUtils";
-import { getConfig } from "../utils";
-import {
-  getBalanceByAccountId,
-  createBalanceObject,
-} from "../asset/asset-query-functions";
-import { Connection, OptionalPageCursor } from "../types";
 import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
 import { TransferHistoryFilter } from "./transfer-history/types";
+import { Account, RateLimit } from "./types";
 import {
-  AuthDescriptor,
-  AuthDescriptorResponse,
-  mapAuthDescriptors,
-} from "./auth-descriptor";
-import { createEntityRetriever } from "../utils/entity-retriever";
-import { Balance, BalanceResponse } from "../asset/types";
-import { balancesByAccountId } from "../asset/asset-queries";
-import { Buffer } from "buffer";
-import { PaginatedEntity } from "../utils/types";
+  AnyAuthDescriptor,
+  GtvAuthDescriptorArgs,
+  GtvAuthDescriptorResponse,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
 export async function getRateLimit(
   session: IClient,
-  accountId: BufferId
+  accountId: BufferId,
 ): Promise<RateLimit> {
   const rateLimit = await session.query<
     { account_id: Buffer },
@@ -59,11 +60,11 @@ export async function getRateLimit(
 
 export function createAccountObject(
   connection: Connection,
-  accountId: BufferId
+  accountId: BufferId,
 ): Account {
   const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
-    accountId
+    accountId,
   );
   return Object.freeze({
     id: formatter.ensureBuffer(accountId),
@@ -73,7 +74,7 @@ export function createAccountObject(
       const retriever = createEntityRetriever<Balance, BalanceResponse>(
         connection,
         balancesByAccountId(accountId, limit, cursor),
-        (balances) => balances.map(createBalanceObject)
+        (balances) => balances.map(createBalanceObject),
       );
       return retriever.retrieve(limit, cursor);
     },
@@ -81,15 +82,15 @@ export function createAccountObject(
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: async (
       limit = 100,
-      cursor: OptionalPageCursor = null
+      cursor: OptionalPageCursor = null,
     ) => {
       const retriever = createEntityRetriever<
-        AuthDescriptor,
-        AuthDescriptorResponse
+        AnyAuthDescriptor,
+        GtvAuthDescriptorResponse<GtvAuthDescriptorArgs>
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
-        mapAuthDescriptors
+        gtv.mapAuthDescriptors,
       );
       return retriever.retrieve(limit, cursor);
     },
@@ -99,7 +100,7 @@ export function createAccountObject(
     getTransferHistory: async (
       limit = 100,
       filter: TransferHistoryFilter = {},
-      cursor: OptionalPageCursor = null
+      cursor: OptionalPageCursor = null,
     ) => {
       return transferHistoryRetriever.retrieve(limit, filter, cursor);
     },
@@ -110,7 +111,7 @@ export function createAccountObject(
 
 export async function getById(
   connection: Connection,
-  id: BufferId
+  id: BufferId,
 ): Promise<Account | null> {
   const accountId = await connection.query<Buffer>(accountById(id));
 
@@ -119,7 +120,7 @@ export async function getById(
 
 export async function getByParticipantId(
   connection: Connection,
-  id: BufferId
+  id: BufferId,
 ): Promise<Account[]> {
   const accountIds =
     (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
@@ -131,35 +132,35 @@ export async function getByAuthDescriptorId(
   connection: Connection,
   id: BufferId,
   limit = 100,
-  cursor: OptionalPageCursor = null
+  cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
   return createEntityRetriever<Account, Buffer>(
     connection,
     accountsByAuthDescriptorId(id, limit, cursor),
-    (accounts) => accounts.map((acc) => createAccountObject(connection, acc))
+    (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
   ).retrieve();
 }
 
 export async function isAuthDescriptorValid(
   connection: Connection,
   accountId: BufferId,
-  authDescriptorId: BufferId
+  authDescriptorId: BufferId,
 ): Promise<boolean> {
   return (await connection.query<boolean>(
-    Query.isAuthDescriptorValid(accountId, authDescriptorId)
+    Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }
 
 export async function getAuthDescriptorsByParticipantId(
   connection: Connection,
   accountId: BufferId,
-  participantId: BufferId
-): Promise<AuthDescriptor[]> {
+  participantId: BufferId,
+): Promise<AnyAuthDescriptor[]> {
   return connection
-    .query<AuthDescriptorResponse[]>(
-      accountAuthDescriptorsByParticipantId(accountId, participantId)
+    .query<GtvAuthDescriptorResponse<GtvAuthDescriptorArgs>[]>(
+      accountAuthDescriptorsByParticipantId(accountId, participantId),
     )
     .then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
+      authDescriptors ? gtv.mapAuthDescriptors(authDescriptors) : [],
     );
 }

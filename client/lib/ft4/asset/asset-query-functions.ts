@@ -74,7 +74,7 @@ export async function getBalancesByAccountId(
   const balances = await connection.query<BalanceResponse[]>(
     balancesByAccountId(accountId),
   );
-  return balances.map(createBalanceObject);
+  return balances?.map(createBalanceObject) ?? [];
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
