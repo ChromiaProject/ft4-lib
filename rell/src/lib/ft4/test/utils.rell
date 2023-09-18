@@ -32,7 +32,7 @@ function evm_auth_operation_for(evm_address: byte_array, signatures: list<signat
 }
 
 /*
- * Signs a message using a evm key.
+ * Signs a message using an evm key.
  */ 
 function eth_sign(message: text, eth_priv_key: byte_array): signature {
     val sig = crypto.eth_sign(
