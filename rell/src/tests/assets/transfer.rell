@@ -6,6 +6,7 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.ft4_basic_dev.*;
+import ^^^.lib.ft4.test.utils. { evm_sign };
 import ^.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import test_utils: ^^^.lib.ft4.test.utils;
@@ -171,7 +172,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
         ].to_gtv()
     );
     val message = utils.create_auth_message(template, alice);
-    val signature = utils.metamask_sign(message, alice.keypair.priv);
+    val signature = evm_sign(message, alice.keypair.priv);
 
     rell.test.tx()
         .op(auth_ext.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
@@ -202,7 +203,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
         ].to_gtv()
     );
     val message = utils.create_auth_message(template, alice);
-    val invalid_signature = utils.metamask_sign(message, bob.keypair.priv);
+    val invalid_signature = evm_sign(message, bob.keypair.priv);
 
     rell.test.tx()
         .op(auth_ext.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
