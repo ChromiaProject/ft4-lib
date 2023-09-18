@@ -61,10 +61,10 @@ function evm_auth_operation_for_operation(evm_privkey: byte_array, op_name: text
 /*
  * Signs a message using an evm key.
  */ 
-function evm_sign(message: text, eth_privkey: byte_array): signature {
+function evm_sign(message: text, evm_privkey: byte_array): signature {
     val sig = crypto.eth_sign(
             keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes()),
-            eth_privkey
+            evm_privkey
         );
 
     return signature(
