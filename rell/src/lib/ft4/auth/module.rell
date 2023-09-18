@@ -3,6 +3,7 @@ module;
 
 import ^.accounts;
 import ^.utils;
+import ^.version;
 
 struct auth_data {
     flags: list<text>;
