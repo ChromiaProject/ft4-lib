@@ -31,6 +31,9 @@ function evm_auth_operation_for(evm_address: byte_array, signatures: list<signat
     return auth_ext.evm_auth(descriptor.account.id, descriptor.id, signatures);
 }
 
+/*
+ * Signs a message using a evm key.
+ */ 
 function eth_sign(msg: text, priv_key: byte_array): signature {
     val sig = crypto.eth_sign(
             keccak256(("\u0019Ethereum Signed Message:\n" + msg.size().to_text() + msg).to_bytes()),
