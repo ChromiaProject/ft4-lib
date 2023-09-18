@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Assets are now always returned with all properties from postchain. The three separate properties `asset`, `asset_id` and `decimals` will be removed in favor of the more complete `asset_data`
-- Version is now emported in every non-external module, so every dapp using ft4 will have version information
+- Version is now imported in every non-external module, so every dapp using ft4 will have version information
 
 ### Added
 - Added `test` module with test utility functions.
