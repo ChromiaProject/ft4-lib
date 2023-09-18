@@ -3,6 +3,7 @@ module;
 
 import ^^.accounts;
 import auth_ext: ^^.auth.external;
+import ^^.auth.{ signature };
 
 /*
  * Creates an ft_auth operation for a specific pubkey.
@@ -15,4 +16,33 @@ function ft_auth_operation_for(pubkey) {
     );
 
     return auth_ext.ft_auth(descriptor.account.id, descriptor.id);
+}
+
+/*
+ * Creates an evm operation for a specific evm address.
+ * If more than one auth_desciptor exists for the address, first one found is chosen.
+ */
+function evm_auth_operation_for(evm_address: byte_array, signatures: list<signature>) {
+    val descriptor = require(
+        accounts.auth_descriptor_participant @? { evm_address }.account_auth_descriptor limit 1,
+        "No auth descriptor found for address %s".format(evm_address)
+    );
+
+    return auth_ext.evm_auth(descriptor.account.id, descriptor.id, signatures);
+}
+
+/*
+ * Signs a message using an evm key.
+ */ 
+function eth_sign(message: text, eth_priv_key: byte_array): signature {
+    val sig = crypto.eth_sign(
+            keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes()),
+            eth_priv_key
+        );
+
+    return signature(
+            r=sig[0],
+            s=sig[1],
+            v=sig[2] + 27
+        );
 }
