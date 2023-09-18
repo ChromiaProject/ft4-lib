@@ -48,5 +48,5 @@ export function isSingleSig(
 export function isGtvSimpleRule(
   rule: GtvAuthDescriptorRule,
 ): rule is GtvAuthDescriptorSimpleRule {
-  return rule[1] === "and";
+  return rule[1] !== "and";
 }

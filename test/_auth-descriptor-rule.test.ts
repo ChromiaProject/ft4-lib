@@ -111,7 +111,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail when number of called operations is greater than value set by operation count rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      createSimpleRule(RuleVariable.OpCount, RuleOperator.LessOrEqual, 2),
+      createSimpleRule(RuleVariable.OpCount, RuleOperator.LessThan, 2),
     );
 
     const account2 = await destinationAccount();
@@ -277,7 +277,7 @@ describe("Auth Descriptor Rule", () => {
         createSimpleRule(RuleVariable.BlockHeight, RuleOperator.GreaterThan, 1),
         createSimpleRule(
           RuleVariable.BlockHeight,
-          RuleOperator.GreaterThan,
+          RuleOperator.LessThan,
           10000,
         ),
       ),
@@ -297,11 +297,7 @@ describe("Auth Descriptor Rule", () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       createCompositeRule(
         createSimpleRule(RuleVariable.BlockHeight, RuleOperator.GreaterThan, 1),
-        createSimpleRule(
-          RuleVariable.BlockHeight,
-          RuleOperator.GreaterThan,
-          10,
-        ),
+        createSimpleRule(RuleVariable.BlockHeight, RuleOperator.LessThan, 10),
       ),
     );
 
