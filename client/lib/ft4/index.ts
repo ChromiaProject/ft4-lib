@@ -53,7 +53,7 @@ import {
   mint,
 } from "./admin/admin-op-functions";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
-import { Session } from "./types";
+import { Session, Connection } from "./types";
 import {
   TransferHistoryEntry,
   TransferHistoryResponse,
@@ -84,6 +84,7 @@ export {
   MultiSigAuthDescriptorArgs,
   Account,
   Session,
+  Connection,
   DecimalFormat,
   TransferHistoryEntry,
   TransferHistoryResponse,
