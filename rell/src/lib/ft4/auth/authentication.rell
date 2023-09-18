@@ -51,7 +51,7 @@ function _validate_eth_signature(auth_op: gtx_operation, is_strict: boolean): ac
     );
 
     var recovered_keys = 
-        if (validated_args.account_auth_descriptor.auth_type in [acc.auth_type.S, acc.auth_type.ES]) [_recover_and_check_eth_address(message, validated_args.signatures[0], validated_args.account_auth_descriptor)] 
+        if (validated_args.account_auth_descriptor.auth_type in [acc.auth_type.S, acc.auth_type.ES]) [_validate_eth_address(message, validated_args.signatures[0], validated_args.account_auth_descriptor)] 
         else _recover_multiple_eth_keys(message, validated_args.signatures, validated_args.account_auth_descriptor);
     
     validated_args.account_auth_descriptor.ctr += 1;
@@ -131,7 +131,7 @@ function _recover_eth_address(message: text, signature) {
     return keccak256(eth_pubkey).sub(12);
 }
 
-function _recover_and_check_eth_address(message: text, signature, acc.account_auth_descriptor) {
+function _validate_eth_address(message: text, signature, acc.account_auth_descriptor) {
     val recovered_address = _recover_eth_address(message, signature);
     val participant = acc.auth_descriptor_participant @? {
         .account_auth_descriptor == account_auth_descriptor,
@@ -146,7 +146,7 @@ function _recover_multiple_eth_keys(message: text, signatures: list<signature>, 
     var recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
         recovered_keys.add(
-            _recover_and_check_eth_address(
+            _validate_eth_address(
                 message,
                 signatures[i],
                 account_auth_descriptor
