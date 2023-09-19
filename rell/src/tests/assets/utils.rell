@@ -1,7 +1,7 @@
 @test module;
 import acc: ^^^.lib.ft4.accounts;
 import auth_ext: ^^^.lib.ft4.auth.external;
-import ^^^.lib.ft4.test.utils.{ evm_address_from_pubkey };
+import ^^^.lib.ft4.test.utils.{ evm_address_from_privkey, evm_address_from_pubkey };
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
 import ^^.operations;
@@ -57,7 +57,7 @@ function create_test_account_with_auth_descriptor(
 }
 
 function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T"]): account_data {
-    val address = evm_address_from_pubkey(crypto.privkey_to_pubkey(keypair.priv).sub(1));
+    val address = evm_address_from_privkey(keypair.priv);
     val auth_descriptor = create_auth_descriptor(address, flags);
     val auth_descriptor_id = auth_descriptor.hash();
 

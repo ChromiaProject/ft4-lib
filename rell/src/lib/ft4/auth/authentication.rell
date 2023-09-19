@@ -1,5 +1,6 @@
 import acc: ^^.ft4.accounts;
 import ^.auth.external;
+import ^.utils. { evm_address_from_pubkey };
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
@@ -128,7 +129,7 @@ function _recover_eth_address(message: text, signature) {
         msg_hash
     );
     
-    return keccak256(eth_pubkey).sub(12);
+    return evm_address_from_pubkey(eth_pubkey);
 }
 
 function _validate_eth_address(message: text, signature, acc.account_auth_descriptor) {
