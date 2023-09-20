@@ -1,7 +1,3 @@
-import acc: ^^.accounts;
-import ^^.assets;
-import ^^.auth;
-
 
 function delete_auth_descriptor_message(gtv) {
     val params = struct<delete_auth_descriptor>.from_gtv(gtv);
@@ -19,8 +15,8 @@ operation delete_auth_descriptor(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
     val account = auth.authenticate();
 
-    acc._delete_auth_descriptor(
-        acc.auth_descriptor_by_id(account, auth_descriptor_id)
+    accounts._delete_auth_descriptor(
+        accounts.auth_descriptor_by_id(account, auth_descriptor_id)
     );    
 }
 
@@ -37,11 +33,11 @@ function () = auth.add_auth_handler(
 );
 
 operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
-    val account =  acc.account_by_id(account_id);
-    val auth_descriptor = acc.auth_descriptor_by_id(account, auth_descriptor_id);
-    acc._auth(account, auth_descriptor, ["A"]);
+    val account =  accounts.account_by_id(account_id);
+    val auth_descriptor = accounts.auth_descriptor_by_id(account, auth_descriptor_id);
+    accounts._auth(account, auth_descriptor, ["A"]);
 
-    acc._delete_all_auth_descriptors_exclude(auth_descriptor);
+    accounts._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
 
 function add_auth_descriptor_message(gtv) {
@@ -58,7 +54,7 @@ function () = auth.add_auth_handler(
     message = add_auth_descriptor_message(*)
 );
 
-operation add_auth_descriptor(new_desc: acc.auth_descriptor) {
+operation add_auth_descriptor(new_desc: accounts.auth_descriptor) {
     val account = auth.authenticate();
-    acc.add_auth_descriptor_to_account(account, new_desc);
+    accounts.add_auth_descriptor_to_account(account, new_desc);
 }
