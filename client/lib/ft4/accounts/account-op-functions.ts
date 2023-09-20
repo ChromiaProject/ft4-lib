@@ -12,13 +12,15 @@ import {
   SignatureProvider,
   TransactionReceipt,
   KeyPair,
+  formatter,
 } from "postchain-client";
 import { Amount } from "../asset/interfaces";
-import { Connection } from "../types";
+import { Connection, Session } from "../types";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
-import { call } from "../ft-session";
+import { call, createSession } from "../ft-session";
+import { createAuthenticator } from "../authentication";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -48,29 +50,56 @@ async function addAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
   newSigner: SignatureProvider | KeyPair,
-): Promise<TransactionReceipt> {
+): Promise<{
+  newSession: Session;
+  receipt: TransactionReceipt;
+}> {
   const tb = transactionBuilder(authenticator, connection.client);
+
+  const newKeyHandler =
+    createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor);
 
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptor))
-    .addSigners(
-      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor),
-    )
+    .addSigners(newKeyHandler)
     .build();
 
-  return connection.client.sendTransaction(tx);
+  const newAuth = createAuthenticator(
+    authenticator.accountId,
+    authenticator.keyHandlers.concat(newKeyHandler),
+    authenticator.authDataService,
+  );
+
+  return {
+    newSession: createSession(connection, newAuth),
+    receipt: await connection.client.sendTransaction(tx),
+  };
 }
 
 async function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId,
-): Promise<TransactionReceipt> {
-  return call(
-    connection,
-    authenticator,
-    deleteAuthDescriptorOp(authDescriptorId),
+): Promise<{
+  newSession: Session;
+  receipt: TransactionReceipt;
+}> {
+  const newAuth = createAuthenticator(
+    authenticator.accountId,
+    authenticator.keyHandlers.filter((kh) =>
+      kh.authDescriptor.id.compare(formatter.ensureBuffer(authDescriptorId)),
+    ),
+    authenticator.authDataService,
   );
+
+  return {
+    newSession: createSession(connection, newAuth),
+    receipt: await call(
+      connection,
+      authenticator,
+      deleteAuthDescriptorOp(authDescriptorId),
+    ),
+  };
 }
 
 async function transfer(
