@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - addAuthDescriptor and deleteAuthDescriptor were hard to use, as you couldn't easily use the new keypair you just added in subsequent operations. They now return the receipt and a new session to use for future operations if you want to also use the current auth descriptor.
+- exported some types regarding assets that weren't available for end users
 
 ## [0.1.5] -- 2023-09-12
 
