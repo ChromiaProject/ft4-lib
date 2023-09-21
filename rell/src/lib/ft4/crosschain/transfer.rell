@@ -7,6 +7,13 @@ entity applied_transfers {
     op_index: integer;
 }
 
+entity pending_transfer {
+    key tx_rid, op_index; 
+    tx_rid: byte_array;
+    op_index: integer;
+    accounts.account;
+}
+
 namespace Unsafe {
 
     function update_balances_if_needed(

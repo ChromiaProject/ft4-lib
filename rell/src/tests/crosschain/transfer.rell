@@ -1,0 +1,70 @@
+@test module;
+
+import xc: ^^^.lib.ft4.crosschain;
+import xc_ext: ^^^.lib.ft4.crosschain.external;
+import auth_ext: ^^^.lib.ft4.auth.external;
+import ^^.assets.utils;
+
+function test_it_registers_a_pending_transaction_in_init_transfer() {
+  val alice = utils.register_alice();
+  val bob = utils.register_bob();
+
+  val asset = utils.create_asset("test", "t", 1);
+  utils.mint(alice.account, asset, 1);
+
+  rell.test.tx()
+    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
+    .sign(alice.keypair)
+    .run();
+
+  val pending_transfers = xc.pending_transfer @* {};
+  assert_equals(pending_transfers.size(), 1);
+  assert_equals(pending_transfers[0].account, alice.account);
+}
+
+function test_it_fetches_pending_transactions_for_the_specified_account() {
+  val alice = utils.register_alice();
+  val bob = utils.register_bob();
+
+  val asset = utils.create_asset("test", "t", 1);
+  utils.mint(alice.account, asset, 1);
+  utils.mint(bob.account, asset, 1);
+
+  rell.test.tx()
+    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
+    .op(auth_ext.ft_auth(bob.account.id, bob.auth_descriptor_id))
+    .op(xc_ext.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()]))
+    .sign(alice.keypair, bob.keypair)
+    .run();
+
+  assert_equals(xc_ext.get_pending_transfers_for_account(bob.account.id).size(), 1);
+}
+
+function test_pending_transactions_can_be_deleted() {
+  val alice = utils.register_alice();
+  val bob = utils.register_bob();
+
+  val asset = utils.create_asset("test", "t", 1);
+  utils.mint(alice.account, asset, 1);
+
+  rell.test.tx()
+    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
+    .sign(alice.keypair)
+    .run();
+
+  val tx = (transaction @* {} ( @sort_desc $ ) limit 1)[0];
+
+  rell.test.tx()
+    .op(xc_ext.delete_pending_transfer(tx.tx_rid, 1))
+    .run();
+
+  val pending_transfers = xc.pending_transfer @* {};
+  assert_equals(pending_transfers.size(), 0);
+}
+
+function test_returns_false_if_transfer_is_not_applied() {
+  assert_false(xc_ext.is_transfer_applied("0".to_bytes(), 0));
+}

@@ -45,6 +45,11 @@ operation init_transfer(
         asset,
         amount
     );
+    create crosschain.pending_transfer(
+        account=account,
+        tx_rid=op_context.transaction.tx_rid,
+        op_index=op_context.op_index
+    );
 }
 
 operation apply_transfer(
@@ -126,4 +131,8 @@ operation apply_transfer(
         asset,
         init_args.amount
     );
+}
+
+operation delete_pending_transfer(tx_rid: byte_array, op_index: integer) {
+    delete crosschain.pending_transfer @ { .tx_rid == tx_rid, .op_index == op_index };
 }

@@ -6,6 +6,7 @@ blockchains:
         - tests.accounts
         - tests.assets        
         - tests.auth
+        - tests.crosschain
       moduleArgs:
         lib.ft4.accounts:
           rate_limit_active: 1

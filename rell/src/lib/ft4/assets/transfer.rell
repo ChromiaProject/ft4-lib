@@ -1,7 +1,8 @@
 import acc: ^.accounts;
 
 function deduct_balance(acc.account, asset, amount: big_integer) {
-    val balance = balance @ { account, asset };
+    val balance = balance @? { account, asset };
+    require(balance, "User does not have this asset in this account");
     require(balance.amount >= amount, "Balance is too low");
     balance.amount -= amount;
 }
