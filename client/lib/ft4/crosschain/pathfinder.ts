@@ -1,5 +1,9 @@
-import { IClient, createClient, formatter } from "postchain-client";
-// import { BlockchainUrlUndefinedException } from "postchain-client/built/src/chromia/errors";
+import {
+  BlockchainUrlUndefinedException,
+  IClient,
+  createClient,
+  formatter,
+} from "postchain-client";
 import { createConnection } from "../ft-session";
 import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
@@ -63,15 +67,15 @@ export async function findPathToChainForAsset(
           lastNode,
         );
       } catch (error) {
-        // if (error instanceof BlockchainUrlUndefinedException) {
-        throw new PathfinderError(
-          `Blockchain ${lastNode.toString(
-            "hex",
-          )} does not exist on the current network.`,
-        );
-        // } else {
-        //   throw error;
-        // }
+        if (error instanceof BlockchainUrlUndefinedException) {
+          throw new PathfinderError(
+            `Blockchain ${lastNode.toString(
+              "hex",
+            )} does not exist on the current network.`,
+          );
+        } else {
+          throw error;
+        }
       }
 
       // three possible errors:
