@@ -134,7 +134,7 @@ do
 
     # Write the YML content to the file
     sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
-        configs/multichain-test.yml.template > ${yml_filename}
+        configs/multichain-jesttest.yml.template > ${yml_filename}
 
     # Create the corresponding RELL file with unique content
     rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
@@ -202,7 +202,6 @@ debug "Verifying the network"
 VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
 if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
-    echo $VERIFY_OUTPUT
     err "Verification failed. Exiting."
     exit 1
 fi

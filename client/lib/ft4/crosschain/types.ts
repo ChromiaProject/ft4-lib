@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 
-export type InitTransferArgs = [
+export type GtvInitTransferArgs = [
   receiverId: Buffer,
   assetId: Buffer,
   amount: bigint,
