@@ -226,7 +226,6 @@ debug "Verifying the network"
 VERIFY_OUTPUT=$($PMC network verify -cfg $PMC_CONFIG)
 
 if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
-    echo $VERIFY_OUTPUT
     err "Verification failed. Exiting."
     exit 1
 fi

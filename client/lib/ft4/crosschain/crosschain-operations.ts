@@ -1,8 +1,9 @@
 import { op } from "../utils";
 import { BufferId } from "../../cryptoUtils";
-import { formatter, gtv, Operation, SignedTransaction } from "postchain-client";
+import { gtv, Operation, SignedTransaction } from "postchain-client";
 import { Amount } from "../asset/interfaces";
-import { InitTransferArgs } from "./types";
+import { GtvInitTransferArgs } from "./types";
+import { getInitTransferArgs } from ".";
 
 export function initTransfer(
   receiverId: BufferId,
@@ -12,15 +13,12 @@ export function initTransfer(
 ): Operation {
   return op(
     "ft4.crosschain.init_transfer",
-    formatter.ensureBuffer(receiverId),
-    formatter.ensureBuffer(assetId),
-    amount.encodeGtv(),
-    hops.map(formatter.ensureBuffer),
+    ...getInitTransferArgs(receiverId, assetId, amount, hops),
   );
 }
 
 export function applyTransfer(
-  initArgs: InitTransferArgs,
+  initArgs: GtvInitTransferArgs,
   tx: SignedTransaction,
   opIndex: number,
   hopIndex: number,

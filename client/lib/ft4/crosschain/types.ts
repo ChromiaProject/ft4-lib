@@ -21,7 +21,7 @@ export type GtxTransaction = {
   signatures: Buffer[];
 };
 
-export type InitTransferArgs = [
+export type GtvInitTransferArgs = [
   receiverId: Buffer,
   assetId: Buffer,
   amount: bigint,
