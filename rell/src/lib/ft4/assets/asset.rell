@@ -1,4 +1,3 @@
-import acc: ^.accounts;
 
 entity asset {
     key id: byte_array;
@@ -16,13 +15,13 @@ function Asset(id: byte_array) = require(
 );
 
 entity balance {
-    key acc.account, asset;
+    key accounts.account, asset;
     mutable amount: big_integer = 0L;
 }
 
 val max_asset_amount = big_integer.from_hex("ff".repeat(32));
 
-function ensure_balance(acc.account, asset): balance {
+function ensure_balance(accounts.account, asset): balance {
     val balance = balance @? {asset, account};
     if (balance != null) {
        return balance;
@@ -115,7 +114,7 @@ function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
 }
 
 namespace Unsafe {
-    function mint(acc.account, asset, amount: big_integer) {
+    function mint(accounts.account, asset, amount: big_integer) {
         require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
@@ -153,7 +152,7 @@ namespace Unsafe {
         after_mint(account, asset, amount);
     }
 
-    function burn(acc.account, asset, amount: big_integer) {
+    function burn(accounts.account, asset, amount: big_integer) {
         require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
         require(
             asset.issuing_brid == chain_context.blockchain_rid,
