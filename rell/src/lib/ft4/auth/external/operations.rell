@@ -1,4 +1,3 @@
-import ^^.auth;
 
 operation evm_auth(
     account_id: byte_array,

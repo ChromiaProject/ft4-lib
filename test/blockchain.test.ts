@@ -27,7 +27,7 @@ describe("Blockchain", () => {
   it("should provide ft4 rell-side version number", async () => {
     const info = await connection.getVersion();
 
-    expect(info).toEqual("0.1.1");
+    expect(info).toEqual("0.1.3");
 
     expect(ft.getClientVersion()).toEqual(version);
   });
