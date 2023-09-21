@@ -1,12 +1,5 @@
+import { createIccfProofTx, gtv, gtx } from "postchain-client";
 import {
-  IClient,
-  IccfProof,
-  createIccfProofTx,
-  gtv,
-  gtx,
-} from "postchain-client";
-import {
-  createChromiaClient,
   createChromiaClientToMultichain,
   getNewAsset,
 } from "/util/blockchain-util";
@@ -29,39 +22,13 @@ import {
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
 import { getTransactionRID } from "/ft4/utils";
-
-interface Blockchain {
-  name: string;
-  rid: Buffer;
-  state: string;
-  system: number;
-}
-
-function temporaryFixForIccfProof(proof: IccfProof) {
-  const newTx = proof.iccfTx;
-  newTx.operations[0].args[2] = gtv.encode(newTx.operations[0].args[2]);
-  return newTx;
-}
+import { fetchBlockchains } from "../../utils/blockchain";
 
 describe("Crosschain transfer", () => {
-  let directoryClient: IClient;
-
-  beforeAll(async () => {
-    directoryClient = await createChromiaClient();
-  });
-
   test("transfers successfully with one hop", async () => {
-    const blockchains = (await directoryClient.query("get_blockchains", {
-      include_inactive: false,
-    })) as unknown as Blockchain[];
+    const { c0, multichain00, multichain01 } = await fetchBlockchains();
 
-    const anchoring = blockchains.find((b) => b.name === "c0");
-    const multichain00 = blockchains.find((b) => b.name === "multichain00");
-    const multichain01 = blockchains.find((b) => b.name === "multichain01");
-
-    const clientAnchoring = await createChromiaClientToMultichain(
-      anchoring.rid,
-    );
+    const clientC0 = await createChromiaClientToMultichain(c0.rid);
     const connection00 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
@@ -106,14 +73,14 @@ describe("Crosschain transfer", () => {
       const onAnchoringHandler: OnAnchoredHandler = async (_, tx) => {
         const decodedTx = gtx.deserialize(tx);
         const proofTx = await createIccfProofTx(
-          clientAnchoring,
+          clientC0,
           getTransactionRID(tx),
           gtv.gtvHash(decodedTx),
           decodedTx.signers,
           multichain00.rid.toString("hex"),
           multichain01.rid.toString("hex"),
         );
-        const newTx = temporaryFixForIccfProof(proofTx);
+        const newTx = proofTx.iccfTx;
         newTx.operations.push(
           applyTransferOp(
             getInitTransferArgs(
