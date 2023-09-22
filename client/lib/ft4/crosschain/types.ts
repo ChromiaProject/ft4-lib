@@ -1,25 +1,8 @@
-import { RawGtv } from "postchain-client";
 import { Buffer } from "buffer";
 import { EventEmitter, Listener } from "../events";
 import { OrchestratorError } from "./errors";
 import { BufferId } from "/cryptoUtils";
 import { FTEvents } from "../events/types";
-
-type GtxOperation = {
-  name: string;
-  args: RawGtv[];
-};
-
-type GtxTransactionBody = {
-  blockchain_rid: Buffer;
-  operations: GtxOperation[];
-  signers: Buffer[];
-};
-
-export type GtxTransaction = {
-  body: GtxTransactionBody;
-  signatures: Buffer[];
-};
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,

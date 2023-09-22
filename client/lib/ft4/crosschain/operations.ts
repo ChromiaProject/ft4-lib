@@ -3,6 +3,9 @@ import { Amount } from "../asset/interfaces";
 import { BufferId } from "/cryptoUtils";
 import { op } from "../utils";
 
+// Constant index for init_transfer operation, applicable when not using TransactionBuilder.
+const OP_INDEX_INIT_TRANSFER = 1;
+
 export function initTransfer(
   recipientId: BufferId,
   assetId: BufferId,
@@ -35,7 +38,7 @@ export function applyTransfer(
       path.map((item) => formatter.ensureBuffer(item)),
     ],
     gtv.decode(tx),
-    1,
+    OP_INDEX_INIT_TRANSFER,
     targetChainIndex,
   );
 }

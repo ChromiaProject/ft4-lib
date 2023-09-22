@@ -207,7 +207,7 @@ export async function createOrchestrator(
     return localEmitter.off("TransferError", listener);
   }
 
-  return {
+  const orchestrator = Object.freeze({
     transfer,
     eventEmitter: localEmitter,
     onTransferInit,
@@ -218,5 +218,7 @@ export async function createOrchestrator(
     offTransferEnd,
     onTransferError,
     offTransferError,
-  };
+  });
+
+  return orchestrator;
 }
