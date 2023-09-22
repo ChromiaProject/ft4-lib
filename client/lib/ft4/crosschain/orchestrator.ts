@@ -1,5 +1,4 @@
 import {
-  IccfProof,
   Operation,
   SignedTransaction,
   createClient,
@@ -29,12 +28,6 @@ type State = {
   path: BufferId[];
   tx?: SignedTransaction;
 };
-
-function temporaryFixForIccfProof(proof: IccfProof) {
-  const newTx = proof.iccfTx;
-  newTx.operations[0].args[2] = gtv.encode(newTx.operations[0].args[2]);
-  return newTx;
-}
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -132,14 +125,13 @@ export async function createOrchestrator(
    */
   async function transfer(): Promise<void> {
     const directoryClient = await createClient({
-      // TODO: Replace with directoryNodeURLPool after Postchain Client release
-      nodeURLPool: session.client.config.endpointPool.slice(),
-      // directoryNodeURLPool: session.client.config.endpointPool.slice(),
+      directoryNodeURLPool: session.client.config.endpointPool.slice(),
       blockchainIID: 0,
     });
 
     try {
       localEmitter.emit("TransferInit");
+
       await initTransfer();
 
       for (
@@ -165,8 +157,7 @@ export async function createOrchestrator(
           brid.toString("hex"),
         );
 
-        // TODO: Replace with const { iccfTx } = proofTx
-        const iccfTx = temporaryFixForIccfProof(proofTx);
+        const { iccfTx } = proofTx;
 
         const iccfOp = iccfTx.operations[0];
         await applyTransfer(brid, iccfOp);
