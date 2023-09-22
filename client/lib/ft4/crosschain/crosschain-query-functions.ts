@@ -1,9 +1,9 @@
 import { BufferId } from "../../cryptoUtils";
 import * as Query from "./crosschain-queries";
 import { Connection } from "../types";
-import { freeze } from "../utils/types";
 import { Buffer } from "buffer";
 import { PendingTransfer, PendingTransferResponse } from "./types";
+import { freeze } from "../utils/types";
 
 export async function getAssetOriginById(
   connection: Connection,

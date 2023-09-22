@@ -3,7 +3,7 @@ import crosschain: ^;
 import ^^.accounts;
 
 query get_asset_origin_by_id(asset_id: byte_array) {
-    return crosschain.asset_origin @? { assets.Asset(asset_id) };
+    return crosschain.asset_origin @? { assets.Asset(asset_id) } .origin_brid;
 }
 
 query get_pending_transfers_for_account(account_id: byte_array) = 

@@ -7,15 +7,16 @@ import { AuthDescriptor } from "../accounts/auth-descriptor";
 import * as ops from "./admin-operations";
 import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
+import { Asset } from "../asset/types";
 
 export function registerAccount(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
-  authDescriptor: AuthDescriptor
+  authDescriptor: AuthDescriptor,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.registerAccount(authDescriptor),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }
 
@@ -23,11 +24,11 @@ export function addRateLimitPoints(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
-  amount: number
+  amount: number,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.addRateLimitPoints(accountId, amount),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }
 
@@ -37,11 +38,11 @@ export function registerAsset(
   name: string,
   symbol: string,
   decimals: number,
-  iconUrl: string
+  iconUrl: string,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.registerAsset(name, symbol, decimals, iconUrl),
-    adminSignatureProvider
+    adminSignatureProvider,
   );
 }
 
@@ -50,10 +51,22 @@ export function mint(
   adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
   assetId: BufferId,
-  amount: Amount
+  amount: Amount,
 ): Promise<TransactionReceipt> {
   return chromiaClient.signAndSendUniqueTransaction(
     ops.mint(accountId, assetId, amount),
-    adminSignatureProvider
+    adminSignatureProvider,
+  );
+}
+
+export function registerCrosschainAsset(
+  chromiaClient: IClient,
+  adminSignatureProvider: SignatureProvider,
+  asset: Asset,
+  originBrid: BufferId,
+): Promise<TransactionReceipt> {
+  return chromiaClient.signAndSendUniqueTransaction(
+    ops.registerCrosschainAsset(asset, originBrid),
+    adminSignatureProvider,
   );
 }

@@ -4,6 +4,8 @@ import {
   QueryArguments,
   RawGtv,
   IClient,
+  SignedTransaction,
+  gtx,
 } from "postchain-client";
 import { Config } from "./types";
 
@@ -17,7 +19,7 @@ export function op(name: string, ...args: readonly RawGtv[]): newOperation {
 
 export async function getConfig(session: IClient): Promise<Config> {
   const response = await session.query<QueryArguments, ConfigResponse>(
-    "ft4.get_config"
+    "ft4.get_config",
   );
   return Object.freeze({
     rateLimit: {
@@ -29,9 +31,13 @@ export async function getConfig(session: IClient): Promise<Config> {
   });
 }
 
+export function getTransactionRID(tx: SignedTransaction): Buffer {
+  return gtx.getDigestToSign(gtx.deserialize(tx));
+}
+
 export async function getVersion(session: IClient): Promise<string> {
   return Object.freeze(
-    await session.query<QueryArguments, string>("ft4.get_version")
+    await session.query<QueryArguments, string>("ft4.get_version"),
   );
 }
 

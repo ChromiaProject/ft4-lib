@@ -1,7 +1,10 @@
 import { createTestAuthDescriptor, emptyOp } from "./util/util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAuthenticator } from "/ft4/authentication";
+import {
+  createAuthenticator,
+  createNoopAuthenticator,
+} from "/ft4/authentication";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -91,7 +94,6 @@ describe("Transaction Builder", () => {
       keyHandlers: [keyHandlerMock],
       authDataService: createFakeAuthDataService({}),
       createSession: jest.fn(),
-      getAuthFlags: jest.fn().mockReturnValue([]),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
       getNonce: jest.fn(),
     };
@@ -202,8 +204,11 @@ describe("Transaction Builder", () => {
           .add(nop())
           .buildAndSend(),
       ).resolves.toMatchObject({
-        status: "confirmed",
-        statusCode: 200,
+        tx: expect.any(Buffer),
+        receipt: {
+          status: "confirmed",
+          statusCode: 200,
+        },
       });
     });
 
@@ -222,7 +227,11 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
     });
 
     it("calls all registered handler when block is anchored", async () => {
@@ -245,8 +254,16 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
-      expect(callback2).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
+      expect(callback2).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
     });
 
     it("calls callbacks even if block is not anchored immediately", async () => {
@@ -266,7 +283,11 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(emptyOp(), null);
+      expect(callback).toHaveBeenCalledWith(
+        emptyOp(),
+        expect.any(Buffer),
+        null,
+      );
     });
     it("calls callback with an error if polling times out", async () => {
       (isBlockAnchored as any)
@@ -290,6 +311,7 @@ describe("Transaction Builder", () => {
 
       expect(callback).toHaveBeenCalledWith(
         null,
+        expect.any(Buffer),
         expect.any(AnchoringTimeoutError),
       );
     });
@@ -297,7 +319,7 @@ describe("Transaction Builder", () => {
       const { authenticatorMock } = getMocks();
       //eslint-disable-next-line no-async-promise-executor
       const promise = new Promise(async (resolve) => {
-        const receipt = await transactionBuilder(authenticatorMock, client, {
+        const txInfo = await transactionBuilder(authenticatorMock, client, {
           retryCount: 2,
           waitTimeMs: 1,
         })
@@ -307,9 +329,21 @@ describe("Transaction Builder", () => {
           )
           .add(nop())
           .buildAndSend();
-        expect(receipt).toMatchObject({ status: "confirmed" });
+        expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
       });
       await promise;
+    });
+
+    it("can bypass authentication", async () => {
+      const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithAuthenticator(
+          transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
+          createNoopAuthenticator(createFakeAuthDataService({})),
+        )
+        .buildUnsigned();
+
+      expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
     });
   });
 });

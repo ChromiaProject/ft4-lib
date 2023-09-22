@@ -10,7 +10,6 @@ export interface Authenticator {
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
   createSession(): AuthenticatorSession;
-  getAuthFlags(operation: Operation): Promise<string[]>;
   getKeyHandlerForOperation(
     operation: Operation,
   ): Promise<KeyHandler | undefined>;

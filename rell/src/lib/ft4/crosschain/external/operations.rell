@@ -109,7 +109,7 @@ operation apply_transfer(
     }
 
     require(
-        iccf.check_iccf_proof(from_brid, tx.hash()),
+        iccf.check_iccf_proof(from_brid, tx.to_gtv().hash()),
         "The previous hop has not been anchored yet."
     );
 

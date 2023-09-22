@@ -8,6 +8,8 @@ import {
   getAnchoringClient,
   createClient,
   BlockAnchoringException,
+  SignedTransaction,
+  TransactionReceipt,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -19,6 +21,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
+import { getTransactionRID } from "..";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 3,
@@ -157,28 +160,30 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
-  async function buildAndSend() {
+  async function buildAndSend(): Promise<{
+    tx: SignedTransaction;
+    receipt: TransactionReceipt;
+  }> {
     const tx = await (this as TransactionBuilder).build();
-    const reciept = await client.sendTransaction(tx);
+    const receipt = await client.sendTransaction(tx);
+
     const operationsWithHandlers = this._operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
 
     if (operationsWithHandlers.length) {
       new Promise((resolve) =>
-        resolve(
-          waitUntilAnchored(operationsWithHandlers, reciept.transactionRID),
-        ),
+        resolve(waitUntilAnchored(operationsWithHandlers, tx)),
       );
     }
 
-    return reciept;
+    return {
+      tx,
+      receipt,
+    };
   }
 
-  async function waitUntilAnchored(
-    operations: OperationContext[],
-    txRid: Buffer,
-  ) {
+  async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const systemClient = await createClient({
       nodeURLPool: client.config.endpointPool.slice(),
       blockchainIID: 0,
@@ -193,8 +198,14 @@ export function transactionBuilder(
 
       let isAnchored = false;
       try {
-        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
+        isAnchored = await isBlockAnchored(
+          client,
+          anchoringClient,
+          getTransactionRID(tx),
+        );
       } catch (error) {
+        console.error("Error while checking block anchoring status", error);
+
         if (error instanceof BlockAnchoringException) {
           isAnchored = false;
         } else {
@@ -204,7 +215,7 @@ export function transactionBuilder(
 
       if (isAnchored) {
         operations.forEach((op: OperationContext) => {
-          op.onAnchoredHandler(op.operation, null);
+          op.onAnchoredHandler(op.operation, tx, null);
         });
         return;
       }
@@ -213,6 +224,7 @@ export function transactionBuilder(
     operations.forEach((op) => {
       op.onAnchoredHandler(
         null,
+        tx,
         new AnchoringTimeoutError(
           "Block was not anchored within the specified timeout",
         ),
