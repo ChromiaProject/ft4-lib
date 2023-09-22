@@ -3,7 +3,6 @@ import {
   SignedTransaction,
   createClient,
   createIccfProofTx,
-  formatter,
   gtv,
   gtx,
 } from "postchain-client";
@@ -20,7 +19,7 @@ import { Session } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
-import { Orchestrator } from "./types";
+import { Orchestrator, OrchestratorEvents } from "./types";
 import { getTransactionRID } from "../utils";
 
 type State = {
@@ -50,14 +49,13 @@ export async function createOrchestrator(
   const asset = await session.getAssetById(assetId);
 
   const path = await findPathToChainForAsset(session, asset, targetChainId);
-  const normalizedPath = path.map(formatter.ensureBuffer);
 
   // Create a local event emitter instance for this orchestrator.
-  const localEmitter = new EventEmitter();
+  const localEmitter = new EventEmitter<OrchestratorEvents>();
 
   const state: State = {
     current: 0,
-    path: normalizedPath,
+    path,
   };
 
   /**
@@ -68,7 +66,7 @@ export async function createOrchestrator(
     return new Promise((resolve) => {
       const tb = session.transactionBuilder();
 
-      tb.add(initTransferOp(recipientId, assetId, amount, normalizedPath), () =>
+      tb.add(initTransferOp(recipientId, assetId, amount, path), () =>
         resolve(),
       )
         .buildAndSend()
@@ -103,9 +101,9 @@ export async function createOrchestrator(
             recipientId,
             assetId,
             amount,
-            normalizedPath,
+            path,
             state.tx,
-            normalizedPath.indexOf(targetChainBrid),
+            path.indexOf(targetChainBrid),
           ),
           () => {
             resolve();
@@ -136,17 +134,17 @@ export async function createOrchestrator(
 
       for (
         let pathIndex = state.current;
-        pathIndex < normalizedPath.length;
+        pathIndex < path.length;
         pathIndex++
       ) {
-        const brid = normalizedPath[pathIndex];
+        const brid = path[pathIndex];
 
         const decodedTx = gtx.deserialize(state.tx);
 
         const sourceBlockchainRid =
           pathIndex === 0
             ? session.client.config.blockchainRID
-            : normalizedPath[pathIndex - 1];
+            : path[pathIndex - 1];
 
         const proofTx = await createIccfProofTx(
           directoryClient,

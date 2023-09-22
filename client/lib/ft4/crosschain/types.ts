@@ -11,6 +11,13 @@ export type GtvInitTransferArgs = [
   hops: Buffer[],
 ];
 
+export type OrchestratorEvents = {
+  TransferInit: [];
+  TransferHop: [BufferId];
+  TransferEnd: [];
+  TransferError: [OrchestratorError];
+};
+
 export interface Orchestrator {
   transfer: () => Promise<void>;
   eventEmitter: EventEmitter<FTEvents>;

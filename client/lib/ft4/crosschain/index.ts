@@ -8,7 +8,7 @@ export { getAssetOriginById } from "./crosschain-query-functions";
 export { initTransfer, applyTransfer } from "./crosschain-op-functions";
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
-export { Orchestrator, GtvInitTransferArgs } from "./types";
+export { OrchestratorEvents, Orchestrator, GtvInitTransferArgs } from "./types";
 
 export function getInitTransferArgs(
   receiverId: BufferId,

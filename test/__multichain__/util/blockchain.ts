@@ -14,7 +14,6 @@ async function fetchBlockchains(): Promise<{ [key: string]: Blockchain }> {
     blockchainIID: 0,
   });
 
-  // Consider adding error handling here
   const result = (await client.query("get_blockchains", {
     include_inactive: false,
   })) as unknown as Blockchain[];
