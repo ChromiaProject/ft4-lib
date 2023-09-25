@@ -23,7 +23,7 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     ).createSession();
 
     const operations = await authenticatorSession.authorize(op("foo"));
@@ -47,20 +47,20 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     ).createSession();
     const operations: Operation[] = await authenticatorSession.authorize(
-      op("foo")
+      op("foo"),
     );
 
     const transaction: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: authDescriptor.signers,
       signatures: [],
     };
     operations.forEach((operation) =>
-      transaction.operations.push(opToRellOp(operation))
+      transaction.operations.push(opToRellOp(operation)),
     );
     await authenticatorSession.sign(transaction);
 
@@ -88,7 +88,7 @@ describe("Authenticator session", () => {
     const authenticator = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2],
-      authDataService
+      authDataService,
     );
     const keyHandler = await authenticator.getKeyHandlerForOperation(op("foo"));
 
@@ -119,7 +119,7 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2, keyHandler3],
-      authDataService
+      authDataService,
     ).createSession();
 
     await authenticatorSession.authorize(op("bar"));
@@ -128,7 +128,7 @@ describe("Authenticator session", () => {
     const usedKeyHandlers = authenticatorSession.getUsedKeyHandlers();
 
     expect(usedKeyHandlers).toEqual(
-      new Set<KeyHandler>([keyHandler2, keyHandler3])
+      new Set<KeyHandler>([keyHandler2, keyHandler3]),
     );
   });
 
@@ -144,11 +144,11 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler],
-      authDataService
+      authDataService,
     ).createSession();
 
     await expect(
-      authenticatorSession.authorize(op("foo"))
+      authenticatorSession.authorize(op("foo")),
     ).rejects.toBeInstanceOf(Error);
   });
 
@@ -176,7 +176,7 @@ describe("Authenticator session", () => {
     const authenticatorSession = createAuthenticator(
       accountId,
       [keyHandler1, keyHandler2, keyHandler3],
-      authDataService
+      authDataService,
     ).createSession();
 
     await authenticatorSession.authorize(op("foo"));
@@ -188,7 +188,7 @@ describe("Authenticator session", () => {
       new Set<Buffer>([
         ...keyHandler2.authDescriptor.signers,
         ...keyHandler3.authDescriptor.signers,
-      ])
+      ]),
     );
   });
 });

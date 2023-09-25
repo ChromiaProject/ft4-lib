@@ -27,7 +27,7 @@ export async function findPathToChainForAsset(
 
   let foundPath = false;
   const pathSourceToRoot = [
-    formatter.toBuffer(connection.client.config.blockchainRID),
+    formatter.toBuffer(connection.client.config.blockchainRid),
   ];
   const pathEndToRoot = [formatter.ensureBuffer(blockchainRID)];
 
@@ -132,8 +132,8 @@ async function createConnectionToBrid(oldClient: IClient, newBrid: BufferId) {
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
       // ""+ to avoid errors (readonly)
-      directoryNodeURLPool: "" + oldClient.config.endpointPool,
-      blockchainRID:
+      directoryNodeUrlPool: "" + oldClient.config.endpointPool,
+      blockchainRid:
         typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
     }),
   );

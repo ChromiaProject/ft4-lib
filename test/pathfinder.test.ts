@@ -1,4 +1,4 @@
-// Not BRIDS, but allows for easier testing
+// Not BRIDs, but allows for easier testing
 const startingChainBrid = Buffer.from("00", "hex");
 const endingChainBrid = Buffer.from("ff", "hex");
 const rootChainBrid = Buffer.from("11", "hex");
@@ -47,7 +47,7 @@ createClientMock.mockImplementation(
         // we need this to create new clients from the old one
         endpointPool: [""],
         // this gives us the starting point, always the same
-        blockchainRID: startingChainBrid,
+        blockchainRid: startingChainBrid,
       },
     }) as unknown as IClient,
 );

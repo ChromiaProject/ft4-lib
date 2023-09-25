@@ -48,8 +48,8 @@ describe("transaction builder", () => {
     >("get_blockchains", { include_inactive: true });
     const dAppChain = blockchains.find((bc) => bc.name === "multichain00");
     client = await createClient({
-      nodeURLPool: "http://127.0.0.1:7740",
-      blockchainRID: dAppChain.rid.toString("hex"),
+      nodeUrlPool: "http://127.0.0.1:7740",
+      blockchainRid: dAppChain.rid.toString("hex"),
     });
   });
 

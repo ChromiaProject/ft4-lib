@@ -21,7 +21,7 @@ import {
   OnAnchoredHandler,
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
-import { getTransactionRID } from "/ft4/utils";
+import { getTransactionRid } from "/ft4/utils";
 import { fetchBlockchains } from "../../utils/blockchain";
 
 describe("Crosschain transfer", () => {
@@ -74,7 +74,7 @@ describe("Crosschain transfer", () => {
         const decodedTx = gtx.deserialize(tx);
         const proofTx = await createIccfProofTx(
           clientC0,
-          getTransactionRID(tx),
+          getTransactionRid(tx),
           gtv.gtvHash(decodedTx),
           decodedTx.signers,
           multichain00.rid.toString("hex"),

@@ -10,8 +10,8 @@ let blockchainsCache: { [key: string]: Blockchain } | null = null;
  */
 async function fetchBlockchains(): Promise<{ [key: string]: Blockchain }> {
   const client = await createClient({
-    nodeURLPool: "http://127.0.0.1:7740",
-    blockchainIID: 0,
+    nodeUrlPool: "http://127.0.0.1:7740",
+    blockchainIid: 0,
   });
 
   const result = await client.query<

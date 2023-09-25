@@ -31,7 +31,7 @@ export async function getConfig(session: IClient): Promise<Config> {
   });
 }
 
-export function getTransactionRID(tx: SignedTransaction): Buffer {
+export function getTransactionRid(tx: SignedTransaction): Buffer {
   return gtx.getDigestToSign(gtx.deserialize(tx));
 }
 
