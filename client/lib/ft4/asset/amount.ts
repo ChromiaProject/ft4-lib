@@ -61,7 +61,7 @@ function buildAmountObject(amount: RawAmount): Amount {
       which: DecimalFormat,
       digits: number,
       removeTrailingZeroes?: boolean,
-      groupDigits?: boolean
+      groupDigits?: boolean,
     ) {
       return format(amount, which, digits, removeTrailingZeroes, groupDigits);
     },
@@ -85,10 +85,7 @@ function buildAmountObject(amount: RawAmount): Amount {
  * createAmount(1, 2) // returns 1.00
  * createAmount("1", 2) // returns 1.00
  */
-export function createAmount(
-  num: Exclude<SupportedNumber, bigint>,
-  decimals?: number
-): Amount {
+export function createAmount(num: SupportedNumber, decimals?: number): Amount {
   const rawAmount = convertToRawAmount(num, decimals);
   return buildAmountObject(rawAmount);
 }
@@ -110,7 +107,7 @@ export function createAmount(
  */
 export function createAmountFromBalance(
   num: bigint,
-  decimals?: number
+  decimals?: number,
 ): Amount {
   const rawAmount = convertToRawAmount(num, decimals);
   return buildAmountObject(rawAmount);
@@ -131,14 +128,14 @@ export function createAmountFromBalance(
  */
 export function convertToRawAmount(
   num: SupportedNumber | bigint,
-  decimals?: number
+  decimals?: number,
 ): RawAmount {
   if (
     decimals !== undefined &&
     (decimals < 0 || !Number.isInteger(decimals) || decimals > 78)
   ) {
     throw new AmountDecimalsError(
-      "Decimals must be an integer number between 0 and 78 (inclusive)"
+      "Decimals must be an integer number between 0 and 78 (inclusive)",
     );
   }
 
@@ -147,6 +144,7 @@ export function convertToRawAmount(
 
   switch (typeof num) {
     case "bigint":
+      //a bigint is often a response, so (100n, 3) is interpreted as 0.1
       value = num;
       break;
 
@@ -154,16 +152,30 @@ export function convertToRawAmount(
     case "number": {
       const numStr = num.toString();
 
-      if (!/^-?\d*\.?\d*$/.test(numStr)) {
+      /**
+       * First regex:
+       *  - may have a - at the start
+       *  - may have digits
+       *  - may have a decimal point (not comma)
+       *  - may have more digits until the end
+       *
+       * Second regex:
+       *  - must have a digit
+       *
+       * Allow weird formats like `-.3`, or `5.`
+       */
+      if (!/^-?\d*\.?\d*$/.test(numStr) || !/\d/.test(numStr)) {
         throw new AmountInputError(
-          `Formatting error: '${numStr}' is not a base-10 number`
+          `Formatting error: '${numStr}' is not a base-10 number`,
         );
       }
 
       const [whole, fraction = ""] = numStr.split(".");
+      //decimals has priority. (1.234, 2) is 1.23
       amountDecimals = decimals ?? fraction.length;
+      //add zeroes if needed, remove extra digits if neeeded
       value = BigInt(
-        whole + fraction.padEnd(amountDecimals, "0").slice(0, amountDecimals)
+        whole + fraction.padEnd(amountDecimals, "0").slice(0, amountDecimals),
       );
       break;
     }
@@ -171,7 +183,7 @@ export function convertToRawAmount(
     default: // if it's not string, number or bigint, it's an object
       if (decimals !== num.decimals && decimals !== undefined) {
         throw new AmountDecimalsError(
-          `Incompatible arguments: decimals (${decimals}), num.decimals (${num.decimals})`
+          `Incompatible arguments: decimals (${decimals}), num.decimals (${num.decimals})`,
         );
       }
       value = num.value;
@@ -184,19 +196,20 @@ export function convertToRawAmount(
 }
 
 /**
- * Checks that a value is in the range [-2^256+1, 2^256-1].
+ * Checks that a value is in the range [-2^256+1, 2^256-1] for EVM compatibility.
  * @param val - The value to check
  */
 export function checkValueInRange(val: bigint) {
   if (val >= MAX || val <= -MAX)
     throw new AmountOutOfRangeError(
-      "Numbers with absolute value above 2^256 - 1 are not supported"
+      "Numbers with absolute value above 2^256 - 1 are not supported",
     );
 }
 
 /**
- * To be used if you want the precise value. Can be formatted starting from here
- * must return a string, as a Number could still be overflowed and it won't be an integer
+ * To be used if you want the precise value. Can be formatted starting from here.
+ * It must return a string, as a Number could still be overflowed and floating point
+ * numbers aren't precise in JS.
  *
  * @param amount - the amount to format
  * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -> 0.8)
@@ -205,22 +218,36 @@ export function checkValueInRange(val: bigint) {
  */
 export function stringify(
   amount: AnyAssetAmount,
-  removeTrailingZeroes = true
+  removeTrailingZeroes = true,
 ): string {
+  /**
+   * amount.value is a BigInt, so this string will have all decimal digits
+   * e.g. (12.3, 5 decimals) is 1230000n as a BigInt
+   */
   let s = amount.value.toString();
   let negative = false;
   if (s.startsWith("-")) {
     s = s.slice(1);
     negative = true;
   }
+  // the integer part is "how many digits more than decimals we have" or 0
   const int = s.substring(0, s.length - amount.decimals) || "0";
+  /**
+   * the decimal part is all the digits after the integer ones, adding zeros
+   * at the start if there's less digits than specified by decimals
+   * e.g.
+   * (0.00327, 5 digits) will be represented as 327n.
+   *   - integer part: 0
+   *   - decimal part: 00327
+   */
   let decimals = s
     .substring(s.length - amount.decimals)
     .padStart(amount.decimals, "0");
   if (removeTrailingZeroes) {
     decimals = decimals.replace(/0+$/, "");
   }
-  return (negative ? "-" : "") + int + (decimals ? "." + decimals : "");
+  //if negative add -, then int part (even if 0), then add point and decimals if non-empty
+  return (negative ? "-" : "") + int + (decimals ? `.${decimals}` : "");
 }
 
 /**
@@ -244,11 +271,11 @@ export function format(
   which: DecimalFormat,
   digits: number,
   removeTrailingZeroes = false,
-  groupDigits = true
+  groupDigits = true,
 ): string {
   if (digits > 15) {
     throw new AmountInputError(
-      "You can't use format() for high-precision output. Please use stringify()"
+      "You can't use format() for high-precision output. Please use stringify()",
     );
   }
   switch (which) {
@@ -260,12 +287,16 @@ export function format(
 
     case DecimalFormat.mixed: {
       const orderOfMag = amount.value.toString().length - amount.decimals;
+      /**
+       * Write the number in scientific only if writing it in normal notation
+       * would take more than <digits> characters
+       */
       if (orderOfMag > 0 && orderOfMag <= digits) {
         return toFixedDecimals(
           amount,
           digits - orderOfMag,
           removeTrailingZeroes,
-          groupDigits
+          groupDigits,
         );
       } else return toScientific(amount, digits, removeTrailingZeroes);
     }
@@ -278,7 +309,7 @@ export function format(
 export function toScientific(
   amount: AnyAssetAmount,
   digits: number,
-  removeTrailingZeroes = false
+  removeTrailingZeroes = false,
 ) {
   const formatted = Number(stringify(amount, false)).toExponential(digits - 1);
   if (removeTrailingZeroes) return formatted.replace(/\.?0+e/, "e");
@@ -289,25 +320,30 @@ export function toFixedDecimals(
   amount: AnyAssetAmount,
   digits: number,
   removeTrailingZeroes = false,
-  groupDigits = true
+  groupDigits = true,
 ) {
   const s = stringify(amount, false);
   let [int, decimals] = s.split("."); //decimals may be undefined
   if (groupDigits) {
+    // add a space before every group of three digits (1 000.3)
     int = int.replace(/(\d)(?=(\d{3})+$)/g, "$1 ");
   }
   if (decimals) {
+    // cut all extra digits away, leave one for rounding
     decimals = decimals.substring(0, digits + 1);
 
     if (decimals.length > digits) {
       if (Number(decimals.charAt(decimals.length - 1)) > 4) {
+        // round up if last digit >= 5
         decimals = decimals.slice(0, -2) + (Number(decimals.slice(-2, -1)) + 1);
       } else {
+        // truncate otherwise
         decimals = decimals.slice(0, -1);
       }
     }
 
     if (groupDigits) {
+      // add a space after every group of three digits 3.000 4
       decimals = decimals.replace(/(\d{3})/g, "$1 ").trimEnd();
     }
 
@@ -315,7 +351,7 @@ export function toFixedDecimals(
 
     if (removeTrailingZeroes) return formatted.replace(/\.?[0 ]*$/, "");
     else return formatted;
-  } else return int; //never remove trailing zeroes
+  } else return int; //never remove trailing zeroes when we have no decimals
 }
 
 function sum(amount: RawAmount, other: RawAmount): Amount {
@@ -380,7 +416,7 @@ function requireSameDecimals(amount: AnyAssetAmount, other: RawAmount): void {
     throw new AmountDecimalsError(
       "Cannot sum, subtract or compare two Amounts with different amount of " +
         `decimals: amount (${amount.decimals}), other ` +
-        `(${other.decimals})`
+        `(${other.decimals})`,
     );
   }
 }
