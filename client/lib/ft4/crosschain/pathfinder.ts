@@ -21,7 +21,7 @@ export class PathfinderError extends Error {
 export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
-  blockchainRID: BufferId,
+  blockchainRid: BufferId,
 ) {
   const rootNode = asset.brid;
 
@@ -29,7 +29,7 @@ export async function findPathToChainForAsset(
   const pathSourceToRoot = [
     formatter.toBuffer(connection.client.config.blockchainRid),
   ];
-  const pathEndToRoot = [formatter.ensureBuffer(blockchainRID)];
+  const pathEndToRoot = [formatter.ensureBuffer(blockchainRid)];
 
   let lastNode: Buffer;
   let commonNode: Buffer;
@@ -131,8 +131,7 @@ async function createConnectionToBrid(oldClient: IClient, newBrid: BufferId) {
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
-      // ""+ to avoid errors (readonly)
-      directoryNodeUrlPool: "" + oldClient.config.endpointPool,
+      directoryNodeUrlPool: oldClient.config.endpointPool.slice(),
       blockchainRid:
         typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
     }),

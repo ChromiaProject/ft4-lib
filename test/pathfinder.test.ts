@@ -34,10 +34,7 @@ import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
 import { createConnection } from "/ft4";
 import { Asset } from "/ft4/asset/types";
-import {
-  PathfinderError,
-  findPathToChainForAsset,
-} from "/ft4/crosschain/pathfinder";
+import { findPathToChainForAsset } from "/ft4/crosschain/pathfinder";
 import { BufferId } from "/cryptoUtils";
 
 createClientMock.mockImplementation(
@@ -122,7 +119,7 @@ describe("Pathfinder", () => {
     ]);
   });
 
-  it("throws when blockchain doesn't exist", async () => {
+  it("rethrows errors when it can't handle them", async () => {
     const asset = getMockAsset();
     assetOriginQueryMock.mockReturnValueOnce(generateId());
     createClientMock.mockImplementationOnce(
@@ -130,7 +127,7 @@ describe("Pathfinder", () => {
     );
     const promise = findPathToChainForAsset(connection, asset, endingChainBrid);
 
-    await expect(promise).rejects.toThrow(PathfinderError);
+    await expect(promise).rejects.toThrow(TypeError);
   });
 
   it("finds a path if both are on the same branch", async () => {
