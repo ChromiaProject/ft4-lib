@@ -1,0 +1,51 @@
+@test module;
+
+import ^^.assets.utils;
+import auth_ext: ^^^.lib.ft4.auth.external;
+import xchain_ext: ^^^.lib.ft4.crosschain.external;
+
+
+// Test for valid asset but invalid amount (0)
+function test_init_transfer_requires_invalid_amount() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 0L, [x"abcdef"]))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("Amount must be positive, got %s".format(0));
+}
+
+// Test for invalid asset and valid amount
+function test_init_transfer_requires_invalid_asset() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_id_invalid = x"deadbeef";
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xchain_ext.init_transfer(bob.account.id, asset_id_invalid, 5L, [x"abcdef"]))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("Asset not found '%s'".format(asset_id_invalid));
+}
+
+// Test for valid asset and valid amount
+function test_init_transfer_requires_valid_conditions() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    // Mint some asset to Alice's account for a valid test
+    utils.mint(alice.account, asset_valid, 10L);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]))
+        .sign(rell.test.keypairs.alice)
+        .run(); // Should run successfully
+}

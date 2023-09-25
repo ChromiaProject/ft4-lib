@@ -39,6 +39,11 @@ operation init_transfer(
         assets.asset @? { .id == asset_id }, 
         "Asset not found '%s'".format(asset_id)
     );
+
+    require(amount > 0,
+      "Amount must be positive, got %s".format(amount)
+    );
+
     crosschain.Unsafe.update_balances_if_needed(
         account,
         crosschain.ensure_blockchain_account(hops[0]),
