@@ -8,19 +8,18 @@ import { AuthenticatedAccount } from "./types";
 import { createAccountObject } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "../../cryptoUtils";
-import {
-  SignatureProvider,
-  TransactionReceipt,
-  KeyPair,
-  formatter,
-} from "postchain-client";
+import { SignatureProvider, KeyPair, formatter } from "postchain-client";
 import { Amount } from "../asset/interfaces";
-import { Connection, Session } from "../types";
+import { Connection } from "../types";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Authenticator } from "../authentication/types";
 import { call, createSession } from "../ft-session";
 import { createAuthenticator } from "../authentication";
+import {
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "../utils/types";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -50,10 +49,7 @@ async function addAuthDescriptor(
   authenticator: Authenticator,
   authDescriptor: AuthDescriptor,
   newSigner: SignatureProvider | KeyPair,
-): Promise<{
-  newSession: Session;
-  receipt: TransactionReceipt;
-}> {
+): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const newKeyHandler =
@@ -71,8 +67,8 @@ async function addAuthDescriptor(
   );
 
   return {
-    newSession: createSession(connection, newAuth),
     receipt: await connection.client.sendTransaction(tx),
+    session: createSession(connection, newAuth),
   };
 }
 
@@ -80,10 +76,7 @@ async function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId,
-): Promise<{
-  newSession: Session;
-  receipt: TransactionReceipt;
-}> {
+): Promise<TransactionSessionCompletion> {
   const newAuth = createAuthenticator(
     authenticator.accountId,
     authenticator.keyHandlers.filter((kh) =>
@@ -91,14 +84,14 @@ async function deleteAuthDescriptor(
     ),
     authenticator.authDataService,
   );
-
+  const { receipt } = await call(
+    connection,
+    authenticator,
+    deleteAuthDescriptorOp(authDescriptorId),
+  );
   return {
-    newSession: createSession(connection, newAuth),
-    receipt: await call(
-      connection,
-      authenticator,
-      deleteAuthDescriptorOp(authDescriptorId),
-    ),
+    receipt,
+    session: createSession(connection, newAuth),
   };
 }
 
@@ -108,7 +101,7 @@ async function transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount,
-): Promise<TransactionReceipt> {
+): Promise<TransactionCompletion> {
   return call(
     connection,
     authenticator,

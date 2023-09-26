@@ -39,12 +39,12 @@ import {
   RawGtv,
   QueryArguments,
   Operation,
-  TransactionReceipt,
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import { fetchExposedOperations } from "./utils/exposed-operations";
 import { ftEventEmitter } from "./events";
+import { TransactionCompletion } from "./utils/types";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -103,7 +103,7 @@ export async function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Promise<TransactionReceipt> {
+): Promise<TransactionCompletion> {
   return callWithoutNop(connection, authenticator, ...operations, nop());
 }
 
@@ -111,11 +111,11 @@ export async function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Promise<TransactionReceipt> {
+): Promise<TransactionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
-  return connection.client.sendTransaction(tx);
+  return { receipt: await connection.client.sendTransaction(tx) };
 }
 
 export type KeyStoreInteractor = {

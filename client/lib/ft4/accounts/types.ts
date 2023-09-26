@@ -1,8 +1,4 @@
-import {
-  SignatureProvider,
-  TransactionReceipt,
-  KeyPair,
-} from "postchain-client";
+import { SignatureProvider, KeyPair } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "../../cryptoUtils";
@@ -13,8 +9,12 @@ import {
 } from "./transfer-history/types";
 import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
-import { OptionalPageCursor, Session } from "../types";
-import { PaginatedEntity } from "../utils/types";
+import { OptionalPageCursor } from "../types";
+import {
+  PaginatedEntity,
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "../utils/types";
 import { Buffer } from "buffer";
 
 export type RateLimit = {
@@ -54,18 +54,14 @@ export interface AuthenticatedAccount extends Account {
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
     newSigner: SignatureProvider | KeyPair,
-  ) => Promise<{
-    newSession: Session;
-    receipt: TransactionReceipt;
-  }>;
-  deleteAuthDescriptor: (authDescriptorId: BufferId) => Promise<{
-    newSession: Session;
-    receipt: TransactionReceipt;
-  }>;
+  ) => Promise<TransactionSessionCompletion>;
+  deleteAuthDescriptor: (
+    authDescriptorId: BufferId,
+  ) => Promise<TransactionSessionCompletion>;
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount,
-  ) => Promise<TransactionReceipt>;
-  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionReceipt>;
+  ) => Promise<TransactionCompletion>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionCompletion>;
 }

@@ -14,16 +14,14 @@ import {
   toGtv,
 } from "../client/lib/ft4/accounts/auth-descriptor";
 import { nop, op } from "../client/lib/ft4/utils";
-import {
-  createConnection,
-  createKeyStoreInteractor,
-} from "../client/lib/ft4/ft-session";
+import { createConnection } from "../client/lib/ft4/ft-session";
 import { ftAuth } from "../client/lib/ft4/authentication";
 import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
 import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
+  getSessionForAccount,
 } from "./util/util";
 import {
   deleteAllAuthDescriptorsExclude,
@@ -51,18 +49,6 @@ async function multiSigCall(
     signedTx = await _connection.client.signTransaction(signedTx, signer);
   }
   await _connection.client.sendTransaction(signedTx);
-}
-
-async function getSessionForUser(
-  accountId: BufferId,
-  signer: pcl.SignatureProvider | pcl.KeyPair,
-) {
-  const { getSession } = createKeyStoreInteractor(
-    _connection.client,
-    createInMemoryFtKeyStore(signer),
-  );
-
-  return await getSession(accountId);
 }
 
 describe("Test the account", () => {
@@ -117,7 +103,7 @@ describe("Test the account", () => {
     expect((await account.getAuthDescriptors()).data.length).toBe(2);
   });
 
-  it("can use new auth descriptor after adding", async () => {
+  it("returns a session that is aware of the new auth descriptor", async () => {
     const account = await AccountBuilder.account(_connection)
       .withAuthFlags(FlagsType.Account)
       .build();
@@ -125,15 +111,16 @@ describe("Test the account", () => {
     const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["T"]);
 
-    const { newSession } = await account.addAuthDescriptor(
+    const { session } = await account.addAuthDescriptor(
       authDescriptor2,
       keyPair2,
     );
 
-    expect(newSession.account.authenticator.keyHandlers.length).toBe(2);
-    expect(
-      newSession.account.authenticator.keyHandlers[1].authDescriptor.flags,
-    ).toEqual(new Set(["T"]));
+    expect(session.account.authenticator.keyHandlers.length).toBe(2);
+    const keyHandler = session.account.authenticator.keyHandlers.find(
+      (kh) => !kh.authDescriptor.id.compare(authDescriptor2.id),
+    );
+    expect(keyHandler.authDescriptor.flags).toEqual(new Set(["T"]));
   });
 
   it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
@@ -316,7 +303,7 @@ describe("Test the account", () => {
 
     await createAccount(_connection.client, ad);
 
-    const session = await getSessionForUser(ad.id, keyPair);
+    const session = await getSessionForAccount(_connection, ad.id, keyPair);
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
@@ -343,7 +330,7 @@ describe("Test the account", () => {
 
     await createAccount(_connection.client, ad);
 
-    const session = await getSessionForUser(ad.id, keyPair);
+    const session = await getSessionForAccount(_connection, ad.id, keyPair);
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = authDescriptor.create.singleSig.withArgs(
@@ -366,7 +353,11 @@ describe("Test the account", () => {
 
     await createAccount(_connection.client, authDescriptor);
 
-    const session = await getSessionForUser(authDescriptor.id, keyPair);
+    const session = await getSessionForAccount(
+      _connection,
+      authDescriptor.id,
+      keyPair,
+    );
 
     const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["A"]);
@@ -450,7 +441,8 @@ describe("Test the account", () => {
       acc1.addAuthDescriptor(ad3, user3.signatureProvider),
     ]);
 
-    const { account: acc2 } = await getSessionForUser(
+    const { account: acc2 } = await getSessionForAccount(
+      _connection,
       acc1.id,
       user2.signatureProvider,
     );
@@ -483,7 +475,8 @@ describe("Test the account", () => {
       acc1.addAuthDescriptor(ad3, user3.signatureProvider),
     ]);
 
-    const { account: acc2 } = await getSessionForUser(
+    const { account: acc2 } = await getSessionForAccount(
+      _connection,
       acc1.id,
       user2.signatureProvider,
     );
@@ -517,13 +510,18 @@ describe("Test the account", () => {
       acc1.addAuthDescriptor(ad3, user3.signatureProvider),
     ]);
 
-    const { account: acc2 } = await getSessionForUser(
+    const { account: acc2 } = await getSessionForAccount(
+      _connection,
       acc1.id,
       user2.signatureProvider,
     );
 
-    expect((await acc2.getAuthDescriptors()).data.length).toBe(3);
-    await acc2.deleteAuthDescriptor(ad3.id);
-    expect((await acc2.getAuthDescriptors()).data.length).toBe(2);
+    acc2.authenticator.keyHandlers.push(
+      createInMemoryFtKeyStore(user3.signatureProvider).createKeyHandler(ad3),
+    );
+
+    expect(acc2.authenticator.keyHandlers.length).toBe(2);
+    const { session } = await acc2.deleteAuthDescriptor(ad3.id);
+    expect(session.account.authenticator.keyHandlers.length).toBe(1);
   });
 });
