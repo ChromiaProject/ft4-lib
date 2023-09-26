@@ -84,13 +84,12 @@ async function deleteAuthDescriptor(
     ),
     authenticator.authDataService,
   );
-  const { receipt } = await call(
-    connection,
-    authenticator,
-    deleteAuthDescriptorOp(authDescriptorId),
-  );
   return {
-    receipt,
+    receipt: await call(
+      connection,
+      authenticator,
+      deleteAuthDescriptorOp(authDescriptorId),
+    ),
     session: createSession(connection, newAuth),
   };
 }
@@ -102,11 +101,13 @@ async function transfer(
   assetId: BufferId,
   amount: Amount,
 ): Promise<TransactionCompletion> {
-  return call(
-    connection,
-    authenticator,
-    transferOp(receiverId, assetId, amount),
-  );
+  return {
+    receipt: await call(
+      connection,
+      authenticator,
+      transferOp(receiverId, assetId, amount),
+    ),
+  };
 }
 
 async function burn(
@@ -115,5 +116,7 @@ async function burn(
   assetId: BufferId,
   amount: Amount,
 ) {
-  return call(connection, authenticator, burnOp(assetId, amount));
+  return {
+    receipt: await call(connection, authenticator, burnOp(assetId, amount)),
+  };
 }

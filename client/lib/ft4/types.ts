@@ -1,13 +1,14 @@
 import { BufferId } from "../cryptoUtils";
 import { Account, AuthenticatedAccount } from "./accounts/types";
 import { Asset } from "./asset/types";
-import { Config, PaginatedEntity, TransactionCompletion } from "./utils/types";
+import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,
   QueryArguments,
   QueryObject,
   Operation,
+  TransactionReceipt,
 } from "postchain-client";
 
 export type PageCursor = string;
@@ -46,9 +47,7 @@ export interface Connection {
 
 export interface Session extends Connection {
   account: AuthenticatedAccount;
-  call: (...operations: Operation[]) => Promise<TransactionCompletion>;
-  callWithoutNop: (
-    ...operations: Operation[]
-  ) => Promise<TransactionCompletion>;
+  call: (...operations: Operation[]) => Promise<TransactionReceipt>;
+  callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
   transactionBuilder: () => TransactionBuilder;
 }
