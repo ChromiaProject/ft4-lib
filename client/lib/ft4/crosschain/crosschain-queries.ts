@@ -1,6 +1,7 @@
 import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Buffer } from "buffer";
+import { OptionalPageCursor } from "../types";
 
 export function assetOriginById(
   assetId: BufferId,
@@ -15,11 +16,19 @@ export function assetOriginById(
 
 export function pendingTransfersForAccount(
   accountId: BufferId,
-): QueryObject<{ account_id: Buffer }> {
+  limit: number,
+  cursor: OptionalPageCursor,
+): QueryObject<{
+  account_id: Buffer;
+  page_size: number;
+  page_cursor: OptionalPageCursor;
+}> {
   return {
     name: "ft4.crosschain.get_pending_transfers_for_account",
     args: {
       account_id: formatter.ensureBuffer(accountId),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

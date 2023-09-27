@@ -8,8 +8,8 @@ entity applied_transfers {
 }
 
 entity pending_transfer {
-    key tx_rid, op_index; 
-    tx_rid: byte_array;
+    key transaction, op_index; 
+    transaction;
     op_index: integer;
     accounts.account;
 }

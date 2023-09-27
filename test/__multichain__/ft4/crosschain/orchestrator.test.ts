@@ -3,6 +3,7 @@ import {
   FlagsType,
   createAmount,
   createConnection,
+  findPathToChainForAsset,
   mint,
   registerCrosschainAsset,
 } from "/ft4";
@@ -17,6 +18,10 @@ import adminUser from "/util/admin_user";
 import AccountBuilder from "/util/account-builder";
 import { createSession } from "/ft4/ft-session";
 import { AuthenticatedAccount } from "/ft4/accounts";
+import { initTransfer } from "/ft4/crosschain/operations";
+import { formatter } from "postchain-client";
+
+jest.setTimeout(60000);
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
@@ -116,5 +121,30 @@ describe("Orchestrator", () => {
     await orchestrator.transfer();
 
     expect(errorListener).toHaveBeenCalled();
+  });
+
+  it("resumes a transfer that was initiated but not completed", async () => {
+    const session2 = createSession(connection2, account2.authenticator);
+
+    const path = await findPathToChainForAsset(session0, asset, multichain2Rid);
+    const normalizedPath = path.map(formatter.ensureBuffer);
+    const amount = createAmount(10);
+    await session0
+      .transactionBuilder()
+      .add(initTransfer(account2.id, asset.id, amount, normalizedPath))
+      .buildAndSend();
+
+    const pendingTransfers = await account0.getPendingTransfers();
+    const orchestrator = await createOrchestrator(
+      multichain2Rid,
+      account0.id,
+      amount,
+      asset.id,
+      session2,
+    );
+
+    await orchestrator.resumeTransfers(pendingTransfers.data);
+    const balance = await account2.getBalanceByAssetId(asset.id);
+    expect(balance).toStrictEqual(amount);
   });
 });

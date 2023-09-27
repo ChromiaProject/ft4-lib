@@ -1,9 +1,9 @@
-import { RawGtv } from "postchain-client";
 import { Buffer } from "buffer";
+import { GTX, RawGtv } from "postchain-client";
 import { EventEmitter, Listener } from "../events";
+import { FTEvents } from "../events/types";
 import { OrchestratorError } from "./errors";
 import { BufferId } from "/cryptoUtils";
-import { FTEvents } from "../events/types";
 
 type GtxOperation = {
   name: string;
@@ -30,6 +30,8 @@ export type InitTransferArgs = [
 
 export interface Orchestrator {
   transfer: () => Promise<void>;
+  resumeTransfer: (transfer: PendingTransfer) => Promise<void>;
+  resumeTransfers: (transfers: PendingTransfer[]) => Promise<void>;
   eventEmitter: EventEmitter<FTEvents>;
   onTransferInit: (listener: Listener<[]>) => void;
   offTransferInit: (listener: Listener<[]>) => void;
@@ -42,13 +44,13 @@ export interface Orchestrator {
 }
 
 export type PendingTransfer = {
-  txRid: Buffer;
+  tx: GTX;
   opIndex: number;
   accountId: Buffer;
 };
 
 export type PendingTransferResponse = {
-  tx_rid: Buffer;
+  tx_data: Buffer;
   op_index: number;
   account_id: Buffer;
 };

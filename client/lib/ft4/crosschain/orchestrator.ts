@@ -1,4 +1,5 @@
 import {
+  IClient,
   IccfProof,
   Operation,
   SignedTransaction,
@@ -21,8 +22,9 @@ import { Session } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
-import { Orchestrator } from "./types";
+import { Orchestrator, PendingTransfer } from "./types";
 import { getTransactionRID } from "../utils";
+import { isTransferApplied } from "./crosschain-queries";
 
 type State = {
   current: number;
@@ -66,6 +68,13 @@ export async function createOrchestrator(
     current: 0,
     path: normalizedPath,
   };
+
+  const directoryClient = await createClient({
+    // TODO: Replace with directoryNodeURLPool after Postchain Client release
+    nodeURLPool: session.client.config.endpointPool.slice(),
+    // directoryNodeURLPool: session.client.config.endpointPool.slice(),
+    blockchainIID: 0,
+  });
 
   /**
    * Initialize the transfer by creating the initial transaction.
@@ -131,55 +140,123 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function transfer(): Promise<void> {
-    const directoryClient = await createClient({
-      // TODO: Replace with directoryNodeURLPool after Postchain Client release
-      nodeURLPool: session.client.config.endpointPool.slice(),
-      // directoryNodeURLPool: session.client.config.endpointPool.slice(),
-      blockchainIID: 0,
-    });
-
-    try {
+    await handleErrors(async () => {
       localEmitter.emit("TransferInit");
       await initTransfer();
 
-      for (
-        let pathIndex = state.current;
-        pathIndex < normalizedPath.length;
-        pathIndex++
-      ) {
-        const brid = normalizedPath[pathIndex];
+      await walkPath(directoryClient);
+    });
+  }
 
-        const decodedTx = gtx.deserialize(state.tx);
-
-        const sourceBlockchainRid =
-          pathIndex === 0
-            ? session.client.config.blockchainRID
-            : normalizedPath[pathIndex - 1];
-
-        const proofTx = await createIccfProofTx(
-          directoryClient,
-          getTransactionRID(state.tx),
-          gtv.gtvHash(decodedTx),
-          decodedTx.signers,
-          sourceBlockchainRid.toString("hex"),
-          brid.toString("hex"),
-        );
-
-        // TODO: Replace with const { iccfTx } = proofTx
-        const iccfTx = temporaryFixForIccfProof(proofTx);
-
-        const iccfOp = iccfTx.operations[0];
-        await applyTransfer(brid, iccfOp);
-
-        state.current++;
-        localEmitter.emit("TransferHop", brid);
-      }
-
-      localEmitter.emit("TransferEnd");
+  /**
+   * Wraps the provied callback in a try/catch block and handles
+   * emitting error events if the provided callback throws any errors.
+   * @param fn
+   */
+  async function handleErrors(fn: () => Promise<void>) {
+    try {
+      await fn();
     } catch (error) {
       const orchError = new OrchestratorError(error.message, "generalError");
       localEmitter.emit("TransferError", orchError);
     }
+  }
+
+  /**
+   * Accepts a cross chain transfer that was not completed
+   * and resumes it. This function returns when the transfer
+   * has been successfully completed.
+   * @param transfer the transfer to resume
+   */
+  async function resumeTransfer(transfer: PendingTransfer) {
+    for (let i = 0; i < state.path.length; i++) {
+      if (
+        await isAppliedOnBrid(
+          formatter.ensureBuffer(state.path[i]),
+          getTransactionRID(gtx.serialize(transfer.tx)),
+          transfer.opIndex,
+        )
+      ) {
+        state.current = i + 1;
+        break;
+      }
+    }
+
+    if (state.current === state.path.length - 1) {
+      // Transfer already applied
+      return;
+    }
+
+    handleErrors(async () => {
+      await walkPath(directoryClient);
+    });
+  }
+
+  /**
+   * Resumes all the provided transfers in parallell. This function
+   * will not resulve until all the pending trnsfers has been applied
+   * @param transfers the transfers to resume
+   */
+  async function resumeTransfers(transfers: PendingTransfer[]) {
+    const promises = transfers.map((transfer) => resumeTransfer(transfer));
+    await Promise.all(promises);
+  }
+
+  /**
+   * Checks to see wether the specified transfer is already applied to
+   * this brid.
+   * @param targetChainBrid the brid of the chain to check
+   * @param txBrid the brid of the transaction containing the transfer
+   * @param opIndex the index of the transfer in the transaction
+   * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
+   */
+  async function isAppliedOnBrid(
+    targetChainBrid: Buffer,
+    txBrid: Buffer,
+    opIndex: number,
+  ): Promise<boolean> {
+    const connection = await createConnectionToBrid(
+      session.client,
+      targetChainBrid,
+    );
+    return connection.query<boolean>(isTransferApplied(txBrid, opIndex));
+  }
+
+  async function walkPath(directoryClient: IClient) {
+    for (
+      let pathIndex = state.current;
+      pathIndex < normalizedPath.length;
+      pathIndex++
+    ) {
+      const brid = normalizedPath[pathIndex];
+
+      const decodedTx = gtx.deserialize(state.tx);
+
+      const sourceBlockchainRid =
+        pathIndex === 0
+          ? session.client.config.blockchainRID
+          : normalizedPath[pathIndex - 1];
+
+      const proofTx = await createIccfProofTx(
+        directoryClient,
+        getTransactionRID(state.tx),
+        gtv.gtvHash(decodedTx),
+        decodedTx.signers,
+        sourceBlockchainRid.toString("hex"),
+        brid.toString("hex"),
+      );
+
+      // TODO: Replace with const { iccfTx } = proofTx
+      const iccfTx = temporaryFixForIccfProof(proofTx);
+
+      const iccfOp = iccfTx.operations[0];
+      await applyTransfer(brid, iccfOp);
+
+      state.current++;
+      localEmitter.emit("TransferHop", brid);
+    }
+
+    localEmitter.emit("TransferEnd");
   }
 
   /* Cross-Chain Transfer convenience event handlers */
@@ -218,6 +295,8 @@ export async function createOrchestrator(
 
   return {
     transfer,
+    resumeTransfer,
+    resumeTransfers,
     eventEmitter: localEmitter,
     onTransferInit,
     offTransferInit,

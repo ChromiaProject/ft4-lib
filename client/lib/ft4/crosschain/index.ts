@@ -13,4 +13,11 @@ export {
 } from "./crosschain-op-functions";
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
-export { Orchestrator, InitTransferArgs } from "./types";
+export { pendingTransfersForAccount } from "./crosschain-queries";
+
+export {
+  Orchestrator,
+  InitTransferArgs,
+  PendingTransfer,
+  PendingTransferResponse,
+} from "./types";

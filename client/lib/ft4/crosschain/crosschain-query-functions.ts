@@ -1,32 +1,38 @@
-import { BufferId } from "../../cryptoUtils";
-import * as Query from "./crosschain-queries";
-import { Connection } from "../types";
 import { Buffer } from "buffer";
+import { gtx } from "postchain-client";
+import { BufferId } from "../../cryptoUtils";
+import { Connection, OptionalPageCursor } from "../types";
+import * as Query from "./crosschain-queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
-import { freeze } from "../utils/types";
 
 export async function getAssetOriginById(
   connection: Connection,
   id: BufferId,
 ): Promise<Buffer> {
-  return await connection.query<Buffer>(Query.assetOriginById(id)).then(freeze);
+  return await connection.query<Buffer>(Query.assetOriginById(id));
 }
 
 export async function getPendingTransfersForAccount(
   connection: Connection,
   accountId: Buffer,
+  limit = 100,
+  cursor: OptionalPageCursor = null,
 ): Promise<PendingTransfer[]> {
   return await connection
     .query<PendingTransferResponse[]>(
-      Query.pendingTransfersForAccount(accountId),
+      Query.pendingTransfersForAccount(accountId, limit, cursor),
     )
-    .then((res) =>
-      res.map((pt) => ({
-        accountId: pt.account_id,
-        opIndex: pt.op_index,
-        txRid: pt.tx_rid,
-      })),
-    );
+    .then(mapPendingTransfers);
+}
+
+export function mapPendingTransfers(
+  transfers: PendingTransferResponse[],
+): PendingTransfer[] {
+  return transfers.map((transfer) => ({
+    accountId: transfer.account_id,
+    opIndex: transfer.op_index,
+    tx: gtx.deserialize(transfer.tx_data),
+  }));
 }
 
 export async function isTransferApplied(
