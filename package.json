@@ -41,7 +41,7 @@
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
     "ethers": "^6.4.1",
-    "postchain-client": "^1.5.9"
+    "postchain-client": "^1.5.10"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",
