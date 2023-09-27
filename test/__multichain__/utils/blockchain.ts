@@ -8,7 +8,12 @@ let blockchainsCache: { [key: string]: Blockchain } | null = null;
  * Fetches blockchains from the client and structures them by name.
  * @returns A dictionary of blockchains indexed by their names.
  */
-async function fetchBlockchains(): Promise<{ [key: string]: Blockchain }> {
+async function fetchBlockchains(
+  force = false,
+): Promise<{ [key: string]: Blockchain }> {
+  if (blockchainsCache || force) {
+    return blockchainsCache;
+  }
   const client = await createClient({
     nodeURLPool: "http://127.0.0.1:7740",
     blockchainIID: 0,
@@ -38,7 +43,7 @@ async function getBlockchainBrid(
   name: string,
 ): Promise<Blockchain | undefined> {
   if (!blockchainsCache?.[name]) {
-    blockchainsCache = await fetchBlockchains();
+    blockchainsCache = await fetchBlockchains(true);
   }
   return blockchainsCache[name];
 }
