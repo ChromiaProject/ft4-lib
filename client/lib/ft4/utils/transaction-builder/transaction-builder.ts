@@ -188,17 +188,14 @@ export function transactionBuilder(
       systemClient,
       client.config.blockchainRID,
     );
+    const txRid = getTransactionRID(tx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
 
       let isAnchored = false;
       try {
-        isAnchored = await isBlockAnchored(
-          client,
-          anchoringClient,
-          getTransactionRID(tx),
-        );
+        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
       } catch (error) {
         if (error instanceof BlockAnchoringException) {
           isAnchored = false;

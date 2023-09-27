@@ -8,7 +8,6 @@ import {
   createAmount,
   createConnection,
   getInitTransferArgs,
-  mint,
   registerCrosschainAsset,
 } from "/ft4";
 import adminUser from "/util/admin_user";
@@ -46,19 +45,12 @@ describe("Crosschain transfer", () => {
 
     const account00 = await AccountBuilder.account(connection00)
       .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
       .build();
 
     const account01 = await AccountBuilder.account(connection01)
       .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
       .build();
-
-    await mint(
-      connection00.client,
-      adminUser().signatureProvider,
-      account00.id,
-      asset00.id,
-      createAmount(100, asset00.decimals),
-    );
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
