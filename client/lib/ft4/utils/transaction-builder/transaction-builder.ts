@@ -8,6 +8,8 @@ import {
   getAnchoringClient,
   createClient,
   BlockAnchoringException,
+  SignedTransaction,
+  TransactionReceipt,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -64,7 +66,7 @@ export function transactionBuilder(
       signatures: [],
     };
     const addOperation = (op: Operation) => {
-      txn.operations.push({ opName: op.name, args: op.args });
+      txn.operations.push({ opName: op.name, args: op.args ?? [] });
     };
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
@@ -159,7 +161,10 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
-  async function buildAndSend() {
+  async function buildAndSend(): Promise<{
+    tx: SignedTransaction;
+    receipt: TransactionReceipt;
+  }> {
     const tx = await (this as TransactionBuilder).build();
     const receipt = await client.sendTransaction(tx);
 
@@ -188,18 +193,17 @@ export function transactionBuilder(
       systemClient,
       client.config.blockchainRid,
     );
+    const txRid = getTransactionRid(tx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
 
       let isAnchored = false;
       try {
-        isAnchored = await isBlockAnchored(
-          client,
-          anchoringClient,
-          getTransactionRid(tx),
-        );
+        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
       } catch (error) {
+        console.error("Error while checking block anchoring status", error);
+
         if (error instanceof BlockAnchoringException) {
           isAnchored = false;
         } else {

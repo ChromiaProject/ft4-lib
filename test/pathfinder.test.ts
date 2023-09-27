@@ -7,10 +7,8 @@ const commonChainBrid = Buffer.from("88", "hex");
 const assetOriginQueryMock = jest.fn();
 const createClientMock = jest.fn();
 
-jest.mock("/ft4/crosschain/crosschain-query-functions", () => {
-  const originalModule = jest.requireActual(
-    "/ft4/crosschain/crosschain-query-functions",
-  );
+jest.mock("/ft4/crosschain/query-functions", () => {
+  const originalModule = jest.requireActual("/ft4/crosschain/query-functions");
 
   return {
     __esModule: true,
