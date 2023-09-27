@@ -1,5 +1,5 @@
 import {
-  Operation,
+  IClient,
   SignedTransaction,
   createClient,
   createIccfProofTx,
@@ -23,8 +23,8 @@ import { Orchestrator, OrchestratorEvents } from "./types";
 import { getTransactionRID } from "../utils";
 
 type State = {
-  current: number;
-  path: BufferId[];
+  currentHopIndex: number;
+  path: Buffer[];
   tx?: SignedTransaction;
 };
 
@@ -42,8 +42,8 @@ type State = {
 export async function createOrchestrator(
   targetChainId: BufferId,
   recipientId: BufferId,
-  amount: Amount,
   assetId: BufferId,
+  amount: Amount,
   session: Session,
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
@@ -54,7 +54,7 @@ export async function createOrchestrator(
   const localEmitter = new EventEmitter<OrchestratorEvents>();
 
   const state: State = {
-    current: 0,
+    currentHopIndex: 0,
     path,
   };
 
@@ -78,17 +78,21 @@ export async function createOrchestrator(
 
   /**
    * Apply the transfer operation targeting a specific bridge.
+   * @param {IClient} directoryClient - The client for the directory chain.
    * @param {Buffer} targetChainBrid - The ID of the target bridge.
    * @returns {Promise<void>}
    */
   async function applyTransfer(
+    directoryClient: IClient,
     targetChainBrid: Buffer,
-    iccfOp: Operation,
   ): Promise<void> {
     const connection = await createConnectionToBrid(
       session.client,
       targetChainBrid,
     );
+
+    const { iccfTx } = await createIccfProof(directoryClient, targetChainBrid);
+    const iccfOp = iccfTx.operations[0];
 
     return new Promise((resolve) => {
       const authDataService = createAuthDataService(connection);
@@ -117,6 +121,37 @@ export async function createOrchestrator(
   }
 
   /**
+   * Create ICCF proof for a specific bridge.
+   *
+   * @param {any} directoryClient - The client for the directory service.
+   * @param {Buffer} targetChainBrid - The ID of the target bridge.
+   * @returns {Promise<IccfProof>} The ICCF proof transaction.
+   */
+  async function createIccfProof(
+    directoryClient: IClient,
+    targetChainBrid: Buffer,
+  ): Promise<any> {
+    const pathIndex = path.indexOf(targetChainBrid);
+    const decodedTx = gtx.deserialize(state.tx);
+
+    const sourceBlockchainRid =
+      pathIndex === 0
+        ? session.client.config.blockchainRID
+        : path[pathIndex - 1];
+
+    const proofTx = createIccfProofTx(
+      directoryClient,
+      getTransactionRID(state.tx),
+      gtv.gtvHash(decodedTx),
+      decodedTx.signers,
+      sourceBlockchainRid.toString("hex"),
+      targetChainBrid.toString("hex"),
+    );
+
+    return proofTx;
+  }
+
+  /**
    * Execute the transfer operation across all steps.
    * @async
    * @returns {Promise<void>}
@@ -133,34 +168,15 @@ export async function createOrchestrator(
       await initTransfer();
 
       for (
-        let pathIndex = state.current;
+        let pathIndex = state.currentHopIndex;
         pathIndex < path.length;
         pathIndex++
       ) {
         const brid = path[pathIndex];
 
-        const decodedTx = gtx.deserialize(state.tx);
+        await applyTransfer(directoryClient, brid);
 
-        const sourceBlockchainRid =
-          pathIndex === 0
-            ? session.client.config.blockchainRID
-            : path[pathIndex - 1];
-
-        const proofTx = await createIccfProofTx(
-          directoryClient,
-          getTransactionRID(state.tx),
-          gtv.gtvHash(decodedTx),
-          decodedTx.signers,
-          sourceBlockchainRid.toString("hex"),
-          brid.toString("hex"),
-        );
-
-        const { iccfTx } = proofTx;
-
-        const iccfOp = iccfTx.operations[0];
-        await applyTransfer(brid, iccfOp);
-
-        state.current++;
+        state.currentHopIndex++;
         localEmitter.emit("TransferHop", brid);
       }
 

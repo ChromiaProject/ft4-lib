@@ -28,6 +28,7 @@ export function applyTransfer(
   path: BufferId[],
   tx: SignedTransaction,
   targetChainIndex: number,
+  operationIndex: typeof OP_INDEX_INIT_TRANSFER = OP_INDEX_INIT_TRANSFER,
 ): Operation {
   return op(
     "ft4.crosschain.apply_transfer",
@@ -38,7 +39,7 @@ export function applyTransfer(
       path.map((item) => formatter.ensureBuffer(item)),
     ],
     gtv.decode(tx),
-    OP_INDEX_INIT_TRANSFER,
+    operationIndex,
     targetChainIndex,
   );
 }
