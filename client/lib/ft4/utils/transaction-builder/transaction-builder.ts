@@ -64,7 +64,7 @@ export function transactionBuilder(
       signatures: [],
     };
     const addOperation = (op: Operation) => {
-      txn.operations.push({ opName: op.name, args: op.args });
+      txn.operations.push({ opName: op.name, args: op.args ?? [] });
     };
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);

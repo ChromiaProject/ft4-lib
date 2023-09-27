@@ -16,6 +16,7 @@ import {
 } from "/ft4/authentication/types";
 import {
   IClient,
+  KeyPair,
   Operation,
   encryption,
   gtx,
@@ -31,6 +32,7 @@ import { createAmount } from "/ft4/asset/amount";
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
   let client: IClient;
+  let keyPair: KeyPair;
   let authDescriptor: AuthDescriptor;
   let keyHandler: KeyHandler;
   let authDataService: AuthDataService;
@@ -44,12 +46,14 @@ describe("Transaction Builder", () => {
   ) {
     const accountId = encryption.randomBytes(32);
 
-    const { keyPair, authDescriptor: ad } = createTestAuthDescriptor([
+    const keyPairAndAuthDescriptor = createTestAuthDescriptor([
       FlagsType.Transfer,
     ]);
-    authDescriptor = ad;
+    keyPair = keyPairAndAuthDescriptor.keyPair;
+    authDescriptor = keyPairAndAuthDescriptor.authDescriptor;
 
-    keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ad);
+    keyHandler =
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
 
     authDataService = createFakeAuthDataService(
       {
@@ -193,21 +197,49 @@ describe("Transaction Builder", () => {
     await expect(builder.build()).resolves.not.toThrow();
   });
 
+  it("built tx is correct", async () => {
+    setupTestEnvironment((operationName) =>
+      Promise.resolve(operationName === mockOperation.name),
+    );
+
+    const expectedTx = gtx.deserialize(
+      await client.signTransaction(
+        {
+          operations: [
+            {
+              name: "ft4.ft_auth",
+              args: [authenticator.accountId, authDescriptor.id],
+            },
+            { name: mockOperation.name, args: null },
+          ],
+          signers: [keyPair.pubKey],
+        },
+        keyPair,
+      ),
+    );
+
+    const tx = await transactionBuilder(authenticator, client)
+      .add(mockOperation)
+      .build();
+
+    expect(gtx.deserialize(tx)).toEqual(expectedTx);
+  });
+
   describe("block anchored handling", () => {
     it("can build and submit a function", async () => {
       const { authenticatorMock } = getMocks();
-      await expect(
-        transactionBuilder(authenticatorMock, client)
-          .add(emptyOp())
-          .add(nop())
-          .buildAndSend(),
-      ).resolves.toMatchObject({
-        tx: expect.any(Buffer),
-        receipt: {
-          status: "confirmed",
-          statusCode: 200,
-        },
+      const operation = nop();
+      const expectedTx = client.encodeTransaction({
+        operations: [emptyOp(), operation],
+        signers: [],
       });
+
+      const { tx } = await transactionBuilder(authenticatorMock, client)
+        .add(emptyOp())
+        .add(operation)
+        .buildAndSend();
+
+      expect(gtx.deserialize(tx)).toEqual(gtx.deserialize(expectedTx));
     });
 
     it("calls registered handler when block is anchored", async () => {
