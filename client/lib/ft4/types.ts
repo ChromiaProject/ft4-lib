@@ -9,6 +9,7 @@ import {
   QueryObject,
   Operation,
   TransactionReceipt,
+  RawGtv,
 } from "postchain-client";
 
 export type PageCursor = string;
@@ -20,7 +21,9 @@ export type PagedResponse<T> = {
 
 export interface Connection {
   client: IClient;
-  query: <T>(query: QueryObject<QueryArguments>) => Promise<T | null>;
+  query: <T extends RawGtv>(
+    query: QueryObject<T, QueryArguments>,
+  ) => Promise<T | null>;
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 

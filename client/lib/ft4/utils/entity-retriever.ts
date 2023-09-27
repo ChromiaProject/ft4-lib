@@ -1,15 +1,15 @@
 import { EntityRetriever, PaginatedEntity } from "./types";
 import { Connection, PagedResponse } from "../types";
-import { QueryArguments, QueryObject } from "postchain-client";
+import { QueryArguments, QueryObject, RawGtv } from "postchain-client";
 
 export function createEntityRetriever<
   T,
-  V,
-  R extends PagedResponse<V> = PagedResponse<V>
+  V extends RawGtv,
+  R extends PagedResponse<V> = PagedResponse<V>,
 >(
   session: Connection,
   query: QueryObject<QueryArguments>,
-  dataMapper: (arg: V[]) => T[]
+  dataMapper: (arg: V[]) => T[],
 ): EntityRetriever<T> {
   return {
     retrieve: async (): Promise<PaginatedEntity<T>> => {

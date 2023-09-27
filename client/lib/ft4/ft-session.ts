@@ -49,7 +49,7 @@ import { ftEventEmitter } from "./events";
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
     client,
-    query: <T extends RawGtv>(queryObject: QueryObject<QueryArguments>) =>
+    query: <T extends RawGtv>(queryObject: QueryObject<T, QueryArguments>) =>
       query<T>(connection, queryObject),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
@@ -94,9 +94,9 @@ export function createSession(
 
 async function query<T extends RawGtv>(
   connection: Connection,
-  queryObject: QueryObject<QueryArguments>,
+  queryObject: QueryObject<T, QueryArguments>,
 ): Promise<T | null> {
-  return await connection.client.query<QueryArguments, T>(queryObject);
+  return await connection.client.query<T, QueryArguments>(queryObject);
 }
 
 export function call(
@@ -149,7 +149,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       connection.query<number>(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | null = null) =>
       connection.query<LoginConfig>(loginConfig(configName)),
-    getBrid: () => Buffer.from(connection.client.config.blockchainRID, "hex"),
+    getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
 }
 

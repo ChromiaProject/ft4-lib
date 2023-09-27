@@ -13,7 +13,7 @@ import { PagedResponse } from "/ft4/types";
 
 export function createTransferHistoryRetriever(
   session: IClient,
-  accountId: BufferId
+  accountId: BufferId,
 ): TransferHistoryRetriever {
   const id = formatter.ensureBuffer(accountId);
 
@@ -21,14 +21,14 @@ export function createTransferHistoryRetriever(
     retrieve: async (
       amount: number,
       filter: TransferHistoryFilter | null,
-      cursor: string | null = null
+      cursor: string | null = null,
     ): Promise<TransferHistoryResponse> => {
       if (amount > 100)
         throw new TransferHistoryError("amount needs to be <= 100");
 
       const res = await session.query<
-        QueryType,
-        PagedResponse<TransferHistoryEntryResponse>
+        PagedResponse<TransferHistoryEntryResponse>,
+        QueryType
       >("ft4.get_transfer_history", {
         account_id: id,
         filter: [filter?.transferHistoryType],
@@ -42,10 +42,10 @@ export function createTransferHistoryRetriever(
     },
     retrieveSingle: async (rowid: number) => {
       return createTransferHistoryEntryFromResponse(
-        await session.query("ft4.get_transfer_history_entry", { rowid })
+        await session.query("ft4.get_transfer_history_entry", { rowid }),
       );
     },
-    brid: session.config.blockchainRID,
+    brid: session.config.blockchainRid,
   });
 }
 
