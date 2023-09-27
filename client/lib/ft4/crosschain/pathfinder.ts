@@ -18,10 +18,10 @@ export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
   blockchainRID: BufferId,
+  maxPathLength = 100,
 ): Promise<Buffer[]> {
   const rootNode = asset.brid;
 
-  let foundPath = false;
   const pathSourceToRoot = [
     formatter.toBuffer(connection.client.config.blockchainRID),
   ];
@@ -31,9 +31,8 @@ export async function findPathToChainForAsset(
   let commonNode: Buffer;
   let isSearchingSource = true;
 
-  // Should we stop before N iterations?
-  // Should we stop before T time delay?
-  while (!foundPath) {
+  let pathLength = 0;
+  for (; pathLength < maxPathLength; ++pathLength) {
     const currentArray = isSearchingSource ? pathSourceToRoot : pathEndToRoot;
 
     lastNode = currentArray[currentArray.length - 1];
@@ -63,15 +62,11 @@ export async function findPathToChainForAsset(
           lastNode,
         );
       } catch (error) {
-        // if (error instanceof BlockchainUrlUndefinedException) {
         throw new PathfinderError(
           `Blockchain ${lastNode.toString(
             "hex",
           )} does not exist on the current network.`,
         );
-        // } else {
-        //   throw error;
-        // }
       }
 
       // three possible errors:
@@ -97,10 +92,15 @@ export async function findPathToChainForAsset(
           (x) => !x.compare(nextHop),
         )
       ) {
-        foundPath = true;
         commonNode = nextHop;
         break;
       }
+    }
+
+    if (pathLength === maxPathLength - 1) {
+      throw new PathfinderError(
+        `Exceeded max path length of ${maxPathLength} hops. This is most likely due to an error in your code, but if you really need a larger path length, you can increase the default by passing the new max path length as an argument to this function`,
+      );
     }
 
     // switch branch only if the other hasn't reached root node yet

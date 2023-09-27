@@ -1,3 +1,4 @@
+import { formatter } from "postchain-client";
 import { fetchBlockchains } from "/__multichain__/util/blockchain";
 import {
   FlagsType,
@@ -7,19 +8,18 @@ import {
   mint,
   registerCrosschainAsset,
 } from "/ft4";
+import { AuthenticatedAccount } from "/ft4/accounts";
+import { Asset } from "/ft4/asset/types";
+import { initTransfer } from "/ft4/crosschain/operations";
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
+import { createSession } from "/ft4/ft-session";
 import { Connection, Session } from "/ft4/types";
+import AccountBuilder from "/util/account-builder";
+import adminUser from "/util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
 } from "/util/blockchain-util";
-import { Asset } from "/ft4/asset/types";
-import adminUser from "/util/admin_user";
-import AccountBuilder from "/util/account-builder";
-import { createSession } from "/ft4/ft-session";
-import { AuthenticatedAccount } from "/ft4/accounts";
-import { initTransfer } from "/ft4/crosschain/operations";
-import { formatter } from "postchain-client";
 
 jest.setTimeout(60000);
 
@@ -124,27 +124,40 @@ describe("Orchestrator", () => {
   });
 
   it("resumes a transfer that was initiated but not completed", async () => {
-    const session2 = createSession(connection2, account2.authenticator);
-
     const path = await findPathToChainForAsset(session0, asset, multichain2Rid);
     const normalizedPath = path.map(formatter.ensureBuffer);
     const amount = createAmount(10);
-    await session0
-      .transactionBuilder()
-      .add(initTransfer(account2.id, asset.id, amount, normalizedPath))
-      .buildAndSend();
+    const promise = new Promise<void>((resolve) => {
+      session0
+        .transactionBuilder()
+        .add(
+          initTransfer(account2.id, asset.id, amount, normalizedPath),
+          () => {
+            resolve();
+          },
+        )
+        .buildAndSend();
+    });
 
+    await promise;
     const pendingTransfers = await account0.getPendingTransfers();
     const orchestrator = await createOrchestrator(
       multichain2Rid,
-      account0.id,
+      account2.id,
       amount,
       asset.id,
-      session2,
+      session0,
     );
 
     await orchestrator.resumeTransfers(pendingTransfers.data);
     const balance = await account2.getBalanceByAssetId(asset.id);
-    expect(balance).toStrictEqual(amount);
+    Object.assign(BigInt.prototype, {
+      toJSON: function () {
+        return this.toString();
+      },
+    });
+    expect(JSON.stringify(balance)).toStrictEqual(
+      JSON.stringify({ asset, amount }),
+    );
   });
 });

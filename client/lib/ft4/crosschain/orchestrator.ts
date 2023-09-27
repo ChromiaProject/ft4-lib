@@ -169,11 +169,12 @@ export async function createOrchestrator(
    * @param transfer the transfer to resume
    */
   async function resumeTransfer(transfer: PendingTransfer) {
+    state.tx = gtx.serialize(transfer.tx);
     for (let i = 0; i < state.path.length; i++) {
       if (
         await isAppliedOnBrid(
           formatter.ensureBuffer(state.path[i]),
-          getTransactionRID(gtx.serialize(transfer.tx)),
+          getTransactionRID(state.tx),
           transfer.opIndex,
         )
       ) {
@@ -182,12 +183,12 @@ export async function createOrchestrator(
       }
     }
 
-    if (state.current === state.path.length - 1) {
+    if (state.current > 0 && state.current === state.path.length - 1) {
       // Transfer already applied
       return;
     }
 
-    handleErrors(async () => {
+    await handleErrors(async () => {
       await walkPath(directoryClient);
     });
   }
