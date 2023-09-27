@@ -29,11 +29,7 @@ import {
   createAuthenticator,
   ftAuth,
 } from "../../client/lib/ft4/authentication";
-import {
-  createAuthDataService,
-  createConnection,
-} from "../../client/lib/ft4/ft-session";
-import { createChromiaClient } from "./blockchain-util";
+import { createAuthDataService } from "../../client/lib/ft4/ft-session";
 import { Connection } from "/ft4/types";
 import {
   addRateLimitPoints,
@@ -72,7 +68,7 @@ class AccountBuilder {
   withAuthDescriptor(
     //this will never be the manager
     authDescriptor: AuthDescriptor,
-    signers: (SignatureProvider | KeyPair)[]
+    signers: (SignatureProvider | KeyPair)[],
   ): AccountBuilder {
     this.authDescInfo = { authDescriptor, signers };
     return this;
@@ -90,7 +86,7 @@ class AccountBuilder {
 
   withBalance(
     asset: Asset,
-    _amount: Exclude<SupportedNumber, bigint>
+    _amount: Exclude<SupportedNumber, bigint>,
   ): AccountBuilder {
     this.balances.push({
       amount: createAmount(_amount, asset.decimals),
@@ -100,13 +96,13 @@ class AccountBuilder {
   }
 
   withBalances(
-    balances: { amount: Exclude<SupportedNumber, bigint>; asset: Asset }[]
+    balances: { amount: Exclude<SupportedNumber, bigint>; asset: Asset }[],
   ): AccountBuilder {
     this.balances = this.balances.concat(
       balances.map((b) => ({
         amount: createAmount(b.amount, b.asset.decimals),
         asset: b.asset,
-      }))
+      })),
     );
     return this;
   }
@@ -129,46 +125,43 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const accountManager = await this.registerAndBuildManagerAuthenticated(
-      manager
-    );
+    const accountManager =
+      await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptor();
     await accountManager.addAuthDescriptor(ad, this.participant);
 
-    const connection = createConnection(await createChromiaClient());
     const keyHandler = createInMemoryFtKeyStore(
-      this.participant
+      this.participant,
     ).createKeyHandler(ad);
     const authenticator = createAuthenticator(
       accountManager.id,
       [keyHandler],
-      createAuthDataService(connection)
+      createAuthDataService(this.connection),
     );
-    return createAuthenticatedAccount(connection, authenticator);
+    return createAuthenticatedAccount(this.connection, authenticator);
   }
 
   /* Private functions */
   private async registerAndBuildManagerAuthenticated(
-    managerSigProv = this.participant
+    managerSigProv = this.participant,
   ): Promise<AuthenticatedAccount> {
     const ad = this.getAccountManagerAuthDescriptor(managerSigProv);
     await registerAccount(
       this.connection.client,
       admin().signatureProvider,
-      ad
+      ad,
     );
     const account = await this.connection.getAccountById(ad.id);
-    const connection = createConnection(await createChromiaClient());
     const keyHandler =
       createInMemoryFtKeyStore(managerSigProv).createKeyHandler(ad);
 
     const authenticator = createAuthenticator(
       account.id,
       [keyHandler],
-      createAuthDataService(connection)
+      createAuthDataService(this.connection),
     );
 
-    const acc = createAuthenticatedAccount(connection, authenticator);
+    const acc = createAuthenticatedAccount(this.connection, authenticator);
 
     await this.addAuthDescriptorIfNeeded(acc, managerSigProv);
 
@@ -189,14 +182,14 @@ class AccountBuilder {
             "ft4.admin.mint",
             account.id,
             balance.asset.id,
-            balance.amount.value
-          )
+            balance.amount.value,
+          ),
         );
       });
 
       await this.connection.client.signAndSendUniqueTransaction(
         tx,
-        adminSignatureProvider
+        adminSignatureProvider,
       );
     }
   }
@@ -208,14 +201,14 @@ class AccountBuilder {
         this.connection.client,
         adminSignatureProvider,
         account.id,
-        this.points
+        this.points,
       );
     }
   }
 
   private async addAuthDescriptorIfNeeded(
     account: Account,
-    managerSigProvider: SignatureProvider
+    managerSigProvider: SignatureProvider,
   ) {
     if (this.authDescInfo) {
       const tx = {
@@ -232,12 +225,12 @@ class AccountBuilder {
 
       let signedTx = await this.connection.client.signTransaction(
         tx,
-        managerSigProvider
+        managerSigProvider,
       );
       for (const signer of this.authDescInfo.signers) {
         signedTx = await this.connection.client.signTransaction(
           signedTx,
-          signer
+          signer,
         );
       }
       await this.connection.client.sendTransaction(signedTx);
@@ -253,7 +246,7 @@ class AccountBuilder {
   private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
     return authDescriptor.create.singleSig.withArgs(
       [...new Set(this.flags.concat(FlagsType.Account))],
-      managerSigProv.pubKey
+      managerSigProv.pubKey,
     ).andNoRules;
   }
 }

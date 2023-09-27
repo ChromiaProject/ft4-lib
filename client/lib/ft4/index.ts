@@ -30,6 +30,7 @@ import {
   addRateLimitPoints,
   registerAsset,
   mint,
+  registerCrosschainAsset,
 } from "./admin/admin-op-functions";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
@@ -71,9 +72,21 @@ export {
   addRateLimitPoints,
   registerAsset,
   mint,
+  registerCrosschainAsset,
 };
 
 export { Listener, EventEmitter } from "./events";
+
+export {
+  Orchestrator,
+  OrchestratorEvents,
+  PathfinderError,
+  applyTransfer,
+  createOrchestrator,
+  findPathToChainForAsset,
+  getAssetOriginById,
+  initTransfer,
+} from "./crosschain";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,

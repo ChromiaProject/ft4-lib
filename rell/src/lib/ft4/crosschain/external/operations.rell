@@ -104,8 +104,8 @@ operation apply_transfer(
     }
 
     require(
-        iccf.check_iccf_proof(from_brid, tx.hash()),
-        "The previous hop has not been anchored yet."
+        iccf.check_iccf_proof(from_brid, tx.to_gtv().hash()),
+        "Missing proof for previous hop"
     );
 
     val asset = assets.Asset(init_args.asset_id);
