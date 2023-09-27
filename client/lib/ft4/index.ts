@@ -41,14 +41,6 @@ import {
   TransferHistoryType,
 } from "./accounts/transfer-history/types";
 import { DecimalFormat } from "./asset/types";
-import {
-  getAssetOriginById,
-  initTransfer,
-  applyTransfer,
-  getInitTransferArgs,
-  findPathToChainForAsset,
-  PathfinderError,
-} from "./crosschain";
 
 export {
   op,
@@ -81,20 +73,19 @@ export {
   registerAsset,
   mint,
   registerCrosschainAsset,
-  getAssetOriginById,
-  initTransfer,
-  applyTransfer,
-  getInitTransferArgs,
-  findPathToChainForAsset,
-  PathfinderError,
 };
 
 export { Listener, EventEmitter } from "./events";
 
 export {
-  OrchestratorEvents,
   Orchestrator,
+  OrchestratorEvents,
+  PathfinderError,
+  applyTransfer,
   createOrchestrator,
+  findPathToChainForAsset,
+  getAssetOriginById,
+  initTransfer,
 } from "./crosschain";
 
 export const ft = Object.freeze({
