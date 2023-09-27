@@ -28,7 +28,6 @@ import {
   addAuthDescriptor,
 } from "/ft4/accounts/account-operations";
 import { AuthorizationError } from "/ft4/utils/transaction-builder";
-import { createInMemoryFtKeyStore } from "/ft4";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -489,7 +488,6 @@ describe("Test the account", () => {
   it("removes auth descriptor from new authenticator", async () => {
     const user1 = testUser();
     const user2 = testUser();
-    const user3 = testUser();
 
     const acc1 = await AccountBuilder.account(_connection)
       .withParticipant(user1.signatureProvider)
@@ -502,22 +500,18 @@ describe("Test the account", () => {
     ).andNoRules;
     const ad3 = authDescriptor.create.singleSig.withArgs(
       ["A", "T"],
-      user3.signatureProvider.pubKey,
+      user2.signatureProvider.pubKey,
     ).andNoRules;
 
     await Promise.all([
       acc1.addAuthDescriptor(ad2, user2.signatureProvider),
-      acc1.addAuthDescriptor(ad3, user3.signatureProvider),
+      acc1.addAuthDescriptor(ad3, user2.signatureProvider),
     ]);
 
     const { account: acc2 } = await getSessionForAccount(
       _connection,
       acc1.id,
       user2.signatureProvider,
-    );
-
-    acc2.authenticator.keyHandlers.push(
-      createInMemoryFtKeyStore(user3.signatureProvider).createKeyHandler(ad3),
     );
 
     expect(acc2.authenticator.keyHandlers.length).toBe(2);
