@@ -5,11 +5,9 @@ import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,
-  QueryArguments,
-  QueryObject,
   Operation,
   TransactionReceipt,
-  RawGtv,
+  Queryable,
 } from "postchain-client";
 
 export type PageCursor = string;
@@ -19,11 +17,8 @@ export type PagedResponse<T> = {
   next_cursor: OptionalPageCursor;
 };
 
-export interface Connection {
+export interface Connection extends Queryable {
   client: IClient;
-  query: <T extends RawGtv>(
-    query: QueryObject<T, QueryArguments>,
-  ) => Promise<T | null>;
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 

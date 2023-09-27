@@ -40,6 +40,7 @@ import {
   QueryArguments,
   Operation,
   TransactionReceipt,
+  QueryCallback,
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
@@ -49,8 +50,14 @@ import { ftEventEmitter } from "./events";
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
     client,
-    query: <T extends RawGtv>(queryObject: QueryObject<T, QueryArguments>) =>
-      query<T>(connection, queryObject),
+    query: <
+      TReturn extends RawGtv = RawGtv,
+      TArgs extends QueryArguments | undefined = QueryArguments,
+    >(
+      nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
+      args?: TArgs,
+      callback?: QueryCallback<TReturn>,
+    ) => query<TReturn, TArgs>(connection, nameOrQueryObject, args, callback),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
 
@@ -92,11 +99,17 @@ export function createSession(
   });
 }
 
-async function query<T extends RawGtv>(
+async function query<TReturn extends RawGtv, TArgs extends QueryArguments>(
   connection: Connection,
-  queryObject: QueryObject<T, QueryArguments>,
-): Promise<T | null> {
-  return await connection.client.query<T, QueryArguments>(queryObject);
+  nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
+  args?: TArgs,
+  callback?: QueryCallback<TReturn>,
+): Promise<TReturn> {
+  return await connection.client.query<TReturn, QueryArguments>(
+    nameOrQueryObject,
+    args,
+    callback,
+  );
 }
 
 export function call(
