@@ -189,7 +189,7 @@ $DOCKER run \
     -p $NODE_PORT:9870/tcp \
     -p 127.0.0.1:$API_PORT:7740/tcp \
     registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
-    run-node >> logs/multichain-postchain.log &
+    run-node > logs/multichain-postchain.log &
 
 debug "Fetching manager chain BRID..."
 BRID=""
