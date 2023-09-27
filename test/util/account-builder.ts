@@ -125,9 +125,8 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const accountManager = await this.registerAndBuildManagerAuthenticated(
-      manager,
-    );
+    const accountManager =
+      await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptor();
     await accountManager.addAuthDescriptor(ad, this.participant);
 

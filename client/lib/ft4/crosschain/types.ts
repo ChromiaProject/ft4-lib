@@ -1,4 +1,7 @@
 import { Buffer } from "buffer";
+import { EventEmitter, Listener } from "../events";
+import { OrchestratorError } from "./errors";
+import { BufferId } from "/cryptoUtils";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -6,3 +9,23 @@ export type GtvInitTransferArgs = [
   amount: bigint,
   hops: Buffer[],
 ];
+
+export type OrchestratorEvents = {
+  TransferInit: [];
+  TransferHop: [BufferId];
+  TransferEnd: [];
+  TransferError: [OrchestratorError];
+};
+
+export interface Orchestrator {
+  transfer: () => Promise<void>;
+  eventEmitter: EventEmitter<OrchestratorEvents>;
+  onTransferInit: (listener: Listener<[]>) => void;
+  offTransferInit: (listener: Listener<[]>) => void;
+  onTransferHop: (listener: Listener<[BufferId]>) => void;
+  offTransferHop: (listener: Listener<[BufferId]>) => void;
+  onTransferEnd: (listener: Listener<[]>) => void;
+  offTransferEnd: (listener: Listener<[]>) => void;
+  onTransferError: (listener: Listener<[OrchestratorError]>) => void;
+  offTransferError: (listener: Listener<[OrchestratorError]>) => void;
+}

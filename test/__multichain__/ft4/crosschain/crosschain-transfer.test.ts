@@ -7,14 +7,13 @@ import {
   FlagsType,
   createAmount,
   createConnection,
-  getInitTransferArgs,
   registerCrosschainAsset,
 } from "/ft4";
 import adminUser from "/util/admin_user";
 import AccountBuilder from "/util/account-builder";
 import {
   applyTransfer as applyTransferOp,
-  initTransfer,
+  initTransfer as initTransferOp,
 } from "../../../../client/lib/ft4/crosschain/operations";
 import {
   OnAnchoredHandler,
@@ -55,7 +54,7 @@ describe("Crosschain transfer", () => {
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
     await new Promise<void>((resolve) => {
-      const initOperation = initTransfer(
+      const initOperation = initTransferOp(
         account01.id,
         asset00.id,
         createAmount(100, asset00.decimals),
@@ -75,14 +74,11 @@ describe("Crosschain transfer", () => {
         const newTx = proofTx.iccfTx;
         newTx.operations.push(
           applyTransferOp(
-            getInitTransferArgs(
-              account01.id,
-              asset00.id,
-              createAmount(100, asset00.decimals),
-              [multichain01.rid],
-            ),
+            account01.id,
+            asset00.id,
+            createAmount(100, asset00.decimals),
+            [multichain01.rid],
             tx,
-            1,
             0,
           ),
         );

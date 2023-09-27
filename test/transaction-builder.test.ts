@@ -1,7 +1,10 @@
 import { createTestAuthDescriptor, emptyOp } from "./util/util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAuthenticator } from "/ft4/authentication";
+import {
+  createAuthenticator,
+  createNoopAuthenticator,
+} from "/ft4/authentication";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -95,7 +98,6 @@ describe("Transaction Builder", () => {
       keyHandlers: [keyHandlerMock],
       authDataService: createFakeAuthDataService({}),
       createSession: jest.fn(),
-      getAuthFlags: jest.fn().mockReturnValue([]),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
       getNonce: jest.fn(),
     };
@@ -362,6 +364,18 @@ describe("Transaction Builder", () => {
         expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
       });
       await promise;
+    });
+
+    it("can bypass authentication", async () => {
+      const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithAuthenticator(
+          transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
+          createNoopAuthenticator(createFakeAuthDataService({})),
+        )
+        .buildUnsigned();
+
+      expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
     });
   });
 });
