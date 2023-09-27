@@ -99,7 +99,7 @@ async function query<T extends RawGtv>(
   return await connection.client.query<QueryArguments, T>(queryObject);
 }
 
-export async function call(
+export function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]

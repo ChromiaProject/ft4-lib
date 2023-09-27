@@ -29,7 +29,7 @@ export interface Connection {
   getAccountsByAuthDescriptorId: (
     id: BufferId,
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
@@ -37,11 +37,11 @@ export interface Connection {
   getAssetsByName: (
     name: string,
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
 }
 
