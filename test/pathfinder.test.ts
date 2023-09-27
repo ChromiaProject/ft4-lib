@@ -127,7 +127,9 @@ describe("Pathfinder", () => {
     );
     const promise = findPathToChainForAsset(connection, asset, endingChainBrid);
 
-    await expect(promise).rejects.toThrow(TypeError);
+    await expect(promise).rejects.toThrow(
+      TypeError("Failed to parse URL from /brid/iid_0"),
+    );
   });
 
   it("finds a path if both are on the same branch", async () => {

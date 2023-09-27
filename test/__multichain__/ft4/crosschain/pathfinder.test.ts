@@ -1,25 +1,12 @@
-const assetOriginQueryMock = jest.fn();
-
-jest.mock("/ft4/crosschain/crosschain-query-functions", () => {
-  const originalModule = jest.requireActual(
-    "/ft4/crosschain/crosschain-query-functions",
-  );
-
-  return {
-    __esModule: true,
-    ...originalModule,
-    getAssetOriginById: assetOriginQueryMock,
-  };
-});
-
 import { generateId } from "../../../util/util";
 import { fetchBlockchains } from "/__multichain__/utils/blockchain";
-import { createConnection } from "/ft4";
+import { createConnection, registerCrosschainAsset } from "/ft4";
 import {
   PathfinderError,
   findPathToChainForAsset,
 } from "/ft4/crosschain/pathfinder";
 import { Connection } from "/ft4/types";
+import adminUser from "/util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -39,18 +26,19 @@ describe("Pathfinder", () => {
     );
   });
 
-  beforeEach(async () => {
-    assetOriginQueryMock.mockReset();
-  });
-
   it("throws PathfinderError when a chain doesn't exist", async () => {
     const asset00 = await getNewAsset(connections[0].client);
-
-    assetOriginQueryMock.mockReturnValueOnce(generateId());
-    const promise = findPathToChainForAsset(
-      connections[0],
+    await registerCrosschainAsset(
+      connections[1].client,
+      adminUser().signatureProvider,
       asset00,
-      connections[1].client.config.blockchainRid,
+      generateId(),
+    );
+
+    const promise = findPathToChainForAsset(
+      connections[1],
+      asset00,
+      connections[0].client.config.blockchainRid,
     );
 
     await expect(promise).rejects.toThrow(PathfinderError);
