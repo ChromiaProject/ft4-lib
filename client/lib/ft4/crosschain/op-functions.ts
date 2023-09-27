@@ -4,7 +4,7 @@ import { Authenticator } from "../authentication/types";
 import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
-} from "./crosschain-operations";
+} from "./operations";
 import { call } from "../ft-session";
 import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";

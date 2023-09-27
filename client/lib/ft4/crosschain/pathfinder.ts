@@ -5,7 +5,7 @@ import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
 import { Buffer } from "buffer";
 import { Asset } from "../asset/types";
-import { getAssetOriginById } from "./crosschain-query-functions";
+import { getAssetOriginById } from "./query-functions";
 
 export class PathfinderError extends Error {
   constructor(msg?) {

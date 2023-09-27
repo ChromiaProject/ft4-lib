@@ -3,8 +3,8 @@ import { Amount } from "../asset/interfaces";
 import { GtvInitTransferArgs } from "./types";
 import { BufferId } from "/cryptoUtils";
 
-export { getAssetOriginById } from "./crosschain-query-functions";
-export { initTransfer, applyTransfer } from "./crosschain-op-functions";
+export { getAssetOriginById } from "./query-functions";
+export { initTransfer, applyTransfer } from "./op-functions";
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 export { GtvInitTransferArgs } from "./types";
 

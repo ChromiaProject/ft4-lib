@@ -16,7 +16,7 @@ import AccountBuilder from "/util/account-builder";
 import {
   applyTransfer as applyTransferOp,
   initTransfer,
-} from "/ft4/crosschain/crosschain-operations";
+} from "../../../../client/lib/ft4/crosschain/operations";
 import {
   OnAnchoredHandler,
   transactionBuilder,
