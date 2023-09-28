@@ -31,7 +31,7 @@ describe("FT key handler", () => {
 
     const client = await createChromiaClient();
     const transaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: authDescriptor.signers,
       signatures: [],

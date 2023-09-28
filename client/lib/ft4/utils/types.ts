@@ -45,7 +45,7 @@ export type PaginatedEntity<T> = {
 };
 
 export type TxBuilderTransaction = {
-  blockchainRID: Buffer;
+  blockchainRid: Buffer;
   operations: RellOperation[];
   signers: Buffer[];
   signatures: Buffer[];

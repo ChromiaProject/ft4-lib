@@ -13,8 +13,8 @@ import { registerAsset } from "/ft4/admin/admin-op-functions";
 export async function createChromiaClient(nodeUrl?: string) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return chromiaClient({
-    nodeURLPool: url,
-    blockchainIID: 0,
+    nodeUrlPool: url,
+    blockchainIid: 0,
   });
 }
 
@@ -36,7 +36,7 @@ export async function getNewAsset(
   );
   const id = gtv.gtvHash([
     name,
-    formatter.ensureBuffer(client.config.blockchainRID),
+    formatter.ensureBuffer(client.config.blockchainRid),
   ]);
   const asset = await createConnection(client).getAssetById(id);
   return asset;
