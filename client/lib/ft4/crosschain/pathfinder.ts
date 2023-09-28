@@ -5,7 +5,7 @@ import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
 import { Buffer } from "buffer";
 import { Asset } from "../asset/types";
-import { getAssetOriginById } from "./crosschain-query-functions";
+import { getAssetOriginById } from "./query-functions";
 
 export class PathfinderError extends Error {
   constructor(msg?) {
@@ -18,7 +18,7 @@ export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
   blockchainRID: BufferId,
-) {
+): Promise<Buffer[]> {
   const rootNode = asset.brid;
 
   let foundPath = false;
@@ -82,6 +82,7 @@ export async function findPathToChainForAsset(
       // The first two errors are instances of UnexpectedStatusError
       // we either match on the message to rethrow or let it through unhandled
       const nextHop = await getAssetOriginById(tmpConnection, asset.id);
+
       if (nextHop === null) {
         throw new PathfinderError(
           `The asset is not a cross-chain asset on chain ${lastNode.toString(
@@ -123,7 +124,10 @@ export async function findPathToChainForAsset(
     .slice(1); // remove starting chain
 }
 
-async function createConnectionToBrid(oldClient: IClient, newBrid: BufferId) {
+export async function createConnectionToBrid(
+  oldClient: IClient,
+  newBrid: BufferId,
+) {
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise

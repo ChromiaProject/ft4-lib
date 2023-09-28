@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
 
 ### Added
@@ -17,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Transfer history's asset properties are now of the Asset type
+- TransactionBuilder's `buildAndSend` now returns the transaction alongside the receipt
+- TransactionBuilder's `onAnchoredHandler`s now receive the signed transaction too
 
 ### Fixed
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
