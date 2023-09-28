@@ -24,9 +24,7 @@ export async function getAssetBySymbol(
   connection: Connection,
   symbol: string,
 ): Promise<Asset> {
-  return await connection
-    .query<AssetResponse>(assetBySymbol(symbol))
-    .then(createAssetObject);
+  return await connection.query(assetBySymbol(symbol)).then(createAssetObject);
 }
 
 export function getAssetsByName(

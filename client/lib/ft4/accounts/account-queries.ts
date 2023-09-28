@@ -95,7 +95,7 @@ export function accountAuthDescriptors(
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   AuthDescriptorResponse,
-  { id: Buffer; page_size: number; page_cursor: string }
+  { id: Buffer; page_size: number; page_cursor: string | null }
 > {
   return {
     name: "ft4.get_account_auth_descriptors",

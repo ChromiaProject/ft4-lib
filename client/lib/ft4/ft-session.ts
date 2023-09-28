@@ -95,7 +95,10 @@ export function createSession(
   });
 }
 
-async function query<TReturn extends RawGtv, TArgs extends DictPair>(
+async function query<
+  TReturn extends RawGtv,
+  TArgs extends DictPair | undefined,
+>(
   connection: Connection,
   nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
   args?: TArgs,

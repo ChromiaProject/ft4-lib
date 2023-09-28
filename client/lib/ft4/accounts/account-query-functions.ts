@@ -109,7 +109,7 @@ export async function getById(
   connection: Connection,
   id: BufferId,
 ): Promise<Account | null> {
-  const accountId = await connection.query<Buffer>(accountById(id));
+  const accountId = await connection.query(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
 }
