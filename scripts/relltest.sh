@@ -18,7 +18,7 @@ exitfn () {
 trap "exitfn" 2
 
 docker=true
-modules=""
+tests=""
 additional_args=""
 
 while :; do
@@ -27,9 +27,9 @@ while :; do
               echo 'skipping docker build'
               docker=false
               ;;
-        --modules=* | -m=*)
-              echo "Testing specified modules: ${1#*=}"
-              modules="--modules=${1#*=}"
+        --tests=* | -t=*)
+              echo "Testing specified tests: ${1#*=}"
+              tests="--tests=${1#*=}"
               ;;
         *)
             additional_args="$additional_args $1"
@@ -46,7 +46,7 @@ if $docker; then
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null
 fi
 
-chr test -s configs/rell-test.yml --use-db $modules $additional_args
+chr test -s configs/rell-test.yml --use-db $tests $additional_args
 return_code=$?
 
 if $docker; then

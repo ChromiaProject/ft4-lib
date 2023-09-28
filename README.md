@@ -52,11 +52,11 @@ npm run test:rell
 
 ### Running Specific Rell Tests
 
-Execute specific Rell modules using the `--modules` or `-m` option:
+To execute particular tests in Rell, use the `--tests` or `-t` option:
 
 ```bash
-npm run test:rell -- --modules=module1,module2
-npm run test:rell -- -m=module1,module2
+npm run test:rell -- --tests=test1,test2
+npm run test:rell -- -t=test1,test2
 ```
 
 ### Running Specific Jest Tests
