@@ -5,7 +5,7 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
 
 // Test for valid asset but invalid amount (0)
-function test_init_transfer_requires_invalid_amount() {
+function test_init_transfer_fails_when_amount_is_invalid() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
     val asset_valid = utils.create_asset("validAsset", "va", 1);
@@ -18,7 +18,7 @@ function test_init_transfer_requires_invalid_amount() {
 }
 
 // Test for invalid asset and valid amount
-function test_init_transfer_requires_invalid_asset() {
+function test_init_transfer_fails_when_asset_is_invalid() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
     val asset_id_invalid = x"deadbeef";
@@ -31,7 +31,7 @@ function test_init_transfer_requires_invalid_asset() {
 }
 
 // Test for valid asset and valid amount
-function test_init_transfer_requires_valid_conditions() {
+function test_init_transfer_succeeds_under_valid_conditions() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
     val asset_valid = utils.create_asset("validAsset", "va", 1);
