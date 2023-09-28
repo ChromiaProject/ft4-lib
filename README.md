@@ -1,32 +1,91 @@
-# FT3 Library
+# FT4 Library: Chromia's Rell Module Manager
 
-FT3 Library is a library for Rell modules (Chromia smart contract language).
-It can be imported and used as a token provider and manager.
-It allows several operations, among them: creation of different assets (type of tokens), allocation of tokens, transfer, and cross crosschain transfer.
-It also have some basic data structure for users (account) that can be used independently from the use of the tokens.
+## Introduction
 
-# The repository
+FT4 Library is a robust toolkit designed for Rell modules in Chromia, a next-generation blockchain platform. This library serves as both a token provider and manager, offering a variety of operations. These include asset creation, token allocation, transfers, and even cross-chain transfers. Moreover, the library features foundational data structures for user accounts, independent of token operations.
 
-This repository  provides the library and tests written in NodeJs and Jest. It is a temporary counter measure as in the future we will have proper testing suite based on Rell.
+## Features
 
-# How to run tests
+- **Asset Management**: Create and manage multiple types of tokens.
+- **Token Operations**: Allocate and transfer tokens with ease.
+- **Cross-Chain Transfers**: Seamlessly move assets across different blockchains.
+- **User Account Management**: Manage user accounts with or without tokens.
 
-`npm run test` will take care of everything, launching the blockchain and running bot typescript and rell tests.
+## Repository Overview
 
-`npm run test:js` and `npm run test:rell` will only run one kind of test
+This repository contains the FT4 library and a comprehensive suite of tests written in Node.js and Jest. The current testing setup serves as a temporary measure, as a Rell-based testing suite is in development.
 
-If you want to run just certain jest tests, use:
-    npm run test[:js] 'string matching test(s)'
-Example:
-npm run test 'user' will only run js tests with user in their name, and all rell tests
-npm run test:js 'rate|sso' will only run js tests with either rate or sso in their name, and no rell tests
+## Getting Started
 
+### Prerequisites
 
-# How to run the blockchain
+- Node.js
+- Docker
+- [Optional] PostgreSQL for database sessions
 
+### Installation
 
-"postchain:test": "docker-compose -f dockers/rell-test.yml up -d",
-"postchain:demo": "docker-compose -f dockers/demo.yml up -d",
-"stop-postchain:jest": "docker-compose -f dockers/jest-test.yml down",
-"stop-postchain:rell": "docker-compose -f dockers/rell-test.yml down",
-"stop-postchain:demo": "docker-compose -f dockers/demo.yml down",
+Clone the repository and install the dependencies:
+
+```bash
+git clone https://github.com/your-repo/ft3-library.git
+cd ft3-library
+npm install
+```
+
+## How to Run Tests
+
+### Comprehensive Test Suite
+
+Run the complete set of TypeScript and Rell tests:
+
+```bash
+npm run test
+```
+
+Run only JavaScript or Rell tests:
+
+```bash
+npm run test:js
+npm run test:rell
+```
+
+### Running Specific Rell Tests
+
+Execute specific Rell modules using the `--modules` or `-m` option:
+
+```bash
+npm run test:rell -- --modules=module1,module2
+npm run test:rell -- -m=module1,module2
+```
+
+### Running Specific Jest Tests
+
+Execute specific Jest tests by string matching:
+
+```bash
+npm run test 'string matching test(s)'
+```
+
+Examples:
+
+```bash
+npm run test 'user'
+npm run test:js 'rate|sso'
+```
+
+## How to Run the Blockchain
+
+For running different blockchain configurations, you can use the following npm commands:
+
+- **Test Environment**: `npm run postchain:test`
+- **Demo Environment**: `npm run postchain:demo`
+
+To stop these environments:
+
+- **Test**: `npm run stop-postchain:jest`
+- **Demo**: `npm run stop-postchain:demo`
+
+## License
+
+This project is licensed under the Apache License, Version 2.0. For more details, see the [LICENSE](LICENSE) file in the repository or visit [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
