@@ -2,7 +2,7 @@ import { formatter, IClient } from "postchain-client";
 import {
   accountById,
   accountsByParticipantId,
-  RateLimit as RateLimitQuery,
+  RateLimitQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
   accountsByAuthDescriptorId,
@@ -35,10 +35,7 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query<
-    Omit<RateLimit, "getAvailablePoints">,
-    { account_id: Buffer }
-  >(RateLimitQuery(accountId));
+  const rateLimit = await session.query(RateLimitQuery(accountId));
 
   const chainInfo = await getConfig(session);
 
@@ -144,7 +141,7 @@ export async function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): Promise<boolean> {
-  return (await connection.query<boolean>(
+  return (await connection.query(
     Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }
@@ -155,9 +152,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
 ): Promise<AuthDescriptor[]> {
   return connection
-    .query<AuthDescriptorResponse[]>(
-      accountAuthDescriptorsByParticipantId(accountId, participantId),
-    )
+    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
     .then((authDescriptors) =>
       authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
     );

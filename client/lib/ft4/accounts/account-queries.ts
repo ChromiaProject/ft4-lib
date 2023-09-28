@@ -1,12 +1,13 @@
-import { QueryObject, RawGtv, formatter } from "postchain-client";
+import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 import { AuthDescriptorResponse } from "./auth-descriptor";
+import { RateLimit } from "./types";
 
-export function RateLimit(
+export function RateLimitQuery(
   accountId: BufferId,
-): QueryObject<RawGtv, { account_id: Buffer }> {
+): QueryObject<Omit<RateLimit, "getAvailablePoints">, { account_id: Buffer }> {
   return {
     name: "ft4.get_account_rate_limit_last_update",
     args: {

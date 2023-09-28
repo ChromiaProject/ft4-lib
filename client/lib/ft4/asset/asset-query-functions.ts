@@ -17,9 +17,7 @@ export async function getAssetById(
   connection: Connection,
   id: BufferId,
 ): Promise<Asset> {
-  return await connection
-    .query<AssetResponse>(assetById(id))
-    .then(createAssetObject);
+  return await connection.query(assetById(id)).then(createAssetObject);
 }
 
 export async function getAssetBySymbol(
@@ -71,9 +69,7 @@ export async function getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId,
 ): Promise<Balance[]> {
-  const balances = await connection.query<BalanceResponse[]>(
-    balancesByAccountId(accountId),
-  );
+  const balances = await connection.query(balancesByAccountId(accountId));
   return balances.map(createBalanceObject);
 }
 
