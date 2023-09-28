@@ -8,7 +8,7 @@ export function createEntityRetriever<
   R extends PagedResponse<V> = PagedResponse<V>,
 >(
   session: Connection,
-  query: QueryObject<QueryArguments>,
+  query: QueryObject<R, QueryArguments>,
   dataMapper: (arg: V[]) => T[],
 ): EntityRetriever<T> {
   return {

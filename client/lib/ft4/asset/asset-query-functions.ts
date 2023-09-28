@@ -63,7 +63,7 @@ export async function getBalanceByAccountId(
   assetId: BufferId,
 ): Promise<Balance> {
   return await connection
-    .query<BalanceResponse>(balanceByAccountId(accountId, assetId))
+    .query(balanceByAccountId(accountId, assetId))
     .then(createBalanceObject);
 }
 

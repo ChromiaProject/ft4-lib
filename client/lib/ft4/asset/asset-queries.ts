@@ -2,10 +2,12 @@ import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
+import { AssetResponse, BalanceResponse } from "./types";
+import { PaginatedEntity } from "../utils/types";
 
 export function assetById(
-  assetId: BufferId
-): QueryObject<{ asset_id: Buffer }> {
+  assetId: BufferId,
+): QueryObject<AssetResponse, { asset_id: Buffer }> {
   return {
     name: "ft4.get_asset_by_id",
     args: {
@@ -14,7 +16,9 @@ export function assetById(
   };
 }
 
-export function assetBySymbol(symbol: string): QueryObject<{ symbol: string }> {
+export function assetBySymbol(
+  symbol: string,
+): QueryObject<AssetResponse, { symbol: string }> {
   return {
     name: "ft4.get_asset_by_symbol",
     args: { symbol },
@@ -24,12 +28,15 @@ export function assetBySymbol(symbol: string): QueryObject<{ symbol: string }> {
 export function assetsByName(
   name: string,
   limit: number,
-  cursor: OptionalPageCursor = null
-): QueryObject<{
-  name: string;
-  page_size: number;
-  page_cursor: OptionalPageCursor;
-}> {
+  cursor: OptionalPageCursor = null,
+): QueryObject<
+  AssetResponse,
+  {
+    name: string;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
+> {
   return {
     name: "ft4.get_assets_by_name",
     args: {
@@ -42,8 +49,11 @@ export function assetsByName(
 
 export function allAssets(
   limit: number,
-  cursor: OptionalPageCursor
-): QueryObject<{ page_size: number; page_cursor: OptionalPageCursor }> {
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PaginatedEntity<AssetResponse>,
+  { page_size: number; page_cursor: OptionalPageCursor }
+> {
   return {
     name: "ft4.get_all_assets",
     args: {
@@ -55,8 +65,8 @@ export function allAssets(
 
 export function balanceByAccountId(
   accountId: BufferId,
-  assetId: BufferId
-): QueryObject<{ account_id: Buffer; asset_id: Buffer }> {
+  assetId: BufferId,
+): QueryObject<BalanceResponse, { account_id: Buffer; asset_id: Buffer }> {
   return {
     name: "ft4.get_asset_balance",
     args: {
@@ -69,12 +79,15 @@ export function balanceByAccountId(
 export function balancesByAccountId(
   accountId: BufferId,
   limit = 100,
-  cursor: OptionalPageCursor = null
-): QueryObject<{
-  account_id: Buffer;
-  page_size: number;
-  page_cursor: OptionalPageCursor;
-}> {
+  cursor: OptionalPageCursor = null,
+): QueryObject<
+  BalanceResponse[],
+  {
+    account_id: Buffer;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
+> {
   return {
     name: "ft4.get_asset_balances",
     args: {

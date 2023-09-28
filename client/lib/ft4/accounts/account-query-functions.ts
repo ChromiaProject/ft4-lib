@@ -121,8 +121,7 @@ export async function getByParticipantId(
   connection: Connection,
   id: BufferId,
 ): Promise<Account[]> {
-  const accountIds =
-    (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
+  const accountIds = await connection.query(accountsByParticipantId(id));
 
   return accountIds.map((id) => createAccountObject(connection, id));
 }
