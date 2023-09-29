@@ -11,6 +11,7 @@ struct module_args {
 import ^.auth;
 import ^.utils;
 import ^.version;
+import .external;
 
 enum auth_type {
     S, M, ES, EM,

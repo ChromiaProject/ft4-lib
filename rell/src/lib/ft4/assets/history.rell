@@ -1,9 +1,6 @@
-import acc: ^.accounts;
-import ^.assets;
-import ^.utils;
 
 @log entity transfer_history_entry {
-    index acc.account, asset;
+    index accounts.account, asset;
     delta: big_integer;
 
     // helps to locate exact position of transfer entry in transaction
@@ -55,7 +52,7 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
     );
 }
 
-function get_paginated_transfers(acc.account, filter, page_size: integer, page_cursor: text?) {
+function get_paginated_transfers(accounts.account, filter, page_size: integer, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
         val cursor = utils.decode_cursor(page_cursor);
