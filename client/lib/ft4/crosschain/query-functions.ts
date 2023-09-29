@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { gtx } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Connection, OptionalPageCursor } from "../types";
-import * as Query from "./crosschain-queries";
+import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
 
 export async function getAssetOriginById(

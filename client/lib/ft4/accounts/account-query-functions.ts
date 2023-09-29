@@ -33,7 +33,7 @@ import {
   PendingTransferResponse,
   pendingTransfersForAccount,
 } from "/ft4/crosschain";
-import { mapPendingTransfers } from "../crosschain/crosschain-query-functions";
+import { mapPendingTransfers } from "../crosschain/query-functions";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -41,10 +41,9 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query<
-    { account_id: Buffer },
-    Omit<RateLimit, "getAvailablePoints">
-  >(RateLimitQuery(accountId));
+  const rateLimit = await session.query<Omit<RateLimit, "getAvailablePoints">>(
+    RateLimitQuery(accountId),
+  );
 
   const chainInfo = await getConfig(session);
 

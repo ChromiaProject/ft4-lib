@@ -45,14 +45,14 @@ export type PaginatedEntity<T> = {
 };
 
 export type TxBuilderTransaction = {
-  blockchainRID: Buffer;
+  blockchainRid: Buffer;
   operations: RellOperation[];
   signers: Buffer[];
   signatures: Buffer[];
 };
 
 export interface RellAppStructure {
-  modules: Record<string, RellModuleStructure>;
+  [modules: string]: Record<string, RellModuleStructure>;
 }
 
 export interface RellModuleStructure {

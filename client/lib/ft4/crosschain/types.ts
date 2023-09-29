@@ -1,38 +1,28 @@
 import { Buffer } from "buffer";
-import { GTX, RawGtv } from "postchain-client";
+import { GTX } from "postchain-client";
 import { EventEmitter, Listener } from "../events";
-import { FTEvents } from "../events/types";
 import { OrchestratorError } from "./errors";
 import { BufferId } from "/cryptoUtils";
 
-type GtxOperation = {
-  name: string;
-  args: RawGtv[];
-};
-
-type GtxTransactionBody = {
-  blockchain_rid: Buffer;
-  operations: GtxOperation[];
-  signers: Buffer[];
-};
-
-export type GtxTransaction = {
-  body: GtxTransactionBody;
-  signatures: Buffer[];
-};
-
-export type InitTransferArgs = [
+export type GtvInitTransferArgs = [
   receiverId: Buffer,
   assetId: Buffer,
   amount: bigint,
   hops: Buffer[],
 ];
 
+export type OrchestratorEvents = {
+  TransferInit: [];
+  TransferHop: [BufferId];
+  TransferEnd: [];
+  TransferError: [OrchestratorError];
+};
+
 export interface Orchestrator {
   transfer: () => Promise<void>;
   resumeTransfer: (transfer: PendingTransfer) => Promise<void>;
   resumeTransfers: (transfers: PendingTransfer[]) => Promise<void>;
-  eventEmitter: EventEmitter<FTEvents>;
+  eventEmitter: EventEmitter<OrchestratorEvents>;
   onTransferInit: (listener: Listener<[]>) => void;
   offTransferInit: (listener: Listener<[]>) => void;
   onTransferHop: (listener: Listener<[BufferId]>) => void;

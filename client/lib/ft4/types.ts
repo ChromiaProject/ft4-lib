@@ -5,10 +5,11 @@ import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,
-  QueryArguments,
   QueryObject,
   Operation,
   TransactionReceipt,
+  RawGtv,
+  DictPair,
 } from "postchain-client";
 
 export type PageCursor = string;
@@ -20,7 +21,9 @@ export type PagedResponse<T> = {
 
 export interface Connection {
   client: IClient;
-  query: <T>(query: QueryObject<QueryArguments>) => Promise<T | null>;
+  query: <R extends RawGtv = RawGtv, A extends DictPair = DictPair>(
+    query: QueryObject<R, A>,
+  ) => Promise<R | null>;
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
@@ -29,7 +32,7 @@ export interface Connection {
   getAccountsByAuthDescriptorId: (
     id: BufferId,
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
@@ -37,11 +40,11 @@ export interface Connection {
   getAssetsByName: (
     name: string,
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
 }
 

@@ -6,13 +6,14 @@ import {
 import { Connection } from "../types";
 import { Authenticator } from "../authentication/types";
 import {
+  OP_INDEX_INIT_TRANSFER,
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
-} from "./crosschain-operations";
+} from "./operations";
 import { call } from "../ft-session";
 import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
-import { InitTransferArgs } from "./types";
+import { GtvInitTransferArgs } from "./types";
 
 export async function initTransfer(
   connection: Connection,
@@ -32,15 +33,26 @@ export async function initTransfer(
 export async function applyTransfer(
   connection: Connection,
   authenticator: Authenticator,
-  initArgs: InitTransferArgs,
+  recipientId: BufferId,
+  assetId: BufferId,
+  amount: Amount,
+  hops: BufferId[],
   tx: SignedTransaction,
-  opIndex: number,
-  hopIndex: number,
+  targetChainIndex: number,
+  operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
-    applyTransferOp(initArgs, tx, opIndex, hopIndex),
+    applyTransferOp(
+      recipientId,
+      assetId,
+      amount,
+      hops,
+      tx,
+      targetChainIndex,
+      operationIndex,
+    ),
   );
 }
 
@@ -49,7 +61,7 @@ export function getInitTransferArgs(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
-): InitTransferArgs {
+): GtvInitTransferArgs {
   return [
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),

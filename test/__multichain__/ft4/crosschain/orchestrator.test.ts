@@ -75,8 +75,8 @@ describe("Orchestrator", () => {
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
-      amount,
       asset.id,
+      amount,
       session0,
     );
 
@@ -109,8 +109,8 @@ describe("Orchestrator", () => {
     const orchestrator = await createOrchestrator(
       multichain0Rid,
       account0.id,
-      amount,
       asset.id,
+      amount,
       mockSession,
     );
     const errorListener = jest.fn();
@@ -143,8 +143,8 @@ describe("Orchestrator", () => {
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
-      amount,
       asset.id,
+      amount,
       session0,
     );
 
@@ -164,8 +164,8 @@ describe("Orchestrator", () => {
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
-      amount,
       asset.id,
+      amount,
       session0,
     );
 

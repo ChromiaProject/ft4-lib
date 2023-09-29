@@ -5,7 +5,7 @@ import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
 import { Buffer } from "buffer";
 import { Asset } from "../asset/types";
-import { getAssetOriginById } from "./crosschain-query-functions";
+import { getAssetOriginById } from "./query-functions";
 
 export class PathfinderError extends Error {
   constructor(msg?) {
@@ -17,15 +17,15 @@ export class PathfinderError extends Error {
 export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
-  blockchainRID: BufferId,
+  blockchainRid: BufferId,
   maxPathLength = 100,
 ): Promise<Buffer[]> {
   const rootNode = asset.brid;
 
   const pathSourceToRoot = [
-    formatter.toBuffer(connection.client.config.blockchainRID),
+    formatter.toBuffer(connection.client.config.blockchainRid),
   ];
-  const pathEndToRoot = [formatter.ensureBuffer(blockchainRID)];
+  const pathEndToRoot = [formatter.ensureBuffer(blockchainRid)];
 
   let lastNode: Buffer;
   let commonNode: Buffer;
@@ -132,8 +132,8 @@ export async function createConnectionToBrid(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
       // ""+ to avoid errors (readonly)
-      directoryNodeURLPool: "" + oldClient.config.endpointPool,
-      blockchainRID:
+      directoryNodeUrlPool: "" + oldClient.config.endpointPool,
+      blockchainRid:
         typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
     }),
   );

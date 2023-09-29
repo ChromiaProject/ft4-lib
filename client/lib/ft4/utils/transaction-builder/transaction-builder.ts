@@ -60,13 +60,13 @@ export function transactionBuilder(
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: toPubkeys(this._keyhandlersUsed),
       signatures: [],
     };
     const addOperation = (op: Operation) => {
-      txn.operations.push({ opName: op.name, args: op.args });
+      txn.operations.push({ opName: op.name, args: op.args ?? [] });
     };
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
@@ -185,24 +185,21 @@ export function transactionBuilder(
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const systemClient = await createClient({
-      nodeURLPool: client.config.endpointPool.slice(),
-      blockchainIID: 0,
+      nodeUrlPool: client.config.endpointPool.slice(),
+      blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(
       systemClient,
-      client.config.blockchainRID,
+      client.config.blockchainRid,
     );
+    const txRid = getTransactionRID(tx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
 
       let isAnchored = false;
       try {
-        isAnchored = await isBlockAnchored(
-          client,
-          anchoringClient,
-          getTransactionRID(tx),
-        );
+        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
       } catch (error) {
         console.error("Error while checking block anchoring status", error);
 
