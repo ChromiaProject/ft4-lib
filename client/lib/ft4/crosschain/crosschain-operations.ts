@@ -33,3 +33,16 @@ export function applyTransfer(
     hopIndex,
   );
 }
+
+export function deletePendingTransfer(
+  tx: SignedTransaction,
+  initialTxRid: Buffer,
+  opIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.delete_pending_transfer",
+    gtv.decode(tx),
+    initialTxRid,
+    opIndex,
+  );
+}

@@ -17,20 +17,6 @@ query get_pending_transfers_for_account(account_id: byte_array, page_size: integ
 function get_paginated_pending_transfers(account_id: byte_array, page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
 
-    val debug = crosschain.pending_transfer @* {
-        pending_transfer.account.id == account_id,
-        pending_transfer.rowid > (before_rowid ?: rowid(0))
-    } (
-        utils.pagination_result(
-            data = (
-                tx_data = .transaction.tx_data,
-                op_index = pending_transfer.op_index,
-                account_id = pending_transfer.account.id
-            ).to_gtv_pretty(),
-            rowid = pending_transfer.rowid
-        )
-    ) limit utils.fetch_data_size(page_size);
-
     return crosschain.pending_transfer @* {
         pending_transfer.account.id == account_id,
         pending_transfer.rowid > (before_rowid ?: rowid(0))

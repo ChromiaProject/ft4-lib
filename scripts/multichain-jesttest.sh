@@ -257,6 +257,8 @@ do
     debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
 done
 
+sleep 10
+
 log "Running Jest tests..."
 if [[ "$1" == "-f" || "$1" == "--file" ]]; then
     FILE_OPTION="--runTestsByPath $2"

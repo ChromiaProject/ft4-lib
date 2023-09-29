@@ -4,24 +4,23 @@ import {
   FlagsType,
   createAmount,
   createConnection,
-  findPathToChainForAsset,
   mint,
   registerCrosschainAsset,
 } from "/ft4";
 import { AuthenticatedAccount } from "/ft4/accounts";
 import { Asset } from "/ft4/asset/types";
-import { initTransfer } from "/ft4/crosschain/operations";
+import { PendingTransfer, findPathToChainForAsset } from "/ft4/crosschain";
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { createSession } from "/ft4/ft-session";
 import { Connection, Session } from "/ft4/types";
+import { PaginatedEntity } from "/ft4/utils/types";
 import AccountBuilder from "/util/account-builder";
 import adminUser from "/util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
 } from "/util/blockchain-util";
-
-jest.setTimeout(60000);
+import { initTransfer } from "/ft4/crosschain/operations";
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
@@ -159,5 +158,29 @@ describe("Orchestrator", () => {
     expect(JSON.stringify(balance)).toStrictEqual(
       JSON.stringify({ asset, amount }),
     );
+  });
+
+  it("removes pending transfer once transfer is completed", async () => {
+    const orchestrator = await createOrchestrator(
+      multichain2Rid,
+      account2.id,
+      amount,
+      asset.id,
+      session0,
+    );
+
+    const pendingTransfers = new Promise<PaginatedEntity<PendingTransfer>>(
+      (resolve) => {
+        orchestrator.onTransferInit(() => {
+          resolve(account0.getPendingTransfers());
+        });
+      },
+    );
+
+    await orchestrator.transfer();
+    const pagination = await pendingTransfers;
+    expect(pagination.data.length).toBe(1);
+    const res = await account0.getPendingTransfers();
+    expect(res.data.length).toBe(0);
   });
 });
