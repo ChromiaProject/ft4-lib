@@ -67,54 +67,136 @@ describe("Orchestrator", () => {
     multichain2Rid = multichain02.rid;
   });
 
-  it("executes transfer through all paths", async () => {
-    const orchestrator = await createOrchestrator(
-      multichain2Rid,
-      account2.id,
-      asset.id,
-      amount,
-      session0,
-    );
+  describe("Basic Functionality", () => {
+    it("initializes transfer correctly", async () => {
+      // Implementation here...
+    });
 
-    const initListener = jest.fn();
-    const hopListener = jest.fn();
-    const endListener = jest.fn();
-    const errorListener = jest.fn();
+    it("executes single hop transfer", async () => {
+      // Implementation here...
+    });
 
-    orchestrator.onTransferInit(initListener);
-    orchestrator.onTransferHop(hopListener);
-    orchestrator.onTransferEnd(endListener);
-    orchestrator.onTransferError(errorListener);
+    it("executes multiple hops transfer", async () => {
+      // Implementation here...
+    });
 
-    await orchestrator.transfer();
+    it("marks transfer as complete", async () => {
+      // Implementation here...
+    });
 
-    expect(initListener).toHaveBeenCalled();
-    expect(hopListener).toHaveBeenCalledTimes(1);
-    expect(endListener).toHaveBeenCalled();
-    expect(errorListener).not.toHaveBeenCalled();
+    it("executes transfer through all paths", async () => {
+      const orchestrator = await createOrchestrator(
+        multichain2Rid,
+        account2.id,
+        asset.id,
+        amount,
+        session0,
+      );
+
+      const initListener = jest.fn();
+      const hopListener = jest.fn();
+      const endListener = jest.fn();
+      const errorListener = jest.fn();
+
+      orchestrator.onTransferInit(initListener);
+      orchestrator.onTransferHop(hopListener);
+      orchestrator.onTransferEnd(endListener);
+      orchestrator.onTransferError(errorListener);
+
+      await orchestrator.transfer();
+
+      expect(initListener).toHaveBeenCalled();
+      expect(hopListener).toHaveBeenCalledTimes(1);
+      expect(endListener).toHaveBeenCalled();
+      expect(errorListener).not.toHaveBeenCalled();
+    });
   });
 
-  it("emits error event on transfer failure", async () => {
-    const mockSession = {
-      ...createSession(connection2, account2.authenticator),
-      transactionBuilder: jest.fn().mockImplementation(() => {
-        throw new Error("Mocked Error");
-      }),
-    };
+  describe("Edge Cases", () => {
+    it("handles invalid amounts", async () => {
+      // Implementation here...
+    });
 
-    const orchestrator = await createOrchestrator(
-      multichain0Rid,
-      account0.id,
-      asset.id,
-      amount,
-      mockSession,
-    );
-    const errorListener = jest.fn();
+    it("handles invalid assets", async () => {
+      // Implementation here...
+    });
 
-    orchestrator.onTransferError(errorListener);
+    it("handles missing or invalid parent details", async () => {
+      // Implementation here...
+    });
+  });
 
-    await orchestrator.transfer();
+  describe("Asset Hierarchy", () => {
+    it("transfers from root to leaf", async () => {
+      // Implementation here...
+    });
 
-    expect(errorListener).toHaveBeenCalled();
+    it("transfers from leaf to root", async () => {
+      // Implementation here...
+    });
+
+    it("transfers from leaf to sibling", async () => {
+      // Implementation here...
+    });
+
+    it("transfers from leaf to branch", async () => {
+      // Implementation here...
+    });
+
+    it("transfers from branch to leaf", async () => {
+      // Implementation here...
+    });
+  });
+
+  describe("Security", () => {
+    it("prevents unauthorized transfers", async () => {
+      // Implementation here...
+    });
+  });
+
+  describe("Error Handling and Recovery", () => {
+    it("emits error event on transfer failure", async () => {
+      const mockSession = {
+        ...createSession(connection2, account2.authenticator),
+        transactionBuilder: jest.fn().mockImplementation(() => {
+          throw new Error("Mocked Error");
+        }),
+      };
+
+      const orchestrator = await createOrchestrator(
+        multichain0Rid,
+        account0.id,
+        asset.id,
+        amount,
+        mockSession,
+      );
+      const errorListener = jest.fn();
+
+      orchestrator.onTransferError(errorListener);
+
+      await orchestrator.transfer();
+
+      expect(errorListener).toHaveBeenCalled();
+    });
+
+    it.skip("emits correct error events", async () => {
+      // Implementation here...
+    });
+
+    it.skip("saves the original exception in the OrchestratorError", async () => {
+      // Implementation here...
+    });
+
+    it.skip("handles Path finder error", async () => {
+      // Implementation here...
+    });
+
+    it.skip("handles Postchain client connection issues", async () => {
+      // Implementation here...
+    });
+
+    it.skip("handles non-existing assets", async () => {
+      // Implementation here...
+    });
   });
 });
