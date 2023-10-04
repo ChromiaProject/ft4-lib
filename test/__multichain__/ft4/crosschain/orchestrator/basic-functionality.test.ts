@@ -1,8 +1,7 @@
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { createAmount } from "/ft4";
 
-describe("Orchestrator", () => {
+describe("Basic Functionality", () => {
   let testContext: TestContext;
 
   beforeEach(async () => {
@@ -10,53 +9,61 @@ describe("Orchestrator", () => {
   });
 
   async function createTestOrchestrator() {
-    const amount = createAmount(10, 1);
-
     return await createOrchestrator(
-      testContext.multichain2Rid,
+      testContext.multichain2.rid,
       testContext.account2.id,
       testContext.asset.id,
-      amount,
+      testContext.sampleAmount,
       testContext.session0,
     );
   }
 
-  describe("Basic Functionality", () => {
-    it("initializes transfer correctly", async () => {
-      // Implementation here...
-    });
+  it("initializes transfer correctly", async () => {
+    const orchestrator = await createTestOrchestrator();
 
-    it("executes single hop transfer", async () => {
-      // Implementation here...
-    });
+    const initListener = jest.fn();
+    orchestrator.onTransferInit(initListener);
 
-    it("executes multiple hops transfer", async () => {
-      // Implementation here...
-    });
+    await orchestrator.transfer();
 
-    it("marks transfer as complete", async () => {
-      // Implementation here...
-    });
+    expect(initListener).toHaveBeenCalled();
+  });
 
-    it.only("executes transfer through all paths", async () => {
-      const orchestrator = await createTestOrchestrator();
+  it("executes single hop transfer", async () => {
+    const orchestrator = await createTestOrchestrator();
 
-      const initListener = jest.fn();
-      const hopListener = jest.fn();
-      const endListener = jest.fn();
-      const errorListener = jest.fn();
+    const hopListener = jest.fn();
+    orchestrator.onTransferHop(hopListener);
 
-      orchestrator.onTransferInit(initListener);
-      orchestrator.onTransferHop(hopListener);
-      orchestrator.onTransferEnd(endListener);
-      orchestrator.onTransferError(errorListener);
+    await orchestrator.transfer();
 
-      await orchestrator.transfer();
+    expect(hopListener).toHaveBeenCalledTimes(1);
+  });
 
-      expect(initListener).toHaveBeenCalled();
-      expect(hopListener).toHaveBeenCalledTimes(1);
-      expect(endListener).toHaveBeenCalled();
-      expect(errorListener).not.toHaveBeenCalled();
-    });
+  it("executes multiple hops transfer", async () => {
+    // Implementation here...
+  });
+
+  it("marks transfer as complete", async () => {
+    const orchestrator = await createTestOrchestrator();
+
+    const endListener = jest.fn();
+    orchestrator.onTransferEnd(endListener);
+
+    await orchestrator.transfer();
+
+    expect(endListener).toHaveBeenCalled();
+  });
+
+  it.only("ensures no errors are thrown throughout the process", async () => {
+    const orchestrator = await createTestOrchestrator();
+
+    const errorListener = jest.fn();
+
+    orchestrator.onTransferError(errorListener);
+
+    await orchestrator.transfer();
+
+    expect(errorListener).not.toHaveBeenCalled();
   });
 });

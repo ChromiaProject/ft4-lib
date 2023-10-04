@@ -16,23 +16,34 @@ import { createSession } from "/ft4/ft-session";
 import { Connection, Session } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
 import { AuthenticatedAccount } from "/ft4/accounts";
+import { Blockchain } from "/__multichain__/util/types";
+import { Amount } from "/ft4/asset/interfaces";
 
 export type TestContext = {
   connection0: Connection;
+  connection1: Connection;
   connection2: Connection;
   account0: AuthenticatedAccount;
+  account1: AuthenticatedAccount;
   account2: AuthenticatedAccount;
   session0: Session;
-  asset: Asset;
-  multichain0Rid: Buffer;
-  multichain2Rid: Buffer;
+  session1: Session;
+  session2: Session;
+  multichain0: Blockchain;
+  multichain1: Blockchain;
+  multichain2: Blockchain;
+  sampleAsset: Asset;
+  sampleAmount: Amount;
 };
 
 export async function setupTestEnvironment() {
-  const { multichain00, multichain02 } = await fetchBlockchains();
+  const { multichain00, multichain01, multichain02 } = await fetchBlockchains();
 
   const connection0 = createConnection(
     await createChromiaClientToMultichain(multichain00.rid),
+  );
+  const connection1 = createConnection(
+    await createChromiaClientToMultichain(multichain01.rid),
   );
   const connection2 = createConnection(
     await createChromiaClientToMultichain(multichain02.rid),
@@ -50,11 +61,17 @@ export async function setupTestEnvironment() {
     .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
     .build();
 
+  const account1 = await AccountBuilder.account(connection0)
+    .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+    .build();
+
   const account2 = await AccountBuilder.account(connection2)
     .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
     .build();
 
   const session0 = createSession(connection0, account0.authenticator);
+  const session1 = createSession(connection1, account1.authenticator);
+  const session2 = createSession(connection2, account2.authenticator);
 
   await mint(
     connection0.client,
@@ -64,18 +81,21 @@ export async function setupTestEnvironment() {
     createAmount(100, asset.decimals),
   );
 
-  const multichain0Rid = multichain00.rid;
-  const multichain2Rid = multichain02.rid;
-
   const testContext: TestContext = {
     connection0,
+    connection1,
     connection2,
     account0,
+    account1,
     account2,
     session0,
-    asset,
-    multichain0Rid,
-    multichain2Rid,
+    session1,
+    session2,
+    multichain0: multichain00,
+    multichain1: multichain01,
+    multichain2: multichain02,
+    sampleAsset: asset,
+    sampleAmount: createAmount(10, 1),
   };
 
   return testContext;
