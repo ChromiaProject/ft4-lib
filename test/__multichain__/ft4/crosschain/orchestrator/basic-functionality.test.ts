@@ -12,7 +12,7 @@ describe("Basic Functionality", () => {
     return await createOrchestrator(
       testContext.multichain2.rid,
       testContext.account2.id,
-      testContext.asset.id,
+      testContext.sampleAsset.id,
       testContext.sampleAmount,
       testContext.session0,
     );
