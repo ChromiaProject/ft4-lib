@@ -45,3 +45,117 @@ function test_init_transfer_succeeds_under_valid_conditions() {
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
 }
+
+
+function test_apply_transfer_succeeds_under_valid_conditions() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    // Mint some asset to Alice's account for a valid test
+    utils.mint(alice.account, asset_valid, 10L);
+
+    val init_args = struct<xchain_ext.init_transfer>(
+      receiver_id = bob.account.id,
+      asset_id = asset_valid.id,
+      amount = 5L,
+      hops = [x"abcdef"]
+    );
+
+    // Debug: Print the GTV structure to ensure it has 4 fields
+    print("init_args", init_args.to_gtv());
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = x"deadbeef",
+            operations = [
+                gtx_operation(
+                    name = "ft4.crosschain.init_transfer",
+                    args = [init_args.to_gtv()]
+                )
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(xchain_ext.apply_transfer(init_args, tx, 0, 0))
+        .sign(rell.test.keypairs.alice)
+        .run(); // Should run successfully
+}
+
+function test_apply_transfer_fails_with_mismatched_init_args() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    val init_args = struct<xchain_ext.init_transfer>(
+      receiver_id = bob.account.id,
+      asset_id = asset_valid.id,
+      amount = 5L,
+      hops = [x"abcdef"]
+    );
+
+    val wrong_init_args = struct<xchain_ext.init_transfer>(
+      receiver_id = alice.account.id,
+      asset_id = asset_valid.id,
+      amount = 5L,
+      hops = [x"abcdef"]
+    );
+
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = x"deadbeef",
+            operations = [
+                gtx_operation(
+                    name = "ft4.crosschain.init_transfer",
+                    args = [init_args.to_gtv()]
+                )
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(xchain_ext.apply_transfer(init_args, tx, 0, 0))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("Parameter init_args does not match init_transfer arguments");
+}
+
+function test_apply_transfer_fails_with_invalid_hop_index() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    val init_args = struct<xchain_ext.init_transfer>(
+      receiver_id = bob.account.id,
+      asset_id = asset_valid.id,
+      amount = 5L,
+      hops = [x"abcdef"]
+    );
+
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = x"deadbeef",
+            operations = [
+                gtx_operation(
+                    name = "ft4.crosschain.apply_transfer",
+                    args = [init_args.to_gtv()]
+                )
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    val hop_index = 100; // Invalid hop index
+
+    rell.test.tx()
+        .op(xchain_ext.apply_transfer(init_args, tx, 0, hop_index))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index));
+}
