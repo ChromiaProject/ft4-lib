@@ -1,6 +1,6 @@
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { registerCrosschainAsset } from "/ft4";
+import { Orchestrator, registerCrosschainAsset } from "/ft4";
 import { getNewAsset } from "/util/blockchain-util";
 import adminUser from "/util/admin_user";
 
@@ -10,6 +10,15 @@ describe("Asset Hierarchy", () => {
   beforeEach(async () => {
     testContext = await setupTestEnvironment();
   });
+
+  async function verifyEndTransfer(orchestrator: Orchestrator) {
+    const endListener = jest.fn();
+    orchestrator.onTransferEnd(endListener);
+
+    await orchestrator.transfer();
+
+    expect(endListener).toHaveBeenCalled();
+  }
 
   it("transfers from root to leaf", async () => {
     // Root asset
@@ -30,7 +39,7 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
-    await orchestrator.transfer();
+    verifyEndTransfer(orchestrator);
   });
 
   it("transfers from leaf to root", async () => {
@@ -52,7 +61,7 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From leaf
     );
 
-    await orchestrator.transfer();
+    verifyEndTransfer(orchestrator);
   });
 
   it("transfers from leaf to sibling", async () => {
@@ -81,7 +90,7 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From leaf
     );
 
-    await orchestrator.transfer();
+    verifyEndTransfer(orchestrator);
   });
 
   it("transfers from leaf to branch", async () => {
@@ -96,10 +105,10 @@ describe("Asset Hierarchy", () => {
     );
 
     await registerCrosschainAsset(
-      testContext.connection1.client, // Branch
+      testContext.connection2.client, // Leaf
       adminUser().signatureProvider,
       asset,
-      testContext.multichain2.rid, // Branch
+      testContext.multichain1.rid, // Branch
     );
 
     const orchestrator = await createOrchestrator(
@@ -110,7 +119,7 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From leaf
     );
 
-    await orchestrator.transfer();
+    verifyEndTransfer(orchestrator);
   });
 
   it("transfers from branch to leaf", async () => {
@@ -125,10 +134,10 @@ describe("Asset Hierarchy", () => {
     );
 
     await registerCrosschainAsset(
-      testContext.connection1.client, // Branch
+      testContext.connection2.client, // Leaf
       adminUser().signatureProvider,
       asset,
-      testContext.multichain2.rid, // Branch
+      testContext.multichain1.rid, // Branch
     );
 
     const orchestrator = await createOrchestrator(
@@ -139,6 +148,6 @@ describe("Asset Hierarchy", () => {
       testContext.session1, // From branch
     );
 
-    await orchestrator.transfer();
+    verifyEndTransfer(orchestrator);
   });
 });
