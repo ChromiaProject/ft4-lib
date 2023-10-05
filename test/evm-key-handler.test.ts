@@ -1,16 +1,16 @@
-import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
-import { op } from "../client/lib/ft4/utils";
-import { evmAuth } from "../client/lib/ft4/authentication/evm";
-import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
-import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAccount } from "./util/util";
+import { Buffer } from "buffer";
 import { ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
+import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
+import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { evmAuth } from "../client/lib/ft4/authentication/evm";
+import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
+import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
+import { op } from "../client/lib/ft4/utils";
+import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
 import { createChromiaClient } from "./util/blockchain-util";
-import { Buffer } from "buffer";
+import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createAccount } from "./util/util";
 
 describe("EVM key handler", () => {
   let client: IClient;
@@ -99,6 +99,62 @@ describe("EVM key handler", () => {
       .build();
 
     expect(gtx.deserialize(tx).operations).toEqual([
+      {
+        opName: "ft4.evm_auth",
+        args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
+      },
+      {
+        opName: "foo",
+        args: [],
+      },
+      {
+        opName: "ft4.evm_auth",
+        args: [accountId, ad.id, [[signature2.r, signature2.s, signature2.v]]],
+      },
+      {
+        opName: "foo",
+        args: [],
+      },
+    ]);
+  });
+
+  it("resets nonce if transaction fails", async () => {
+    const accountId = encryption.randomBytes(32);
+    const keyPair = encryption.makeKeyPair();
+    const message = "Sign this message with {nonce}";
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      ["T"],
+      keyStore.address,
+    ).andNoRules;
+    const authService = createFakeAuthDataService({
+      foo: { flags: ["T"], message },
+    });
+    authService.getNonce = () => Promise.resolve(0);
+    const authenticator = createAuthenticator(
+      accountId,
+      [keyStore.createKeyHandler(ad)],
+      authService,
+    );
+
+    const signature1 = await keyStore.signMessage(
+      message.replace("{nonce}", "0"),
+    );
+    const signature2 = await keyStore.signMessage(
+      message.replace("{nonce}", "1"),
+    );
+
+    await transactionBuilder(authenticator, client)
+      .add(op("foo"))
+      .add(op("foo"))
+      .build();
+
+    const tx2 = await transactionBuilder(authenticator, client)
+      .add(op("foo"))
+      .add(op("foo"))
+      .build();
+
+    expect(gtx.deserialize(tx2).operations).toEqual([
       {
         opName: "ft4.evm_auth",
         args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],

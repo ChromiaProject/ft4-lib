@@ -6,7 +6,15 @@ import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
-export const nonces = {};
+type NonceData = {
+  nonce: number;
+  accountId: BufferId;
+  authDescriptorId: BufferId;
+  keyStoreId: Buffer;
+};
+
+export const noncesByAccountAndAdId: { [key: string]: NonceData } = {};
+export const noncesByKeystoreId: { [key: string]: NonceData } = {};
 
 const getNonceId = (v1: BufferId, v2: BufferId) =>
   v1.toString("hex") + v2.toString("hex");
@@ -46,7 +54,12 @@ async function authorize(
 ): Promise<Operation[]> {
   const messageTemplate =
     await authDataService.getAuthMessageTemplate(operation);
-  const nonce = await getNonce(authDataService, accountId, authDescriptorId);
+  const nonce = await getNonce(
+    authDataService,
+    accountId,
+    authDescriptorId,
+    keyStore,
+  );
   const brid = authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
@@ -66,7 +79,13 @@ async function sign(
   transaction: TxBuilderTransaction,
   keyStore: KeyStore,
 ): Promise<void> {
-  // return transaction.sign(keyStore);
+  const nonceData = noncesByKeystoreId[keyStore.id.toString("hex")];
+  if (nonceData) {
+    delete noncesByKeystoreId[keyStore.id.toString("hex")];
+    delete noncesByAccountAndAdId[
+      getNonceId(nonceData.accountId, nonceData.authDescriptorId)
+    ];
+  }
 }
 /* eslint-enable */
 
@@ -74,15 +93,28 @@ async function getNonce(
   authDataService: AuthDataService,
   accountId: BufferId,
   authDescriptorId: BufferId,
+  keyStore: KeyStore,
 ) {
   const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-  const cahcedNonce = nonces[getNonceId(accountId, authDescriptorId)];
+  const cachedNonceData =
+    noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)];
 
-  if (!cahcedNonce || nonce > cahcedNonce) {
-    nonces[getNonceId(accountId, authDescriptorId)] = nonce;
+  if (!cachedNonceData || nonce > cachedNonceData.nonce) {
+    noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)] = {
+      nonce,
+      accountId,
+      authDescriptorId,
+      keyStoreId: keyStore.id,
+    };
+    noncesByKeystoreId[keyStore.id.toString("hex")] = {
+      nonce,
+      accountId,
+      authDescriptorId,
+      keyStoreId: keyStore.id,
+    };
   } else {
-    nonces[getNonceId(accountId, authDescriptorId)] += 1;
+    noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)].nonce += 1;
+    noncesByKeystoreId[keyStore.id.toString("hex")].nonce += 1;
   }
-
-  return nonces[getNonceId(accountId, authDescriptorId)];
+  return noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)].nonce;
 }
