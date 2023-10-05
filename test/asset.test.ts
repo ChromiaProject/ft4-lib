@@ -18,7 +18,7 @@ async function registerAssetWithCustomBrid(
   client: IClient,
   assetName: string,
   decimals = 0,
-  blockchainRID: Buffer = randomBytes(32),
+  blockchainRid: Buffer = randomBytes(32),
 ) {
   const txn = {
     operations: [
@@ -27,7 +27,7 @@ async function registerAssetWithCustomBrid(
         assetName,
         generateAssetSymbol(),
         decimals,
-        blockchainRID,
+        blockchainRid,
         "",
       ),
     ],
@@ -81,7 +81,7 @@ describe("Asset", () => {
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
+    const brid = Buffer.from(connection.client.config.blockchainRid, "hex");
     const assetId = gtv.gtvHash([assetName, brid]);
     await getNewAsset(client, assetName, assetSymbol, 3);
 
@@ -96,7 +96,7 @@ describe("Asset", () => {
   it("is returned when queried by symbol", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = Buffer.from(connection.client.config.blockchainRID, "hex");
+    const brid = Buffer.from(connection.client.config.blockchainRid, "hex");
     const assetId = gtv.gtvHash([assetName, brid]);
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);

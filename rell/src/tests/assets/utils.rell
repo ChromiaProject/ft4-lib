@@ -1,6 +1,7 @@
 @test module;
 import acc: ^^^.lib.ft4.accounts;
 import auth_ext: ^^^.lib.ft4.auth.external;
+import ^^^.lib.ft4.test.utils.{ evm_address_from_privkey, evm_address_from_pubkey };
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
 import ^^.operations;
@@ -56,7 +57,7 @@ function create_test_account_with_auth_descriptor(
 }
 
 function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T"]): account_data {
-    val address = eth_address_from_pubkey(crypto.privkey_to_pubkey(keypair.priv).sub(1));
+    val address = evm_address_from_privkey(keypair.priv);
     val auth_descriptor = create_auth_descriptor(address, flags);
     val auth_descriptor_id = auth_descriptor.hash();
 
@@ -208,11 +209,6 @@ function create_auth_message(template: text, account_data) {
         .replace("{nonce}", nonce.to_text());
 }
 
-function metamask_sign(message: text, privkey: byte_array) {
-    val hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
-    return eth_sign(hash, privkey);
-}
-
 function eth_sign(hash: byte_array, privkey: byte_array) {
     val (r, s, rec_id) = crypto.eth_sign(hash, privkey);
     return auth.signature(
@@ -222,8 +218,4 @@ function eth_sign(hash: byte_array, privkey: byte_array) {
     );
 }
 
-function eth_hex_address_from_pubkey(pubkey) = "0x" + eth_address_from_pubkey(pubkey).to_hex();
-
-function eth_address_from_pubkey(pubkey) = keccak256(pubkey).sub(12);
-
-function eth_address_from_privkey(privkey: byte_array) = eth_address_from_pubkey(crypto.privkey_to_pubkey(privkey).sub(1));
+function eth_hex_address_from_pubkey(pubkey) = "0x" + evm_address_from_pubkey(pubkey).to_hex();

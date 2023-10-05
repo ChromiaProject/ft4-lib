@@ -17,18 +17,14 @@ export async function getAssetById(
   connection: Connection,
   id: BufferId,
 ): Promise<Asset> {
-  return await connection
-    .query<AssetResponse>(assetById(id))
-    .then(createAssetObject);
+  return await connection.query(assetById(id)).then(createAssetObject);
 }
 
 export async function getAssetBySymbol(
   connection: Connection,
   symbol: string,
 ): Promise<Asset> {
-  return await connection
-    .query<AssetResponse>(assetBySymbol(symbol))
-    .then(createAssetObject);
+  return await connection.query(assetBySymbol(symbol)).then(createAssetObject);
 }
 
 export function getAssetsByName(
@@ -63,7 +59,7 @@ export async function getBalanceByAccountId(
   assetId: BufferId,
 ): Promise<Balance> {
   return await connection
-    .query<BalanceResponse>(balanceByAccountId(accountId, assetId))
+    .query(balanceByAccountId(accountId, assetId))
     .then(createBalanceObject);
 }
 
@@ -71,9 +67,7 @@ export async function getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId,
 ): Promise<Balance[]> {
-  const balances = await connection.query<BalanceResponse[]>(
-    balancesByAccountId(accountId),
-  );
+  const balances = await connection.query(balancesByAccountId(accountId));
   return balances.map(createBalanceObject);
 }
 

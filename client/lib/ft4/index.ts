@@ -24,7 +24,13 @@ import {
   authDescriptor,
   GtvAuthDescriptor,
 } from "./accounts";
-import { createAmount } from "./asset/amount";
+import {
+  DecimalFormat,
+  Asset,
+  Balance,
+  SupportedNumber,
+  createAmount,
+} from "./asset";
 import {
   registerAccount,
   addRateLimitPoints,
@@ -39,7 +45,6 @@ import {
   TransferHistoryResponse,
   TransferHistoryType,
 } from "./accounts/transfer-history/types";
-import { DecimalFormat } from "./asset/types";
 
 export {
   op,
@@ -51,6 +56,9 @@ export {
   Session,
   Connection,
   DecimalFormat,
+  Asset,
+  Balance,
+  SupportedNumber,
   GtvAuthDescriptor,
   TransferHistoryEntry,
   TransferHistoryResponse,

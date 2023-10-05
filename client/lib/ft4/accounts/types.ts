@@ -1,8 +1,4 @@
-import {
-  SignatureProvider,
-  TransactionReceipt,
-  KeyPair,
-} from "postchain-client";
+import { SignatureProvider, KeyPair } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "../../cryptoUtils";
@@ -14,7 +10,11 @@ import {
 import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
 import { OptionalPageCursor } from "../types";
-import { PaginatedEntity } from "../utils/types";
+import {
+  PaginatedEntity,
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "../utils/types";
 import { Buffer } from "buffer";
 
 export type RateLimit = {
@@ -27,25 +27,25 @@ export interface Account {
   id: Buffer;
   getBalances: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AuthDescriptor>>;
   getAuthDescriptorsByParticipantId: (
-    partiticipantId: BufferId
+    partiticipantId: BufferId,
   ) => Promise<AuthDescriptor[]>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
     limit?: number,
     filter?: TransferHistoryFilter,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<TransferHistoryResponse>;
   getTransferHistoryEntry: (
-    rowid: number
+    rowid: number,
   ) => Promise<TransferHistoryEntry | null>;
 }
 
@@ -53,15 +53,15 @@ export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
-    newSigner: SignatureProvider | KeyPair
-  ) => Promise<TransactionReceipt>;
+    newSigner: SignatureProvider | KeyPair,
+  ) => Promise<TransactionSessionCompletion>;
   deleteAuthDescriptor: (
-    authDescriptorId: BufferId
-  ) => Promise<TransactionReceipt>;
+    authDescriptorId: BufferId,
+  ) => Promise<TransactionSessionCompletion>;
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
-    amount: Amount
-  ) => Promise<TransactionReceipt>;
-  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionReceipt>;
+    amount: Amount,
+  ) => Promise<TransactionCompletion>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionCompletion>;
 }

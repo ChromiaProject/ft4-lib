@@ -1,49 +1,67 @@
-import {
-  IClient,
-  SignatureProvider,
-  TransactionReceipt,
-} from "postchain-client";
+import { IClient, SignatureProvider } from "postchain-client";
 import { AuthDescriptor } from "../accounts/auth-descriptor";
 import * as ops from "./admin-operations";
 import { BufferId } from "../../cryptoUtils";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
+import { TransactionCompletion } from "../utils/types";
 
-export function registerAccount(
+export async function registerAccount(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   authDescriptor: AuthDescriptor,
-): Promise<TransactionReceipt> {
-  return chromiaClient.signAndSendUniqueTransaction(
-    ops.registerAccount(authDescriptor),
-    adminSignatureProvider,
-  );
+): Promise<TransactionCompletion> {
+  return {
+    receipt: await chromiaClient.signAndSendUniqueTransaction(
+      ops.registerAccount(authDescriptor),
+      adminSignatureProvider,
+    ),
+  };
 }
 
-export function addRateLimitPoints(
+export async function addRateLimitPoints(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   accountId: BufferId,
   amount: number,
-): Promise<TransactionReceipt> {
-  return chromiaClient.signAndSendUniqueTransaction(
-    ops.addRateLimitPoints(accountId, amount),
-    adminSignatureProvider,
-  );
+): Promise<TransactionCompletion> {
+  return {
+    receipt: await chromiaClient.signAndSendUniqueTransaction(
+      ops.addRateLimitPoints(accountId, amount),
+      adminSignatureProvider,
+    ),
+  };
 }
 
-export function registerAsset(
+export async function registerAsset(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   name: string,
   symbol: string,
   decimals: number,
   iconUrl: string,
-): Promise<TransactionReceipt> {
+): Promise<TransactionCompletion> {
   assertValidUrl(iconUrl);
-  return chromiaClient.signAndSendUniqueTransaction(
-    ops.registerAsset(name, symbol, decimals, iconUrl),
-    adminSignatureProvider,
-  );
+  return {
+    receipt: await chromiaClient.signAndSendUniqueTransaction(
+      ops.registerAsset(name, symbol, decimals, iconUrl),
+      adminSignatureProvider,
+    ),
+  };
+}
+
+export async function mint(
+  chromiaClient: IClient,
+  adminSignatureProvider: SignatureProvider,
+  accountId: BufferId,
+  assetId: BufferId,
+  amount: Amount,
+): Promise<TransactionCompletion> {
+  return {
+    receipt: await chromiaClient.signAndSendUniqueTransaction(
+      ops.mint(accountId, assetId, amount),
+      adminSignatureProvider,
+    ),
+  };
 }
 
 function assertValidUrl(url: string) {
@@ -77,17 +95,4 @@ function assertValidUrl(url: string) {
       "Insecure protocol (http) is only allowed on localhost or 127.0.0.1",
     );
   }
-}
-
-export function mint(
-  chromiaClient: IClient,
-  adminSignatureProvider: SignatureProvider,
-  accountId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-): Promise<TransactionReceipt> {
-  return chromiaClient.signAndSendUniqueTransaction(
-    ops.mint(accountId, assetId, amount),
-    adminSignatureProvider,
-  );
 }

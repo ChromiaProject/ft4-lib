@@ -41,7 +41,7 @@ async function sign(
   transaction.signatures.push(
     await keyStore.sign(
       gtx.getDigestToSign({
-        blockchainRID: transaction.blockchainRID,
+        blockchainRid: transaction.blockchainRid,
         signers: transaction.signers,
         operations: transaction.operations,
       }),
