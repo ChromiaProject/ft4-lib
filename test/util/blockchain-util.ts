@@ -55,7 +55,7 @@ export async function getNewAsset(
   return asset;
 }
 
-export function callBackParameters(
+export function anchoredHandlerCallbackParameters(
   client: IClient,
   operations: Operation[],
   opIndex: number,
@@ -69,6 +69,5 @@ export function callBackParameters(
       signers: [],
       signatures: [],
     }),
-    error: null,
   });
 }

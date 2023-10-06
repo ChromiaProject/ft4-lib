@@ -111,23 +111,16 @@ export type TransactionBuilderConfig = RequireTogether<
   "retryCount" | "waitTimeMs"
 >;
 
-export type OnAnchoredHandler = (
-  data:
-    | {
-        operation: Operation;
-        opIndex: number;
-        verifiedTx: GTX;
-        proofConstructor: (brid: BufferId) => Promise<Transaction>;
-        error: null;
-      }
-    | {
-        operation: null;
-        opIndex: null;
-        verifiedTx: null;
-        proofConstructor: null;
-        error: Error;
-      },
-) => void;
+export type OnAnchoredHandler = ((
+  data: {
+    operation: Operation;
+    opIndex: number;
+    verifiedTx: GTX;
+    proofConstructor: (brid: BufferId) => Promise<Transaction>;
+  },
+  error: null,
+) => void) &
+  ((data: null, error: Error) => void);
 
 export type OperationContext = {
   operation: Operation;

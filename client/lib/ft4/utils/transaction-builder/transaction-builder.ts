@@ -228,28 +228,27 @@ export function transactionBuilder(
         };
 
         operations.forEach((op: OperationContext, idx: number) => {
-          op.onAnchoredHandler({
-            operation: op.operation,
-            opIndex: idx,
-            verifiedTx: decodedTx,
-            proofConstructor,
-            error: null,
-          });
+          op.onAnchoredHandler(
+            {
+              operation: op.operation,
+              opIndex: idx,
+              verifiedTx: decodedTx,
+              proofConstructor,
+            },
+            null,
+          );
         });
         return;
       }
     }
 
     operations.forEach((op) => {
-      op.onAnchoredHandler({
-        operation: null,
-        opIndex: null,
-        verifiedTx: null,
-        proofConstructor: null,
-        error: new AnchoringTimeoutError(
+      op.onAnchoredHandler(
+        null,
+        new AnchoringTimeoutError(
           "Block was not anchored within the specified timeout",
         ),
-      });
+      );
     });
   }
 

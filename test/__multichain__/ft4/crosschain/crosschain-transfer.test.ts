@@ -20,7 +20,7 @@ import {
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
 import { getTransactionRID } from "/ft4/utils";
-import { fetchBlockchains } from "../../utils/blockchain";
+import { fetchBlockchains } from "../../util/blockchain";
 
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {

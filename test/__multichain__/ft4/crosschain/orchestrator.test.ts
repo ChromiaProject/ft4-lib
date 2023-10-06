@@ -1,4 +1,4 @@
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
+import { fetchBlockchains } from "../../util/blockchain";
 import {
   FlagsType,
   createAmount,

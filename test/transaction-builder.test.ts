@@ -11,7 +11,7 @@ import {
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
 import {
-  callBackParameters,
+  anchoredHandlerCallbackParameters,
   createChromiaClient,
 } from "./util/blockchain-util";
 import { nop } from "/ft4/utils";
@@ -264,7 +264,8 @@ describe("Transaction Builder", () => {
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        callBackParameters(client, [emptyOp(), operation], 0),
+        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
+        null,
       );
     });
 
@@ -290,10 +291,20 @@ describe("Transaction Builder", () => {
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        callBackParameters(client, [emptyOp(), emptyOp(), operation], 0),
+        anchoredHandlerCallbackParameters(
+          client,
+          [emptyOp(), emptyOp(), operation],
+          0,
+        ),
+        null,
       );
       expect(callback2).toHaveBeenCalledWith(
-        callBackParameters(client, [emptyOp(), emptyOp(), operation], 1),
+        anchoredHandlerCallbackParameters(
+          client,
+          [emptyOp(), emptyOp(), operation],
+          1,
+        ),
+        null,
       );
     });
 
@@ -316,7 +327,8 @@ describe("Transaction Builder", () => {
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        callBackParameters(client, [emptyOp(), operation], 0),
+        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
+        null,
       );
     });
     it("calls callback with an error if polling times out", async () => {
@@ -339,13 +351,10 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith({
-        operation: null,
-        opIndex: null,
-        proofConstructor: null,
-        verifiedTx: null,
-        error: expect.any(AnchoringTimeoutError),
-      });
+      expect(callback).toHaveBeenCalledWith(
+        null,
+        expect.any(AnchoringTimeoutError),
+      );
     });
     it("returns receipt without waiting for block to be anchored", async () => {
       const { authenticatorMock } = getMocks();

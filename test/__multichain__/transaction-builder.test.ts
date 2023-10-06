@@ -8,7 +8,7 @@ import { FlagsType, createInMemoryFtKeyStore } from "/ft4";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
 import { createFakeAuthDataService } from "/util/fake-auth-data-service";
 import { fetchBlockchains } from "./util/blockchain";
-import { callBackParameters } from "/util/blockchain-util";
+import { anchoredHandlerCallbackParameters } from "/util/blockchain-util";
 
 function getMocks() {
   const { authDescriptor, keyPair } = createTestAuthDescriptor([
@@ -64,7 +64,8 @@ describe("transaction builder", () => {
 
     await promise;
     expect(callback).toHaveBeenCalledWith(
-      callBackParameters(client, [emptyOp(), operation], 0),
+      anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
+      null,
     );
   });
 });
