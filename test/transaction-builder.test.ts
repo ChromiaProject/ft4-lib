@@ -10,7 +10,10 @@ import {
   AuthorizationError,
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
-import { createChromiaClient } from "./util/blockchain-util";
+import {
+  callBackParameters,
+  createChromiaClient,
+} from "./util/blockchain-util";
 import { nop } from "/ft4/utils";
 import {
   AuthDataService,
@@ -247,6 +250,7 @@ describe("Transaction Builder", () => {
     it("calls registered handler when block is anchored", async () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const { authenticatorMock } = getMocks();
+      const operation = nop();
       let callback = null;
       const promise = new Promise((resolve) => {
         transactionBuilder(authenticatorMock, client)
@@ -254,21 +258,20 @@ describe("Transaction Builder", () => {
             emptyOp(),
             (callback = jest.fn().mockImplementation((op) => resolve(op))),
           )
-          .add(nop())
+          .add(operation)
           .buildAndSend();
       });
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        emptyOp(),
-        expect.any(Buffer),
-        null,
+        callBackParameters(client, [emptyOp(), operation], 0),
       );
     });
 
     it("calls all registered handler when block is anchored", async () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const { authenticatorMock } = getMocks();
+      const operation = nop();
       let callback = null;
       let callback2 = null;
       const promise = new Promise((resolve) => {
@@ -281,20 +284,16 @@ describe("Transaction Builder", () => {
             emptyOp(),
             (callback2 = jest.fn().mockImplementation((op) => resolve(op))),
           )
-          .add(nop())
+          .add(operation)
           .buildAndSend();
       });
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        emptyOp(),
-        expect.any(Buffer),
-        null,
+        callBackParameters(client, [emptyOp(), emptyOp(), operation], 0),
       );
       expect(callback2).toHaveBeenCalledWith(
-        emptyOp(),
-        expect.any(Buffer),
-        null,
+        callBackParameters(client, [emptyOp(), emptyOp(), operation], 1),
       );
     });
 
@@ -303,6 +302,7 @@ describe("Transaction Builder", () => {
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
       const { authenticatorMock } = getMocks();
+      const operation = nop();
       let callback = null;
       const promise = new Promise((resolve) => {
         transactionBuilder(authenticatorMock, client)
@@ -310,15 +310,13 @@ describe("Transaction Builder", () => {
             emptyOp(),
             (callback = jest.fn().mockImplementation((op) => resolve(op))),
           )
-          .add(nop())
+          .add(operation)
           .buildAndSend();
       });
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        emptyOp(),
-        expect.any(Buffer),
-        null,
+        callBackParameters(client, [emptyOp(), operation], 0),
       );
     });
     it("calls callback with an error if polling times out", async () => {
@@ -341,13 +339,15 @@ describe("Transaction Builder", () => {
       });
       await promise;
 
-      expect(callback).toHaveBeenCalledWith(
-        null,
-        expect.any(Buffer),
-        expect.any(AnchoringTimeoutError),
-      );
+      expect(callback).toHaveBeenCalledWith({
+        operation: null,
+        opIndex: null,
+        proofConstructor: null,
+        verifiedTx: null,
+        error: expect.any(AnchoringTimeoutError),
+      });
     });
-    it("returns reciept without waiting for block to be anchored", async () => {
+    it("returns receipt without waiting for block to be anchored", async () => {
       const { authenticatorMock } = getMocks();
       //eslint-disable-next-line no-async-promise-executor
       const promise = new Promise(async (resolve) => {

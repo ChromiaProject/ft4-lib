@@ -1,5 +1,5 @@
 import {
-  Operation as newOperation,
+  Operation,
   encryption,
   QueryArguments,
   RawGtv,
@@ -9,11 +9,11 @@ import {
 } from "postchain-client";
 import { Config } from "./types";
 
-export function nop(): newOperation {
+export function nop(): Operation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
 }
 
-export function op(name: string, ...args: readonly RawGtv[]): newOperation {
+export function op(name: string, ...args: readonly RawGtv[]): Operation {
   return { name, args: args as RawGtv[] };
 }
 

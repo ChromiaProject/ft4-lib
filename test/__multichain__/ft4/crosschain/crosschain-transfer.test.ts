@@ -61,13 +61,16 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler: OnAnchoredHandler = async (_, tx) => {
-        const decodedTx = gtx.deserialize(tx);
+      const onAnchoringHandler: OnAnchoredHandler = async (data) => {
+        if (data.error) {
+          throw data.error;
+        }
+        const serializedTx = gtx.serialize(data.verifiedTx);
         const proofTx = await createIccfProofTx(
           clientC0,
-          getTransactionRID(tx),
-          gtv.gtvHash(decodedTx),
-          decodedTx.signers,
+          getTransactionRID(serializedTx),
+          gtv.gtvHash(data.verifiedTx),
+          data.verifiedTx.signers,
           multichain00.rid.toString("hex"),
           multichain01.rid.toString("hex"),
         );
@@ -78,7 +81,7 @@ describe("Crosschain transfer", () => {
             asset00.id,
             createAmount(100, asset00.decimals),
             [multichain01.rid],
-            tx,
+            serializedTx,
             0,
           ),
         );

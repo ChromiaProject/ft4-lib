@@ -10,6 +10,7 @@ import {
   BlockAnchoringException,
   SignedTransaction,
   TransactionReceipt,
+  createIccfProofTx,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -22,6 +23,7 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRID } from "..";
+import { BufferId } from "/cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 3,
@@ -98,8 +100,9 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -193,6 +196,7 @@ export function transactionBuilder(
       client.config.blockchainRID,
     );
     const txRid = getTransactionRID(tx);
+    const decodedTx = gtx.deserialize(tx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
@@ -211,21 +215,41 @@ export function transactionBuilder(
       }
 
       if (isAnchored) {
-        operations.forEach((op: OperationContext) => {
-          op.onAnchoredHandler(op.operation, tx, null);
+        const proofConstructor = async (brid: BufferId) => {
+          const proof = await createIccfProofTx(
+            systemClient,
+            txRid,
+            tx,
+            decodedTx.signers,
+            client.config.blockchainRID,
+            brid.toString("hex"),
+          );
+          return proof.iccfTx;
+        };
+
+        operations.forEach((op: OperationContext, idx: number) => {
+          op.onAnchoredHandler({
+            operation: op.operation,
+            opIndex: idx,
+            verifiedTx: decodedTx,
+            proofConstructor,
+            error: null,
+          });
         });
         return;
       }
     }
 
     operations.forEach((op) => {
-      op.onAnchoredHandler(
-        null,
-        tx,
-        new AnchoringTimeoutError(
+      op.onAnchoredHandler({
+        operation: null,
+        opIndex: null,
+        verifiedTx: null,
+        proofConstructor: null,
+        error: new AnchoringTimeoutError(
           "Block was not anchored within the specified timeout",
         ),
-      );
+      });
     });
   }
 

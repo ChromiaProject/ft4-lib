@@ -4,6 +4,7 @@ import {
   gtv,
   IClient,
   formatter,
+  Operation,
 } from "postchain-client";
 import { createConnection } from "../../client/lib/ft4/ft-session";
 import { Asset } from "../../client/lib/ft4/asset/types";
@@ -52,4 +53,22 @@ export async function getNewAsset(
   ]);
   const asset = await createConnection(client).getAssetById(id);
   return asset;
+}
+
+export function callBackParameters(
+  client: IClient,
+  operations: Operation[],
+  opIndex: number,
+) {
+  return expect.objectContaining({
+    operation: operations[opIndex],
+    opIndex,
+    verifiedTx: expect.objectContaining({
+      operations: operations.map((o) => ({ opName: o.name, args: o.args })),
+      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      signers: [],
+      signatures: [],
+    }),
+    error: null,
+  });
 }

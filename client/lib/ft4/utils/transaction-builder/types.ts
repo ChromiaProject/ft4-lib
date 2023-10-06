@@ -1,11 +1,14 @@
 import {
+  GTX,
   IClient,
   Operation,
   SignedTransaction,
+  Transaction,
   TransactionReceipt,
 } from "postchain-client";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
 import { RequireTogether, TxBuilderTransaction } from "../types";
+import { BufferId } from "/cryptoUtils";
 
 export type TransactionBuilder = {
   _operations: OperationContext[];
@@ -107,10 +110,23 @@ export type TransactionBuilderConfig = RequireTogether<
   ConfigOptions,
   "retryCount" | "waitTimeMs"
 >;
+
 export type OnAnchoredHandler = (
-  operation: Operation | null,
-  transaction: SignedTransaction,
-  error: Error | null,
+  data:
+    | {
+        operation: Operation;
+        opIndex: number;
+        verifiedTx: GTX;
+        proofConstructor: (brid: BufferId) => Promise<Transaction>;
+        error: null;
+      }
+    | {
+        operation: null;
+        opIndex: null;
+        verifiedTx: null;
+        proofConstructor: null;
+        error: Error;
+      },
 ) => void;
 
 export type OperationContext = {
