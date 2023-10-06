@@ -1,14 +1,12 @@
+import { IClient, formatter } from "postchain-client";
+import { BufferId } from "../../../cryptoUtils";
+import { TransferHistoryError, TransferHistoryRetriever } from "./interfaces";
+import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 import {
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
-  TransferHistoryType,
   TransferHistoryResponse,
 } from "./types";
-import { BufferId } from "../../../cryptoUtils";
-import { IClient, formatter } from "postchain-client";
-import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
-import { TransferHistoryError, TransferHistoryRetriever } from "./interfaces";
-import { Buffer } from "buffer";
 import { OptionalPageCursor, PagedResponse } from "/ft4/types";
 
 export function createTransferHistoryRetriever(
@@ -27,7 +25,6 @@ export function createTransferHistoryRetriever(
         throw new TransferHistoryError("amount needs to be <= 100");
 
       const res = await session.query<
-        QueryType,
         PagedResponse<TransferHistoryEntryResponse>
       >("ft4.get_transfer_history", {
         account_id: id,
@@ -45,13 +42,6 @@ export function createTransferHistoryRetriever(
         await session.query("ft4.get_transfer_history_entry", { rowid }),
       );
     },
-    brid: session.config.blockchainRID,
+    brid: session.config.blockchainRid,
   });
 }
-
-type QueryType = {
-  account_id: Buffer;
-  filter: [TransferHistoryType | null];
-  page_size: number;
-  page_cursor: OptionalPageCursor;
-};

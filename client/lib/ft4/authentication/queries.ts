@@ -3,7 +3,7 @@ import { BufferId } from "/cryptoUtils";
 
 export function nonce(
   accountId: BufferId,
-  authDescriptorId: BufferId
+  authDescriptorId: BufferId,
 ): QueryObject<{ account_id: Buffer; auth_descriptor_id: Buffer }> {
   return {
     name: "ft4.get_auth_descriptor_nonce",
@@ -15,8 +15,8 @@ export function nonce(
 }
 
 export function loginConfig(
-  configName?: string
-): QueryObject<{ name?: string }> {
+  configName: string | null,
+): QueryObject<{ name: string | null }> {
   return {
     name: "ft4.get_login_config",
     args: {
@@ -26,7 +26,7 @@ export function loginConfig(
 }
 
 export function authFlags(
-  operation: Operation
+  operation: Operation,
 ): QueryObject<{ op_name: string }> {
   return {
     name: "ft4.get_auth_flags",
@@ -37,13 +37,13 @@ export function authFlags(
 }
 
 export function authMessageTemplate(
-  operation: Operation
-): QueryObject<{ op_name: string; op_args?: RawGtv[] }> {
+  operation: Operation,
+): QueryObject<{ op_name: string; op_args: RawGtv[] }> {
   return {
     name: "ft4.get_auth_message_template",
     args: {
       op_name: operation.name,
-      op_args: operation.args,
+      op_args: operation.args ?? null,
     },
   };
 }

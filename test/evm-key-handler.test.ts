@@ -1,9 +1,9 @@
-import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
-import { op } from "../client/lib/ft4/utils";
-import { evmAuth } from "../client/lib/ft4/authentication/evm";
-import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
-import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
+import { op } from "/ft4/utils";
+import { evmAuth } from "/ft4/authentication/evm";
+import { createKeyStoreInteractor } from "/ft4/ft-session";
+import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import { createAuthenticator } from "/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAccount } from "./util/util";
 import { ethers } from "ethers";

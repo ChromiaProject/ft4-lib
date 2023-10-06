@@ -36,10 +36,9 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query<
-    { account_id: Buffer },
-    Omit<RateLimit, "getAvailablePoints">
-  >(RateLimitQuery(accountId));
+  const rateLimit = await session.query<Omit<RateLimit, "getAvailablePoints">>(
+    RateLimitQuery(accountId),
+  );
 
   const chainInfo = await getConfig(session);
 

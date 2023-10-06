@@ -119,19 +119,18 @@ class AccountBuilder {
     const manager = newSignatureProvider();
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
-    const ad = this.getAuthDescriptor();
+    const ad = this.getAccountManagerAuthDescriptor();
     await accountManager.addAuthDescriptor(ad, this.participant);
 
-    const connection = createConnection(await createChromiaClient());
     const keyHandler = createInMemoryFtKeyStore(
       this.participant,
     ).createKeyHandler(ad);
     const authenticator = createAuthenticator(
       accountManager.id,
       [keyHandler],
-      createAuthDataService(connection),
+      createAuthDataService(this.connection),
     );
-    return createAuthenticatedAccount(connection, authenticator);
+    return createAuthenticatedAccount(this.connection, authenticator);
   }
 
   /* Private functions */
@@ -155,7 +154,7 @@ class AccountBuilder {
       createAuthDataService(connection),
     );
 
-    const acc = createAuthenticatedAccount(connection, authenticator);
+    const acc = createAuthenticatedAccount(this.connection, authenticator);
 
     await this.addAuthDescriptorIfNeeded(acc, managerSigProv);
 
@@ -235,16 +234,6 @@ class AccountBuilder {
       }
       await this.connection.client.sendTransaction(signedTx);
     }
-  }
-
-  private getAuthDescriptor() {
-    return createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: this.flags,
-        signer: this.participant.pubKey,
-      },
-      this.rules,
-    );
   }
 
   private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {

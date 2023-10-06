@@ -9,12 +9,24 @@ import { createConnection } from "../../client/lib/ft4/ft-session";
 import { Asset } from "../../client/lib/ft4/asset/types";
 import adminUser from "./admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
+import { BufferId } from "/cryptoUtils";
 
-export async function createChromiaClient(nodeUrl?: string) {
+export async function createChromiaClientToMultichain(
+  brid: BufferId,
+  nodeUrl?: string,
+) {
+  const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
+  return chromiaClient({
+    directoryNodeURLPool: url,
+    blockchainRID: brid.toString("hex"),
+  });
+}
+
+export async function createChromiaClient(nodeUrl?: string, iid = 0) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return chromiaClient({
     nodeURLPool: url,
-    blockchainIID: 0,
+    blockchainIID: iid,
   });
 }
 

@@ -42,3 +42,5 @@ operation consume_point(account_id: byte_array) {
 
 	state.points -= 1;
 }
+
+operation empty_op() {}

@@ -47,15 +47,17 @@ export function createAuthenticatedAccount(
 async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  ad: AnyAuthDescriptorRegistration,
+  authDescriptor: AnyAuthDescriptorRegistration,
   newSigner: SignatureProvider | KeyPair,
 ): Promise<TransactionReceipt> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const registration = authDescriptorRegistrationToGtv(ad);
+  const registration = authDescriptorRegistrationToGtv(authDescriptor);
   const tx = await tb
     .add(addAuthDescriptorOp(registration))
-    .addSigners(createInMemoryFtKeyStore(newSigner).createKeyHandler(ad))
+    .addSigners(
+      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor),
+    )
     .build();
 
   return connection.client.sendTransaction(tx);

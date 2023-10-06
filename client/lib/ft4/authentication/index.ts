@@ -1,14 +1,21 @@
 import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
+import { AnyAuthDescriptor } from "../accounts";
 import { TxBuilderTransaction } from "../utils/types";
 import {
   AuthDataService,
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
+  KeyStore,
 } from "./types";
-import { aggregateSigners } from "/ft4/accounts";
+import {
+  AuthDescriptorRegistration,
+  AuthType,
+  SingleSig,
+  aggregateSigners,
+} from "/ft4/accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -25,8 +32,6 @@ export function createAuthenticator(
     keyHandlers,
     createSession: () =>
       createAuthenticatorSession(authenticator, authDataService),
-    getAuthFlags: (operation: Operation) =>
-      getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
@@ -35,6 +40,53 @@ export function createAuthenticator(
 
   return authenticator;
 }
+
+export function createNoopAuthenticator(
+  authDataService: AuthDataService,
+): Authenticator {
+  const authenticator = Object.freeze({
+    accountId: Buffer.alloc(32),
+    keyHandlers: [noopKeyHandler],
+    authDataService,
+    createSession: () =>
+      createAuthenticatorSession(authenticator, authDataService),
+    getKeyHandlerForOperation: (_operation: Operation) =>
+      Promise.resolve(noopKeyHandler),
+    getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
+  });
+
+  return authenticator;
+}
+
+const nullKeyStore: KeyStore = Object.freeze({
+  id: Buffer.alloc(32),
+  isInteractive: false,
+  createKeyHandler: (_authDescriptor: AnyAuthDescriptor) => noopKeyHandler,
+});
+
+const nullAuthDescriptorRegistration: AuthDescriptorRegistration<SingleSig> =
+  Object.freeze({
+    authType: AuthType.SingleSig,
+    args: {
+      flags: [] as string[],
+      signer: Buffer.alloc(32, 0),
+    },
+    rule: null,
+  });
+
+const noopKeyHandler: KeyHandler = Object.freeze({
+  authDescriptorRegistration: nullAuthDescriptorRegistration,
+  keyStore: nullKeyStore,
+  satisfiesAuthRequirements: (_flags: string[]) => true,
+  authorize: (
+    _accountId: BufferId,
+    operation: Operation,
+    _nonce: number,
+    _authDataService: AuthDataService,
+  ) => Promise.resolve([operation]),
+  sign: () => Promise.resolve(),
+  getSigners: (): Buffer[] => [],
+});
 
 async function getAuthFlags(
   authDataService: AuthDataService,

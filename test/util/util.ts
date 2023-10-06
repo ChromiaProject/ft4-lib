@@ -190,3 +190,7 @@ export function opToRellOp(operation: Operation): RellOperation {
     args: operation.args ?? [],
   };
 }
+
+export function emptyOp(): Operation {
+  return { name: "empty_op", args: [] };
+}

@@ -37,9 +37,10 @@ import {
   IClient,
   QueryObject,
   RawGtv,
-  QueryArguments,
   Operation,
   TransactionReceipt,
+  DictPair,
+  QueryCallback,
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
@@ -49,8 +50,11 @@ import { ftEventEmitter } from "./events";
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
     client,
-    query: <T extends RawGtv>(queryObject: QueryObject<QueryArguments>) =>
-      query<T>(connection, queryObject),
+    query: <TReturn extends RawGtv, TArgs extends DictPair | undefined>(
+      nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
+      args?: TArgs,
+      callback?: QueryCallback<TReturn>,
+    ) => query<TReturn, TArgs>(connection, nameOrQueryObject, args, callback),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
 
@@ -151,7 +155,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       connection.query<number>(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | undefined = undefined) =>
       connection.query<LoginConfig>(loginConfig(configName)),
-    getBrid: () => Buffer.from(connection.client.config.blockchainRID, "hex"),
+    getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
 }
 
@@ -181,7 +185,7 @@ export function createKeyStoreInteractor(
     getLoginManager: (loginKeyStore?: LoginKeyStore) =>
       createLoginManager(connection, keyStore, loginKeyStore),
     onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
-      ftEventEmitter.on("KeyStoreChanged", (newKeyStore: KeyStore) =>
+      ftEventEmitter.on("KeyStoreChange", (newKeyStore: KeyStore) =>
         handler(createKeyStoreInteractor(client, newKeyStore)),
       );
     },
