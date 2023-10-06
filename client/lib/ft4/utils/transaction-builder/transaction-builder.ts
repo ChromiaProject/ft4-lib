@@ -11,6 +11,7 @@ import {
   SignedTransaction,
   TransactionReceipt,
   createIccfProofTx,
+  Transaction,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -215,7 +216,10 @@ export function transactionBuilder(
       }
 
       if (isAnchored) {
+        const cachedProof = new Map<string, Transaction>();
         const proofConstructor = async (brid: BufferId) => {
+          if (cachedProof.has(brid.toString("hex")))
+            return cachedProof.get(brid.toString("hex"));
           const proof = await createIccfProofTx(
             systemClient,
             txRid,
@@ -224,6 +228,7 @@ export function transactionBuilder(
             client.config.blockchainRID,
             brid.toString("hex"),
           );
+          cachedProof.set(brid.toString("hex"), proof.iccfTx);
           return proof.iccfTx;
         };
 
