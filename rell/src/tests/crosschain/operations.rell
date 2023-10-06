@@ -47,6 +47,7 @@ function test_init_transfer_succeeds_under_valid_conditions() {
         .run(); // Should run successfully
 }
 
+// Test apply_transfer succeeding under valid conditions
 function test_apply_transfer_succeeds_under_valid_conditions() {
     val bob = utils.register_bob();
 
