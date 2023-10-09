@@ -1,15 +1,14 @@
-# FT4 Library: Chromia's Rell Module Manager
+# FT4 Library: Asset and Account Management for Chromia's Rell and TypeScript Environments
 
 ## Introduction
 
-FT4 Library is a robust toolkit designed for Rell modules in Chromia, a next-generation blockchain platform. This library serves as both a token provider and manager, offering a variety of operations. These include asset creation, token allocation, transfers, and even cross-chain transfers. Moreover, the library features foundational data structures for user accounts, independent of token operations.
+The FT4 Library functions as a comprehensive toolkit engineered for both Rell and TypeScript modules in the Chromia blockchain ecosystem. Specialising in asset and account management, the library provides a suite of operations including asset issuance, allocation, and transfers, extending even to cross-chain capabilities. Furthermore, it establishes foundational data structures for account management, designed to operate independently of asset-related activities.
 
 ## Features
 
-- **Asset Management**: Create and manage multiple types of tokens.
-- **Token Operations**: Allocate and transfer tokens with ease.
-- **Cross-Chain Transfers**: Seamlessly move assets across different blockchains.
-- **User Account Management**: Manage user accounts with or without tokens.
+- **Asset Management**: Facilitate the creation, allocation, and management of assets. **Asset Allocation and Transfers**: Perform secure and efficient asset transfers.
+- **Cross-Chain Transfers**: Enable the movement of assets between distinct blockchains.
+- **Account Management**: Oversee user accounts independently of asset activities.
 
 ## Repository Overview
 
@@ -28,8 +27,8 @@ This repository contains the FT4 library and a comprehensive suite of tests writ
 Clone the repository and install the dependencies:
 
 ```bash
-git clone https://github.com/your-repo/ft3-library.git
-cd ft3-library
+git clone git@bitbucket.org:chromawallet/ft3-lib.git
+cd ft3-lib
 npm install
 ```
 
@@ -43,7 +42,7 @@ Run the complete set of TypeScript and Rell tests:
 npm run test
 ```
 
-Run only JavaScript or Rell tests:
+Run only TypeScript or Rell tests:
 
 ```bash
 npm run test:js

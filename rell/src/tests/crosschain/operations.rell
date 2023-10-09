@@ -47,7 +47,6 @@ function test_init_transfer_succeeds_under_valid_conditions() {
         .run(); // Should run successfully
 }
 
-// Test apply_transfer succeeding under valid conditions
 function test_apply_transfer_succeeds_under_valid_conditions() {
     val bob = utils.register_bob();
 
@@ -83,7 +82,6 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
         .run(); // Should run successfully
 }
 
-// Test apply_transfer failing when init_args do not match
 function test_apply_transfer_fails_with_mismatched_init_args() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
@@ -123,7 +121,6 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
         .run_must_fail("Parameter init_args does not match init_transfer arguments");
 }
 
-// Test apply_transfer failing when hop_index is invalid
 function test_apply_transfer_fails_with_invalid_hop_index() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
