@@ -2,7 +2,9 @@ import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Amount } from "/ft4/asset/interfaces";
 import { Asset } from "/ft4/asset/types";
-import { createAmount } from "/ft4";
+import { createAmount, registerCrosschainAsset } from "/ft4";
+import adminUser from "/util/admin_user";
+import { getNewAsset } from "/util/blockchain-util";
 
 describe("Edge Cases", () => {
   let testContext: TestContext;
@@ -109,6 +111,31 @@ describe("Edge Cases", () => {
     await orchestratorIncompatibleAsset.transfer();
     expect(errorListener).toHaveBeenCalledWith(
       expect.objectContaining({ message: "Asset is incompatible" }),
+    );
+  });
+
+  it("handles missing or invalid parent details", async () => {
+    const asset = await getNewAsset(testContext.connection0.client);
+
+    await registerCrosschainAsset(
+      testContext.connection2.client,
+      adminUser().signatureProvider,
+      asset,
+      Buffer.from("deadbeef", "hex"),
+    );
+
+    const orchestrator = await createTestOrchestrator(
+      testContext.sampleAmount,
+      asset,
+    );
+    const errorListener = jest.fn();
+
+    orchestrator.onTransferError(errorListener);
+
+    await orchestrator.transfer();
+
+    expect(errorListener).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "Invalid asset" }),
     );
   });
 });

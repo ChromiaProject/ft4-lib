@@ -1,17 +1,30 @@
+import { TestContext, setupTestEnvironment } from "./common-setup";
+import { createOrchestrator } from "/ft4";
+import { createSession } from "/ft4/ft-session";
+
 describe("Error Handling and Recovery", () => {
+  let testContext: TestContext;
+
+  beforeEach(async () => {
+    testContext = await setupTestEnvironment();
+  });
+
   it("emits error event on transfer failure", async () => {
     const mockSession = {
-      ...createSession(connection2, account2.authenticator),
+      ...createSession(
+        testContext.connection2,
+        testContext.account2.authenticator,
+      ),
       transactionBuilder: jest.fn().mockImplementation(() => {
         throw new Error("Mocked Error");
       }),
     };
 
     const orchestrator = await createOrchestrator(
-      multichain0Rid,
-      account0.id,
-      asset.id,
-      amount,
+      testContext.multichain0.rid,
+      testContext.account0.id,
+      testContext.sampleAsset.id,
+      testContext.sampleAmount,
       mockSession,
     );
     const errorListener = jest.fn();
