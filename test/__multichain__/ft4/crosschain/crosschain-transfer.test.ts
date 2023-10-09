@@ -1,4 +1,4 @@
-import { createIccfProofTx, gtv, gtx } from "postchain-client";
+import { GTX, Operation, Transaction, gtx } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -19,14 +19,15 @@ import {
   OnAnchoredHandler,
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
-import { getTransactionRID } from "/ft4/utils";
 import { fetchBlockchains } from "../../util/blockchain";
+import { BufferId } from "/cryptoUtils";
+
+jest.unmock("postchain-client");
 
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
-    const { c0, multichain00, multichain01 } = await fetchBlockchains();
+    const { multichain00, multichain01 } = await fetchBlockchains();
 
-    const clientC0 = await createChromiaClientToMultichain(c0.rid);
     const connection00 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
@@ -61,20 +62,20 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler: OnAnchoredHandler = async (data) => {
-        if (data.error) {
-          throw data.error;
+      const onAnchoringHandler: OnAnchoredHandler = async (
+        data: {
+          operation: Operation;
+          opIndex: number;
+          verifiedTx: GTX;
+          proofConstructor: (brid: BufferId) => Promise<Transaction>;
+        } | null,
+        error: Error | null,
+      ) => {
+        if (error) {
+          throw error;
         }
         const serializedTx = gtx.serialize(data.verifiedTx);
-        const proofTx = await createIccfProofTx(
-          clientC0,
-          getTransactionRID(serializedTx),
-          gtv.gtvHash(data.verifiedTx),
-          data.verifiedTx.signers,
-          multichain00.rid.toString("hex"),
-          multichain01.rid.toString("hex"),
-        );
-        const newTx = proofTx.iccfTx;
+        const newTx = await data.proofConstructor(multichain01.rid);
         newTx.operations.push(
           applyTransferOp(
             account01.id,
