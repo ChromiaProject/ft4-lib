@@ -117,9 +117,10 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const accountManager =
-      await this.registerAndBuildManagerAuthenticated(manager);
-    const ad = this.getAccountManagerAuthDescriptor();
+    const accountManager = await this.registerAndBuildManagerAuthenticated(
+      manager,
+    );
+    const ad = this.getAuthDescriptorRegistration();
     await accountManager.addAuthDescriptor(ad, this.participant);
 
     const keyHandler = createInMemoryFtKeyStore(
@@ -243,6 +244,16 @@ class AccountBuilder {
         signer: managerSigProv.pubKey,
       },
       null,
+    );
+  }
+
+  private getAuthDescriptorRegistration() {
+    return createSingleSignatureAuthDescriptorRegistration(
+      {
+        flags: this.flags,
+        signer: this.participant.pubKey,
+      },
+      this.rules,
     );
   }
 }

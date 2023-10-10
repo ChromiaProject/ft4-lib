@@ -6,6 +6,7 @@ import {
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
   TransferHistoryResponse,
+  TransferHistoryType,
 } from "./types";
 import { OptionalPageCursor, PagedResponse } from "/ft4/types";
 
@@ -25,7 +26,8 @@ export function createTransferHistoryRetriever(
         throw new TransferHistoryError("amount needs to be <= 100");
 
       const res = await session.query<
-        PagedResponse<TransferHistoryEntryResponse>
+        PagedResponse<TransferHistoryEntryResponse>,
+        QueryType
       >("ft4.get_transfer_history", {
         account_id: id,
         filter: [filter?.transferHistoryType ?? null],
@@ -45,3 +47,10 @@ export function createTransferHistoryRetriever(
     brid: session.config.blockchainRid,
   });
 }
+
+type QueryType = {
+  account_id: Buffer;
+  filter: [TransferHistoryType | null];
+  page_size: number;
+  page_cursor: OptionalPageCursor;
+};

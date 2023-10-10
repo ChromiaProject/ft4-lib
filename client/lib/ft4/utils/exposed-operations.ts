@@ -1,6 +1,5 @@
 import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
-import { RellAppStructure } from "./types";
 import { Connection } from "../types";
 
 export async function fetchExposedOperations(
@@ -8,8 +7,7 @@ export async function fetchExposedOperations(
 ): Promise<Set<string>> {
   const appStructureQuery = rellAppStructure();
 
-  const appStructure =
-    await connection.query<RellAppStructure>(appStructureQuery);
+  const appStructure = await connection.query(appStructureQuery);
 
   if (!appStructure?.modules) {
     throw new FetchAppStructureError(

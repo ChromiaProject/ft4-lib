@@ -1,6 +1,6 @@
+import { RellOperation, TransactionReceipt } from "postchain-client";
+import { OptionalPageCursor, Session } from "../types";
 import { Buffer } from "buffer";
-import { RellOperation } from "postchain-client";
-import { OptionalPageCursor } from "../types";
 
 export type Config = {
   rateLimit: {
@@ -67,3 +67,11 @@ export interface RellOperationStructure {
 export type RequireTogether<T, Keys extends keyof T> = T & {
   [K in Keys]-?: T[K];
 };
+
+export type TransactionCompletion<T = undefined> = T extends undefined
+  ? { receipt: TransactionReceipt }
+  : { receipt: TransactionReceipt; data: T };
+
+export type TransactionSessionCompletion<T = undefined> = T extends undefined
+  ? { receipt: TransactionReceipt; session: Session }
+  : { receipt: TransactionReceipt; session: Session; data: T };

@@ -1,6 +1,3 @@
-import ^^.assets;
-import acc: ^^.accounts;
-import ^^.utils;
 
 query _get_asset_balances(account_id: byte_array) {
     return assets.get_asset_balances(account_id);
@@ -54,7 +51,7 @@ query get_all_assets(page_size: integer, page_cursor: text?) {
 }
 
 query get_transfer_history(account_id: byte_array, filter: assets.filter, page_size: integer, page_cursor: text?) {
-    val account = acc.account @? { account_id };
+    val account = accounts.account @? { account_id };
     if (empty(account)) return null;
 
     val paginated_transfers = assets.get_paginated_transfers(account, filter, page_size, page_cursor);

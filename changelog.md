@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.5] -- 2023-09-12
+## [0.1.6] - 2023-09-29
+
+### Fixed
+- addAuthDescriptor and deleteAuthDescriptor were hard to use, as you couldn't easily use the new keypair you just added in subsequent operations. They now return the receipt and a new session to use for future operations if you want to also use the current auth descriptor.
+- exported some types regarding assets that weren't available for end users
+
+### Changed
+- All operations now return an TransactionCompletion, which holds the receipt and (optionally) additional data
+
+## [0.1.5] - 2023-09-12
 
 ### Added
 - assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from

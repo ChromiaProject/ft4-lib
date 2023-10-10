@@ -16,14 +16,11 @@ async function fetchBlockchains(
     return blockchainsCache;
   }
   const client = await createClient({
-    nodeURLPool: "http://127.0.0.1:7740",
-    blockchainIID: 0,
+    nodeUrlPool: "http://127.0.0.1:7740",
+    blockchainIid: 0,
   });
 
-  const result = await client.query<
-    { include_inactive: boolean },
-    Blockchain[]
-  >("get_blockchains", {
+  const result = await client.query<Blockchain[]>("get_blockchains", {
     include_inactive: false,
   });
 

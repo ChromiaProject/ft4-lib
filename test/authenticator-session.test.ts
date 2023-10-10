@@ -62,7 +62,7 @@ describe("Authenticator session", () => {
     );
 
     const transaction: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: aggregateSigners(authDescriptorRegistration),
       signatures: [],

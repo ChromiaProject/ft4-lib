@@ -1,11 +1,12 @@
+import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
-import { Buffer } from "buffer";
+import { RateLimit } from "./types";
 
-export function RateLimit(
+export function RateLimitQuery(
   accountId: BufferId,
-): QueryObject<{ account_id: Buffer }> {
+): QueryObject<Omit<RateLimit, "getAvailablePoints">, { account_id: Buffer }> {
   return {
     name: "ft4.get_account_rate_limit_last_update",
     args: {
@@ -14,7 +15,9 @@ export function RateLimit(
   };
 }
 
-export function accountById(id: BufferId): QueryObject<{ id: Buffer }> {
+export function accountById(
+  id: BufferId,
+): QueryObject<Buffer | null, { id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {

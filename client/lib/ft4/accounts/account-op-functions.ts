@@ -1,13 +1,10 @@
-import {
-  KeyPair,
-  SignatureProvider,
-  TransactionReceipt,
-} from "postchain-client";
+import { KeyPair, SignatureProvider, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
+import { createAuthenticator } from "../authentication";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { Authenticator } from "../authentication/types";
-import { call } from "../ft-session";
+import { call, createSession } from "../ft-session";
 import { Connection } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import {
@@ -17,9 +14,14 @@ import {
   transfer as transferOp,
 } from "./account-operations";
 import { createAccountObject } from "./account-query-functions";
+import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
 import { AuthenticatedAccount } from "./types";
 import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
-import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
+import {
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "../utils/types";
+import { deriveAccountId } from "./auth-descriptor";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -47,32 +49,61 @@ export function createAuthenticatedAccount(
 async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  authDescriptor: AnyAuthDescriptorRegistration,
+  authDescriptorRegistration: AnyAuthDescriptorRegistration,
   newSigner: SignatureProvider | KeyPair,
-): Promise<TransactionReceipt> {
+): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const registration = authDescriptorRegistrationToGtv(authDescriptor);
+  const newKeyHandler = createInMemoryFtKeyStore(newSigner).createKeyHandler(
+    authDescriptorRegistration,
+  );
+
+  const registration = authDescriptorRegistrationToGtv(
+    authDescriptorRegistration,
+  );
   const tx = await tb
     .add(addAuthDescriptorOp(registration))
     .addSigners(
-      createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor),
+      createInMemoryFtKeyStore(newSigner).createKeyHandler(
+        authDescriptorRegistration,
+      ),
     )
     .build();
 
-  return connection.client.sendTransaction(tx);
+  const newAuth = createAuthenticator(
+    authenticator.accountId,
+    authenticator.keyHandlers.concat(newKeyHandler),
+    authenticator.authDataService,
+  );
+
+  return {
+    receipt: await connection.client.sendTransaction(tx),
+    session: createSession(connection, newAuth),
+  };
 }
 
 async function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId,
-): Promise<TransactionReceipt> {
-  return call(
-    connection,
-    authenticator,
-    deleteAuthDescriptorOp(authDescriptorId),
+): Promise<TransactionSessionCompletion> {
+  const newAuth = createAuthenticator(
+    authenticator.accountId,
+    authenticator.keyHandlers.filter((kh) =>
+      deriveAccountId(kh.authDescriptorRegistration).compare(
+        formatter.ensureBuffer(authDescriptorId),
+      ),
+    ),
+    authenticator.authDataService,
   );
+  return {
+    receipt: await call(
+      connection,
+      authenticator,
+      deleteAuthDescriptorOp(authDescriptorId),
+    ),
+    session: createSession(connection, newAuth),
+  };
 }
 
 async function transfer(
@@ -81,12 +112,14 @@ async function transfer(
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount,
-): Promise<TransactionReceipt> {
-  return call(
-    connection,
-    authenticator,
-    transferOp(receiverId, assetId, amount),
-  );
+): Promise<TransactionCompletion> {
+  return {
+    receipt: await call(
+      connection,
+      authenticator,
+      transferOp(receiverId, assetId, amount),
+    ),
+  };
 }
 
 async function burn(
@@ -95,5 +128,7 @@ async function burn(
   assetId: BufferId,
   amount: Amount,
 ) {
-  return call(connection, authenticator, burnOp(assetId, amount));
+  return {
+    receipt: await call(connection, authenticator, burnOp(assetId, amount)),
+  };
 }

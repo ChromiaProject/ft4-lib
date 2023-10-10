@@ -1,4 +1,4 @@
-import { encryption, gtx } from "postchain-client";
+import { RellOperation, encryption, gtx } from "postchain-client";
 import { ftAuth } from "../client/lib/ft4/authentication/ft";
 import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { op } from "../client/lib/ft4/utils";
@@ -6,7 +6,6 @@ import { createChromiaClient } from "./util/blockchain-util";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createTestAuthDescriptorRegistration } from "./util/util";
 import { aggregateSigners, deriveAccountId } from "/ft4/accounts";
-import { TxBuilderTransaction } from "/ft4/utils/types";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -35,9 +34,9 @@ describe("FT key handler", () => {
       createTestAuthDescriptorRegistration();
 
     const client = await createChromiaClient();
-    const transaction: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
-      operations: [],
+    const transaction = {
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+      operations: [] as RellOperation[],
       signers: aggregateSigners(authDescriptorRegistration),
       signatures: [],
     };

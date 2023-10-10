@@ -17,16 +17,16 @@ export async function createChromiaClientToMultichain(
 ) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return chromiaClient({
-    directoryNodeURLPool: url,
-    blockchainRID: brid.toString("hex"),
+    directoryNodeUrlPool: url,
+    blockchainRid: brid.toString("hex"),
   });
 }
 
 export async function createChromiaClient(nodeUrl?: string, iid = 0) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return chromiaClient({
-    nodeURLPool: url,
-    blockchainIID: iid,
+    nodeUrlPool: url,
+    blockchainIid: iid,
   });
 }
 
@@ -48,7 +48,7 @@ export async function getNewAsset(
   );
   const id = gtv.gtvHash([
     name,
-    formatter.ensureBuffer(client.config.blockchainRID),
+    formatter.ensureBuffer(client.config.blockchainRid),
   ]);
   const asset = await createConnection(client).getAssetById(id);
   if (!asset) {

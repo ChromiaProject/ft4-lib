@@ -63,7 +63,7 @@ export function transactionBuilder(
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
 
     const txn: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRid, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: toPubkeys(this._keyhandlersUsed),
       signatures: [],
@@ -101,8 +101,9 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -112,7 +113,10 @@ export function transactionBuilder(
       keyHandlers.push(keyHandler);
       const adId = deriveAccountId(keyHandler.authDescriptorRegistration);
       if (!nonces.has(adId.toString("hex"))) {
-        nonces.set(adId.toString("hex"), (await authenticator.getNonce(adId))!);
+        nonces.set(
+          adId.toString("hex"),
+          (await authenticator.getNonce(adId)) || 0,
+        );
       }
 
       const nonce = nonces.get(adId.toString("hex"));
@@ -214,28 +218,24 @@ export function transactionBuilder(
       }
 
       if (isAnchored) {
-        operations
-          .filter((op) => !!op.onAnchoredHandler)
-          .forEach((op: OperationContext) => {
-            if (!op.onAnchoredHandler) return;
-            op.onAnchoredHandler(op.operation, tx, null);
-          });
+        operations.forEach((op: OperationContext) => {
+          if (!op.onAnchoredHandler) return;
+          op.onAnchoredHandler(op.operation, tx, null);
+        });
         return;
       }
     }
 
-    operations
-      .filter((op) => !!op.onAnchoredHandler)
-      .forEach((op) => {
-        if (!op.onAnchoredHandler) return;
-        op.onAnchoredHandler(
-          null,
-          tx,
-          new AnchoringTimeoutError(
-            "Block was not anchored within the specified timeout",
-          ),
-        );
-      });
+    operations.forEach((op) => {
+      if (!op.onAnchoredHandler) return;
+      op.onAnchoredHandler(
+        null,
+        tx,
+        new AnchoringTimeoutError(
+          "Block was not anchored within the specified timeout",
+        ),
+      );
+    });
   }
 
   function addWithAuthenticator(

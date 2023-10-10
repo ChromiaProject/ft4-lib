@@ -21,13 +21,19 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 import { createAuthenticator } from "/ft4/authentication";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
-import { createAuthDataService, createConnection } from "/ft4/ft-session";
 import {
   gtv,
   deriveAccountId,
   createMultiSignatureAuthDescriptorRegistration,
   createSingleSignatureAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
+import {
+  createAuthDataService,
+  createConnection,
+  createKeyStoreInteractor,
+} from "/ft4/ft-session";
+import { BufferId } from "/cryptoUtils";
+import { Connection } from "/ft4";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);
@@ -176,6 +182,19 @@ export async function createAccount(
     adminUser().signatureProvider,
   );
   return deriveAccountId(descriptor);
+}
+
+export async function getSessionForAccount(
+  connection: Connection,
+  accountId: BufferId,
+  signer: SignatureProvider | KeyPair,
+) {
+  const { getSession } = createKeyStoreInteractor(
+    connection.client,
+    createInMemoryFtKeyStore(signer),
+  );
+
+  return await getSession(accountId);
 }
 
 export function rellError(message: string) {

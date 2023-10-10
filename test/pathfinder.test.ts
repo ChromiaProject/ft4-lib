@@ -45,7 +45,7 @@ createClientMock.mockImplementation(
         // we need this to create new clients from the old one
         endpointPool: [""],
         // this gives us the starting point, always the same
-        blockchainRID: startingChainBrid,
+        blockchainRid: startingChainBrid,
       },
     }) as unknown as IClient,
 );

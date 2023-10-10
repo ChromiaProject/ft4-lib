@@ -18,7 +18,7 @@ async function registerAssetWithCustomBrid(
   client: IClient,
   assetName: string,
   decimals = 0,
-  blockchainRID: Buffer = randomBytes(32),
+  blockchainRid: Buffer = randomBytes(32),
 ) {
   const txn = {
     operations: [
@@ -27,7 +27,7 @@ async function registerAssetWithCustomBrid(
         assetName,
         generateAssetSymbol(),
         decimals,
-        blockchainRID,
+        blockchainRid,
         "",
       ),
     ],

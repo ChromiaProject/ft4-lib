@@ -20,7 +20,6 @@ import {
   AuthDataService,
   Authenticator,
   KeyStore,
-  LoginConfig,
 } from "./authentication/types";
 import { createAuthenticator } from "./authentication";
 import {
@@ -96,14 +95,19 @@ export function createSession(
   });
 }
 
-async function query<T extends RawGtv>(
+async function query<
+  TReturn extends RawGtv,
+  TArgs extends DictPair | undefined,
+>(
   connection: Connection,
-  queryObject: QueryObject<QueryArguments>,
-): Promise<T | null> {
-  return await connection.client.query<QueryArguments, T>(queryObject);
+  nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
+  args?: TArgs,
+  callback?: QueryCallback<TReturn>,
+): Promise<TReturn> {
+  return await connection.client.query(nameOrQueryObject, args, callback);
 }
 
-export async function call(
+export function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
@@ -144,17 +148,15 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       return exposedOperations!.has(operationName);
     },
     getAuthFlags: async (operation: Operation) => {
-      return (await connection.query<string[]>(authFlags(operation))) ?? [];
+      return await connection.query(authFlags(operation));
     },
     getAuthMessageTemplate: async (operation: Operation) => {
-      return (
-        (await connection.query<string>(authMessageTemplate(operation))) ?? ""
-      );
+      return await connection.query(authMessageTemplate(operation));
     },
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
-      connection.query<number>(nonce(accountId, authDescriptorId)),
+      connection.query(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | undefined = undefined) =>
-      connection.query<LoginConfig>(loginConfig(configName)),
+      connection.query(loginConfig(configName)),
     getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
 }
