@@ -106,7 +106,7 @@ export async function createOrchestrator(
             assetId,
             amount,
             path,
-            state.tx,
+            gtx.deserialize(state.tx),
             path.indexOf(targetChainBrid),
           ),
           () => {

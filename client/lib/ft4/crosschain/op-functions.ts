@@ -1,4 +1,4 @@
-import { SignedTransaction, TransactionReceipt } from "postchain-client";
+import { GTX, TransactionReceipt } from "postchain-client";
 import { Connection } from "../types";
 import { Authenticator } from "../authentication/types";
 import {
@@ -32,7 +32,7 @@ export async function applyTransfer(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
-  tx: SignedTransaction,
+  tx: GTX,
   targetChainIndex: number,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Promise<TransactionReceipt> {

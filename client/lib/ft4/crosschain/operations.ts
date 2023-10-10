@@ -1,4 +1,4 @@
-import { Operation, SignedTransaction, formatter, gtv } from "postchain-client";
+import { GTX, Operation, formatter, gtx } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { BufferId } from "/cryptoUtils";
 import { op } from "../utils";
@@ -38,14 +38,14 @@ export function applyTransfer(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
-  tx: SignedTransaction,
+  tx: GTX,
   targetChainIndex: number,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Operation {
   return op(
     "ft4.crosschain.apply_transfer",
     getInitTransferArgs(recipientId, assetId, amount, hops),
-    gtv.decode(tx),
+    gtx.gtxToRawGtx(tx),
     operationIndex,
     targetChainIndex,
   );

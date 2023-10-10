@@ -115,7 +115,7 @@ export type OnAnchoredHandler = ((
   data: {
     operation: Operation;
     opIndex: number;
-    verifiedTx: GTX;
+    tx: GTX;
     proofConstructor: (brid: BufferId) => Promise<Transaction>;
   },
   error: null,

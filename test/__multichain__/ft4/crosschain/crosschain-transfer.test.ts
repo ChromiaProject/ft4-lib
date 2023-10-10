@@ -1,4 +1,4 @@
-import { GTX, Operation, Transaction, gtx } from "postchain-client";
+import { GTX, Operation, Transaction } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -66,7 +66,7 @@ describe("Crosschain transfer", () => {
         data: {
           operation: Operation;
           opIndex: number;
-          verifiedTx: GTX;
+          tx: GTX;
           proofConstructor: (brid: BufferId) => Promise<Transaction>;
         } | null,
         error: Error | null,
@@ -74,7 +74,6 @@ describe("Crosschain transfer", () => {
         if (error) {
           throw error;
         }
-        const serializedTx = gtx.serialize(data.verifiedTx);
         const newTx = await data.proofConstructor(multichain01.rid);
         newTx.operations.push(
           applyTransferOp(
@@ -82,7 +81,7 @@ describe("Crosschain transfer", () => {
             asset00.id,
             createAmount(100, asset00.decimals),
             [multichain01.rid],
-            serializedTx,
+            data.tx,
             0,
           ),
         );

@@ -237,7 +237,7 @@ export function transactionBuilder(
             {
               operation: op.operation,
               opIndex: idx,
-              verifiedTx: decodedTx,
+              tx: decodedTx,
               proofConstructor,
             },
             null,
