@@ -12,7 +12,6 @@
 db.log
 
 node_modules/
-package-lock.json
 
 logs/
 postchain/runtime
@@ -33,3 +32,4 @@ build/
 
 # Rell dependencies
 rell/dep
+rell/src/lib/iccf

@@ -1,7 +1,6 @@
 import {
   Operation as newOperation,
   encryption,
-  QueryArguments,
   RawGtv,
   IClient,
   SignedTransaction,
@@ -18,9 +17,7 @@ export function op(name: string, ...args: readonly RawGtv[]): newOperation {
 }
 
 export async function getConfig(session: IClient): Promise<Config> {
-  const response = await session.query<QueryArguments, ConfigResponse>(
-    "ft4.get_config",
-  );
+  const response = await session.query<ConfigResponse>("ft4.get_config");
   return Object.freeze({
     rateLimit: {
       active: response.rate_limit.active,
@@ -36,9 +33,7 @@ export function getTransactionRID(tx: SignedTransaction): Buffer {
 }
 
 export async function getVersion(session: IClient): Promise<string> {
-  return Object.freeze(
-    await session.query<QueryArguments, string>("ft4.get_version"),
-  );
+  return Object.freeze(await session.query<string>("ft4.get_version"));
 }
 
 type DeepReadonly<T> = T extends (infer R)[]

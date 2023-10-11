@@ -60,7 +60,7 @@ export function transactionBuilder(
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: toPubkeys(this._keyhandlersUsed),
       signatures: [],
@@ -98,8 +98,9 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -185,12 +186,12 @@ export function transactionBuilder(
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const systemClient = await createClient({
-      nodeURLPool: client.config.endpointPool.slice(),
-      blockchainIID: 0,
+      nodeUrlPool: client.config.endpointPool.slice(),
+      blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(
       systemClient,
-      client.config.blockchainRID,
+      client.config.blockchainRid,
     );
     const txRid = getTransactionRID(tx);
 

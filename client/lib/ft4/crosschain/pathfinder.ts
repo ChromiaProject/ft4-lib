@@ -1,5 +1,4 @@
 import { IClient, createClient, formatter } from "postchain-client";
-// import { BlockchainUrlUndefinedException } from "postchain-client/built/src/chromia/errors";
 import { createConnection } from "../ft-session";
 import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
@@ -23,7 +22,7 @@ export async function findPathToChainForAsset(
 
   let foundPath = false;
   const pathSourceToRoot = [
-    formatter.toBuffer(connection.client.config.blockchainRID),
+    formatter.toBuffer(connection.client.config.blockchainRid),
   ];
   const pathEndToRoot = [formatter.ensureBuffer(blockchainRID)];
 
@@ -132,8 +131,8 @@ export async function createConnectionToBrid(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
       // ""+ to avoid errors (readonly)
-      directoryNodeURLPool: "" + oldClient.config.endpointPool,
-      blockchainRID:
+      directoryNodeUrlPool: "" + oldClient.config.endpointPool,
+      blockchainRid:
         typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
     }),
   );

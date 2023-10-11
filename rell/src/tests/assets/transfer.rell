@@ -6,8 +6,10 @@ import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.ft4_basic_dev.*;
-import auth_ext: ^^^.lib.ft4.auth.external;
+import ^^^.lib.ft4.test.utils. { evm_sign };
 import ^.utils;
+import auth_ext: ^^^.lib.ft4.auth.external;
+import test_utils: ^^^.lib.ft4.test.utils;
 
 val too_big = assets.max_asset_amount + 1;
 
@@ -20,7 +22,7 @@ function test_before_transfer_extension_is_called() {
     utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(alice.ft_auth())
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -41,7 +43,7 @@ function test_after_transfer_extension_is_called() {
     utils.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(alice.ft_auth())
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
         .sign(rell.test.keypairs.alice)
         .run();
@@ -60,7 +62,7 @@ function test_correct_auth_message_is_used() {
         asset_id=asset.id,
         10L
     );
-    val expected_msg = "Please sign the message\nto transfer 1.0 test\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n0xabcd\n\nNonce: {nonce}".format(asset.id);
+    val expected_msg = "Please sign the message\nto transfer 1.0 test\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n0xabcd".format(asset.id);
     assert_equals(ft4.assets_ext.transfer_message(args.to_gtv()), expected_msg);
 }
 
@@ -72,7 +74,7 @@ function test_transfer_fails_when_insufficient_balance() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(test_utils.ft_auth_operation_for(alice.keypair.pub))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 11))
         .sign(alice.keypair)
         .run_must_fail("Balance is too low");
@@ -170,7 +172,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
         ].to_gtv()
     );
     val message = utils.create_auth_message(template, alice);
-    val signature = utils.metamask_sign(message, alice.keypair.priv);
+    val signature = evm_sign(message, alice.keypair.priv);
 
     rell.test.tx()
         .op(auth_ext.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
@@ -201,7 +203,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
         ].to_gtv()
     );
     val message = utils.create_auth_message(template, alice);
-    val invalid_signature = utils.metamask_sign(message, bob.keypair.priv);
+    val invalid_signature = evm_sign(message, bob.keypair.priv);
 
     rell.test.tx()
         .op(auth_ext.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
