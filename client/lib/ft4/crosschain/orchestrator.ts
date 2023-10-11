@@ -24,7 +24,7 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Orchestrator, OrchestratorEvents } from "./types";
-import { getTransactionRID } from "../utils";
+import { getTransactionRid } from "../utils";
 
 type State = {
   currentHopIndex: number;
@@ -159,12 +159,12 @@ export async function createOrchestrator(
 
     const sourceBlockchainRid =
       pathIndex === 0
-        ? session.client.config.blockchainRID
+        ? session.client.config.blockchainRid
         : path[pathIndex - 1];
 
     const proofTx = createIccfProofTx(
       directoryClient,
-      getTransactionRID(state.tx),
+      getTransactionRid(state.tx),
       gtv.gtvHash(decodedTx),
       decodedTx.signers,
       sourceBlockchainRid.toString("hex"),
@@ -181,8 +181,8 @@ export async function createOrchestrator(
    */
   async function transfer(): Promise<void> {
     const directoryClient = await createClient({
-      directoryNodeURLPool: session.client.config.endpointPool.slice(),
-      blockchainIID: 0,
+      directoryNodeUrlPool: session.client.config.endpointPool.slice(),
+      blockchainIid: 0,
     });
 
     try {

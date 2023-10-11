@@ -135,8 +135,9 @@ function createAuthenticatorSession(
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }
