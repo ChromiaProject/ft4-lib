@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Comprehensive testing suite for Crosschain Transfer Orchestrator covering basic functionality, edge cases, asset hierarchy verification, and security measures.
+- Error handling bootstrap in `error-handling.test.ts` for future implementation.
+- New test files under `test/__multichain__/ft4/crosschain/orchestrator` for better organization and test case categorization.
+- Enhanced error handling in `orchestrator.ts` for promise rejections and client errors conversion.
 - assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from
 - findPathToChainForAsset: traverses the tree structure of the linked chains to find the path to a certain asset.
 - createGenericEvmKeyStore: it receives an address and a sign function, to allow for custom implementations with any web3 library. Metamask is still supported through ethers for ease of setup.
@@ -17,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
 
 ### Changed
+- Improved handling of asset not found in `asset-query-functions.ts`.
 - Transfer history's asset properties are now of the Asset type
 - TransactionBuilder's `buildAndSend` now returns the transaction alongside the receipt
 - TransactionBuilder's `onAnchoredHandler`s now receive the signed transaction too
