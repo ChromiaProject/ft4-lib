@@ -6,7 +6,7 @@ async function get(url: string): Promise<string> {
   return await response.text();
 }
 
-export async function getBRID(nodeUrl: string, id: number): Promise<Buffer> {
+export async function getBrid(nodeUrl: string, id: number): Promise<Buffer> {
   if (!Number.isInteger(id)) throw new Error("Invalid chain iid");
   if (!nodeUrl) throw new Error("Cannot get BRID. Node url missing.");
 

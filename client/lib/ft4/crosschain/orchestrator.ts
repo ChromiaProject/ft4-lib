@@ -20,7 +20,7 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Orchestrator, OrchestratorEvents } from "./types";
-import { getTransactionRID } from "../utils";
+import { getTransactionRid } from "../utils";
 
 type State = {
   currentHopIndex: number;
@@ -141,7 +141,7 @@ export async function createOrchestrator(
 
     const proofTx = createIccfProofTx(
       directoryClient,
-      getTransactionRID(state.tx),
+      getTransactionRid(state.tx),
       gtv.gtvHash(decodedTx),
       decodedTx.signers,
       sourceBlockchainRid.toString("hex"),

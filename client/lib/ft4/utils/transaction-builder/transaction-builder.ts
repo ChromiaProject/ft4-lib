@@ -21,7 +21,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { getTransactionRID } from "..";
+import { getTransactionRid } from "..";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 3,
@@ -193,7 +193,7 @@ export function transactionBuilder(
       systemClient,
       client.config.blockchainRid,
     );
-    const txRid = getTransactionRID(tx);
+    const txRid = getTransactionRid(tx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
