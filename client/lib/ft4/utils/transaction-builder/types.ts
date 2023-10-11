@@ -3,7 +3,6 @@ import {
   Operation,
   RawGtx,
   SignedTransaction,
-  Transaction,
   TransactionReceipt,
 } from "postchain-client";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
@@ -116,7 +115,7 @@ export type OnAnchoredHandler = ((
     operation: Operation;
     opIndex: number;
     tx: RawGtx;
-    proofConstructor: (brid: BufferId) => Promise<Transaction>;
+    proofConstructor: (brid: BufferId) => Promise<Operation>;
   },
   error: null,
 ) => void) &
