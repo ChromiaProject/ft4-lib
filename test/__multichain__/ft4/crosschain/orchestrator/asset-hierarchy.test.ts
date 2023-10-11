@@ -41,7 +41,7 @@ describe("Asset Hierarchy", () => {
     await verifyEndTransfer(orchestratorFromLeafToRoot);
   });
 
-  it.only("transfers from leaf to sibling", async () => {
+  it("transfers from leaf to sibling", async () => {
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -100,8 +100,6 @@ describe("Asset Hierarchy", () => {
   });
 
   it("transfers from branch to leaf", async () => {
-    console.log("Registering asset");
-
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -109,7 +107,6 @@ describe("Asset Hierarchy", () => {
       testContext.multichain2.rid, // Branch
     );
 
-    console.log("Creating root to branch orchestrator");
     const orchestratorFromRootToBranch = await createOrchestrator(
       testContext.multichain2.rid, // To branch
       testContext.account2.id,
@@ -118,10 +115,8 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
-    console.log("Performing root to branch transfer");
     await verifyEndTransfer(orchestratorFromRootToBranch);
 
-    console.log("Creating branch to leaf orchestrator");
     const orchestratorFromBranchToLeaf = await createOrchestrator(
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
@@ -130,7 +125,6 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From branch
     );
 
-    console.log("Performing branch to leaf transfer");
     await verifyEndTransfer(orchestratorFromBranchToLeaf);
   });
 });

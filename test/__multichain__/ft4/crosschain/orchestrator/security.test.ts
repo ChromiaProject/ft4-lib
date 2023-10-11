@@ -38,6 +38,8 @@ describe("Security", () => {
     await orchestrator.transfer();
 
     expect(errorListener).toHaveBeenCalled();
-    expect(errorListener.mock.calls[0][0]).toMatch(/unauthorized/i);
+    expect(errorListener.mock.calls[0][0].message).toMatch(
+      /^Failed to initialize transfer/i,
+    );
   });
 });

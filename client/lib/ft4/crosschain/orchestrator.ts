@@ -205,7 +205,7 @@ export async function createOrchestrator(
 
       localEmitter.emit("TransferEnd");
     } catch (error) {
-      const orchError = new TransferExecutionError(error.message);
+      const orchError = new TransferExecutionError(error.toString());
       localEmitter.emit("TransferError", orchError);
     }
   }
