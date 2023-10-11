@@ -1,7 +1,6 @@
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Orchestrator, registerCrosschainAsset } from "/ft4";
-import { getNewAsset } from "/util/blockchain-util";
 import adminUser from "/util/admin_user";
 
 describe("Asset Hierarchy", () => {
@@ -20,134 +19,118 @@ describe("Asset Hierarchy", () => {
     expect(endListener).toHaveBeenCalled();
   }
 
-  it("transfers from root to leaf", async () => {
-    // Root asset
-    const asset = await getNewAsset(testContext.connection0.client);
-
-    await registerCrosschainAsset(
-      testContext.connection2.client, // Leaf
-      adminUser().signatureProvider,
-      asset,
-      testContext.multichain0.rid, // Root
-    );
-
-    const orchestrator = await createOrchestrator(
+  it("transfers from root to leaf and back", async () => {
+    const orchestratorFromRootToLeaf = await createOrchestrator(
       testContext.multichain2.rid, // To leaf
       testContext.account2.id,
-      asset.id,
+      testContext.sampleAsset.id,
       testContext.sampleAmount,
       testContext.session0, // From root
     );
 
-    verifyEndTransfer(orchestrator);
-  });
+    await verifyEndTransfer(orchestratorFromRootToLeaf);
 
-  it("transfers from leaf to root", async () => {
-    // Root asset
-    const asset = await getNewAsset(testContext.connection0.client);
-
-    await registerCrosschainAsset(
-      testContext.connection2.client, // Leaf
-      adminUser().signatureProvider,
-      asset,
-      testContext.multichain0.rid, // Root
-    );
-
-    const orchestrator = await createOrchestrator(
+    const orchestratorFromLeafToRoot = await createOrchestrator(
       testContext.multichain0.rid, // To root
       testContext.account0.id,
-      asset.id,
+      testContext.sampleAsset.id,
       testContext.sampleAmount,
       testContext.session2, // From leaf
     );
 
-    verifyEndTransfer(orchestrator);
+    await verifyEndTransfer(orchestratorFromLeafToRoot);
   });
 
-  it("transfers from leaf to sibling", async () => {
-    // Leaf asset
-    const asset = await getNewAsset(testContext.connection2.client);
-
+  it.only("transfers from leaf to sibling", async () => {
     await registerCrosschainAsset(
-      testContext.connection2.client, // Leaf
+      testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
-      asset,
+      testContext.sampleAsset,
       testContext.multichain0.rid, // Root
     );
 
-    await registerCrosschainAsset(
-      testContext.connection1.client, // Sibling
-      adminUser().signatureProvider,
-      asset,
-      testContext.multichain0.rid, // Root
+    const orchestratorFromRootToLeaf = await createOrchestrator(
+      testContext.multichain2.rid, // To leaf
+      testContext.account2.id,
+      testContext.sampleAsset.id,
+      testContext.sampleAmount,
+      testContext.session0, // From root
     );
 
-    const orchestrator = await createOrchestrator(
+    await verifyEndTransfer(orchestratorFromRootToLeaf);
+
+    const orchestratorFromLeafToSibling = await createOrchestrator(
       testContext.multichain1.rid, // To sibling
       testContext.account1.id,
-      asset.id,
+      testContext.sampleAsset.id,
       testContext.sampleAmount,
       testContext.session2, // From leaf
     );
 
-    verifyEndTransfer(orchestrator);
+    await verifyEndTransfer(orchestratorFromLeafToSibling);
   });
 
   it("transfers from leaf to branch", async () => {
-    // Branch asset
-    const asset = await getNewAsset(testContext.connection1.client);
-
     await registerCrosschainAsset(
-      testContext.connection1.client, // Branch
+      testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
-      asset,
-      testContext.multichain0.rid, // Root
+      testContext.sampleAsset,
+      testContext.multichain2.rid, // Branch
     );
 
-    await registerCrosschainAsset(
-      testContext.connection2.client, // Leaf
-      adminUser().signatureProvider,
-      asset,
-      testContext.multichain1.rid, // Branch
-    );
-
-    const orchestrator = await createOrchestrator(
-      testContext.multichain1.rid, // To branch
+    const orchestratorFromRootToLeaf = await createOrchestrator(
+      testContext.multichain1.rid, // To leaf
       testContext.account1.id,
-      asset.id,
+      testContext.sampleAsset.id,
       testContext.sampleAmount,
-      testContext.session2, // From leaf
+      testContext.session0, // From root
     );
 
-    verifyEndTransfer(orchestrator);
+    await verifyEndTransfer(orchestratorFromRootToLeaf);
+
+    const orchestratorFromLeafToBranch = await createOrchestrator(
+      testContext.multichain2.rid, // To branch
+      testContext.account2.id,
+      testContext.sampleAsset.id,
+      testContext.sampleAmount,
+      testContext.session1, // From leaf
+    );
+
+    await verifyEndTransfer(orchestratorFromLeafToBranch);
   });
 
   it("transfers from branch to leaf", async () => {
-    // Leaf asset
-    const asset = await getNewAsset(testContext.connection2.client);
+    console.log("Registering asset");
 
     await registerCrosschainAsset(
-      testContext.connection1.client, // Branch
+      testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
-      asset,
-      testContext.multichain0.rid, // Root
+      testContext.sampleAsset,
+      testContext.multichain2.rid, // Branch
     );
 
-    await registerCrosschainAsset(
-      testContext.connection2.client, // Leaf
-      adminUser().signatureProvider,
-      asset,
-      testContext.multichain1.rid, // Branch
-    );
-
-    const orchestrator = await createOrchestrator(
-      testContext.multichain2.rid, // To leaf
-      testContext.account1.id,
-      asset.id,
+    console.log("Creating root to branch orchestrator");
+    const orchestratorFromRootToBranch = await createOrchestrator(
+      testContext.multichain2.rid, // To branch
+      testContext.account2.id,
+      testContext.sampleAsset.id,
       testContext.sampleAmount,
-      testContext.session1, // From branch
+      testContext.session0, // From root
     );
 
-    verifyEndTransfer(orchestrator);
+    console.log("Performing root to branch transfer");
+    await verifyEndTransfer(orchestratorFromRootToBranch);
+
+    console.log("Creating branch to leaf orchestrator");
+    const orchestratorFromBranchToLeaf = await createOrchestrator(
+      testContext.multichain1.rid, // To leaf
+      testContext.account1.id,
+      testContext.sampleAsset.id,
+      testContext.sampleAmount,
+      testContext.session2, // From branch
+    );
+
+    console.log("Performing branch to leaf transfer");
+    await verifyEndTransfer(orchestratorFromBranchToLeaf);
   });
 });

@@ -10,7 +10,11 @@ import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { Listener, EventEmitter } from "../events";
-import { OrchestratorError } from "./errors";
+import {
+  FactoryError,
+  OrchestratorError,
+  TransferExecutionError,
+} from "./errors";
 import {
   initTransfer as initTransferOp,
   applyTransfer as applyTransferOp,
@@ -47,8 +51,17 @@ export async function createOrchestrator(
   session: Session,
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
+  if (asset === null) {
+    throw new FactoryError("Asset not found");
+  }
 
-  const path = await findPathToChainForAsset(session, asset, targetChainId);
+  let path: Buffer[];
+
+  try {
+    path = await findPathToChainForAsset(session, asset, targetChainId);
+  } catch (error) {
+    throw new FactoryError(`Path finder error: ${error.message}`);
+  }
 
   // Create a local event emitter instance for this orchestrator.
   const localEmitter = new EventEmitter<OrchestratorEvents>();
@@ -63,16 +76,21 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function initTransfer(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const tb = session.transactionBuilder();
 
       tb.add(initTransferOp(recipientId, assetId, amount, path), () =>
         resolve(),
       )
         .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+        .then(
+          ({ tx }) => {
+            state.tx = tx;
+          },
+          (reason) => {
+            reject(`Failed to initialize transfer: ${reason}`);
+          },
+        );
     });
   }
 
@@ -94,7 +112,7 @@ export async function createOrchestrator(
     const { iccfTx } = await createIccfProof(directoryClient, targetChainBrid);
     const iccfOp = iccfTx.operations[0];
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const authDataService = createAuthDataService(connection);
       const noopAuthenticator = createNoopAuthenticator(authDataService);
       const tb = transactionBuilder(noopAuthenticator, connection.client);
@@ -114,9 +132,14 @@ export async function createOrchestrator(
           },
         )
         .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+        .then(
+          ({ tx }) => {
+            state.tx = tx;
+          },
+          (reason) => {
+            reject(`Failed to apply transfer: ${reason}`);
+          },
+        );
     });
   }
 
@@ -182,7 +205,7 @@ export async function createOrchestrator(
 
       localEmitter.emit("TransferEnd");
     } catch (error) {
-      const orchError = new OrchestratorError(error.message, "generalError");
+      const orchError = new TransferExecutionError(error.message);
       localEmitter.emit("TransferError", orchError);
     }
   }

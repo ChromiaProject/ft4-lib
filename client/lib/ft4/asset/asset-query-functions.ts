@@ -17,18 +17,16 @@ export async function getAssetById(
   connection: Connection,
   id: BufferId,
 ): Promise<Asset> {
-  return await connection
-    .query<AssetResponse>(assetById(id))
-    .then(createAssetObject);
+  const response = await connection.query<AssetResponse>(assetById(id));
+  return response ? createAssetObject(response) : null;
 }
 
 export async function getAssetBySymbol(
   connection: Connection,
   symbol: string,
 ): Promise<Asset> {
-  return await connection
-    .query<AssetResponse>(assetBySymbol(symbol))
-    .then(createAssetObject);
+  const response = await connection.query<AssetResponse>(assetBySymbol(symbol));
+  return response ? createAssetObject(response) : null;
 }
 
 export function getAssetsByName(

@@ -61,7 +61,7 @@ export async function setupTestEnvironment() {
     .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
     .build();
 
-  const account1 = await AccountBuilder.account(connection0)
+  const account1 = await AccountBuilder.account(connection1)
     .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
     .build();
 

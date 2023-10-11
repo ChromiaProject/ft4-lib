@@ -6,3 +6,15 @@ export class OrchestratorError extends Error {
     this.type = type;
   }
 }
+
+export class FactoryError extends OrchestratorError {
+  constructor(message: string) {
+    super(message, "FactoryError");
+  }
+}
+
+export class TransferExecutionError extends OrchestratorError {
+  constructor(message: string) {
+    super(message, "TransferError");
+  }
+}

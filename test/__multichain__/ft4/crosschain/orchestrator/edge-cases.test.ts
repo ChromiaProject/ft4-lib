@@ -74,44 +74,22 @@ describe("Edge Cases", () => {
   });
 
   it("handles invalid assets", async () => {
-    const errorListener = jest.fn();
-
     // Test for non-existing asset
     const nonExistingAsset = createInvalidAsset({
       id: Buffer.from("non-existing-asset"),
     });
 
-    const orchestratorNonExistingAsset = await createTestOrchestrator(
-      undefined,
-      nonExistingAsset,
-    );
-
-    orchestratorNonExistingAsset.onTransferError(errorListener);
-
-    await orchestratorNonExistingAsset.transfer();
-    expect(errorListener).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Asset does not exist" }),
-    );
-
-    // Reset errorListener
-    errorListener.mockClear();
+    await expect(
+      createTestOrchestrator(undefined, nonExistingAsset),
+    ).rejects.toThrowError("Asset not found");
 
     // Test for incompatible asset
-    const incompatibleAsset = createInvalidAsset({
-      id: Buffer.from("incompatible-asset"),
-    });
+    const incompatibleAsset = await getNewAsset(testContext.connection0.client);
 
-    const orchestratorIncompatibleAsset = await createTestOrchestrator(
-      undefined,
-      incompatibleAsset,
-    );
-
-    orchestratorIncompatibleAsset.onTransferError(errorListener);
-
-    await orchestratorIncompatibleAsset.transfer();
-    expect(errorListener).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Asset is incompatible" }),
-    );
+    // We created the asset but didn't register it, thus it is incompatible
+    await expect(
+      createTestOrchestrator(undefined, incompatibleAsset),
+    ).rejects.toThrowError(/^Path finder error/);
   });
 
   it("handles missing or invalid parent details", async () => {
@@ -124,18 +102,8 @@ describe("Edge Cases", () => {
       Buffer.from("deadbeef", "hex"),
     );
 
-    const orchestrator = await createTestOrchestrator(
-      testContext.sampleAmount,
-      asset,
-    );
-    const errorListener = jest.fn();
-
-    orchestrator.onTransferError(errorListener);
-
-    await orchestrator.transfer();
-
-    expect(errorListener).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Invalid asset" }),
-    );
+    await expect(
+      createTestOrchestrator(testContext.sampleAmount, asset),
+    ).rejects.toThrowError(/^Path finder error/);
   });
 });

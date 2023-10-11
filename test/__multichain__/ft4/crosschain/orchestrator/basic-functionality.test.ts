@@ -1,5 +1,7 @@
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
+import { registerCrosschainAsset } from "/ft4";
+import adminUser from "/util/admin_user";
 
 describe("Basic Functionality", () => {
   let testContext: TestContext;
@@ -41,7 +43,27 @@ describe("Basic Functionality", () => {
   });
 
   it("executes multiple hops transfer", async () => {
-    // Implementation here...
+    await registerCrosschainAsset(
+      testContext.connection1.client, // Leaf
+      adminUser().signatureProvider,
+      testContext.sampleAsset,
+      testContext.multichain2.rid, // Branch
+    );
+
+    const orchestrator = await createOrchestrator(
+      testContext.multichain1.rid, // To branch
+      testContext.account1.id,
+      testContext.sampleAsset.id,
+      testContext.sampleAmount,
+      testContext.session0, // From root
+    );
+
+    const hopListener = jest.fn();
+    orchestrator.onTransferHop(hopListener);
+
+    await orchestrator.transfer();
+
+    expect(hopListener).toHaveBeenCalledTimes(2);
   });
 
   it("marks transfer as complete", async () => {
@@ -55,7 +77,7 @@ describe("Basic Functionality", () => {
     expect(endListener).toHaveBeenCalled();
   });
 
-  it.only("ensures no errors are thrown throughout the process", async () => {
+  it("ensures no errors are thrown throughout the process", async () => {
     const orchestrator = await createTestOrchestrator();
 
     const errorListener = jest.fn();
