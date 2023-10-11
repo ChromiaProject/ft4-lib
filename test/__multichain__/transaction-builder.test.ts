@@ -41,8 +41,8 @@ describe("transaction builder", () => {
     const { multichain00 } = await fetchBlockchains();
 
     client = await createClient({
-      nodeURLPool: "http://127.0.0.1:7740",
-      blockchainRID: multichain00.rid.toString("hex"),
+      nodeUrlPool: "http://127.0.0.1:7740",
+      blockchainRid: multichain00.rid.toString("hex"),
     });
   });
 
