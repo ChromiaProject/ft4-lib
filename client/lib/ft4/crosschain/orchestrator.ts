@@ -1,11 +1,9 @@
 import {
   IClient,
   RawGtx,
-  SignedTransaction,
   createClient,
   createIccfProofTx,
   gtv,
-  gtx,
 } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
@@ -26,7 +24,7 @@ import { getTransactionRID } from "../utils";
 type State = {
   currentHopIndex: number;
   path: Buffer[];
-  tx?: SignedTransaction;
+  tx?: RawGtx;
 };
 
 /**
@@ -67,13 +65,10 @@ export async function createOrchestrator(
     return new Promise((resolve) => {
       const tb = session.transactionBuilder();
 
-      tb.add(initTransferOp(recipientId, assetId, amount, path), () =>
-        resolve(),
-      )
-        .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+      tb.add(initTransferOp(recipientId, assetId, amount, path), ({ tx }) => {
+        state.tx = tx;
+        resolve();
+      }).buildAndSend();
     });
   }
 
@@ -107,17 +102,15 @@ export async function createOrchestrator(
             assetId,
             amount,
             path,
-            gtv.decode(state.tx) as RawGtx,
+            state.tx,
             path.indexOf(targetChainBrid),
           ),
-          () => {
+          ({ tx }) => {
+            state.tx = tx;
             resolve();
           },
         )
-        .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+        .buildAndSend();
     });
   }
 
@@ -133,7 +126,6 @@ export async function createOrchestrator(
     targetChainBrid: Buffer,
   ): Promise<any> {
     const pathIndex = path.indexOf(targetChainBrid);
-    const decodedTx = gtx.deserialize(state.tx);
 
     const sourceBlockchainRid =
       pathIndex === 0
@@ -143,8 +135,8 @@ export async function createOrchestrator(
     const proofTx = createIccfProofTx(
       directoryClient,
       getTransactionRID(state.tx),
-      gtv.gtvHash(decodedTx),
-      decodedTx.signers,
+      gtv.gtvHash(state.tx),
+      state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
       targetChainBrid.toString("hex"),
     );

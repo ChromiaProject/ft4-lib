@@ -12,6 +12,8 @@ import {
   TransactionReceipt,
   createIccfProofTx,
   Transaction,
+  gtv,
+  RawGtx,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -196,8 +198,8 @@ export function transactionBuilder(
       systemClient,
       client.config.blockchainRID,
     );
-    const txRid = getTransactionRID(tx);
-    const decodedTx = gtx.deserialize(tx);
+    const rawTx = gtv.decode(tx) as RawGtx;
+    const txRid = getTransactionRID(rawTx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
@@ -220,11 +222,12 @@ export function transactionBuilder(
         const proofConstructor = async (brid: BufferId) => {
           if (cachedProof.has(brid.toString("hex")))
             return cachedProof.get(brid.toString("hex"));
+
           const proof = await createIccfProofTx(
             systemClient,
             txRid,
             tx,
-            decodedTx.signers,
+            rawTx[0][2], // signers
             client.config.blockchainRID,
             brid.toString("hex"),
           );
@@ -237,7 +240,7 @@ export function transactionBuilder(
             {
               operation: op.operation,
               opIndex: idx,
-              tx: gtx.gtxToRawGtx(decodedTx),
+              tx: rawTx,
               proofConstructor,
             },
             null,

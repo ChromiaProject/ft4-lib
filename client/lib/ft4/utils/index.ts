@@ -4,8 +4,8 @@ import {
   QueryArguments,
   RawGtv,
   IClient,
-  SignedTransaction,
-  gtx,
+  gtv,
+  RawGtx,
 } from "postchain-client";
 import { Config } from "./types";
 
@@ -31,8 +31,8 @@ export async function getConfig(session: IClient): Promise<Config> {
   });
 }
 
-export function getTransactionRID(tx: SignedTransaction): Buffer {
-  return gtx.getDigestToSign(gtx.deserialize(tx));
+export function getTransactionRID(tx: RawGtx): Buffer {
+  return gtv.gtvHash(tx[0]); //tx body
 }
 
 export async function getVersion(session: IClient): Promise<string> {
