@@ -63,11 +63,13 @@ export function anchoredHandlerCallbackParameters(
   return expect.objectContaining({
     operation: operations[opIndex],
     opIndex,
-    tx: expect.objectContaining({
-      operations: operations.map((o) => ({ opName: o.name, args: o.args })),
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
-      signers: [],
-      signatures: [],
-    }),
+    tx: expect.arrayContaining([
+      [
+        Buffer.from(client.config.blockchainRID, "hex"),
+        operations.map((o) => [o.name, o.args]),
+        [],
+      ],
+      [],
+    ]),
   });
 }

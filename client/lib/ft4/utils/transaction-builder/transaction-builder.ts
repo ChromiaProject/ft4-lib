@@ -237,7 +237,7 @@ export function transactionBuilder(
             {
               operation: op.operation,
               opIndex: idx,
-              tx: decodedTx,
+              tx: gtx.gtxToRawGtx(decodedTx),
               proofConstructor,
             },
             null,

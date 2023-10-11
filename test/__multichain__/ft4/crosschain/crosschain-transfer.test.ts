@@ -1,4 +1,4 @@
-import { GTX, Operation, Transaction } from "postchain-client";
+import { Operation, RawGtx, Transaction } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -66,7 +66,7 @@ describe("Crosschain transfer", () => {
         data: {
           operation: Operation;
           opIndex: number;
-          tx: GTX;
+          tx: RawGtx;
           proofConstructor: (brid: BufferId) => Promise<Transaction>;
         } | null,
         error: Error | null,

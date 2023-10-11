@@ -1,5 +1,6 @@
 import {
   IClient,
+  RawGtx,
   SignedTransaction,
   createClient,
   createIccfProofTx,
@@ -106,7 +107,7 @@ export async function createOrchestrator(
             assetId,
             amount,
             path,
-            gtx.deserialize(state.tx),
+            gtv.decode(state.tx) as RawGtx,
             path.indexOf(targetChainBrid),
           ),
           () => {

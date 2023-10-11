@@ -1,7 +1,7 @@
 import {
-  GTX,
   IClient,
   Operation,
+  RawGtx,
   SignedTransaction,
   Transaction,
   TransactionReceipt,
@@ -115,7 +115,7 @@ export type OnAnchoredHandler = ((
   data: {
     operation: Operation;
     opIndex: number;
-    tx: GTX;
+    tx: RawGtx;
     proofConstructor: (brid: BufferId) => Promise<Transaction>;
   },
   error: null,
