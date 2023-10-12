@@ -5,7 +5,7 @@ import { Buffer } from "buffer";
 
 export function ftAuth(
   accountId: BufferId,
-  authDescriptorId: BufferId
+  authDescriptorId: BufferId,
 ): Operation {
   return {
     name: "ft4.ft_auth",
@@ -19,3 +19,5 @@ export function ftAuth(
 export interface FtKeyStore extends KeyStore {
   pubKey: Buffer;
 }
+
+export { createInMemoryFtKeyStore } from "./key-stores/in-memory";
