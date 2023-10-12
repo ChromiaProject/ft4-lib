@@ -20,9 +20,16 @@ describe("Asset Hierarchy", () => {
   }
 
   it("transfers from root to leaf and back", async () => {
+    await registerCrosschainAsset(
+      testContext.connection1.client, // Leaf
+      adminUser().signatureProvider,
+      testContext.sampleAsset,
+      testContext.multichain2.rid, // Branch
+    );
+
     const orchestratorFromRootToLeaf = await createOrchestrator(
-      testContext.multichain2.rid, // To leaf
-      testContext.account2.id,
+      testContext.multichain1.rid, // To leaf
+      testContext.account1.id,
       testContext.sampleAsset.id,
       testContext.sampleAmount,
       testContext.session0, // From root
@@ -35,7 +42,7 @@ describe("Asset Hierarchy", () => {
       testContext.account0.id,
       testContext.sampleAsset.id,
       testContext.sampleAmount,
-      testContext.session2, // From leaf
+      testContext.session1, // From leaf
     );
 
     await verifyEndTransfer(orchestratorFromLeafToRoot);
