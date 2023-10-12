@@ -21,8 +21,8 @@ async function fetchBlockchains(
   });
 
   const result = await client.query<
-    { include_inactive: boolean },
-    Blockchain[]
+    Blockchain[],
+    { include_inactive: boolean }
   >("get_blockchains", {
     include_inactive: false,
   });

@@ -65,7 +65,7 @@ export function anchoredHandlerCallbackParameters(
     opIndex,
     tx: expect.arrayContaining([
       [
-        Buffer.from(client.config.blockchainRID, "hex"),
+        Buffer.from(client.config.blockchainRid, "hex"),
         operations.map((o) => [o.name, o.args]),
         [],
       ],

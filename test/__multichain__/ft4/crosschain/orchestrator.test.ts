@@ -18,6 +18,8 @@ import AccountBuilder from "/util/account-builder";
 import { createSession } from "/ft4/ft-session";
 import { AuthenticatedAccount } from "/ft4/accounts";
 
+jest.unmock("postchain-client");
+
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
   let account0: AuthenticatedAccount, account2: AuthenticatedAccount;

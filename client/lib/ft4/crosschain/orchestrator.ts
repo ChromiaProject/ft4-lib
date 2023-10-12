@@ -63,13 +63,20 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function initTransfer(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const tb = session.transactionBuilder();
 
-      tb.add(initTransferOp(recipientId, assetId, amount, path), ({ tx }) => {
-        state.tx = tx;
-        resolve();
-      }).buildAndSend();
+      tb.add(
+        initTransferOp(recipientId, assetId, amount, path),
+        (data: { tx: RawGtx }, error: Error | null) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          state.tx = data.tx;
+          resolve();
+        },
+      ).buildAndSend();
     });
   }
 
@@ -91,7 +98,7 @@ export async function createOrchestrator(
     const { iccfTx } = await createIccfProof(directoryClient, targetChainBrid);
     const iccfOp = iccfTx.operations[0];
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const authDataService = createAuthDataService(connection);
       const noopAuthenticator = createNoopAuthenticator(authDataService);
       const tb = transactionBuilder(noopAuthenticator, connection.client);
@@ -106,8 +113,12 @@ export async function createOrchestrator(
             state.tx,
             path.indexOf(targetChainBrid),
           ),
-          ({ tx }) => {
-            state.tx = tx;
+          (data: { tx: RawGtx }, error: Error | null) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            state.tx = data.tx;
             resolve();
           },
         )
