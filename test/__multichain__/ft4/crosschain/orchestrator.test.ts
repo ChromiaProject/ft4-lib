@@ -1,4 +1,4 @@
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
+import { fetchBlockchains } from "../../util/blockchain";
 import {
   FlagsType,
   createAmount,
@@ -17,6 +17,8 @@ import adminUser from "/util/admin_user";
 import AccountBuilder from "/util/account-builder";
 import { createSession } from "/ft4/ft-session";
 import { AuthenticatedAccount } from "/ft4/accounts";
+
+jest.unmock("postchain-client");
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;

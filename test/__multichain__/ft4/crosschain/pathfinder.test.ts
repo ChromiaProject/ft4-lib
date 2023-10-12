@@ -1,5 +1,5 @@
 import { generateId } from "../../../util/util";
-import { fetchBlockchains } from "/__multichain__/utils/blockchain";
+import { fetchBlockchains } from "/__multichain__/util/blockchain";
 import { createConnection, registerCrosschainAsset } from "/ft4";
 import {
   PathfinderError,

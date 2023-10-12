@@ -1,12 +1,12 @@
 import {
   IClient,
-  SignedTransaction,
+  RawGtx,
   createClient,
   createIccfProofTx,
   gtv,
-  gtx,
 } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
+import { Buffer } from "buffer";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { Listener, EventEmitter } from "../events";
@@ -25,7 +25,7 @@ import { getTransactionRid } from "../utils";
 type State = {
   currentHopIndex: number;
   path: Buffer[];
-  tx?: SignedTransaction;
+  tx?: RawGtx;
 };
 
 /**
@@ -63,16 +63,20 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function initTransfer(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const tb = session.transactionBuilder();
 
-      tb.add(initTransferOp(recipientId, assetId, amount, path), () =>
-        resolve(),
-      )
-        .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+      tb.add(
+        initTransferOp(recipientId, assetId, amount, path),
+        (data: { tx: RawGtx }, error: Error | null) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          state.tx = data.tx;
+          resolve();
+        },
+      ).buildAndSend();
     });
   }
 
@@ -94,7 +98,7 @@ export async function createOrchestrator(
     const { iccfTx } = await createIccfProof(directoryClient, targetChainBrid);
     const iccfOp = iccfTx.operations[0];
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const authDataService = createAuthDataService(connection);
       const noopAuthenticator = createNoopAuthenticator(authDataService);
       const tb = transactionBuilder(noopAuthenticator, connection.client);
@@ -109,14 +113,16 @@ export async function createOrchestrator(
             state.tx,
             path.indexOf(targetChainBrid),
           ),
-          () => {
+          (data: { tx: RawGtx }, error: Error | null) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            state.tx = data.tx;
             resolve();
           },
         )
-        .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+        .buildAndSend();
     });
   }
 
@@ -132,7 +138,6 @@ export async function createOrchestrator(
     targetChainBrid: Buffer,
   ): Promise<any> {
     const pathIndex = path.indexOf(targetChainBrid);
-    const decodedTx = gtx.deserialize(state.tx);
 
     const sourceBlockchainRid =
       pathIndex === 0
@@ -142,8 +147,8 @@ export async function createOrchestrator(
     const proofTx = createIccfProofTx(
       directoryClient,
       getTransactionRid(state.tx),
-      gtv.gtvHash(decodedTx),
-      decodedTx.signers,
+      gtv.gtvHash(state.tx),
+      state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
       targetChainBrid.toString("hex"),
     );
