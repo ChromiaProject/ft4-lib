@@ -23,12 +23,8 @@ import {
 import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
 import { TransferHistoryFilter } from "./transfer-history/types";
 import { Account, RateLimit } from "./types";
-import {
-  AnyAuthDescriptor,
-  GtvAuthDescriptorArgs,
-  GtvAuthDescriptorResponse,
-  gtv,
-} from "/ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor, gtv } from "/ft4/accounts/auth-descriptor";
+import { GtvAnyAuthDescriptor } from "./auth-descriptor/types";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -83,7 +79,7 @@ export function createAccountObject(
     ) => {
       const retriever = createEntityRetriever<
         AnyAuthDescriptor,
-        GtvAuthDescriptorResponse<GtvAuthDescriptorArgs>
+        GtvAnyAuthDescriptor
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
@@ -154,7 +150,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
 ): Promise<AnyAuthDescriptor[]> {
   return connection
-    .query<GtvAuthDescriptorResponse<GtvAuthDescriptorArgs>[]>(
+    .query<GtvAnyAuthDescriptor[]>(
       accountAuthDescriptorsByParticipantId(accountId, participantId),
     )
     .then((authDescriptors) =>

@@ -5,9 +5,10 @@ import {
   AuthDescriptor,
   AuthDescriptorRule,
   AuthType,
+  GtvAnyAuthDescriptor,
+  GtvAuthDescriptor,
   GtvAuthDescriptorArgs,
   GtvAuthDescriptorRegistration,
-  GtvAuthDescriptorResponse,
   GtvAuthDescriptorRule,
   GtvAuthDescriptorSimpleRule,
   GtvSingleSigAuthDescriptorArgs,
@@ -34,8 +35,8 @@ export function isAuthDescriptorRegistrationGtv(
 }
 
 export function isSingleSigGtv(
-  res: GtvAuthDescriptorResponse<GtvAuthDescriptorArgs>,
-): res is GtvAuthDescriptorResponse<GtvSingleSigAuthDescriptorArgs> {
+  res: GtvAnyAuthDescriptor,
+): res is GtvAuthDescriptor<GtvSingleSigAuthDescriptorArgs> {
   return res.auth_type === AuthType.SingleSig;
 }
 

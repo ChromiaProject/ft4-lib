@@ -4,7 +4,7 @@ import { Buffer } from "buffer";
 
 export function assetOriginById(
   assetId: BufferId,
-): QueryObject<{ asset_id: Buffer }> {
+): QueryObject<Buffer, { asset_id: Buffer }> {
   return {
     name: "ft4.crosschain.get_asset_origin_by_id",
     args: {

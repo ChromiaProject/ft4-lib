@@ -120,7 +120,11 @@ export type GtvAnyAuthDescriptorRegistration =
 
 // ======== Server side response model ========
 
-export type GtvAuthDescriptorResponse<T extends GtvAuthDescriptorArgs> = {
+export type GtvAnyAuthDescriptor =
+  | GtvAuthDescriptor<GtvSingleSigAuthDescriptorArgs>
+  | GtvAuthDescriptor<GtvMultiSigAuthDescriptorArgs>;
+
+export type GtvAuthDescriptor<T extends GtvAuthDescriptorArgs> = {
   args: T;
   auth_type: string;
   created: number;

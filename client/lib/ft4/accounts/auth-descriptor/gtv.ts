@@ -15,9 +15,10 @@ import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthDescriptorRule,
+  GtvAnyAuthDescriptor,
+  GtvAuthDescriptor,
   GtvAuthDescriptorArgs,
   GtvAuthDescriptorRegistration,
-  GtvAuthDescriptorResponse,
   GtvAuthDescriptorRule,
   GtvMultiSigAuthDescriptorArgs,
   GtvSingleSigAuthDescriptorArgs,
@@ -28,7 +29,7 @@ import {
 } from "./types";
 
 export function mapSingleSigAuthDescriptor(
-  ad: GtvAuthDescriptorResponse<GtvSingleSigAuthDescriptorArgs>,
+  ad: GtvAuthDescriptor<GtvSingleSigAuthDescriptorArgs>,
 ): AuthDescriptor<SingleSig> {
   const { id, auth_type, args, rules, created } = ad;
   const [flags, signer] = args;
@@ -45,7 +46,7 @@ export function mapSingleSigAuthDescriptor(
 }
 
 export function mapMultiSigAuthDescriptor(
-  ad: GtvAuthDescriptorResponse<GtvMultiSigAuthDescriptorArgs>,
+  ad: GtvAuthDescriptor<GtvMultiSigAuthDescriptorArgs>,
 ): AuthDescriptor<MultiSig> {
   const { id, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
@@ -64,13 +65,13 @@ export function mapMultiSigAuthDescriptor(
 }
 
 export function mapAuthDescriptors(
-  response: GtvAuthDescriptorResponse<GtvAuthDescriptorArgs>[],
+  response: GtvAnyAuthDescriptor[],
 ): AnyAuthDescriptor[] {
   return response.map((res) =>
     isSingleSigGtv(res)
       ? mapSingleSigAuthDescriptor(res)
       : mapMultiSigAuthDescriptor(
-          res as GtvAuthDescriptorResponse<GtvMultiSigAuthDescriptorArgs>,
+          res as GtvAuthDescriptor<GtvMultiSigAuthDescriptorArgs>,
         ),
   );
 }
