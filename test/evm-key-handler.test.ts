@@ -1,9 +1,12 @@
 import { Buffer } from "buffer";
-import { ethers } from "ethers";
+import { EthersError, ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
 import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
 import { createAuthenticator } from "../client/lib/ft4/authentication";
-import { evmAuth } from "../client/lib/ft4/authentication/evm";
+import {
+  createEvmKeyHandler,
+  evmAuth,
+} from "../client/lib/ft4/authentication/evm";
 import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
 import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
 import { op } from "../client/lib/ft4/utils";
@@ -33,8 +36,9 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage =
-      await createInMemoryEvmKeyStore(keyPair).signMessage(message);
+    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
+      message,
+    );
 
     expect(signedMessage).toEqual(expectedSignature);
   });
@@ -68,7 +72,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("should increment nonce", async () => {
+  it("increments nonce", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -148,6 +152,77 @@ describe("EVM key handler", () => {
       .add(op("foo"))
       .add(op("foo"))
       .build();
+
+    const tx2 = await transactionBuilder(authenticator, client)
+      .add(op("foo"))
+      .add(op("foo"))
+      .build();
+
+    expect(gtx.deserialize(tx2).operations).toEqual([
+      {
+        opName: "ft4.evm_auth",
+        args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
+      },
+      {
+        opName: "foo",
+        args: [],
+      },
+      {
+        opName: "ft4.evm_auth",
+        args: [accountId, ad.id, [[signature2.r, signature2.s, signature2.v]]],
+      },
+      {
+        opName: "foo",
+        args: [],
+      },
+    ]);
+  });
+
+  it("resets nonce if user rejects metamask signature", async () => {
+    const accountId = encryption.randomBytes(32);
+    const keyPair = encryption.makeKeyPair();
+    const message = "Sign this message with {nonce}";
+    let keyStore = createInMemoryEvmKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      ["T"],
+      keyStore.address,
+    ).andNoRules;
+
+    // Rewire the keystore to let us fake an user rejection on first call
+    const oldSignFunc = keyStore.signMessage;
+    const signMessage = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        const err = new Error() as EthersError;
+        err.code = "ACTION_REJECTED";
+        throw err;
+      })
+      .mockImplementation((msg: string) => oldSignFunc(msg));
+    keyStore = { ...keyStore, signMessage };
+
+    const authService = createFakeAuthDataService({
+      foo: { flags: ["T"], message },
+    });
+    authService.getNonce = () => Promise.resolve(0);
+    const authenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(ad, keyStore)],
+      authService,
+    );
+
+    await expect(
+      transactionBuilder(authenticator, client)
+        .add(op("foo"))
+        .add(op("foo"))
+        .build(),
+    ).rejects.toThrow(Error);
+
+    const signature1 = await keyStore.signMessage(
+      message.replace("{nonce}", "0"),
+    );
+    const signature2 = await keyStore.signMessage(
+      message.replace("{nonce}", "1"),
+    );
 
     const tx2 = await transactionBuilder(authenticator, client)
       .add(op("foo"))

@@ -52,8 +52,9 @@ async function authorize(
   authDataService: AuthDataService,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate =
-    await authDataService.getAuthMessageTemplate(operation);
+  const messageTemplate = await authDataService.getAuthMessageTemplate(
+    operation,
+  );
   const nonce = await getNonce(
     authDataService,
     accountId,
@@ -70,8 +71,13 @@ async function authorize(
     .replace("{brid}", brid.toString("hex"))
     .replace("{nonce}", `${nonce}`);
 
-  const signature = await keyStore.signMessage(message);
-  return [evmAuth(accountId, authDescriptorId, [signature]), operation];
+  try {
+    const signature = await keyStore.signMessage(message);
+    return [evmAuth(accountId, authDescriptorId, [signature]), operation];
+  } catch (err) {
+    resetNonce(keyStore);
+    throw err;
+  }
 }
 
 /* eslint-disable */
@@ -79,13 +85,7 @@ async function sign(
   transaction: TxBuilderTransaction,
   keyStore: KeyStore,
 ): Promise<void> {
-  const nonceData = noncesByKeystoreId[keyStore.id.toString("hex")];
-  if (nonceData) {
-    delete noncesByKeystoreId[keyStore.id.toString("hex")];
-    delete noncesByAccountAndAdId[
-      getNonceId(nonceData.accountId, nonceData.authDescriptorId)
-    ];
-  }
+  resetNonce(keyStore);
 }
 /* eslint-enable */
 
@@ -117,4 +117,14 @@ async function getNonce(
     noncesByKeystoreId[keyStore.id.toString("hex")].nonce += 1;
   }
   return noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)].nonce;
+}
+
+async function resetNonce(keyStore: KeyStore) {
+  const nonceData = noncesByKeystoreId[keyStore.id.toString("hex")];
+  if (nonceData) {
+    delete noncesByKeystoreId[keyStore.id.toString("hex")];
+    delete noncesByAccountAndAdId[
+      getNonceId(nonceData.accountId, nonceData.authDescriptorId)
+    ];
+  }
 }
