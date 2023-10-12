@@ -1,6 +1,5 @@
-import acc: ^.accounts;
 
-function deduct_balance(acc.account, asset, amount: big_integer) {
+function deduct_balance(accounts.account, asset, amount: big_integer) {
     val balance = balance @ { account, asset };
     require(balance.amount >= amount, "Balance is too low");
     balance.amount -= amount;
@@ -8,7 +7,7 @@ function deduct_balance(acc.account, asset, amount: big_integer) {
 
 namespace Unsafe {
    
-   function transfer(from: acc.account, to: acc.account, assets.asset, amount: big_integer) {
+   function transfer(from: accounts.account, to: accounts.account, assets.asset, amount: big_integer) {
       require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
 

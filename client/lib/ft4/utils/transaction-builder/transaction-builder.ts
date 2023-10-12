@@ -24,7 +24,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { getTransactionRID } from "..";
+import { getTransactionRid } from "..";
 import { BufferId } from "/cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
@@ -64,7 +64,7 @@ export function transactionBuilder(
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: toPubkeys(this._keyhandlersUsed),
       signatures: [],
@@ -190,15 +190,15 @@ export function transactionBuilder(
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const systemClient = await createClient({
-      nodeURLPool: client.config.endpointPool.slice(),
-      blockchainIID: 0,
+      nodeUrlPool: client.config.endpointPool.slice(),
+      blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(
       systemClient,
-      client.config.blockchainRID,
+      client.config.blockchainRid,
     );
     const rawTx = gtv.decode(tx) as RawGtx;
-    const txRid = getTransactionRID(rawTx);
+    const txRid = getTransactionRid(rawTx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
@@ -227,7 +227,7 @@ export function transactionBuilder(
             txRid,
             tx,
             rawTx[0][2], // signers
-            client.config.blockchainRID,
+            client.config.blockchainRid,
             brid.toString("hex"),
           );
 

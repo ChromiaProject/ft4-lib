@@ -8,7 +8,7 @@ import { TxBuilderTransaction } from "/ft4/utils/types";
 
 export function createEvmKeyHandler(
   authDescriptor: AuthDescriptor,
-  keyStore: EvmKeyStore
+  keyStore: EvmKeyStore,
 ): KeyHandler {
   return Object.freeze({
     authDescriptor,
@@ -19,7 +19,7 @@ export function createEvmKeyHandler(
       accountId: BufferId,
       operation: Operation,
       nonce: number,
-      authDataService: AuthDataService
+      authDataService: AuthDataService,
     ) =>
       authorize(
         accountId,
@@ -27,7 +27,7 @@ export function createEvmKeyHandler(
         operation,
         nonce,
         authDataService,
-        keyStore
+        keyStore,
       ),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
     getSigners: () => null,
@@ -40,17 +40,19 @@ async function authorize(
   operation: Operation,
   nonce: number,
   authDataService: AuthDataService,
-  keyStore: EvmKeyStore
+  keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
   const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation
+    operation,
   );
+  const brid = await authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
       "{auth_descriptor_id}",
-      formatter.ensureBuffer(authDescriptorId).toString("hex")
+      formatter.ensureBuffer(authDescriptorId).toString("hex"),
     )
+    .replace("{brid}", brid.toString("hex"))
     .replace("{nonce}", `${nonce}`);
 
   const signature = await keyStore.signMessage(message);
@@ -60,7 +62,7 @@ async function authorize(
 /* eslint-disable */
 async function sign(
   transaction: TxBuilderTransaction,
-  keyStore: KeyStore
+  keyStore: KeyStore,
 ): Promise<void> {
   // return transaction.sign(keyStore);
 }

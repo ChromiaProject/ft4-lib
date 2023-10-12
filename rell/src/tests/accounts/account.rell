@@ -11,6 +11,7 @@ struct gtv_auth_descriptor {
     acc.auth_type;
     args: gtv;
     rules: gtv;
+    created: timestamp;
 }
 
 function setup_account_with_many_ads() {
@@ -66,7 +67,8 @@ function test_paginated_items_have_the_correct_return_format() {
     id = alice_ad_id,
     auth_type = alice_ad.auth_type,
     args = alice_ad.args.to_gtv_pretty(),
-    rules = alice_ad.rules.to_gtv_pretty()
+    rules = alice_ad.rules.to_gtv_pretty(),
+    created = acc.account_auth_descriptor @ { .id == alice_ad_id }( .created )
   );
   assert_equals(descriptors.data[0], alice_gtv_ad.to_gtv_pretty());
 }

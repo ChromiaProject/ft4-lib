@@ -6,6 +6,7 @@ import {
   gtv,
 } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
+import { Buffer } from "buffer";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { Listener, EventEmitter } from "../events";
@@ -19,7 +20,7 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Orchestrator, OrchestratorEvents } from "./types";
-import { getTransactionRID } from "../utils";
+import { getTransactionRid } from "../utils";
 
 type State = {
   currentHopIndex: number;
@@ -129,12 +130,12 @@ export async function createOrchestrator(
 
     const sourceBlockchainRid =
       pathIndex === 0
-        ? session.client.config.blockchainRID
+        ? session.client.config.blockchainRid
         : path[pathIndex - 1];
 
     const proofTx = createIccfProofTx(
       directoryClient,
-      getTransactionRID(state.tx),
+      getTransactionRid(state.tx),
       gtv.gtvHash(state.tx),
       state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
@@ -151,8 +152,8 @@ export async function createOrchestrator(
    */
   async function transfer(): Promise<void> {
     const directoryClient = await createClient({
-      directoryNodeURLPool: session.client.config.endpointPool.slice(),
-      blockchainIID: 0,
+      directoryNodeUrlPool: session.client.config.endpointPool.slice(),
+      blockchainIid: 0,
     });
 
     try {

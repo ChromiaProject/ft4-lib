@@ -1,13 +1,13 @@
 import {
   Operation,
   encryption,
-  QueryArguments,
   RawGtv,
   IClient,
   gtv,
   RawGtx,
 } from "postchain-client";
 import { Config } from "./types";
+import { Buffer } from "buffer";
 
 export function nop(): Operation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
@@ -18,9 +18,7 @@ export function op(name: string, ...args: readonly RawGtv[]): Operation {
 }
 
 export async function getConfig(session: IClient): Promise<Config> {
-  const response = await session.query<QueryArguments, ConfigResponse>(
-    "ft4.get_config",
-  );
+  const response = await session.query<ConfigResponse>("ft4.get_config");
   return Object.freeze({
     rateLimit: {
       active: response.rate_limit.active,
@@ -31,14 +29,12 @@ export async function getConfig(session: IClient): Promise<Config> {
   });
 }
 
-export function getTransactionRID(tx: RawGtx): Buffer {
+export function getTransactionRid(tx: RawGtx): Buffer {
   return gtv.gtvHash(tx[0]); //tx body
 }
 
 export async function getVersion(session: IClient): Promise<string> {
-  return Object.freeze(
-    await session.query<QueryArguments, string>("ft4.get_version"),
-  );
+  return Object.freeze(await session.query<string>("ft4.get_version"));
 }
 
 type DeepReadonly<T> = T extends (infer R)[]

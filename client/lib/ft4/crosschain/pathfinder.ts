@@ -1,5 +1,9 @@
-import { IClient, createClient, formatter } from "postchain-client";
-// import { BlockchainUrlUndefinedException } from "postchain-client/built/src/chromia/errors";
+import {
+  BlockchainUrlUndefinedException,
+  IClient,
+  createClient,
+  formatter,
+} from "postchain-client";
 import { createConnection } from "../ft-session";
 import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
@@ -17,15 +21,15 @@ export class PathfinderError extends Error {
 export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
-  blockchainRID: BufferId,
+  blockchainRid: BufferId,
 ): Promise<Buffer[]> {
   const rootNode = asset.brid;
 
   let foundPath = false;
   const pathSourceToRoot = [
-    formatter.toBuffer(connection.client.config.blockchainRID),
+    formatter.toBuffer(connection.client.config.blockchainRid),
   ];
-  const pathEndToRoot = [formatter.ensureBuffer(blockchainRID)];
+  const pathEndToRoot = [formatter.ensureBuffer(blockchainRid)];
 
   let lastNode: Buffer;
   let commonNode: Buffer;
@@ -63,15 +67,15 @@ export async function findPathToChainForAsset(
           lastNode,
         );
       } catch (error) {
-        // if (error instanceof BlockchainUrlUndefinedException) {
-        throw new PathfinderError(
-          `Blockchain ${lastNode.toString(
-            "hex",
-          )} does not exist on the current network.`,
-        );
-        // } else {
-        //   throw error;
-        // }
+        if (error instanceof BlockchainUrlUndefinedException) {
+          throw new PathfinderError(
+            `Blockchain ${lastNode.toString(
+              "hex",
+            )} does not exist on the current network.`,
+          );
+        } else {
+          throw error;
+        }
       }
 
       // three possible errors:
@@ -131,9 +135,8 @@ export async function createConnectionToBrid(
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
-      // ""+ to avoid errors (readonly)
-      directoryNodeURLPool: "" + oldClient.config.endpointPool,
-      blockchainRID:
+      directoryNodeUrlPool: oldClient.config.endpointPool.slice(),
+      blockchainRid:
         typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
     }),
   );
