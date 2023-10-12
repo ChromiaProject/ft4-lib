@@ -1,4 +1,4 @@
-import { Operation, RawGtx, Transaction } from "postchain-client";
+import { Operation, RawGtx } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -67,25 +67,29 @@ describe("Crosschain transfer", () => {
           operation: Operation;
           opIndex: number;
           tx: RawGtx;
-          proofConstructor: (brid: BufferId) => Promise<Transaction>;
+          createProof: (brid: BufferId) => Promise<Operation>;
         } | null,
         error: Error | null,
       ) => {
         if (error) {
           throw error;
         }
-        const newTx = await data.proofConstructor(multichain01.rid);
-        newTx.operations.push(
-          applyTransferOp(
-            account01.id,
-            asset00.id,
-            createAmount(100, asset00.decimals),
-            [multichain01.rid],
-            data.tx,
-            0,
-          ),
-        );
-        await connection01.client.sendTransaction(newTx);
+        const iccfProofOperation = await data.createProof(multichain01.rid);
+
+        await connection01.client.sendTransaction({
+          operations: [
+            iccfProofOperation,
+            applyTransferOp(
+              account01.id,
+              asset00.id,
+              createAmount(100, asset00.decimals),
+              [multichain01.rid],
+              data.tx,
+              0,
+            ),
+          ],
+          signers: [],
+        });
         resolve();
       };
 

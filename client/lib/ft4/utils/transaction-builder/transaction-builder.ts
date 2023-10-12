@@ -11,7 +11,8 @@ import {
   SignedTransaction,
   TransactionReceipt,
   createIccfProofTx,
-  Transaction,
+  gtv,
+  RawGtx,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -196,8 +197,8 @@ export function transactionBuilder(
       systemClient,
       client.config.blockchainRID,
     );
-    const txRid = getTransactionRID(tx);
-    const decodedTx = gtx.deserialize(tx);
+    const rawTx = gtv.decode(tx) as RawGtx;
+    const txRid = getTransactionRID(rawTx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
@@ -216,20 +217,23 @@ export function transactionBuilder(
       }
 
       if (isAnchored) {
-        const cachedProof = new Map<string, Transaction>();
-        const proofConstructor = async (brid: BufferId) => {
-          if (cachedProof.has(brid.toString("hex")))
-            return cachedProof.get(brid.toString("hex"));
+        const proofCache = new Map<string, Operation>();
+        const createProof = async (brid: BufferId) => {
+          if (proofCache.has(brid.toString("hex")))
+            return proofCache.get(brid.toString("hex"));
+
           const proof = await createIccfProofTx(
             systemClient,
             txRid,
             tx,
-            decodedTx.signers,
+            rawTx[0][2], // signers
             client.config.blockchainRID,
             brid.toString("hex"),
           );
-          cachedProof.set(brid.toString("hex"), proof.iccfTx);
-          return proof.iccfTx;
+
+          const iccfProofOperation = proof.iccfTx.operations[0];
+          proofCache.set(brid.toString("hex"), iccfProofOperation);
+          return iccfProofOperation;
         };
 
         operations.forEach((op: OperationContext, idx: number) => {
@@ -237,8 +241,8 @@ export function transactionBuilder(
             {
               operation: op.operation,
               opIndex: idx,
-              tx: gtx.gtxToRawGtx(decodedTx),
-              proofConstructor,
+              tx: rawTx,
+              createProof,
             },
             null,
           );
