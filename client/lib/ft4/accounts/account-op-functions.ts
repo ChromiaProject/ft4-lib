@@ -16,12 +16,14 @@ import {
 import { createAccountObject } from "./account-query-functions";
 import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
 import { AuthenticatedAccount } from "./types";
-import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
 import {
   TransactionCompletion,
   TransactionSessionCompletion,
 } from "../utils/types";
-import { deriveAccountId } from "./auth-descriptor";
+import {
+  AnyAuthDescriptorRegistration,
+  deriveAccountId,
+} from "./auth-descriptor";
 
 export function createAuthenticatedAccount(
   connection: Connection,
