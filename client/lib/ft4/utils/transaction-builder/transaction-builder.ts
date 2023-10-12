@@ -218,7 +218,7 @@ export function transactionBuilder(
 
       if (isAnchored) {
         const proofCache = new Map<string, Operation>();
-        const proofConstructor = async (brid: BufferId) => {
+        const createProof = async (brid: BufferId) => {
           if (proofCache.has(brid.toString("hex")))
             return proofCache.get(brid.toString("hex"));
 
@@ -242,7 +242,7 @@ export function transactionBuilder(
               operation: op.operation,
               opIndex: idx,
               tx: rawTx,
-              proofConstructor,
+              createProof,
             },
             null,
           );
