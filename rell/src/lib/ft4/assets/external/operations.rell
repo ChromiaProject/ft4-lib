@@ -1,13 +1,9 @@
-import ^^.assets;
-import ^^.auth;
-
-query transfer_auth_data(gtv) = auth.auth_data(["T"], "Do you want to transfer %s from account %s to account %s? Nonce: %s");
 
 function transfer_message(gtv) {
     val params = struct<transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return "Please sign the message\nto transfer %s %s\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n%s\n\nNonce: {nonce}"
+    return "Please sign the message\nto transfer %s %s\n(id: %s)\n\nfrom:\n{account_id}\n\nto:\n%s"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
@@ -25,7 +21,7 @@ function () = auth.add_auth_handler(
 
 operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
     val account = auth.authenticate();
-    assets.Unsafe.transfer(account, acc.Account(receiver_id), assets.Asset(asset_id), amount);
+    assets.Unsafe.transfer(account, accounts.Account(receiver_id), assets.Asset(asset_id), amount);
 }
 
 @extend(auth.auth_handler)
@@ -39,7 +35,7 @@ function burn_message(gtv) {
     val params = struct<burn>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}\n\nNonce: {nonce}"
+    return "Please sign the message\nto burn %s %s\n\nfrom:\n{account_id}"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name

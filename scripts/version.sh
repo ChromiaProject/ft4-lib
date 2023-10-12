@@ -9,8 +9,8 @@ updaterell(){
       echo "ERROR: Invalid version format"
       exit 1
     fi
-    sed -i 's/[0-9]\+\.[0-9]\+\.[0-9]\+r/'${version}'r/' rell/src/lib/ft4/version.rell
-    sed -i 's/toEqual("[0-9]\+\.[0-9]\+\.[0-9]\+r")/toEqual("'${version}'r")/' test/blockchain.test.ts
+    sed -i 's/[0-9]\+\.[0-9]\+\.[0-9]\+/'${version}'/' rell/src/lib/ft4/version.rell
+    sed -i 's/toEqual("[0-9]\+\.[0-9]\+\.[0-9]\+")/toEqual("'${version}'")/' test/blockchain.test.ts
 }
 
 function usage {

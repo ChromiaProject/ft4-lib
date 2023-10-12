@@ -9,7 +9,7 @@ import { IClient, formatter } from "postchain-client";
 import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 import { TransferHistoryError, TransferHistoryRetriever } from "./interfaces";
 import { Buffer } from "buffer";
-import { PagedResponse } from "/ft4/types";
+import { OptionalPageCursor, PagedResponse } from "/ft4/types";
 
 export function createTransferHistoryRetriever(
   session: IClient,
@@ -27,11 +27,11 @@ export function createTransferHistoryRetriever(
         throw new TransferHistoryError("amount needs to be <= 100");
 
       const res = await session.query<
-        QueryType,
-        PagedResponse<TransferHistoryEntryResponse>
+        PagedResponse<TransferHistoryEntryResponse>,
+        QueryType
       >("ft4.get_transfer_history", {
         account_id: id,
-        filter: [filter?.transferHistoryType],
+        filter: [filter?.transferHistoryType ?? null],
         page_size: amount,
         page_cursor: cursor,
       });
@@ -51,7 +51,7 @@ export function createTransferHistoryRetriever(
 
 type QueryType = {
   account_id: Buffer;
-  filter: TransferHistoryType[] | undefined;
+  filter: [TransferHistoryType | null];
   page_size: number;
-  page_cursor: string;
+  page_cursor: OptionalPageCursor;
 };

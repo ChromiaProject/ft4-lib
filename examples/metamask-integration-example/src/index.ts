@@ -16,7 +16,7 @@ declare global {
 async function createChromiaClient(nodeUrl?: string) {
   const url = nodeUrl || "http://localhost:7741";
   return createClient({
-    nodeURLPool: url,
+    nodeUrlPool: url,
     blockchainIID: 0
   });
 }
