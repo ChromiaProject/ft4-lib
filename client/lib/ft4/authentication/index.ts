@@ -9,7 +9,7 @@ import {
 } from "./types";
 import { TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
-import { AuthDescriptor } from "../accounts";
+import { AuthDescriptor, AuthType } from "../accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -60,11 +60,12 @@ const nullKeyStore: KeyStore = Object.freeze({
 
 const nullAuthDescriptor: AuthDescriptor = Object.freeze({
   id: Buffer.alloc(0),
-  authType: "S",
+  authType: AuthType.single_sig,
   flags: new Set<string>(),
   signaturesRequired: 0,
   signers: [],
   rule: null,
+  created: 0,
 });
 
 const noopKeyHandler: KeyHandler = Object.freeze({

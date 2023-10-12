@@ -24,7 +24,13 @@ import {
   authDescriptor,
   GtvAuthDescriptor,
 } from "./accounts";
-import { createAmount } from "./asset/amount";
+import {
+  DecimalFormat,
+  Asset,
+  Balance,
+  SupportedNumber,
+  createAmount,
+} from "./asset";
 import {
   registerAccount,
   addRateLimitPoints,
@@ -34,13 +40,12 @@ import {
 } from "./admin/admin-op-functions";
 import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
 import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
-import { Session } from "./types";
+import { Session, Connection } from "./types";
 import {
   TransferHistoryEntry,
   TransferHistoryResponse,
   TransferHistoryType,
 } from "./accounts/transfer-history/types";
-import { DecimalFormat } from "./asset/types";
 
 export {
   op,
@@ -50,7 +55,11 @@ export {
   FlagsType,
   Account,
   Session,
+  Connection,
   DecimalFormat,
+  Asset,
+  Balance,
+  SupportedNumber,
   GtvAuthDescriptor,
   TransferHistoryEntry,
   TransferHistoryResponse,

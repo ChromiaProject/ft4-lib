@@ -20,10 +20,7 @@ async function fetchBlockchains(
     blockchainIid: 0,
   });
 
-  const result = await client.query<
-    { include_inactive: boolean },
-    Blockchain[]
-  >("get_blockchains", {
+  const result = await client.query<Blockchain[]>("get_blockchains", {
     include_inactive: false,
   });
 

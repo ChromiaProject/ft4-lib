@@ -10,3 +10,9 @@ struct validation_result {
 val VALID = validation_result(true, null);
 
 function invalid(error: text) = validation_result(false, error);
+
+function make_auth_message(message: text) {
+    return "Blockchain:\n{brid}\n\n" + message + "\n\nNonce: {nonce}";
+}
+
+function evm_address_from_pubkey(pubkey) = keccak256(pubkey).sub(12);
