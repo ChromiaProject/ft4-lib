@@ -1,8 +1,4 @@
-import {
-  IClient,
-  SignatureProvider,
-  TransactionReceipt,
-} from "postchain-client";
+import { IClient, SignatureProvider } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
 import * as ops from "./admin-operations";
@@ -127,16 +123,18 @@ export async function mint(
  * @returns a TransactionReceipt object that allows to check the status of the
  * transaction and its RID
  */
-export function registerCrosschainAsset(
+export async function registerCrosschainAsset(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   asset: Asset,
   originBrid: BufferId,
-): Promise<TransactionReceipt> {
-  return chromiaClient.signAndSendUniqueTransaction(
-    ops.registerCrosschainAsset(asset, originBrid),
-    adminSignatureProvider,
-  );
+): Promise<TransactionCompletion> {
+  return {
+    receipt: await chromiaClient.signAndSendUniqueTransaction(
+      ops.registerCrosschainAsset(asset, originBrid),
+      adminSignatureProvider,
+    ),
+  };
 }
 
 function assertValidUrl(url: string) {

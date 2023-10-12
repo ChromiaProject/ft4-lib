@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Transfer history's asset properties are now of the Asset type
 - TransactionBuilder's `buildAndSend` now returns the transaction alongside the receipt
 - TransactionBuilder's `onAnchoredHandler`s now receive the signed transaction too
+- Auth messages now include rid of the blockchain to which the tx is being submitted.
 
 ### Fixed
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
