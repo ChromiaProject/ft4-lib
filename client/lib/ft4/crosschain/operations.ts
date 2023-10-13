@@ -1,4 +1,4 @@
-import { Operation, SignedTransaction, gtv } from "postchain-client";
+import { Operation, RawGtx } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { op } from "../utils";
 import { getInitTransferArgs } from "./op-functions";
@@ -24,27 +24,27 @@ export function applyTransfer(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
-  tx: SignedTransaction,
+  tx: RawGtx,
   targetChainIndex: number,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Operation {
   return op(
     "ft4.crosschain.apply_transfer",
     getInitTransferArgs(recipientId, assetId, amount, hops),
-    gtv.decode(tx),
+    tx,
     operationIndex,
     targetChainIndex,
   );
 }
 
 export function deletePendingTransfer(
-  tx: SignedTransaction,
+  tx: RawGtx,
   initialTxRid: Buffer,
   opIndex: number,
 ): Operation {
   return op(
     "ft4.crosschain.delete_pending_transfer",
-    gtv.decode(tx),
+    tx,
     initialTxRid,
     opIndex,
   );

@@ -16,7 +16,7 @@ pipelines:
             - apt install default-jre -y
             - apt install chr
             - chr install -s configs/jest-test.yml
-            - npm install
+            - npm ci
             - npm run test:pipeline
 
           services:

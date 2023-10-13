@@ -1,10 +1,11 @@
 import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { BufferId } from "/cryptoUtils";
+import { LoginConfig } from "./types";
 
 export function nonce(
   accountId: BufferId,
-  authDescriptorId: BufferId
-): QueryObject<{ account_id: Buffer; auth_descriptor_id: Buffer }> {
+  authDescriptorId: BufferId,
+): QueryObject<number, { account_id: Buffer; auth_descriptor_id: Buffer }> {
   return {
     name: "ft4.get_auth_descriptor_nonce",
     args: {
@@ -15,8 +16,8 @@ export function nonce(
 }
 
 export function loginConfig(
-  configName?: string
-): QueryObject<{ name?: string }> {
+  configName?: string,
+): QueryObject<LoginConfig, { name?: string }> {
   return {
     name: "ft4.get_login_config",
     args: {
@@ -26,8 +27,8 @@ export function loginConfig(
 }
 
 export function authFlags(
-  operation: Operation
-): QueryObject<{ op_name: string }> {
+  operation: Operation,
+): QueryObject<string[], { op_name: string }> {
   return {
     name: "ft4.get_auth_flags",
     args: {
@@ -37,8 +38,8 @@ export function authFlags(
 }
 
 export function authMessageTemplate(
-  operation: Operation
-): QueryObject<{ op_name: string; op_args?: RawGtv[] }> {
+  operation: Operation,
+): QueryObject<string, { op_name: string; op_args?: RawGtv[] }> {
   return {
     name: "ft4.get_auth_message_template",
     args: {

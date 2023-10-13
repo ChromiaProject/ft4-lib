@@ -1,5 +1,9 @@
-import { IClient, createClient, formatter } from "postchain-client";
-// import { BlockchainUrlUndefinedException } from "postchain-client/built/src/chromia/errors";
+import {
+  BlockchainUrlUndefinedException,
+  IClient,
+  createClient,
+  formatter,
+} from "postchain-client";
 import { createConnection } from "../ft-session";
 import { Connection } from "../types";
 import { BufferId } from "/cryptoUtils";
@@ -62,11 +66,15 @@ export async function findPathToChainForAsset(
           lastNode,
         );
       } catch (error) {
-        throw new PathfinderError(
-          `Blockchain ${lastNode.toString(
-            "hex",
-          )} does not exist on the current network.`,
-        );
+        if (error instanceof BlockchainUrlUndefinedException) {
+          throw new PathfinderError(
+            `Blockchain ${lastNode.toString(
+              "hex",
+            )} does not exist on the current network.`,
+          );
+        } else {
+          throw error;
+        }
       }
 
       // three possible errors:
@@ -131,8 +139,7 @@ export async function createConnectionToBrid(
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
-      // ""+ to avoid errors (readonly)
-      directoryNodeUrlPool: "" + oldClient.config.endpointPool,
+      directoryNodeUrlPool: oldClient.config.endpointPool.slice(),
       blockchainRid:
         typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
     }),

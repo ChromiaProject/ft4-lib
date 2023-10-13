@@ -1,8 +1,4 @@
-import {
-  SignatureProvider,
-  TransactionReceipt,
-  KeyPair,
-} from "postchain-client";
+import { SignatureProvider, KeyPair } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "../../cryptoUtils";
@@ -14,7 +10,11 @@ import {
 import { Authenticator } from "../authentication/types";
 import { Amount } from "../asset/interfaces";
 import { OptionalPageCursor } from "../types";
-import { PaginatedEntity } from "../utils/types";
+import {
+  PaginatedEntity,
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "../utils/types";
 import { Buffer } from "buffer";
 import { PendingTransfer } from "../crosschain/types";
 
@@ -56,14 +56,14 @@ export interface AuthenticatedAccount extends Account {
   addAuthDescriptor: (
     authDescriptor: AuthDescriptor,
     newSigner: SignatureProvider | KeyPair,
-  ) => Promise<TransactionReceipt>;
+  ) => Promise<TransactionSessionCompletion>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId,
-  ) => Promise<TransactionReceipt>;
+  ) => Promise<TransactionSessionCompletion>;
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount,
-  ) => Promise<TransactionReceipt>;
-  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionReceipt>;
+  ) => Promise<TransactionCompletion>;
+  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionCompletion>;
 }

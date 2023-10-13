@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { GTX } from "postchain-client";
+import { RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "../events";
 import { OrchestratorError } from "./errors";
 import { BufferId } from "/cryptoUtils";
@@ -34,13 +34,13 @@ export interface Orchestrator {
 }
 
 export type PendingTransfer = {
-  tx: GTX;
+  tx: RawGtx;
   opIndex: number;
   accountId: Buffer;
 };
 
 export type PendingTransferResponse = {
-  tx_data: Buffer;
+  tx_data: RawGtx;
   op_index: number;
   account_id: Buffer;
 };

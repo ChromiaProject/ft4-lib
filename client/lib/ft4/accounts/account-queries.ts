@@ -2,10 +2,12 @@ import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
+import { AuthDescriptorResponse } from "./auth-descriptor";
+import { RateLimit } from "./types";
 
-export function RateLimit(
-  accountId: BufferId
-): QueryObject<{ account_id: Buffer }> {
+export function RateLimitQuery(
+  accountId: BufferId,
+): QueryObject<Omit<RateLimit, "getAvailablePoints">, { account_id: Buffer }> {
   return {
     name: "ft4.get_account_rate_limit_last_update",
     args: {
@@ -14,7 +16,9 @@ export function RateLimit(
   };
 }
 
-export function accountById(id: BufferId): QueryObject<{ id: Buffer }> {
+export function accountById(
+  id: BufferId,
+): QueryObject<Buffer | null, { id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {
@@ -24,8 +28,8 @@ export function accountById(id: BufferId): QueryObject<{ id: Buffer }> {
 }
 
 export function accountsByParticipantId(
-  id: BufferId
-): QueryObject<{ id: Buffer }> {
+  id: BufferId,
+): QueryObject<Buffer[], { id: Buffer }> {
   return {
     name: "ft4.get_accounts_by_participant_id",
     args: {
@@ -37,12 +41,15 @@ export function accountsByParticipantId(
 export function accountsByAuthDescriptorId(
   id: BufferId,
   limit: number,
-  cursor: OptionalPageCursor
-): QueryObject<{
-  id: BufferId;
-  page_size: number;
-  page_cursor: OptionalPageCursor;
-}> {
+  cursor: OptionalPageCursor,
+): QueryObject<
+  Buffer[],
+  {
+    id: BufferId;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
+> {
   return {
     name: "ft4.get_accounts_by_auth_descriptor_id",
     args: {
@@ -55,8 +62,8 @@ export function accountsByAuthDescriptorId(
 
 export function isAuthDescriptorValid(
   accountId: BufferId,
-  authDescriptorId: BufferId
-): QueryObject<{ account_id: Buffer; auth_descriptor_id: Buffer }> {
+  authDescriptorId: BufferId,
+): QueryObject<boolean, { account_id: Buffer; auth_descriptor_id: Buffer }> {
   return {
     name: "ft4.is_auth_descriptor_valid",
     args: {
@@ -68,8 +75,11 @@ export function isAuthDescriptorValid(
 
 export function accountAuthDescriptorsByParticipantId(
   accountId: BufferId,
-  participantId: BufferId
-): QueryObject<{ account_id: Buffer; participant_id: Buffer }> {
+  participantId: BufferId,
+): QueryObject<
+  AuthDescriptorResponse[],
+  { account_id: Buffer; participant_id: Buffer }
+> {
   return {
     name: "ft4.get_account_auth_descriptors_by_participant_id",
     args: {
@@ -82,8 +92,11 @@ export function accountAuthDescriptorsByParticipantId(
 export function accountAuthDescriptors(
   accountId: BufferId,
   limit: number,
-  cursor: OptionalPageCursor = null
-): QueryObject<{ id: Buffer; page_size: number; page_cursor: string }> {
+  cursor: OptionalPageCursor = null,
+): QueryObject<
+  AuthDescriptorResponse,
+  { id: Buffer; page_size: number; page_cursor: string | null }
+> {
   return {
     name: "ft4.get_account_auth_descriptors",
     args: {

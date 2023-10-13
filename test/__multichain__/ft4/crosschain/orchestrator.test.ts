@@ -1,5 +1,4 @@
-import { formatter } from "postchain-client";
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
+import { fetchBlockchains } from "../../util/blockchain";
 import {
   FlagsType,
   createAmount,
@@ -21,6 +20,9 @@ import {
   getNewAsset,
 } from "/util/blockchain-util";
 import { initTransfer } from "/ft4/crosschain/operations";
+import { formatter } from "postchain-client";
+
+jest.unmock("postchain-client");
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;

@@ -58,7 +58,8 @@ export interface AuthDataService {
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;
-  getLoginConfig(name: string | null): Promise<LoginConfig>;
+  getLoginConfig(name: string | undefined): Promise<LoginConfig>;
+  getBrid(): Buffer;
 }
 
 export type LoginConfig = {

@@ -1,5 +1,4 @@
 import { Buffer } from "buffer";
-import { gtx } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Connection, OptionalPageCursor } from "../types";
 import * as Query from "./queries";
@@ -31,7 +30,7 @@ export function mapPendingTransfers(
   return transfers.map((transfer) => ({
     accountId: transfer.account_id,
     opIndex: transfer.op_index,
-    tx: gtx.deserialize(transfer.tx_data),
+    tx: transfer.tx_data,
   }));
 }
 

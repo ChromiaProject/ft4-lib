@@ -1,18 +1,18 @@
+import { Buffer } from "buffer";
 import {
   Operation,
-  SignedTransaction,
+  RawGtx,
   createClient,
   createIccfProofTx,
   formatter,
   gtv,
-  gtx,
 } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
 import { EventEmitter, Listener } from "../events";
 import { createAuthDataService } from "../ft-session";
 import { Session } from "../types";
-import { getTransactionRID } from "../utils";
+import { getTransactionRid } from "../utils";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { OrchestratorError } from "./errors";
 import {
@@ -24,12 +24,13 @@ import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { isTransferApplied } from "./queries";
 import { Orchestrator, OrchestratorEvents, PendingTransfer } from "./types";
 import { BufferId } from "/cryptoUtils";
+import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
 
 type State = {
   currentHopIndex: number;
   path: Buffer[];
-  tx?: SignedTransaction;
-  initialTx?: SignedTransaction;
+  tx?: RawGtx;
+  initialTx?: RawGtx;
 };
 
 /**
@@ -52,6 +53,12 @@ export async function createOrchestrator(
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
 
+  if (!asset) {
+    throw new OrchestratorError(
+      `Unable to transfer asset '${assetId}' as it was not found on chain '${session.client.config.blockchainRid}'`,
+    );
+  }
+
   const path = await findPathToChainForAsset(session, asset, targetChainId);
 
   // Create a local event emitter instance for this orchestrator.
@@ -72,17 +79,20 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function initTransfer(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const tb = session.transactionBuilder();
 
-      tb.add(initTransferOp(recipientId, assetId, amount, path), () =>
-        resolve(),
-      )
-        .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-          state.initialTx = tx;
-        });
+      tb.add(
+        initTransferOp(recipientId, assetId, amount, path),
+        (data: OnAnchoredHandlerData | null, error: Error | null) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          state.tx = data?.tx;
+          resolve();
+        },
+      ).buildAndSend();
     });
   }
 
@@ -93,6 +103,11 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function applyTransfer(targetChainBrid: Buffer): Promise<void> {
+    if (!state.tx) {
+      throw new OrchestratorError(
+        "Unable to apply transfer for non existing transaction",
+      );
+    }
     const tb = await getTransactionBuilderForChain(session, targetChainBrid);
 
     const iccfOp = await createIccfProofOperation(
@@ -100,7 +115,7 @@ export async function createOrchestrator(
       path.indexOf(targetChainBrid),
     );
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       tb.add(iccfOp)
         .add(
           applyTransferOp(
@@ -108,17 +123,19 @@ export async function createOrchestrator(
             assetId,
             amount,
             path,
-            state.tx,
+            state.tx!,
             path.indexOf(targetChainBrid),
           ),
-          () => {
+          (data: OnAnchoredHandlerData | null, error: Error | null) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+            state.tx = data?.tx;
             resolve();
           },
         )
-        .buildAndSend()
-        .then(({ tx }) => {
-          state.tx = tx;
-        });
+        .buildAndSend();
     });
   }
 
@@ -140,7 +157,11 @@ export async function createOrchestrator(
     targetChainBrid: Buffer,
     pathIndex: number,
   ): Promise<Operation> {
-    const decodedTx = gtx.deserialize(state.tx);
+    if (!state.tx) {
+      throw new OrchestratorError(
+        "Unable to create a proof operation for a non existing transaction",
+      );
+    }
 
     const sourceBlockchainRid =
       pathIndex === 0
@@ -149,9 +170,9 @@ export async function createOrchestrator(
 
     const proofTx = await createIccfProofTx(
       directoryClient,
-      getTransactionRID(state.tx),
-      gtv.gtvHash(decodedTx),
-      decodedTx.signers,
+      getTransactionRid(state.tx),
+      gtv.gtvHash(state.tx),
+      state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
       targetChainBrid.toString("hex"),
     );
@@ -168,7 +189,13 @@ export async function createOrchestrator(
     await handleErrors(async () => {
       await initTransfer();
       localEmitter.emit("TransferInit");
-      await walkPath();
+
+      if (!state.tx || !state.initialTx) {
+        throw new OrchestratorError(
+          "Unable to perform transfer as tx was not applied propperly",
+        );
+      }
+      await walkPath(state.tx, state.initialTx);
     });
   }
 
@@ -181,7 +208,7 @@ export async function createOrchestrator(
     try {
       await fn();
     } catch (error) {
-      const orchError = new OrchestratorError(error.message, "generalError");
+      const orchError = new OrchestratorError(error.message);
       localEmitter.emit("TransferError", orchError);
     }
   }
@@ -193,13 +220,13 @@ export async function createOrchestrator(
    * @param transfer the transfer to resume
    */
   async function resumeTransfer(transfer: PendingTransfer) {
-    state.tx = gtx.serialize(transfer.tx);
-    state.initialTx = gtx.serialize(transfer.tx);
+    state.tx = transfer.tx;
+    state.initialTx = transfer.tx;
     for (let i = 0; i < state.path.length; i++) {
       if (
         await isAppliedOnBrid(
           formatter.ensureBuffer(state.path[i]),
-          getTransactionRID(state.tx),
+          getTransactionRid(state.tx),
           transfer.opIndex,
         )
       ) {
@@ -217,7 +244,7 @@ export async function createOrchestrator(
     }
 
     await handleErrors(async () => {
-      await walkPath(transfer);
+      await walkPath(state.tx!, state.initialTx!, transfer);
     });
   }
 
@@ -251,7 +278,11 @@ export async function createOrchestrator(
     return connection.query<boolean>(isTransferApplied(txBrid, opIndex));
   }
 
-  async function walkPath(transfer?: PendingTransfer) {
+  async function walkPath(
+    tx: RawGtx,
+    initialTx: RawGtx,
+    transfer?: PendingTransfer,
+  ) {
     for (
       let pathIndex = state.currentHopIndex;
       pathIndex < path.length;
@@ -276,8 +307,8 @@ export async function createOrchestrator(
       tb.add(iccfOp)
         .add(
           deletePendingTransferOp(
-            state.tx,
-            getTransactionRID(state.initialTx),
+            tx,
+            getTransactionRid(initialTx),
             transfer?.opIndex || 1,
           ),
           () => {

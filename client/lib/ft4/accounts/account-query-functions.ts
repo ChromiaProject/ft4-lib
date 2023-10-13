@@ -2,7 +2,7 @@ import { formatter, IClient } from "postchain-client";
 import {
   accountById,
   accountsByParticipantId,
-  RateLimit as RateLimitQuery,
+  RateLimitQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
   accountsByAuthDescriptorId,
@@ -20,7 +20,7 @@ import { createTransferHistoryRetriever } from "./transfer-history/transfer-hist
 import { TransferHistoryFilter } from "./transfer-history/types";
 import {
   AuthDescriptor,
-  RawAuthDescriptor,
+  AuthDescriptorResponse,
   mapAuthDescriptors,
 } from "./auth-descriptor";
 import { createEntityRetriever } from "../utils/entity-retriever";
@@ -41,9 +41,7 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query<Omit<RateLimit, "getAvailablePoints">>(
-    RateLimitQuery(accountId),
-  );
+  const rateLimit = await session.query(RateLimitQuery(accountId));
 
   const chainInfo = await getConfig(session);
 
@@ -90,7 +88,7 @@ export function createAccountObject(
     ) => {
       const retriever = createEntityRetriever<
         AuthDescriptor,
-        RawAuthDescriptor
+        AuthDescriptorResponse
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
@@ -131,7 +129,7 @@ export async function getById(
   connection: Connection,
   id: BufferId,
 ): Promise<Account | null> {
-  const accountId = await connection.query<Buffer>(accountById(id));
+  const accountId = await connection.query(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
 }
@@ -140,8 +138,7 @@ export async function getByParticipantId(
   connection: Connection,
   id: BufferId,
 ): Promise<Account[]> {
-  const accountIds =
-    (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
+  const accountIds = await connection.query(accountsByParticipantId(id));
 
   return accountIds.map((id) => createAccountObject(connection, id));
 }
@@ -164,7 +161,7 @@ export async function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): Promise<boolean> {
-  return (await connection.query<boolean>(
+  return (await connection.query(
     Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }
@@ -175,9 +172,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
 ): Promise<AuthDescriptor[]> {
   return connection
-    .query<RawAuthDescriptor[]>(
-      accountAuthDescriptorsByParticipantId(accountId, participantId),
-    )
+    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
     .then((authDescriptors) =>
       authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
     );

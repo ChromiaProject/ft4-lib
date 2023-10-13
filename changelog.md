@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.6] - 2023-09-29
+
+### Fixed
+- addAuthDescriptor and deleteAuthDescriptor were hard to use, as you couldn't easily use the new keypair you just added in subsequent operations. They now return the receipt and a new session to use for future operations if you want to also use the current auth descriptor.
+- exported some types regarding assets that weren't available for end users
+
+### Changed
+- All operations now return an TransactionCompletion, which holds the receipt and (optionally) additional data
+
+## [0.1.5] - 2023-09-12
 
 ### Added
 - assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from
@@ -20,12 +29,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Transfer history's asset properties are now of the Asset type
 - TransactionBuilder's `buildAndSend` now returns the transaction alongside the receipt
 - TransactionBuilder's `onAnchoredHandler`s now receive the signed transaction too
+- Auth messages now include rid of the blockchain to which the tx is being submitted.
 
 ### Fixed
 - Asset queries now return Asset type with `iconUrl`, not `icon_url`
 - Balance queries now return frozen objects
 - Exports of admin functions.
 - `authenticate()` function will now try to match operation name exactly when searching for auth handlers and throw an error if none is found. The old behaviour where scope path was traversed to the root can be aquired again by calling `authenticate(strict = false)`
+- `Connection` interface is now exported and part of the public interface
+
+## [0.1.4] - 2023-07-21
+
+### Changed
+- README
 
 ## [0.1.3] - 2023-07-13
 
