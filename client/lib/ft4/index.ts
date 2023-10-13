@@ -1,6 +1,5 @@
 import { logger } from "postchain-client";
 import { version } from "../../../package.json";
-import { authDescriptor } from "./accounts";
 
 // Authentication module
 export {
@@ -39,6 +38,9 @@ export {
 // Accounts module
 export {
   AuthDescriptor,
+  // TODO: Remove this export by merging
+  // [Refactor auth descriptor model](https://bitbucket.org/chromawallet/ft3-lib/pull-requests/266)
+  authDescriptor,
   FlagsType,
   Account,
   GtvAuthDescriptor,
@@ -76,7 +78,6 @@ export {
 export const ft = Object.freeze({
   getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
-  authDescriptor,
 });
 
 ft.setLogLevel(0);
