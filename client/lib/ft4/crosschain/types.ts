@@ -14,7 +14,7 @@ export type GtvInitTransferArgs = [
 export type OrchestratorEvents = {
   TransferInit: [];
   TransferHop: [BufferId];
-  TransferEnd: [];
+  TransferComplete: [];
   TransferError: [OrchestratorError];
 };
 

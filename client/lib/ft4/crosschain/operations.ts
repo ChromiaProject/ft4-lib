@@ -37,15 +37,10 @@ export function applyTransfer(
   );
 }
 
-export function deletePendingTransfer(
+export function completeTransfer(
   tx: RawGtx,
   initialTxRid: Buffer,
   opIndex: number,
 ): Operation {
-  return op(
-    "ft4.crosschain.delete_pending_transfer",
-    tx,
-    initialTxRid,
-    opIndex,
-  );
+  return op("ft4.crosschain.complete_transfer", tx, initialTxRid, opIndex);
 }

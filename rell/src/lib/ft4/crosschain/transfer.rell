@@ -9,9 +9,8 @@ entity applied_transfers {
 
 entity pending_transfer {
     key transaction, op_index; 
-    transaction;
     op_index: integer;
-    accounts.account;
+    index accounts.account;
 }
 
 namespace Unsafe {

@@ -134,7 +134,7 @@ operation apply_transfer(
     );
 }
 
-operation delete_pending_transfer(iccf_tx: gtx_transaction, original_tx_rid: byte_array, op_index: integer) {
+operation complete_transfer(iccf_tx: gtx_transaction, original_tx_rid: byte_array, op_index: integer) {
     require(
         iccf.check_iccf_proof(
             iccf_tx.body.blockchain_rid,

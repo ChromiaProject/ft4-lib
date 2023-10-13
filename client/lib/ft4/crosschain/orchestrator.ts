@@ -17,7 +17,7 @@ import { transactionBuilder } from "../utils/transaction-builder";
 import { OrchestratorError } from "./errors";
 import {
   applyTransfer as applyTransferOp,
-  deletePendingTransfer as deletePendingTransferOp,
+  completeTransfer as completeTransferOp,
   initTransfer as initTransferOp,
 } from "./operations";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
@@ -310,7 +310,7 @@ export async function createOrchestrator(
     await new Promise<void>((resolve) => {
       tb.add(iccfOp)
         .add(
-          deletePendingTransferOp(
+          completeTransferOp(
             tx,
             getTransactionRid(initialTx),
             transfer?.opIndex || 1,
@@ -322,7 +322,7 @@ export async function createOrchestrator(
         .buildAndSend();
     });
 
-    localEmitter.emit("TransferEnd");
+    localEmitter.emit("TransferComplete");
   }
 
   /* Cross-Chain Transfer convenience event handlers */
@@ -344,11 +344,11 @@ export async function createOrchestrator(
   }
 
   function onTransferEnd(listener: Listener<[]>) {
-    return localEmitter.on("TransferEnd", listener);
+    return localEmitter.on("TransferComplete", listener);
   }
 
   function offTransferEnd(listener: Listener<[]>) {
-    return localEmitter.off("TransferEnd", listener);
+    return localEmitter.off("TransferComplete", listener);
   }
 
   function onTransferError(listener: Listener<[OrchestratorError]>) {
