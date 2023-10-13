@@ -79,7 +79,7 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function initTransfer(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       const tb = session.transactionBuilder();
 
       tb.add(
@@ -93,6 +93,8 @@ export async function createOrchestrator(
           resolve();
         },
       ).buildAndSend();
+    }).then(() => {
+      localEmitter.emit("TransferInit");
     });
   }
 
@@ -115,7 +117,7 @@ export async function createOrchestrator(
       path.indexOf(targetChainBrid),
     );
 
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       tb.add(iccfOp)
         .add(
           applyTransferOp(
@@ -136,6 +138,8 @@ export async function createOrchestrator(
           },
         )
         .buildAndSend();
+    }).then(() => {
+      localEmitter.emit("TransferHop", targetChainBrid);
     });
   }
 
@@ -150,12 +154,12 @@ export async function createOrchestrator(
    * Create ICCF proof for a specific bridge.
    *
    * @param {Buffer} targetChainBrid - The ID of the target bridge.
-   * @param {number} pathIndex - the hop index of the path where the transaction is anchored
+   * @param {number} hopIndex - the hop index of the path where the transaction is anchored
    * @returns {Promise<Operation>} The ICCF proof operation.
    */
   async function createIccfProofOperation(
     targetChainBrid: Buffer,
-    pathIndex: number,
+    hopIndex: number,
   ): Promise<Operation> {
     if (!state.tx) {
       throw new OrchestratorError(
@@ -164,9 +168,7 @@ export async function createOrchestrator(
     }
 
     const sourceBlockchainRid =
-      pathIndex === 0
-        ? session.client.config.blockchainRid
-        : path[pathIndex - 1];
+      hopIndex === 0 ? session.client.config.blockchainRid : path[hopIndex - 1];
 
     const proofTx = await createIccfProofTx(
       directoryClient,
@@ -188,14 +190,14 @@ export async function createOrchestrator(
   async function transfer(): Promise<void> {
     await handleErrors(async () => {
       await initTransfer();
-      localEmitter.emit("TransferInit");
 
       if (!state.tx || !state.initialTx) {
         throw new OrchestratorError(
           "Unable to perform transfer as tx was not applied propperly",
         );
       }
-      await walkPath(state.tx, state.initialTx);
+      await walkPath();
+      await endTransfer(state.tx, state.initialTx);
     });
   }
 
@@ -244,7 +246,8 @@ export async function createOrchestrator(
     }
 
     await handleErrors(async () => {
-      await walkPath(state.tx!, state.initialTx!, transfer);
+      await walkPath();
+      await endTransfer(state.tx!, state.initialTx!, transfer);
     });
   }
 
@@ -275,26 +278,27 @@ export async function createOrchestrator(
       session.client,
       targetChainBrid,
     );
-    return connection.query<boolean>(isTransferApplied(txBrid, opIndex));
+    return connection.query(isTransferApplied(txBrid, opIndex));
   }
 
-  async function walkPath(
+  async function walkPath() {
+    for (
+      let hopIndex = state.currentHopIndex;
+      hopIndex < path.length;
+      hopIndex++
+    ) {
+      const nextBrid = path[hopIndex];
+      await applyTransfer(nextBrid);
+
+      state.currentHopIndex++;
+    }
+  }
+
+  async function endTransfer(
     tx: RawGtx,
     initialTx: RawGtx,
     transfer?: PendingTransfer,
   ) {
-    for (
-      let pathIndex = state.currentHopIndex;
-      pathIndex < path.length;
-      pathIndex++
-    ) {
-      const targetBrid = path[pathIndex];
-      await applyTransfer(targetBrid);
-
-      state.currentHopIndex++;
-      localEmitter.emit("TransferHop", targetBrid);
-    }
-
     const targetChainBrid = path.slice(-1)[0];
     const tb = await getTransactionBuilderForChain(
       session,

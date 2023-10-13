@@ -2,10 +2,11 @@ import { QueryObject, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
 import { Buffer } from "buffer";
 import { OptionalPageCursor } from "../types";
+import { PendingTransferResponse } from "./types";
 
 export function assetOriginById(
   assetId: BufferId,
-): QueryObject<{ asset_id: Buffer }> {
+): QueryObject<Buffer, { asset_id: Buffer }> {
   return {
     name: "ft4.crosschain.get_asset_origin_by_id",
     args: {
@@ -18,11 +19,14 @@ export function pendingTransfersForAccount(
   accountId: BufferId,
   limit: number,
   cursor: OptionalPageCursor,
-): QueryObject<{
-  account_id: Buffer;
-  page_size: number;
-  page_cursor: OptionalPageCursor;
-}> {
+): QueryObject<
+  PendingTransferResponse[],
+  {
+    account_id: Buffer;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
+> {
   return {
     name: "ft4.crosschain.get_pending_transfers_for_account",
     args: {
@@ -36,7 +40,7 @@ export function pendingTransfersForAccount(
 export function isTransferApplied(
   txRid: Buffer,
   opIndex: number,
-): QueryObject<{ tx_rid: Buffer; op_index: number }> {
+): QueryObject<boolean, { tx_rid: Buffer; op_index: number }> {
   return {
     name: "ft4.crosschain.is_transfer_applied",
     args: {

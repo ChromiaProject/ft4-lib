@@ -108,7 +108,7 @@ export function createAccountObject(
     },
     getTransferHistoryEntry: async (rowid: number) =>
       transferHistoryRetriever.retrieveSingle(rowid),
-    getPendingTransfers: async (
+    getPendingCrosschainTransfers: async (
       limit = 100,
       cursor: OptionalPageCursor = null,
     ) => {

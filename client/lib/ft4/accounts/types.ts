@@ -48,7 +48,9 @@ export interface Account {
   getTransferHistoryEntry: (
     rowid: number,
   ) => Promise<TransferHistoryEntry | null>;
-  getPendingTransfers: () => Promise<PaginatedEntity<PendingTransfer>>;
+  getPendingCrosschainTransfers: () => Promise<
+    PaginatedEntity<PendingTransfer>
+  >;
 }
 
 export interface AuthenticatedAccount extends Account {

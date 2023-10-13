@@ -8,7 +8,7 @@ export async function getAssetOriginById(
   connection: Connection,
   id: BufferId,
 ): Promise<Buffer> {
-  return await connection.query<Buffer>(Query.assetOriginById(id));
+  return await connection.query(Query.assetOriginById(id));
 }
 
 export async function getPendingTransfersForAccount(
@@ -18,9 +18,7 @@ export async function getPendingTransfersForAccount(
   cursor: OptionalPageCursor = null,
 ): Promise<PendingTransfer[]> {
   return await connection
-    .query<PendingTransferResponse[]>(
-      Query.pendingTransfersForAccount(accountId, limit, cursor),
-    )
+    .query(Query.pendingTransfersForAccount(accountId, limit, cursor))
     .then(mapPendingTransfers);
 }
 
@@ -39,7 +37,5 @@ export async function isTransferApplied(
   txRid: Buffer,
   opIndex: number,
 ): Promise<boolean> {
-  return await connection.query<boolean>(
-    Query.isTransferApplied(txRid, opIndex),
-  );
+  return await connection.query(Query.isTransferApplied(txRid, opIndex));
 }

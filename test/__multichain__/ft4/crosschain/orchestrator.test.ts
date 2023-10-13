@@ -141,7 +141,7 @@ describe("Orchestrator", () => {
     });
 
     await promise;
-    const pendingTransfers = await account0.getPendingTransfers();
+    const pendingTransfers = await account0.getPendingCrosschainTransfers();
     const orchestrator = await createOrchestrator(
       multichain2Rid,
       account2.id,
@@ -174,7 +174,7 @@ describe("Orchestrator", () => {
     const pendingTransfers = new Promise<PaginatedEntity<PendingTransfer>>(
       (resolve) => {
         orchestrator.onTransferInit(() => {
-          resolve(account0.getPendingTransfers());
+          resolve(account0.getPendingCrosschainTransfers());
         });
       },
     );
@@ -182,7 +182,7 @@ describe("Orchestrator", () => {
     await orchestrator.transfer();
     const pagination = await pendingTransfers;
     expect(pagination.data.length).toBe(1);
-    const res = await account0.getPendingTransfers();
+    const res = await account0.getPendingCrosschainTransfers();
     expect(res.data.length).toBe(0);
   });
 });
