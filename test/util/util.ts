@@ -160,11 +160,7 @@ export async function addAuthDescriptorTo(
   );
 
   const tx = await transactionBuilder(authenticator, client)
-    .add(
-      addAuthDescriptor(
-        gtv.authDescriptorRegistrationToGtv(newUser.authDescriptorRegistration),
-      ),
-    )
+    .add(addAuthDescriptor(newUser.authDescriptorRegistration))
     .addSigners(keyHandlerUser2)
     .build();
   return client.sendTransaction(tx);

@@ -1,11 +1,9 @@
-import { op } from "../utils";
-import { BufferId } from "../../cryptoUtils";
 import { formatter, Operation } from "postchain-client";
+import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
-import {
-  GtvAuthDescriptorRegistration,
-  GtvAuthDescriptorArgs,
-} from "/ft4/accounts/auth-descriptor";
+import { op } from "../utils";
+import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
 
 export function burn(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), amount.value);
@@ -36,9 +34,12 @@ export function transfer(
 }
 
 export function addAuthDescriptor(
-  authDescriptor: GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs>,
+  authDescriptor: AnyAuthDescriptorRegistration,
 ): Operation {
-  return op("ft4.add_auth_descriptor", authDescriptor);
+  return op(
+    "ft4.add_auth_descriptor",
+    authDescriptorRegistrationToGtv(authDescriptor),
+  );
 }
 
 export function deleteAuthDescriptor(authDescriptorId: BufferId): Operation {

@@ -9,7 +9,7 @@ export function ruleVariableFromString(str: string): RuleVariable {
   const enumValues = Object.values(RuleVariable);
   for (const value of enumValues) {
     if (value === str) {
-      return RuleVariable[value];
+      return value;
     }
   }
   throw new AuthDescriptorError(`No rule variable named: '${str}'`);
@@ -19,7 +19,7 @@ export function ruleOperatorFromString(str: string): RuleOperator {
   const enumValues = Object.values(RuleOperator);
   for (const value of enumValues) {
     if (value === str) {
-      return RuleOperator[value];
+      return value;
     }
   }
   throw new AuthDescriptorError(`No rule operator named: '${str}'`);
@@ -42,7 +42,7 @@ const authTypeDeserializationMap = Object.values(AuthType)
   .map((value, i) => [i, value])
   .reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {});
 
-export function serializeAuthType(type: AuthType): any {
+export function serializeAuthType(type: AuthType): number {
   return authTypeSerializationMap[type];
 }
 

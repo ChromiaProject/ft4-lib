@@ -8,22 +8,18 @@ import { call, createSession } from "../ft-session";
 import { Connection } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import {
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "../utils/types";
+import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
 } from "./account-operations";
 import { createAccountObject } from "./account-query-functions";
-import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
+import { AnyAuthDescriptor, deriveAccountId } from "./auth-descriptor";
 import { AuthenticatedAccount } from "./types";
-import {
-  TransactionCompletion,
-  TransactionSessionCompletion,
-} from "../utils/types";
-import {
-  AnyAuthDescriptorRegistration,
-  deriveAccountId,
-} from "./auth-descriptor";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -32,7 +28,7 @@ export function createAuthenticatedAccount(
   return {
     authenticator,
     addAuthDescriptor: (
-      authDescriptor: AnyAuthDescriptorRegistration,
+      authDescriptor: AnyAuthDescriptor,
       newSigner: SignatureProvider | KeyPair,
     ) =>
       addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
@@ -51,7 +47,7 @@ export function createAuthenticatedAccount(
 async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  authDescriptorRegistration: AnyAuthDescriptorRegistration,
+  authDescriptorRegistration: AnyAuthDescriptor,
   newSigner: SignatureProvider | KeyPair,
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
@@ -60,11 +56,8 @@ async function addAuthDescriptor(
     authDescriptorRegistration,
   );
 
-  const registration = authDescriptorRegistrationToGtv(
-    authDescriptorRegistration,
-  );
   const tx = await tb
-    .add(addAuthDescriptorOp(registration))
+    .add(addAuthDescriptorOp(authDescriptorRegistration))
     .addSigners(
       createInMemoryFtKeyStore(newSigner).createKeyHandler(
         authDescriptorRegistration,

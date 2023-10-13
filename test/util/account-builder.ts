@@ -1,6 +1,5 @@
 import {
   FlagsType,
-  gtv,
   deriveAccountId,
   AnyAuthDescriptorRegistration,
   AuthDescriptorRule,
@@ -208,11 +207,7 @@ class AccountBuilder {
       const tx = {
         operations: [
           ftAuth(account.id, account.id),
-          addAuthDescriptor(
-            gtv.authDescriptorRegistrationToGtv(
-              this.authDescInfo.authDescriptor,
-            ),
-          ),
+          addAuthDescriptor(this.authDescInfo.authDescriptor),
           nop(),
         ],
         signers: [

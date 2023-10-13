@@ -169,7 +169,7 @@ describe("Test the account", () => {
       account.id,
       ad,
       [kp1, kp2, keyPair],
-      addAuthDescriptor(gtv.authDescriptorRegistrationToGtv(ad2)),
+      addAuthDescriptor(ad2),
     );
 
     expect((await account.getAuthDescriptors()).data.length).toBe(3);

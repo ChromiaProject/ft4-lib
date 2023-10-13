@@ -35,6 +35,7 @@ import {
   createMultiSignatureAuthDescriptorRegistration,
   createSimpleRule,
   createSingleSignatureAuthDescriptorRegistration,
+  deriveAccountId,
 } from "./accounts/auth-descriptor";
 import {
   TransferHistoryEntry,
@@ -106,6 +107,7 @@ export {
   createSimpleRule,
   createSingleSignatureAuthDescriptorRegistration,
   createWeb3ProviderEvmKeyStore,
+  deriveAccountId,
   mint,
   op,
   registerAccount,

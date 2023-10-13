@@ -38,6 +38,12 @@ function hashAuthDescriptor(
   return pclGtv.gtvHash(ad);
 }
 
+/**
+ * Computes the account id that would be the result of creating
+ * an account from the provided auth descriptor registration
+ * @param firstAuthDescriptor registration to compute id for
+ * @returns account id as Buffer
+ */
 export function deriveAccountId(
   firstAuthDescriptor:
     | GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs>
@@ -49,6 +55,12 @@ export function deriveAccountId(
   return hashAuthDescriptor(ad);
 }
 
+/**
+ * Creates a registration for a single signature auth descriptor
+ * @param args the arguments to the auth descriptor registration
+ * @param rule any rules to be included in the registration
+ * @returns the created registration
+ */
 export function createSingleSignatureAuthDescriptorRegistration(
   args: SingleSigAuthDescriptorArgs,
   rule: AuthDescriptorRule | null,
@@ -60,6 +72,12 @@ export function createSingleSignatureAuthDescriptorRegistration(
   };
 }
 
+/**
+ * Creates a registration for a multi signature auth descriptor
+ * @param args the arguments to the auth descriptor registration
+ * @param rule any rules to be included in the registration
+ * @returns the created registration
+ */
 export function createMultiSignatureAuthDescriptorRegistration(
   args: MultiSigAuthDescriptorArgs,
   rule: AuthDescriptorRule | null,
@@ -71,6 +89,13 @@ export function createMultiSignatureAuthDescriptorRegistration(
   };
 }
 
+/**
+ * Creates a rule that can be added to an auth descriptor(registration)
+ * @param variable what variable to use, see {@link RuleVariable}
+ * @param operator the operator to use for this rule, see {@link RuleOperator}
+ * @param value the value, or limit, for the variable/operator combination that this rule represents
+ * @returns the created rule
+ */
 export function createSimpleRule(
   variable: RuleVariable,
   operator: RuleOperator,
@@ -79,6 +104,13 @@ export function createSimpleRule(
   return { variable, operator, value };
 }
 
+/**
+ * Creates a rule consisting of two other rules, this rule is true when booth
+ * the composing rules are true.
+ * @param lhs first rule
+ * @param rhs second rule
+ * @returns the created rule
+ */
 export function createCompositeRule(
   lhs: AuthDescriptorRule,
   rhs: AuthDescriptorRule,
@@ -86,6 +118,12 @@ export function createCompositeRule(
   return { lhs, rhs };
 }
 
+/**
+ * Utility method that accepts an array of any kind of auth descriptor/auth descriptor registration
+ * and returns an array of all of the signiners represented by the provided objects.
+ * @param authDescriptors the auth descriptors(registrations) over which to aggregate signers
+ * @returns a list of all of the composing signers
+ */
 export function aggregateSigners(
   ...authDescriptors: AnyAuthDescriptor[] | AnyAuthDescriptorRegistration[]
 ): Buffer[] {
