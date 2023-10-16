@@ -8,6 +8,7 @@ import { FlagsType, createInMemoryFtKeyStore } from "/ft4";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
 import { createFakeAuthDataService } from "/util/fake-auth-data-service";
 import { fetchBlockchains } from "./util/blockchain";
+import { anchoredHandlerCallbackParameters } from "/util/blockchain-util";
 
 function getMocks() {
   const { authDescriptor, keyPair } = createTestAuthDescriptor([
@@ -49,6 +50,7 @@ describe("transaction builder", () => {
   it("calls registered handler when block is anchored", async () => {
     const { authenticatorMock } = getMocks();
     let callback = null;
+    const operation = nop();
 
     const promise = new Promise((resolve) => {
       transactionBuilder(authenticatorMock, client)
@@ -56,11 +58,14 @@ describe("transaction builder", () => {
           emptyOp(),
           (callback = jest.fn().mockImplementation((op) => resolve(op))),
         )
-        .add(nop())
+        .add(operation)
         .buildAndSend();
     });
 
     await promise;
-    expect(callback).toHaveBeenCalledWith(emptyOp(), expect.any(Buffer), null);
+    expect(callback).toHaveBeenCalledWith(
+      anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
+      null,
+    );
   });
 });

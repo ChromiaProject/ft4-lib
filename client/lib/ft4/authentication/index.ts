@@ -15,6 +15,11 @@ export * from "./evm";
 export * from "./ft";
 export * from "./types";
 
+export {
+  createSessionStorageLoginKeyStore,
+  createLocalStorageLoginKeyStore,
+} from "./login-manager/stores";
+
 export function createAuthenticator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],

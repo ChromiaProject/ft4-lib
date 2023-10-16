@@ -3,7 +3,7 @@
 import ^^.assets.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
-import test_op: ^^.operations;
+import iccf_op: ^^.operations.iccf_op;
 
 // Test for valid asset but invalid amount (0)
 function test_init_transfer_fails_when_amount_is_invalid() {
@@ -76,7 +76,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     );
 
     rell.test.tx()
-        .op(test_op.iccf_proof(source_brid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(source_brid, tx.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(init_args, tx, 0, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
