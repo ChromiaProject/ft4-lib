@@ -17,6 +17,7 @@ export class AuthorizationError extends Error {
 export type TransactionBuilder = {
   _operations: OpAuthPair[];
   _keyhandlersUsed: KeyHandler[];
+  _context: any;
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
@@ -146,8 +147,9 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -158,6 +160,7 @@ export function transactionBuilder(
       const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
+        context,
         authenticator.authDataService,
       );
       processedOperations.push(ops);
@@ -205,6 +208,7 @@ export function transactionBuilder(
     _operations: [],
     _keyhandlersUsed: [],
     session: client,
+    _context: {},
   };
   context.add = add.bind(context);
   context.build = build.bind(context);

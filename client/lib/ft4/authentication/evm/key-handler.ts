@@ -6,15 +6,15 @@ import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
-type NonceData = {
-  nonce: number;
-  accountId: BufferId;
-  authDescriptorId: BufferId;
-  keyStoreId: Buffer;
-};
+// type NonceData = {
+//   nonce: number;
+//   accountId: BufferId;
+//   authDescriptorId: BufferId;
+//   keyStoreId: Buffer;
+// };
 
-export const noncesByAccountAndAdId: { [key: string]: NonceData } = {};
-export const noncesByKeystoreId: { [key: string]: NonceData } = {};
+// export const noncesByAccountAndAdId: { [key: string]: NonceData } = {};
+// export const noncesByKeystoreId: { [key: string]: NonceData } = {};
 
 const getNonceId = (v1: BufferId, v2: BufferId) =>
   v1.toString("hex") + v2.toString("hex");
@@ -31,6 +31,7 @@ export function createEvmKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
+      context: any,
       authDataService: AuthDataService,
     ) =>
       authorize(
@@ -38,6 +39,7 @@ export function createEvmKeyHandler(
         authDescriptor.id,
         operation,
         authDataService,
+        context,
         keyStore,
       ),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
@@ -50,6 +52,7 @@ async function authorize(
   authDescriptorId: BufferId,
   operation: Operation,
   authDataService: AuthDataService,
+  context: any,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
   const messageTemplate = await authDataService.getAuthMessageTemplate(
@@ -71,13 +74,8 @@ async function authorize(
     .replace("{brid}", brid.toString("hex"))
     .replace("{nonce}", `${nonce}`);
 
-  try {
-    const signature = await keyStore.signMessage(message);
-    return [evmAuth(accountId, authDescriptorId, [signature]), operation];
-  } catch (err) {
-    resetNonce(keyStore);
-    throw err;
-  }
+  const signature = await keyStore.signMessage(message);
+  return [evmAuth(accountId, authDescriptorId, [signature]), operation];
 }
 
 /* eslint-disable */
@@ -85,7 +83,7 @@ async function sign(
   transaction: TxBuilderTransaction,
   keyStore: KeyStore,
 ): Promise<void> {
-  resetNonce(keyStore);
+  // resetNonce(keyStore);
 }
 /* eslint-enable */
 
@@ -93,38 +91,28 @@ async function getNonce(
   authDataService: AuthDataService,
   accountId: BufferId,
   authDescriptorId: BufferId,
-  keyStore: KeyStore,
+  context: any,
 ) {
   const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-  const cachedNonceData =
-    noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)];
+  // const cachedNonceData =
+  //   noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)];
+  if (!context.nonce && Object.isExtensible(context)) context.nonce = {};
+  const cachedNonce = context.nonce[getNonceId(accountId, authDescriptorId)];
 
-  if (!cachedNonceData || nonce > cachedNonceData.nonce) {
-    noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)] = {
-      nonce,
-      accountId,
-      authDescriptorId,
-      keyStoreId: keyStore.id,
-    };
-    noncesByKeystoreId[keyStore.id.toString("hex")] = {
-      nonce,
-      accountId,
-      authDescriptorId,
-      keyStoreId: keyStore.id,
-    };
+  if (!cachedNonce || nonce > cachedNonce) {
+    context.nonce[getNonceId(accountId, authDescriptorId)] = nonce;
   } else {
-    noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)].nonce += 1;
-    noncesByKeystoreId[keyStore.id.toString("hex")].nonce += 1;
+    context.nonce[getNonceId(accountId, authDescriptorId)] += 1;
   }
-  return noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)].nonce;
+  return context.nonce[getNonceId(accountId, authDescriptorId)];
 }
 
-async function resetNonce(keyStore: KeyStore) {
-  const nonceData = noncesByKeystoreId[keyStore.id.toString("hex")];
-  if (nonceData) {
-    delete noncesByKeystoreId[keyStore.id.toString("hex")];
-    delete noncesByAccountAndAdId[
-      getNonceId(nonceData.accountId, nonceData.authDescriptorId)
-    ];
-  }
-}
+// async function resetNonce(keyStore: KeyStore) {
+//   const nonceData = noncesByKeystoreId[keyStore.id.toString("hex")];
+//   if (nonceData) {
+//     delete noncesByKeystoreId[keyStore.id.toString("hex")];
+//     delete noncesByAccountAndAdId[
+//       getNonceId(nonceData.accountId, nonceData.authDescriptorId)
+//     ];
+//   }
+// }

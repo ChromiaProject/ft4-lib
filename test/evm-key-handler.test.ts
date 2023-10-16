@@ -60,6 +60,7 @@ describe("EVM key handler", () => {
     const operations = await keyHandler.authorize(
       accountId,
       op("foo"),
+      {},
       createFakeAuthDataService({
         foo: authData,
       }),
