@@ -1,6 +1,7 @@
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { Orchestrator, registerCrosschainAsset } from "/ft4";
+import { createAmount, Orchestrator, registerCrosschainAsset } from "/ft4";
+import { Amount } from "/ft4/asset/interfaces";
 import adminUser from "/util/admin_user";
 
 describe("Asset Hierarchy", () => {
@@ -10,13 +11,27 @@ describe("Asset Hierarchy", () => {
     testContext = await setupTestEnvironment();
   });
 
-  async function verifyEndTransfer(orchestrator: Orchestrator) {
+  async function verifyEndTransferAndBalances(
+    orchestrator: Orchestrator,
+    expectedBalances: { [key: number]: Amount | undefined },
+  ) {
     const endListener = jest.fn();
     orchestrator.onTransferEnd(endListener);
 
     await orchestrator.transfer();
 
     expect(endListener).toHaveBeenCalled();
+
+    for (const [accountNum, expectedBalance] of Object.entries(
+      expectedBalances,
+    )) {
+      if (expectedBalance !== undefined) {
+        const actualBalance = await testContext[
+          `account${accountNum}`
+        ].getBalanceByAssetId(testContext.sampleAsset);
+        expect(actualBalance.amount).toEqual(expectedBalance);
+      }
+    }
   }
 
   it("transfers from root to leaf and back", async () => {
@@ -35,7 +50,10 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
-    await verifyEndTransfer(orchestratorFromRootToLeaf);
+    await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {
+      0: createAmount(90, 1),
+      1: createAmount(10, 1),
+    });
 
     const orchestratorFromLeafToRoot = await createOrchestrator(
       testContext.multichain0.rid, // To root
@@ -45,7 +63,7 @@ describe("Asset Hierarchy", () => {
       testContext.session1, // From leaf
     );
 
-    await verifyEndTransfer(orchestratorFromLeafToRoot);
+    await verifyEndTransferAndBalances(orchestratorFromLeafToRoot, {});
   });
 
   it("transfers from leaf to sibling", async () => {
@@ -64,7 +82,7 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
-    await verifyEndTransfer(orchestratorFromRootToLeaf);
+    await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {});
 
     const orchestratorFromLeafToSibling = await createOrchestrator(
       testContext.multichain1.rid, // To sibling
@@ -74,7 +92,7 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From leaf
     );
 
-    await verifyEndTransfer(orchestratorFromLeafToSibling);
+    await verifyEndTransferAndBalances(orchestratorFromLeafToSibling, {});
   });
 
   it("transfers from leaf to branch", async () => {
@@ -93,7 +111,7 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
-    await verifyEndTransfer(orchestratorFromRootToLeaf);
+    await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {});
 
     const orchestratorFromLeafToBranch = await createOrchestrator(
       testContext.multichain2.rid, // To branch
@@ -103,7 +121,7 @@ describe("Asset Hierarchy", () => {
       testContext.session1, // From leaf
     );
 
-    await verifyEndTransfer(orchestratorFromLeafToBranch);
+    await verifyEndTransferAndBalances(orchestratorFromLeafToBranch, {});
   });
 
   it("transfers from branch to leaf", async () => {
@@ -122,7 +140,7 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
-    await verifyEndTransfer(orchestratorFromRootToBranch);
+    await verifyEndTransferAndBalances(orchestratorFromRootToBranch, {});
 
     const orchestratorFromBranchToLeaf = await createOrchestrator(
       testContext.multichain1.rid, // To leaf
@@ -132,6 +150,6 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From branch
     );
 
-    await verifyEndTransfer(orchestratorFromBranchToLeaf);
+    await verifyEndTransferAndBalances(orchestratorFromBranchToLeaf, {});
   });
 });
