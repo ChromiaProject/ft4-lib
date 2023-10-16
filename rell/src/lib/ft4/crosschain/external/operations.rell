@@ -54,14 +54,16 @@ operation init_transfer(
 }
 
 operation apply_transfer(
-    init_args: struct<init_transfer>,
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer,
     tx: gtx_transaction,
     op_index: integer,
     hop_index: integer
 ) {
     create crosschain.applied_transfers(tx.to_gtv().hash(), op_index);
+    val init_args = if (hop_index == 0) struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args.to_gtv()) else struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args[0].to_gtv());
 
-    if (hop_index == 0){
+    if (hop_index == 0) {
         require(
             tx.body.operations[op_index].name == "ft4.crosschain.init_transfer", 
             "The operation at number %s from tx is not init_transfer".format(op_index)
@@ -134,7 +136,12 @@ operation apply_transfer(
     );
 }
 
-operation complete_transfer(iccf_tx: gtx_transaction, original_tx_rid: byte_array, op_index: integer) {
+operation complete_transfer(
+    iccf_tx: gtx_transaction,
+    original_tx_rid: byte_array,
+    init_transfer_op_index: integer,
+    apply_transfer_op_index: integer
+) {
     require(
         iccf.check_iccf_proof(
             iccf_tx.body.blockchain_rid,
@@ -142,5 +149,19 @@ operation complete_transfer(iccf_tx: gtx_transaction, original_tx_rid: byte_arra
         ),
         "Could not delete pedning transfer as the proof is not anchored yet"
     );
-    delete crosschain.pending_transfer @ { .transaction.tx_rid == original_tx_rid, .op_index == op_index };
+    val pending_transfer = crosschain.pending_transfer @ { .transaction.tx_rid == original_tx_rid, .op_index == init_transfer_op_index };
+    val tx = gtx_transaction.from_bytes(pending_transfer.transaction.tx_data);
+
+    require(
+        tx.body.operations[init_transfer_op_index].name == "ft4.crosschain.init_transfer", 
+        "Provided op_index was %s instead of init_transfer".format(tx.body.operations[init_transfer_op_index].name)
+    );
+
+    val init_transfer_args = struct<init_transfer>.from_gtv(tx.body.operations[init_transfer_op_index].args.to_gtv());
+    require(iccf_tx.body.blockchain_rid == init_transfer_args.hops[init_transfer_args.hops.size() - 1], "This xc transfer is not completed yet");
+
+    val apply_transfer_args = struct<apply_transfer>.from_gtv(iccf_tx.body.operations[apply_transfer_op_index].args.to_gtv());
+    require(apply_transfer_args.init_transfer_tx == tx, "The proof for the apply_transfer does not match the init_transfer transaction");
+
+    delete pending_transfer;
 }
