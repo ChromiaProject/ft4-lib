@@ -137,31 +137,38 @@ operation apply_transfer(
 }
 
 operation complete_transfer(
-    iccf_tx: gtx_transaction,
-    original_tx_rid: byte_array,
-    init_transfer_op_index: integer,
-    apply_transfer_op_index: integer
+    final_apply_transfer_tx: gtx_transaction,
+    op_index: integer
 ) {
     require(
         iccf.check_iccf_proof(
-            iccf_tx.body.blockchain_rid,
-            iccf_tx.to_gtv().hash()
+            final_apply_transfer_tx.body.blockchain_rid,
+            final_apply_transfer_tx.to_gtv().hash()
         ),
         "Could not delete pedning transfer as the proof is not anchored yet"
     );
-    val pending_transfer = crosschain.pending_transfer @ { .transaction.tx_rid == original_tx_rid, .op_index == init_transfer_op_index };
-    val tx = gtx_transaction.from_bytes(pending_transfer.transaction.tx_data);
 
     require(
-        tx.body.operations[init_transfer_op_index].name == "ft4.crosschain.init_transfer", 
-        "Provided op_index was %s instead of init_transfer".format(tx.body.operations[init_transfer_op_index].name)
+        final_apply_transfer_tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer",
+        "Operation at op_index was not apply_transfer"
     );
 
-    val init_transfer_args = struct<init_transfer>.from_gtv(tx.body.operations[init_transfer_op_index].args.to_gtv());
-    require(iccf_tx.body.blockchain_rid == init_transfer_args.hops[init_transfer_args.hops.size() - 1], "This xc transfer is not completed yet");
+    // map gtv args to struct
+    val final_apply_transfer_args = struct<apply_transfer>.from_gtv(final_apply_transfer_tx.body.operations[op_index].args.to_gtv());
 
-    val apply_transfer_args = struct<apply_transfer>.from_gtv(iccf_tx.body.operations[apply_transfer_op_index].args.to_gtv());
-    require(apply_transfer_args.init_transfer_tx == tx, "The proof for the apply_transfer does not match the init_transfer transaction");
+    // extract init transfer tx details
+    val init_transfer_tx_rid = final_apply_transfer_args.init_transfer_tx.to_gtv().hash();
+    val init_transfer_args = struct<init_transfer>.from_gtv(final_apply_transfer_args.init_transfer_tx.body.operations[final_apply_transfer_args.init_tx_op_index].to_gtv());
 
-    delete pending_transfer;
+    require(
+        final_apply_transfer_args.hop_index == init_transfer_args.hops.size() - 1,
+        "The provided transaction does not represent the final hop in this cross chain transfer"
+    );
+    require(
+        init_transfer_args.hops[final_apply_transfer_args.hop_index] == final_apply_transfer_tx.body.blockchain_rid,
+        "The provided transaction was not applied to the expected target chain"
+    );
+
+    // delete the pending transfer as it is now completed
+    delete crosschain.pending_transfer @ { .transaction.tx_rid == init_transfer_tx_rid, .op_index == final_apply_transfer_args.init_tx_op_index };
 }
