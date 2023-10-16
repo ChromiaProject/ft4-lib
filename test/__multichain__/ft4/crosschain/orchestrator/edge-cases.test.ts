@@ -106,4 +106,23 @@ describe("Edge Cases", () => {
       createTestOrchestrator(testContext.sampleAmount, asset),
     ).rejects.toThrowError(/^Path finder error/);
   });
+
+  it("handles insufficient funds when sending assets back", async () => {
+    const orchestratorTo = await createTestOrchestrator();
+
+    await orchestratorTo.transfer();
+
+    // Source chain account only has 10 tokens
+    const orchestratorFrom = await createTestOrchestrator(createAmount(20, 1));
+
+    const errorListener = jest.fn();
+    orchestratorFrom.onTransferError(errorListener);
+
+    await orchestratorFrom.transfer();
+
+    expect(errorListener).toHaveBeenCalled();
+    expect(errorListener.mock.calls[0][0].message).toMatch(
+      /^Not sufficient funds/i,
+    );
+  });
 });

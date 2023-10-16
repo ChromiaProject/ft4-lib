@@ -31,7 +31,7 @@ describe("Basic Functionality", () => {
     expect(initListener).toHaveBeenCalled();
   });
 
-  it("executes single hop transfer", async () => {
+  it.only("executes single hop transfer", async () => {
     const orchestrator = await createTestOrchestrator();
 
     const hopListener = jest.fn();

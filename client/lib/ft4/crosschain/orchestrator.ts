@@ -81,15 +81,18 @@ export async function createOrchestrator(
 
       tb.add(
         initTransferOp(recipientId, assetId, amount, path),
-        (data: { tx: RawGtx }, error: Error | null) => {
-          if (error) {
-            reject(error);
+        (data: { tx: RawGtx }, reason: Error | null) => {
+          if (reason) {
+            console.error(`Failed to initialize transfer: ${reason}`);
+            reject(`Failed to initialize transfer: ${reason}`);
           } else {
             state.tx = data.tx;
+            console.log("Resolved init transfer");
             resolve();
           }
         },
       ).buildAndSend();
+      // .catch(error => reject(new TransferExecutionError(errorMessage, error)));
     });
   }
 
@@ -126,9 +129,10 @@ export async function createOrchestrator(
             state.tx,
             path.indexOf(targetChainBrid),
           ),
-          (data: { tx: RawGtx }, error: Error | null) => {
-            if (error) {
-              reject(error);
+          (data: { tx: RawGtx }, reason: Error | null) => {
+            if (reason) {
+              console.error(`Failed to apply transfer: ${reason}`);
+              reject(`Failed to apply transfer: ${reason}`);
             } else {
               state.tx = data.tx;
               resolve();
@@ -136,6 +140,7 @@ export async function createOrchestrator(
           },
         )
         .buildAndSend();
+      // .catch(error => reject(new TransferExecutionError(errorMessage, error)));
     });
   }
 
@@ -183,7 +188,10 @@ export async function createOrchestrator(
     try {
       localEmitter.emit("TransferInit");
 
+      console.log("Initializing transfer...");
       await initTransfer();
+
+      console.log(`Expecting ${path.length} hops...`);
 
       for (
         let pathIndex = state.currentHopIndex;
@@ -192,6 +200,7 @@ export async function createOrchestrator(
       ) {
         const brid = path[pathIndex];
 
+        console.log(`Applying transfer to ${brid.toString("hex")}...`);
         await applyTransfer(directoryClient, brid);
 
         state.currentHopIndex++;
@@ -200,7 +209,7 @@ export async function createOrchestrator(
 
       localEmitter.emit("TransferEnd");
     } catch (error) {
-      const orchError = new TransferExecutionError(error.toString());
+      const orchError = new TransferExecutionError(error.toString(), error);
       localEmitter.emit("TransferError", orchError);
     }
   }

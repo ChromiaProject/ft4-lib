@@ -1,20 +1,24 @@
 export class OrchestratorError extends Error {
-  type: string;
+  originalError?: Error;
 
-  constructor(message: string, type: string) {
+  constructor(message: string, originalError?: Error) {
     super(message);
-    this.type = type;
+    Object.setPrototypeOf(this, new.target.prototype);
+
+    if (originalError) {
+      this.originalError = originalError;
+    }
   }
 }
 
 export class FactoryError extends OrchestratorError {
-  constructor(message: string) {
-    super(message, "FactoryError");
+  constructor(message: string, originalError?: Error) {
+    super(message, originalError);
   }
 }
 
 export class TransferExecutionError extends OrchestratorError {
-  constructor(message: string) {
-    super(message, "TransferError");
+  constructor(message: string, originalError?: Error) {
+    super(message, originalError);
   }
 }
