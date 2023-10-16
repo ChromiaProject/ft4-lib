@@ -41,4 +41,5 @@ operation consume_point(account_id: byte_array) {
     require(state.points > 0, "Insufficient rate limiter points");
 
 	state.points -= 1;
+    state.last_update = op_context.last_block_time;
 }
