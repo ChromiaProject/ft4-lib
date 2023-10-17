@@ -1,8 +1,10 @@
 import { Buffer } from "buffer";
-import { RawGtx } from "postchain-client";
+import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "../events";
 import { OrchestratorError } from "./errors";
 import { BufferId } from "/cryptoUtils";
+import { TransactionBuilder } from "../utils/transaction-builder";
+import { Session } from "../types";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -18,11 +20,27 @@ export type OrchestratorEvents = {
   TransferError: [OrchestratorError];
 };
 
-export interface Orchestrator {
-  transfer: () => Promise<void>;
-  resumeTransfer: (transfer: PendingTransfer) => Promise<void>;
-  resumeTransfers: (transfers: PendingTransfer[]) => Promise<void>;
+type OrchestratorState = {
+  currentHopIndex: number;
+  path: Buffer[];
+  tx?: RawGtx;
+  initialTx?: RawGtx;
+};
+
+export interface OrchestratorBase {
+  state: OrchestratorState;
   eventEmitter: EventEmitter<OrchestratorEvents>;
+  walkPath: () => Promise<void>;
+  getTransactionBuilderForChain: (
+    session: Session,
+    brid: Buffer,
+  ) => Promise<TransactionBuilder>;
+  handleErrors: (fn: () => Promise<void>) => Promise<void>;
+  endTransfer: (tx: RawGtx, transfer?: PendingTransfer) => Promise<void>;
+  createIccfProofOperation: (
+    targetChainBrid: Buffer,
+    hopIndex: number,
+  ) => Promise<Operation>;
   onTransferInit: (listener: Listener<[]>) => void;
   offTransferInit: (listener: Listener<[]>) => void;
   onTransferHop: (listener: Listener<[BufferId]>) => void;
@@ -33,6 +51,14 @@ export interface Orchestrator {
   offTransferError: (listener: Listener<[OrchestratorError]>) => void;
 }
 
+export type Orchestrator = Omit<OrchestratorBase, "state"> & {
+  transfer: () => Promise<void>;
+};
+
+export type ResumeOrchestrator = Omit<OrchestratorBase, "state"> & {
+  resumeTransfer: () => Promise<void>;
+};
+
 export type PendingTransfer = {
   tx: RawGtx;
   opIndex: number;
@@ -40,7 +66,7 @@ export type PendingTransfer = {
 };
 
 export type PendingTransferResponse = {
-  tx_data: RawGtx;
+  tx_data: Buffer;
   op_index: number;
   account_id: Buffer;
 };

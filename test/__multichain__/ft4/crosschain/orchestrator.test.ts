@@ -9,7 +9,10 @@ import {
 import { AuthenticatedAccount } from "/ft4/accounts";
 import { Asset } from "/ft4/asset/types";
 import { PendingTransfer, findPathToChainForAsset } from "/ft4/crosschain";
-import { createOrchestrator } from "/ft4/crosschain/orchestrator";
+import {
+  createOrchestrator,
+  createResumeOrchestrator,
+} from "/ft4/crosschain/orchestrator";
 import { createSession } from "/ft4/ft-session";
 import { Connection, Session } from "/ft4/types";
 import { PaginatedEntity } from "/ft4/utils/types";
@@ -142,15 +145,12 @@ describe("Orchestrator", () => {
 
     await promise;
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    const orchestrator = await createOrchestrator(
-      multichain2Rid,
-      account2.id,
-      asset.id,
-      amount,
+    const orchestrator = await createResumeOrchestrator(
       session0,
+      pendingTransfers.data[0],
     );
 
-    await orchestrator.resumeTransfers(pendingTransfers.data);
+    await orchestrator.resumeTransfer();
     const balance = await account2.getBalanceByAssetId(asset.id);
     Object.assign(BigInt.prototype, {
       toJSON: function () {

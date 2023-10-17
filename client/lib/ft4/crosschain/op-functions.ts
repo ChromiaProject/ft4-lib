@@ -29,24 +29,20 @@ export async function initTransfer(
 export async function applyTransfer(
   connection: Connection,
   authenticator: Authenticator,
-  recipientId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-  hops: BufferId[],
+  initTransferTx: RawGtx,
   tx: RawGtx,
   targetChainIndex: number,
+  initTransferOpIndex: number = OP_INDEX_INIT_TRANSFER,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
     applyTransferOp(
-      recipientId,
-      assetId,
-      amount,
-      hops,
+      initTransferTx,
       tx,
       targetChainIndex,
+      initTransferOpIndex,
       operationIndex,
     ),
   );

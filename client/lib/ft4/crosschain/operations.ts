@@ -20,17 +20,16 @@ export function initTransfer(
 }
 
 export function applyTransfer(
-  recipientId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-  hops: BufferId[],
+  initTransferTx: RawGtx,
   tx: RawGtx,
   targetChainIndex: number,
+  initTransferOpIndex: number = OP_INDEX_INIT_TRANSFER,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Operation {
   return op(
     "ft4.crosschain.apply_transfer",
-    getInitTransferArgs(recipientId, assetId, amount, hops),
+    initTransferTx,
+    initTransferOpIndex,
     tx,
     operationIndex,
     targetChainIndex,

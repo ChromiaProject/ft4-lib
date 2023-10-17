@@ -3,6 +3,7 @@ import { BufferId } from "../../cryptoUtils";
 import { Connection, OptionalPageCursor } from "../types";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
+import { RawGtx, gtx } from "postchain-client";
 
 export async function getAssetOriginById(
   connection: Connection,
@@ -25,11 +26,22 @@ export async function getPendingTransfersForAccount(
 export function mapPendingTransfers(
   transfers: PendingTransferResponse[],
 ): PendingTransfer[] {
-  return transfers.map((transfer) => ({
-    accountId: transfer.account_id,
-    opIndex: transfer.op_index,
-    tx: transfer.tx_data,
-  }));
+  return transfers.map((transfer) => {
+    const deserialized = gtx.deserialize(transfer.tx_data);
+    const tx: RawGtx = [
+      [
+        deserialized.blockchainRid,
+        deserialized.operations.map((op) => [op.opName, op.args]),
+        deserialized.signers,
+      ],
+      deserialized.signatures,
+    ];
+    return {
+      accountId: transfer.account_id,
+      opIndex: transfer.op_index,
+      tx,
+    };
+  });
 }
 
 export async function isTransferApplied(

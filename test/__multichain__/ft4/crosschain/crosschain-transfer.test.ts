@@ -79,14 +79,7 @@ describe("Crosschain transfer", () => {
         await connection01.client.sendTransaction({
           operations: [
             iccfProofOperation,
-            applyTransferOp(
-              account01.id,
-              asset00.id,
-              createAmount(100, asset00.decimals),
-              [multichain01.rid],
-              data.tx,
-              0,
-            ),
+            applyTransferOp(data.tx, data.tx, 0),
           ],
           signers: [],
         });

@@ -22,16 +22,16 @@ import {
 } from "./operations";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { isTransferApplied } from "./queries";
-import { Orchestrator, OrchestratorEvents, PendingTransfer } from "./types";
+import {
+  Orchestrator,
+  OrchestratorBase,
+  OrchestratorEvents,
+  PendingTransfer,
+  ResumeOrchestrator,
+} from "./types";
 import { BufferId } from "/cryptoUtils";
 import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
-
-type State = {
-  currentHopIndex: number;
-  path: Buffer[];
-  tx?: RawGtx;
-  initialTx?: RawGtx;
-};
+import { createAmount } from "../asset";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -52,27 +52,19 @@ export async function createOrchestrator(
   session: Session,
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
-
   if (!asset) {
     throw new OrchestratorError(
       `Unable to transfer asset '${assetId}' as it was not found on chain '${session.client.config.blockchainRid}'`,
     );
   }
-
   const path = await findPathToChainForAsset(session, asset, targetChainId);
-
-  // Create a local event emitter instance for this orchestrator.
-  const localEmitter = new EventEmitter<OrchestratorEvents>();
-
-  const state: State = {
-    currentHopIndex: 0,
+  const { state, ...orchestrator } = await createBaseOrcestrator(
+    session,
+    recipientId,
+    assetId,
+    amount,
     path,
-  };
-
-  const directoryClient = await createClient({
-    directoryNodeUrlPool: session.client.config.endpointPool.slice(),
-    blockchainIid: 0,
-  });
+  );
 
   /**
    * Initialize the transfer by creating the initial transaction.
@@ -90,13 +82,146 @@ export async function createOrchestrator(
             return;
           }
           state.tx = data?.tx;
+          state.initialTx = data?.tx;
           resolve();
         },
       ).buildAndSend();
     }).then(() => {
-      localEmitter.emit("TransferInit");
+      orchestrator.eventEmitter.emit("TransferInit");
     });
   }
+
+  /**
+   * Execute the transfer operation across all steps.
+   * @async
+   * @returns {Promise<void>}
+   */
+  async function transfer(): Promise<void> {
+    await orchestrator.handleErrors(async () => {
+      await initTransfer();
+
+      if (!state.tx || !state.initialTx) {
+        throw new OrchestratorError(
+          "Unable to perform transfer as tx was not applied propperly",
+        );
+      }
+      await orchestrator.walkPath();
+      await orchestrator.endTransfer(state.tx);
+    });
+  }
+
+  return Object.freeze({
+    ...orchestrator,
+    transfer,
+  });
+}
+
+/**
+ * Creates an orchestrator instance to handle resuming a transfer
+ * which was initiated but did not complete propperly
+ * @param {Session} session - The current user session
+ * @param {PendingTransfer} pendingTransfer - The transfer to resume
+ * @returns The orchestrator instance which will be able to resume the transfer
+ */
+export async function createResumeOrchestrator(
+  session: Session,
+  pendingTransfer: PendingTransfer,
+): Promise<ResumeOrchestrator> {
+  const operations = pendingTransfer.tx[0][1];
+  const initTransferOpArgs = operations[pendingTransfer.opIndex][1];
+  const [recipientId, assetId, amount, path] = initTransferOpArgs;
+
+  const { state, ...orchestrator } = await createBaseOrcestrator(
+    session,
+    recipientId as Buffer,
+    assetId as Buffer,
+    createAmount(amount as number),
+    path as Buffer[],
+  );
+
+  /**
+   * Accepts a cross chain transfer that was not completed
+   * and resumes it. This function returns when the transfer
+   * has been successfully completed.
+   * @param transfer the transfer to resume
+   */
+  async function resumeTransfer(): Promise<void> {
+    state.tx = pendingTransfer.tx;
+    state.initialTx = pendingTransfer.tx;
+    for (let i = 0; i < state.path.length; i++) {
+      if (
+        await isAppliedOnBrid(
+          formatter.ensureBuffer(state.path[i]),
+          getTransactionRid(state.tx),
+          pendingTransfer.opIndex,
+        )
+      ) {
+        state.currentHopIndex = i + 1;
+        break;
+      }
+    }
+
+    if (
+      state.currentHopIndex > 0 &&
+      state.currentHopIndex === state.path.length - 1
+    ) {
+      // Transfer already applied
+      return;
+    }
+
+    await orchestrator.handleErrors(async () => {
+      await orchestrator.walkPath();
+      await orchestrator.endTransfer(state.tx!, pendingTransfer);
+    });
+  }
+
+  /**
+   * Checks to see wether the specified transfer is already applied to
+   * this brid.
+   * @param targetChainBrid the brid of the chain to check
+   * @param txBrid the brid of the transaction containing the transfer
+   * @param opIndex the index of the transfer in the transaction
+   * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
+   */
+  async function isAppliedOnBrid(
+    targetChainBrid: Buffer,
+    txBrid: Buffer,
+    opIndex: number,
+  ): Promise<boolean> {
+    const connection = await createConnectionToBrid(
+      session.client,
+      targetChainBrid,
+    );
+    return connection.query(isTransferApplied(txBrid, opIndex));
+  }
+
+  return Object.freeze({
+    ...orchestrator,
+    resumeTransfer,
+  });
+}
+
+async function createBaseOrcestrator(
+  session: Session,
+  recipientId: BufferId,
+  assetId: BufferId,
+  amount: Amount,
+  path: Buffer[],
+): Promise<OrchestratorBase> {
+  const state = {
+    currentHopIndex: 0,
+    path,
+    tx: undefined,
+    initialTx: undefined,
+  };
+
+  const directoryClient = await createClient({
+    directoryNodeUrlPool: session.client.config.endpointPool.slice(),
+    blockchainIid: 0,
+  });
+
+  // Create a local event emitter instance for this orchestrator.
+  const localEmitter = new EventEmitter<OrchestratorEvents>();
 
   /**
    * Apply the transfer operation targeting a specific bridge.
@@ -104,7 +229,10 @@ export async function createOrchestrator(
    * @param {Buffer} targetChainBrid - The ID of the target bridge.
    * @returns {Promise<void>}
    */
-  async function applyTransfer(targetChainBrid: Buffer): Promise<void> {
+  async function applyTransfer(
+    initTransferTx: RawGtx,
+    targetChainBrid: Buffer,
+  ): Promise<void> {
     if (!state.tx) {
       throw new OrchestratorError(
         "Unable to apply transfer for non existing transaction",
@@ -121,10 +249,7 @@ export async function createOrchestrator(
       tb.add(iccfOp)
         .add(
           applyTransferOp(
-            recipientId,
-            assetId,
-            amount,
-            path,
+            initTransferTx,
             state.tx!,
             path.indexOf(targetChainBrid),
           ),
@@ -141,6 +266,19 @@ export async function createOrchestrator(
     }).then(() => {
       localEmitter.emit("TransferHop", targetChainBrid);
     });
+  }
+
+  async function walkPath() {
+    for (
+      let hopIndex = state.currentHopIndex;
+      hopIndex < path.length;
+      hopIndex++
+    ) {
+      const nextBrid = path[hopIndex];
+      await applyTransfer(state.initialTx, nextBrid);
+
+      state.currentHopIndex++;
+    }
   }
 
   async function getTransactionBuilderForChain(session: Session, brid: Buffer) {
@@ -183,25 +321,6 @@ export async function createOrchestrator(
   }
 
   /**
-   * Execute the transfer operation across all steps.
-   * @async
-   * @returns {Promise<void>}
-   */
-  async function transfer(): Promise<void> {
-    await handleErrors(async () => {
-      await initTransfer();
-
-      if (!state.tx || !state.initialTx) {
-        throw new OrchestratorError(
-          "Unable to perform transfer as tx was not applied propperly",
-        );
-      }
-      await walkPath();
-      await endTransfer(state.tx, state.initialTx);
-    });
-  }
-
-  /**
    * Wraps the provied callback in a try/catch block and handles
    * emitting error events if the provided callback throws any errors.
    * @param fn
@@ -215,90 +334,7 @@ export async function createOrchestrator(
     }
   }
 
-  /**
-   * Accepts a cross chain transfer that was not completed
-   * and resumes it. This function returns when the transfer
-   * has been successfully completed.
-   * @param transfer the transfer to resume
-   */
-  async function resumeTransfer(transfer: PendingTransfer) {
-    state.tx = transfer.tx;
-    state.initialTx = transfer.tx;
-    for (let i = 0; i < state.path.length; i++) {
-      if (
-        await isAppliedOnBrid(
-          formatter.ensureBuffer(state.path[i]),
-          getTransactionRid(state.tx),
-          transfer.opIndex,
-        )
-      ) {
-        state.currentHopIndex = i + 1;
-        break;
-      }
-    }
-
-    if (
-      state.currentHopIndex > 0 &&
-      state.currentHopIndex === state.path.length - 1
-    ) {
-      // Transfer already applied
-      return;
-    }
-
-    await handleErrors(async () => {
-      await walkPath();
-      await endTransfer(state.tx!, state.initialTx!, transfer);
-    });
-  }
-
-  /**
-   * Resumes all the provided transfers in parallell. This function
-   * will not resulve until all the pending trnsfers has been applied
-   * @param transfers the transfers to resume
-   */
-  async function resumeTransfers(transfers: PendingTransfer[]) {
-    const promises = transfers.map((transfer) => resumeTransfer(transfer));
-    await Promise.all(promises);
-  }
-
-  /**
-   * Checks to see wether the specified transfer is already applied to
-   * this brid.
-   * @param targetChainBrid the brid of the chain to check
-   * @param txBrid the brid of the transaction containing the transfer
-   * @param opIndex the index of the transfer in the transaction
-   * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
-   */
-  async function isAppliedOnBrid(
-    targetChainBrid: Buffer,
-    txBrid: Buffer,
-    opIndex: number,
-  ): Promise<boolean> {
-    const connection = await createConnectionToBrid(
-      session.client,
-      targetChainBrid,
-    );
-    return connection.query(isTransferApplied(txBrid, opIndex));
-  }
-
-  async function walkPath() {
-    for (
-      let hopIndex = state.currentHopIndex;
-      hopIndex < path.length;
-      hopIndex++
-    ) {
-      const nextBrid = path[hopIndex];
-      await applyTransfer(nextBrid);
-
-      state.currentHopIndex++;
-    }
-  }
-
-  async function endTransfer(
-    tx: RawGtx,
-    initialTx: RawGtx,
-    transfer?: PendingTransfer,
-  ) {
+  async function endTransfer(tx: RawGtx, transfer?: PendingTransfer) {
     const targetChainBrid = path.slice(-1)[0];
     const tb = await getTransactionBuilderForChain(
       session,
@@ -352,11 +388,14 @@ export async function createOrchestrator(
     return localEmitter.off("TransferError", listener);
   }
 
-  const orchestrator = Object.freeze({
-    transfer,
-    resumeTransfer,
-    resumeTransfers,
+  return Object.freeze({
+    state,
     eventEmitter: localEmitter,
+    walkPath,
+    getTransactionBuilderForChain,
+    handleErrors,
+    endTransfer,
+    createIccfProofOperation,
     onTransferInit,
     offTransferInit,
     onTransferHop,
@@ -366,6 +405,4 @@ export async function createOrchestrator(
     onTransferError,
     offTransferError,
   });
-
-  return orchestrator;
 }

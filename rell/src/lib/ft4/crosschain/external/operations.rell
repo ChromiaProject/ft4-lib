@@ -158,7 +158,7 @@ operation complete_transfer(
 
     // extract init transfer tx details
     val init_transfer_tx_rid = final_apply_transfer_args.init_transfer_tx.to_gtv().hash();
-    val init_transfer_args = struct<init_transfer>.from_gtv(final_apply_transfer_args.init_transfer_tx.body.operations[final_apply_transfer_args.init_tx_op_index].to_gtv());
+    val init_transfer_args = struct<init_transfer>.from_gtv(final_apply_transfer_args.init_transfer_tx.body.operations[final_apply_transfer_args.init_tx_op_index].args.to_gtv());
 
     require(
         final_apply_transfer_args.hop_index == init_transfer_args.hops.size() - 1,
