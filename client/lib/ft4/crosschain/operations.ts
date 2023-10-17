@@ -37,10 +37,6 @@ export function applyTransfer(
   );
 }
 
-export function completeTransfer(
-  tx: RawGtx,
-  initialTxRid: Buffer,
-  opIndex: number,
-): Operation {
-  return op("ft4.crosschain.complete_transfer", tx, initialTxRid, opIndex);
+export function completeTransfer(tx: RawGtx, opIndex: number): Operation {
+  return op("ft4.crosschain.complete_transfer", tx, opIndex);
 }

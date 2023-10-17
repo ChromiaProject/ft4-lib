@@ -309,16 +309,9 @@ export async function createOrchestrator(
 
     await new Promise<void>((resolve) => {
       tb.add(iccfOp)
-        .add(
-          completeTransferOp(
-            tx,
-            getTransactionRid(initialTx),
-            transfer?.opIndex || 1,
-          ),
-          () => {
-            resolve();
-          },
-        )
+        .add(completeTransferOp(tx, transfer?.opIndex || 1), () => {
+          resolve();
+        })
         .buildAndSend();
     });
 
