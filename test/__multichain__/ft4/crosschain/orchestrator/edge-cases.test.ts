@@ -122,7 +122,7 @@ describe("Edge Cases", () => {
 
     expect(errorListener).toHaveBeenCalled();
     expect(errorListener.mock.calls[0][0].message).toMatch(
-      /^Not sufficient funds/i,
+      /^Failed to initialize transfer/i,
     );
   });
 });

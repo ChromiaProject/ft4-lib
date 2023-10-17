@@ -192,10 +192,7 @@ export async function createOrchestrator(
     try {
       localEmitter.emit("TransferInit");
 
-      console.log("Initializing transfer...");
       await initTransfer();
-
-      console.log(`Expecting ${path.length} hops...`);
 
       for (
         let pathIndex = state.currentHopIndex;
@@ -204,7 +201,6 @@ export async function createOrchestrator(
       ) {
         const brid = path[pathIndex];
 
-        console.log(`Applying transfer to ${brid.toString("hex")}...`);
         await applyTransfer(directoryClient, brid);
 
         state.currentHopIndex++;

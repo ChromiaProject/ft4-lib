@@ -3,6 +3,9 @@ import { TestContext, setupTestEnvironment } from "./common-setup";
 import { registerCrosschainAsset } from "/ft4";
 import adminUser from "/util/admin_user";
 
+// This is needed to allow to check whether transaction is anchored
+jest.unmock("postchain-client");
+
 describe("Basic Functionality", () => {
   let testContext: TestContext;
 
@@ -31,7 +34,7 @@ describe("Basic Functionality", () => {
     expect(initListener).toHaveBeenCalled();
   });
 
-  it.only("executes single hop transfer", async () => {
+  it("executes single hop transfer", async () => {
     const orchestrator = await createTestOrchestrator();
 
     const hopListener = jest.fn();

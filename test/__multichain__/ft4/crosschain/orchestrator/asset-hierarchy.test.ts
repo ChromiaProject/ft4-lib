@@ -4,6 +4,9 @@ import { createAmount, Orchestrator, registerCrosschainAsset } from "/ft4";
 import { Amount } from "/ft4/asset/interfaces";
 import adminUser from "/util/admin_user";
 
+// This is needed to allow to check whether transaction is anchored
+jest.unmock("postchain-client");
+
 describe("Asset Hierarchy", () => {
   let testContext: TestContext;
 
@@ -28,8 +31,11 @@ describe("Asset Hierarchy", () => {
       if (expectedBalance !== undefined) {
         const actualBalance = await testContext[
           `account${accountNum}`
-        ].getBalanceByAssetId(testContext.sampleAsset);
-        expect(actualBalance.amount).toEqual(expectedBalance);
+        ].getBalanceByAssetId(testContext.sampleAsset.id);
+
+        expect(actualBalance.amount.toString()).toEqual(
+          expectedBalance.toString(),
+        );
       }
     }
   }
@@ -50,9 +56,11 @@ describe("Asset Hierarchy", () => {
       testContext.session0, // From root
     );
 
+    const { decimals } = testContext.sampleAsset;
+
     await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {
-      0: createAmount(90, 1),
-      1: createAmount(10, 1),
+      0: createAmount(90, decimals),
+      1: createAmount(10, decimals),
     });
 
     const orchestratorFromLeafToRoot = await createOrchestrator(
@@ -63,7 +71,10 @@ describe("Asset Hierarchy", () => {
       testContext.session1, // From leaf
     );
 
-    await verifyEndTransferAndBalances(orchestratorFromLeafToRoot, {});
+    await verifyEndTransferAndBalances(orchestratorFromLeafToRoot, {
+      0: createAmount(100, decimals),
+      1: createAmount(0, decimals),
+    });
   });
 
   it("transfers from leaf to sibling", async () => {
@@ -92,7 +103,13 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From leaf
     );
 
-    await verifyEndTransferAndBalances(orchestratorFromLeafToSibling, {});
+    const { decimals } = testContext.sampleAsset;
+
+    await verifyEndTransferAndBalances(orchestratorFromLeafToSibling, {
+      0: createAmount(90, decimals),
+      1: createAmount(10, decimals),
+      2: createAmount(0, decimals),
+    });
   });
 
   it("transfers from leaf to branch", async () => {
@@ -121,7 +138,13 @@ describe("Asset Hierarchy", () => {
       testContext.session1, // From leaf
     );
 
-    await verifyEndTransferAndBalances(orchestratorFromLeafToBranch, {});
+    const { decimals } = testContext.sampleAsset;
+
+    await verifyEndTransferAndBalances(orchestratorFromLeafToBranch, {
+      0: createAmount(90, decimals),
+      1: createAmount(0, decimals),
+      2: createAmount(10, decimals),
+    });
   });
 
   it("transfers from branch to leaf", async () => {
@@ -150,6 +173,12 @@ describe("Asset Hierarchy", () => {
       testContext.session2, // From branch
     );
 
-    await verifyEndTransferAndBalances(orchestratorFromBranchToLeaf, {});
+    const { decimals } = testContext.sampleAsset;
+
+    await verifyEndTransferAndBalances(orchestratorFromBranchToLeaf, {
+      0: createAmount(90, decimals),
+      1: createAmount(10, decimals),
+      2: createAmount(0, decimals),
+    });
   });
 });
