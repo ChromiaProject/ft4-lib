@@ -78,21 +78,23 @@ export async function createOrchestrator(
   async function initTransfer(): Promise<void> {
     return new Promise((resolve, reject) => {
       const tb = session.transactionBuilder();
+      const errorMessage = "Failed to initialize transfer";
 
       tb.add(
         initTransferOp(recipientId, assetId, amount, path),
-        (data: { tx: RawGtx }, reason: Error | null) => {
-          if (reason) {
-            console.error(`Failed to initialize transfer: ${reason}`);
-            reject(`Failed to initialize transfer: ${reason}`);
+        (data: { tx: RawGtx }, error: Error | null) => {
+          if (error) {
+            reject(new TransferExecutionError(errorMessage, error));
           } else {
             state.tx = data.tx;
-            console.log("Resolved init transfer");
             resolve();
           }
         },
-      ).buildAndSend();
-      // .catch(error => reject(new TransferExecutionError(errorMessage, error)));
+      )
+        .buildAndSend()
+        .catch((reason) =>
+          reject(new TransferExecutionError(errorMessage, reason)),
+        );
     });
   }
 
@@ -118,6 +120,7 @@ export async function createOrchestrator(
       const authDataService = createAuthDataService(connection);
       const noopAuthenticator = createNoopAuthenticator(authDataService);
       const tb = transactionBuilder(noopAuthenticator, connection.client);
+      const errorMessage = "Failed to apply transfer";
 
       tb.add(iccfOp)
         .add(
@@ -129,18 +132,19 @@ export async function createOrchestrator(
             state.tx,
             path.indexOf(targetChainBrid),
           ),
-          (data: { tx: RawGtx }, reason: Error | null) => {
-            if (reason) {
-              console.error(`Failed to apply transfer: ${reason}`);
-              reject(`Failed to apply transfer: ${reason}`);
+          (data: { tx: RawGtx }, error: Error | null) => {
+            if (error) {
+              reject(new TransferExecutionError(errorMessage, error));
             } else {
               state.tx = data.tx;
               resolve();
             }
           },
         )
-        .buildAndSend();
-      // .catch(error => reject(new TransferExecutionError(errorMessage, error)));
+        .buildAndSend()
+        .catch((error) =>
+          reject(new TransferExecutionError(errorMessage, error)),
+        );
     });
   }
 
@@ -166,7 +170,7 @@ export async function createOrchestrator(
       directoryClient,
       getTransactionRid(state.tx),
       gtv.gtvHash(state.tx),
-      state.tx[0][2], // signers
+      state.tx[0][2], // Signers
       sourceBlockchainRid.toString("hex"),
       targetChainBrid.toString("hex"),
     );
@@ -209,7 +213,9 @@ export async function createOrchestrator(
 
       localEmitter.emit("TransferEnd");
     } catch (error) {
-      const orchError = new TransferExecutionError(error.toString(), error);
+      const errorMessage = error.message ? error.message : error.toString();
+
+      const orchError = new TransferExecutionError(errorMessage, error);
       localEmitter.emit("TransferError", orchError);
     }
   }

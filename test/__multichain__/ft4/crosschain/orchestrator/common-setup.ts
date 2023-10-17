@@ -19,6 +19,9 @@ import { AuthenticatedAccount } from "/ft4/accounts";
 import { Blockchain } from "/__multichain__/util/types";
 import { Amount } from "/ft4/asset/interfaces";
 
+// This is needed to allow to check whether transaction is anchored
+jest.unmock("postchain-client");
+
 export type TestContext = {
   connection0: Connection;
   connection1: Connection;
