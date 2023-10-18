@@ -36,7 +36,7 @@ export interface OrchestratorBase {
     brid: Buffer,
   ) => Promise<TransactionBuilder>;
   handleErrors: (fn: () => Promise<void>) => Promise<void>;
-  endTransfer: (tx: RawGtx, transfer?: PendingTransfer) => Promise<void>;
+  completeTransfer: (tx: RawGtx, transfer?: PendingTransfer) => Promise<void>;
   createIccfProofOperation: (
     targetChainBrid: Buffer,
     hopIndex: number,
@@ -45,8 +45,8 @@ export interface OrchestratorBase {
   offTransferInit: (listener: Listener<[]>) => void;
   onTransferHop: (listener: Listener<[BufferId]>) => void;
   offTransferHop: (listener: Listener<[BufferId]>) => void;
-  onTransferEnd: (listener: Listener<[]>) => void;
-  offTransferEnd: (listener: Listener<[]>) => void;
+  onTransferComplete: (listener: Listener<[]>) => void;
+  offTransferComplete: (listener: Listener<[]>) => void;
   onTransferError: (listener: Listener<[OrchestratorError]>) => void;
   offTransferError: (listener: Listener<[OrchestratorError]>) => void;
 }
@@ -57,7 +57,7 @@ export type ExternalOrchestratorBase = Omit<
   | "walkPath"
   | "getTransactionBuilderForChain"
   | "handleErrors"
-  | "endTransfer"
+  | "completeTransfer"
   | "createIccfProofOperation"
 >;
 

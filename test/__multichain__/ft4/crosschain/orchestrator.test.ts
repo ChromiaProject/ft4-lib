@@ -87,19 +87,19 @@ describe("Orchestrator", () => {
 
     const initListener = jest.fn();
     const hopListener = jest.fn();
-    const endListener = jest.fn();
+    const completeListener = jest.fn();
     const errorListener = jest.fn();
 
     orchestrator.onTransferInit(initListener);
     orchestrator.onTransferHop(hopListener);
-    orchestrator.onTransferEnd(endListener);
+    orchestrator.onTransferComplete(completeListener);
     orchestrator.onTransferError(errorListener);
 
     await orchestrator.transfer();
 
     expect(initListener).toHaveBeenCalled();
     expect(hopListener).toHaveBeenCalledTimes(1);
-    expect(endListener).toHaveBeenCalled();
+    expect(completeListener).toHaveBeenCalled();
     expect(errorListener).not.toHaveBeenCalled();
   });
 

@@ -100,7 +100,7 @@ export async function createOrchestrator(
         );
       }
       await orchestrator.walkPath();
-      await orchestrator.endTransfer(state.tx);
+      await orchestrator.completeTransfer(state.tx);
     });
   }
 
@@ -153,13 +153,16 @@ export async function createResumeOrchestrator(
       state.currentHopIndex > 0 &&
       state.currentHopIndex === state.path.length - 1
     ) {
-      // Transfer already applied
+      // Transfer already applied, make sure that pending transfer is also cleaned up
+      await orchestrator.handleErrors(async () => {
+        await orchestrator.completeTransfer(state.tx!, pendingTransfer);
+      });
       return;
     }
 
     await orchestrator.handleErrors(async () => {
       await orchestrator.walkPath();
-      await orchestrator.endTransfer(state.tx!, pendingTransfer);
+      await orchestrator.completeTransfer(state.tx!, pendingTransfer);
     });
   }
 
@@ -319,7 +322,7 @@ async function createBaseOrcestrator(
     }
   }
 
-  async function endTransfer(tx: RawGtx, transfer?: PendingTransfer) {
+  async function completeTransfer(tx: RawGtx, transfer?: PendingTransfer) {
     const targetChainBrid = path.slice(-1)[0];
     const tb = await getTransactionBuilderForChain(
       session,
@@ -357,11 +360,11 @@ async function createBaseOrcestrator(
     return localEmitter.off("TransferHop", listener);
   }
 
-  function onTransferEnd(listener: Listener<[]>) {
+  function onTransferComplete(listener: Listener<[]>) {
     return localEmitter.on("TransferComplete", listener);
   }
 
-  function offTransferEnd(listener: Listener<[]>) {
+  function offTransferComplete(listener: Listener<[]>) {
     return localEmitter.off("TransferComplete", listener);
   }
 
@@ -379,14 +382,14 @@ async function createBaseOrcestrator(
     walkPath,
     getTransactionBuilderForChain,
     handleErrors,
-    endTransfer,
+    completeTransfer,
     createIccfProofOperation,
     onTransferInit,
     offTransferInit,
     onTransferHop,
     offTransferHop,
-    onTransferEnd,
-    offTransferEnd,
+    onTransferComplete,
+    offTransferComplete,
     onTransferError,
     offTransferError,
   });
@@ -401,8 +404,8 @@ function getPublicOrchestratorBase(
     offTransferInit,
     onTransferHop,
     offTransferHop,
-    onTransferEnd,
-    offTransferEnd,
+    onTransferComplete,
+    offTransferComplete,
     onTransferError,
     offTransferError,
   } = orchestrator;
@@ -413,8 +416,8 @@ function getPublicOrchestratorBase(
     offTransferInit,
     onTransferHop,
     offTransferHop,
-    onTransferEnd,
-    offTransferEnd,
+    onTransferComplete,
+    offTransferComplete,
     onTransferError,
     offTransferError,
   });
