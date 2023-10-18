@@ -32,7 +32,6 @@ import {
 } from "./types";
 import { BufferId } from "/cryptoUtils";
 import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
-import { createAmount } from "../asset";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -59,13 +58,7 @@ export async function createOrchestrator(
     );
   }
   const path = await findPathToChainForAsset(session, asset, targetChainId);
-  const { state, ...orchestrator } = await createBaseOrcestrator(
-    session,
-    recipientId,
-    assetId,
-    amount,
-    path,
-  );
+  const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
 
   /**
    * Initialize the transfer by creating the initial transaction.
@@ -130,15 +123,9 @@ export async function createResumeOrchestrator(
 ): Promise<ResumeOrchestrator> {
   const operations = pendingTransfer.tx[0][1];
   const initTransferOpArgs = operations[pendingTransfer.opIndex][1];
-  const [recipientId, assetId, amount, path] = initTransferOpArgs;
+  const path = initTransferOpArgs[3] as Buffer[];
 
-  const { state, ...orchestrator } = await createBaseOrcestrator(
-    session,
-    recipientId as Buffer,
-    assetId as Buffer,
-    createAmount(amount as number),
-    path as Buffer[],
-  );
+  const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
 
   /**
    * Accepts a cross chain transfer that was not completed
@@ -204,9 +191,6 @@ export async function createResumeOrchestrator(
 
 async function createBaseOrcestrator(
   session: Session,
-  recipientId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
   path: Buffer[],
 ): Promise<OrchestratorBase> {
   const state = {
