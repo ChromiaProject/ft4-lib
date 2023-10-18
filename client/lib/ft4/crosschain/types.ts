@@ -51,11 +51,21 @@ export interface OrchestratorBase {
   offTransferError: (listener: Listener<[OrchestratorError]>) => void;
 }
 
-export type Orchestrator = Omit<OrchestratorBase, "state"> & {
+export type ExternalOrchestratorBase = Omit<
+  OrchestratorBase,
+  | "state"
+  | "walkPath"
+  | "getTransactionBuilderForChain"
+  | "handleErrors"
+  | "endTransfer"
+  | "createIccfProofOperation"
+>;
+
+export type Orchestrator = ExternalOrchestratorBase & {
   transfer: () => Promise<void>;
 };
 
-export type ResumeOrchestrator = Omit<OrchestratorBase, "state"> & {
+export type ResumeOrchestrator = ExternalOrchestratorBase & {
   resumeTransfer: () => Promise<void>;
 };
 

@@ -23,6 +23,7 @@ import {
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { isTransferApplied } from "./queries";
 import {
+  ExternalOrchestratorBase,
   Orchestrator,
   OrchestratorBase,
   OrchestratorEvents,
@@ -111,7 +112,7 @@ export async function createOrchestrator(
   }
 
   return Object.freeze({
-    ...orchestrator,
+    ...getPublicOrchestratorBase({ state, ...orchestrator }),
     transfer,
   });
 }
@@ -196,7 +197,7 @@ export async function createResumeOrchestrator(
   }
 
   return Object.freeze({
-    ...orchestrator,
+    ...getPublicOrchestratorBase({ state, ...orchestrator }),
     resumeTransfer,
   });
 }
@@ -396,6 +397,34 @@ async function createBaseOrcestrator(
     handleErrors,
     endTransfer,
     createIccfProofOperation,
+    onTransferInit,
+    offTransferInit,
+    onTransferHop,
+    offTransferHop,
+    onTransferEnd,
+    offTransferEnd,
+    onTransferError,
+    offTransferError,
+  });
+}
+
+function getPublicOrchestratorBase(
+  orchestrator: OrchestratorBase,
+): ExternalOrchestratorBase {
+  const {
+    eventEmitter,
+    onTransferInit,
+    offTransferInit,
+    onTransferHop,
+    offTransferHop,
+    onTransferEnd,
+    offTransferEnd,
+    onTransferError,
+    offTransferError,
+  } = orchestrator;
+
+  return Object.freeze({
+    eventEmitter,
     onTransferInit,
     offTransferInit,
     onTransferHop,
