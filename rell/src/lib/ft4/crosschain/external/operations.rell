@@ -60,7 +60,7 @@ operation apply_transfer(
     op_index: integer,
     hop_index: integer
 ) {
-    create crosschain.applied_transfers(tx.to_gtv().hash(), op_index);
+    create crosschain.applied_transfers(init_transfer_tx.to_gtv().hash(), op_index);
     val init_args = if (hop_index == 0) struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args.to_gtv()) else struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args[0].to_gtv());
 
     if (hop_index == 0) {
@@ -157,7 +157,7 @@ operation complete_transfer(
     val final_apply_transfer_args = struct<apply_transfer>.from_gtv(final_apply_transfer_tx.body.operations[op_index].args.to_gtv());
 
     // extract init transfer tx details
-    val init_transfer_tx_rid = final_apply_transfer_args.init_transfer_tx.to_gtv().hash();
+    val init_transfer_tx_hash = final_apply_transfer_args.init_transfer_tx.to_gtv().hash();
     val init_transfer_args = struct<init_transfer>.from_gtv(final_apply_transfer_args.init_transfer_tx.body.operations[final_apply_transfer_args.init_tx_op_index].args.to_gtv());
 
     require(
@@ -170,5 +170,5 @@ operation complete_transfer(
     );
 
     // delete the pending transfer as it is now completed
-    delete crosschain.pending_transfer @ { .transaction.tx_rid == init_transfer_tx_rid, .op_index == final_apply_transfer_args.init_tx_op_index };
+    delete crosschain.pending_transfer @ { .transaction.tx_hash == init_transfer_tx_hash, .op_index == final_apply_transfer_args.init_tx_op_index };
 }
