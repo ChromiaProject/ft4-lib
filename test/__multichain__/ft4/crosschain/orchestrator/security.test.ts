@@ -1,6 +1,7 @@
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Session, createOrchestrator } from "/ft4";
 import { createNoopAuthenticator } from "/ft4/authentication";
+import { InitTransferError } from "/ft4/crosschain/errors";
 import { createAuthDataService, createSession } from "/ft4/ft-session";
 
 describe("Security", () => {
@@ -38,8 +39,10 @@ describe("Security", () => {
     await orchestrator.transfer();
 
     expect(errorListener).toHaveBeenCalled();
+
+    expect(errorListener.mock.calls[0][0]).toBeInstanceOf(InitTransferError);
     expect(errorListener.mock.calls[0][0].message).toMatch(
-      /^Failed to initialize transfer/i,
+      /^Failed to send transaction/i,
     );
   });
 });

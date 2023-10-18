@@ -11,7 +11,10 @@ import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { Listener, EventEmitter } from "../events";
 import {
+  ApplyTransferError,
+  ErrorMessages,
   FactoryError,
+  InitTransferError,
   OrchestratorError,
   TransferExecutionError,
 } from "./errors";
@@ -52,7 +55,7 @@ export async function createOrchestrator(
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
   if (asset === null) {
-    throw new FactoryError("Asset not found");
+    throw new FactoryError(ErrorMessages.ASSET_NOT_FOUND);
   }
 
   let path: Buffer[];
@@ -60,7 +63,7 @@ export async function createOrchestrator(
   try {
     path = await findPathToChainForAsset(session, asset, targetChainId);
   } catch (error) {
-    throw new FactoryError(`Path finder error: ${error.message}`);
+    throw new FactoryError(ErrorMessages.FAILED_TO_FIND_PATH, error);
   }
 
   // Create a local event emitter instance for this orchestrator.
@@ -78,13 +81,14 @@ export async function createOrchestrator(
   async function initTransfer(): Promise<void> {
     return new Promise((resolve, reject) => {
       const tb = session.transactionBuilder();
-      const errorMessage = "Failed to initialize transfer";
 
       tb.add(
         initTransferOp(recipientId, assetId, amount, path),
         (data: { tx: RawGtx }, error: Error | null) => {
           if (error) {
-            reject(new TransferExecutionError(errorMessage, error));
+            reject(
+              new InitTransferError(ErrorMessages.UNABLE_TO_FETCH_PROOF, error),
+            );
           } else {
             state.tx = data.tx;
             resolve();
@@ -93,7 +97,12 @@ export async function createOrchestrator(
       )
         .buildAndSend()
         .catch((reason) =>
-          reject(new TransferExecutionError(errorMessage, reason)),
+          reject(
+            new InitTransferError(
+              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+              reason,
+            ),
+          ),
         );
     });
   }
@@ -120,7 +129,6 @@ export async function createOrchestrator(
       const authDataService = createAuthDataService(connection);
       const noopAuthenticator = createNoopAuthenticator(authDataService);
       const tb = transactionBuilder(noopAuthenticator, connection.client);
-      const errorMessage = "Failed to apply transfer";
 
       tb.add(iccfOp)
         .add(
@@ -134,7 +142,12 @@ export async function createOrchestrator(
           ),
           (data: { tx: RawGtx }, error: Error | null) => {
             if (error) {
-              reject(new TransferExecutionError(errorMessage, error));
+              reject(
+                new ApplyTransferError(
+                  ErrorMessages.UNABLE_TO_FETCH_PROOF,
+                  error,
+                ),
+              );
             } else {
               state.tx = data.tx;
               resolve();
@@ -143,7 +156,12 @@ export async function createOrchestrator(
         )
         .buildAndSend()
         .catch((error) =>
-          reject(new TransferExecutionError(errorMessage, error)),
+          reject(
+            new ApplyTransferError(
+              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+              error,
+            ),
+          ),
         );
     });
   }
@@ -209,9 +227,15 @@ export async function createOrchestrator(
 
       localEmitter.emit("TransferEnd");
     } catch (error) {
-      const errorMessage = error.message ? error.message : error.toString();
+      let orchError: TransferExecutionError;
 
-      const orchError = new TransferExecutionError(errorMessage, error);
+      if (error instanceof TransferExecutionError) {
+        orchError = error;
+      } else {
+        const errorMessage = error.message ? error.message : error.toString();
+        orchError = new TransferExecutionError(errorMessage, error);
+      }
+
       localEmitter.emit("TransferError", orchError);
     }
   }

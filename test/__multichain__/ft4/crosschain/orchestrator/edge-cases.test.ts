@@ -81,7 +81,7 @@ describe("Edge Cases", () => {
 
     await expect(
       createTestOrchestrator(undefined, nonExistingAsset),
-    ).rejects.toThrowError("Asset not found");
+    ).rejects.toThrowError("The specified asset could not be found");
 
     // Test for incompatible asset
     const incompatibleAsset = await getNewAsset(testContext.connection0.client);
@@ -89,7 +89,7 @@ describe("Edge Cases", () => {
     // We created the asset but didn't register it, thus it is incompatible
     await expect(
       createTestOrchestrator(undefined, incompatibleAsset),
-    ).rejects.toThrowError(/^Path finder error/);
+    ).rejects.toThrowError(/^Failed to find a path to the target chain/);
   });
 
   it("handles missing or invalid parent details", async () => {
@@ -104,7 +104,7 @@ describe("Edge Cases", () => {
 
     await expect(
       createTestOrchestrator(testContext.sampleAmount, asset),
-    ).rejects.toThrowError(/^Path finder error/);
+    ).rejects.toThrowError(/^Failed to find a path to the target chain/);
   });
 
   it("handles insufficient funds when sending assets back", async () => {
