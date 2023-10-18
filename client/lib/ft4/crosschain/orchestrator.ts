@@ -10,7 +10,14 @@ import { Buffer } from "buffer";
 import { Amount } from "../asset/interfaces";
 import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
 import { Listener, EventEmitter } from "../events";
-import { OrchestratorError } from "./errors";
+import {
+  ApplyTransferError,
+  ErrorMessages,
+  FactoryError,
+  InitTransferError,
+  OrchestratorError,
+  TransferExecutionError,
+} from "./errors";
 import {
   initTransfer as initTransferOp,
   applyTransfer as applyTransferOp,
@@ -47,8 +54,17 @@ export async function createOrchestrator(
   session: Session,
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
+  if (asset === null) {
+    throw new FactoryError(ErrorMessages.ASSET_NOT_FOUND);
+  }
 
-  const path = await findPathToChainForAsset(session, asset, targetChainId);
+  let path: Buffer[];
+
+  try {
+    path = await findPathToChainForAsset(session, asset, targetChainId);
+  } catch (error) {
+    throw new FactoryError(ErrorMessages.FAILED_TO_FIND_PATH, error);
+  }
 
   // Create a local event emitter instance for this orchestrator.
   const localEmitter = new EventEmitter<OrchestratorEvents>();
@@ -70,13 +86,24 @@ export async function createOrchestrator(
         initTransferOp(recipientId, assetId, amount, path),
         (data: { tx: RawGtx }, error: Error | null) => {
           if (error) {
-            reject(error);
-            return;
+            reject(
+              new InitTransferError(ErrorMessages.UNABLE_TO_FETCH_PROOF, error),
+            );
+          } else {
+            state.tx = data.tx;
+            resolve();
           }
-          state.tx = data.tx;
-          resolve();
         },
-      ).buildAndSend();
+      )
+        .buildAndSend()
+        .catch((reason) =>
+          reject(
+            new InitTransferError(
+              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+              reason,
+            ),
+          ),
+        );
     });
   }
 
@@ -115,14 +142,27 @@ export async function createOrchestrator(
           ),
           (data: { tx: RawGtx }, error: Error | null) => {
             if (error) {
-              reject(error);
-              return;
+              reject(
+                new ApplyTransferError(
+                  ErrorMessages.UNABLE_TO_FETCH_PROOF,
+                  error,
+                ),
+              );
+            } else {
+              state.tx = data.tx;
+              resolve();
             }
-            state.tx = data.tx;
-            resolve();
           },
         )
-        .buildAndSend();
+        .buildAndSend()
+        .catch((error) =>
+          reject(
+            new ApplyTransferError(
+              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+              error,
+            ),
+          ),
+        );
     });
   }
 
@@ -148,7 +188,7 @@ export async function createOrchestrator(
       directoryClient,
       getTransactionRid(state.tx),
       gtv.gtvHash(state.tx),
-      state.tx[0][2], // signers
+      state.tx[0][2], // Signers
       sourceBlockchainRid.toString("hex"),
       targetChainBrid.toString("hex"),
     );
@@ -187,7 +227,15 @@ export async function createOrchestrator(
 
       localEmitter.emit("TransferEnd");
     } catch (error) {
-      const orchError = new OrchestratorError(error.message, "generalError");
+      let orchError: TransferExecutionError;
+
+      if (error instanceof TransferExecutionError) {
+        orchError = error;
+      } else {
+        const errorMessage = error.message ? error.message : error.toString();
+        orchError = new TransferExecutionError(errorMessage, error);
+      }
+
       localEmitter.emit("TransferError", orchError);
     }
   }

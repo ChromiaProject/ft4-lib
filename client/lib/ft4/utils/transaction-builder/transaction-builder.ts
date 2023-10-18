@@ -102,9 +102,8 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -207,7 +206,8 @@ export function transactionBuilder(
       try {
         isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
       } catch (error) {
-        console.error("Error while checking block anchoring status", error);
+        // TODO: Uncomment to pollute logs with errors
+        // console.error("Error while checking block anchoring status", error);
 
         if (error instanceof BlockAnchoringException) {
           isAnchored = false;
