@@ -1,5 +1,5 @@
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { createOrchestrator } from "/ft4";
+import { createAmount, createOrchestrator } from "/ft4";
 import { createSession } from "/ft4/ft-session";
 
 describe("Error Handling and Recovery", () => {
@@ -24,7 +24,7 @@ describe("Error Handling and Recovery", () => {
       testContext.multichain0.rid,
       testContext.account0.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, testContext.sampleAsset.decimals),
       mockSession,
     );
     const errorListener = jest.fn();

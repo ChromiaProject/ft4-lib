@@ -33,10 +33,9 @@ export type TestContext = {
   multichain1: Blockchain;
   multichain2: Blockchain;
   sampleAsset: Asset;
-  sampleAmount: Amount;
 };
 
-export async function setupTestEnvironment() {
+export async function setupTestEnvironment(mintAmount?: Amount) {
   const { multichain00, multichain01, multichain02 } = await fetchBlockchains();
 
   const connection0 = createConnection(
@@ -73,12 +72,14 @@ export async function setupTestEnvironment() {
   const session1 = createSession(connection1, account1.authenticator);
   const session2 = createSession(connection2, account2.authenticator);
 
+  const amountToMint = mintAmount ?? createAmount(100, asset.decimals);
+
   await mint(
     connection0.client,
     adminUser().signatureProvider,
     account0.id,
     asset.id,
-    createAmount(100, asset.decimals),
+    amountToMint,
   );
 
   const testContext: TestContext = {
@@ -95,7 +96,6 @@ export async function setupTestEnvironment() {
     multichain1: multichain01,
     multichain2: multichain02,
     sampleAsset: asset,
-    sampleAmount: createAmount(10, asset.decimals),
   };
 
   return testContext;

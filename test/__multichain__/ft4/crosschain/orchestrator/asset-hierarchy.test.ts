@@ -8,10 +8,11 @@ import adminUser from "/util/admin_user";
 jest.unmock("postchain-client");
 
 describe("Asset Hierarchy", () => {
+  const mintAmount = createAmount(100, 0);
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment();
+    testContext = await setupTestEnvironment(mintAmount);
   });
 
   async function verifyEndTransferAndBalances(
@@ -41,6 +42,8 @@ describe("Asset Hierarchy", () => {
   }
 
   it("transfers from root to leaf and back", async () => {
+    const { decimals } = mintAmount;
+
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -52,11 +55,9 @@ describe("Asset Hierarchy", () => {
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session0, // From root
     );
-
-    const { decimals } = testContext.sampleAsset;
 
     await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {
       0: createAmount(90, decimals),
@@ -67,7 +68,7 @@ describe("Asset Hierarchy", () => {
       testContext.multichain0.rid, // To root
       testContext.account0.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session1, // From leaf
     );
 
@@ -78,6 +79,8 @@ describe("Asset Hierarchy", () => {
   });
 
   it("transfers from leaf to sibling", async () => {
+    const { decimals } = mintAmount;
+
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -89,7 +92,7 @@ describe("Asset Hierarchy", () => {
       testContext.multichain2.rid, // To leaf
       testContext.account2.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session0, // From root
     );
 
@@ -99,11 +102,9 @@ describe("Asset Hierarchy", () => {
       testContext.multichain1.rid, // To sibling
       testContext.account1.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session2, // From leaf
     );
-
-    const { decimals } = testContext.sampleAsset;
 
     await verifyEndTransferAndBalances(orchestratorFromLeafToSibling, {
       0: createAmount(90, decimals),
@@ -113,6 +114,8 @@ describe("Asset Hierarchy", () => {
   });
 
   it("transfers from leaf to branch", async () => {
+    const { decimals } = mintAmount;
+
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -124,7 +127,7 @@ describe("Asset Hierarchy", () => {
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session0, // From root
     );
 
@@ -134,11 +137,9 @@ describe("Asset Hierarchy", () => {
       testContext.multichain2.rid, // To branch
       testContext.account2.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session1, // From leaf
     );
-
-    const { decimals } = testContext.sampleAsset;
 
     await verifyEndTransferAndBalances(orchestratorFromLeafToBranch, {
       0: createAmount(90, decimals),
@@ -148,6 +149,8 @@ describe("Asset Hierarchy", () => {
   });
 
   it("transfers from branch to leaf", async () => {
+    const { decimals } = mintAmount;
+
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -159,7 +162,7 @@ describe("Asset Hierarchy", () => {
       testContext.multichain2.rid, // To branch
       testContext.account2.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session0, // From root
     );
 
@@ -169,11 +172,9 @@ describe("Asset Hierarchy", () => {
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, decimals),
       testContext.session2, // From branch
     );
-
-    const { decimals } = testContext.sampleAsset;
 
     await verifyEndTransferAndBalances(orchestratorFromBranchToLeaf, {
       0: createAmount(90, decimals),

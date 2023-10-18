@@ -1,5 +1,5 @@
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { Session, createOrchestrator } from "/ft4";
+import { Session, createAmount, createOrchestrator } from "/ft4";
 import { createNoopAuthenticator } from "/ft4/authentication";
 import { InitTransferError } from "/ft4/crosschain/errors";
 import { createAuthDataService, createSession } from "/ft4/ft-session";
@@ -18,7 +18,7 @@ describe("Security", () => {
       testContext.multichain2.rid,
       testContext.account2.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, testContext.sampleAsset.decimals),
       session,
     );
   }

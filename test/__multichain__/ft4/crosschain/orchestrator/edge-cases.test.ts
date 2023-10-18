@@ -5,16 +5,18 @@ import { Asset } from "/ft4/asset/types";
 import { createAmount, registerCrosschainAsset } from "/ft4";
 import adminUser from "/util/admin_user";
 import { getNewAsset } from "/util/blockchain-util";
+import { InitTransferError } from "/ft4/crosschain/errors";
 
 describe("Edge Cases", () => {
+  const mintAmount = createAmount(100, 0);
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment();
+    testContext = await setupTestEnvironment(mintAmount);
   });
 
   async function createTestOrchestrator(
-    amount: Amount = testContext.sampleAmount,
+    amount: Amount = createAmount(10, mintAmount.decimals),
     asset: Asset = testContext.sampleAsset,
   ) {
     return await createOrchestrator(
@@ -102,9 +104,9 @@ describe("Edge Cases", () => {
       Buffer.from("deadbeef", "hex"),
     );
 
-    await expect(
-      createTestOrchestrator(testContext.sampleAmount, asset),
-    ).rejects.toThrowError(/^Failed to find a path to the target chain/);
+    await expect(createTestOrchestrator(undefined, asset)).rejects.toThrowError(
+      /^Failed to find a path to the target chain/,
+    );
   });
 
   it("handles insufficient funds when sending assets back", async () => {
@@ -121,8 +123,10 @@ describe("Edge Cases", () => {
     await orchestratorFrom.transfer();
 
     expect(errorListener).toHaveBeenCalled();
+
+    expect(errorListener.mock.calls[0][0]).toBeInstanceOf(InitTransferError);
     expect(errorListener.mock.calls[0][0].message).toMatch(
-      /^Failed to initialize transfer/i,
+      /^Failed to send transaction/i,
     );
   });
 });

@@ -1,16 +1,17 @@
 import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { registerCrosschainAsset } from "/ft4";
+import { createAmount, registerCrosschainAsset } from "/ft4";
 import adminUser from "/util/admin_user";
 
 // This is needed to allow to check whether transaction is anchored
 jest.unmock("postchain-client");
 
 describe("Basic Functionality", () => {
+  const mintAmount = createAmount(100, 0);
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment();
+    testContext = await setupTestEnvironment(mintAmount);
   });
 
   async function createTestOrchestrator() {
@@ -18,7 +19,7 @@ describe("Basic Functionality", () => {
       testContext.multichain2.rid,
       testContext.account2.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, mintAmount.decimals),
       testContext.session0,
     );
   }
@@ -57,7 +58,7 @@ describe("Basic Functionality", () => {
       testContext.multichain1.rid, // To branch
       testContext.account1.id,
       testContext.sampleAsset.id,
-      testContext.sampleAmount,
+      createAmount(10, mintAmount.decimals),
       testContext.session0, // From root
     );
 
