@@ -56,7 +56,7 @@ operation init_transfer(
 operation apply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
-    tx: gtx_transaction,
+    previous_hop_tx: gtx_transaction,
     op_index: integer,
     hop_index: integer
 ) {
@@ -65,25 +65,23 @@ operation apply_transfer(
 
     if (hop_index == 0) {
         require(
-            tx.body.operations[op_index].name == "ft4.crosschain.init_transfer", 
+            previous_hop_tx.body.operations[op_index].name == "ft4.crosschain.init_transfer",
             "The operation at number %s from tx is not init_transfer".format(op_index)
         );
         require(
             init_args == struct<init_transfer>.from_gtv(
-                tx.body.operations[op_index].args.to_gtv()
+                previous_hop_tx.body.operations[op_index].args.to_gtv()
             ),
             "Parameter init_args does not match init_transfer arguments"
         );
     } else {
         require(
-            tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer", 
+            previous_hop_tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer",
             "The operation at number %s from tx is not apply_transfer, ".format(op_index)
         );
         require(
-            init_args == struct<init_transfer>.from_gtv(
-                tx.body.operations[op_index].args[0].to_gtv()
-            ),
-            "Parameter init_args does not match the one passed to the last apply_transfer"
+            init_transfer_tx.hash() == previous_hop_tx.body.operations[op_index].args[0].hash(),
+            "The previous apply_transfer does not have the same init_transfer as the one provided to this hop"
         );
     }
 
@@ -99,7 +97,7 @@ operation apply_transfer(
             .format(init_args.hops[hop_index])
     );
 
-    val from_brid = tx.body.blockchain_rid; 
+    val from_brid = previous_hop_tx.body.blockchain_rid; 
 
     if (hop_index > 0) {
         require(
@@ -112,7 +110,7 @@ operation apply_transfer(
     }
 
     require(
-        iccf.check_iccf_proof(from_brid, tx.to_gtv().hash()),
+        iccf.check_iccf_proof(from_brid, previous_hop_tx.to_gtv().hash()),
         "Missing proof for previous hop"
     );
 
