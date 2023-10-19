@@ -5,13 +5,20 @@ import {
   Authenticator,
   AuthenticatorSession,
   KeyHandler,
+  KeyStore,
 } from "./types";
 import { TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
+import { AuthDescriptor, AuthType } from "../accounts";
 
 export * from "./evm";
 export * from "./ft";
 export * from "./types";
+
+export {
+  createSessionStorageLoginKeyStore,
+  createLocalStorageLoginKeyStore,
+} from "./login-manager/stores";
 
 export function createAuthenticator(
   accountId: BufferId,
@@ -24,8 +31,6 @@ export function createAuthenticator(
     keyHandlers,
     createSession: () =>
       createAuthenticatorSession(authenticator, authDataService),
-    getAuthFlags: (operation: Operation) =>
-      getAuthFlags(authDataService, operation),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
@@ -34,6 +39,53 @@ export function createAuthenticator(
 
   return authenticator;
 }
+
+export function createNoopAuthenticator(
+  authDataService: AuthDataService,
+): Authenticator {
+  const authenticator = Object.freeze({
+    accountId: Buffer.alloc(32),
+    keyHandlers: [noopKeyHandler],
+    authDataService,
+    createSession: () =>
+      createAuthenticatorSession(authenticator, authDataService),
+    getKeyHandlerForOperation: (_operation: Operation) =>
+      Promise.resolve(noopKeyHandler),
+    getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
+  });
+
+  return authenticator;
+}
+
+const nullKeyStore: KeyStore = Object.freeze({
+  id: Buffer.alloc(32),
+  isInteractive: false,
+  createKeyHandler: (_authDescriptor: AuthDescriptor) => noopKeyHandler,
+});
+
+const nullAuthDescriptor: AuthDescriptor = Object.freeze({
+  id: Buffer.alloc(0),
+  authType: AuthType.single_sig,
+  flags: new Set<string>(),
+  signaturesRequired: 0,
+  signers: [],
+  rule: null,
+  created: 0,
+});
+
+const noopKeyHandler: KeyHandler = Object.freeze({
+  authDescriptor: nullAuthDescriptor,
+  keyStore: nullKeyStore,
+  satisfiesAuthRequirements: (_flags: string[]) => true,
+  authorize: (
+    _accountId: BufferId,
+    operation: Operation,
+    _nonce: number,
+    _authDataService: AuthDataService,
+  ) => Promise.resolve([operation]),
+  sign: () => Promise.resolve(),
+  getSigners: (): Buffer[] => [],
+});
 
 async function getAuthFlags(
   authDataService: AuthDataService,
@@ -89,9 +141,8 @@ function createAuthenticatorSession(
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }

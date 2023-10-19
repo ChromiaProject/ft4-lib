@@ -11,7 +11,7 @@
     "version:rell": "./scripts/version.sh",
     "test:js-coverage": "./scripts/jesttest.sh -- --coverage",
     "test:js": "./scripts/jesttest.sh",
-    "test:rell": "./scripts/relltest.sh",
+    "test:rell": "./scripts/relltest.sh -- $@",
     "test:multichain": "./scripts/multichain-jesttest.sh",
     "test": "./scripts/test.sh",
     "test:pipeline": "./scripts/test.sh --no-docker",

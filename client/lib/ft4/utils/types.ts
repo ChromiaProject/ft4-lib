@@ -52,7 +52,7 @@ export type TxBuilderTransaction = {
 };
 
 export interface RellAppStructure {
-  modules: Record<string, RellModuleStructure>;
+  [modules: string]: Record<string, RellModuleStructure>;
 }
 
 export interface RellModuleStructure {
@@ -64,6 +64,9 @@ export interface RellOperationStructure {
   parameters: any[];
 }
 
+export type RequireTogether<T, Keys extends keyof T> = T & {
+  [K in Keys]-?: T[K];
+};
 export type TransactionCompletion<T = undefined> = T extends undefined
   ? { receipt: TransactionReceipt }
   : { receipt: TransactionReceipt; data: T };

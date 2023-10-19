@@ -42,7 +42,7 @@ export function getAuthDescriptorId(ad: RawAuthDescriptor): Buffer {
 }
 
 export function deriveAccountId(
-  firstAuthDescriptor: RawAuthDescriptor
+  firstAuthDescriptor: RawAuthDescriptor,
 ): Buffer {
   return hashAuthDescriptor(firstAuthDescriptor);
 }
@@ -109,12 +109,12 @@ export function mapAuthDescriptor(raw: AuthDescriptorResponse): AuthDescriptor {
       args,
       rules,
       created,
-    ] as GtvAuthDescriptor)
+    ] as GtvAuthDescriptor),
   );
 }
 
 export function mapAuthDescriptors(
-  raw: AuthDescriptorResponse[]
+  raw: AuthDescriptorResponse[],
 ): AuthDescriptor[] {
   return raw.map(mapAuthDescriptor);
 }

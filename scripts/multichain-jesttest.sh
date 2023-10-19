@@ -6,12 +6,18 @@ NUM_BLOCKCHAINS=3
 POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
+POSTCHAIN_LOG_LOCATION="logs/multichain-postchain.log"
 
-NODE_VERSION='3.11.2'
+NODE_VERSION='3.13.7'
 DIRECTORY_CHAIN_VERSION='1.9.2'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
+
+# PMC version 3.14.0
+PMC_DOWNLOAD_URL="https://gitlab.com/chromaway/core-tools/management-console/-/package_files/91637017/download"
+PMC_ARCHIVE_PATH="$DEPENDENCIES_PATH/management-console.tar.gz"
+PMC_EXEC_PATH="$DEPENDENCIES_PATH/management-console/bin/pmc"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
@@ -54,25 +60,42 @@ exitfn() {
     fi
 }
 
+# Function to download and unpack the PMC tool
+download_pmc() {
+    log "Downloading PMC..."
+    curl -sSL $PMC_DOWNLOAD_URL -o $PMC_ARCHIVE_PATH
+
+    debug "Extracting PMC..."
+    tar -xzf $PMC_ARCHIVE_PATH -C $DEPENDENCIES_PATH
+}
+
 trap "exitfn" EXIT 2
 
 debug "Checking for required commands..."
-if ! command -v pmc &> /dev/null || ! command -v chr &> /dev/null
-then
-    err "pmc and chr commands must be installed."
+
+mkdir -p $DEPENDENCIES_PATH
+
+if ! [ -x "$PMC_EXEC_PATH" ]; then
+    download_pmc
+fi
+
+if ! command -v chr &> /dev/null; then
+    err "chr command must be installed."
 
     # Check if the system is macOS
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "You are running macOS. If you haven't installed pmc and chr, please do so using:"
+        echo "You are running macOS. If you haven't installed chr, please do so using:"
         echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
-        echo "% brew install pmc"
+        echo "% brew install chr"
     fi
 
-    # TODO: Add some more instructions for Linus
+    # TODO: Add some more instructions for Linux
     # ...
 
     exit 1
 fi
+
+PMC="$PMC_EXEC_PATH"
 
 log "Running Postgres container..."
 $DOCKER run \
@@ -99,7 +122,6 @@ else
 fi
 
 log "Cloning Directory Chain dependency..."
-mkdir -p $DEPENDENCIES_PATH
 
 if [ -d "$DEPENDENCIES_PATH/directory-chain" ]; then
     log "Directory Chain already installed."
@@ -120,29 +142,33 @@ fi
 log "Building Directory Chain..."
 chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
 
+debug  "Copying FT library dependency to source folder..."
+
+rm -rf "$DEPENDENCIES_PATH/multichain"
+mkdir -p "$DEPENDENCIES_PATH/multichain/"
+
+cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/"
+cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
+
 log "Building Multichain dApp Chains..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
 do
     # Generate the YML filename and module name
     yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
-    module_name="multichain.app_module$chain_num"
+    module_name="app_module$chain_num"
 
     # Write the YML content to the file
-    cat <<- EOM > $yml_filename
-blockchains:
-    ft4_multichain_test_$chain_num:
-        module: $module_name
-compile:
-    source: ./
-    target: ../out
-EOM
+    sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
+        configs/multichain-jesttest.yml.template > ${yml_filename}
 
     # Create the corresponding RELL file with unique content
-    rell_filepath="$DEPENDENCIES_PATH/multichain/app_module$chain_num.rell"
+    rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
 
     mkdir -p $(dirname $rell_filepath)
 
     echo "module;" > $rell_filepath
+    echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
+    echo "import tests.operations;" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
     debug "Generated $yml_filename and $rell_filepath"
@@ -152,6 +178,7 @@ EOM
 done
 
 log "Running node container..."
+rm $POSTCHAIN_LOG_LOCATION
 $DOCKER run \
     --name $DOCKER_NODE_NAME \
     --restart unless-stopped \
@@ -163,16 +190,15 @@ $DOCKER run \
     -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
     -p $NODE_PORT:9870/tcp \
     -p 127.0.0.1:$API_PORT:7740/tcp \
-    -d \
     registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
-    run-node > /dev/null
+    run-node >> $POSTCHAIN_LOG_LOCATION &
 
 debug "Fetching manager chain BRID..."
 BRID=""
 retry_count=0
 
 # Loop until BRID receives a non-empty value or until 10 tries
-while [ -z "$BRID" ] && [ $retry_count -lt 10 ]; do
+while [ -z "$BRID" ] && [ $retry_count -lt 1000 ]; do
   # Attempt to fetch the value
   BRID=$(curl -s http://localhost:7740/brid/iid_0)
   
@@ -189,16 +215,17 @@ done
 log "Got manager chain BRID: $BRID"
 
 debug "Saving manager chain BRID to PMC config"
-pmc config --file $PMC_CONFIG --set brid="$BRID"
+$PMC config --file $PMC_CONFIG --set brid="$BRID"
 
 log "Initializing the network..."
-pmc network initialize \
+$PMC network initialize \
     --system-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml \
     --cluster-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/cluster_anchoring.xml \
     -cfg $PMC_CONFIG
 
+sleep 1
 debug "Verifying the network"
-VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
+VERIFY_OUTPUT=$($PMC network verify -cfg $PMC_CONFIG)
 
 if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
     err "Verification failed. Exiting."
@@ -208,17 +235,17 @@ fi
 log "Network verified successfully."
 
 debug "Adding container for the multichain test blockchains"
-pmc container add \
+$PMC container add \
     --name ft4_multichain_test \
     --cluster system \
-    --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
+    --pubkeys $($PMC config --get pubkey --file $PMC_CONFIG) \
     -cfg $PMC_CONFIG
 
 log "Adding blockchains to the container..."
 for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
 do
     MULTICHAIN_DAPP_BRID=$(
-        pmc blockchain add \
+        $PMC blockchain add \
             --quiet \
             --name multichain$chain_num \
             --container ft4_multichain_test \
@@ -229,6 +256,8 @@ do
     debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
 done
 
+sleep 10
+
 log "Running Jest tests..."
 if [[ "$1" == "-f" || "$1" == "--file" ]]; then
     FILE_OPTION="--runTestsByPath $2"
@@ -236,7 +265,9 @@ else
     FILE_OPTION=""
 fi
 
-npx jest \
+debug "Running tests..."
+
+NODE_OPTIONS='--stack-trace-limit=100' npx jest \
     --config=jest.config.multichain.js \
     --maxWorkers=1 \
     --testPathPattern=__multichain__ \
