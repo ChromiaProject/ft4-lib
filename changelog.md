@@ -15,8 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TransactionBuilder` now has a function `buildAndSend` which immediately submits the built transaction
 - Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
 
-### Changed
-- Auth messages now includes rid of the blockchain to which the tx is being submitted.
 
 ## [0.1.6] - 2023-09-29
 
@@ -30,18 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.5] - 2023-09-12
 
 ### Added
-- assetOriginById: query that retrieves the "asset origin", which is the only chain the asset can be received from
-- findPathToChainForAsset: traverses the tree structure of the linked chains to find the path to a certain asset.
 - createGenericEvmKeyStore: it receives an address and a sign function, to allow for custom implementations with any web3 library. Metamask is still supported through ethers for ease of setup.
 - fixed examples
 - Custom Event Emitter for handling various events like Metamask address change, crosschain transfer notifications.
-- `TransactionBuilder` now has a function `buildAndSend` which immediately submits the built transaction
-- Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
+- Auth messages now includes rid of the blockchain to which the tx is being submitted.
 
 ### Changed
 - Transfer history's asset properties are now of the Asset type
-- TransactionBuilder's `buildAndSend` now returns the transaction alongside the receipt
-- TransactionBuilder's `onAnchoredHandler`s now receive the signed transaction too
 - Auth messages now include rid of the blockchain to which the tx is being submitted.
 
 ### Fixed
