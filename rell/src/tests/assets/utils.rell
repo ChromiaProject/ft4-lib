@@ -77,14 +77,18 @@ function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T
     );
 }
 
-function create_auth_descriptor(participant_id: byte_array, permissions: list<text> = ["T"]): acc.auth_descriptor {
+function create_auth_descriptor(
+    participant_id: byte_array,
+    permissions: list<text> = ["T"],
+    rules: gtv = null.to_gtv()
+): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.S,
         [
             set(permissions).to_gtv(),
             participant_id.to_hex().to_gtv()
         ],
-        rules = null.to_gtv());
+        rules);
 }
 
 function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "") {

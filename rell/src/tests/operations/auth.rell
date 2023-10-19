@@ -29,7 +29,7 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
        		acc_auth_desc.args,
             participants,
        		required_flags
-	);
+	  );
 
     if (result.valid) {
         test_error.msg = "valid";

@@ -106,10 +106,20 @@ function is_simple_rule_active(rule: gtv, variables: map<text, gtv>): boolean {
  *  Variables
  */
 
-function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, gtv>): boolean {
+function evaluate_int_variable_rule(
+	rule: rule_expression,
+	variables: map<text, gtv>,
+	current_height: integer = op_context.block_height,
+	current_time: integer = op_context.last_block_time
+): boolean {
 	val variable = rule_variable.value(rule.variable);
 	val operator = rule_operator.value(rule.operator);
-	val current_value = variable_value(variable, variables);
+	val current_value = variable_value(
+		variable,
+		variables,
+		current_height,
+		current_time
+	);
 	val defined_value = integer.from_gtv(rule.value);
 
 	when (operator) {
@@ -172,13 +182,18 @@ function update_variables(account_auth_descriptor, variables: map<text, gtv>) {
 	}
 }
  
-function variable_value(variable: rule_variable, variables: map<text, gtv>): integer {
+function variable_value(
+	variable: rule_variable,
+	variables: map<text, gtv>,
+	current_height: integer,
+	current_time: integer
+): integer {
 	when (variable) {
 		rule_variable.block_height -> {
-			return op_context.block_height;
+			return current_height;
 		}
 		rule_variable.block_time -> {
-			return op_context.last_block_time;
+			return current_time;
 		}
 		rule_variable.op_count -> {
 			return integer.from_gtv(variables[rule_variable.op_count.name]);
