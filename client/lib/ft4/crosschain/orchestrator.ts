@@ -9,12 +9,19 @@ import {
 } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
-import { EventEmitter, Listener } from "../events";
 import { createAuthDataService } from "../ft-session";
 import { Session } from "../types";
 import { getTransactionRid } from "../utils";
 import { transactionBuilder } from "../utils/transaction-builder";
-import { OrchestratorError } from "./errors";
+import { Listener, EventEmitter } from "../events";
+import {
+  ApplyTransferError,
+  ErrorMessages,
+  FactoryError,
+  InitTransferError,
+  OrchestratorError,
+  TransferExecutionError,
+} from "./errors";
 import {
   applyTransfer as applyTransferOp,
   completeTransfer as completeTransferOp,
@@ -53,11 +60,16 @@ export async function createOrchestrator(
 ): Promise<Orchestrator> {
   const asset = await session.getAssetById(assetId);
   if (!asset) {
-    throw new OrchestratorError(
-      `Unable to transfer asset '${assetId}' as it was not found on chain '${session.client.config.blockchainRid}'`,
-    );
+    throw new FactoryError(ErrorMessages.ASSET_NOT_FOUND);
   }
-  const path = await findPathToChainForAsset(session, asset, targetChainId);
+  let path: Buffer[];
+
+  try {
+    path = await findPathToChainForAsset(session, asset, targetChainId);
+  } catch (error) {
+    throw new FactoryError(ErrorMessages.FAILED_TO_FIND_PATH, error);
+  }
+
   const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
 
   /**
@@ -72,14 +84,25 @@ export async function createOrchestrator(
         initTransferOp(recipientId, assetId, amount, path),
         (data: OnAnchoredHandlerData | null, error: Error | null) => {
           if (error) {
-            reject(error);
-            return;
+            reject(
+              new InitTransferError(ErrorMessages.UNABLE_TO_FETCH_PROOF, error),
+            );
+          } else {
+            state.tx = data?.tx;
+            state.initialTx = data?.tx;
+            resolve();
           }
-          state.tx = data?.tx;
-          state.initialTx = data?.tx;
-          resolve();
         },
-      ).buildAndSend();
+      )
+        .buildAndSend()
+        .catch((reason) =>
+          reject(
+            new InitTransferError(
+              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+              reason,
+            ),
+          ),
+        );
     }).then(() => {
       orchestrator.eventEmitter.emit("TransferInit");
     });
@@ -213,7 +236,7 @@ async function createBaseOrcestrator(
 
   /**
    * Apply the transfer operation targeting a specific bridge.
-   * @param {IClient} directoryClient - The client for the directory chain.
+   * @param {RawGtx} initTransferTx - The tx that was used to initialize the transfer
    * @param {Buffer} targetChainBrid - The ID of the target bridge.
    * @returns {Promise<void>}
    */
@@ -243,14 +266,27 @@ async function createBaseOrcestrator(
           ),
           (data: OnAnchoredHandlerData | null, error: Error | null) => {
             if (error) {
-              reject(error);
+              reject(
+                new ApplyTransferError(
+                  ErrorMessages.UNABLE_TO_FETCH_PROOF,
+                  error,
+                ),
+              );
               return;
             }
             state.tx = data?.tx;
             resolve();
           },
         )
-        .buildAndSend();
+        .buildAndSend()
+        .catch((error) =>
+          reject(
+            new ApplyTransferError(
+              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+              error,
+            ),
+          ),
+        );
     }).then(() => {
       localEmitter.emit("TransferHop", targetChainBrid);
     });
@@ -317,7 +353,15 @@ async function createBaseOrcestrator(
     try {
       await fn();
     } catch (error) {
-      const orchError = new OrchestratorError(error.message);
+      let orchError: TransferExecutionError;
+
+      if (error instanceof TransferExecutionError) {
+        orchError = error;
+      } else {
+        const errorMessage = error.message ? error.message : error.toString();
+        orchError = new TransferExecutionError(errorMessage, error);
+      }
+
       localEmitter.emit("TransferError", orchError);
     }
   }

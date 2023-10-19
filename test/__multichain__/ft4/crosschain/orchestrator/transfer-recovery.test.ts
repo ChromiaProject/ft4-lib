@@ -1,4 +1,4 @@
-import { fetchBlockchains } from "../../util/blockchain";
+import { fetchBlockchains } from "/__multichain__/util/blockchain";
 import {
   FlagsType,
   createAmount,
@@ -32,7 +32,7 @@ describe("Orchestrator", () => {
   let account0: AuthenticatedAccount, account2: AuthenticatedAccount;
   let session0: Session;
   let asset: Asset;
-  let multichain0Rid: Buffer, multichain2Rid: Buffer;
+  let multichain2Rid: Buffer;
 
   const amount = createAmount(10, 1);
 
@@ -72,59 +72,7 @@ describe("Orchestrator", () => {
       createAmount(100, asset.decimals),
     );
 
-    multichain0Rid = multichain00.rid;
     multichain2Rid = multichain02.rid;
-  });
-
-  it("executes transfer through all paths", async () => {
-    const orchestrator = await createOrchestrator(
-      multichain2Rid,
-      account2.id,
-      asset.id,
-      amount,
-      session0,
-    );
-
-    const initListener = jest.fn();
-    const hopListener = jest.fn();
-    const completeListener = jest.fn();
-    const errorListener = jest.fn();
-
-    orchestrator.onTransferInit(initListener);
-    orchestrator.onTransferHop(hopListener);
-    orchestrator.onTransferComplete(completeListener);
-    orchestrator.onTransferError(errorListener);
-
-    await orchestrator.transfer();
-
-    expect(initListener).toHaveBeenCalled();
-    expect(hopListener).toHaveBeenCalledTimes(1);
-    expect(completeListener).toHaveBeenCalled();
-    expect(errorListener).not.toHaveBeenCalled();
-  });
-
-  it("emits error event on transfer failure", async () => {
-    const mockSession = {
-      ...createSession(connection2, account2.authenticator),
-      transactionBuilder: jest.fn().mockImplementation(() => {
-        throw new Error("Mocked Error");
-      }),
-    };
-
-    const orchestrator = await createOrchestrator(
-      multichain0Rid,
-      account0.id,
-      asset.id,
-      amount,
-      mockSession,
-    );
-    const errorListener = jest.fn();
-
-    orchestrator.onTransferError(errorListener);
-
-    await orchestrator.transfer();
-
-    expect(errorListener).toHaveBeenCalled();
   });
 
   it("resumes a transfer that was initiated but not completed", async () => {

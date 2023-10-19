@@ -61,7 +61,7 @@ operation apply_transfer(
     hop_index: integer
 ) {
     create crosschain.applied_transfers(init_transfer_tx.to_gtv().hash(), op_index);
-    val init_args = if (hop_index == 0) struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args.to_gtv()) else struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args[0].to_gtv());
+    val init_args = struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args.to_gtv());
 
     if (hop_index == 0) {
         require(
