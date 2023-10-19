@@ -1,0 +1,67 @@
+@test module;
+
+import ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.admin;
+import ^^.assets.utils;
+import test_op: ^^.operations;
+import auth: ^^.operations.auth;
+import auth_ext: ^^^.lib.ft4.auth.external;
+
+val alice = rell.test.keypairs.alice;
+val bob = rell.test.keypairs.bob;
+
+function test_an_account_can_be_created() {
+  val auth_descriptor = utils.create_auth_descriptor(alice.pub);
+  
+  utils.create_test_account(alice);
+  
+  assert_equals(accounts.account @ {}( .id ), auth_descriptor.hash());
+}
+
+function test_cannot_create_account_with_expiring_ad() {
+  val auth_descriptor = utils.create_auth_descriptor(
+    rell.test.pubkeys.bob,
+    ["A"],
+    ("block_height", "lt", 100).to_gtv()
+  );
+  
+  admin.register_account(auth_descriptor)
+    .sign(utils.admin_priv_key())
+    .sign(bob)
+    .run_must_fail();
+}
+
+function test_multi_sig_auth_descriptor_can_be_added() {
+  val auth_descriptor = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        0x2.to_gtv(),
+        [
+          alice.pub.to_hex(),
+          bob.pub.to_hex()
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
+
+  assert_equals(accounts.account_auth_descriptor @ {}( .id ), auth_descriptor.hash());
+}
+
+function test_an_invalid_descriptor_can_not_be_added() {
+  val auth_descriptor = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        alice.pub.to_hex().to_gtv(),
+        bob.pub.to_hex().to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  assert_fails(
+    utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
+  );
+}

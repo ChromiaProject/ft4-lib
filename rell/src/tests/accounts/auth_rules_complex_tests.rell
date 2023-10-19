@@ -97,6 +97,37 @@ namespace test_basic_functionality {
       ).to_gtv());;
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
+
+  function test_transaction_with_two_similar_rules() {
+    val acc_data = setup_account_with_rules(
+      (
+        ("block_height", "lt", 100), "and", ("block_height", "lt", 200)
+      ).to_gtv());
+    authenticate_account_signed_tx(acc_data).run();
+  }
+
+  function test_cannot_setup_with_too_many_rules() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+    val rules = (
+        ("block_height", "lt", 100), "and",
+        ("block_height", "lt", 101), "and",
+        ("block_height", "lt", 102), "and",
+        ("block_height", "lt", 103), "and",
+        ("block_height", "lt", 104), "and",
+        ("block_height", "lt", 105)
+      ).to_gtv();
+
+    val bob_ad = utils.create_auth_descriptor(
+      rell.test.pubkeys.bob,
+      ["A"],
+      rules
+    );
+    
+    val bob_ad_id = bob_ad.hash();
+    test_op.add_ad_to_account(alice.account, bob_ad)
+      .sign(rell.test.keypairs.bob).run_must_fail();
+  }
 }
 
 namespace test_multiple_ops_with_op_count {
