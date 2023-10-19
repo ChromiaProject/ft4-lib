@@ -1,6 +1,6 @@
+import { Connection } from "../types";
 import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
-import { Connection } from "../types";
 
 export async function fetchExposedOperations(
   connection: Connection,

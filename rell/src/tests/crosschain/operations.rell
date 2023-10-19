@@ -3,6 +3,7 @@
 import ^^.assets.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
+import xc: ^^^.lib.ft4.crosschain;
 import iccf_op: ^^.operations.iccf_op;
 
 // Test for valid asset but invalid amount (0)
@@ -77,7 +78,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_brid, tx.to_gtv().hash()))
-        .op(xchain_ext.apply_transfer(init_args, tx, 0, 0))
+        .op(xchain_ext.apply_transfer(tx, 0, tx, 0, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
 }
@@ -101,6 +102,20 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
       hops = [x"abcdef"]
     );
 
+    val wrong_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = x"deadbeef",
+            operations = [
+                gtx_operation(
+                    name = "ft4.crosschain.init_transfer",
+                    args = list<gtv>.from_gtv(wrong_init_args.to_gtv())
+                )
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
     val tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
@@ -116,7 +131,7 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.apply_transfer(wrong_init_args, tx, 0, 0))
+        .op(xchain_ext.apply_transfer(wrong_tx, 0, tx, 0, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Parameter init_args does not match init_transfer arguments");
 }
@@ -133,13 +148,26 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
       hops = [x"abcdef"]
     );
 
-    val tx = gtx_transaction(
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = x"deadbeef",
+            operations = [
+                gtx_operation(
+                    name = "ft4.crosschain.init_transfer",
+                    args = list<gtv>.from_gtv(init_args.to_gtv())
+                )
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+    val apply_tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
                 gtx_operation(
                     name = "ft4.crosschain.apply_transfer",
-                    args = [init_args.to_gtv()]
+                    args = [init_tx.to_gtv(), (0).to_gtv(), init_tx.to_gtv(), (0).to_gtv(), 0x0.to_gtv()]
                 )
             ],
             signers = []
@@ -150,7 +178,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
     val hop_index = 100; // Invalid hop index
 
     rell.test.tx()
-        .op(xchain_ext.apply_transfer(init_args, tx, 0, hop_index))
+        .op(xchain_ext.apply_transfer(init_tx, 0, apply_tx, 0, hop_index))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index));
 }

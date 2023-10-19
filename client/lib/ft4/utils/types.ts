@@ -52,7 +52,7 @@ export type TxBuilderTransaction = {
 };
 
 export interface RellAppStructure {
-  modules: Record<string, RellModuleStructure>;
+  [modules: string]: Record<string, RellModuleStructure>;
 }
 
 export interface RellModuleStructure {

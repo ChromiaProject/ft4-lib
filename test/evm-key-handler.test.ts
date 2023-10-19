@@ -33,8 +33,9 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage =
-      await createInMemoryEvmKeyStore(keyPair).signMessage(message);
+    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
+      message,
+    );
 
     expect(signedMessage).toEqual(expectedSignature);
   });

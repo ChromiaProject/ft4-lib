@@ -73,12 +73,12 @@ describe("Basic Functionality", () => {
   it("marks transfer as complete", async () => {
     const orchestrator = await createTestOrchestrator();
 
-    const endListener = jest.fn();
-    orchestrator.onTransferEnd(endListener);
+    const completeListener = jest.fn();
+    orchestrator.onTransferComplete(completeListener);
 
     await orchestrator.transfer();
 
-    expect(endListener).toHaveBeenCalled();
+    expect(completeListener).toHaveBeenCalled();
   });
 
   it("ensures no errors are thrown throughout the process", async () => {

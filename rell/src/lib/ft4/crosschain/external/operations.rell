@@ -46,37 +46,42 @@ operation init_transfer(
         asset,
         amount
     );
+    create crosschain.pending_transfer(
+        account=account,
+        transaction=op_context.transaction,
+        op_index=op_context.op_index
+    );
 }
 
 operation apply_transfer(
-    init_args: struct<init_transfer>,
-    tx: gtx_transaction,
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer,
+    previous_hop_tx: gtx_transaction,
     op_index: integer,
     hop_index: integer
 ) {
-    create crosschain.applied_transfers(tx.to_gtv().hash(), op_index);
+    create crosschain.applied_transfers(init_transfer_tx.to_gtv().hash(), op_index);
+    val init_args = struct<init_transfer>.from_gtv(init_transfer_tx.body.operations[init_tx_op_index].args.to_gtv());
 
-    if (hop_index == 0){
+    if (hop_index == 0) {
         require(
-            tx.body.operations[op_index].name == "ft4.crosschain.init_transfer", 
+            previous_hop_tx.body.operations[op_index].name == "ft4.crosschain.init_transfer",
             "The operation at number %s from tx is not init_transfer".format(op_index)
         );
         require(
             init_args == struct<init_transfer>.from_gtv(
-                tx.body.operations[op_index].args.to_gtv()
+                previous_hop_tx.body.operations[op_index].args.to_gtv()
             ),
             "Parameter init_args does not match init_transfer arguments"
         );
     } else {
         require(
-            tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer", 
+            previous_hop_tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer",
             "The operation at number %s from tx is not apply_transfer, ".format(op_index)
         );
         require(
-            init_args == struct<init_transfer>.from_gtv(
-                tx.body.operations[op_index].args[0].to_gtv()
-            ),
-            "Parameter init_args does not match the one passed to the last apply_transfer"
+            init_transfer_tx.hash() == previous_hop_tx.body.operations[op_index].args[0].hash(),
+            "The previous apply_transfer does not have the same init_transfer as the one provided to this hop"
         );
     }
 
@@ -92,7 +97,7 @@ operation apply_transfer(
             .format(init_args.hops[hop_index])
     );
 
-    val from_brid = tx.body.blockchain_rid; 
+    val from_brid = previous_hop_tx.body.blockchain_rid; 
 
     if (hop_index > 0) {
         require(
@@ -105,7 +110,7 @@ operation apply_transfer(
     }
 
     require(
-        iccf.check_iccf_proof(from_brid, tx.to_gtv().hash()),
+        iccf.check_iccf_proof(from_brid, previous_hop_tx.to_gtv().hash()),
         "Missing proof for previous hop"
     );
 
@@ -127,4 +132,41 @@ operation apply_transfer(
         asset,
         init_args.amount
     );
+}
+
+operation complete_transfer(
+    final_apply_transfer_tx: gtx_transaction,
+    op_index: integer
+) {
+    require(
+        iccf.check_iccf_proof(
+            final_apply_transfer_tx.body.blockchain_rid,
+            final_apply_transfer_tx.to_gtv().hash()
+        ),
+        "Could not delete pedning transfer as the proof is not anchored yet"
+    );
+
+    require(
+        final_apply_transfer_tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer",
+        "Operation at op_index was not apply_transfer"
+    );
+
+    // map gtv args to struct
+    val final_apply_transfer_args = struct<apply_transfer>.from_gtv(final_apply_transfer_tx.body.operations[op_index].args.to_gtv());
+
+    // extract init transfer tx details
+    val init_transfer_tx_hash = final_apply_transfer_args.init_transfer_tx.to_gtv().hash();
+    val init_transfer_args = struct<init_transfer>.from_gtv(final_apply_transfer_args.init_transfer_tx.body.operations[final_apply_transfer_args.init_tx_op_index].args.to_gtv());
+
+    require(
+        final_apply_transfer_args.hop_index == init_transfer_args.hops.size() - 1,
+        "The provided transaction does not represent the final hop in this cross chain transfer"
+    );
+    require(
+        init_transfer_args.hops[final_apply_transfer_args.hop_index] == final_apply_transfer_tx.body.blockchain_rid,
+        "The provided transaction was not applied to the expected target chain"
+    );
+
+    // delete the pending transfer as it is now completed
+    delete crosschain.pending_transfer @ { .transaction.tx_hash == init_transfer_tx_hash, .op_index == final_apply_transfer_args.init_tx_op_index };
 }

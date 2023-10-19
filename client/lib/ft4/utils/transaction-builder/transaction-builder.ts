@@ -28,7 +28,7 @@ import { getTransactionRid } from "..";
 import { BufferId } from "/cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
-  retryCount: 3,
+  retryCount: 10,
   waitTimeMs: 500,
 };
 
@@ -102,8 +102,9 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(

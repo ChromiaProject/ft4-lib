@@ -1,25 +1,11 @@
-import { Operation, RawGtx, formatter } from "postchain-client";
+import { Operation, RawGtx } from "postchain-client";
 import { Amount } from "../asset/interfaces";
-import { BufferId } from "/cryptoUtils";
 import { op } from "../utils";
-import { GtvInitTransferArgs } from "./types";
+import { getInitTransferArgs } from "./op-functions";
+import { BufferId } from "/cryptoUtils";
 
 // Constant index for init_transfer operation, applicable when not using TransactionBuilder.
 export const OP_INDEX_INIT_TRANSFER = 1;
-
-function getInitTransferArgs(
-  recipientId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-  hops: BufferId[],
-): GtvInitTransferArgs {
-  return [
-    formatter.ensureBuffer(recipientId),
-    formatter.ensureBuffer(assetId),
-    amount.value,
-    hops.map(formatter.ensureBuffer),
-  ];
-}
 
 export function initTransfer(
   recipientId: BufferId,
@@ -34,19 +20,22 @@ export function initTransfer(
 }
 
 export function applyTransfer(
-  recipientId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-  hops: BufferId[],
+  initTransferTx: RawGtx,
   tx: RawGtx,
   targetChainIndex: number,
+  initTransferOpIndex: number = OP_INDEX_INIT_TRANSFER,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Operation {
   return op(
     "ft4.crosschain.apply_transfer",
-    getInitTransferArgs(recipientId, assetId, amount, hops),
+    initTransferTx,
+    initTransferOpIndex,
     tx,
     operationIndex,
     targetChainIndex,
   );
+}
+
+export function completeTransfer(tx: RawGtx, opIndex: number): Operation {
+  return op("ft4.crosschain.complete_transfer", tx, opIndex);
 }

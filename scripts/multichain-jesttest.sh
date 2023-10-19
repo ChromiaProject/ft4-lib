@@ -6,8 +6,9 @@ NUM_BLOCKCHAINS=3
 POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
+POSTCHAIN_LOG_LOCATION="logs/multichain-postchain.log"
 
-NODE_VERSION='3.11.2'
+NODE_VERSION='3.13.7'
 DIRECTORY_CHAIN_VERSION='1.9.2'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
@@ -177,6 +178,7 @@ do
 done
 
 log "Running node container..."
+rm $POSTCHAIN_LOG_LOCATION
 $DOCKER run \
     --name $DOCKER_NODE_NAME \
     --restart unless-stopped \
@@ -189,7 +191,7 @@ $DOCKER run \
     -p $NODE_PORT:9870/tcp \
     -p 127.0.0.1:$API_PORT:7740/tcp \
     registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
-    run-node > logs/multichain-postchain.log &
+    run-node >> $POSTCHAIN_LOG_LOCATION &
 
 debug "Fetching manager chain BRID..."
 BRID=""
@@ -253,6 +255,8 @@ do
 
     debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
 done
+
+sleep 10
 
 log "Running Jest tests..."
 if [[ "$1" == "-f" || "$1" == "--file" ]]; then
