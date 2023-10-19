@@ -154,7 +154,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
             operations = [
                 gtx_operation(
                     name = "ft4.crosschain.init_transfer",
-                    args = [init_args.to_gtv()]
+                    args = list<gtv>.from_gtv(init_args.to_gtv())
                 )
             ],
             signers = []
@@ -167,7 +167,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
             operations = [
                 gtx_operation(
                     name = "ft4.crosschain.apply_transfer",
-                    args = [init_tx.to_gtv(), 0x0.to_gtv()]
+                    args = [init_tx.to_gtv(), (0).to_gtv(), init_tx.to_gtv(), (0).to_gtv(), 0x0.to_gtv()]
                 )
             ],
             signers = []
