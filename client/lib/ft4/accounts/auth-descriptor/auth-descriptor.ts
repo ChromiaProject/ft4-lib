@@ -13,7 +13,7 @@ import {
 export function createSingleSignatureAuthDescriptor(
   args: SingleSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null,
-  created?: number
+  created?: number,
 ): AuthDescriptor {
   const fields: RawAuthDescriptor = [
     serializeAuthType(AuthType.single_sig),
@@ -21,14 +21,14 @@ export function createSingleSignatureAuthDescriptor(
     rules,
   ];
   return Object.freeze(
-    authDescriptor.fromGtv([authDescriptor.getId(fields), ...fields, created])
+    authDescriptor.fromGtv([authDescriptor.getId(fields), ...fields, created]),
   );
 }
 
 export function createMultiSignatureAuthDescriptor(
   args: MultiSigAuthDescriptorArgs,
   rules: AuthDescriptorRule | null,
-  created?: number
+  created?: number,
 ): AuthDescriptor {
   const fields: RawAuthDescriptor = [
     serializeAuthType(AuthType.multi_sig),
@@ -36,13 +36,13 @@ export function createMultiSignatureAuthDescriptor(
     rules,
   ];
   return Object.freeze(
-    authDescriptor.fromGtv([authDescriptor.getId(fields), ...fields, created])
+    authDescriptor.fromGtv([authDescriptor.getId(fields), ...fields, created]),
   );
 }
 
 export function singleSigArgs(
   flags: string[],
-  signerPubKey: BufferId
+  signerPubKey: BufferId,
 ): SingleSigAuthDescriptorArgs {
   return Object.freeze([
     [...new Set(flags)],
@@ -61,11 +61,11 @@ export class AuthDescriptorError extends Error {
 export function multiSigArgs(
   flags: string[],
   requiredSignatures: number,
-  signerPubKeys: BufferId[]
+  signerPubKeys: BufferId[],
 ): MultiSigAuthDescriptorArgs {
   if (requiredSignatures > signerPubKeys.length) {
     throw new AuthDescriptorError(
-      "Number of required signatures have to be less or equal to number of pubkeys"
+      "Number of required signatures have to be less or equal to number of pubkeys",
     );
   }
   return Object.freeze([
@@ -95,7 +95,7 @@ function multiSigObj() {
     withArgs: (
       flags: string[],
       requiredSignatures: number,
-      signerPubKeys: BufferId[]
+      signerPubKeys: BufferId[],
     ) => {
       const args = multiSigArgs(flags, requiredSignatures, signerPubKeys);
       return {

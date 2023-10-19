@@ -32,6 +32,8 @@ operation register_account_test(acc.auth_descriptor) {
     acc.Unsafe.create_account_with_auth(auth_descriptor);
 }
 
+operation empty_op() {}
+
 operation consume_point(account_id: byte_array) {
     var state = require(
         acc.rl_state @? { acc.account @ { .id == account_id } },
@@ -41,4 +43,5 @@ operation consume_point(account_id: byte_array) {
     require(state.points > 0, "Insufficient rate limiter points");
 
 	state.points -= 1;
+    state.last_update = op_context.last_block_time;
 }

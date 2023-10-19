@@ -63,13 +63,13 @@ describe("Transfer history", () => {
 
       const session = await createKeyStoreInteractor(
         connection.client,
-        createInMemoryFtKeyStore(keyPair),
+        createInMemoryFtKeyStore(keyPair)
       ).getSession(account1.id);
 
       await session.account.transfer(
         account2.id,
         asset.id,
-        createAmount(10, asset.decimals),
+        createAmount(10, asset.decimals)
       );
 
       const history = await account1.getTransferHistory();
@@ -98,7 +98,7 @@ describe("Transfer history", () => {
       await account1.transfer(
         account2.id,
         asset.id,
-        createAmount(10, asset.decimals),
+        createAmount(10, asset.decimals)
       );
 
       const transferHistoryEntries = await account1.getTransferHistory();
@@ -123,12 +123,12 @@ describe("Transfer history", () => {
       await account1.transfer(
         account2.id,
         asset.id,
-        createAmount(10, asset.decimals),
+        createAmount(10, asset.decimals)
       );
       await account1.transfer(
         account2.id,
         asset.id,
-        createAmount(11, asset.decimals),
+        createAmount(11, asset.decimals)
       );
 
       const history = await account1.getTransferHistory();
@@ -151,12 +151,12 @@ describe("Transfer history", () => {
       await account1.transfer(
         account2.id,
         asset.id,
-        createAmount(10, asset.decimals),
+        createAmount(10, asset.decimals)
       );
       await account1.transfer(
         account2.id,
         asset.id,
-        createAmount(10, asset.decimals),
+        createAmount(10, asset.decimals)
       );
 
       const history = await account1.getTransferHistory(2);
@@ -179,24 +179,24 @@ describe("Transfer history", () => {
       await account1.transfer(
         account2.id,
         asset.id,
-        createAmount(10, asset.decimals),
+        createAmount(10, asset.decimals)
       );
 
       const history = await account1.getTransferHistory();
       expect(history.data.length).toStrictEqual(2);
       expect(history.data[0].transferInputArgs.length).toBe(1);
       expect(history.data[0].transferInputArgs[0].accountId).toEqual(
-        account1.id,
+        account1.id
       );
       expect(history.data[0].transferInputArgs[0].amount.value).toEqual(
-        createAmount(10, asset.decimals).value,
+        createAmount(10, asset.decimals).value
       );
       expect(history.data[0].transferOutputArgs.length).toBe(1);
       expect(history.data[0].transferOutputArgs[0].accountId).toEqual(
-        account2.id,
+        account2.id
       );
       expect(history.data[0].transferOutputArgs[0].amount.value).toEqual(
-        createAmount(10, asset.decimals).value,
+        createAmount(10, asset.decimals).value
       );
     });
   });
@@ -212,25 +212,25 @@ describe("Transfer history", () => {
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(5, asset.decimals),
+      createAmount(5, asset.decimals)
     );
 
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals),
+      createAmount(10, asset.decimals)
     );
 
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(15, asset.decimals),
+      createAmount(15, asset.decimals)
     );
 
     await account2.transfer(
       account1.id,
       asset.id,
-      createAmount(15, asset.decimals),
+      createAmount(15, asset.decimals)
     );
 
     const transferHistory = await account1.getTransferHistory(10, {
@@ -251,19 +251,19 @@ describe("Transfer history", () => {
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals),
+      createAmount(10, asset.decimals)
     );
 
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(15, asset.decimals),
+      createAmount(15, asset.decimals)
     );
 
     await account2.transfer(
       account1.id,
       asset.id,
-      createAmount(20, asset.decimals),
+      createAmount(20, asset.decimals)
     );
 
     const transferHistory = await account2.getTransferHistory(5, {
@@ -287,12 +287,12 @@ describe("Transfer history", () => {
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals),
+      createAmount(10, asset.decimals)
     );
 
     const retreiver = createTransferHistoryRetriever(
       connection.client,
-      account1.id,
+      account1.id
     );
     const expectedEntry = (await retreiver.retrieve(1, null, null)).data[0];
     const actualEntry = await retreiver.retrieveSingle(expectedEntry.rowid);
@@ -304,7 +304,7 @@ describe("Transfer history", () => {
     });
 
     expect(JSON.stringify(actualEntry)).toStrictEqual(
-      JSON.stringify(expectedEntry),
+      JSON.stringify(expectedEntry)
     );
   });
 
@@ -322,7 +322,7 @@ describe("Transfer history", () => {
     await account1.transfer(
       account2.id,
       asset.id,
-      createAmount(10, asset.decimals),
+      createAmount(10, asset.decimals)
     );
 
     const foundAccount = await connection.getAccountById(account1.id);
@@ -330,7 +330,7 @@ describe("Transfer history", () => {
     const history = await foundAccount.getTransferHistory();
 
     const entry = await foundAccount!.getTransferHistoryEntry(
-      history.data[0].rowid,
+      history.data[0].rowid
     );
     expect(entry!.rowid).toBe(history.data[0].rowid);
   });
