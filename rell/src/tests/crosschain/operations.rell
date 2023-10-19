@@ -6,8 +6,7 @@ import xchain_ext: ^^^.lib.ft4.crosschain.external;
 import xc: ^^^.lib.ft4.crosschain;
 import iccf_op: ^^.operations.iccf_op;
 
-// Test for valid asset but invalid amount (0)
-function test_init_transfer_fails_when_amount_is_invalid() {
+function test_init_transfer_fails_when_amount_is_zero() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
     val asset_valid = utils.create_asset("validAsset", "va", 1);
@@ -133,7 +132,7 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
     rell.test.tx()
         .op(xchain_ext.apply_transfer(wrong_tx, 0, tx, 0, 0))
         .sign(rell.test.keypairs.alice)
-        .run_must_fail("Parameter init_args does not match init_transfer arguments");
+        .run_must_fail("Invalid parameter. Previous hop tx must be equal to init transfer t");
 }
 
 function test_apply_transfer_fails_with_invalid_hop_index() {
