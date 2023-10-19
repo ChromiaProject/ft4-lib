@@ -79,7 +79,7 @@ operation apply_transfer(
 
         require(
             op_index == init_tx_op_index,
-            "Invalid pareameter. init_transfer indexes should be same"
+            "Invalid parameter. init_transfer indexes should be same"
         );
     } else {
         val previous_hop_details = get_apply_transfer_details(previous_hop_tx, op_index);
