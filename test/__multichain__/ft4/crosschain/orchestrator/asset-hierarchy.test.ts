@@ -19,12 +19,12 @@ describe("Asset Hierarchy", () => {
     orchestrator: Orchestrator,
     expectedBalances: { [key: number]: Amount | undefined },
   ) {
-    const endListener = jest.fn();
-    orchestrator.onTransferEnd(endListener);
+    const completedListener = jest.fn();
+    orchestrator.onTransferComplete(completedListener);
 
     await orchestrator.transfer();
 
-    expect(endListener).toHaveBeenCalled();
+    expect(completedListener).toHaveBeenCalled();
 
     for (const [accountNum, expectedBalance] of Object.entries(
       expectedBalances,

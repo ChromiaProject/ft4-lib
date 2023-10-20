@@ -111,12 +111,7 @@ export type TransactionBuilderConfig = RequireTogether<
 >;
 
 export type OnAnchoredHandler = ((
-  data: {
-    operation: Operation;
-    opIndex: number;
-    tx: RawGtx;
-    createProof: (brid: BufferId) => Promise<Operation>;
-  },
+  data: OnAnchoredHandlerData,
   error: null,
 ) => void) &
   ((data: null, error: Error) => void);
@@ -125,6 +120,13 @@ export type OperationContext = {
   operation: Operation;
   authenticator: Authenticator;
   onAnchoredHandler: OnAnchoredHandler | undefined;
+};
+
+export type OnAnchoredHandlerData = {
+  operation: Operation;
+  opIndex: number;
+  tx: RawGtx;
+  createProof: (brid: BufferId) => Promise<Operation>;
 };
 
 type ConfigOptions = {

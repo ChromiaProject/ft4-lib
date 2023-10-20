@@ -155,7 +155,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
       connection.query(nonce(accountId, authDescriptorId)),
-    getLoginConfig: async (configName: string | null = null) =>
+    getLoginConfig: async (configName: string | undefined = undefined) =>
       connection.query(loginConfig(configName)),
     getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
   });

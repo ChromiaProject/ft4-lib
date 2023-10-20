@@ -28,7 +28,7 @@ import { getTransactionRid } from "..";
 import { BufferId } from "/cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
-  retryCount: 3,
+  retryCount: 10,
   waitTimeMs: 500,
 };
 
