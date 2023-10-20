@@ -22,10 +22,10 @@ export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
   blockchainRid: BufferId,
+  maxPathLength = 100,
 ): Promise<Buffer[]> {
   const rootNode = asset.brid;
 
-  let foundPath = false;
   const pathSourceToRoot = [
     formatter.toBuffer(connection.client.config.blockchainRid),
   ];
@@ -35,9 +35,8 @@ export async function findPathToChainForAsset(
   let commonNode: Buffer;
   let isSearchingSource = true;
 
-  // Should we stop before N iterations?
-  // Should we stop before T time delay?
-  while (!foundPath) {
+  let pathLength = 0;
+  for (; pathLength < maxPathLength; ++pathLength) {
     const currentArray = isSearchingSource ? pathSourceToRoot : pathEndToRoot;
 
     lastNode = currentArray[currentArray.length - 1];
@@ -101,10 +100,15 @@ export async function findPathToChainForAsset(
           (x) => !x.compare(nextHop),
         )
       ) {
-        foundPath = true;
         commonNode = nextHop;
         break;
       }
+    }
+
+    if (pathLength === maxPathLength - 1) {
+      throw new PathfinderError(
+        `Exceeded max path length of ${maxPathLength} hops. This is most likely due to an error in your code, but if you really need a larger path length, you can increase the default by passing the new max path length as an argument to this function`,
+      );
     }
 
     // switch branch only if the other hasn't reached root node yet

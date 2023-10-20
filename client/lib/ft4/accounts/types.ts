@@ -19,6 +19,7 @@ import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor/types";
+import { PendingTransfer } from "../crosschain/types";
 
 export type RateLimit = {
   points: number;
@@ -50,6 +51,9 @@ export interface Account {
   getTransferHistoryEntry: (
     rowid: number,
   ) => Promise<TransferHistoryEntry | null>;
+  getPendingCrosschainTransfers: () => Promise<
+    PaginatedEntity<PendingTransfer>
+  >;
 }
 
 export interface AuthenticatedAccount extends Account {

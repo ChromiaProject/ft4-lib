@@ -1,19 +1,20 @@
 import {
-  Operation as newOperation,
+  Operation,
   encryption,
   RawGtv,
   IClient,
   KeyPair,
-  SignedTransaction,
-  gtx,
+  gtv,
+  RawGtx,
 } from "postchain-client";
 import { Config } from "./types";
+import { Buffer } from "buffer";
 
-export function nop(): newOperation {
+export function nop(): Operation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
 }
 
-export function op(name: string, ...args: readonly RawGtv[]): newOperation {
+export function op(name: string, ...args: readonly RawGtv[]): Operation {
   return { name, args: args as RawGtv[] };
 }
 
@@ -29,8 +30,8 @@ export async function getConfig(session: IClient): Promise<Config> {
   });
 }
 
-export function getTransactionRid(tx: SignedTransaction): Buffer {
-  return gtx.getDigestToSign(gtx.deserialize(tx));
+export function getTransactionRid(tx: RawGtx): Buffer {
+  return gtv.gtvHash(tx[0]); //tx body
 }
 
 export async function getVersion(session: IClient): Promise<string> {

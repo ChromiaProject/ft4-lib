@@ -21,6 +21,11 @@ export * from "./evm";
 export * from "./ft";
 export * from "./types";
 
+export {
+  createSessionStorageLoginKeyStore,
+  createLocalStorageLoginKeyStore,
+} from "./login-manager/stores";
+
 export function createAuthenticator(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
@@ -142,8 +147,9 @@ function createAuthenticatorSession(
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }

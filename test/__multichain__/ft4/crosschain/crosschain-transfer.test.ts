@@ -1,4 +1,4 @@
-import { createIccfProofTx, gtv, gtx } from "postchain-client";
+import { Operation, RawGtx } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -15,18 +15,16 @@ import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
 } from "../../../../client/lib/ft4/crosschain/operations";
-import {
-  OnAnchoredHandler,
-  transactionBuilder,
-} from "/ft4/utils/transaction-builder";
-import { getTransactionRid } from "/ft4/utils";
-import { fetchBlockchains } from "../../utils/blockchain";
+import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import { fetchBlockchains } from "../../util/blockchain";
+import { BufferId } from "/cryptoUtils";
+
+jest.unmock("postchain-client");
 
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
-    const { c0, multichain00, multichain01 } = await fetchBlockchains();
+    const { multichain00, multichain01 } = await fetchBlockchains();
 
-    const clientC0 = await createChromiaClientToMultichain(c0.rid);
     const connection00 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
@@ -61,28 +59,30 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler: OnAnchoredHandler = async (_, tx) => {
-        const decodedTx = gtx.deserialize(tx);
-        const proofTx = await createIccfProofTx(
-          clientC0,
-          getTransactionRid(tx),
-          gtv.gtvHash(decodedTx),
-          decodedTx.signers,
-          multichain00.rid.toString("hex"),
-          multichain01.rid.toString("hex"),
-        );
-        const newTx = proofTx.iccfTx;
-        newTx.operations.push(
-          applyTransferOp(
-            account01.id,
-            asset00.id,
-            createAmount(100, asset00.decimals),
-            [multichain01.rid],
-            tx,
-            0,
-          ),
-        );
-        await connection01.client.sendTransaction(newTx);
+      const onAnchoringHandler = async (
+        data: {
+          operation: Operation;
+          opIndex: number;
+          tx: RawGtx;
+          createProof: (brid: BufferId) => Promise<Operation>;
+        } | null,
+        error: Error | null,
+      ) => {
+        if (error) {
+          throw error;
+        }
+        if (!data) {
+          throw new Error("No data provided");
+        }
+        const iccfProofOperation = await data.createProof(multichain01.rid);
+
+        await connection01.client.sendTransaction({
+          operations: [
+            iccfProofOperation,
+            applyTransferOp(data.tx, data.tx, 0),
+          ],
+          signers: [],
+        });
         resolve();
       };
 

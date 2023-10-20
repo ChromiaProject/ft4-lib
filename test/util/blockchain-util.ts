@@ -4,6 +4,7 @@ import {
   gtv,
   IClient,
   formatter,
+  Operation,
 } from "postchain-client";
 import { createConnection } from "../../client/lib/ft4/ft-session";
 import { Asset } from "../../client/lib/ft4/asset/types";
@@ -55,4 +56,23 @@ export async function getNewAsset(
     throw new Error("Unable to fetch the new asset");
   }
   return asset;
+}
+
+export function anchoredHandlerCallbackParameters(
+  client: IClient,
+  operations: Operation[],
+  opIndex: number,
+) {
+  return expect.objectContaining({
+    operation: operations[opIndex],
+    opIndex,
+    tx: expect.arrayContaining([
+      [
+        Buffer.from(client.config.blockchainRid, "hex"),
+        operations.map((o) => [o.name, o.args]),
+        [],
+      ],
+      [],
+    ]),
+  });
 }

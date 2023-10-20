@@ -1,4 +1,4 @@
-import { SignedTransaction, TransactionReceipt } from "postchain-client";
+import { RawGtx, TransactionReceipt, formatter } from "postchain-client";
 import { Connection } from "../types";
 import { Authenticator } from "../authentication/types";
 import {
@@ -9,6 +9,7 @@ import {
 import { call } from "../ft-session";
 import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
+import { GtvInitTransferArgs } from "./types";
 
 export async function initTransfer(
   connection: Connection,
@@ -28,25 +29,35 @@ export async function initTransfer(
 export async function applyTransfer(
   connection: Connection,
   authenticator: Authenticator,
-  recipientId: BufferId,
-  assetId: BufferId,
-  amount: Amount,
-  hops: BufferId[],
-  tx: SignedTransaction,
+  initTransferTx: RawGtx,
+  tx: RawGtx,
   targetChainIndex: number,
+  initTransferOpIndex: number = OP_INDEX_INIT_TRANSFER,
   operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Promise<TransactionReceipt> {
   return call(
     connection,
     authenticator,
     applyTransferOp(
-      recipientId,
-      assetId,
-      amount,
-      hops,
+      initTransferTx,
       tx,
       targetChainIndex,
+      initTransferOpIndex,
       operationIndex,
     ),
   );
+}
+
+export function getInitTransferArgs(
+  receiverId: BufferId,
+  assetId: BufferId,
+  amount: Amount,
+  hops: BufferId[],
+): GtvInitTransferArgs {
+  return [
+    formatter.ensureBuffer(receiverId),
+    formatter.ensureBuffer(assetId),
+    amount.value,
+    hops.map(formatter.ensureBuffer),
+  ];
 }

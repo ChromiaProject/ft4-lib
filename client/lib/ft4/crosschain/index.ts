@@ -1,6 +1,24 @@
+// export the needed stuff
+
+export {
+  isTransferApplied,
+  getPendingTransfersForAccount,
+  getAssetOriginById,
+} from "./query-functions";
 export { createOrchestrator } from "./orchestrator";
-export { getAssetOriginById } from "./query-functions";
-export { initTransfer, applyTransfer } from "./op-functions";
+export {
+  initTransfer,
+  applyTransfer,
+  getInitTransferArgs,
+} from "./op-functions";
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
-export { OrchestratorEvents, Orchestrator, GtvInitTransferArgs } from "./types";
+export { pendingTransfersForAccount } from "./queries";
+
+export {
+  Orchestrator,
+  OrchestratorEvents,
+  GtvInitTransferArgs,
+  PendingTransfer,
+  PendingTransferResponse,
+} from "./types";

@@ -11,6 +11,9 @@ import {
   BlockAnchoringException,
   SignedTransaction,
   TransactionReceipt,
+  createIccfProofTx,
+  gtv,
+  RawGtx,
 } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
@@ -23,9 +26,10 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRid } from "..";
+import { BufferId } from "/cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
-  retryCount: 3,
+  retryCount: 10,
   waitTimeMs: 500,
 };
 
@@ -115,7 +119,7 @@ export function transactionBuilder(
       if (!nonces.has(adId.toString("hex"))) {
         nonces.set(
           adId.toString("hex"),
-          (await authenticator.getNonce(adId)) || 0,
+          (await authenticator.getNonce(adId)) ?? 0,
         );
       }
 
@@ -199,7 +203,8 @@ export function transactionBuilder(
       systemClient,
       client.config.blockchainRid,
     );
-    const txRid = getTransactionRid(tx);
+    const rawTx = gtv.decode(tx) as RawGtx;
+    const txRid = getTransactionRid(rawTx);
 
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
@@ -208,7 +213,8 @@ export function transactionBuilder(
       try {
         isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
       } catch (error) {
-        console.error("Error while checking block anchoring status", error);
+        // TODO: Uncomment to pollute logs with errors
+        // console.error("Error while checking block anchoring status", error);
 
         if (error instanceof BlockAnchoringException) {
           isAnchored = false;
@@ -218,9 +224,37 @@ export function transactionBuilder(
       }
 
       if (isAnchored) {
-        operations.forEach((op: OperationContext) => {
+        const proofCache = new Map<string, Operation>();
+        const createProof = async (brid: BufferId): Promise<Operation> => {
+          if (proofCache.has(brid.toString("hex"))) {
+            return proofCache.get(brid.toString("hex"))!;
+          }
+
+          const proof = await createIccfProofTx(
+            systemClient,
+            txRid,
+            tx,
+            rawTx[0][2], // signers
+            client.config.blockchainRid,
+            brid.toString("hex"),
+          );
+
+          const iccfProofOperation = proof.iccfTx.operations[0];
+          proofCache.set(brid.toString("hex"), iccfProofOperation);
+          return iccfProofOperation;
+        };
+
+        operations.forEach((op: OperationContext, idx: number) => {
           if (!op.onAnchoredHandler) return;
-          op.onAnchoredHandler(op.operation, tx, null);
+          op.onAnchoredHandler(
+            {
+              operation: op.operation,
+              opIndex: idx,
+              tx: rawTx,
+              createProof,
+            },
+            null,
+          );
         });
         return;
       }
@@ -230,7 +264,6 @@ export function transactionBuilder(
       if (!op.onAnchoredHandler) return;
       op.onAnchoredHandler(
         null,
-        tx,
         new AnchoringTimeoutError(
           "Block was not anchored within the specified timeout",
         ),

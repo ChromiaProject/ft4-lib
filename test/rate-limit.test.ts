@@ -71,7 +71,7 @@ describe("Rate Limit", () => {
       expect(rateLimit.points).toBe(0);
     });
 
-    it.skip("can't make another operation because she has 0 points", async () => {
+    it("can't make another operation because she has 0 points", async () => {
       const user = TestUser();
 
       const account = await AccountBuilder.account(_connection)
