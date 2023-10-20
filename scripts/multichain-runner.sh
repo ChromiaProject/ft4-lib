@@ -38,6 +38,11 @@ debug() {
     fi
 }
 
+fatal_error() {
+    err "$1"
+    exit 1
+}
+
 # Function to download and unpack the PMC tool
 download_pmc() {
     log "Downloading PMC..."

@@ -3,6 +3,8 @@
 source ./scripts/multichain-runner.sh
 
 TEST_ASSET_BRID="BD4D3A0D3797080E581631E74E622F90E58EC9DD426B66F07AA7D3D65B8DAFE6"
+ADMIN_KEYPAIR_FILE="$DEPENDENCIES_PATH/.ft4-admin.keypair"
+USER_KEYPAIR_FILE="$DEPENDENCIES_PATH/.user.keypair"
 
 register_account_on_chain() {
   local blockchain_rid=$1
@@ -14,16 +16,13 @@ register_account_on_chain() {
       --secret $ADMIN_KEYPAIR_FILE
 }
 
+
 debug "Initiating generation of admin-level keypair."
+cp "$BASE_CONFIG_DIR/ft4-admin.keypair.template" "$ADMIN_KEYPAIR_FILE" \
+  || fatal_error "Failed to generate admin-level keypair."
 
 debug "Initiating generation of user-level keypair."
-
-# Keypair file paths
-ADMIN_KEYPAIR_FILE="$DEPENDENCIES_PATH/.ft4-admin.keypair"
-USER_KEYPAIR_FILE="$DEPENDENCIES_PATH/.user.keypair"
-
-# Generate keypair
-chr keygen > "$USER_KEYPAIR_FILE"
+chr keygen > "$USER_KEYPAIR_FILE" || fatal_error "Failed to generate user-level keypair."
 
 log "Registering user account..."
 
@@ -31,7 +30,7 @@ log "Registering user account..."
 USER_PUBKEY=$(awk '/pubkey:/ {print $2}' "$USER_KEYPAIR_FILE")
 USER_PRIVKEY=$(awk '/privkey:/ {print $2}' "$USER_KEYPAIR_FILE")
 
-# Call the function for MULTICHAIN00 and MULTICHAIN02
+# Call the function for multichain00 and multichain02
 register_account_on_chain $MULTICHAIN00_BRID
 register_account_on_chain $MULTICHAIN02_BRID
 
