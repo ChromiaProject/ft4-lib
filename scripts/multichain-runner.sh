@@ -229,6 +229,9 @@ main() {
                 -cfg $PMC_CONFIG
         )
 
+        export_var="MULTICHAIN${chain_num}_BRID"
+        export $export_var="$MULTICHAIN_DAPP_BRID"
+
         debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
     done
 }
