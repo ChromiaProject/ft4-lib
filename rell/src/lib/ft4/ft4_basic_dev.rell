@@ -6,9 +6,6 @@ namespace ft4 {
     import ^.assets;
     import ^.auth;
     import ^.admin;
-    import admin_crosschain: ^.admin.crosschain;
-    import ^.crosschain;
-    import crosschain_ext: ^.crosschain.external;
     import acc_ext: ^.accounts.external;
     import accounts_ext: ^.accounts.external;
     import assets_ext: ^.assets.external;

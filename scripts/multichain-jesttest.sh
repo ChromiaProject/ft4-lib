@@ -168,6 +168,8 @@ do
 
     echo "module;" > $rell_filepath
     echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
+    echo "import admin_crosschain: lib.ft4.admin.crosschain;" >> $rell_filepath
+    echo "import crosschain_ext: lib.ft4.crosschain.external;" >> $rell_filepath
     echo "import tests.operations;" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
