@@ -3,7 +3,6 @@
 source ./scripts/multichain-runner.sh
 
 TEST_ASSET_BRID="BD4D3A0D3797080E581631E74E622F90E58EC9DD426B66F07AA7D3D65B8DAFE6"
-USER_ACCOUNT_BRID="10C469F4057D859C5BAB3781A393837D56A8715F3B40F38B3DE7C0B189E5AE4B"
 
 register_account_on_chain() {
   local blockchain_rid=$1
@@ -24,13 +23,13 @@ ADMIN_KEYPAIR_FILE="$DEPENDENCIES_PATH/.ft4-admin.keypair"
 USER_KEYPAIR_FILE="$DEPENDENCIES_PATH/.user.keypair"
 
 # Generate keypair
-chr keygen > "$KEYPAIR_FILE"
+chr keygen > "$USER_KEYPAIR_FILE"
 
 log "Registering user account..."
 
 # Extract both pubkey and privkey from the keypair file
-USER_PUBKEY=$(awk '/pubkey:/ {print $2}' "$KEYPAIR_FILE")
-USER_PRIVKEY=$(awk '/privkey:/ {print $2}' "$KEYPAIR_FILE")
+USER_PUBKEY=$(awk '/pubkey:/ {print $2}' "$USER_KEYPAIR_FILE")
+USER_PRIVKEY=$(awk '/privkey:/ {print $2}' "$USER_KEYPAIR_FILE")
 
 # Call the function for MULTICHAIN00 and MULTICHAIN02
 register_account_on_chain $MULTICHAIN00_BRID
@@ -45,17 +44,17 @@ USER_ACCOUNT_ID_RAW_OUTPUT=$(
     2>/dev/null
 )
 
-# Use sed to extract the account ID
-USER_ACCOUNT_ID=$(echo "$RAW_OUTPUT" | sed -n 's/.*\[\(x"[A-Fa-f0-9]*"\)\].*/\1/p')
+# Use grep to robustly extract the account ID
+USER_ACCOUNT_ID=$(grep -o 'x"[A-Fa-f0-9]*"' <<< "$USER_ACCOUNT_ID_RAW_OUTPUT")
 
-# Remove the x" " wrapper
-USER_ACCOUNT_ID=${USER_ACCOUNT_ID:2:-1}
+# Remove the x" " wrapper using tr
+USER_ACCOUNT_ID=$(tr -d 'x"' <<< "$USER_ACCOUNT_ID")
 
 log "Registering test asset..."
 
 chr tx \
     --blockchain-rid $MULTICHAIN00_BRID \
-    ft4.admin.register_asset TestAsset TST 6 https://url-to-asset-icon 
+    ft4.admin.register_asset TestAsset TST 6 https://url-to-asset-icon \
     --await \
     --secret $ADMIN_KEYPAIR_FILE
 
