@@ -61,6 +61,7 @@ export function transactionBuilder(
   async function buildUnsigned() {
     const [operations, keyHandlers] = await authenticateOperations(
       this._operations,
+      this._context,
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
@@ -80,6 +81,7 @@ export function transactionBuilder(
 
   async function authenticateOperations(
     opContexts: OperationContext[],
+    ctx: any,
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
     const processedOperations: Operation[][] = [];
@@ -114,7 +116,7 @@ export function transactionBuilder(
       const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        context,
+        ctx,
         authenticator.authDataService,
       );
       processedOperations.push(ops);

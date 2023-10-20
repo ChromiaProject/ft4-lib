@@ -6,16 +6,6 @@ import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
-// type NonceData = {
-//   nonce: number;
-//   accountId: BufferId;
-//   authDescriptorId: BufferId;
-//   keyStoreId: Buffer;
-// };
-
-// export const noncesByAccountAndAdId: { [key: string]: NonceData } = {};
-// export const noncesByKeystoreId: { [key: string]: NonceData } = {};
-
 const getNonceId = (v1: BufferId, v2: BufferId) =>
   v1.toString("hex") + v2.toString("hex");
 
@@ -62,7 +52,7 @@ async function authorize(
     authDataService,
     accountId,
     authDescriptorId,
-    keyStore,
+    context,
   );
   const brid = authDataService.getBrid();
   const message = messageTemplate
@@ -82,9 +72,7 @@ async function authorize(
 async function sign(
   transaction: TxBuilderTransaction,
   keyStore: KeyStore,
-): Promise<void> {
-  // resetNonce(keyStore);
-}
+): Promise<void> {}
 /* eslint-enable */
 
 async function getNonce(
@@ -94,25 +82,13 @@ async function getNonce(
   context: any,
 ) {
   const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-  // const cachedNonceData =
-  //   noncesByAccountAndAdId[getNonceId(accountId, authDescriptorId)];
-  if (!context.nonce && Object.isExtensible(context)) context.nonce = {};
+  if (!context.nonce) context.nonce = {};
   const cachedNonce = context.nonce[getNonceId(accountId, authDescriptorId)];
 
-  if (!cachedNonce || nonce > cachedNonce) {
+  if (cachedNonce !== 0 && (!cachedNonce || nonce > cachedNonce)) {
     context.nonce[getNonceId(accountId, authDescriptorId)] = nonce;
   } else {
     context.nonce[getNonceId(accountId, authDescriptorId)] += 1;
   }
   return context.nonce[getNonceId(accountId, authDescriptorId)];
 }
-
-// async function resetNonce(keyStore: KeyStore) {
-//   const nonceData = noncesByKeystoreId[keyStore.id.toString("hex")];
-//   if (nonceData) {
-//     delete noncesByKeystoreId[keyStore.id.toString("hex")];
-//     delete noncesByAccountAndAdId[
-//       getNonceId(nonceData.accountId, nonceData.authDescriptorId)
-//     ];
-//   }
-// }
