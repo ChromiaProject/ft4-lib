@@ -4,18 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.1.5r] - 2023-10-19
+
+### Added
+- Implemented crosschain functions to allow for asset transfer across chains
+- New admin module `admin.crosschain` which allows you to register crosschain assets
+- Added the ability to specify tests for Rell through `--tests` or `-t` option in `scripts/relltest.sh`.
+
 ## [0.1.4r] - 2023-09-29
 
 ### Changed
-- importing a module will now always import the corresponding external module too
+- Importing a module will now always import the corresponding external module too
 
-## [0.1.3r] -- 2023-09-19
+## [0.1.3r] - 2023-09-19
 
 ### Added
 - Added more test utility functions.
 - Added `evm_address_from_pubkey`
 
-## [0.1.2r] -- 2023-09-18
+## [0.1.2r] - 2023-09-18
 
 ### Changed
 - Version module is now included no matter what modules you use from the library.
