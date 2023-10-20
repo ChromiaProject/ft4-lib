@@ -52,7 +52,7 @@ download_pmc() {
     tar -xzf $PMC_ARCHIVE_PATH -C $DEPENDENCIES_PATH
 }
 
-main() {
+run_main_logic() {
     debug "Checking for required commands..."
 
     mkdir -p $DEPENDENCIES_PATH
@@ -264,4 +264,4 @@ exitfn() {
 
 trap "exitfn" EXIT 2
 
-main "$@"
+run_main_logic "$@"
