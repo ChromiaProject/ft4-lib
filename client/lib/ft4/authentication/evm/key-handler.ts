@@ -42,9 +42,8 @@ async function authorize(
   authDataService: AuthDataService,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
   const brid = await authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
