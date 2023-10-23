@@ -161,7 +161,7 @@ export async function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): Promise<boolean> {
-  return (await connection.query<boolean>(
+  return (await connection.query(
     Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }
@@ -172,9 +172,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
 ): Promise<AuthDescriptor[]> {
   return connection
-    .query<AuthDescriptorResponse[]>(
-      accountAuthDescriptorsByParticipantId(accountId, participantId),
-    )
+    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
     .then((authDescriptors) =>
       authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
     );
