@@ -3,10 +3,6 @@
 source ./scripts/multichain-runner.sh
 
 generate_keypairs() {
-  debug "Initiating generation of admin-level keypair."
-  cp "$BASE_CONFIG_DIR/ft4-admin.keypair.template" "$ADMIN_KEYPAIR_FILE" \
-    || fatal_error "Failed to generate admin-level keypair."
-
   if [ ! -f "$USER_KEYPAIR_FILE" ]; then
     debug "User-level keypair file does not exist. Initiating generation."
     chr keygen > "$USER_KEYPAIR_FILE" \
@@ -111,7 +107,7 @@ main() {
   log "Asset registered. Proceeding to mint assets on source chain..."
 
   chr tx --blockchain-rid $MULTICHAIN00_BRID \
-      ft4.admin.mint $USER_ACCOUNT_ID $TEST_ASSET_BRID 1000000L \
+      ft4.admin.mint $USER_ACCOUNT_ID $TEST_ASSET_BRID 1000000000L \
       --await \
       --secret $ADMIN_KEYPAIR_FILE
 
@@ -126,7 +122,7 @@ main() {
 }
 
 # Global variables, defined here for clarity
-ADMIN_KEYPAIR_FILE="$DEPENDENCIES_PATH/.ft4-admin.keypair"
+ADMIN_KEYPAIR_FILE="$BASE_CONFIG_DIR/ft4-admin.keypair"
 USER_KEYPAIR_FILE="$DEPENDENCIES_PATH/.user.keypair"
 
 # Call the main function
