@@ -4,7 +4,7 @@ import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
 import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { Buffer } from "buffer";
 import { ftAuth } from ".";
-import { TxBuilderTransaction } from "/ft4/utils/types";
+import { TxContext, TxBuilderTransaction } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -18,10 +18,8 @@ export function createFtKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      nonce: number,
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      authDataService: AuthDataService,
+      _context: TxContext,
+      _authDataService: AuthDataService,
     ) => authorize(accountId, authDescriptor.id, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
     getSigners: () => authDescriptor.signers,

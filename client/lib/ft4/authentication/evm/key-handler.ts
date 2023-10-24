@@ -4,7 +4,10 @@ import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
-import { TxBuilderTransaction } from "/ft4/utils/types";
+import { TxContext, TxBuilderTransaction } from "/ft4/utils/types";
+
+const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
+  accountId.toString("hex") + authDescriptorId.toString("hex");
 
 export function createEvmKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -18,15 +21,15 @@ export function createEvmKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
-      nonce: number,
+      context: TxContext,
       authDataService: AuthDataService,
     ) =>
       authorize(
         accountId,
         authDescriptor.id,
         operation,
-        nonce,
         authDataService,
+        context,
         keyStore,
       ),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
@@ -38,13 +41,21 @@ async function authorize(
   accountId: BufferId,
   authDescriptorId: BufferId,
   operation: Operation,
-  nonce: number,
   authDataService: AuthDataService,
+  context: TxContext,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate =
-    await authDataService.getAuthMessageTemplate(operation);
-  const brid = await authDataService.getBrid();
+  const messageTemplate = await authDataService.getAuthMessageTemplate(
+    operation,
+  );
+  const nonce = await getNonce(
+    authDataService,
+    accountId,
+    authDescriptorId,
+    context,
+  );
+
+  const brid = authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
@@ -62,7 +73,34 @@ async function authorize(
 async function sign(
   transaction: TxBuilderTransaction,
   keyStore: KeyStore,
-): Promise<void> {
-  // return transaction.sign(keyStore);
-}
+): Promise<void> {}
 /* eslint-enable */
+
+async function getNonce(
+  authDataService: AuthDataService,
+  accountId: BufferId,
+  authDescriptorId: BufferId,
+  context: TxContext,
+) {
+  let evmContext = context["evm"];
+  if (!evmContext) {
+    evmContext = {
+      nonce: {},
+    };
+
+    context["evm"] = evmContext;
+  } else if (!evmContext.nonce) {
+    evmContext["nonce"] = {};
+  }
+
+  const nonceId = getNonceId(accountId, authDescriptorId);
+  const cachedNonce = evmContext.nonce[nonceId];
+  if (cachedNonce !== 0 && !cachedNonce) {
+    const nonce = await authDataService.getNonce(accountId, authDescriptorId);
+    evmContext.nonce[nonceId] = nonce;
+  } else {
+    evmContext.nonce[nonceId] += 1;
+  }
+
+  return evmContext.nonce[nonceId];
+}
