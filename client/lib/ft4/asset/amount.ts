@@ -159,7 +159,7 @@ export function convertToRawAmount(
        * .3
        * 1
        * 5.
-       * All of these formats may have a minus sign at the start
+       * All of these formats may have a minus sign at the start, e.g. -.3
        */
       if (!/^-?\d*\.?\d*$/.test(numStr) || !/\d/.test(numStr)) {
         throw new AmountInputError(
