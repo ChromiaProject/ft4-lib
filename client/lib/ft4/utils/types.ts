@@ -51,6 +51,8 @@ export type TxBuilderTransaction = {
   signatures: Buffer[];
 };
 
+export type TxBuilderContext = { [key: string]: { [key: string]: any } };
+
 export interface RellAppStructure {
   [modules: string]: Record<string, RellModuleStructure>;
 }

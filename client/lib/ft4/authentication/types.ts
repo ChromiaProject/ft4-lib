@@ -1,6 +1,6 @@
 import { Operation } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
-import { TxBuilderTransaction } from "../utils/types";
+import { TxBuilderContext, TxBuilderTransaction } from "../utils/types";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
 
@@ -25,7 +25,7 @@ export interface KeyHandler {
   authorize(
     accountId: BufferId,
     operation: Operation,
-    context: { [key: string]: { [key: string]: any } },
+    context: TxBuilderContext,
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 

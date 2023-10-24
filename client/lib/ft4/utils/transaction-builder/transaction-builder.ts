@@ -14,7 +14,7 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxBuilderTransaction } from "../types";
+import { TxBuilderContext, TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
 import {
   AnchoringTimeoutError,
@@ -81,7 +81,7 @@ export function transactionBuilder(
 
   async function authenticateOperations(
     opContexts: OperationContext[],
-    ctx: { [key: string]: { [key: string]: any } },
+    ctx: TxBuilderContext,
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
     const processedOperations: Operation[][] = [];

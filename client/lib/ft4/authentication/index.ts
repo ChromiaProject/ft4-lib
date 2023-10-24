@@ -7,7 +7,7 @@ import {
   KeyHandler,
   KeyStore,
 } from "./types";
-import { TxBuilderTransaction } from "../utils/types";
+import { TxBuilderContext, TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
 import { AuthDescriptor, AuthType } from "../accounts";
 
@@ -80,7 +80,7 @@ const noopKeyHandler: KeyHandler = Object.freeze({
   authorize: (
     _accountId: BufferId,
     operation: Operation,
-    _nonce: number,
+    _context: TxBuilderContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
   sign: () => Promise.resolve(),

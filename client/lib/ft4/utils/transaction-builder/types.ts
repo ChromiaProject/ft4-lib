@@ -6,13 +6,17 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
-import { RequireTogether, TxBuilderTransaction } from "../types";
+import {
+  RequireTogether,
+  TxBuilderContext,
+  TxBuilderTransaction,
+} from "../types";
 import { BufferId } from "/cryptoUtils";
 
 export type TransactionBuilder = {
   _operations: OperationContext[];
   _keyhandlersUsed: KeyHandler[];
-  _context: { [key: string]: { [key: string]: any } };
+  _context: TxBuilderContext;
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
