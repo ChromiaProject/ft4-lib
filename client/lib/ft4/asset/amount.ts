@@ -153,16 +153,13 @@ export function convertToRawAmount(
       const numStr = num.toString();
 
       /**
-       * First regex:
-       *  - may have a - at the start
-       *  - may have digits
-       *  - may have a decimal point (not comma)
-       *  - may have more digits until the end
-       *
-       * Second regex:
-       *  - must have a digit
-       *
-       * Allow weird formats like `-.3`, or `5.`
+       * Matches numbers in following formats:
+       * 0.1
+       * 1.0
+       * .3
+       * 1
+       * 5.
+       * All of these formats may have a minus sign at the start
        */
       if (!/^-?\d*\.?\d*$/.test(numStr) || !/\d/.test(numStr)) {
         throw new AmountInputError(
