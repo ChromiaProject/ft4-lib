@@ -81,7 +81,7 @@ async function getNonce(
   authDataService: AuthDataService,
   accountId: BufferId,
   authDescriptorId: BufferId,
-  context: any,
+  context: { [key: string]: { [key: string]: any } },
 ) {
   let evmContext = context["evm"];
   if (!evmContext) {
