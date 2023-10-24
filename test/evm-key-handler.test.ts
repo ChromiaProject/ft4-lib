@@ -120,7 +120,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("resets nonce if transaction fails", async () => {
+  it("resets nonce between transactions if transaction is not submitted", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";

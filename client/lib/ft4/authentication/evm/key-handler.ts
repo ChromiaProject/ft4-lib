@@ -6,8 +6,8 @@ import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
 import { TxBuilderTransaction } from "/ft4/utils/types";
 
-const getNonceId = (v1: BufferId, v2: BufferId) =>
-  v1.toString("hex") + v2.toString("hex");
+const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
+  accountId.toString("hex") + authDescriptorId.toString("hex");
 
 export function createEvmKeyHandler(
   authDescriptor: AuthDescriptor,
@@ -42,7 +42,7 @@ async function authorize(
   authDescriptorId: BufferId,
   operation: Operation,
   authDataService: AuthDataService,
-  context: any,
+  context: { [key: string]: { [key: string]: any } },
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
   const messageTemplate = await authDataService.getAuthMessageTemplate(
@@ -54,6 +54,8 @@ async function authorize(
     authDescriptorId,
     context,
   );
+
+  console.log(nonce);
   const brid = authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
@@ -81,14 +83,24 @@ async function getNonce(
   authDescriptorId: BufferId,
   context: any,
 ) {
-  const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-  if (!context.nonce) context.nonce = {};
-  const cachedNonce = context.nonce[getNonceId(accountId, authDescriptorId)];
+  let evmContext = context["evm"];
+  if (!evmContext) {
+    evmContext = {
+      nonce: {},
+    };
 
-  if (cachedNonce !== 0 && (!cachedNonce || nonce > cachedNonce)) {
-    context.nonce[getNonceId(accountId, authDescriptorId)] = nonce;
-  } else {
-    context.nonce[getNonceId(accountId, authDescriptorId)] += 1;
+    context["evm"] = evmContext;
+  } else if (!evmContext.nonce) {
+    evmContext["nonce"] = {};
   }
-  return context.nonce[getNonceId(accountId, authDescriptorId)];
+
+  const cachedNonce = evmContext.nonce[getNonceId(accountId, authDescriptorId)];
+  if (cachedNonce !== 0 && !cachedNonce) {
+    const nonce = await authDataService.getNonce(accountId, authDescriptorId);
+    evmContext.nonce[getNonceId(accountId, authDescriptorId)] = nonce;
+  } else {
+    evmContext.nonce[getNonceId(accountId, authDescriptorId)] += 1;
+  }
+
+  return evmContext.nonce[getNonceId(accountId, authDescriptorId)];
 }
