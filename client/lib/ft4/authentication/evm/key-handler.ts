@@ -21,7 +21,7 @@ export function createEvmKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
-      context: any,
+      context: { [key: string]: { [key: string]: any } },
       authDataService: AuthDataService,
     ) =>
       authorize(
@@ -55,7 +55,6 @@ async function authorize(
     context,
   );
 
-  console.log(nonce);
   const brid = authDataService.getBrid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
@@ -94,13 +93,14 @@ async function getNonce(
     evmContext["nonce"] = {};
   }
 
-  const cachedNonce = evmContext.nonce[getNonceId(accountId, authDescriptorId)];
+  const nonceId = getNonceId(accountId, authDescriptorId);
+  const cachedNonce = evmContext.nonce[nonceId];
   if (cachedNonce !== 0 && !cachedNonce) {
     const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-    evmContext.nonce[getNonceId(accountId, authDescriptorId)] = nonce;
+    evmContext.nonce[nonceId] = nonce;
   } else {
-    evmContext.nonce[getNonceId(accountId, authDescriptorId)] += 1;
+    evmContext.nonce[nonceId] += 1;
   }
 
-  return evmContext.nonce[getNonceId(accountId, authDescriptorId)];
+  return evmContext.nonce[nonceId];
 }

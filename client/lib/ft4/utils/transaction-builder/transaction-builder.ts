@@ -81,7 +81,7 @@ export function transactionBuilder(
 
   async function authenticateOperations(
     opContexts: OperationContext[],
-    ctx: any,
+    ctx: { [key: string]: { [key: string]: any } },
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
     const processedOperations: Operation[][] = [];

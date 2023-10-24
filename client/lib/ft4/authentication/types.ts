@@ -25,7 +25,7 @@ export interface KeyHandler {
   authorize(
     accountId: BufferId,
     operation: Operation,
-    context: any,
+    context: { [key: string]: { [key: string]: any } },
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 

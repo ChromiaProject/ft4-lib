@@ -12,7 +12,7 @@ import { BufferId } from "/cryptoUtils";
 export type TransactionBuilder = {
   _operations: OperationContext[];
   _keyhandlersUsed: KeyHandler[];
-  _context: any;
+  _context: { [key: string]: { [key: string]: any } };
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
