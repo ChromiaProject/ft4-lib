@@ -170,7 +170,10 @@ export function convertToRawAmount(
       const [whole, fraction = ""] = numStr.split(".");
       //decimals has priority. (1.234, 2) is 1.23
       amountDecimals = decimals ?? fraction.length;
-      //add zeroes if needed, remove extra digits if neeeded
+      // add zeroes if needed, e.g.
+      //   (1.234, 5) -> "123400"
+      // remove extra digits if needed
+      //   (1.234, 1) -> "12"
       value = BigInt(
         whole + fraction.padEnd(amountDecimals, "0").slice(0, amountDecimals),
       );
