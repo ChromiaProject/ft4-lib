@@ -4,17 +4,30 @@ import {
   gtv,
   IClient,
   formatter,
+  Operation,
 } from "postchain-client";
 import { createConnection } from "../../client/lib/ft4/ft-session";
 import { Asset } from "../../client/lib/ft4/asset/types";
 import adminUser from "./admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
+import { BufferId } from "/cryptoUtils";
 
-export async function createChromiaClient(nodeUrl?: string) {
+export async function createChromiaClientToMultichain(
+  brid: BufferId,
+  nodeUrl?: string,
+) {
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return chromiaClient({
-    nodeURLPool: url,
-    blockchainIID: 0,
+    directoryNodeUrlPool: url,
+    blockchainRid: brid.toString("hex"),
+  });
+}
+
+export async function createChromiaClient(nodeUrl?: string, iid = 0) {
+  const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
+  return chromiaClient({
+    nodeUrlPool: url,
+    blockchainIid: iid,
   });
 }
 
@@ -36,8 +49,27 @@ export async function getNewAsset(
   );
   const id = gtv.gtvHash([
     name,
-    formatter.ensureBuffer(client.config.blockchainRID),
+    formatter.ensureBuffer(client.config.blockchainRid),
   ]);
   const asset = await createConnection(client).getAssetById(id);
   return asset;
+}
+
+export function anchoredHandlerCallbackParameters(
+  client: IClient,
+  operations: Operation[],
+  opIndex: number,
+) {
+  return expect.objectContaining({
+    operation: operations[opIndex],
+    opIndex,
+    tx: expect.arrayContaining([
+      [
+        Buffer.from(client.config.blockchainRid, "hex"),
+        operations.map((o) => [o.name, o.args]),
+        [],
+      ],
+      [],
+    ]),
+  });
 }

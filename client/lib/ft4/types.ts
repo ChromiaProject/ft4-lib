@@ -5,8 +5,7 @@ import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,
-  QueryArguments,
-  QueryObject,
+  Queryable,
   Operation,
   TransactionReceipt,
 } from "postchain-client";
@@ -18,9 +17,8 @@ export type PagedResponse<T> = {
   next_cursor: OptionalPageCursor;
 };
 
-export interface Connection {
+export interface Connection extends Queryable {
   client: IClient;
-  query: <T>(query: QueryObject<QueryArguments>) => Promise<T | null>;
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
@@ -29,7 +27,7 @@ export interface Connection {
   getAccountsByAuthDescriptorId: (
     id: BufferId,
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
@@ -37,11 +35,11 @@ export interface Connection {
   getAssetsByName: (
     name: string,
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: (
     limit?: number,
-    cursor?: OptionalPageCursor
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
 }
 

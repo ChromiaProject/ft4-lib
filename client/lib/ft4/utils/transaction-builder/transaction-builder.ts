@@ -1,83 +1,35 @@
-import { Authenticator, KeyHandler } from "../authentication/types";
+import { Authenticator, KeyHandler } from "../../authentication/types";
 import { Buffer } from "buffer";
-import { Operation, SignedTransaction, gtx, IClient } from "postchain-client";
-import { TxBuilderTransaction } from "./types";
-import { OperationNotExistError } from "./errors";
+import {
+  Operation,
+  gtx,
+  IClient,
+  isBlockAnchored,
+  getAnchoringClient,
+  createClient,
+  BlockAnchoringException,
+  SignedTransaction,
+  TransactionReceipt,
+  createIccfProofTx,
+  gtv,
+  RawGtx,
+} from "postchain-client";
+import { TxBuilderTransaction } from "../types";
+import { OperationNotExistError } from "../errors";
+import {
+  AnchoringTimeoutError,
+  AuthorizationError,
+  OnAnchoredHandler,
+  OperationContext,
+  TransactionBuilder,
+  TransactionBuilderConfig,
+} from "./types";
+import { getTransactionRid } from "..";
+import { BufferId } from "/cryptoUtils";
 
-type OpAuthPair = [Operation, Authenticator];
-
-export class AuthorizationError extends Error {
-  constructor(msg?) {
-    super(msg);
-    this.message = msg;
-    this.name = "AuthorizationError";
-  }
-}
-
-export type TransactionBuilder = {
-  _operations: OpAuthPair[];
-  _keyhandlersUsed: KeyHandler[];
-  /**
-   * Adds an operation to include in the final transaction
-   * @param operation the operation to add to the transaction
-   * @returns an instance of the transaction builder object
-   */
-  add: (operation: Operation) => TransactionBuilder;
-  /**
-   * Adds an operation to include in the final transaction
-   * the operation will be authenticated using the provided
-   * authenticator, and if `build` is called, the authenticator
-   * will also be used to sign the transaction.
-   * @param operation the operation to add
-   * @param authenticator the authenticator to use for this and only this operation
-   * @returns an instance of the transaction builder object
-   */
-  addWithAuthenticator: (
-    operation: Operation,
-    authenticator: Authenticator,
-  ) => TransactionBuilder;
-  /**
-   * Add key handlers that will also be included as signers to this operation.
-   * If `build` is called, the key handlers will also sign the transaction
-   * @param keyHandlers the key handlers to use for signing
-   * @returns an instance of the transaction builder object
-   */
-  addSigners: (...keyHandlers: KeyHandler[]) => TransactionBuilder;
-  /**
-   * Builds a transaction the same way as `buildUnsigned` and also signs it
-   * using the same key handlers that were used to authorize the operations,
-   * as well as any explicitly added key handlers.
-   * @param signers array of participants that should sign this transaction
-   * @returns A promised containing the unsigned transaction
-   */
-  build: () => Promise<SignedTransaction>;
-  /**
-   * Builds an unsigned transaction containing the previously added
-   * transactions, as well as any authhorization operations as needed.
-   * @param signers array of participants that should sign this transaction
-   * @returns A promise containing the signed transaction
-   */
-  buildUnsigned: () => Promise<TxBuilderTransaction>;
-  /**
-   * A function to extract the keyhandlers used to build a transaction,
-   * and thus should be the ones signing the transaction when
-   * `buildUnsigned` was called instead of `build`.
-   * @returns an array containing the keyhandlers used to build the transaction,
-   * and which consequently should sign the transaction.
-   */
-  keyHandlersUsed: () => KeyHandler[];
-
-  /**
-   * Builds a transaction and signs it with the keyhandlers provided.
-   * When using this function, the builder will completely ignore any
-   * other keyhandlers previously provided.
-   * @param keyHandlers the keyhandler to user
-   * @returns a signed transaction
-   */
-  buildWithSigners: (
-    ...keyHandlers: KeyHandler[]
-  ) => Promise<SignedTransaction>;
-  session: IClient;
+const defaultConfig: TransactionBuilderConfig = {
+  retryCount: 10,
+  waitTimeMs: 500,
 };
 
 /**
@@ -89,9 +41,13 @@ export type TransactionBuilder = {
 export function transactionBuilder(
   authenticator: Authenticator,
   client: IClient,
+  config: TransactionBuilderConfig = defaultConfig,
 ): TransactionBuilder {
-  function add(operation: Operation): TransactionBuilder {
-    this._operations.push([operation, authenticator]);
+  function add(
+    operation: Operation,
+    onAnchoredHandler?: OnAnchoredHandler,
+  ): TransactionBuilder {
+    this._operations.push({ operation, authenticator, onAnchoredHandler });
     return this;
   }
 
@@ -108,13 +64,13 @@ export function transactionBuilder(
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
-      blockchainRID: Buffer.from(client.config.blockchainRID, "hex"),
+      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: toPubkeys(this._keyhandlersUsed),
       signatures: [],
     };
     const addOperation = (op: Operation) => {
-      txn.operations.push({ opName: op.name, args: op.args });
+      txn.operations.push({ opName: op.name, args: op.args ?? [] });
     };
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
@@ -123,15 +79,14 @@ export function transactionBuilder(
   }
 
   async function authenticateOperations(
-    operations: OpAuthPair[],
+    opContexts: OperationContext[],
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
     const nonces = new Map<Buffer, number>();
     const processedOperations: Operation[][] = [];
 
-    for (const tuple of operations) {
-      const [operation, authenticator] = tuple;
-
+    for (const opContext of opContexts) {
+      const { operation, authenticator } = opContext;
       if (
         !(await authenticator.authDataService.isOperationExposed(
           operation.name,
@@ -187,7 +142,7 @@ export function transactionBuilder(
     return [opsToReturn, keyHandlers];
   }
 
-  async function build() {
+  async function build(): Promise<Buffer> {
     const tx = await this.buildUnsigned();
     await Promise.all(
       this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
@@ -209,11 +164,109 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
+  async function buildAndSend(): Promise<{
+    tx: SignedTransaction;
+    receipt: TransactionReceipt;
+  }> {
+    const tx = await (this as TransactionBuilder).build();
+    const receipt = await client.sendTransaction(tx);
+
+    const operationsWithHandlers = this._operations.filter(
+      (op: OperationContext) => !!op.onAnchoredHandler,
+    );
+
+    if (operationsWithHandlers.length) {
+      new Promise((resolve) =>
+        resolve(waitUntilAnchored(operationsWithHandlers, tx)),
+      );
+    }
+
+    return {
+      tx,
+      receipt,
+    };
+  }
+
+  async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
+    const systemClient = await createClient({
+      nodeUrlPool: client.config.endpointPool.slice(),
+      blockchainIid: 0,
+    });
+    const anchoringClient = await getAnchoringClient(
+      systemClient,
+      client.config.blockchainRid,
+    );
+    const rawTx = gtv.decode(tx) as RawGtx;
+    const txRid = getTransactionRid(rawTx);
+
+    for (let i = 0; i < config.retryCount; ++i) {
+      await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
+
+      let isAnchored = false;
+      try {
+        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
+      } catch (error) {
+        // TODO: Uncomment to pollute logs with errors
+        // console.error("Error while checking block anchoring status", error);
+
+        if (error instanceof BlockAnchoringException) {
+          isAnchored = false;
+        } else {
+          throw error;
+        }
+      }
+
+      if (isAnchored) {
+        const proofCache = new Map<string, Operation>();
+        const createProof = async (brid: BufferId) => {
+          if (proofCache.has(brid.toString("hex")))
+            return proofCache.get(brid.toString("hex"));
+
+          const proof = await createIccfProofTx(
+            systemClient,
+            txRid,
+            tx,
+            rawTx[0][2], // signers
+            client.config.blockchainRid,
+            brid.toString("hex"),
+          );
+
+          const iccfProofOperation = proof.iccfTx.operations[0];
+          proofCache.set(brid.toString("hex"), iccfProofOperation);
+          return iccfProofOperation;
+        };
+
+        operations.forEach((op: OperationContext, idx: number) => {
+          op.onAnchoredHandler(
+            {
+              operation: op.operation,
+              opIndex: idx,
+              tx: rawTx,
+              createProof,
+            },
+            null,
+          );
+        });
+        return;
+      }
+    }
+
+    operations.forEach((op) => {
+      op.onAnchoredHandler(
+        null,
+        new AnchoringTimeoutError(
+          "Block was not anchored within the specified timeout",
+        ),
+      );
+    });
+  }
+
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator,
+    handler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    this._operations.push([operation, authenticator]);
+    this._operations.push({ operation, authenticator, handler });
     return this;
   }
 
@@ -228,6 +281,7 @@ export function transactionBuilder(
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
   context.buildWithSigners = buildWithSigners.bind(context);
+  context.buildAndSend = buildAndSend.bind(context);
 
   return context as TransactionBuilder;
 }

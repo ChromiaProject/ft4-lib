@@ -2,7 +2,7 @@ import { formatter, IClient } from "postchain-client";
 import {
   accountById,
   accountsByParticipantId,
-  RateLimit as RateLimitQuery,
+  RateLimitQuery,
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
   accountsByAuthDescriptorId,
@@ -28,17 +28,20 @@ import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountId } from "../asset/asset-queries";
 import { Buffer } from "buffer";
 import { PaginatedEntity } from "../utils/types";
+import {
+  PendingTransfer,
+  PendingTransferResponse,
+  pendingTransfersForAccount,
+} from "/ft4/crosschain";
+import { mapPendingTransfers } from "../crosschain/query-functions";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
 export async function getRateLimit(
   session: IClient,
-  accountId: BufferId
+  accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query<
-    { account_id: Buffer },
-    Omit<RateLimit, "getAvailablePoints">
-  >(RateLimitQuery(accountId));
+  const rateLimit = await session.query(RateLimitQuery(accountId));
 
   const chainInfo = await getConfig(session);
 
@@ -59,11 +62,11 @@ export async function getRateLimit(
 
 export function createAccountObject(
   connection: Connection,
-  accountId: BufferId
+  accountId: BufferId,
 ): Account {
   const transferHistoryRetriever = createTransferHistoryRetriever(
     connection.client,
-    accountId
+    accountId,
   );
   return Object.freeze({
     id: formatter.ensureBuffer(accountId),
@@ -73,7 +76,7 @@ export function createAccountObject(
       const retriever = createEntityRetriever<Balance, BalanceResponse>(
         connection,
         balancesByAccountId(accountId, limit, cursor),
-        (balances) => balances.map(createBalanceObject)
+        (balances) => balances.map(createBalanceObject),
       );
       return retriever.retrieve(limit, cursor);
     },
@@ -81,7 +84,7 @@ export function createAccountObject(
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: async (
       limit = 100,
-      cursor: OptionalPageCursor = null
+      cursor: OptionalPageCursor = null,
     ) => {
       const retriever = createEntityRetriever<
         AuthDescriptor,
@@ -89,7 +92,7 @@ export function createAccountObject(
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
-        mapAuthDescriptors
+        mapAuthDescriptors,
       );
       return retriever.retrieve(limit, cursor);
     },
@@ -99,30 +102,43 @@ export function createAccountObject(
     getTransferHistory: async (
       limit = 100,
       filter: TransferHistoryFilter = {},
-      cursor: OptionalPageCursor = null
+      cursor: OptionalPageCursor = null,
     ) => {
       return transferHistoryRetriever.retrieve(limit, filter, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) =>
       transferHistoryRetriever.retrieveSingle(rowid),
+    getPendingCrosschainTransfers: async (
+      limit = 100,
+      cursor: OptionalPageCursor = null,
+    ) => {
+      const retriever = createEntityRetriever<
+        PendingTransfer,
+        PendingTransferResponse
+      >(
+        connection,
+        pendingTransfersForAccount(accountId, limit, cursor),
+        mapPendingTransfers,
+      );
+      return retriever.retrieve(limit, cursor);
+    },
   });
 }
 
 export async function getById(
   connection: Connection,
-  id: BufferId
+  id: BufferId,
 ): Promise<Account | null> {
-  const accountId = await connection.query<Buffer>(accountById(id));
+  const accountId = await connection.query(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
 }
 
 export async function getByParticipantId(
   connection: Connection,
-  id: BufferId
+  id: BufferId,
 ): Promise<Account[]> {
-  const accountIds =
-    (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
+  const accountIds = await connection.query(accountsByParticipantId(id));
 
   return accountIds.map((id) => createAccountObject(connection, id));
 }
@@ -131,35 +147,33 @@ export async function getByAuthDescriptorId(
   connection: Connection,
   id: BufferId,
   limit = 100,
-  cursor: OptionalPageCursor = null
+  cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
   return createEntityRetriever<Account, Buffer>(
     connection,
     accountsByAuthDescriptorId(id, limit, cursor),
-    (accounts) => accounts.map((acc) => createAccountObject(connection, acc))
+    (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
   ).retrieve();
 }
 
 export async function isAuthDescriptorValid(
   connection: Connection,
   accountId: BufferId,
-  authDescriptorId: BufferId
+  authDescriptorId: BufferId,
 ): Promise<boolean> {
-  return (await connection.query<boolean>(
-    Query.isAuthDescriptorValid(accountId, authDescriptorId)
+  return (await connection.query(
+    Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }
 
 export async function getAuthDescriptorsByParticipantId(
   connection: Connection,
   accountId: BufferId,
-  participantId: BufferId
+  participantId: BufferId,
 ): Promise<AuthDescriptor[]> {
   return connection
-    .query<AuthDescriptorResponse[]>(
-      accountAuthDescriptorsByParticipantId(accountId, participantId)
-    )
+    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
     .then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : []
+      authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
     );
 }

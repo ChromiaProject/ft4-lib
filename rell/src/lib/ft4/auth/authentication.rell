@@ -135,7 +135,7 @@ function _validate_eth_address(message: text, signature, accounts.account_auth_d
         .account_auth_descriptor == account_auth_descriptor,
         .id == recovered_address
     };
-    require(participant, "Invalid signature");
+    require(participant, "Invalid signature on message: \n%s".format(message));
 
     return recovered_address;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@chromia/ft4",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "FT4 Library is a library for Rell modules (Chromia smart contract language). It can be imported and used as a token provider and manager. It allows several operations, among them: creation of different assets (type of tokens), allocation of tokens, transfer, and cross crosschain transfer. It also have some basic data structure for users (account) that can be used independently from the use of the tokens.",
   "main": "dist/client/lib/ft4/index.js",
   "types": "dist/client/lib/ft4/index.d.ts",
@@ -11,7 +11,7 @@
     "version:rell": "./scripts/version.sh",
     "test:js-coverage": "./scripts/jesttest.sh -- --coverage",
     "test:js": "./scripts/jesttest.sh",
-    "test:rell": "./scripts/relltest.sh",
+    "test:rell": "./scripts/relltest.sh -- $@",
     "test:multichain": "./scripts/multichain-jesttest.sh",
     "test": "./scripts/test.sh",
     "test:pipeline": "./scripts/test.sh --no-docker",
@@ -19,6 +19,7 @@
     "stop-postchain:demo": "docker stop ft4_demo; docker rm ft4_demo",
     "stop-postchain:rell": "docker stop postchain; docker rm postchain",
     "start-postchain:demo": "./scripts/rundemo.sh",
+    "multichain:demo": "./scripts/multichain-rundemo.sh",
     "deploy:latest": "./scripts/deploy.sh",
     "deploy:stable": "./scripts/deploy.sh --stable",
     "start": "node index.js",
@@ -40,8 +41,7 @@
   "license": "Apache-2.0",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
-    "ethers": "^6.4.1",
-    "postchain-client": "^1.5.9"
+    "ethers": "^6.4.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",
@@ -63,6 +63,7 @@
     "typescript": "^5.1.3"
   },
   "peerDependencies": {
-    "buffer": "^5.x || ^6.x"
+    "buffer": "^5.x || ^6.x",
+    "postchain-client": "^1.7.1"
   }
 }

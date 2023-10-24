@@ -1,15 +1,13 @@
+import { Connection } from "../types";
 import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
-import { RellAppStructure } from "./types";
-import { Connection } from "../types";
 
 export async function fetchExposedOperations(
   connection: Connection,
 ): Promise<Set<string>> {
   const appStructureQuery = rellAppStructure();
 
-  const appStructure =
-    await connection.query<RellAppStructure>(appStructureQuery);
+  const appStructure = await connection.query(appStructureQuery);
 
   if (!appStructure || !appStructure.modules) {
     throw new FetchAppStructureError(
@@ -19,8 +17,9 @@ export async function fetchExposedOperations(
 
   const exposedOperations = new Set<string>();
 
-  // Always treat "nop" as an exposed operation
+  // Always treat "nop" and "iccf_proof" as an exposed operation
   exposedOperations.add("nop");
+  exposedOperations.add("iccf_proof");
 
   for (const module of Object.values(appStructure.modules)) {
     if (module.operations) {

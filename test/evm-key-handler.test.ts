@@ -1,10 +1,10 @@
-import { authDescriptor } from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication/evm/key-stores/in-memory";
-import { op } from "../client/lib/ft4/utils";
-import { evmAuth } from "../client/lib/ft4/authentication/evm";
-import { createKeyStoreInteractor } from "../client/lib/ft4/ft-session";
-import { transactionBuilder } from "../client/lib/ft4/utils/transaction-builder";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { authDescriptor } from "/ft4/accounts/auth-descriptor";
+import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
+import { op } from "/ft4/utils";
+import { evmAuth } from "/ft4/authentication/evm";
+import { createKeyStoreInteractor } from "/ft4/ft-session";
+import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import { createAuthenticator } from "/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createAccount } from "./util/util";
 import { ethers } from "ethers";
@@ -33,9 +33,8 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
-      message,
-    );
+    const signedMessage =
+      await createInMemoryEvmKeyStore(keyPair).signMessage(message);
 
     expect(signedMessage).toEqual(expectedSignature);
   });
