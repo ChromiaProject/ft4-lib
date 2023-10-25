@@ -14,7 +14,7 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxBuilderTransaction } from "../types";
+import { TxContext, TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
 import {
   AnchoringTimeoutError,
@@ -61,6 +61,7 @@ export function transactionBuilder(
   async function buildUnsigned() {
     const [operations, keyHandlers] = await authenticateOperations(
       this._operations,
+      this._context,
     );
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
@@ -80,9 +81,9 @@ export function transactionBuilder(
 
   async function authenticateOperations(
     opContexts: OperationContext[],
+    ctx: TxContext,
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
-    const nonces = new Map<Buffer, number>();
     const processedOperations: Operation[][] = [];
 
     for (const opContext of opContexts) {
@@ -112,26 +113,12 @@ export function transactionBuilder(
         );
       }
       keyHandlers.push(keyHandler);
-      if (!nonces.has(keyHandler.authDescriptor.id)) {
-        nonces.set(
-          keyHandler.authDescriptor.id,
-          (await authenticator.getNonce(keyHandler.authDescriptor.id))!,
-        );
-      }
-
-      const nonce = nonces.get(keyHandler.authDescriptor.id);
       const ops = await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        nonce,
+        ctx,
         authenticator.authDataService,
       );
-      // consider keeping nonce value in corresponding key handler
-      ops.forEach((op) => {
-        if (op.name === "ft4.evm_auth") {
-          nonces.set(keyHandler.authDescriptor.id, nonce + 1);
-        }
-      });
       processedOperations.push(ops);
     }
     let opsToReturn: Operation[] = [];
@@ -275,6 +262,7 @@ export function transactionBuilder(
     _operations: [],
     _keyhandlersUsed: [],
     session: client,
+    _context: {},
   };
   context.add = add.bind(context);
   context.build = build.bind(context);

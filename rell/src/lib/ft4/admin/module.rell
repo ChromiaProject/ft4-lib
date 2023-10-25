@@ -16,3 +16,7 @@ function require_admin() {
         "Expected admin signature"
     );
 }
+
+function get_admin_pubkey() {
+    return chain_context.args.admin_pubkey;
+}

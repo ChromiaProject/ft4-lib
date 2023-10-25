@@ -7,7 +7,7 @@ import {
   KeyHandler,
   KeyStore,
 } from "./types";
-import { TxBuilderTransaction } from "../utils/types";
+import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
 import { AuthDescriptor, AuthType } from "../accounts";
 
@@ -80,7 +80,7 @@ const noopKeyHandler: KeyHandler = Object.freeze({
   authorize: (
     _accountId: BufferId,
     operation: Operation,
-    _nonce: number,
+    _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
   sign: () => Promise.resolve(),
@@ -141,8 +141,9 @@ function createAuthenticatorSession(
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+      );
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }
@@ -150,7 +151,7 @@ function createAuthenticatorSession(
       return await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        0,
+        {},
         authDataService,
       );
     },
