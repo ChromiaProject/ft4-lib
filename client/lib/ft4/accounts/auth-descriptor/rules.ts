@@ -1,17 +1,17 @@
 import { AuthDescriptorRule } from "./types";
 
 enum RuleVariables {
-  BlockHeight = "block_height",
-  BlockTime = "block_time",
-  OpCount = "op_count",
+  BlockHeight = 0,
+  BlockTime = 1,
+  OpCount = 2,
 }
 
 enum RuleOperator {
-  LessThan = "lt",
-  LessOrEqual = "le",
-  Equals = "eq",
-  GreaterThen = "gt",
-  GreaterOrEqual = "ge",
+  LessThan = 0,
+  LessOrEqual = 1,
+  Equals = 2,
+  GreaterThen = 3,
+  GreaterOrEqual = 4,
 }
 
 export const allow = {
@@ -19,55 +19,55 @@ export const allow = {
   all: null,
 };
 
-function chooseOperator(start: any[], variable: string) {
+function chooseOperator(start: any[], variable: number) {
   return {
     lessThan: (value: number) => {
       const current = start
         ? start.concat([[variable, RuleOperator.LessThan, value]])
-        : [variable, RuleOperator.LessThan, value];
+        : [[variable, RuleOperator.LessThan, value]];
       return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([current, "and"]),
+        only: <AuthDescriptorRule>Object.freeze(["and", ...current]),
+        and: chooseVariable(current),
       };
     },
 
     lessOrEqual: (value: number) => {
       const current = start
-        ? [start].concat([[variable, RuleOperator.LessOrEqual, value]])
-        : [variable, RuleOperator.LessOrEqual, value];
+        ? start.concat([[variable, RuleOperator.LessOrEqual, value]])
+        : [[variable, RuleOperator.LessOrEqual, value]];
       return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([current, "and"]),
+        only: <AuthDescriptorRule>Object.freeze(["and", ...current]),
+        and: chooseVariable(current),
       };
     },
 
     equals: (value: number) => {
       const current = start
         ? start.concat([[variable, RuleOperator.Equals, value]])
-        : [variable, RuleOperator.Equals, value];
+        : [[variable, RuleOperator.Equals, value]];
       return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([current, "and"]),
+        only: <AuthDescriptorRule>Object.freeze(["and", ...current]),
+        and: chooseVariable(current),
       };
     },
 
     greaterOrEqual: (value: number) => {
       const current = start
         ? start.concat([[variable, RuleOperator.GreaterOrEqual, value]])
-        : [variable, RuleOperator.GreaterOrEqual, value];
+        : [[variable, RuleOperator.GreaterOrEqual, value]];
       return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([current, "and"]),
+        only: <AuthDescriptorRule>Object.freeze(["and", ...current]),
+        and: chooseVariable(current),
       };
     },
 
     greaterThan: (value: number) => {
       const current = start
         ? start.concat([[variable, RuleOperator.GreaterThen, value]])
-        : [variable, RuleOperator.GreaterThen, value];
+        : [[variable, RuleOperator.GreaterThen, value]];
       return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable([current, "and"]),
+        only: <AuthDescriptorRule>Object.freeze(["and", ...current]),
+        and: chooseVariable(current),
       };
     },
   };

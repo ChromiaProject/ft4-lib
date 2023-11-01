@@ -88,7 +88,7 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
         "Auth descriptor '%s' not found for account '%s'".format(auth_descriptor_id, account_id)
     );
 
-    require(accounts.is_valid(auth_descriptor));
+    require(not accounts.is_violating_rules(auth_descriptor));
     
     val has_all_flags = when (auth_descriptor.auth_type) {
         S, ES -> accounts.single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
