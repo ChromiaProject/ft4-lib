@@ -14,8 +14,8 @@ enum rule_operator {
 }
 
 struct rule_expression {
-	variable: rule_variable;
 	operator: rule_operator;
+	variable: rule_variable;
 	value: integer;
 }
 

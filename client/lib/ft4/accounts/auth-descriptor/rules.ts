@@ -24,9 +24,9 @@ function chooseOperator(start: any[], variable: number) {
     lessThan: (value: number) => {
       const current = start
         ? start[0] === "and"
-          ? [...start, [variable, RuleOperator.LessThan, value]]
-          : ["and", start, [variable, RuleOperator.LessThan, value]]
-        : [variable, RuleOperator.LessThan, value];
+          ? [...start, [RuleOperator.LessThan, variable, value]]
+          : ["and", start, [RuleOperator.LessThan, variable, value]]
+        : [RuleOperator.LessThan, variable, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
         and: chooseVariable(current),
@@ -36,9 +36,9 @@ function chooseOperator(start: any[], variable: number) {
     lessOrEqual: (value: number) => {
       const current = start
         ? start[0] === "and"
-          ? [...start, [variable, RuleOperator.LessOrEqual, value]]
-          : ["and", start, [variable, RuleOperator.LessOrEqual, value]]
-        : [variable, RuleOperator.LessOrEqual, value];
+          ? [...start, [RuleOperator.LessOrEqual, variable, value]]
+          : ["and", start, [RuleOperator.LessOrEqual, variable, value]]
+        : [RuleOperator.LessOrEqual, variable, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
         and: chooseVariable(current),
@@ -48,9 +48,9 @@ function chooseOperator(start: any[], variable: number) {
     equals: (value: number) => {
       const current = start
         ? start[0] === "and"
-          ? [...start, [variable, RuleOperator.Equals, value]]
-          : ["and", start, [variable, RuleOperator.Equals, value]]
-        : [variable, RuleOperator.Equals, value];
+          ? [...start, [RuleOperator.Equals, variable, value]]
+          : ["and", start, [RuleOperator.Equals, variable, value]]
+        : [RuleOperator.Equals, variable, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
         and: chooseVariable(current),
@@ -60,9 +60,9 @@ function chooseOperator(start: any[], variable: number) {
     greaterOrEqual: (value: number) => {
       const current = start
         ? start[0] === "and"
-          ? [...start, [variable, RuleOperator.GreaterOrEqual, value]]
-          : ["and", start, [variable, RuleOperator.GreaterOrEqual, value]]
-        : [variable, RuleOperator.GreaterOrEqual, value];
+          ? [...start, [RuleOperator.GreaterOrEqual, variable, value]]
+          : ["and", start, [RuleOperator.GreaterOrEqual, variable, value]]
+        : [RuleOperator.GreaterOrEqual, variable, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
         and: chooseVariable(current),
@@ -72,9 +72,9 @@ function chooseOperator(start: any[], variable: number) {
     greaterThan: (value: number) => {
       const current = start
         ? start[0] === "and"
-          ? [...start, [variable, RuleOperator.GreaterThen, value]]
-          : ["and", start, [variable, RuleOperator.GreaterThen, value]]
-        : [variable, RuleOperator.GreaterThen, value];
+          ? [...start, [RuleOperator.GreaterThen, variable, value]]
+          : ["and", start, [RuleOperator.GreaterThen, variable, value]]
+        : [RuleOperator.GreaterThen, variable, value];
       return {
         only: <AuthDescriptorRule>Object.freeze(current),
         and: chooseVariable(current),
