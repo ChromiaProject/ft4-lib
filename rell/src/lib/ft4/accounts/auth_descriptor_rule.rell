@@ -34,28 +34,28 @@ function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 			"Expected a single rule expression, but got something else"
 		); // This error will be caught on the next line as well, but like this we can give a better error message
 
-		return not is_rule_valid(rule_expression.from_gtv(rules_gtv.to_gtv()), variables);
+		return is_rule_violated(rule_expression.from_gtv(rules_gtv.to_gtv()), variables);
 	}
 
 	val operand = text.from_gtv(rules_gtv[0]);
 	val rules = list<rule_expression>.from_gtv(rules_gtv.sub(1).to_gtv());
 	return when (operand) {
-		"and" -> not are_and_rules_valid(rules, variables);
+		"and" -> are_and_rules_violated(rules, variables);
 		else -> true;
 	};
 }
 
-function is_rule_valid(rule: rule_expression, variables: map<text, gtv>): boolean {
-	return evaluate_int_variable_rule(rule, variables);
+function is_rule_violated(rule: rule_expression, variables: map<text, gtv>): boolean {
+	return not evaluate_int_variable_rule(rule, variables);
 }
 
-function are_and_rules_valid(rules: list<rule_expression>, variables: map<text, gtv>): boolean {
+function are_and_rules_violated(rules: list<rule_expression>, variables: map<text, gtv>): boolean {
 	for (rule in rules) {
-		if (not is_rule_valid(rule, variables)) {
-			return false;
+		if (is_rule_violated(rule, variables)) {
+			return true;
 		}
 	}
-	return true;
+	return false;
 }
 
 function is_active(account_auth_descriptor): boolean {
