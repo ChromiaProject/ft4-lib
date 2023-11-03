@@ -19,6 +19,21 @@ struct rule_expression {
 	value: integer;
 }
 
+function serialize_rules(rules: list<rule_expression>): gtv {
+		if (rules.size() == 0) {
+			return null.to_gtv();
+		}
+    if (rules.size() == 1) {
+        return rules[0].to_gtv();
+    }
+    
+    val rules_gtv = list<gtv>.from_gtv(["and"].to_gtv());
+    for (rule in rules) {
+        rules_gtv.add(rule.to_gtv());
+    }
+    return rules_gtv.to_gtv();
+}
+
 function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 	if (auth_descriptor.rules == null.to_gtv().to_bytes()) {
 		return false;
