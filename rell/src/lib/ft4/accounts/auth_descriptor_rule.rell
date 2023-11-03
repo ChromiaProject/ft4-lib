@@ -28,9 +28,13 @@ function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 	val variables = map<text, gtv>();
 	variables[rule_variable.op_count.name] = (auth_descriptor.ctr + 1).to_gtv();
 
-	require(rules_gtv[0] == "and".to_gtv(), "First element in rules list must be 'and'");
-	if (rules_gtv.size() == 2) {
-		return not is_rule_valid(rule_expression.from_gtv(rules_gtv[1]), variables);
+	if (rules_gtv[0] != "and".to_gtv()) {
+		require(
+			rules_gtv.size() == 3,
+			"Expected a single rule expression, but got something else"
+		); // This error will be caught on the next line as well, but like this we can give a better error message
+
+		return not is_rule_valid(rule_expression.from_gtv(rules_gtv.to_gtv()), variables);
 	}
 
 	val operand = text.from_gtv(rules_gtv[0]);
@@ -59,13 +63,18 @@ function is_active(account_auth_descriptor): boolean {
 		return true;
 	}
 
-	val rules = list<gtv>.from_gtv(gtv.from_bytes(account_auth_descriptor.rules)).sub(1);
-	for (rule in rules) {
-		if (is_rule_active(rule_expression.from_gtv(rule))) {
-			return true;
+	val gtv_rules = list<gtv>.from_gtv(gtv.from_bytes(account_auth_descriptor.rules));
+	if (gtv_rules[0] == "and".to_gtv()) {
+		val rules = gtv_rules.sub(1);
+		for (rule in rules) {
+			if (is_rule_active(rule_expression.from_gtv(rule))) {
+				return true;
+			}
 		}
+		return false;
 	}
-	return false;
+
+	return is_rule_active(rule_expression.from_gtv(gtv_rules.to_gtv()));
 }
 
 function is_rule_active(rule: rule_expression): boolean {
@@ -132,29 +141,18 @@ function validate_auth_descriptor_rules(rules: gtv) {
 	}
 
 	val rules_gtv = list<gtv>.from_gtv(rules);
+	if (rules_gtv[0] != "and".to_gtv()) {
+		rule_expression.from_gtv(rules_gtv.to_gtv());
+		return;
+	}
+	
 	require(rules_gtv[0] == "and".to_gtv(), "First element in rules list must be 'and'");
 	require(rules_gtv.size() <= 8, "Too many rules"); // TODO: Make this parameter configurable
 	
 	for (rule in rules_gtv.sub(1)) {
 		rule_expression.from_gtv(rule);
 	}
- }
-
-/*
- * Returns set of variable names used in a rule
- */
-function get_variable_names_set(rules: gtv): set<text> {
-	val parameters = list<gtv>.from_gtv(rules);
-	val operator = text.from_gtv(parameters[1]);
-	var vars = set<text>();
-	if (operator == "and") {
-		vars.add_all(get_variable_names_set(parameters[0]));
-		vars.add_all(get_variable_names_set(parameters[2]));
-	} else {
-		vars.add(text.from_gtv(parameters[0]));
-	}
-	return vars;
-} 
+}
 
 function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
 	update account_auth_descriptor @ { .id == desc.id }( .ctr += 1 );
