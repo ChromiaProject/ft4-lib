@@ -38,8 +38,8 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { BufferId } from "/cryptoUtils";
 import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
+import { BufferId } from "/ft4/utils/types";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.

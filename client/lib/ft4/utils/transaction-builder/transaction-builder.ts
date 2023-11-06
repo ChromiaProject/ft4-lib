@@ -14,7 +14,7 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxContext, TxBuilderTransaction } from "../types";
+import { TxContext, TxBuilderTransaction, BufferId } from "../types";
 import { OperationNotExistError } from "../errors";
 import {
   AnchoringTimeoutError,
@@ -25,7 +25,6 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRid } from "..";
-import { BufferId } from "/cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,

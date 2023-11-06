@@ -10,7 +10,7 @@ import { createConnection } from "../../client/lib/ft4/ft-session";
 import { Asset } from "../../client/lib/ft4/asset/types";
 import adminUser from "./admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "/ft4/utils/types";
 
 export async function createChromiaClientToMultichain(
   brid: BufferId,

@@ -1,6 +1,5 @@
 import { Buffer } from "buffer";
 import { formatter, IClient } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { balancesByAccountId } from "../asset/asset-queries";
 import {
   createBalanceObject,
@@ -10,7 +9,7 @@ import { Balance, BalanceResponse } from "../asset/types";
 import { Connection, OptionalPageCursor } from "../types";
 import { getConfig } from "../utils";
 import { createEntityRetriever } from "../utils/entity-retriever";
-import { PaginatedEntity } from "../utils/types";
+import { BufferId, PaginatedEntity } from "/ft4/utils/types";
 import * as Query from "./account-queries";
 import {
   accountAuthDescriptors,

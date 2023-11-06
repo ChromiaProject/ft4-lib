@@ -1,15 +1,15 @@
 import { Buffer } from "buffer";
 import { KeyPair, SignatureProvider } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { Balance } from "../asset/types";
 import { Authenticator } from "../authentication/types";
 import { OptionalPageCursor } from "../types";
 import {
+  BufferId,
   PaginatedEntity,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "../utils/types";
+} from "/ft4/utils/types";
 import {
   TransferHistoryEntry,
   TransferHistoryFilter,

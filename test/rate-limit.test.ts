@@ -4,9 +4,8 @@ import { Connection } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient } from "./util/blockchain-util";
 import TestUser, { User } from "./util/test-user";
-import { Config } from "/ft4/utils/types";
+import { BufferId, Config } from "/ft4/utils/types";
 import { ftAuth } from "/ft4/authentication";
-import { BufferId } from "/cryptoUtils";
 import { op } from "/ft4";
 import { deriveAccountId } from "/ft4/accounts";
 

@@ -17,7 +17,7 @@ import {
 } from "../../../../client/lib/ft4/crosschain/operations";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "/ft4/utils/types";
 
 jest.unmock("postchain-client");
 

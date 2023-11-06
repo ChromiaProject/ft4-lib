@@ -1,4 +1,3 @@
-import { BufferId } from "../../cryptoUtils";
 import {
   balanceByAccountId,
   assetById,
@@ -9,7 +8,7 @@ import {
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalPageCursor } from "../types";
-import { PaginatedEntity, freeze } from "../utils/types";
+import { BufferId, PaginatedEntity, freeze } from "/ft4/utils/types";
 import { createAmountFromBalance } from "./amount";
 import { createEntityRetriever } from "../utils/entity-retriever";
 

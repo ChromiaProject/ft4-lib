@@ -1,5 +1,4 @@
 import { KeyPair, SignatureProvider, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { createAuthenticator } from "../authentication";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
@@ -8,9 +7,10 @@ import { call, createSession } from "../ft-session";
 import { Connection } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import {
+  BufferId,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "../utils/types";
+} from "/ft4/utils/types";
 import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,

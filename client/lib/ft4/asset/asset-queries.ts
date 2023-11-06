@@ -1,9 +1,8 @@
 import { QueryObject, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 import { AssetResponse, BalanceResponse } from "./types";
-import { PaginatedEntity } from "../utils/types";
+import { BufferId, PaginatedEntity } from "/ft4/utils/types";
 
 export function assetById(
   assetId: BufferId,

@@ -6,8 +6,12 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { Authenticator, KeyHandler } from "/ft4/authentication";
-import { RequireTogether, TxContext, TxBuilderTransaction } from "../types";
-import { BufferId } from "/cryptoUtils";
+import {
+  RequireTogether,
+  TxContext,
+  TxBuilderTransaction,
+  BufferId,
+} from "../types";
 
 export type TransactionBuilder = {
   _operations: OperationContext[];

@@ -4,9 +4,9 @@ import {
   GtvAuthDescriptorArgs,
   GtvAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor/types";
-import { BufferId } from "/cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { Asset } from "../asset/types";
+import { BufferId } from "/ft4/utils/types";
 
 export function registerAccount(
   authDescriptor: GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs>,

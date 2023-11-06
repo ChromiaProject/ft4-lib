@@ -32,8 +32,8 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "/ft4/ft-session";
-import { BufferId } from "/cryptoUtils";
 import { Connection } from "/ft4";
+import { BufferId } from "/ft4/utils/types";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);

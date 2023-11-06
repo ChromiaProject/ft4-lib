@@ -2,6 +2,8 @@ import { RellOperation, TransactionReceipt } from "postchain-client";
 import { OptionalPageCursor, Session } from "../types";
 import { Buffer } from "buffer";
 
+export type BufferId = string | Buffer;
+
 export type Config = {
   rateLimit: {
     active: 0 | 1;

@@ -1,7 +1,6 @@
 import { Account } from "./accounts/types";
 import { Connection, Session, OptionalPageCursor } from "./types";
 import { getConfig, getVersion, nop } from "./utils";
-import { BufferId } from "../cryptoUtils";
 import {
   getByParticipantId,
   getById,
@@ -45,6 +44,7 @@ import { Buffer } from "buffer";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import { fetchExposedOperations } from "./utils/exposed-operations";
 import { ftEventEmitter } from "./events";
+import { BufferId } from "./utils/types";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({

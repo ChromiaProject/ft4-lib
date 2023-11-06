@@ -1,9 +1,9 @@
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { RateLimit } from "./types";
 import { GtvAnyAuthDescriptor } from "./auth-descriptor/types";
+import { BufferId } from "/ft4/utils/types";
 
 export function RateLimitQuery(
   accountId: BufferId,

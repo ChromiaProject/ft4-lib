@@ -1,7 +1,6 @@
-import { BufferId } from "../cryptoUtils";
 import { Account, AuthenticatedAccount } from "./accounts/types";
 import { Asset } from "./asset/types";
-import { Config, PaginatedEntity } from "./utils/types";
+import { BufferId, Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,

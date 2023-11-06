@@ -1,7 +1,6 @@
 import { Buffer } from "buffer";
 import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { ftAuth } from ".";
-import { BufferId } from "../../../cryptoUtils";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import {
   aggregateSigners,
@@ -10,7 +9,7 @@ import {
   AnyAuthDescriptorRegistration,
   AnyAuthDescriptor,
 } from "/ft4/accounts/auth-descriptor";
-import { TxBuilderTransaction, TxContext } from "/ft4/utils/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptorRegistration: AnyAuthDescriptorRegistration,

@@ -1,5 +1,4 @@
 import * as pcl from "postchain-client";
-import { BufferId } from "../client/lib/cryptoUtils";
 import { Connection } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
@@ -30,6 +29,7 @@ import { ftAuth } from "/ft4/authentication";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import { nop, op } from "/ft4/utils";
 import { AuthorizationError } from "/ft4/utils/transaction-builder";
+import { BufferId } from "/ft4/utils/types";
 
 let _connection: Connection;
 const admin = adminUser();
