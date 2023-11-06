@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
-import { TxBuilderTransaction } from "../utils/types";
+import { TxBuilderTransaction, TxContext } from "../utils/types";
 import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
 
 export interface Authenticator {
@@ -23,7 +23,7 @@ export interface KeyHandler {
   authorize(
     accountId: BufferId,
     operation: Operation,
-    nonce: number,
+    context: TxContext,
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 

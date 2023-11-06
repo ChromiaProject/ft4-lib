@@ -19,7 +19,7 @@ describe("FT key handler", () => {
     const operations = await keyHandler.authorize(
       accountId,
       op("foo"),
-      0,
+      {},
       createFakeAuthDataService({}),
     );
 

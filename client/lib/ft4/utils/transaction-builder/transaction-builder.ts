@@ -1,6 +1,5 @@
 import { Authenticator, KeyHandler } from "/ft4/authentication";
 import { Buffer } from "buffer";
-import { deriveAccountId } from "/ft4/accounts";
 import {
   Operation,
   gtx,
@@ -15,7 +14,7 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxBuilderTransaction } from "../types";
+import { TxContext, TxBuilderTransaction } from "../types";
 import { OperationNotExistError } from "../errors";
 import {
   AnchoringTimeoutError,
@@ -62,6 +61,7 @@ export function transactionBuilder(
   async function buildUnsigned() {
     const [operations, keyHandlers] = await authenticateOperations(
       this._operations,
+      this._context,
     );
 
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
@@ -83,9 +83,9 @@ export function transactionBuilder(
 
   async function authenticateOperations(
     opContexts: OperationContext[],
+    ctx: TxContext,
   ): Promise<[Operation[], KeyHandler[]]> {
     const keyHandlers: KeyHandler[] = [];
-    const nonces = new Map<string, number>();
     const processedOperations: Operation[][] = [];
 
     for (const opContext of opContexts) {
@@ -115,30 +115,13 @@ export function transactionBuilder(
         );
       }
       keyHandlers.push(keyHandler);
-      const adId = deriveAccountId(keyHandler.authDescriptorRegistration);
-      if (!nonces.has(adId.toString("hex"))) {
-        nonces.set(
-          adId.toString("hex"),
-          (await authenticator.getNonce(adId)) ?? 0,
-        );
-      }
-
-      const nonce = nonces.get(adId.toString("hex"));
-      if (nonce || nonce === 0) {
-        const ops = await keyHandler.authorize(
-          authenticator.accountId,
-          operation,
-          nonce,
-          authenticator.authDataService,
-        );
-        // consider keeping nonce value in corresponding key handler
-        ops.forEach((op) => {
-          if (op.name === "ft4.evm_auth") {
-            nonces.set(adId.toString("hex"), nonce + 1);
-          }
-        });
-        processedOperations.push(ops);
-      }
+      const ops = await keyHandler.authorize(
+        authenticator.accountId,
+        operation,
+        ctx,
+        authenticator.authDataService,
+      );
+      processedOperations.push(ops);
     }
     let opsToReturn: Operation[] = [];
     processedOperations.forEach((item) => {
@@ -284,6 +267,7 @@ export function transactionBuilder(
     _operations: [],
     _keyhandlersUsed: [],
     session: client,
+    _context: {},
   };
   context.add = add.bind(context);
   context.build = build.bind(context);

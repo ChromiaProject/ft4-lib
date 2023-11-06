@@ -324,8 +324,9 @@ describe("Auth Descriptor Rule", () => {
         Date.now() - 10000,
       ),
     );
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -350,8 +351,9 @@ describe("Auth Descriptor Rule", () => {
         Date.now() + 10000,
       ),
     );
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -470,8 +472,9 @@ describe("Auth Descriptor Rule", () => {
       createSimpleRule(RuleVariable.OpCount, RuleOperator.LessOrEqual, 1),
     );
 
-    const [, accountAdmin] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     await accountAdmin.addAuthDescriptor(
       user3.authDescriptorRegistration,

@@ -11,7 +11,7 @@ import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Session } from "../types";
-import { getTransactionRid } from "../utils";
+import { getTransactionRid, nop } from "../utils";
 import { transactionBuilder } from "../utils/transaction-builder";
 import { Listener, EventEmitter } from "../events";
 import {
@@ -95,6 +95,7 @@ export async function createOrchestrator(
           }
         },
       )
+        .add(nop())
         .buildAndSend()
         .catch((reason) =>
           reject(
@@ -279,6 +280,7 @@ async function createBaseOrcestrator(
             resolve();
           },
         )
+        .add(nop())
         .buildAndSend()
         .catch((error) =>
           reject(
@@ -386,6 +388,7 @@ async function createBaseOrcestrator(
         .add(completeTransferOp(tx, transfer?.opIndex ?? 1), () => {
           resolve();
         })
+        .add(nop())
         .buildAndSend();
     });
 

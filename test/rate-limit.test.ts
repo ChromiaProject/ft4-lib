@@ -90,6 +90,8 @@ describe("Rate Limit", () => {
         operations: [
           ftAuth(account.id, deriveAccountId(user.authDescriptorRegistration)),
           op("test_authenticated_operation"),
+          ftAuth(account.id, deriveAccountId(user.authDescriptorRegistration)),
+          op("test_authenticated_operation"),
         ],
         signers: [user.signatureProvider.pubKey],
       };

@@ -1,8 +1,7 @@
 import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
-import { AnyAuthDescriptor } from "../accounts";
-import { TxBuilderTransaction } from "../utils/types";
+import { TxBuilderTransaction, TxContext } from "../utils/types";
 import {
   AuthDataService,
   Authenticator,
@@ -11,6 +10,7 @@ import {
   KeyStore,
 } from "./types";
 import {
+  AnyAuthDescriptor,
   AuthDescriptorRegistration,
   AuthType,
   SingleSig,
@@ -86,7 +86,7 @@ const noopKeyHandler: KeyHandler = Object.freeze({
   authorize: (
     _accountId: BufferId,
     operation: Operation,
-    _nonce: number,
+    _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
   sign: () => Promise.resolve(),
@@ -157,7 +157,7 @@ function createAuthenticatorSession(
       return await keyHandler.authorize(
         authenticator.accountId,
         operation,
-        0,
+        {},
         authDataService,
       );
     },

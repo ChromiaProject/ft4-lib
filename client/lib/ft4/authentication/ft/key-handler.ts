@@ -10,7 +10,7 @@ import {
   AnyAuthDescriptorRegistration,
   AnyAuthDescriptor,
 } from "/ft4/accounts/auth-descriptor";
-import { TxBuilderTransaction } from "/ft4/utils/types";
+import { TxBuilderTransaction, TxContext } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptorRegistration: AnyAuthDescriptorRegistration,
@@ -27,10 +27,8 @@ export function createFtKeyHandler(
     authorize: (
       accountId: BufferId,
       operation: Operation,
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      nonce: number,
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-      authDataService: AuthDataService,
+      _context: TxContext,
+      _authDataService: AuthDataService,
     ) => authorize(accountId, adId, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
     getSigners: () => aggregateSigners(authDescriptorRegistration),

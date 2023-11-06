@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2023-10-25
+
+### Changed
+- Updated cross-chain transfer orchestrator to add `nop` operation to "init", "apply" and "complete" transactions to avoid tx rid conflicts
+- Updated `KeyHandler` interface. `authorize` function `nonce: number` argument is replaced with `context: TxContext` 
+
 ## [0.1.7] - 2023-10-19
 
 ### Added
