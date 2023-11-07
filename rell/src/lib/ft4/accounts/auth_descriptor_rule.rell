@@ -19,23 +19,26 @@ struct rule_expression {
 	value: integer;
 }
 
+val GTV_NULL = null.to_gtv();
+val GTV_NULL_BYTES = null.to_gtv().to_bytes();
+
 function serialize_rules(rules: list<rule_expression>): gtv {
-		if (rules.size() == 0) {
-			return null.to_gtv();
-		}
-    if (rules.size() == 1) {
-        return rules[0].to_gtv();
-    }
-    
-    val rules_gtv = list<gtv>.from_gtv(["and"].to_gtv());
-    for (rule in rules) {
-        rules_gtv.add(rule.to_gtv());
-    }
-    return rules_gtv.to_gtv();
+	if (rules.size() == 0) {
+		return GTV_NULL;
+	}
+	if (rules.size() == 1) {
+			return rules[0].to_gtv();
+	}
+
+	val rules_gtv = ["and".to_gtv()];
+	for (rule in rules) {
+			rules_gtv.add(rule.to_gtv());
+	}
+	return rules_gtv.to_gtv();
 }
 
 function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
-	if (auth_descriptor.rules == null.to_gtv().to_bytes()) {
+	if (auth_descriptor.rules == GTV_NULL_BYTES) {
 		return false;
 	}
 
@@ -54,10 +57,7 @@ function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 
 	val operand = text.from_gtv(rules_gtv[0]);
 	val rules = list<rule_expression>.from_gtv(rules_gtv.sub(1).to_gtv());
-	return when (operand) {
-		"and" -> are_and_rules_violated(rules, variables);
-		else -> true;
-	};
+	return are_and_rules_violated(rules, variables);
 }
 
 function is_rule_violated(rule: rule_expression, variables: map<text, gtv>): boolean {
@@ -74,7 +74,7 @@ function are_and_rules_violated(rules: list<rule_expression>, variables: map<tex
 }
 
 function is_active(account_auth_descriptor): boolean {
-	if (account_auth_descriptor.rules == null.to_gtv().to_bytes()) { 
+	if (account_auth_descriptor.rules == GTV_NULL_BYTES) { 
 		return true;
 	}
 
@@ -82,11 +82,11 @@ function is_active(account_auth_descriptor): boolean {
 	if (gtv_rules[0] == "and".to_gtv()) {
 		val rules = gtv_rules.sub(1);
 		for (rule in rules) {
-			if (is_rule_active(rule_expression.from_gtv(rule))) {
-				return true;
+			if (not is_rule_active(rule_expression.from_gtv(rule))) {
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	return is_rule_active(rule_expression.from_gtv(gtv_rules.to_gtv()));
@@ -151,7 +151,7 @@ function variable_value(variable: rule_variable, variables: map<text, gtv>): int
  * Analyze the rules before assigning them to an authenticator descriptor
  */
 function validate_auth_descriptor_rules(rules: gtv) {
- 	if (rules == null.to_gtv()) {
+ 	if (rules == GTV_NULL) {
 		return;
 	}
 
