@@ -28,6 +28,12 @@ import { Balance, BalanceResponse } from "../asset/types";
 import { balancesByAccountId } from "../asset/asset-queries";
 import { Buffer } from "buffer";
 import { PaginatedEntity } from "../utils/types";
+import {
+  PendingTransfer,
+  PendingTransferResponse,
+  pendingTransfersForAccount,
+} from "/ft4/crosschain";
+import { mapPendingTransfers } from "../crosschain/query-functions";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -102,6 +108,20 @@ export function createAccountObject(
     },
     getTransferHistoryEntry: async (rowid: number) =>
       transferHistoryRetriever.retrieveSingle(rowid),
+    getPendingCrosschainTransfers: async (
+      limit = 100,
+      cursor: OptionalPageCursor = null,
+    ) => {
+      const retriever = createEntityRetriever<
+        PendingTransfer,
+        PendingTransferResponse
+      >(
+        connection,
+        pendingTransfersForAccount(accountId, limit, cursor),
+        mapPendingTransfers,
+      );
+      return retriever.retrieve(limit, cursor);
+    },
   });
 }
 

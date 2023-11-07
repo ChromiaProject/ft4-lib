@@ -18,24 +18,25 @@ exitfn () {
 trap "exitfn" 2
 
 docker=true
+tests=""
+additional_args=""
+
 while :; do
     case $1 in
         --no-docker)
               echo 'skipping docker build'
               docker=false
               ;;
-        --)
-            shift
-            break
-            ;;
-        -?*)
-            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
-            ;;
+        --tests=* | -t=*)
+              echo "Testing specified tests: ${1#*=}"
+              tests="--tests=${1#*=}"
+              ;;
         *)
-            break
+            additional_args="$additional_args $1"
             ;;
     esac
     shift
+    [ -z "$1" ] && break
 done
 
 if $docker; then
@@ -45,7 +46,7 @@ if $docker; then
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres > /dev/null
 fi
 
-chr test -s configs/rell-test.yml --use-db
+chr test -s configs/rell-test.yml --use-db $tests $additional_args
 return_code=$?
 
 if $docker; then

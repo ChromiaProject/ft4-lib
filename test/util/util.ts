@@ -10,8 +10,8 @@ import {
 import {
   AuthDescriptor,
   AuthDescriptorRule,
-} from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
+} from "/ft4/accounts/auth-descriptor/types";
+import { authDescriptor } from "/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
 import { op } from "/ft4/utils";
 import adminUser from "./admin_user";
@@ -187,4 +187,8 @@ export function opToRellOp(operation: Operation): RellOperation {
     opName: operation.name,
     args: operation.args,
   };
+}
+
+export function emptyOp(): Operation {
+  return { name: "empty_op", args: [] };
 }

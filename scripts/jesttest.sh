@@ -103,12 +103,12 @@ printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 
 pids=()
 if [[ $opt == *"--runTestsByPath"* ]]; then
-    npx jest -maxWorkers=1 $opt -t "${test_string%?}" &
+    npx jest -maxWorkers=1 --detectOpenHandles $opt -t "${test_string%?}" &
     pids+=($!)
 else
     if $docker; then
         for f in ./**/[!_]*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" $opt -t "${test_string%?}" &
+            npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else

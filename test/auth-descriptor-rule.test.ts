@@ -278,6 +278,7 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
+
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       rules,
     );
@@ -296,6 +297,7 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
+
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       rules,
     );

@@ -1,24 +1,9 @@
-import { IClient } from "postchain-client";
-import { createChromiaClient } from "/util/blockchain-util";
-
-interface Blockchain {
-  name: string;
-  rid: Buffer;
-  state: string;
-  system: number;
-}
+import { fetchBlockchains } from "./util/blockchain";
 
 describe("Multichain initialization", () => {
-  let client: IClient;
-
-  beforeAll(async () => {
-    client = await createChromiaClient();
-  });
-
   test("multiple blockchains are hosted by the node", async () => {
-    const blockchains = (await client.query("get_blockchains", {
-      include_inactive: false,
-    })) as unknown as Blockchain[];
+    const blockchainsData = await fetchBlockchains();
+    const blockchains = Object.values(blockchainsData);
 
     // Check for the presence of system blockchains
     const systemBlockchains = [

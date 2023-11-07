@@ -20,7 +20,7 @@ export async function createWeb3ProviderEvmKeyStore(
 
   externalProvider.once("accountsChanged", () => {
     createWeb3ProviderEvmKeyStore(externalProvider).then((keyStore) =>
-      ftEventEmitter.emit("KeyStoreChanged", keyStore),
+      ftEventEmitter.emit("KeyStoreChange", keyStore),
     );
   });
 

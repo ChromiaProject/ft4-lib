@@ -9,7 +9,7 @@ export type AuthDescriptorSimpleRule = readonly [string, string, number];
 export type AuthDescriptorCompositeRule = readonly [
   AuthDescriptorAnyRule,
   "and",
-  AuthDescriptorAnyRule
+  AuthDescriptorAnyRule,
 ];
 type AuthDescriptorAnyRule =
   | AuthDescriptorCompositeRule
@@ -31,18 +31,18 @@ export type GtvAuthDescriptor = readonly [
   authType: number,
   args: AuthDescriptorArgs,
   rule: AuthDescriptorRule | null,
-  created: number
+  created: number,
 ];
 
 export type MultiSigAuthDescriptorArgs = readonly [
   flags: string[],
   signaturesRequired: number,
-  signers: Buffer[]
+  signers: Buffer[],
 ];
 
 export type SingleSigAuthDescriptorArgs = readonly [
   flags: string[],
-  signer: Buffer
+  signer: Buffer,
 ];
 
 export type AuthDescriptorArgs =
@@ -52,7 +52,7 @@ export type AuthDescriptorArgs =
 export type RawAuthDescriptor = [
   auth_type: number,
   args: AuthDescriptorArgs,
-  rules: AuthDescriptorRule | null
+  rules: AuthDescriptorRule | null,
 ];
 
 export type AuthDescriptorResponse = {
