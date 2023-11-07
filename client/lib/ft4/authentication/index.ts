@@ -9,7 +9,7 @@ import {
   KeyStore,
 } from "./types";
 import {
-  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
   AuthDescriptorRegistration,
   AuthType,
   SingleSig,
@@ -65,7 +65,8 @@ export function createNoopAuthenticator(
 const nullKeyStore: KeyStore = Object.freeze({
   id: Buffer.alloc(32),
   isInteractive: false,
-  createKeyHandler: (_authDescriptor: AnyAuthDescriptor) => noopKeyHandler,
+  createKeyHandler: (_authDescriptor: AnyAuthDescriptorRegistration) =>
+    noopKeyHandler,
 });
 
 const nullAuthDescriptorRegistration: AuthDescriptorRegistration<SingleSig> =

@@ -33,23 +33,18 @@ export class AuthDescriptorError extends Error {
 
 // ======== Client side data model ============
 
-export type SimpleRuleExpression = {
+export type AuthDescriptorRule = {
   variable: RuleVariable;
   operator: RuleOperator;
   value: number;
 };
 
-export type CompositeRuleExpression = {
-  lhs: SimpleRuleExpression | CompositeRuleExpression;
-  rhs: SimpleRuleExpression | CompositeRuleExpression;
-};
-
-export type AuthDescriptorRule = SimpleRuleExpression | CompositeRuleExpression;
+export type AuthDescriptorRules = AuthDescriptorRule[];
 
 export type AuthDescriptor<T extends AnySig> = {
   id: Buffer;
   authType: AuthType;
-  rule: AuthDescriptorRule | null;
+  rule: AuthDescriptorRule | AuthDescriptorRules | null;
   created: number;
   args: T;
 };
@@ -57,7 +52,7 @@ export type AuthDescriptor<T extends AnySig> = {
 export type AuthDescriptorRegistration<T extends AnySig> = {
   authType: AuthType;
   args: T;
-  rule: AuthDescriptorRule | null;
+  rule: AuthDescriptorRule | AuthDescriptorRules | null;
 };
 
 export type AnyAuthDescriptor =
@@ -83,17 +78,6 @@ export type MultiSigAuthDescriptorArgs = {
 };
 
 // ======== Server side =======================
-export type GtvAuthDescriptorSimpleRule = readonly [string, string, number];
-export type GtvAuthDescriptorCompositeRule = readonly [
-  GtvAuthDescriptorAnyRule,
-  "and",
-  GtvAuthDescriptorAnyRule,
-];
-type GtvAuthDescriptorAnyRule =
-  | GtvAuthDescriptorCompositeRule
-  | GtvAuthDescriptorSimpleRule;
-export type GtvAuthDescriptorRule = GtvAuthDescriptorAnyRule;
-
 export type GtvMultiSigAuthDescriptorArgs = readonly [
   flags: string[],
   signaturesRequired: number,
@@ -109,10 +93,20 @@ export type GtvAuthDescriptorArgs =
   | GtvSingleSigAuthDescriptorArgs
   | GtvMultiSigAuthDescriptorArgs;
 
+export type GtvAuthDescriptorRule = readonly [number, number, number];
+export type GtvAuthDescriptorRules = readonly [
+  "and",
+  ...GtvAuthDescriptorRule[],
+];
+
 // ======== Server side request model =========
 
 export type GtvAuthDescriptorRegistration<T extends GtvAuthDescriptorArgs> =
-  readonly [auth_type: number, args: T, rules: GtvAuthDescriptorRule | null];
+  readonly [
+    auth_type: number,
+    args: T,
+    rules: GtvAuthDescriptorRule | GtvAuthDescriptorRules | null,
+  ];
 
 export type GtvAnyAuthDescriptorRegistration =
   | GtvAuthDescriptorRegistration<GtvSingleSigAuthDescriptorArgs>
@@ -129,5 +123,5 @@ export type GtvAuthDescriptor<T extends GtvAuthDescriptorArgs> = {
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: GtvAuthDescriptorRule | null;
+  rules: GtvAuthDescriptorRule | GtvAuthDescriptorRules | null;
 };

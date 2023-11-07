@@ -1,8 +1,10 @@
 import {
   authTypeFromString,
-  ruleOperatorFromString,
-  ruleVariableFromString,
+  deserializeRuleOperator,
+  deserializeRuleVariable,
   serializeAuthType,
+  serializeRuleOperator,
+  serializeRuleVariable,
 } from "./enum-parsers";
 import {
   isGtvSimpleRule,
@@ -15,11 +17,13 @@ import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthDescriptorRule,
+  AuthDescriptorRules,
   GtvAnyAuthDescriptor,
   GtvAuthDescriptor,
   GtvAuthDescriptorArgs,
   GtvAuthDescriptorRegistration,
   GtvAuthDescriptorRule,
+  GtvAuthDescriptorRules,
   GtvMultiSigAuthDescriptorArgs,
   GtvSingleSigAuthDescriptorArgs,
   MultiSig,
@@ -70,9 +74,7 @@ export function mapAuthDescriptors(
   return response.map((res) =>
     isSingleSigGtv(res)
       ? mapSingleSigAuthDescriptor(res)
-      : mapMultiSigAuthDescriptor(
-          res as GtvAuthDescriptor<GtvMultiSigAuthDescriptorArgs>,
-        ),
+      : mapMultiSigAuthDescriptor(res),
   );
 }
 
@@ -102,25 +104,27 @@ export function authDescriptorRegistrationToGtv(
 }
 
 export function rulesFromGtv(
-  gtvRules: GtvAuthDescriptorRule,
-): AuthDescriptorRule {
+  gtvRules: GtvAuthDescriptorRule | GtvAuthDescriptorRules,
+): AuthDescriptorRule | AuthDescriptorRules {
+  const mapRule = (gtv: GtvAuthDescriptorRule) => ({
+    operator: deserializeRuleOperator(gtv[1]),
+    variable: deserializeRuleVariable(gtv[0]),
+    value: gtv[2],
+  });
   if (isGtvSimpleRule(gtvRules)) {
-    return {
-      variable: ruleVariableFromString(gtvRules[0]),
-      operator: ruleOperatorFromString(gtvRules[1]),
-      value: gtvRules[2],
-    };
+    return mapRule(gtvRules);
   } else {
-    return {
-      lhs: rulesFromGtv(gtvRules[0]),
-      rhs: rulesFromGtv(gtvRules[2]),
-    };
+    return gtvRules.slice(1).map(mapRule);
   }
 }
 
-export function rulesToGtv(rules: AuthDescriptorRule): GtvAuthDescriptorRule {
-  if (isSimpleRule(rules)) {
-    return [rules.variable, rules.operator, rules.value];
-  }
-  return [rulesToGtv(rules.lhs), "and", rulesToGtv(rules.rhs)];
+export function rulesToGtv(
+  rules: AuthDescriptorRule | AuthDescriptorRules,
+): GtvAuthDescriptorRule | GtvAuthDescriptorRules {
+  const toGtv = (rule: AuthDescriptorRule): GtvAuthDescriptorRule => [
+    serializeRuleOperator(rule.operator),
+    serializeRuleVariable(rule.variable),
+    rule.value,
+  ];
+  return isSimpleRule(rules) ? toGtv(rules) : ["and", ...rules.map(toGtv)];
 }

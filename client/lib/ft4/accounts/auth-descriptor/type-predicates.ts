@@ -4,15 +4,15 @@ import {
   AnySig,
   AuthDescriptor,
   AuthDescriptorRule,
+  AuthDescriptorRules,
   AuthType,
   GtvAnyAuthDescriptor,
   GtvAuthDescriptor,
   GtvAuthDescriptorArgs,
   GtvAuthDescriptorRegistration,
   GtvAuthDescriptorRule,
-  GtvAuthDescriptorSimpleRule,
+  GtvAuthDescriptorRules,
   GtvSingleSigAuthDescriptorArgs,
-  SimpleRuleExpression,
   SingleSig,
 } from "./types";
 
@@ -21,9 +21,9 @@ export function isSingleSigArgs(ad: AnySig): ad is SingleSig {
 }
 
 export function isSimpleRule(
-  rule: AuthDescriptorRule,
-): rule is SimpleRuleExpression {
-  return (rule as SimpleRuleExpression).value !== undefined;
+  rule: AuthDescriptorRule | AuthDescriptorRules,
+): rule is AuthDescriptorRule {
+  return !Array.isArray(rule as AuthDescriptorRule);
 }
 
 export function isAuthDescriptorRegistrationGtv(
@@ -47,7 +47,7 @@ export function isSingleSig(
 }
 
 export function isGtvSimpleRule(
-  rule: GtvAuthDescriptorRule,
-): rule is GtvAuthDescriptorSimpleRule {
-  return rule[1] !== "and";
+  rule: GtvAuthDescriptorRule | GtvAuthDescriptorRules,
+): rule is GtvAuthDescriptorRule {
+  return rule[0] !== "and";
 }

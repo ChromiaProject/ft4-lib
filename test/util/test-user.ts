@@ -14,16 +14,17 @@ import {
   SingleSigAuthDescriptorArgs,
   createSingleSignatureAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
+import { AuthDescriptorRules } from "/ft4/accounts/auth-descriptor/types";
 
 export default function singleSigUser(
-  rule: AuthDescriptorRule | null = null,
+  rule: AuthDescriptorRule | AuthDescriptorRules | null = null,
 ): User {
   return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
 
 export function newSingleSigUser(
   keyPair: KeyPair,
-  rule: AuthDescriptorRule | null = null,
+  rule: AuthDescriptorRule | AuthDescriptorRules | null = null,
 ): User {
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),

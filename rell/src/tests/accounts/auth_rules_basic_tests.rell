@@ -1,0 +1,60 @@
+@test module;
+
+import ^^^.lib.ft4.accounts.{
+  rule_expression,
+  rule_variable,
+  rule_operator,
+  serialize_rules
+};
+
+function test_it_creates_gtv_from_single_rule() {
+  val expr = rule_expression(
+    rule_variable.op_count,
+    rule_operator.lt,
+    1
+  );
+  assert_equals(
+    serialize_rules([expr]),
+    [
+      rule_operator.lt.to_gtv(),
+      rule_variable.op_count.to_gtv(),
+      0x1.to_gtv()
+    ].to_gtv()
+  );
+}
+
+function test_it_creates_gtv_from_multiple_rules() {
+  val expr1 = rule_expression(
+    rule_variable.op_count,
+    rule_operator.lt,
+    1
+  );
+  val expr2 = rule_expression(
+    rule_variable.op_count,
+    rule_operator.lt,
+    2
+  );
+  assert_equals(
+    serialize_rules([expr1, expr2]),
+    [
+      "and".to_gtv(),
+      [
+        rule_operator.lt.to_gtv(),
+        rule_variable.op_count.to_gtv(),
+        0x1.to_gtv()
+      ].to_gtv(),
+      [
+        rule_operator.lt.to_gtv(),
+        rule_variable.op_count.to_gtv(),
+        0x2.to_gtv()
+      ].to_gtv()
+    ].to_gtv()
+  );
+}
+
+function test_it_creates_gtv_from_no_rules() {
+  assert_equals(
+    serialize_rules([]),
+    null.to_gtv()
+  );
+}

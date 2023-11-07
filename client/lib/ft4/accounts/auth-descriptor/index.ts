@@ -9,8 +9,8 @@ import {
   AuthDescriptorError,
   AuthDescriptorRegistration,
   AuthDescriptorRule,
+  AuthDescriptorRules,
   AuthType,
-  CompositeRuleExpression,
   FlagsType,
   GtvAnyAuthDescriptor,
   GtvAuthDescriptorArgs,
@@ -21,7 +21,6 @@ import {
   MultiSigAuthDescriptorArgs,
   RuleOperator,
   RuleVariable,
-  SimpleRuleExpression,
   SingleSig,
   SingleSigAuthDescriptorArgs,
 } from "./types";
@@ -63,7 +62,7 @@ export function deriveAccountId(
  */
 export function createSingleSignatureAuthDescriptorRegistration(
   args: SingleSigAuthDescriptorArgs,
-  rule: AuthDescriptorRule | null,
+  rule: AuthDescriptorRule | AuthDescriptorRules | null,
 ): AuthDescriptorRegistration<SingleSigAuthDescriptorArgs> {
   return {
     authType: AuthType.SingleSig,
@@ -96,26 +95,12 @@ export function createMultiSignatureAuthDescriptorRegistration(
  * @param value the value, or limit, for the variable/operator combination that this rule represents
  * @returns the created rule
  */
-export function createSimpleRule(
+export function createAuthDescriptorRule(
   variable: RuleVariable,
   operator: RuleOperator,
   value: number,
-): SimpleRuleExpression {
+): AuthDescriptorRule {
   return { variable, operator, value };
-}
-
-/**
- * Creates a rule consisting of two other rules, this rule is true when booth
- * the composing rules are true.
- * @param lhs first rule
- * @param rhs second rule
- * @returns the created rule
- */
-export function createCompositeRule(
-  lhs: AuthDescriptorRule,
-  rhs: AuthDescriptorRule,
-) {
-  return { lhs, rhs };
 }
 
 /**
@@ -147,8 +132,6 @@ export {
   RuleVariable,
   RuleOperator,
   AuthDescriptorError,
-  SimpleRuleExpression,
-  CompositeRuleExpression,
   AuthDescriptorRule,
   AuthDescriptorRegistration,
   AnyAuthDescriptorRegistration,

@@ -1,7 +1,10 @@
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
 import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
-import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor/types";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -36,7 +39,9 @@ export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;
-  createKeyHandler(authDescriptor: AnyAuthDescriptorRegistration): KeyHandler;
+  createKeyHandler(
+    authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
+  ): KeyHandler;
 }
 
 export interface AuthenticatorSession {
