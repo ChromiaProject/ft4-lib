@@ -92,7 +92,7 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
 }
 
 function create_account_with_auth(auth_descriptor): byte_array {
-    require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
+    require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
     
     val id = auth_descriptor.hash();
     val acc = create account (id);
@@ -144,7 +144,7 @@ function single_sig_auth_descriptor(pubkey, flags: set<text>) = auth_descriptor(
         flags.to_gtv(),
         pubkey.to_gtv()
     ],
-    null.to_gtv()
+    GTV_NULL
 );
 
 function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
@@ -193,7 +193,7 @@ function validate_auth_descriptor_args(auth_descriptor) {
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth(auth_descriptor): byte_array {
-        require(auth_descriptor.rules == null.to_gtv(), "Cannot create an account with a restricted auth descriptor");
+        require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
         val id = auth_descriptor.hash();
         val acc = create account (id);
         _add_auth_descriptor(
