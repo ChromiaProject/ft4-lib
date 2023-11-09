@@ -14,6 +14,13 @@ compile:
   source: ../rell/src
   target: ../rell/out
 
+libs:
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.9.1
+    rid: x"593D6EBA650BAC473E105C047B2C43A099164870304B3E5E324F714FF2F3F82F"
+
 deployments:
   latest:
     url: https://node0.devnet1.chromia.dev:7740

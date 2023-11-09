@@ -5,9 +5,9 @@ import { Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,
+  Queryable,
   Operation,
   TransactionReceipt,
-  Queryable,
 } from "postchain-client";
 
 export type PageCursor = string;

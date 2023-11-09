@@ -85,7 +85,7 @@ function check_auth_args(a_t: auth_type, args: byte_array, participants: list<by
     return when (a_t) {
         S -> check_single_sig_auth(args, participants, required_flags);
         M -> check_multi_sig_auth(args, participants, required_flags);
-        else -> utils.invalid("Don't recognize authentication type (S or M).");
+        else -> utils.invalid("Don't recognize authentication type %s, valid options are: S or M.".format(a_t));
     };
 }
 
@@ -97,7 +97,7 @@ function check_auth_args(a_t: auth_type, args: byte_array, participants: list<by
  * 4. Clean away expired Auth Descs on the account.
  */
 function require_auth(account, account_auth_descriptor, required_flags: list<text>) {
-	require(is_valid(account_auth_descriptor), "Invalid Auth Descriptor rules. Did it expire?");
+	require(not is_violating_rules(account_auth_descriptor), "The rules for this auth descriptor have been violated");
 
 	val result: utils.validation_result = check_auth_args(
        		account_auth_descriptor.auth_type,
