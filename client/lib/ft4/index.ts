@@ -44,6 +44,8 @@ export {
   AuthDescriptorError,
   AuthDescriptorRegistration,
   AuthDescriptorRule,
+  ComplexAuthDescriptorRule,
+  AuthDescriptorAndRule,
   AuthType,
   FlagsType,
   Account,
@@ -57,10 +59,18 @@ export {
   TransferHistoryResponse,
   TransferHistoryType,
   deriveAccountId,
-  createAuthDescriptorRule,
   createSingleSignatureAuthDescriptorRegistration,
   createMultiSignatureAuthDescriptorRegistration,
   aggregateSigners,
+  blockHeight,
+  blockTime,
+  opCount,
+  lessThan,
+  lessOrEqual,
+  equals,
+  greaterThan,
+  greaterOrEqual,
+  and,
 } from "./accounts";
 
 // Root imports

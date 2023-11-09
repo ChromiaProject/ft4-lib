@@ -4,8 +4,8 @@ import {
   AnySig,
   AuthDescriptor,
   AuthDescriptorRule,
-  AuthDescriptorRules,
   AuthType,
+  ComplexAuthDescriptorRule,
   GtvAnyAuthDescriptor,
   GtvAuthDescriptor,
   GtvAuthDescriptorArgs,
@@ -21,9 +21,9 @@ export function isSingleSigArgs(ad: AnySig): ad is SingleSig {
 }
 
 export function isSimpleRule(
-  rule: AuthDescriptorRule | AuthDescriptorRules,
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule,
 ): rule is AuthDescriptorRule {
-  return !Array.isArray(rule as AuthDescriptorRule);
+  return (rule as ComplexAuthDescriptorRule).and === undefined;
 }
 
 export function isAuthDescriptorRegistrationGtv(

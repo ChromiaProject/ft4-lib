@@ -17,7 +17,7 @@ import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthDescriptorRule,
-  AuthDescriptorRules,
+  ComplexAuthDescriptorRule,
   GtvAnyAuthDescriptor,
   GtvAuthDescriptor,
   GtvAuthDescriptorArgs,
@@ -105,7 +105,7 @@ export function authDescriptorRegistrationToGtv(
 
 export function rulesFromGtv(
   gtvRules: GtvAuthDescriptorRule | GtvAuthDescriptorRules,
-): AuthDescriptorRule | AuthDescriptorRules {
+): AuthDescriptorRule | ComplexAuthDescriptorRule {
   const mapRule = (gtv: GtvAuthDescriptorRule) => ({
     operator: deserializeRuleOperator(gtv[1]),
     variable: deserializeRuleVariable(gtv[0]),
@@ -114,17 +114,33 @@ export function rulesFromGtv(
   if (isGtvSimpleRule(gtvRules)) {
     return mapRule(gtvRules);
   } else {
-    return gtvRules.slice(1).map(mapRule);
+    return {
+      and: gtvRules.slice(1).map((v) => mapRule(v as GtvAuthDescriptorRule)),
+    };
   }
 }
 
 export function rulesToGtv(
-  rules: AuthDescriptorRule | AuthDescriptorRules,
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule,
 ): GtvAuthDescriptorRule | GtvAuthDescriptorRules {
   const toGtv = (rule: AuthDescriptorRule): GtvAuthDescriptorRule => [
     serializeRuleOperator(rule.operator),
     serializeRuleVariable(rule.variable),
     rule.value,
   ];
-  return isSimpleRule(rules) ? toGtv(rules) : ["and", ...rules.map(toGtv)];
+
+  if (isSimpleRule(rule)) {
+    return toGtv(rule);
+  }
+
+  const flattenRules = (
+    rule: ComplexAuthDescriptorRule | AuthDescriptorRule,
+  ): AuthDescriptorRule[] => {
+    if (isSimpleRule(rule)) {
+      return [rule];
+    }
+    return rule.and.flatMap(flattenRules);
+  };
+
+  return ["and", ...flattenRules(rule).map(toGtv)];
 }

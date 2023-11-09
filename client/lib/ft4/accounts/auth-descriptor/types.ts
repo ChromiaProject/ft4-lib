@@ -39,12 +39,20 @@ export type AuthDescriptorRule = {
   value: number;
 };
 
-export type AuthDescriptorRules = AuthDescriptorRule[];
+export type AuthDescriptorAndRule = {
+  and: (AuthDescriptorRule | ComplexAuthDescriptorRule)[];
+  or?: never;
+};
+// type AuthDescriptorOrRule = {
+//   and?: never
+//   or: ComplexAuthDescriptorRule[]
+// }
+export type ComplexAuthDescriptorRule = AuthDescriptorAndRule; // | AuthDescriptorOrRule
 
 export type AuthDescriptor<T extends AnySig> = {
   id: Buffer;
   authType: AuthType;
-  rule: AuthDescriptorRule | AuthDescriptorRules | null;
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null;
   created: number;
   args: T;
 };
@@ -52,7 +60,7 @@ export type AuthDescriptor<T extends AnySig> = {
 export type AuthDescriptorRegistration<T extends AnySig> = {
   authType: AuthType;
   args: T;
-  rule: AuthDescriptorRule | AuthDescriptorRules | null;
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null;
 };
 
 export type AnyAuthDescriptor =

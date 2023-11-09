@@ -9,8 +9,9 @@ import {
   AuthDescriptorError,
   AuthDescriptorRegistration,
   AuthDescriptorRule,
-  AuthDescriptorRules,
   AuthType,
+  ComplexAuthDescriptorRule,
+  AuthDescriptorAndRule,
   FlagsType,
   GtvAnyAuthDescriptor,
   GtvAuthDescriptorArgs,
@@ -28,6 +29,17 @@ import {
   isAuthDescriptorRegistrationGtv,
   isSingleSigArgs,
 } from "./type-predicates";
+import {
+  and,
+  blockHeight,
+  blockTime,
+  equals,
+  greaterOrEqual,
+  greaterThan,
+  lessOrEqual,
+  lessThan,
+  opCount,
+} from "./rules";
 
 function hashAuthDescriptor(
   ad: GtvAuthDescriptorRegistration<
@@ -62,7 +74,7 @@ export function deriveAccountId(
  */
 export function createSingleSignatureAuthDescriptorRegistration(
   args: SingleSigAuthDescriptorArgs,
-  rule: AuthDescriptorRule | AuthDescriptorRules | null,
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null,
 ): AuthDescriptorRegistration<SingleSigAuthDescriptorArgs> {
   return {
     authType: AuthType.SingleSig,
@@ -79,28 +91,13 @@ export function createSingleSignatureAuthDescriptorRegistration(
  */
 export function createMultiSignatureAuthDescriptorRegistration(
   args: MultiSigAuthDescriptorArgs,
-  rule: AuthDescriptorRule | null,
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null,
 ): AuthDescriptorRegistration<MultiSigAuthDescriptorArgs> {
   return {
     authType: AuthType.MultiSig,
     args,
     rule,
   };
-}
-
-/**
- * Creates a rule that can be added to an auth descriptor(registration)
- * @param variable what variable to use, see {@link RuleVariable}
- * @param operator the operator to use for this rule, see {@link RuleOperator}
- * @param value the value, or limit, for the variable/operator combination that this rule represents
- * @returns the created rule
- */
-export function createAuthDescriptorRule(
-  variable: RuleVariable,
-  operator: RuleOperator,
-  value: number,
-): AuthDescriptorRule {
-  return { variable, operator, value };
 }
 
 /**
@@ -133,10 +130,21 @@ export {
   RuleOperator,
   AuthDescriptorError,
   AuthDescriptorRule,
+  ComplexAuthDescriptorRule,
+  AuthDescriptorAndRule,
   AuthDescriptorRegistration,
   AnyAuthDescriptorRegistration,
   SingleSigAuthDescriptorArgs,
   MultiSigAuthDescriptorArgs,
+  blockHeight,
+  blockTime,
+  opCount,
+  lessThan,
+  lessOrEqual,
+  equals,
+  greaterThan,
+  greaterOrEqual,
+  and,
 };
 
 export const gtv = {
