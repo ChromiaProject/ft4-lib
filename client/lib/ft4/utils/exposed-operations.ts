@@ -1,6 +1,6 @@
+import { Connection } from "../types";
 import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
-import { Connection } from "../types";
 
 export async function fetchExposedOperations(
   connection: Connection,
@@ -17,8 +17,9 @@ export async function fetchExposedOperations(
 
   const exposedOperations = new Set<string>();
 
-  // Always treat "nop" as an exposed operation
+  // Always treat "nop" and "iccf_proof" as an exposed operation
   exposedOperations.add("nop");
+  exposedOperations.add("iccf_proof");
 
   for (const module of Object.values(appStructure.modules)) {
     if (module.operations) {

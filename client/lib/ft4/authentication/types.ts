@@ -1,6 +1,6 @@
 import { Operation } from "postchain-client";
 import { BufferId } from "../../cryptoUtils";
-import { TxBuilderTransaction } from "../utils/types";
+import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
 
@@ -10,7 +10,6 @@ export interface Authenticator {
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
   createSession(): AuthenticatorSession;
-  getAuthFlags(operation: Operation): Promise<string[]>;
   getKeyHandlerForOperation(
     operation: Operation,
   ): Promise<KeyHandler | undefined>;
@@ -26,7 +25,7 @@ export interface KeyHandler {
   authorize(
     accountId: BufferId,
     operation: Operation,
-    nonce: number,
+    context: TxContext,
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 
@@ -59,7 +58,7 @@ export interface AuthDataService {
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;
-  getLoginConfig(name: string | null): Promise<LoginConfig>;
+  getLoginConfig(name: string | undefined): Promise<LoginConfig>;
   getBrid(): Buffer;
 }
 

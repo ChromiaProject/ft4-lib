@@ -21,7 +21,7 @@ export function createTransferHistoryRetriever(
     retrieve: async (
       amount: number,
       filter: TransferHistoryFilter | null,
-      cursor: string | null = null,
+      cursor: OptionalPageCursor = null,
     ): Promise<TransferHistoryResponse> => {
       if (amount > 100)
         throw new TransferHistoryError("amount needs to be <= 100");

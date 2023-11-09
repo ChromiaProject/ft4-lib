@@ -34,6 +34,12 @@ jest.mock("/ft4/utils/exposed-operations", () => ({
         "test_auth",
         "test_authenticated_operation",
         "test_perform_large_transfer",
+        "iccf_proof",
+        "empty_op",
+        "ft4.admin.register_crosschain_asset",
+        "ft4.crosschain.apply_transfer",
+        "ft4.crosschain.init_transfer",
+        "ft4.crosschain.complete_transfer",
       ]),
     ),
 }));

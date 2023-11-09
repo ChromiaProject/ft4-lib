@@ -1,73 +1,13 @@
 import { logger } from "postchain-client";
 import { version } from "../../../package.json";
-import {
-  createKeyStoreInteractor,
-  KeyStoreInteractor,
-  createConnection,
-} from "./ft-session";
-import { op } from "./utils";
 
-import { createSessionStorageLoginKeyStore } from "./authentication/login-manager/stores/session-storage";
-import { createLocalStorageLoginKeyStore } from "./authentication/login-manager/stores/local-storage";
-
-// Export public interfaces
-import {
-  KeyStore,
-  createWeb3ProviderEvmKeyStore,
-  createGenericEvmKeyStore,
-  createInMemoryEvmKeyStore,
-} from "./authentication";
-import {
-  AuthDescriptor,
-  FlagsType,
-  Account,
-  authDescriptor,
-  GtvAuthDescriptor,
-} from "./accounts";
-import {
-  DecimalFormat,
-  Asset,
-  Balance,
-  SupportedNumber,
-  createAmount,
-} from "./asset";
-import {
-  registerAccount,
-  addRateLimitPoints,
-  registerAsset,
-  mint,
-} from "./admin/admin-op-functions";
-import { createEvmKeyHandler, EvmKeyStore, FtKeyStore } from "./authentication";
-import { createInMemoryFtKeyStore } from "./authentication/ft/key-stores/in-memory";
-import { Session, Connection } from "./types";
-import {
-  TransferHistoryEntry,
-  TransferHistoryResponse,
-  TransferHistoryType,
-} from "./accounts/transfer-history/types";
-
+// Authentication module
 export {
-  op,
   KeyStore,
-  KeyStoreInteractor,
-  AuthDescriptor,
-  FlagsType,
-  Account,
-  Session,
-  Connection,
-  DecimalFormat,
-  Asset,
-  Balance,
-  SupportedNumber,
-  GtvAuthDescriptor,
-  TransferHistoryEntry,
-  TransferHistoryResponse,
-  TransferHistoryType,
+  KeyHandler,
   EvmKeyStore,
   FtKeyStore,
-  authDescriptor,
-  createConnection,
-  createKeyStoreInteractor,
+  createAuthenticator,
   createWeb3ProviderEvmKeyStore,
   createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
@@ -75,19 +15,69 @@ export {
   createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
   createEvmKeyHandler,
-  createAmount,
+} from "./authentication";
+
+// Admin module
+export {
   registerAccount,
   addRateLimitPoints,
   registerAsset,
   mint,
-};
+  registerCrosschainAsset,
+} from "./admin";
 
+// Asset module
+export {
+  DecimalFormat,
+  Asset,
+  Balance,
+  SupportedNumber,
+  createAmount,
+} from "./asset";
+
+// Accounts module
+export {
+  AuthDescriptor,
+  // TODO: Remove this export by merging
+  // [Refactor auth descriptor model](https://bitbucket.org/chromawallet/ft3-lib/pull-requests/266)
+  authDescriptor,
+  FlagsType,
+  Account,
+  GtvAuthDescriptor,
+  TransferHistoryEntry,
+  TransferHistoryResponse,
+  TransferHistoryType,
+} from "./accounts";
+
+// Root imports
+export { Session, Connection, OptionalPageCursor } from "./types";
+
+export {
+  createConnection,
+  createSession,
+  createKeyStoreInteractor,
+  KeyStoreInteractor,
+} from "./ft-session";
+
+// Utils & Others
+export { op } from "./utils";
 export { Listener, EventEmitter } from "./events";
+
+// Crosschain
+export {
+  Orchestrator,
+  OrchestratorEvents,
+  PathfinderError,
+  applyTransfer,
+  createOrchestrator,
+  findPathToChainForAsset,
+  getAssetOriginById,
+  initTransfer,
+} from "./crosschain";
 
 export const ft = Object.freeze({
   getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
-  authDescriptor,
 });
 
 ft.setLogLevel(0);

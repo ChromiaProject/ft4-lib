@@ -16,6 +16,7 @@ import {
   TransactionSessionCompletion,
 } from "../utils/types";
 import { Buffer } from "buffer";
+import { PendingTransfer } from "../crosschain/types";
 
 export type RateLimit = {
   points: number;
@@ -47,6 +48,9 @@ export interface Account {
   getTransferHistoryEntry: (
     rowid: number,
   ) => Promise<TransferHistoryEntry | null>;
+  getPendingCrosschainTransfers: () => Promise<
+    PaginatedEntity<PendingTransfer>
+  >;
 }
 
 export interface AuthenticatedAccount extends Account {
