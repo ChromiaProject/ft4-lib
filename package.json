@@ -31,7 +31,7 @@
     "deploy:latest": "./scripts/deploy.sh",
     "deploy:stable": "./scripts/deploy.sh --stable",
     "start": "node index.js",
-    "build": "shx rm -rf dist && shx cp package.json client/lib/ft4 && tsc --project tsconfig.dist.json && rollup -c rollup.config.mjs && shx rm client/lib/ft4/package.json",
+    "build": "shx rm -rf dist && shx cp package.json client/lib/ft4/ && tsc --project tsconfig.dist.json && rollup -c rollup.config.mjs && shx rm client/lib/ft4/package.json",
     "prepublishOnly": "npm run build",
     "prepare": "husky install"
   },
