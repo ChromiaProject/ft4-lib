@@ -33,6 +33,8 @@ export {
   Balance,
   SupportedNumber,
   createAmount,
+  createAmountFromBalance,
+  createAssetObject
 } from "./asset";
 
 // Accounts module
