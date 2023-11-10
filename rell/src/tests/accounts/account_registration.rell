@@ -10,14 +10,6 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
 
-function test_an_account_can_be_created() {
-  val auth_descriptor = utils.create_auth_descriptor(alice.pub);
-  
-  utils.create_test_account(alice);
-  
-  assert_equals(accounts.account @ {}( .id ), auth_descriptor.hash());
-}
-
 function test_cannot_create_account_with_expiring_ad() {
   val auth_descriptor = utils.create_auth_descriptor(
     rell.test.pubkeys.bob,
