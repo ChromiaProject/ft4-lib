@@ -6,7 +6,7 @@ import auth: ^^^.lib.ft4.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import acc: ^^^.lib.ft4.accounts;
 import acc_ext: ^^^.lib.ft4.accounts.external;
-import ^^^.lib.ft4.test.utils. { evm_sign, evm_address_from_privkey, evm_auth_operation_for_op };
+import ^^^.lib.ft4.test.utils. { evm_sign, evm_address_from_privkey, evm_auth_operation_for };
 import test_operations: ^^.operations;
 
 val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
@@ -49,7 +49,7 @@ function test_perform_eth_auth_transaction() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
-    .op(evm_auth_operation_for_op(external_auth_data.keypair.priv, op))
+    .op(evm_auth_operation_for(external_auth_data.keypair.priv, op))
     .op(op)
     .sign(rell.test.keypairs.alice.priv)
     .run();

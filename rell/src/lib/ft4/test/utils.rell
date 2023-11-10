@@ -26,14 +26,7 @@ function ft_auth_operation_for(pubkey) {
  * Creates an evm_auth operation by signing an operation using [evm_sign].
  * The associated account is derived from the evm privkey. If more than one auth_descriptor exists the first one will be chosen.
  */
-function evm_auth_operation_for_op(evm_privkey: byte_array, op: rell.test.op) 
-    = evm_auth_operation_for(evm_privkey, op.name, op.args);
-
-/*
- * Creates an evm_auth operation by signing an operation using [evm_sign].
- * The associated account is derived from the evm privkey. If more than one auth_descriptor exists the first one will be chosen.
- */
-function evm_auth_operation_for(evm_privkey: byte_array, op_name: text, args: list<gtv> = []) {
+function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
     val evm_address = evm_address_from_privkey(evm_privkey);
     val descriptor = require(
         accounts.auth_descriptor_participant @? { evm_address }.account_auth_descriptor limit 1,
@@ -45,8 +38,8 @@ function evm_auth_operation_for(evm_privkey: byte_array, op_name: text, args: li
             descriptor,
             signatures = []
         ),
-        get_auth_message_template(op_name, args.to_gtv()),
-        args,
+        get_auth_message_template(op.name, op.args.to_gtv()),
+        op.args,
         descriptor.ctr
     );
     val evm_signature = evm_sign(eth_message, evm_privkey);
