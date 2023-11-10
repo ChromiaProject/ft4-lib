@@ -57,66 +57,130 @@ function authenticate_alice(account_id: byte_array) {
 
 namespace test_basic_functionality {
   function test_transaction_with_simple_working_rule() {
-    val acc_data = setup_account_with_rules(("block_height", "lt", 100).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.lt,
+          100
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run();
   }
 
   function test_transaction_with_simple_failing_rule() {
-    val acc_data = setup_account_with_rules(("block_height", "gt", 100).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.gt,
+          100
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
 
   function test_transaction_with_two_both_working_rule() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_height", "lt", 100), "and", ("block_time", "lt", 20000000000000)
-      ).to_gtv());
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.lt,
+          100
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.lt,
+          20000000000000
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run();
   }
 
   function test_transaction_with_two_both_failing_rule() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_height", "gt", 100), "and", ("block_time", "gt", 20000000000000)
-      ).to_gtv());;
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.gt,
+          100
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.gt,
+          20000000000000
+        )
+      ])
+    );;
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
 
   function test_transaction_with_first_failing_rule() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_height", "gt", 100), "and", ("block_time", "lt", 20000000000000)
-      ).to_gtv());;
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.gt,
+          100
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.lt,
+          20000000000000
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
 
   function test_transaction_with_second_failing_rule() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_height", "lt", 100), "and", ("block_time", "gt", 20000000000000)
-      ).to_gtv());;
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.lt,
+          100
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.gt,
+          20000000000000
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
 
   function test_transaction_with_two_similar_rules() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_height", "lt", 100), "and", ("block_height", "lt", 200)
-      ).to_gtv());
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.lt,
+          100
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.lt,
+          200
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run();
   }
 
   function test_cannot_setup_with_too_many_rules() {
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
-    val rules = (
-        ("block_height", "lt", 100), "and",
-        ("block_height", "lt", 101), "and",
-        ("block_height", "lt", 102), "and",
-        ("block_height", "lt", 103), "and",
-        ("block_height", "lt", 104), "and",
-        ("block_height", "lt", 105)
-      ).to_gtv();
+    val rule_list = list<accounts.rule_expression>();
+    for (i in range(accounts.MAX_AD_RULES)) {
+      rule_list.add(
+        accounts.rule_expression(
+          accounts.rule_variable.block_height,
+          accounts.rule_operator.lt,
+          100 + i
+        )
+      );
+    }
+    val rules = accounts.serialize_rules(rule_list);
 
     val bob_ad = utils.create_auth_descriptor(
       rell.test.pubkeys.bob,
@@ -132,23 +196,55 @@ namespace test_basic_functionality {
 
 namespace test_multiple_ops_with_op_count {
   function test_transaction_with_simple_working_rule() {
-    val acc_data = setup_account_with_rules(("op_count", "lt", 5).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.op_count,
+          accounts.rule_operator.lt,
+          5
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data, 4).run();
   }
 
   function test_transaction_with_simple_failing_rule() {
-    val acc_data = setup_account_with_rules(("op_count", "le", 3).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.op_count,
+          accounts.rule_operator.le,
+          3
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data, 4).run_must_fail();
   }
 
   function test_two_transactions_with_simple_working_rule() {
-    val acc_data = setup_account_with_rules(("op_count", "le", 4).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.op_count,
+          accounts.rule_operator.le,
+          4
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data, 3).run();
     authenticate_account_signed_tx(acc_data).run();
   }
 
   function test_two_transactions_with_simple_failing_rule() {
-    val acc_data = setup_account_with_rules(("op_count", "le", 3).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.op_count,
+          accounts.rule_operator.le,
+          3
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data, 3).run();
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
@@ -157,32 +253,67 @@ namespace test_multiple_ops_with_op_count {
 namespace test_block_time_span {
   function test_transaction_within_span() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_time", "gt", 100), "and", ("block_time", "lt", 20000000000000)
-      ).to_gtv());
+      accounts.serialize_rules([
+        accounts.rule_expression(
+            accounts.rule_variable.block_time,
+            accounts.rule_operator.gt,
+            100
+          ), accounts.rule_expression(
+            accounts.rule_variable.block_time,
+            accounts.rule_operator.lt,
+            20000000000000
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run();
   }
 
   function test_transaction_before_span() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_time", "gt", 19000000000000), "and", ("block_time", "lt", 20000000000000)
-      ).to_gtv());
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.gt,
+          19000000000000
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.lt,
+          20000000000000
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
 
   function test_transaction_after_span() {
     val acc_data = setup_account_with_rules(
-      (
-        ("block_time", "gt", 19000000000), "and", ("block_time", "lt", 20000000000)
-      ).to_gtv());
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.gt,
+          19000000000
+        ), accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.lt,
+          20000000000
+        )
+      ])
+    );
     authenticate_account_signed_tx(acc_data).run_must_fail();
   }
 }
 
 namespace test_deletion_after_expiration {
   function test_delete_on_expiration() {
-    val acc_data = setup_account_with_rules(("op_count", "lt", 6).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.op_count,
+          accounts.rule_operator.lt,
+          6
+        )
+      ])
+    );
     //run three times so tx has different RID from next tx
     authenticate_account_signed_tx(acc_data, 3).run();
     //auth desc still exists
@@ -198,7 +329,15 @@ namespace test_deletion_after_expiration {
   }
 
   function test_delete_expired_ad_on_authentication_with_different_auth_descriptor() {
-    val acc_data = setup_account_with_rules(("block_time", "lt", 100).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.lt,
+          100
+        )
+      ])
+    );
     //auth desc exists
     assert_true(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
     
@@ -211,7 +350,15 @@ namespace test_deletion_after_expiration {
   }
 
   function test_keep_valid_ad_on_authentication_with_different_auth_descriptor() {
-    val acc_data = setup_account_with_rules(("block_time", "gt", 100).to_gtv());
+    val acc_data = setup_account_with_rules(
+      accounts.serialize_rules([
+        accounts.rule_expression(
+          accounts.rule_variable.block_time,
+          accounts.rule_operator.gt,
+          100
+        )
+      ])
+    );
     //auth desc exists
     assert_true(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
     
@@ -225,16 +372,80 @@ namespace test_deletion_after_expiration {
   function test_delete_only_expired_auth_descriptors() {
     val account = utils.create_test_account(rell.test.keypairs.alice, ["A"]).account;
     val acc_data_valid = [
-      add_expiring_auth_descriptor(account, ("block_time", "gt", 100).to_gtv()),
-      add_expiring_auth_descriptor(account, ("block_height", "lt", 100).to_gtv()),
-      add_expiring_auth_descriptor(account, ("block_height", "gt", 100).to_gtv()),
-      add_expiring_auth_descriptor(account, ("op_count", "lt", 100).to_gtv())
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.block_time,
+            accounts.rule_operator.gt,
+            100
+          )
+        ])
+      ),
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.block_height,
+            accounts.rule_operator.lt,
+            100
+          )
+        ])
+      ),
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.block_height,
+            accounts.rule_operator.gt,
+            100
+          )
+        ])
+      ),
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.op_count,
+            accounts.rule_operator.lt,
+            100
+          )
+        ])
+      )
     ];
     val acc_data_invalid = [
-      add_expiring_auth_descriptor(account, ("block_time", "lt", 100).to_gtv()),
-      add_expiring_auth_descriptor(account, ("block_height", "lt", 0).to_gtv()),
-      add_expiring_auth_descriptor(account, ("op_count", "lt", 0).to_gtv()),
-      add_expiring_auth_descriptor(account, ("op_count", "gt", 100).to_gtv())
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.block_time,
+            accounts.rule_operator.lt,
+            100
+          )
+        ])
+      ),
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.block_height,
+            accounts.rule_operator.lt,
+            0
+          )
+        ])
+      ),
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.op_count,
+            accounts.rule_operator.lt,
+            0
+          )
+        ])
+      ),
+      add_expiring_auth_descriptor(account, 
+        accounts.serialize_rules([
+          accounts.rule_expression(
+            accounts.rule_variable.op_count,
+            accounts.rule_operator.gt,
+            100
+          )
+        ])
+      )
     ];
 
     //valid auth descs exist
