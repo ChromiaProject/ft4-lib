@@ -1,5 +1,5 @@
 import { Operation } from "postchain-client";
-import { BufferId } from "../../client/lib/cryptoUtils";
+import { BufferId } from "../../client/lib/ft4/cryptoUtils";
 import { AuthDataService } from "../../client/lib/ft4/authentication/types";
 
 export function createFakeAuthDataService(

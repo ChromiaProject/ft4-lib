@@ -20,7 +20,7 @@ import {
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../../../../client/lib/ft4/cryptoUtils";
 
 jest.unmock("postchain-client");
 
