@@ -9,7 +9,7 @@ import {
 } from "./account-queries";
 import * as Query from "./account-queries";
 import { Account, RateLimit } from "./types";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { getConfig } from "../utils";
 import {
   getBalanceByAccountId,

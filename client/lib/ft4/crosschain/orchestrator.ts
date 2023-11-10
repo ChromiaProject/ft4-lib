@@ -1,12 +1,5 @@
 import { Buffer } from "buffer";
-import {
-  Operation,
-  RawGtx,
-  createClient,
-  createIccfProofTx,
-  formatter,
-  gtv,
-} from "postchain-client";
+import { Operation, RawGtx, createClient, createIccfProofTx, formatter, gtv, } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
@@ -37,7 +30,7 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
 
 /**

@@ -4,7 +4,7 @@ import {
   TransferHistoryType,
   TransferHistoryResponse,
 } from "./types";
-import { BufferId } from "../../../cryptoUtils";
+import { BufferId } from "../../cryptoUtils";
 import { IClient, formatter } from "postchain-client";
 import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 import { TransferHistoryError, TransferHistoryRetriever } from "./interfaces";

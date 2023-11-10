@@ -1,5 +1,5 @@
 import { Operation, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import {
   AuthDataService,
   Authenticator,

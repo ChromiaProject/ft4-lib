@@ -1,7 +1,7 @@
 import { IClient, SignatureProvider } from "postchain-client";
 import { AuthDescriptor } from "../accounts/auth-descriptor";
 import * as ops from "./admin-operations";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
 import { Asset } from "../asset/types";
 import { TransactionCompletion } from "../utils/types";

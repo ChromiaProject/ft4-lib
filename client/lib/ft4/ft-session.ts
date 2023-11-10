@@ -1,37 +1,20 @@
 import { Account } from "./accounts/types";
 import { Connection, Session, OptionalPageCursor } from "./types";
 import { getConfig, getVersion, nop } from "./utils";
-import { BufferId } from "../cryptoUtils";
+import { BufferId } from "./cryptoUtils";
 import {
   getByParticipantId,
   getById,
   createAccountObject,
   getByAuthDescriptorId,
 } from "./accounts/account-query-functions";
-import {
-  getAssetById,
-  getAssetBySymbol,
-  getAllAssets,
-  getAssetsByName,
-} from "./asset/asset-query-functions";
+import { getAssetById, getAssetBySymbol, getAllAssets, getAssetsByName, } from "./asset/asset-query-functions";
 import { createAuthenticatedAccount } from "./accounts/account-op-functions";
 import { transactionBuilder } from "./utils/transaction-builder";
-import {
-  AuthDataService,
-  Authenticator,
-  KeyStore,
-} from "./authentication/types";
+import { AuthDataService, Authenticator, KeyStore, } from "./authentication/types";
 import { createAuthenticator } from "./authentication";
-import {
-  authFlags,
-  authMessageTemplate,
-  loginConfig,
-  nonce,
-} from "./authentication/queries";
-import {
-  LoginManger,
-  createLoginManager,
-} from "./authentication/login-manager";
+import { authFlags, authMessageTemplate, loginConfig, nonce, } from "./authentication/queries";
+import { LoginManger, createLoginManager, } from "./authentication/login-manager";
 import {
   IClient,
   QueryObject,

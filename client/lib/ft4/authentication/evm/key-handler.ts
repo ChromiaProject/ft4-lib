@@ -1,4 +1,4 @@
-import { BufferId } from "../../../cryptoUtils";
+import { BufferId } from "../../cryptoUtils";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
 import { EvmKeyStore, evmAuth } from ".";

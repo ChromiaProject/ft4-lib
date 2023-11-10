@@ -1,6 +1,6 @@
 import { formatter } from "postchain-client";
 import { authDescriptor, serializeAuthType } from ".";
-import { BufferId } from "../../../cryptoUtils";
+import { BufferId } from "../../cryptoUtils";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
