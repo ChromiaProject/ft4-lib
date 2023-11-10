@@ -1,6 +1,9 @@
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { createAmount, createOrchestrator } from "/ft4";
-import { createSession } from "/ft4/ft-session";
+import {
+  createAmount,
+  createOrchestrator,
+} from "../../../../../client/lib/ft4";
+import { createSession } from "../../../../../client/lib/ft4/ft-session";
 
 describe("Error Handling and Recovery", () => {
   let testContext: TestContext;

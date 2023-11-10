@@ -8,7 +8,7 @@ import { KeyHandler } from "../client/lib/ft4/authentication/types";
 import { createTestAuthDescriptor, opToRellOp } from "./util/util";
 import { Buffer } from "buffer";
 import { createChromiaClient } from "./util/blockchain-util";
-import { TxBuilderTransaction } from "/ft4/utils/types";
+import { TxBuilderTransaction } from "../client/lib/ft4/utils/types";
 
 describe("Authenticator session", () => {
   it("should insert FT auth operation", async () => {

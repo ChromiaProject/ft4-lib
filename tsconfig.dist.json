@@ -14,15 +14,9 @@
       "dom"
     ],
     "resolveJsonModule": true,
-    "types": ["jest"],
-    "paths": {
-      "/*": [
-        "./client/lib/*"
-      ],
-      "@authentication/*": ["./client/lib/ft4/authentication/*"]
-    }
+    "types": ["jest"]
   },
-  "include": ["./client/**/*"],
+  "include": ["./client/lib/ft4/**/*"],
   "exclude": [
     "node_modules"
   ]

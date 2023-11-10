@@ -1,7 +1,13 @@
-import { IClient, Operation, RawGtx, SignedTransaction, TransactionReceipt, } from "postchain-client";
-import { Authenticator, KeyHandler } from "/ft4/authentication";
+import {
+  IClient,
+  Operation,
+  RawGtx,
+  SignedTransaction,
+  TransactionReceipt,
+} from "postchain-client";
+import { Authenticator, KeyHandler } from "../../authentication";
 import { RequireTogether, TxContext, TxBuilderTransaction } from "../types";
-import { BufferId } from "/ft4/cryptoUtils";
+import { BufferId } from "../../cryptoUtils";
 
 export type TransactionBuilder = {
   _operations: OperationContext[];

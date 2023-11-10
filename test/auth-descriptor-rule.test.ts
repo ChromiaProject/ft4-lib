@@ -8,24 +8,24 @@ import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
 import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "../client/lib/ft4/asset/amount";
 import { IClient } from "postchain-client";
-import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
+import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
 import {
   createAuthDataService,
   createConnection,
   createSession,
-} from "/ft4/ft-session";
+} from "../client/lib/ft4/ft-session";
 import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
 } from "./util/util";
-import { createAuthenticator } from "/ft4/authentication";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { newSignatureProvider } from "postchain-client";
-import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
-import { registerAccount } from "/ft4/admin/admin-op-functions";
+import { deleteAllAuthDescriptorsExclude } from "../client/lib/ft4/accounts/account-operations";
+import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
 import adminUser from "./util/admin_user";
-import { authDescriptor } from "/ft4";
+import { authDescriptor } from "../client/lib/ft4";
 
 let _connection: Connection;
 let asset: Asset;
@@ -278,8 +278,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -295,8 +296,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -395,8 +397,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.operationCount.lessOrEqual(1).only;
     const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
 
-    const [, accountAdmin] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     await accountAdmin.addAuthDescriptor(
       user3.authDescriptor,

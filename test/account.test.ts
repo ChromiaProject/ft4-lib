@@ -26,8 +26,8 @@ import {
 import {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
-} from "/ft4/accounts/account-operations";
-import { AuthorizationError } from "/ft4/utils/transaction-builder";
+} from "../client/lib/ft4/accounts/account-operations";
+import { AuthorizationError } from "../client/lib/ft4/utils/transaction-builder";
 
 let _connection: Connection;
 const admin = adminUser();

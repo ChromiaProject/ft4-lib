@@ -1,25 +1,25 @@
 import { createTestAuthDescriptor, emptyOp } from "./util/util";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import {
   createAuthenticator,
   createNoopAuthenticator,
-} from "/ft4/authentication";
+} from "../client/lib/ft4/authentication";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
   transactionBuilder,
-} from "/ft4/utils/transaction-builder";
+} from "../client/lib/ft4/utils/transaction-builder";
 import {
   anchoredHandlerCallbackParameters,
   createChromiaClient,
 } from "./util/blockchain-util";
-import { nop } from "/ft4/utils";
+import { nop } from "../client/lib/ft4/utils";
 import {
   AuthDataService,
   Authenticator,
   KeyHandler,
-} from "/ft4/authentication/types";
+} from "../client/lib/ft4/authentication/types";
 import {
   IClient,
   KeyPair,
@@ -28,12 +28,12 @@ import {
   gtx,
   isBlockAnchored,
 } from "postchain-client";
-import { transfer } from "/ft4/accounts/account-operations";
-import { AuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { FlagsType } from "/ft4/accounts/auth-descriptor";
+import { transfer } from "../client/lib/ft4/accounts/account-operations";
+import { AuthDescriptor } from "../client/lib/ft4/accounts/auth-descriptor/types";
+import { FlagsType } from "../client/lib/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
-import { registerAccount } from "/ft4/admin/admin-operations";
-import { createAmount } from "/ft4/asset/amount";
+import { registerAccount } from "../client/lib/ft4/admin/admin-operations";
+import { createAmount } from "../client/lib/ft4/asset/amount";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

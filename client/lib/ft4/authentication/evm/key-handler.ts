@@ -4,7 +4,7 @@ import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { formatter, Operation } from "postchain-client";
-import { TxContext, TxBuilderTransaction } from "/ft4/utils/types";
+import { TxContext, TxBuilderTransaction } from "../../utils/types";
 
 const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
   accountId.toString("hex") + authDescriptorId.toString("hex");

@@ -10,22 +10,22 @@ import {
 import {
   AuthDescriptor,
   AuthDescriptorRule,
-} from "/ft4/accounts/auth-descriptor/types";
-import { authDescriptor } from "/ft4/accounts/auth-descriptor";
+} from "../../client/lib/ft4/accounts/auth-descriptor/types";
+import { authDescriptor } from "../../client/lib/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
-import { op } from "/ft4/utils";
+import { op } from "../../client/lib/ft4/utils";
 import adminUser from "./admin_user";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator } from "/ft4/authentication";
-import { transactionBuilder } from "/ft4/utils/transaction-builder";
-import { addAuthDescriptor } from "/ft4/accounts/account-operations";
+import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator } from "../../client/lib/ft4/authentication";
+import { transactionBuilder } from "../../client/lib/ft4/utils/transaction-builder";
+import { addAuthDescriptor } from "../../client/lib/ft4/accounts/account-operations";
 import {
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
-} from "/ft4/ft-session";
-import { BufferId } from "/ft4/cryptoUtils";
-import { Connection } from "/ft4";
+} from "../../client/lib/ft4/ft-session";
+import { BufferId } from "../../client/lib/ft4/cryptoUtils";
+import { Connection } from "../../client/lib/ft4";
 
 function generateNumber(max = 10000): number {
   return Math.round(Math.random() * max);

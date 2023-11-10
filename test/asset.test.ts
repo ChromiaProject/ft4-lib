@@ -6,9 +6,9 @@ import { createConnection } from "../client/lib/ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
-import { op } from "/ft4";
+import { op } from "../client/lib/ft4";
 import adminUser, { adminKeyPair } from "./util/admin_user";
-import { registerAsset } from "/ft4/admin/admin-op-functions";
+import { registerAsset } from "../client/lib/ft4/admin/admin-op-functions";
 
 let connection: Connection;
 let client: IClient;

@@ -9,7 +9,7 @@ import {
 import { Connection } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
 
 let connection: Connection;
 let client: IClient;
@@ -122,7 +122,7 @@ describe("Asset balance", () => {
       .build();
 
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      account.id
+      account.id,
     );
 
     const { data, nextCursor } = await session.account.getBalances(2);

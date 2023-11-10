@@ -14,8 +14,8 @@ import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
-import { registerAccount } from "/ft4/admin/admin-op-functions";
-import { Connection } from "/ft4/types";
+import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
+import { Connection } from "../client/lib/ft4/types";
 
 let asset: Asset;
 let connection: Connection;

@@ -10,12 +10,12 @@ import {
   createKeyStoreInteractor,
 } from "../client/lib/ft4/ft-session";
 import AccountBuilder from "./util/account-builder";
-import { Connection } from "/ft4/types";
+import { Connection } from "../client/lib/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
 import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
-} from "/ft4/authentication";
+} from "../client/lib/ft4/authentication";
 
 let connection: Connection;
 

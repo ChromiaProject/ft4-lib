@@ -1,28 +1,31 @@
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
+import { fetchBlockchains } from "../../../util/blockchain";
 import {
   FlagsType,
   createAmount,
   createConnection,
   mint,
   registerCrosschainAsset,
-} from "/ft4";
-import { AuthenticatedAccount } from "/ft4/accounts";
-import { Asset } from "/ft4/asset/types";
-import { PendingTransfer, findPathToChainForAsset } from "/ft4/crosschain";
+} from "../../../../../client/lib/ft4";
+import { AuthenticatedAccount } from "../../../../../client/lib/ft4/accounts";
+import { Asset } from "../../../../../client/lib/ft4/asset/types";
+import {
+  PendingTransfer,
+  findPathToChainForAsset,
+} from "../../../../../client/lib/ft4/crosschain";
 import {
   createOrchestrator,
   createResumeOrchestrator,
-} from "/ft4/crosschain/orchestrator";
-import { createSession } from "/ft4/ft-session";
-import { Connection, Session } from "/ft4/types";
-import { PaginatedEntity } from "/ft4/utils/types";
-import AccountBuilder from "/util/account-builder";
-import adminUser from "/util/admin_user";
+} from "../../../../../client/lib/ft4/crosschain/orchestrator";
+import { createSession } from "../../../../../client/lib/ft4/ft-session";
+import { Connection, Session } from "../../../../../client/lib/ft4/types";
+import { PaginatedEntity } from "../../../../../client/lib/ft4/utils/types";
+import AccountBuilder from "../../../../util/account-builder";
+import adminUser from "../../../../util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "/util/blockchain-util";
-import { initTransfer } from "/ft4/crosschain/operations";
+} from "../../../../util/blockchain-util";
+import { initTransfer } from "../../../../../client/lib/ft4/crosschain/operations";
 import { formatter } from "postchain-client";
 
 jest.unmock("postchain-client");

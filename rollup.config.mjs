@@ -7,9 +7,9 @@ import resolve from "@rollup/plugin-node-resolve";
 export default [
   //ESM
   {
-    input: "./dist/client/lib/ft4/index.js",
+    input: "./dist/index.js",
     output: {
-      dir: "./dist/client/lib/ft4/esm",
+      dir: "./dist/esm",
       format: "es",
       name: "FT4 lib",
       sourcemap: true,
@@ -29,9 +29,9 @@ export default [
   },
   //NODE
   {
-    input: "./dist/client/lib/ft4/index.js",
+    input: "./dist/index.js",
     output: {
-      dir: "./dist/client/lib/ft4/cjs",
+      dir: "./dist/cjs",
       format: "cjs",
       name: "FT4 lib",
       sourcemap: true,

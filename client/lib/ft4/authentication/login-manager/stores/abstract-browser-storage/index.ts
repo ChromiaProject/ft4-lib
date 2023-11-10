@@ -1,6 +1,6 @@
 import { encryption } from "postchain-client";
 import { LoginKeyStore } from "../types";
-import { BufferId } from "/ft4/cryptoUtils";
+import { BufferId } from "../../../../cryptoUtils";
 
 const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 
@@ -37,7 +37,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
       const accountIdString = ensureString(accountId);
       if (accountIdString in values) {
         throw new Error(
-          `KeyPair already exists for account <${accountIdString}>`
+          `KeyPair already exists for account <${accountIdString}>`,
         );
       }
 

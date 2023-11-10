@@ -30,14 +30,14 @@ import {
   ftAuth,
 } from "../../client/lib/ft4/authentication";
 import { createAuthDataService } from "../../client/lib/ft4/ft-session";
-import { Connection } from "/ft4/types";
+import { Connection } from "../../client/lib/ft4/types";
 import {
   addRateLimitPoints,
   registerAccount,
-} from "/ft4/admin/admin-op-functions";
-import { nop } from "/ft4/utils";
-import { addAuthDescriptor } from "/ft4/accounts/account-operations";
-import { op } from "/ft4";
+} from "../../client/lib/ft4/admin/admin-op-functions";
+import { nop } from "../../client/lib/ft4/utils";
+import { addAuthDescriptor } from "../../client/lib/ft4/accounts/account-operations";
+import { op } from "../../client/lib/ft4";
 
 class AccountBuilder {
   private connection: Connection;

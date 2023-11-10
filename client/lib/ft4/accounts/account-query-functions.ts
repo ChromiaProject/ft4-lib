@@ -32,7 +32,7 @@ import {
   PendingTransfer,
   PendingTransferResponse,
   pendingTransfersForAccount,
-} from "/ft4/crosschain";
+} from "../crosschain";
 import { mapPendingTransfers } from "../crosschain/query-functions";
 
 //this will be outdated as soon as another tx is sent to the same account:

@@ -4,10 +4,10 @@ import { Connection } from "../client/lib/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient } from "./util/blockchain-util";
 import TestUser, { User } from "./util/test-user";
-import { Config } from "/ft4/utils/types";
-import { ftAuth } from "/ft4/authentication";
-import { BufferId } from "/ft4/cryptoUtils";
-import { op } from "/ft4";
+import { Config } from "../client/lib/ft4/utils/types";
+import { ftAuth } from "../client/lib/ft4/authentication";
+import { BufferId } from "../client/lib/ft4/cryptoUtils";
+import { op } from "../client/lib/ft4";
 
 jest.setTimeout(2000000);
 
