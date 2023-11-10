@@ -9,6 +9,7 @@
     "import": "./dist/esm/index.js",
     "require": "./dist/cjs/index.js",
     "browser": "./dist/esm/index.js",
+    "script": "./dist/umd/index.js",
     "types": "./dist/index.d.ts"
   },
   "directories": {

@@ -27,7 +27,28 @@ export default [
       }),
     ],
   },
-  //NODE
+  //UMD
+  {
+    input: "./dist/index.js",
+    output: {
+      dir: "./dist/umd",
+      format: "umd",
+      name: "FT4 lib",
+      sourcemap: true,
+    },
+    plugins: [
+      commonjs(),
+      inject({ Buffer: ["buffer", "Buffer"] }),
+      json(),
+      resolve({ browser: true }),
+      alias({
+        entries: [
+          { find: "crypto", replacement: "crypto-browserify" },
+          { find: "stream", replacement: "stream-browserify" },
+        ],
+      }),
+    ],
+  },  //NODE
   {
     input: "./dist/index.js",
     output: {
