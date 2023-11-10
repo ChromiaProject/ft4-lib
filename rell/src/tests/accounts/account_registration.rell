@@ -14,7 +14,13 @@ function test_cannot_create_account_with_expiring_ad() {
   val auth_descriptor = utils.create_auth_descriptor(
     rell.test.pubkeys.bob,
     ["A"],
-    ("block_height", "lt", 100).to_gtv()
+    accounts.serialize_rules([
+      accounts.rule_expression(
+        accounts.rule_variable.block_height,
+        accounts.rule_operator.lt,
+        100
+      )
+    ])
   );
   
   admin.register_account(auth_descriptor)
