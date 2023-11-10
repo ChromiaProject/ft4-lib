@@ -15,4 +15,4 @@ function make_auth_message(message: text) {
     return "Blockchain:\n{brid}\n\n" + message + "\n\nNonce: {nonce}";
 }
 
-function evm_address_from_pubkey(pubkey) = keccak256(pubkey).sub(12);
+function evm_address_from_pubkey(evm_pubkey: byte_array) = keccak256(evm_pubkey).sub(12);
