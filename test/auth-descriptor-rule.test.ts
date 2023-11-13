@@ -1,12 +1,12 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Connection } from "../client/lib/ft4/types";
-import { Asset } from "../client/lib/ft4/asset/types";
-import { AuthenticatedAccount } from "../client/lib/ft4/accounts/types";
-import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
+import { Connection } from "/ft4/types";
+import { Asset } from "/ft4/asset/types";
+import { AuthenticatedAccount } from "/ft4/accounts/types";
+import { AuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
 import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
-import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
-import { createAmount } from "../client/lib/ft4/asset/amount";
+import { allow } from "/ft4/accounts/auth-descriptor/rules";
+import { createAmount } from "/ft4/asset/amount";
 import { IClient } from "postchain-client";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import {
@@ -278,8 +278,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 20000)
       .and.blockTime.lessThan(Date.now() - 10000).only;
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -295,8 +296,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.blockTime
       .greaterThan(Date.now() - 10000)
       .and.blockTime.lessThan(Date.now() + 10000).only;
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -395,8 +397,9 @@ describe("Auth Descriptor Rule", () => {
     const rules = allow.operationCount.lessOrEqual(1).only;
     const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
 
-    const [, accountAdmin] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     await accountAdmin.addAuthDescriptor(
       user3.authDescriptor,

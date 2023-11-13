@@ -1,7 +1,7 @@
 import { Account } from "./accounts/types";
 import { Connection, Session, OptionalPageCursor } from "./types";
 import { getConfig, getVersion, nop } from "./utils";
-import { BufferId } from "../cryptoUtils";
+import { BufferId } from "./cryptoUtils";
 import {
   getByParticipantId,
   getById,

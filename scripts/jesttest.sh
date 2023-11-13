@@ -12,6 +12,7 @@ forceexit(){
 }
 
 exitfn () {
+    rm client/lib/ft4/package.json
     trap "forceexit" 2
     echo; echo 'Stopping docker, hit Ctrl+C to force quit'
     if $docker; then
@@ -98,6 +99,8 @@ do
     true $(( i=i+1 ))
     sleep 1
 done
+
+cp package.json client/lib/ft4/
 
 printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 

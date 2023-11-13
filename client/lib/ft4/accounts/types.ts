@@ -1,7 +1,7 @@
 import { SignatureProvider, KeyPair } from "postchain-client";
 import { Balance } from "../asset/types";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import {
   TransferHistoryFilter,
   TransferHistoryResponse,

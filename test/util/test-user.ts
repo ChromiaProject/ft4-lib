@@ -5,26 +5,23 @@ import {
   Operation,
   SignatureProvider,
 } from "postchain-client";
-import {
-  authDescriptor,
-  FlagsType,
-} from "../../client/lib/ft4/accounts/auth-descriptor";
+import { authDescriptor, FlagsType } from "/ft4/accounts/auth-descriptor";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
-} from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import { KeyManager } from "../../client/lib/ft4/accounts/auth/types";
+} from "/ft4/accounts/auth-descriptor/types";
+import { KeyManager } from "/ft4/accounts/auth/types";
 import { Buffer } from "buffer";
 
 export default function singleSigUser(
-  rule: AuthDescriptorRule | null = null
+  rule: AuthDescriptorRule | null = null,
 ): User {
   return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
 
 export function newSingleSigUser(
   keyPair: KeyPair,
-  rule: AuthDescriptorRule | null = null
+  rule: AuthDescriptorRule | null = null,
 ): User {
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),
@@ -36,7 +33,7 @@ export function newSingleSigUser(
     ...km,
     pubKey: Buffer.from(
       "036CED8CC605AD61F95A79CCCB5A5C8CCB734A106FD67D54809A69C4BEB5103F28",
-      "hex"
+      "hex",
     ),
     sign: (gtx: Buffer) => Promise.resolve(gtx),
   };
