@@ -14,12 +14,7 @@
       "dom"
     ],
     "resolveJsonModule": true,
-    "types": ["jest"],
-    "paths": {
-      "/*": [
-        "./client/lib/*"
-      ],
-    }
+    "types": ["jest"]
   },
   "include": ["./client/lib/ft4/**/*"],
   "exclude": [
