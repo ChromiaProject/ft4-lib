@@ -1,5 +1,6 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
+import adminUser from "./util/admin_user";
 import { Connection } from "../client/lib/ft4/types";
 import { Asset } from "../client/lib/ft4/asset/types";
 import { AuthenticatedAccount } from "../client/lib/ft4/accounts/types";
@@ -22,6 +23,7 @@ import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { newSignatureProvider } from "postchain-client";
 import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
+import { addRateLimitPoints } from "/ft4";
 
 let _connection: Connection;
 let asset: Asset;
@@ -102,6 +104,7 @@ describe("Auth Descriptor Rule", () => {
     );
 
     const accountId = await createAccount(_connection.client, ad1);
+    addRateLimitPoints(client, adminUser().signatureProvider, accountId, 1);
 
     const user1 = {
       signatureProvider: newSignatureProvider(kp1),
