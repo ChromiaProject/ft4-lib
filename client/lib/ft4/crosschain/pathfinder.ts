@@ -1,4 +1,9 @@
-import { BlockchainUrlUndefinedException, IClient, createClient, formatter, } from "postchain-client";
+import {
+  BlockchainUrlUndefinedException,
+  IClient,
+  createClient,
+  formatter,
+} from "postchain-client";
 import { createConnection } from "../ft-session";
 import { Connection } from "../types";
 import { BufferId } from "../cryptoUtils";

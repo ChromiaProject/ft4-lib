@@ -1,5 +1,12 @@
 import { Buffer } from "buffer";
-import { Operation, RawGtx, createClient, createIccfProofTx, formatter, gtv, } from "postchain-client";
+import {
+  Operation,
+  RawGtx,
+  createClient,
+  createIccfProofTx,
+  formatter,
+  gtv,
+} from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
