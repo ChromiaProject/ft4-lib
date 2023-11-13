@@ -1,12 +1,12 @@
 import { encryption } from "postchain-client";
-import { AuthDescriptor, authDescriptor } from "../client/lib/ft4";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { AuthDescriptor, authDescriptor } from "/ft4";
+import { createAuthenticator } from "/ft4/authentication";
 import {
   FtKeyStore,
   createFtKeyHandler,
-} from "../client/lib/ft4/authentication/ft/key-handler";
+} from "/ft4/authentication/ft/key-handler";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { op } from "../client/lib/ft4/utils";
+import { op } from "/ft4/utils";
 
 describe("Authenticator", () => {
   it("uses non-interactive key store if both non-interactive and interactive auth handlers satisfy auth requirements", async () => {

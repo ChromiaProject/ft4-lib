@@ -1,19 +1,15 @@
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
-import {
-  FlagsType,
-  authDescriptor,
-  createKeyStoreInteractor,
-} from "../client/lib/ft4";
-import { createInMemoryEvmKeyStore } from "../client/lib/ft4/authentication";
-import { Connection } from "../client/lib/ft4/types";
+import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
+import { createInMemoryEvmKeyStore } from "/ft4/authentication";
+import { Connection } from "/ft4/types";
 import { createAccount } from "./util/util";
-import { createAccountObject } from "../client/lib/ft4/accounts/account-query-functions";
-import { createConnection } from "../client/lib/ft4/ft-session";
-import { createAmount } from "../client/lib/ft4/asset/amount";
-import { transfer } from "../client/lib/ft4/accounts/account-operations";
+import { createAccountObject } from "/ft4/accounts/account-query-functions";
+import { createConnection } from "/ft4/ft-session";
+import { createAmount } from "/ft4/asset/amount";
+import { transfer } from "/ft4/accounts/account-operations";
 import { IClient, encryption, gtx } from "postchain-client";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createInMemoryLoginKeyStore } from "../client/lib/ft4/authentication/login-manager/stores/in-memory";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 
 describe("Login manager", () => {
   let client: IClient;

@@ -2,25 +2,25 @@ import { Operation, RawGtx } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "../../../util/blockchain-util";
+} from "/util/blockchain-util";
 import {
   FlagsType,
   createAmount,
   createConnection,
   registerCrosschainAsset,
-} from "../../../../client/lib/ft4";
-import adminUser from "../../../util/admin_user";
-import AccountBuilder from "../../../util/account-builder";
+} from "/ft4";
+import adminUser from "/util/admin_user";
+import AccountBuilder from "/util/account-builder";
 import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
-} from "../../../../client/lib/ft4/crosschain/operations";
+} from "/ft4/crosschain/operations";
 import {
   OnAnchoredHandler,
   transactionBuilder,
-} from "../../../../client/lib/ft4/utils/transaction-builder";
+} from "/ft4/utils/transaction-builder";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "../../../../client/lib/ft4/cryptoUtils";
+import { BufferId } from "/ft4/cryptoUtils";
 
 jest.unmock("postchain-client");
 

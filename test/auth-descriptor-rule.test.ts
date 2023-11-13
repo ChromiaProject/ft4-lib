@@ -1,31 +1,31 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
-import { Connection } from "../client/lib/ft4/types";
-import { Asset } from "../client/lib/ft4/asset/types";
-import { AuthenticatedAccount } from "../client/lib/ft4/accounts/types";
-import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
+import { Connection } from "/ft4/types";
+import { Asset } from "/ft4/asset/types";
+import { AuthenticatedAccount } from "/ft4/accounts/types";
+import { AuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
 import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
-import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
-import { createAmount } from "../client/lib/ft4/asset/amount";
+import { allow } from "/ft4/accounts/auth-descriptor/rules";
+import { createAmount } from "/ft4/asset/amount";
 import { IClient } from "postchain-client";
-import { createAuthenticatedAccount } from "../client/lib/ft4/accounts/account-op-functions";
+import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import {
   createAuthDataService,
   createConnection,
   createSession,
-} from "../client/lib/ft4/ft-session";
+} from "/ft4/ft-session";
 import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
 } from "./util/util";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator } from "/ft4/authentication";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { newSignatureProvider } from "postchain-client";
-import { deleteAllAuthDescriptorsExclude } from "../client/lib/ft4/accounts/account-operations";
-import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
+import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
+import { registerAccount } from "/ft4/admin/admin-op-functions";
 import adminUser from "./util/admin_user";
-import { authDescriptor } from "../client/lib/ft4";
+import { authDescriptor } from "/ft4";
 
 let _connection: Connection;
 let asset: Asset;

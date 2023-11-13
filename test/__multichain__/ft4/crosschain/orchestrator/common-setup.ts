@@ -1,23 +1,23 @@
-import { fetchBlockchains } from "../../../util/blockchain";
+import { fetchBlockchains } from "/__multichain__/util/blockchain";
 import {
   FlagsType,
   createAmount,
   createConnection,
   mint,
   registerCrosschainAsset,
-} from "../../../../../client/lib/ft4";
+} from "/ft4";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "../../../../util/blockchain-util";
-import adminUser from "../../../../util/admin_user";
-import AccountBuilder from "../../../../util/account-builder";
-import { createSession } from "../../../../../client/lib/ft4/ft-session";
-import { Connection, Session } from "../../../../../client/lib/ft4/types";
-import { Asset } from "../../../../../client/lib/ft4/asset/types";
-import { AuthenticatedAccount } from "../../../../../client/lib/ft4/accounts";
-import { Blockchain } from "../../../util/types";
-import { Amount } from "../../../../../client/lib/ft4/asset/interfaces";
+} from "/util/blockchain-util";
+import adminUser from "/util/admin_user";
+import AccountBuilder from "/util/account-builder";
+import { createSession } from "/ft4/ft-session";
+import { Connection, Session } from "/ft4/types";
+import { Asset } from "/ft4/asset/types";
+import { AuthenticatedAccount } from "/ft4/accounts";
+import { Blockchain } from "/__multichain__/util/types";
+import { Amount } from "/ft4/asset/interfaces";
 
 export type TestContext = {
   connection0: Connection;

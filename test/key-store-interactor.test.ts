@@ -1,21 +1,18 @@
 import { newSignatureProvider } from "postchain-client";
-import {
-  FlagsType,
-  authDescriptor,
-} from "../client/lib/ft4/accounts/auth-descriptor";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
+import { FlagsType, authDescriptor } from "/ft4/accounts/auth-descriptor";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import {
   KeyStoreInteractor,
   createConnection,
   createKeyStoreInteractor,
-} from "../client/lib/ft4/ft-session";
+} from "/ft4/ft-session";
 import AccountBuilder from "./util/account-builder";
-import { Connection } from "../client/lib/ft4/types";
+import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
 import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
-} from "../client/lib/ft4/authentication";
+} from "/ft4/authentication";
 
 let connection: Connection;
 

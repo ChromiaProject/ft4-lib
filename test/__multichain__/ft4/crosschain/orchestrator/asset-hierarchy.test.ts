@@ -1,12 +1,8 @@
-import { createOrchestrator } from "../../../../../client/lib/ft4/crosschain/orchestrator";
+import { createOrchestrator } from "/ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import {
-  createAmount,
-  Orchestrator,
-  registerCrosschainAsset,
-} from "../../../../../client/lib/ft4";
-import { Amount } from "../../../../../client/lib/ft4/asset/interfaces";
-import adminUser from "../../../../util/admin_user";
+import { createAmount, Orchestrator, registerCrosschainAsset } from "/ft4";
+import { Amount } from "/ft4/asset/interfaces";
+import adminUser from "/util/admin_user";
 
 // This is needed to allow to check whether transaction is anchored
 jest.unmock("postchain-client");

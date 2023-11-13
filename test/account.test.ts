@@ -1,10 +1,10 @@
 import * as pcl from "postchain-client";
-import { BufferId } from "../client/lib/ft4/cryptoUtils";
+import { BufferId } from "/ft4/cryptoUtils";
 import testUser from "./util/test-user";
 import adminUser from "./util/admin_user";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient } from "./util/blockchain-util";
-import { Connection } from "../client/lib/ft4/types";
+import { Connection } from "/ft4/types";
 import {
   AuthDescriptor,
   authDescriptor,
@@ -12,11 +12,11 @@ import {
   FlagsType,
   singleSigArgs,
   toGtv,
-} from "../client/lib/ft4/accounts/auth-descriptor";
-import { nop, op } from "../client/lib/ft4/utils";
-import { createConnection } from "../client/lib/ft4/ft-session";
-import { ftAuth } from "../client/lib/ft4/authentication";
-import { registerAccount } from "../client/lib/ft4/admin/admin-op-functions";
+} from "/ft4/accounts/auth-descriptor";
+import { nop, op } from "/ft4/utils";
+import { createConnection } from "/ft4/ft-session";
+import { ftAuth } from "/ft4/authentication";
+import { registerAccount } from "/ft4/admin/admin-op-functions";
 import {
   addAuthDescriptorTo,
   createAccount,
@@ -26,8 +26,8 @@ import {
 import {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
-} from "../client/lib/ft4/accounts/account-operations";
-import { AuthorizationError } from "../client/lib/ft4/utils/transaction-builder";
+} from "/ft4/accounts/account-operations";
+import { AuthorizationError } from "/ft4/utils/transaction-builder";
 
 let _connection: Connection;
 const admin = adminUser();

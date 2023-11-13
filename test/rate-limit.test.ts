@@ -1,13 +1,13 @@
 import { IClient, Transaction } from "postchain-client";
-import { createConnection } from "../client/lib/ft4/ft-session";
-import { Connection } from "../client/lib/ft4/types";
+import { createConnection } from "/ft4/ft-session";
+import { Connection } from "/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient } from "./util/blockchain-util";
 import TestUser, { User } from "./util/test-user";
-import { Config } from "../client/lib/ft4/utils/types";
-import { ftAuth } from "../client/lib/ft4/authentication";
-import { BufferId } from "../client/lib/ft4/cryptoUtils";
-import { op } from "../client/lib/ft4";
+import { Config } from "/ft4/utils/types";
+import { ftAuth } from "/ft4/authentication";
+import { BufferId } from "/ft4/cryptoUtils";
+import { op } from "/ft4";
 
 jest.setTimeout(2000000);
 
