@@ -37,7 +37,7 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
 
 /**

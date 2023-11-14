@@ -1,7 +1,7 @@
 import { Amount } from "../../asset/interfaces";
 import { PageCursor } from "../../types";
 import { Buffer } from "buffer";
-import { Asset, AssetResponse } from "/ft4/asset/types";
+import { Asset, AssetResponse } from "../../asset/types";
 
 type TransferHistoryTransferArgs = {
   amount: Amount;

@@ -1,5 +1,5 @@
 import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { LoginConfig } from "./types";
 
 export function nonce(
