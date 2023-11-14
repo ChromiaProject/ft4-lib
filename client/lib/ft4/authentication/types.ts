@@ -1,5 +1,5 @@
 import { Operation } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";

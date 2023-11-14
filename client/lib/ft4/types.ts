@@ -1,4 +1,4 @@
-import { BufferId } from "../cryptoUtils";
+import { BufferId } from "./cryptoUtils";
 import { Account, AuthenticatedAccount } from "./accounts/types";
 import { Asset } from "./asset/types";
 import { Config, PaginatedEntity } from "./utils/types";
