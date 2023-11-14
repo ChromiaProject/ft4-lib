@@ -25,7 +25,7 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRid } from "..";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../../cryptoUtils";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,

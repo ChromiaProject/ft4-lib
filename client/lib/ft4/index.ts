@@ -1,5 +1,5 @@
 import { logger } from "postchain-client";
-import { version } from "../../../package.json";
+import { version } from "./package.json";
 
 // Authentication module
 export {
@@ -33,6 +33,8 @@ export {
   Balance,
   SupportedNumber,
   createAmount,
+  createAmountFromBalance,
+  createAssetObject,
 } from "./asset";
 
 // Accounts module

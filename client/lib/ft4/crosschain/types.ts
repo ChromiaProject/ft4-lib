@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "../events";
 import { OrchestratorError } from "./errors";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { TransactionBuilder } from "../utils/transaction-builder";
 import { Session } from "../types";
 

@@ -1,8 +1,8 @@
 import { encryption, gtx } from "postchain-client";
 import { createTestAuthDescriptor } from "./util/util";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { op } from "../client/lib/ft4/utils";
-import { ftAuth } from "../client/lib/ft4/authentication/ft";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { op } from "/ft4/utils";
+import { ftAuth } from "/ft4/authentication/ft";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createChromiaClient } from "./util/blockchain-util";
 
