@@ -25,7 +25,7 @@ export enum RuleOperator {
 }
 
 export class AuthDescriptorError extends Error {
-  constructor(msg?) {
+  constructor(msg?: string) {
     super(msg);
     this.name = "AuthDescriptorError";
   }
@@ -101,7 +101,7 @@ export type GtvAuthDescriptorArgs =
   | GtvSingleSigAuthDescriptorArgs
   | GtvMultiSigAuthDescriptorArgs;
 
-export type GtvAuthDescriptorRule = readonly [number, number, number];
+export type GtvAuthDescriptorRule = readonly [string, string, number];
 export type GtvAuthDescriptorRules = readonly [
   "and",
   ...GtvAuthDescriptorRule[],

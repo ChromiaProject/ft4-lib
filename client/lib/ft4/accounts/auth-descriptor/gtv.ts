@@ -1,10 +1,8 @@
 import {
   authTypeFromString,
-  deserializeRuleOperator,
-  deserializeRuleVariable,
+  ruleOperatorFromString,
+  ruleVariableFromString,
   serializeAuthType,
-  serializeRuleOperator,
-  serializeRuleVariable,
 } from "./enum-parsers";
 import {
   isGtvSimpleRule,
@@ -107,8 +105,8 @@ export function rulesFromGtv(
   gtvRules: GtvAuthDescriptorRule | GtvAuthDescriptorRules,
 ): AuthDescriptorRule | ComplexAuthDescriptorRule {
   const mapRule = (gtv: GtvAuthDescriptorRule) => ({
-    operator: deserializeRuleOperator(gtv[1]),
-    variable: deserializeRuleVariable(gtv[0]),
+    operator: ruleOperatorFromString(gtv[0]),
+    variable: ruleVariableFromString(gtv[1]),
     value: gtv[2],
   });
   if (isGtvSimpleRule(gtvRules)) {
@@ -124,8 +122,8 @@ export function rulesToGtv(
   rule: AuthDescriptorRule | ComplexAuthDescriptorRule,
 ): GtvAuthDescriptorRule | GtvAuthDescriptorRules {
   const toGtv = (rule: AuthDescriptorRule): GtvAuthDescriptorRule => [
-    serializeRuleOperator(rule.operator),
-    serializeRuleVariable(rule.variable),
+    rule.operator,
+    rule.variable,
     rule.value,
   ];
 

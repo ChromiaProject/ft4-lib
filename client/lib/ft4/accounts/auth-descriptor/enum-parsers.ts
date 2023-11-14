@@ -35,54 +35,15 @@ export function authTypeFromString(str: string): AuthType {
   throw new AuthDescriptorError(`No auth type named: '${str}'`);
 }
 
-function serializationMap<T extends string | number>(
-  v: T[],
-): Record<number, T> {
-  return v
-    .map((value, i) => [value, i])
-    .reduce(
-      (acc, curr) => ({ ...acc, [curr[0]]: curr[1] }),
-      {} as Record<number, T>,
-    );
+const authTypeSerializationMap = Object.values(AuthType)
+  .map((value, i) => [value, i])
+  .reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {});
+const authTypeDeserializationMap = Object.values(AuthType)
+  .map((value, i) => [i, value])
+  .reduce((acc, curr) => ({ ...acc, [curr[0]]: curr[1] }), {});
+export function serializeAuthType(type: AuthType): number {
+  return authTypeSerializationMap[type];
 }
-
-function deserializationMap<T extends string | number>(
-  v: T[],
-): Record<T, number> {
-  return v
-    .map((value, i) => [i, value])
-    .reduce(
-      (acc, curr) => ({ ...acc, [curr[0]]: curr[1] }),
-      {} as Record<T, number>,
-    );
+export function deserializeAuthType(i: number): AuthType {
+  return authTypeDeserializationMap[i];
 }
-
-const authTypeSerializationMap = serializationMap(Object.values(AuthType));
-const authTypeDeserializationMap = deserializationMap(Object.values(AuthType));
-
-export const serializeAuthType = (type: AuthType): number =>
-  authTypeSerializationMap[type];
-export const deserializeAuthType = (i: number): AuthType =>
-  authTypeDeserializationMap[i];
-
-const ruleVariableSerializationMap = serializationMap(
-  Object.values(RuleVariable),
-);
-const ruleVariableDeserializationMap = deserializationMap(
-  Object.values(RuleVariable),
-);
-export const serializeRuleVariable = (variable: RuleVariable) =>
-  ruleVariableSerializationMap[variable];
-export const deserializeRuleVariable = (i: number) =>
-  ruleVariableDeserializationMap[i];
-
-const ruleOperatorSerializationMap = serializationMap(
-  Object.values(RuleOperator),
-);
-const ruleOperatorDeserializationMap = deserializationMap(
-  Object.values(RuleOperator),
-);
-export const serializeRuleOperator = (operator: RuleOperator) =>
-  ruleOperatorSerializationMap[operator];
-export const deserializeRuleOperator = (i: number) =>
-  ruleOperatorDeserializationMap[i];
