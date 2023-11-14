@@ -2,7 +2,7 @@ import { TransferHistoryEntry, TransferHistoryEntryResponse } from "./types";
 import { createAmountFromBalance } from "../../asset/amount";
 import { formatter, gtv } from "postchain-client";
 import { Buffer } from "buffer";
-import { createAssetObject } from "/ft4/asset/asset-query-functions";
+import { createAssetObject } from "../../asset/asset-query-functions";
 
 export function createTransferHistoryEntryFromResponse(
   responseEntry: TransferHistoryEntryResponse,

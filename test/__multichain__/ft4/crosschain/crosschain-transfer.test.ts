@@ -14,7 +14,7 @@ import AccountBuilder from "/util/account-builder";
 import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
-} from "../../../../client/lib/ft4/crosschain/operations";
+} from "/ft4/crosschain/operations";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { fetchBlockchains } from "../../util/blockchain";
 import { BufferId } from "/ft4/utils/types";

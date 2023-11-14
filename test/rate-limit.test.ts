@@ -1,6 +1,6 @@
 import { IClient, Transaction } from "postchain-client";
-import { createConnection } from "../client/lib/ft4/ft-session";
-import { Connection } from "../client/lib/ft4/types";
+import { createConnection } from "/ft4/ft-session";
+import { Connection } from "/ft4/types";
 import AccountBuilder from "./util/account-builder";
 import { createChromiaClient } from "./util/blockchain-util";
 import TestUser, { User } from "./util/test-user";

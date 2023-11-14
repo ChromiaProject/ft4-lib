@@ -1,5 +1,4 @@
 import { logger } from "postchain-client";
-import { version } from "../../../package.json";
 
 // Authentication module
 export {
@@ -33,6 +32,8 @@ export {
   Balance,
   SupportedNumber,
   createAmount,
+  createAmountFromBalance,
+  createAssetObject,
 } from "./asset";
 
 // Accounts module
@@ -100,7 +101,7 @@ export {
 } from "./crosschain";
 
 export const ft = Object.freeze({
-  getClientVersion: () => version,
+  getClientVersion: () => process.env.npm_package_version,
   setLogLevel: logger.setLogLevel,
 });
 

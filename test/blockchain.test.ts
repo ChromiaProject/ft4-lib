@@ -1,8 +1,8 @@
 import { version } from "../package.json";
-import { Connection } from "../client/lib/ft4/types";
+import { Connection } from "/ft4/types";
 import { createChromiaClient } from "./util/blockchain-util";
-import { Config } from "../client/lib/ft4/utils/types";
-import { ft } from "../client/lib/ft4";
+import { Config } from "/ft4/utils/types";
+import { ft } from "/ft4";
 import { createConnection } from "/ft4/ft-session";
 
 let connection: Connection;

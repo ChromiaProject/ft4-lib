@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - BREAKING CHANGE: The API for creating auth descriptor rules has been updated
 
+## [0.1.9] - 2023-11-14
+
+### Changed 
+- Use Rollup for packaging, produce output for ECMAScript, Common.JS and UMD. 
+- Move `cryptoUtils` module into main library (imports needs to be updated).
+- Export `createAmountFromBalance` and `createAssetObject` functions.
+
 ## [0.1.8] - 2023-10-25
 
 ### Changed

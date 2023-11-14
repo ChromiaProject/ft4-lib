@@ -1,8 +1,8 @@
 import { Operation, encryption, gtx } from "postchain-client";
-import { ftAuth } from "../client/lib/ft4/authentication/ft";
-import { op } from "../client/lib/ft4/utils";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator } from "../client/lib/ft4/authentication";
+import { ftAuth } from "/ft4/authentication/ft";
+import { op } from "/ft4/utils";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator } from "/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { KeyHandler } from "../client/lib/ft4/authentication/types";
 import { createTestAuthDescriptorRegistration, opToRellOp } from "./util/util";
