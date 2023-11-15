@@ -1,20 +1,10 @@
-import {
-  authDescriptor,
-  FlagsType,
-} from "../../client/lib/ft4/accounts/auth-descriptor";
+import { authDescriptor, FlagsType } from "/ft4/accounts/auth-descriptor";
 import {
   AuthDescriptor,
   AuthDescriptorRule,
-} from "../../client/lib/ft4/accounts/auth-descriptor/types";
-import {
-  Asset,
-  Balance,
-  SupportedNumber,
-} from "../../client/lib/ft4/asset/types";
-import {
-  Account,
-  AuthenticatedAccount,
-} from "../../client/lib/ft4/accounts/types";
+} from "/ft4/accounts/auth-descriptor/types";
+import { Asset, Balance, SupportedNumber } from "/ft4/asset/types";
+import { Account, AuthenticatedAccount } from "/ft4/accounts/types";
 import {
   gtx,
   KeyPair,
@@ -22,14 +12,11 @@ import {
   SignatureProvider,
 } from "postchain-client";
 import admin from "./admin_user";
-import { createAmount } from "../../client/lib/ft4/asset/amount";
-import { createAuthenticatedAccount } from "../../client/lib/ft4/accounts/account-op-functions";
-import { createInMemoryFtKeyStore } from "../../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import {
-  createAuthenticator,
-  ftAuth,
-} from "../../client/lib/ft4/authentication";
-import { createAuthDataService } from "../../client/lib/ft4/ft-session";
+import { createAmount } from "/ft4/asset/amount";
+import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator, ftAuth } from "/ft4/authentication";
+import { createAuthDataService } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
 import {
   addRateLimitPoints,

@@ -24,7 +24,7 @@ import {
   createConnection,
   createKeyStoreInteractor,
 } from "/ft4/ft-session";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "/ft4/cryptoUtils";
 import { Connection } from "/ft4";
 
 function generateNumber(max = 10000): number {

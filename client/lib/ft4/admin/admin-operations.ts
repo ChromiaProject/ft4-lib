@@ -2,7 +2,7 @@ import { op } from "../utils";
 import { Operation, formatter } from "postchain-client";
 import { authDescriptor as authDesc } from "../accounts/auth-descriptor";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { Asset } from "../asset/types";
 

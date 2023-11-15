@@ -7,7 +7,7 @@ import {
   initTransfer as initTransferOp,
 } from "./operations";
 import { call } from "../ft-session";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { GtvInitTransferArgs } from "./types";
 

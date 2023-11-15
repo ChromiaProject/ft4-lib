@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed 
+- Upgrade postchain-client to 1.8.1.
+
+## [0.1.9] - 2023-11-14
+
+### Changed 
+- Use Rollup for packaging, produce output for ECMAScript, Common.JS and UMD. 
+- Move `cryptoUtils` module into main library (imports needs to be updated).
+- Export `createAmountFromBalance` and `createAssetObject` functions.
+
 ## [0.1.8] - 2023-10-25
 
 ### Changed
@@ -20,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - findPathToChainForAsset: traverses the tree structure of the linked chains to find the path to a certain asset.
 - `TransactionBuilder` now has a function `buildAndSend` which immediately submits the built transaction
 - Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
-
 
 ## [0.1.6] - 2023-09-29
 

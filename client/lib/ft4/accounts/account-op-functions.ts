@@ -7,7 +7,7 @@ import {
 import { AuthenticatedAccount } from "./types";
 import { createAccountObject } from "./account-query-functions";
 import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { SignatureProvider, KeyPair, formatter } from "postchain-client";
 import { Amount } from "../asset/interfaces";
 import { Connection } from "../types";

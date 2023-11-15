@@ -1,10 +1,10 @@
-import { BufferId } from "../../../cryptoUtils";
+import { BufferId } from "../../cryptoUtils";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
 import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { Buffer } from "buffer";
 import { ftAuth } from ".";
-import { TxContext, TxBuilderTransaction } from "/ft4/utils/types";
+import { TxContext, TxBuilderTransaction } from "../../utils/types";
 
 export function createFtKeyHandler(
   authDescriptor: AuthDescriptor,
