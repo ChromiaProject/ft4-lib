@@ -1,44 +1,8 @@
-
-enum rule_variable {
-	block_height,
-	block_time,
-	op_count
-}
-
-enum rule_operator {
-	lt,
-	le,
-	eq,
-	ge,
-	gt
-}
-
-struct rule_expression {
-	operator: rule_operator;
-	variable: rule_variable;
-	value: integer;
-}
-
 val GTV_NULL = null.to_gtv();
 val GTV_NULL_BYTES = null.to_gtv().to_bytes();
 // used in tests
 // TODO: make this configurable
 val MAX_AD_RULES = 8;
-
-function serialize_rules(rules: list<rule_expression>): gtv {
-	if (rules.size() == 0) {
-		return GTV_NULL;
-	}
-	if (rules.size() == 1) {
-			return rules[0].to_gtv();
-	}
-
-	val rules_gtv = ["and".to_gtv()];
-	for (rule in rules) {
-			rules_gtv.add(rule.to_gtv());
-	}
-	return rules_gtv.to_gtv();
-}
 
 function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 	if (auth_descriptor.rules == GTV_NULL_BYTES) {

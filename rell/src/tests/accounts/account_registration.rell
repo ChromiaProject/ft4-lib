@@ -15,11 +15,7 @@ function test_cannot_create_account_with_expiring_ad() {
     rell.test.pubkeys.bob,
     ["A"],
     accounts.serialize_rules([
-      accounts.rule_expression(
-        accounts.rule_variable.block_height,
-        accounts.rule_operator.lt,
-        100
-      )
+      accounts.less_than(accounts.block_height(100))
     ])
   );
   
