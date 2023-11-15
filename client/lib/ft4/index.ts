@@ -1,5 +1,5 @@
 import { logger } from "postchain-client";
-import { version } from "../../../package.json";
+import { version } from "./package.json";
 
 // Authentication module
 export {
