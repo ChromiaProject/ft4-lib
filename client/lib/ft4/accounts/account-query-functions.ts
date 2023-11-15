@@ -23,7 +23,7 @@ import { createTransferHistoryRetriever } from "./transfer-history/transfer-hist
 import { TransferHistoryFilter } from "./transfer-history/types";
 import { Account, RateLimit } from "./types";
 import { AnyAuthDescriptor, gtv } from "/ft4/accounts/auth-descriptor";
-import { GtvAnyAuthDescriptor } from "./auth-descriptor/types";
+import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
 import {
   PendingTransfer,
   PendingTransferResponse,
@@ -84,7 +84,7 @@ export function createAccountObject(
     ) => {
       const retriever = createEntityRetriever<
         AnyAuthDescriptor,
-        GtvAnyAuthDescriptor
+        RawAnyAuthDescriptor
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
@@ -169,7 +169,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
 ): Promise<AnyAuthDescriptor[]> {
   return connection
-    .query<GtvAnyAuthDescriptor[]>(
+    .query<RawAnyAuthDescriptor[]>(
       accountAuthDescriptorsByParticipantId(accountId, participantId),
     )
     .then((authDescriptors) =>

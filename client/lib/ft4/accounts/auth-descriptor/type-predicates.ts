@@ -6,13 +6,13 @@ import {
   AuthDescriptorRule,
   AuthType,
   ComplexAuthDescriptorRule,
-  GtvAnyAuthDescriptor,
-  GtvAuthDescriptor,
-  GtvAuthDescriptorArgs,
-  GtvAuthDescriptorRegistration,
-  GtvAuthDescriptorRule,
-  GtvAuthDescriptorRules,
-  GtvSingleSigAuthDescriptorArgs,
+  RawAnyAuthDescriptor,
+  RawAuthDescriptor,
+  RawAuthDescriptorArgs,
+  RawAuthDescriptorRegistration,
+  RawAuthDescriptorRule,
+  RawAuthDescriptorRules,
+  RawSingleSigAuthDescriptorArgs,
   SingleSig,
 } from "./types";
 
@@ -28,15 +28,15 @@ export function isSimpleRule(
 
 export function isAuthDescriptorRegistrationGtv(
   ad:
-    | GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs>
+    | RawAuthDescriptorRegistration<RawAuthDescriptorArgs>
     | AnyAuthDescriptorRegistration,
-): ad is GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs> {
+): ad is RawAuthDescriptorRegistration<RawAuthDescriptorArgs> {
   return Array.isArray(ad);
 }
 
 export function isSingleSigGtv(
-  res: GtvAnyAuthDescriptor,
-): res is GtvAuthDescriptor<GtvSingleSigAuthDescriptorArgs> {
+  res: RawAnyAuthDescriptor,
+): res is RawAuthDescriptor<RawSingleSigAuthDescriptorArgs> {
   return res.auth_type === AuthType.SingleSig;
 }
 
@@ -47,7 +47,7 @@ export function isSingleSig(
 }
 
 export function isGtvSimpleRule(
-  rule: GtvAuthDescriptorRule | GtvAuthDescriptorRules,
-): rule is GtvAuthDescriptorRule {
+  rule: RawAuthDescriptorRule | RawAuthDescriptorRules,
+): rule is RawAuthDescriptorRule {
   return rule[0] !== "and";
 }

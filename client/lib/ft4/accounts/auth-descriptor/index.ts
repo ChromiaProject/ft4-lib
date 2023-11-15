@@ -13,11 +13,11 @@ import {
   ComplexAuthDescriptorRule,
   AuthDescriptorAndRule,
   FlagsType,
-  GtvAnyAuthDescriptor,
-  GtvAuthDescriptorArgs,
-  GtvAuthDescriptorRegistration,
-  GtvMultiSigAuthDescriptorArgs,
-  GtvSingleSigAuthDescriptorArgs,
+  RawAnyAuthDescriptor,
+  RawAuthDescriptorArgs,
+  RawAuthDescriptorRegistration,
+  RawMultiSigAuthDescriptorArgs,
+  RawSingleSigAuthDescriptorArgs,
   MultiSig,
   MultiSigAuthDescriptorArgs,
   RuleOperator,
@@ -42,8 +42,8 @@ import {
 } from "./rules";
 
 function hashAuthDescriptor(
-  ad: GtvAuthDescriptorRegistration<
-    GtvSingleSigAuthDescriptorArgs | GtvMultiSigAuthDescriptorArgs
+  ad: RawAuthDescriptorRegistration<
+    RawSingleSigAuthDescriptorArgs | RawMultiSigAuthDescriptorArgs
   >,
 ) {
   return pclGtv.gtvHash(ad);
@@ -57,7 +57,7 @@ function hashAuthDescriptor(
  */
 export function deriveAccountId(
   firstAuthDescriptor:
-    | GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs>
+    | RawAuthDescriptorRegistration<RawAuthDescriptorArgs>
     | AnyAuthDescriptorRegistration,
 ): Buffer {
   const ad = isAuthDescriptorRegistrationGtv(firstAuthDescriptor)
@@ -117,9 +117,9 @@ export function aggregateSigners(
 
 export {
   AnyAuthDescriptor,
-  GtvAuthDescriptorArgs,
-  GtvAnyAuthDescriptor,
-  GtvAuthDescriptorRegistration,
+  RawAuthDescriptorArgs as GtvAuthDescriptorArgs,
+  RawAnyAuthDescriptor as GtvAnyAuthDescriptor,
+  RawAuthDescriptorRegistration as GtvAuthDescriptorRegistration,
   FlagsType,
   SingleSig,
   MultiSig,

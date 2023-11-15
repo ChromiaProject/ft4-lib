@@ -86,50 +86,50 @@ export type MultiSigAuthDescriptorArgs = {
 };
 
 // ======== Server side =======================
-export type GtvMultiSigAuthDescriptorArgs = readonly [
+export type RawMultiSigAuthDescriptorArgs = readonly [
   flags: string[],
   signaturesRequired: number,
   signers: Buffer[],
 ];
 
-export type GtvSingleSigAuthDescriptorArgs = readonly [
+export type RawSingleSigAuthDescriptorArgs = readonly [
   flags: string[],
   signer: Buffer,
 ];
 
-export type GtvAuthDescriptorArgs =
-  | GtvSingleSigAuthDescriptorArgs
-  | GtvMultiSigAuthDescriptorArgs;
+export type RawAuthDescriptorArgs =
+  | RawSingleSigAuthDescriptorArgs
+  | RawMultiSigAuthDescriptorArgs;
 
-export type GtvAuthDescriptorRule = readonly [string, string, number];
-export type GtvAuthDescriptorRules = readonly [
+export type RawAuthDescriptorRule = readonly [string, string, number];
+export type RawAuthDescriptorRules = readonly [
   "and",
-  ...GtvAuthDescriptorRule[],
+  ...RawAuthDescriptorRule[],
 ];
 
 // ======== Server side request model =========
 
-export type GtvAuthDescriptorRegistration<T extends GtvAuthDescriptorArgs> =
+export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
   readonly [
     auth_type: number,
     args: T,
-    rules: GtvAuthDescriptorRule | GtvAuthDescriptorRules | null,
+    rules: RawAuthDescriptorRule | RawAuthDescriptorRules | null,
   ];
 
-export type GtvAnyAuthDescriptorRegistration =
-  | GtvAuthDescriptorRegistration<GtvSingleSigAuthDescriptorArgs>
-  | GtvAuthDescriptorRegistration<GtvMultiSigAuthDescriptorArgs>;
+export type RawAnyAuthDescriptorRegistration =
+  | RawAuthDescriptorRegistration<RawSingleSigAuthDescriptorArgs>
+  | RawAuthDescriptorRegistration<RawMultiSigAuthDescriptorArgs>;
 
 // ======== Server side response model ========
 
-export type GtvAnyAuthDescriptor =
-  | GtvAuthDescriptor<GtvSingleSigAuthDescriptorArgs>
-  | GtvAuthDescriptor<GtvMultiSigAuthDescriptorArgs>;
+export type RawAnyAuthDescriptor =
+  | RawAuthDescriptor<RawSingleSigAuthDescriptorArgs>
+  | RawAuthDescriptor<RawMultiSigAuthDescriptorArgs>;
 
-export type GtvAuthDescriptor<T extends GtvAuthDescriptorArgs> = {
+export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   args: T;
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: GtvAuthDescriptorRule | GtvAuthDescriptorRules | null;
+  rules: RawAuthDescriptorRule | RawAuthDescriptorRules | null;
 };

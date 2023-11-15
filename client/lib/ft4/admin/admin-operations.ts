@@ -1,15 +1,15 @@
 import { op } from "../utils";
 import { Operation, formatter } from "postchain-client";
 import {
-  GtvAuthDescriptorArgs,
-  GtvAuthDescriptorRegistration,
+  RawAuthDescriptorArgs,
+  RawAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor/types";
 import { Amount } from "../asset/interfaces";
 import { Asset } from "../asset/types";
 import { BufferId } from "/ft4/utils/types";
 
 export function registerAccount(
-  authDescriptor: GtvAuthDescriptorRegistration<GtvAuthDescriptorArgs>,
+  authDescriptor: RawAuthDescriptorRegistration<RawAuthDescriptorArgs>,
 ): Operation {
   return op("ft4.admin.register_account", authDescriptor);
 }

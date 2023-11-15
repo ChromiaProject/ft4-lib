@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
 import { OptionalPageCursor } from "../types";
 import { RateLimit } from "./types";
-import { GtvAnyAuthDescriptor } from "./auth-descriptor/types";
+import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
 import { BufferId } from "/ft4/utils/types";
 
 export function RateLimitQuery(
@@ -77,7 +77,7 @@ export function accountAuthDescriptorsByParticipantId(
   accountId: BufferId,
   participantId: BufferId,
 ): QueryObject<
-  GtvAnyAuthDescriptor[],
+  RawAnyAuthDescriptor[],
   { account_id: Buffer; participant_id: Buffer }
 > {
   return {
@@ -94,7 +94,7 @@ export function accountAuthDescriptors(
   limit: number,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  GtvAnyAuthDescriptor,
+  RawAnyAuthDescriptor,
   {
     id: Buffer;
     page_size: number;
