@@ -47,3 +47,4 @@ libs:
 
 compile:
   source: ../rell/src
+  rellVersion: 0.13.5
