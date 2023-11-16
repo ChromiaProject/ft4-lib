@@ -7,8 +7,8 @@ import {
   createAmount,
   createAmountFromBalance,
   stringify,
-} from "../client/lib/ft4/asset/amount";
-import { DecimalFormat } from "../client/lib/ft4/asset/types";
+} from "/ft4/asset/amount";
+import { DecimalFormat } from "/ft4/asset/types";
 
 describe("Asset amount", () => {
   const amounts = [
@@ -97,7 +97,7 @@ describe("Asset amount", () => {
     expect(() => createAmount(0.1, 79)).toThrow(AmountDecimalsError);
     const outOfBounds = BigInt("0x1" + "0".repeat(64));
     expect(() => createAmountFromBalance(outOfBounds, 0)).toThrow(
-      AmountOutOfRangeError
+      AmountOutOfRangeError,
     );
   });
 
@@ -112,7 +112,7 @@ describe("Asset amount", () => {
     ];
 
     expect(
-      amounts.map((num) => num.format(DecimalFormat.fixedDecimals, 4))
+      amounts.map((num) => num.format(DecimalFormat.fixedDecimals, 4)),
     ).toEqual([
       "1 234 567 890.0",
       "12.123 5",
@@ -122,7 +122,7 @@ describe("Asset amount", () => {
       "10 000 000 000.100 0",
     ]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.fixedDecimals, 5, true))
+      amounts.map((num) => num.format(DecimalFormat.fixedDecimals, 5, true)),
     ).toEqual([
       "1 234 567 890",
       "12.123 46",
@@ -133,8 +133,8 @@ describe("Asset amount", () => {
     ]);
     expect(
       amounts.map((num) =>
-        num.format(DecimalFormat.fixedDecimals, 4, false, false)
-      )
+        num.format(DecimalFormat.fixedDecimals, 4, false, false),
+      ),
     ).toEqual([
       "1234567890.0",
       "12.1235",
@@ -145,8 +145,8 @@ describe("Asset amount", () => {
     ]);
     expect(
       amounts.map((num) =>
-        num.format(DecimalFormat.fixedDecimals, 4, true, false)
-      )
+        num.format(DecimalFormat.fixedDecimals, 4, true, false),
+      ),
     ).toEqual([
       "1234567890",
       "12.1235",
@@ -168,7 +168,7 @@ describe("Asset amount", () => {
     ];
 
     expect(
-      amounts.map((num) => num.format(DecimalFormat.scientific, 4))
+      amounts.map((num) => num.format(DecimalFormat.scientific, 4)),
     ).toEqual([
       "1.235e+9",
       "1.212e+1",
@@ -178,7 +178,7 @@ describe("Asset amount", () => {
       "1.000e+10",
     ]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.scientific, 5, true))
+      amounts.map((num) => num.format(DecimalFormat.scientific, 5, true)),
     ).toEqual([
       "1.2346e+9",
       "1.2123e+1",
@@ -188,7 +188,7 @@ describe("Asset amount", () => {
       "1e+10",
     ]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.scientific, 4, false))
+      amounts.map((num) => num.format(DecimalFormat.scientific, 4, false)),
     ).toEqual([
       "1.235e+9",
       "1.212e+1",
@@ -198,7 +198,7 @@ describe("Asset amount", () => {
       "1.000e+10",
     ]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.scientific, 4, true))
+      amounts.map((num) => num.format(DecimalFormat.scientific, 4, true)),
     ).toEqual(["1.235e+9", "1.212e+1", "1.123e+10", "1e+0", "1e-11", "1e+10"]);
   });
 
@@ -221,10 +221,10 @@ describe("Asset amount", () => {
       "1.000e+10",
     ]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.mixed, 6, true))
+      amounts.map((num) => num.format(DecimalFormat.mixed, 6, true)),
     ).toEqual(["1.23457e+9", "12.123 5", "1.12346e+10", "1", "1e-11", "1e+10"]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.mixed, 6, false, false))
+      amounts.map((num) => num.format(DecimalFormat.mixed, 6, false, false)),
     ).toEqual([
       "1.23457e+9",
       "12.1235",
@@ -234,7 +234,7 @@ describe("Asset amount", () => {
       "1.00000e+10",
     ]);
     expect(
-      amounts.map((num) => num.format(DecimalFormat.mixed, 2, true, false))
+      amounts.map((num) => num.format(DecimalFormat.mixed, 2, true, false)),
     ).toEqual(["1.2e+9", "12", "1.1e+10", "1", "1e-11", "1e+10"]);
   });
 
@@ -305,7 +305,7 @@ describe("Asset amount", () => {
 
     expect(() => first.plus(first)).toThrow(AmountOutOfRangeError);
     expect(() => firstNegative.plus(firstNegative)).toThrow(
-      AmountOutOfRangeError
+      AmountOutOfRangeError,
     );
     expect(() => first.times(2)).toThrow(AmountOutOfRangeError);
     expect(() => firstNegative.times(2)).toThrow(AmountOutOfRangeError);
@@ -381,7 +381,7 @@ describe("Asset amount", () => {
     const validTestCases: [
       number | string | bigint,
       number | undefined,
-      RawAmount
+      RawAmount,
     ][] = [
       [100.5, undefined, { value: BigInt(1005), decimals: 1 }],
       [100, undefined, { value: BigInt(100), decimals: 0 }],
@@ -397,7 +397,7 @@ describe("Asset amount", () => {
       (input, decimals, expectedOutput) => {
         const rawAmount = convertToRawAmount(input, decimals);
         expect(rawAmount).toEqual(expectedOutput);
-      }
+      },
     );
 
     const invalidStringTestCases = ["abc", "10.1.2"];
@@ -405,12 +405,12 @@ describe("Asset amount", () => {
       "should throw error for invalid string input '%s'",
       async (num) => {
         expect(() => convertToRawAmount(num)).toThrow(AmountInputError);
-      }
+      },
     );
 
     it("should throw error for incompatible decimals", async () => {
       expect(() => convertToRawAmount(BigInt(100), -3)).toThrow(
-        AmountDecimalsError
+        AmountDecimalsError,
       );
     });
 
@@ -419,14 +419,14 @@ describe("Asset amount", () => {
       "should throw error for invalid decimals %s",
       async (decimals) => {
         expect(() => convertToRawAmount(100, decimals)).toThrow(
-          AmountDecimalsError
+          AmountDecimalsError,
         );
-      }
+      },
     );
   });
 
   it("should not export certain arithmetic functions", async () => {
-    const myModule = await import("../client/lib/ft4/asset/amount");
+    const myModule = await import("/ft4/asset/amount");
     const nonExportedFunctions = [
       "sum",
       "sub",

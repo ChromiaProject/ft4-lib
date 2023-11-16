@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- BREAKING CHANGE: The internal structure of the rules has been changed. So auth descriptors which used rules will cause a runtime error when trying to be used. 
+- updated signature for `evm_auth_operation_for` to take a `rell.test.op`
 
 ## [0.1.7r] - 2023-10-25
 

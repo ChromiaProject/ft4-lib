@@ -1,15 +1,9 @@
 import { newSignatureProvider } from "postchain-client";
-import {
-  authDescriptor as ad,
-  FlagsType,
-} from "../client/lib/ft4/accounts/auth-descriptor";
-import { createAmount } from "../client/lib/ft4/asset/amount";
-import { Asset } from "../client/lib/ft4/asset/types";
-import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/key-stores/in-memory";
-import {
-  createConnection,
-  createKeyStoreInteractor,
-} from "../client/lib/ft4/ft-session";
+import { authDescriptor as ad, FlagsType } from "/ft4/accounts/auth-descriptor";
+import { createAmount } from "/ft4/asset/amount";
+import { Asset } from "/ft4/asset/types";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
 import { getNewAsset, createChromiaClient } from "./util/blockchain-util";

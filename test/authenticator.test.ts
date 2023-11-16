@@ -15,11 +15,11 @@ describe("Authenticator", () => {
 
     const authDescriptor1 = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyPair1.pubKey
+      keyPair1.pubKey,
     ).andNoRules;
     const authDescriptor2 = authDescriptor.create.singleSig.withArgs(
       ["T"],
-      keyPair2.pubKey
+      keyPair2.pubKey,
     ).andNoRules;
 
     const interactiveKeyStore: FtKeyStore = {
@@ -29,7 +29,7 @@ describe("Authenticator", () => {
       createKeyHandler: jest
         .fn()
         .mockImplementation((authDescriptor: AuthDescriptor) =>
-          createFtKeyHandler(authDescriptor, interactiveKeyStore)
+          createFtKeyHandler(authDescriptor, interactiveKeyStore),
         ),
       sign: jest.fn(),
     };
@@ -41,7 +41,7 @@ describe("Authenticator", () => {
       createKeyHandler: jest
         .fn()
         .mockImplementation((authDescriptor: AuthDescriptor) =>
-          createFtKeyHandler(authDescriptor, nonInteractiveKeyStore)
+          createFtKeyHandler(authDescriptor, nonInteractiveKeyStore),
         ),
       sign: jest.fn(),
     };
@@ -59,15 +59,15 @@ describe("Authenticator", () => {
     const authenticator = createAuthenticator(
       accountId,
       [authHandler1, authHandler2],
-      authDataService
+      authDataService,
     );
 
     const authHandler = await authenticator.getKeyHandlerForOperation(
-      op("foo")
+      op("foo"),
     );
 
     expect(authHandler2.authDescriptor.id).toEqual(
-      authHandler.authDescriptor.id
+      authHandler.authDescriptor.id,
     );
   });
 });

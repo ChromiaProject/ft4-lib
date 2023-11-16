@@ -1,12 +1,12 @@
 import testUser from "./util/test-user";
 import AccountBuilder from "./util/account-builder";
 import adminUser from "./util/admin_user";
-import { Connection } from "../client/lib/ft4/types";
-import { Asset } from "../client/lib/ft4/asset/types";
-import { AuthenticatedAccount } from "../client/lib/ft4/accounts/types";
-import { AuthDescriptorRule } from "../client/lib/ft4/accounts/auth-descriptor/types";
+import { Connection } from "/ft4/types";
+import { Asset } from "/ft4/asset/types";
+import { AuthenticatedAccount } from "/ft4/accounts/types";
+import { AuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
 import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
-import { allow } from "../client/lib/ft4/accounts/auth-descriptor/rules";
+import { allow } from "/ft4/accounts/auth-descriptor/rules";
 import { IClient } from "postchain-client";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import {

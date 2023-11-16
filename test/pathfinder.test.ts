@@ -33,7 +33,7 @@ import { createChromiaClient } from "./util/blockchain-util";
 import { createConnection } from "/ft4";
 import { Asset } from "/ft4/asset/types";
 import { findPathToChainForAsset } from "/ft4/crosschain/pathfinder";
-import { BufferId } from "/cryptoUtils";
+import { BufferId } from "/ft4/cryptoUtils";
 
 createClientMock.mockImplementation(
   async () =>
@@ -125,9 +125,7 @@ describe("Pathfinder", () => {
     );
     const promise = findPathToChainForAsset(connection, asset, endingChainBrid);
 
-    await expect(promise).rejects.toThrow(
-      TypeError("Failed to parse URL from /brid/iid_0"),
-    );
+    await expect(promise).rejects.toThrow(TypeError("Invalid URL"));
   });
 
   it("finds a path if both are on the same branch", async () => {

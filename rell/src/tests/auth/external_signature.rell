@@ -47,10 +47,10 @@ function test_it_rejects_wrong_eth_signatures() {
 
 function test_perform_eth_auth_transaction() {
   val external_auth_data = utils.evm_register_alice(["A"]);
-
+  val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
-    .op(evm_auth_operation_for(external_auth_data.keypair.priv, "test_perform_large_transfer", [(1000).to_gtv(), to_addr.to_gtv()]))
-    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
+    .op(evm_auth_operation_for(external_auth_data.keypair.priv, op))
+    .op(op)
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }

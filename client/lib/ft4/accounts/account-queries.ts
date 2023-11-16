@@ -1,5 +1,5 @@
 import { QueryObject, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 import { AuthDescriptorResponse } from "./auth-descriptor";

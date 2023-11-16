@@ -246,4 +246,4 @@ function eth_sign(hash: byte_array, privkey: byte_array) {
     );
 }
 
-function eth_hex_address_from_pubkey(pubkey) = "0x" + evm_address_from_pubkey(pubkey).to_hex();
+function eth_hex_address_from_pubkey(evm_pubkey: byte_array) = "0x" + evm_address_from_pubkey(evm_pubkey).to_hex();

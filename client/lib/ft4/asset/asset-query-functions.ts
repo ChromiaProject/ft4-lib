@@ -1,4 +1,4 @@
-import { BufferId } from "../../cryptoUtils";
+import { BufferId } from "../cryptoUtils";
 import {
   balanceByAccountId,
   assetById,
