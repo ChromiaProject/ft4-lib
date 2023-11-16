@@ -95,6 +95,11 @@ To stop these environments:
 - **Test**: `npm run stop-postchain:jest`
 - **Demo**: `npm run stop-postchain:demo`
 
+## Changelog
+
+Update changelog in `doc/release-notes/`, then run `./compile-changelog.sh` script to assemble 
+`changelog.md` and `rell-changelog.md`. Do not update `changelog.md` or `rell-changelog.md` directly.
+
 ## License
 
 This project is licensed under the Apache License, Version 2.0. For more details, see the [LICENSE](LICENSE) file in the repository or visit [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
