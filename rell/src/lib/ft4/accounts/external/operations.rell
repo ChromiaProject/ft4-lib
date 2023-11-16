@@ -6,7 +6,7 @@ function delete_auth_descriptor_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.delete_auth_descriptor",
+    scope = rell.meta(delete_auth_descriptor).mount_name,
     flags = ["A"],
     message = delete_auth_descriptor_message(*)
 );
@@ -27,7 +27,7 @@ function delete_all_auth_descriptors_exclude_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.delete_all_auth_descriptors_exclude",
+    scope = rell.meta(delete_all_auth_descriptors_exclude).mount_name,
     flags = ["A"],
     message = delete_all_auth_descriptors_exclude_message(*)
 );
@@ -49,7 +49,7 @@ function add_auth_descriptor_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.add_auth_descriptor",
+    scope = rell.meta(add_auth_descriptor).mount_name,
     flags = ["A"],
     message = add_auth_descriptor_message(*)
 );
