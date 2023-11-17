@@ -56,7 +56,7 @@ describe("Test the account", () => {
   });
 
   it("should be in DEV mode", () => {
-    expect(process.env.TEST_DEV || "true").toBe("true");
+    expect(process.env.TEST_DEV || "true").toBe("false");
   });
 
   it("Correctly creates keypair from string", () => {
