@@ -24,5 +24,5 @@ function test_authenticate_v2_and_rate_limit_call() {
 
   // Check if the points have increased after the transaction,
   // indicating that the rate_limit function was called
-  assert_false(rl_state_after > rl_state_before);
+  assert_true(rl_state_after > rl_state_before);
 }
