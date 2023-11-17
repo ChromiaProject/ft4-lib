@@ -77,6 +77,6 @@
   },
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
-    "postchain-client": "^1.7.1"
+    "postchain-client": "^1.8.1"
   }
 }
