@@ -51,6 +51,10 @@ while :; do
               echo 'skipping docker build'
               docker=false
               ;;
+        --ci)
+              echo 'generating test reports'
+              opt="$opt --ci --reporters=default --reporters=jest-junit"
+              ;;
         --)
             shift
             break
