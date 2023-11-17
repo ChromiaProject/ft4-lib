@@ -29,7 +29,7 @@ import {
   nonce,
 } from "./authentication/queries";
 import {
-  LoginManger,
+  LoginManager,
   createLoginManager,
 } from "./authentication/login-manager";
 import {
@@ -129,7 +129,7 @@ export async function callWithoutNop(
 export type KeyStoreInteractor = {
   getAccounts(): Promise<Account[]>;
   getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManager;
   onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
 };
 

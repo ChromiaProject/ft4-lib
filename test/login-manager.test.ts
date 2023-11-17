@@ -123,6 +123,26 @@ describe("Login manager", () => {
     expect(authDescriptorAfterLogin.data[1].rule).toEqual(rules);
   });
 
+  it("added disposable auth descriptor can have no rules", async () => {
+    const keyPair = encryption.makeKeyPair();
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
+    const ad = authDescriptor.create.singleSig.withArgs(
+      [FlagsType.Account],
+      keyStore.address,
+    ).andNoRules;
+    const accountId = await createAccount(client, ad);
+    const account = createAccountObject(connection, accountId);
+
+    const loginManager = createKeyStoreInteractor(
+      connection.client,
+      keyStore,
+    ).getLoginManager();
+
+    await loginManager.login({ accountId: account.id, rules: null });
+    const authDescriptorAfterLogin = await account.getAuthDescriptors();
+    expect(authDescriptorAfterLogin.data[1].rule).toEqual(null);
+  });
+
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = encryption.makeKeyPair();
     const asset = await getNewAsset(client, undefined, undefined, 5);

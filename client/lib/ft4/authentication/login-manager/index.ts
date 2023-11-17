@@ -3,7 +3,7 @@ import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
-import { LoginManger, LoginOptions } from "./types";
+import { LoginManager, LoginOptions } from "./types";
 import { createAccountObject } from "../../accounts/account-query-functions";
 import {
   AuthDescriptorRule,
@@ -22,7 +22,7 @@ export function createLoginManager(
   connection: Connection,
   keyStore: KeyStore,
   loginKeyStore: LoginKeyStore | null = null,
-): LoginManger {
+): LoginManager {
   const usedLoginKeyStore = loginKeyStore || createInMemoryLoginKeyStore();
 
   return Object.freeze({
@@ -79,10 +79,12 @@ export function createLoginManager(
       // Add new auth descriptor.
       if (!disposableKeyHandlers.length) {
         const rules =
-          loginOptions.rules ??
-          allow.blockTime.lessThan(
-            Date.now() + (loginOptions.ttlMinutes ?? TTL_DEFAULT_VALUE) * 60000,
-          ).only;
+          loginOptions.rules === undefined
+            ? allow.blockTime.lessThan(
+                Date.now() +
+                  (loginOptions.ttlMinutes ?? TTL_DEFAULT_VALUE) * 60000,
+              ).only
+            : loginOptions.rules;
         const disposableKeyHandler = await addDisposableAuthDescriptor(
           connection,
           usedLoginKeyStore,

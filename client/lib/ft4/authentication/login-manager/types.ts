@@ -37,7 +37,7 @@ export type LoginOptions = {
       }
   );
 
-export type LoginManger = {
+export type LoginManager = {
   login: (loginOptions: LoginOptions) => Promise<Session>;
   logout: (accountId: Buffer) => void;
 };
