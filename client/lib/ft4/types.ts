@@ -56,6 +56,10 @@ export interface Session extends Connection {
 }
 
 export type KeyStoreInteractor = {
+  /**
+   * Retrieves a list of Accounts associated with the pubkey. At most MAX_PAGE_SIZE.
+   * To fetch more Accounts, use @see getAccountsPaginated
+   */
   getAccounts(): Promise<Account[]>;
   getAccountsPaginated(
     limit: number,
