@@ -5,12 +5,18 @@ import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import { LoginManger, LoginOptions } from "./types";
 import { createAccountObject } from "../../accounts/account-query-functions";
-import { FlagsType, authDescriptor } from "../../accounts/auth-descriptor";
+import {
+  AuthDescriptorRule,
+  FlagsType,
+  authDescriptor,
+} from "../../accounts/auth-descriptor";
 import { createAuthDataService, createSession } from "../../ft-session";
 import { Connection } from "../../types";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
+import { allow } from "/ft4/accounts/auth-descriptor/rules";
 
 export * from "./types";
+const TTL_DEFAULT_VALUE = 60;
 
 export function createLoginManager(
   connection: Connection,
@@ -72,12 +78,18 @@ export function createLoginManager(
       // or there are no auth descriptors that have required flags.
       // Add new auth descriptor.
       if (!disposableKeyHandlers.length) {
+        const rules =
+          loginOptions.rules ??
+          allow.blockTime.lessThan(
+            Date.now() + (loginOptions.ttlMinutes ?? TTL_DEFAULT_VALUE) * 60000,
+          ).only;
         const disposableKeyHandler = await addDisposableAuthDescriptor(
           connection,
           usedLoginKeyStore,
           account.id,
           keyStore.createKeyHandler(adminAuthDescriptor),
           flags,
+          rules,
         );
         disposableKeyHandlers = [disposableKeyHandler];
       }
@@ -126,6 +138,7 @@ async function addDisposableAuthDescriptor(
   accountId: Buffer,
   adminAuthHandler: KeyHandler,
   flags: string[],
+  rules: AuthDescriptorRule,
 ): Promise<KeyHandler> {
   const authenticator = createAuthenticator(
     accountId,
@@ -138,10 +151,9 @@ async function addDisposableAuthDescriptor(
   const keyPair = await loginKeyStore.createKeyPair(accountId);
   const ks = createInMemoryFtKeyStore(keyPair);
 
-  const ad = authDescriptor.create.singleSig.withArgs(
-    flags,
-    keyPair.pubKey,
-  ).andNoRules;
+  const ad = authDescriptor.create.singleSig
+    .withArgs(flags, keyPair.pubKey)
+    .andRules(rules);
 
   await session.account.addAuthDescriptor(ad, keyPair);
 
