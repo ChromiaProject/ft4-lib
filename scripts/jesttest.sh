@@ -115,12 +115,12 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
 else
     if $docker; then
         for f in ./**/[!_]*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
+            JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else
         for f in ./**/*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+            JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
             pids+=($!)
         done
     fi
