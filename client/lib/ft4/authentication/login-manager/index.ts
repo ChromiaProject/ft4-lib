@@ -11,6 +11,7 @@ import { Connection } from "../../types";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 
 export * from "./types";
+export { LoginKeyStore };
 
 export function createLoginManager(
   connection: Connection,

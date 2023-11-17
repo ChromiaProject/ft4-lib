@@ -53,8 +53,11 @@ query get_account_by_auth_descriptor(accounts.auth_descriptor) {
     return accounts.account @? { .id == auth_descriptor.hash() } ( .id );
 }
 
-query get_accounts_by_participant_id(id: byte_array) {
-    return accounts.auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
+query get_accounts_by_participant_id(id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        accounts.get_paginated_accounts_by_participant_id(id, page_size, page_cursor),
+        page_size
+    );
 }
 
 query _get_accounts_by_auth_descriptor_id(id: byte_array) {

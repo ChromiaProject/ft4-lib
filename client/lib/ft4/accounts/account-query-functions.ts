@@ -137,10 +137,14 @@ export async function getById(
 export async function getByParticipantId(
   connection: Connection,
   id: BufferId,
-): Promise<Account[]> {
-  const accountIds = await connection.query(accountsByParticipantId(id));
-
-  return accountIds.map((id) => createAccountObject(connection, id));
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Account>> {
+  return createEntityRetriever<Account, Buffer>(
+    connection,
+    accountsByParticipantId(id, limit, cursor),
+    (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
+  ).retrieve();
 }
 
 export async function getByAuthDescriptorId(

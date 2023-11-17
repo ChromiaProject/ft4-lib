@@ -52,13 +52,17 @@ export {
 } from "./accounts";
 
 // Root imports
-export { Session, Connection, OptionalPageCursor } from "./types";
+export {
+  Session,
+  Connection,
+  KeyStoreInteractor,
+  OptionalPageCursor,
+} from "./types";
 
 export {
   createConnection,
   createSession,
   createKeyStoreInteractor,
-  KeyStoreInteractor,
 } from "./ft-session";
 
 // Utils & Others
