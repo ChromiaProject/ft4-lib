@@ -19,7 +19,7 @@ pipelines:
             # - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
             # - ./scripts/jesttest.sh --no-docker --ci
-            - ./scripts/multichain-jesttest.sh --ci
+            - ./scripts/multichain-jesttest.sh --no-postgres --ci
 
           services:
             - docker

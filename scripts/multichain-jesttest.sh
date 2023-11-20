@@ -1,9 +1,6 @@
 #!/bin/bash
 
-source ./scripts/multichain-runner.sh
-
-log "Running Jest tests..."
-
+postgres=true
 while :; do
     case $1 in
         -f|--file)
@@ -22,6 +19,10 @@ while :; do
             echo 'ERROR: "--file" requires a non-empty option argument.'
             exit 1
             ;;
+        --no-postgres)
+              echo 'skipping postgres'
+              postgres=false
+              ;;
         --ci)
               echo 'generating test reports'
               opt="$opt --ci --reporters=default --reporters=jest-junit"
@@ -39,6 +40,10 @@ while :; do
     esac
     shift
 done
+
+source ./scripts/multichain-runner.sh
+
+log "Running Jest tests..."
 
 NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
     --config=jest.config.multichain.js \
