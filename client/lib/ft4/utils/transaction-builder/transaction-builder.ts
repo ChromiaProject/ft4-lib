@@ -1,4 +1,5 @@
 import { Authenticator, KeyHandler } from "../../authentication/types";
+import { createNoopAuthenticator } from "../../authentication";
 import { Buffer } from "buffer";
 import {
   Operation,
@@ -258,17 +259,31 @@ export function transactionBuilder(
     return this;
   }
 
+  function addWithoutAuthenticator(
+    operation: Operation,
+    handler?: OnAnchoredHandler,
+  ): TransactionBuilder {
+    this._operations.push({
+      operation,
+      authenticator: this._noopAuthenticator,
+      handler,
+    });
+    return this;
+  }
+
   const context: Partial<TransactionBuilder> = {
     _operations: [],
     _keyhandlersUsed: [],
     session: client,
     _context: {},
+    _noopAuthenticator: createNoopAuthenticator(authenticator.authDataService),
   };
   context.add = add.bind(context);
   context.build = build.bind(context);
   context.buildUnsigned = buildUnsigned.bind(context);
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
+  context.addWithoutAuthenticator = addWithoutAuthenticator.bind(context);
   context.buildWithSigners = buildWithSigners.bind(context);
   context.buildAndSend = buildAndSend.bind(context);
 
