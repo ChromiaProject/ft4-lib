@@ -40,7 +40,7 @@ export type TransactionBuilder = {
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
-   * The operation will not be authenticated.
+   * The operation will not be authenticated using FT4 authentication.
    * @param operation the operation to add
    * @returns an instance of the transaction builder object
    */
