@@ -5,7 +5,7 @@ pipelines:
     '**':
       - step:
           size: 2x
-          name: Test
+          name: Tests
           caches:
             - node
           script:
@@ -15,15 +15,30 @@ pipelines:
             - apt update
             - apt install default-jre -y
             - apt install chr
-            # - chr install -s configs/rell-test.yml
-            # - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
+            - chr install -s configs/rell-test.yml
+            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
-            # - ./scripts/jesttest.sh --no-docker --ci
+            - ./scripts/jesttest.sh --no-docker --ci
+
+          services:
+            - postgres
+
+      - step:
+          name: "Multichain tests"
+          script:
+            - apt update
+            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install default-jre -y
+            - apt install chr
+            - npm ci
             - ./scripts/multichain-jesttest.sh --no-postgres --ci
 
           services:
             - docker
             - postgres
+
   branches:
     ft4:
       - step:
