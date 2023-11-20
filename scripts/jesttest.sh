@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DOCKER=${DOCKER:-docker}
+CHR_STOP=${CHR_STOP:-kill $prc}
 
 forceexit(){
     echo
@@ -19,7 +20,7 @@ exitfn () {
         $DOCKER stop ft4_jest_test  > /dev/null 
         $DOCKER rm ft4_jest_test > /dev/null
     fi
-    kill $prc
+    ${CHR_STOP}
     exit 2
 }
 
@@ -135,7 +136,7 @@ else
     echo "Tests failed"
 fi
 
-kill $prc
+${CHR_STOP}
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 
