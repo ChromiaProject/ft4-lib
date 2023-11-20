@@ -263,6 +263,11 @@ export function transactionBuilder(
     operation: Operation,
     handler?: OnAnchoredHandler,
   ): TransactionBuilder {
+    if (this._noopAuthenticator === undefined) {
+      this._noopAuthenticator = createNoopAuthenticator(
+        authenticator.authDataService,
+      );
+    }
     this._operations.push({
       operation,
       authenticator: this._noopAuthenticator,
@@ -276,7 +281,6 @@ export function transactionBuilder(
     _keyhandlersUsed: [],
     session: client,
     _context: {},
-    _noopAuthenticator: createNoopAuthenticator(authenticator.authDataService),
   };
   context.add = add.bind(context);
   context.build = build.bind(context);
