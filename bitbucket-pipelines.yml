@@ -22,7 +22,6 @@ pipelines:
             - ./scripts/multichain-jesttest.sh --ci
 
           services:
-            - docker
             - postgres
   branches:
     ft4:
