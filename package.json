@@ -21,8 +21,7 @@
     "test:js": "./scripts/jesttest.sh",
     "test:rell": "./scripts/relltest.sh -- $@",
     "test:multichain": "./scripts/multichain-jesttest.sh",
-    "test": "./scripts/test.sh",
-    "test:pipeline": "./scripts/test.sh --no-docker",
+    "test": "./scripts/relltest.sh -- ; ./scripts/jesttest.sh",
     "stop-postchain:jest": "docker stop ft4_jest_test; docker rm ft4_jest_test",
     "stop-postchain:demo": "docker stop ft4_demo; docker rm ft4_demo",
     "stop-postchain:rell": "docker stop postchain; docker rm postchain",
@@ -66,6 +65,7 @@
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",
     "jest": "^29.5.0",
+    "jest-junit": "^16.0.0",
     "lint-staged": "^13.0.1",
     "node-fetch": "^3.3.1",
     "prettier": "^3.0.0",
@@ -78,5 +78,9 @@
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
     "postchain-client": "^1.8.1"
+  },
+  "jest-junit": {
+    "suiteName": "jest tests",
+    "outputDirectory": "test-reports/ts"
   }
 }
