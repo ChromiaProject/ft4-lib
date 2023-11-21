@@ -174,10 +174,18 @@ export async function getAuthDescriptorsByParticipantId(
   connection: Connection,
   accountId: BufferId,
   participantId: BufferId,
-): Promise<AuthDescriptor[]> {
-  return connection
-    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
-    .then((authDescriptors) =>
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<AuthDescriptor>> {
+  return createEntityRetriever<AuthDescriptor, AuthDescriptorResponse | null>(
+    connection,
+    accountAuthDescriptorsByParticipantId(
+      accountId,
+      participantId,
+      limit,
+      cursor,
+    ),
+    (authDescriptors) =>
       authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
-    );
+  ).retrieve();
 }

@@ -412,7 +412,7 @@ describe("Test the account", () => {
     );
 
     expect((await acc.getAuthDescriptors()).data.length).toBe(2);
-    await acc.deleteAuthDescriptor(ads[0].id);
+    await acc.deleteAuthDescriptor(ads.data[0].id);
     expect((await acc.getAuthDescriptors()).data.length).toBe(1);
   });
 

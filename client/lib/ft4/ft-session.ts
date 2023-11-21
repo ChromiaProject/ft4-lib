@@ -175,7 +175,7 @@ export function createKeyStoreInteractor(
       const authDescriptors = await account.getAuthDescriptorsByParticipantId(
         keyStore.id,
       );
-      const keyHandlers = authDescriptors.map((authDescriptor) =>
+      const keyHandlers = authDescriptors.data.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor),
       );
       const authenticator = createAuthenticator(

@@ -160,6 +160,21 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
     ) limit utils.fetch_data_size(page_size);
 }
 
+function get_paginated_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return (ad: account_auth_descriptor, p: auth_descriptor_participant) @* {
+        ad.account.id == account_id,
+        p.id == participant_id,
+        ad == p.account_auth_descriptor,
+        ad.rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = get_auth_descriptor_data(ad.to_struct()).to_gtv_pretty(),
+            rowid = ad.rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     return (
         id = ad.id,

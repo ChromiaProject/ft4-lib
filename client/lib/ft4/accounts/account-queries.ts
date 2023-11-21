@@ -83,15 +83,24 @@ export function isAuthDescriptorValid(
 export function accountAuthDescriptorsByParticipantId(
   accountId: BufferId,
   participantId: BufferId,
+  limit: number,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   AuthDescriptorResponse[],
-  { account_id: Buffer; participant_id: Buffer }
+  {
+    account_id: Buffer;
+    participant_id: Buffer;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
 > {
   return {
     name: "ft4.get_account_auth_descriptors_by_participant_id",
     args: {
       account_id: formatter.ensureBuffer(accountId),
       participant_id: formatter.ensureBuffer(participantId),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }
@@ -102,7 +111,7 @@ export function accountAuthDescriptors(
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   AuthDescriptorResponse,
-  { id: Buffer; page_size: number; page_cursor: string | null }
+  { id: Buffer; page_size: number; page_cursor: OptionalPageCursor }
 > {
   return {
     name: "ft4.get_account_auth_descriptors",
