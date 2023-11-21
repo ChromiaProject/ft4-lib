@@ -96,14 +96,8 @@ chr node start -s configs/jest-test.yml --wipe \
 prc=$!
 
 printf "done!\n\n"
-i=0
-max=15
-while [ $i -lt $max ]
-do
-    printf "Waiting to start tests... $(( $max - $i )) \r"
-    true $(( i=i+1 ))
-    sleep 1
-done
+
+while ! nc -z localhost 7740; do sleep 1; done; sleep 1
 
 cp package.json client/lib/ft4/
 
