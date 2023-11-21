@@ -2,7 +2,6 @@
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import acc: ^^^.lib.ft4.accounts;
 import auth_ext: ^^^.lib.ft4.auth.external;
-import ^^^.lib.ft4.test.utils.{ evm_address_from_privkey, evm_address_from_pubkey };
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
 import ^^.operations;
@@ -58,7 +57,7 @@ function create_test_account_with_auth_descriptor(
 }
 
 function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T"]): account_data {
-    val address = evm_address_from_privkey(keypair.priv);
+    val address = crypto.eth_privkey_to_address(keypair.priv);
     val auth_descriptor = create_auth_descriptor(address, flags);
     val auth_descriptor_id = auth_descriptor.hash();
 
@@ -242,4 +241,4 @@ function eth_sign(hash: byte_array, privkey: byte_array) {
     );
 }
 
-function eth_hex_address_from_pubkey(evm_pubkey: byte_array) = "0x" + evm_address_from_pubkey(evm_pubkey).to_hex();
+function eth_hex_address_from_pubkey(evm_pubkey: byte_array) = "0x" + crypto.eth_pubkey_to_address(evm_pubkey).to_hex();

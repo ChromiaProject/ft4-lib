@@ -14,5 +14,3 @@ function invalid(error: text) = validation_result(false, error);
 function make_auth_message(message: text) {
     return "Blockchain:\n{brid}\n\n" + message + "\n\nNonce: {nonce}";
 }
-
-function evm_address_from_pubkey(evm_pubkey: byte_array) = keccak256(evm_pubkey).sub(12);

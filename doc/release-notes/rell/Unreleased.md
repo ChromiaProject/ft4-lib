@@ -1,6 +1,8 @@
 ## [Unreleased]
  
-- BREAKING CHANGE: The internal structure of the rules has been changed. So auth descriptors which used rules will cause a runtime error when trying to be used.
+### Breaking
+- The internal structure of the rules has been changed. So auth descriptors which used rules will cause a runtime error when trying to be used.
+- Removed the functions evm_address_from_pubkey and evm_address_from_privkey, use crypto.eth_pubkey_to_address and crypto.eth_privkey_to_address in Rell standard library instead. 
 
 ### Changed
 - updated signature for `evm_auth_operation_for` to take a `rell.test.op`
