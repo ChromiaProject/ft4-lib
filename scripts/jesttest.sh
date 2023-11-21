@@ -3,7 +3,7 @@
 DOCKER=${DOCKER:-docker}
 CHR_STOP=${CHR_STOP:-kill $prc}
 
-forceexit(){
+forceexit() {
     echo
     if $docker; then
         echo 'Remember to run "npm run stop-postchain:jest"!'
@@ -12,15 +12,15 @@ forceexit(){
     exit 2
 }
 
-exitfn () {
+exitfn() {
     rm client/lib/ft4/package.json
     trap "forceexit" 2
-    echo; echo 'Stopping docker, hit Ctrl+C to force quit'
+    ${CHR_STOP}
     if $docker; then
-        $DOCKER stop ft4_jest_test  > /dev/null 
+        echo; echo 'Stopping docker, hit Ctrl+C to force quit'
+        $DOCKER stop ft4_jest_test  > /dev/null
         $DOCKER rm ft4_jest_test > /dev/null
     fi
-    ${CHR_STOP}
     exit 2
 }
 
@@ -89,7 +89,7 @@ if $docker; then
 fi
 
 echo -n "Building and running postchain node..."
-    chr build -s configs/jest-test.yml > /dev/null
+chr build -s configs/jest-test.yml > /dev/null
 
 chr node start -s configs/jest-test.yml --wipe \
     -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
