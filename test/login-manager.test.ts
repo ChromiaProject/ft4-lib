@@ -1,5 +1,10 @@
 import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
-import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
+import {
+  FlagsType,
+  authDescriptor,
+  createKeyStoreInteractor,
+  minutes,
+} from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
 import { createAccount } from "./util/util";
@@ -11,6 +16,8 @@ import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 import { allow } from "/ft4/accounts/auth-descriptor/rules";
+
+Date.now = jest.fn(() => 0);
 
 describe("Login manager", () => {
   let client: IClient;
@@ -44,7 +51,7 @@ describe("Login manager", () => {
     expect(authDescriptorAfterLogin.data.length).toBe(2);
   });
 
-  it("added disposable auth descriptor expires in 1h", async () => {
+  it("added disposable auth descriptor has no rules by default", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = authDescriptor.create.singleSig.withArgs(
@@ -60,16 +67,9 @@ describe("Login manager", () => {
     ).getLoginManager();
 
     await loginManager.login({ accountId: account.id });
-    const expectedExpiration = Date.now() + 3600000; // 1h from now
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rule.slice(0, 2)).toEqual(
-      allow.blockTime.lessThan(0).only.slice(0, 2),
-    );
-
-    const expiration = authDescriptorAfterLogin.data[1]
-      .rule[2] as unknown as number;
-    expect(expiration - expectedExpiration).toBeLessThan(60000); // 1 minute of error
+    expect(authDescriptorAfterLogin.data[1].rule).toEqual(null);
   });
 
   it("added disposable auth descriptor expires in 30 minutes", async () => {
@@ -87,17 +87,16 @@ describe("Login manager", () => {
       keyStore,
     ).getLoginManager();
 
-    await loginManager.login({ accountId: account.id, ttlMinutes: 30 });
+    await loginManager.login({
+      accountId: account.id,
+      config: { flags: ["T"], ttl: minutes(30) },
+    });
     const expectedExpiration = Date.now() + 1800000; // 30 min from now
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rule.slice(0, 2)).toEqual(
-      allow.blockTime.lessThan(0).only.slice(0, 2),
+    expect(authDescriptorAfterLogin.data[1].rule).toEqual(
+      allow.blockTime.lessThan(expectedExpiration).only,
     );
-
-    const expiration = authDescriptorAfterLogin.data[1]
-      .rule[2] as unknown as number;
-    expect(expiration - expectedExpiration).toBeLessThan(60000); // 1 minute of error
   });
 
   it("added disposable auth descriptor has correct rules", async () => {
@@ -118,7 +117,10 @@ describe("Login manager", () => {
     const rules = allow.blockHeight
       .lessThan(2)
       .and.operationCount.lessOrEqual(3).only;
-    await loginManager.login({ accountId: account.id, rules });
+    await loginManager.login({
+      accountId: account.id,
+      config: { flags: ["T"], rules },
+    });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin.data[1].rule).toEqual(rules);
   });
@@ -138,7 +140,10 @@ describe("Login manager", () => {
       keyStore,
     ).getLoginManager();
 
-    await loginManager.login({ accountId: account.id, rules: null });
+    await loginManager.login({
+      accountId: account.id,
+      config: { flags: ["T"] },
+    });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin.data[1].rule).toEqual(null);
   });

@@ -15,6 +15,12 @@ export {
   createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
   createEvmKeyHandler,
+  milliseconds,
+  seconds,
+  minutes,
+  hours,
+  days,
+  weeks,
 } from "./authentication";
 
 // Admin module

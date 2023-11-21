@@ -14,6 +14,14 @@ import { AuthDescriptor, AuthType } from "../accounts";
 export * from "./evm";
 export * from "./ft";
 export * from "./types";
+export {
+  milliseconds,
+  seconds,
+  minutes,
+  hours,
+  days,
+  weeks,
+} from "./login-manager";
 
 export {
   createSessionStorageLoginKeyStore,

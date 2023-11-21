@@ -4,7 +4,20 @@ import { AuthDescriptorRule } from "/ft4/accounts";
 
 export type LoginConfig = {
   flags: string[];
-};
+} & (
+  | {
+      ttl: number;
+      rules?: never;
+    }
+  | {
+      ttl?: never;
+      rules: AuthDescriptorRule;
+    }
+  | {
+      ttl?: never;
+      rules?: never;
+    }
+);
 
 export type LoginOptions = {
   accountId: BufferId;
@@ -21,21 +34,7 @@ export type LoginOptions = {
       configName?: never;
       config?: never;
     }
-) &
-  (
-    | {
-        ttlMinutes: number;
-        rules?: never;
-      }
-    | {
-        ttlMinutes?: never;
-        rules: AuthDescriptorRule;
-      }
-    | {
-        ttlMinutes?: never;
-        rules?: never;
-      }
-  );
+);
 
 export type LoginManager = {
   login: (loginOptions: LoginOptions) => Promise<Session>;

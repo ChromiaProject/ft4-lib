@@ -1,6 +1,9 @@
 import { Operation } from "postchain-client";
 import { BufferId } from "/ft4/cryptoUtils";
-import { AuthDataService } from "/ft4/authentication/types";
+import {
+  AuthDataService,
+  LoginConfigResponse,
+} from "/ft4/authentication/types";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
@@ -17,7 +20,8 @@ export function createFakeAuthDataService(
     getNonce: (accountId: BufferId, authDescriptorId: BufferId) =>
       generator.next().value,
     // eslint-disable-next-line
-    getLoginConfig: (configName: string) => Promise.resolve({ flags: [] }),
+    getLoginConfig: (configName: string) =>
+      Promise.resolve({ flags: [], ttl: null } as LoginConfigResponse),
     getBrid: () => Buffer.from(""),
   };
 }

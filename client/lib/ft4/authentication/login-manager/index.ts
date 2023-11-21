@@ -16,7 +16,6 @@ import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { allow } from "/ft4/accounts/auth-descriptor/rules";
 
 export * from "./types";
-const TTL_DEFAULT_VALUE = 60;
 
 export function createLoginManager(
   connection: Connection,
@@ -52,7 +51,7 @@ export function createLoginManager(
 
       const authDataService = createAuthDataService(connection);
       // Get list of flags that will be added to new auth descriptor
-      const flags = await getFlags(authDataService, loginOptions);
+      const config = await getFlagsAndRules(authDataService, loginOptions);
 
       const keyPair = await usedLoginKeyStore.getKeyPair(account.id);
 
@@ -67,7 +66,7 @@ export function createLoginManager(
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
             // If
-            hasAuthDescriptorFlags(authDescriptor, flags),
+            hasAuthDescriptorFlags(authDescriptor, config.flags),
           )
           .map((authDescriptor) =>
             disposableKeyStore.createKeyHandler(authDescriptor),
@@ -78,20 +77,13 @@ export function createLoginManager(
       // or there are no auth descriptors that have required flags.
       // Add new auth descriptor.
       if (!disposableKeyHandlers.length) {
-        const rules =
-          loginOptions.rules === undefined
-            ? allow.blockTime.lessThan(
-                Date.now() +
-                  (loginOptions.ttlMinutes ?? TTL_DEFAULT_VALUE) * 60000,
-              ).only
-            : loginOptions.rules;
         const disposableKeyHandler = await addDisposableAuthDescriptor(
           connection,
           usedLoginKeyStore,
           account.id,
           keyStore.createKeyHandler(adminAuthDescriptor),
-          flags,
-          rules,
+          config.flags,
+          config.rules,
         );
         disposableKeyHandlers = [disposableKeyHandler];
       }
@@ -116,22 +108,36 @@ export function createLoginManager(
 }
 
 /*
- * Returns auth flags provided as option to login manager's `login` function,
+ * Returns auth flags and rules provided as option to login manager's `login` function,
  * or if they are not provided, the function uses config name to load login config from chain.
  * If configName is null or undefined too, then default login config will be loaded from chain.
  */
-async function getFlags(
+async function getFlagsAndRules(
   authDataService: AuthDataService,
   options: LoginOptions,
-): Promise<string[]> {
+): Promise<{ flags: string[]; rules: AuthDescriptorRule }> {
+  let flags: string[];
+  let rules: AuthDescriptorRule;
   if (options.config) {
-    return options.config.flags;
+    flags = options.config.flags;
+    rules = options.config.ttl
+      ? // if we have ttl, use it
+        allow.blockTime.lessThan(Date.now() + options.config.ttl).only
+      : // if we have rules, use them. Otherwise, allow all (no rules)
+        options.config.rules ?? allow.all;
   } else {
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
     );
-    return loginConfig.flags;
+    flags = loginConfig.flags;
+    rules = loginConfig.ttl
+      ? allow.blockTime.lessThan(Date.now() + loginConfig.ttl).only
+      : allow.all;
   }
+  return {
+    flags,
+    rules,
+  };
 }
 
 async function addDisposableAuthDescriptor(
@@ -161,3 +167,19 @@ async function addDisposableAuthDescriptor(
 
   return ks.createKeyHandler(ad);
 }
+
+/*
+ * Allows the user to specify a ttl value like this:
+ * weeks(1)+days(3)
+ * None of these functions care in any way about leap seconds and any other time adjustments
+ * This means that when you define an auth descriptor with a rule that makes it expire after
+ * 1 day, it will expire after exactly 24h, even if there has been a leap second during that
+ * day, which means it will be off by a second (e.g. starts at 14:00:00 and expires the next
+ * day at 13:59:59).
+ */
+export const milliseconds = (ms: number) => ms;
+export const seconds = (s: number) => s * 1000;
+export const minutes = (m: number) => m * 60000;
+export const hours = (h: number) => h * 3600000;
+export const days = (d: number) => d * 86400000;
+export const weeks = (w: number) => w * 604800000;

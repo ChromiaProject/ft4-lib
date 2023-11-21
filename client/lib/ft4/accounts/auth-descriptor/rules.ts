@@ -16,7 +16,7 @@ enum RuleOperator {
 
 export const allow = {
   ...chooseVariable(),
-  all: null,
+  all: null as AuthDescriptorRule,
 };
 
 function chooseOperator(start: any[], variable: number) {
