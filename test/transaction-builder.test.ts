@@ -180,6 +180,17 @@ describe("Transaction Builder", () => {
     expect(keyHandlerMock.sign).toHaveBeenCalled();
   });
 
+  it("uses uses noop authenticator if authentication is not requested", async () => {
+    const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
+    const tx = await transactionBuilder(authenticator, client)
+      .addWithoutAuthenticator(
+        transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
+      )
+      .buildUnsigned();
+
+    expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
+  });
+
   it("throws an error when the operation does not exist", async () => {
     setupTestEnvironment(() => Promise.resolve(false));
 

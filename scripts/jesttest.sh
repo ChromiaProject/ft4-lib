@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DOCKER=${DOCKER:-docker}
+CHR_STOP=${CHR_STOP:-kill $prc}
 
 forceexit(){
     echo
@@ -19,7 +20,7 @@ exitfn () {
         $DOCKER stop ft4_jest_test  > /dev/null 
         $DOCKER rm ft4_jest_test > /dev/null
     fi
-    kill $prc
+    ${CHR_STOP}
     exit 2
 }
 
@@ -50,6 +51,10 @@ while :; do
         --no-docker)
               echo 'skipping docker build'
               docker=false
+              ;;
+        --ci)
+              echo 'generating test reports'
+              opt="$opt --ci --reporters=default --reporters=jest-junit"
               ;;
         --)
             shift
@@ -111,12 +116,12 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
 else
     if $docker; then
         for f in ./**/[!_]*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
+            JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else
         for f in ./**/*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+            JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
             pids+=($!)
         done
     fi
@@ -135,7 +140,7 @@ else
     echo "Tests failed"
 fi
 
-kill $prc
+${CHR_STOP}
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 
