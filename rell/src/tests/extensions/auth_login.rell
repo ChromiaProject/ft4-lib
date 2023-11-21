@@ -13,3 +13,10 @@ function () = auth.add_login_config(
     flags = ["X", "Y"]
 );
 
+@extend(auth.login_config)
+function () = auth.add_login_config(
+    name = "custom_config_with_ttl",
+    flags = ["Z"],
+    ttl = 10
+);
+

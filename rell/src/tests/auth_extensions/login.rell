@@ -24,3 +24,9 @@ function test_custom_login_config_can_be_fetched() {
     assert_equals(config, auth._login_config(flags = ["X", "Y"]));
 }
 
+function test_custom_login_config_can_have_ttl() {
+    val config = auth.get_login_config("custom_config_with_ttl");
+
+    assert_equals(config, auth._login_config(flags = ["Z"], ttl = 10));
+}
+
