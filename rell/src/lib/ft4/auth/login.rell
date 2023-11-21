@@ -26,7 +26,7 @@ function login_config(): map<name, _login_config>;
 function add_login_config(
     name = DEFAULT_LOGIN_CONFIG_NAME,
     flags: list<text>,
-    ttl: integer? = null,
+    ttl: integer? = null
 ) {
     return [name: _login_config(flags, ttl)];
 }
