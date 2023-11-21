@@ -33,3 +33,5 @@ build/
 # Rell dependencies
 rell/dep
 rell/src/lib/iccf
+
+/test-reports/
