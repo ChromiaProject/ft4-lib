@@ -44,12 +44,17 @@ export function transactionBuilder(
   client: IClient,
   config: TransactionBuilderConfig = defaultConfig,
 ): TransactionBuilder {
+  const _operations: OperationContext[] = [];
+  const _keyhandlersUsed: KeyHandler[] = [];
+  const _context: TxContext = {};
+  let _noopAuthenticator: Authenticator;
+
   function add(
     operation: Operation,
     onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    this._operations.push({ operation, authenticator, onAnchoredHandler });
-    return this;
+    _operations.push({ operation, authenticator, onAnchoredHandler });
+    return me;
   }
 
   function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
@@ -61,14 +66,14 @@ export function transactionBuilder(
 
   async function buildUnsigned() {
     const [operations, keyHandlers] = await authenticateOperations(
-      this._operations,
-      this._context,
+      _operations,
+      _context,
     );
-    keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
+    keyHandlers.forEach((kh) => _keyhandlersUsed.push(kh));
     const txn: TxBuilderTransaction = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
-      signers: toPubkeys(this._keyhandlersUsed),
+      signers: toPubkeys(_keyhandlersUsed),
       signatures: [],
     };
     const addOperation = (op: Operation) => {
@@ -132,20 +137,20 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx = await this.buildUnsigned();
+    const tx = await buildUnsigned();
     await Promise.all(
-      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
+      _keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
     );
     return gtx.serialize(tx);
   }
 
   function addSigners(...signers: KeyHandler[]): TransactionBuilder {
-    signers.forEach((signer) => this._keyhandlersUsed.push(signer));
-    return this;
+    signers.forEach((signer) => _keyhandlersUsed.push(signer));
+    return me;
   }
 
   async function buildWithSigners(...signers: KeyHandler[]) {
-    const tx = await this.buildUnsigned();
+    const tx = await buildUnsigned();
     tx.signers = [
       ...new Set(signers.map((signer) => signer.getSigners()).flat()),
     ];
@@ -157,10 +162,10 @@ export function transactionBuilder(
     tx: SignedTransaction;
     receipt: TransactionReceipt;
   }> {
-    const tx = await (this as TransactionBuilder).build();
+    const tx = await me.build();
     const receipt = await client.sendTransaction(tx);
 
-    const operationsWithHandlers = this._operations.filter(
+    const operationsWithHandlers = _operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
 
@@ -253,43 +258,45 @@ export function transactionBuilder(
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator,
-    handler?: OnAnchoredHandler,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    this._operations.push({ operation, authenticator, handler });
-    return this;
+    _operations.push({ operation, authenticator, onAnchoredHandler });
+    return me;
   }
 
   function addWithoutAuthenticator(
     operation: Operation,
-    handler?: OnAnchoredHandler,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    if (this._noopAuthenticator === undefined) {
-      this._noopAuthenticator = createNoopAuthenticator(
+    if (_noopAuthenticator === undefined) {
+      _noopAuthenticator = createNoopAuthenticator(
         authenticator.authDataService,
       );
     }
-    this._operations.push({
+    _operations.push({
       operation,
-      authenticator: this._noopAuthenticator,
-      handler,
+      authenticator: _noopAuthenticator,
+      onAnchoredHandler,
     });
-    return this;
+    return me;
   }
 
-  const context: Partial<TransactionBuilder> = {
-    _operations: [],
-    _keyhandlersUsed: [],
-    session: client,
-    _context: {},
-  };
-  context.add = add.bind(context);
-  context.build = build.bind(context);
-  context.buildUnsigned = buildUnsigned.bind(context);
-  context.addSigners = addSigners.bind(context);
-  context.addWithAuthenticator = addWithAuthenticator.bind(context);
-  context.addWithoutAuthenticator = addWithoutAuthenticator.bind(context);
-  context.buildWithSigners = buildWithSigners.bind(context);
-  context.buildAndSend = buildAndSend.bind(context);
+  function keyHandlersUsed(): KeyHandler[] {
+    return _keyhandlersUsed;
+  }
 
-  return context as TransactionBuilder;
+  const me = Object.freeze({
+    add,
+    build,
+    buildUnsigned,
+    addSigners,
+    addWithAuthenticator,
+    addWithoutAuthenticator,
+    buildWithSigners,
+    buildAndSend,
+    keyHandlersUsed,
+    session: client,
+  });
+
+  return me;
 }
