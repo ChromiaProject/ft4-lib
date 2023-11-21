@@ -27,8 +27,8 @@ import {
 import { BufferId } from "/ft4/cryptoUtils";
 import { Connection } from "/ft4";
 
-function generateNumber(max = 10000): number {
-  return Math.round(Math.random() * max);
+function generateNumber(): number {
+  return Date.now();
 }
 
 function generateAssetName(prefix = "CHROMA"): string {
