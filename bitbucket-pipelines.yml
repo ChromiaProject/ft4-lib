@@ -13,7 +13,7 @@ pipelines:
             - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
             - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
             - apt update
-            - apt install -y netcat-openbsd chr default-jre -y
+            - apt install -y netcat-openbsd chr default-jre
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
