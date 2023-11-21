@@ -1,7 +1,14 @@
 #!/bin/bash
 
 DOCKER=${DOCKER:-docker}
-CHR_STOP=${CHR_STOP:-kill $prc}
+
+chr_stop() {
+  if [ -n "${CHR_STOP}" ]; then
+    ${CHR_STOP}
+  else
+    kill $prc
+  fi
+}
 
 forceexit() {
     echo
@@ -15,7 +22,7 @@ forceexit() {
 exitfn() {
     rm client/lib/ft4/package.json
     trap "forceexit" 2
-    ${CHR_STOP}
+    chr_stop
     if $docker; then
         echo; echo 'Stopping docker, hit Ctrl+C to force quit'
         $DOCKER stop ft4_jest_test  > /dev/null
@@ -134,7 +141,7 @@ else
     echo "Tests failed"
 fi
 
-${CHR_STOP}
+chr_stop
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 
