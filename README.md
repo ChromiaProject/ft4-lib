@@ -46,17 +46,17 @@ Note that this will temporarily copy `package.json` into the source directory in
 
 ### Comprehensive Test Suite
 
-Run the complete set of TypeScript and Rell tests:
+Run the complete set of Rell and TypeScript tests:
 
 ```bash
 npm run test
 ```
 
-Run only TypeScript or Rell tests:
+Run only Rell or TypeScript tests:
 
 ```bash
-npm run test:js
 npm run test:rell
+npm run test:js
 ```
 
 ### Running Specific Rell Tests
@@ -73,13 +73,13 @@ npm run test:rell -- -t=test1,test2
 Execute specific Jest tests by string matching:
 
 ```bash
-npm run test 'string matching test(s)'
+npm run test:js 'string matching test(s)'
 ```
 
 Examples:
 
 ```bash
-npm run test 'user'
+npm run test:js 'user'
 npm run test:js 'rate|sso'
 ```
 
@@ -94,6 +94,11 @@ To stop these environments:
 
 - **Test**: `npm run stop-postchain:jest`
 - **Demo**: `npm run stop-postchain:demo`
+
+## Changelog
+
+Update changelog in `doc/release-notes/`, then run `./compile-changelog.sh` script to assemble 
+`changelog.md` and `rell-changelog.md`. Do not update `changelog.md` or `rell-changelog.md` directly.
 
 ## License
 

@@ -1,4 +1,8 @@
-import { Authenticator, KeyHandler } from "/ft4/authentication";
+import {
+  Authenticator,
+  KeyHandler,
+  createNoopAuthenticator,
+} from "/ft4/authentication";
 import { Buffer } from "buffer";
 import {
   Operation,
@@ -104,9 +108,8 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -262,6 +265,23 @@ export function transactionBuilder(
     return this;
   }
 
+  function addWithoutAuthenticator(
+    operation: Operation,
+    handler?: OnAnchoredHandler,
+  ): TransactionBuilder {
+    if (this._noopAuthenticator === undefined) {
+      this._noopAuthenticator = createNoopAuthenticator(
+        authenticator.authDataService,
+      );
+    }
+    this._operations.push({
+      operation,
+      authenticator: this._noopAuthenticator,
+      handler,
+    });
+    return this;
+  }
+
   const context: Partial<TransactionBuilder> = {
     _operations: [],
     _keyhandlersUsed: [],
@@ -273,6 +293,7 @@ export function transactionBuilder(
   context.buildUnsigned = buildUnsigned.bind(context);
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
+  context.addWithoutAuthenticator = addWithoutAuthenticator.bind(context);
   context.buildWithSigners = buildWithSigners.bind(context);
   context.buildAndSend = buildAndSend.bind(context);
 

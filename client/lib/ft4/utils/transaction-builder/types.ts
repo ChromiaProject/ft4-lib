@@ -17,6 +17,8 @@ export type TransactionBuilder = {
   _operations: OperationContext[];
   _keyhandlersUsed: KeyHandler[];
   _context: TxContext;
+  _noopAuthenticator: Authenticator;
+
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
@@ -27,8 +29,8 @@ export type TransactionBuilder = {
     handler?: OnAnchoredHandler | undefined,
   ) => TransactionBuilder;
   /**
-   * Adds an operation to include in the final transaction
-   * the operation will be authenticated using the provided
+   * Adds an operation to include in the final transaction.
+   * The operation will be authenticated using the provided
    * authenticator, and if `build` is called, the authenticator
    * will also be used to sign the transaction.
    * @param operation the operation to add
@@ -38,6 +40,16 @@ export type TransactionBuilder = {
   addWithAuthenticator: (
     operation: Operation,
     authenticator: Authenticator,
+    handler?: OnAnchoredHandler | undefined,
+  ) => TransactionBuilder;
+  /**
+   * Adds an operation to include in the final transaction.
+   * The operation will not be authenticated using FT4 authentication.
+   * @param operation the operation to add
+   * @returns an instance of the transaction builder object
+   */
+  addWithoutAuthenticator: (
+    operation: Operation,
     handler?: OnAnchoredHandler | undefined,
   ) => TransactionBuilder;
   /**

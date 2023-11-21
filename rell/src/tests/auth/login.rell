@@ -16,6 +16,9 @@ function test_querying_login_config_without_config_name_returns_default_login_co
 }
 
 function test_querying_unknown_login_config_throws_error() {
-    assert_fails(auth.get_login_config("unknown_config", *));
+    assert_fails(
+        "Unknown login configuration",
+        auth.get_login_config("unknown_config", *)
+    );
 }
 
