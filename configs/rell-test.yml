@@ -15,10 +15,10 @@ blockchains:
           rate_limit_points_at_account_creation: 1
 
         lib.ft4.admin:
-          admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
+          admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
         tests.assets.utils:
-          admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
+          admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
   ft4_rell_auth:  # Runs separate test chain to test auth extensions
     module: tests.assets.app_module_2  # Entrypoint to the project
@@ -33,10 +33,10 @@ blockchains:
           rate_limit_points_at_account_creation: 1
 
         lib.ft4.admin:
-          admin_pubkey: 02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD      
+          admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
         tests.assets.utils:
-          admin_priv_key: 00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE
+          admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
 libs:
   iccf:
