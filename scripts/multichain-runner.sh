@@ -7,14 +7,14 @@ POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
 
-NODE_VERSION='3.12.0'
-DIRECTORY_CHAIN_VERSION='1.9.2'
+NODE_VERSION='3.14.2'
+DIRECTORY_CHAIN_VERSION='1.28.0'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
 
-# PMC version 3.14.0
-PMC_DOWNLOAD_URL="https://gitlab.com/chromaway/core-tools/management-console/-/package_files/91637017/download"
+# PMC version 3.16.2
+PMC_DOWNLOAD_URL="https://gitlab.com/chromaway/core-tools/management-console/-/package_files/99889189/download"
 PMC_ARCHIVE_PATH="$DEPENDENCIES_PATH/management-console.tar.gz"
 PMC_EXEC_PATH="$DEPENDENCIES_PATH/management-console/bin/pmc"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
@@ -121,8 +121,11 @@ run_main_logic() {
         fi
     fi
 
+    log "Installing Directory Chain dependencies..."
+    chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
+
     log "Building Directory Chain..."
-    chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
+    chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
 
     debug  "Copying FT library dependency to source folder..."
 

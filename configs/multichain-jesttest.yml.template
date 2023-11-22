@@ -26,3 +26,4 @@ libs:
 compile:
   source: ./multichain
   target: ../out
+  rellVersion: 0.13.5

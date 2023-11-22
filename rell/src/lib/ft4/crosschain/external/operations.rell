@@ -26,7 +26,7 @@ function init_transfer_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.crosschain.init_transfer",
+    scope = rell.meta(init_transfer).mount_name,
     flags = ["T"],
     message = init_transfer_message(*)
 );

@@ -2,7 +2,15 @@
 
 DOCKER=${DOCKER:-docker}
 
-forceexit(){
+chr_stop() {
+  if [ -n "${CHR_STOP}" ]; then
+    ${CHR_STOP}
+  else
+    kill $prc
+  fi
+}
+
+forceexit() {
     echo
     if $docker; then
         echo 'Remember to run "npm run stop-postchain:jest"!'
@@ -11,15 +19,15 @@ forceexit(){
     exit 2
 }
 
-exitfn () {
+exitfn() {
     rm client/lib/ft4/package.json
     trap "forceexit" 2
-    echo; echo 'Stopping docker, hit Ctrl+C to force quit'
+    chr_stop
     if $docker; then
-        $DOCKER stop ft4_jest_test  > /dev/null 
+        echo; echo 'Stopping docker, hit Ctrl+C to force quit'
+        $DOCKER stop ft4_jest_test  > /dev/null
         $DOCKER rm ft4_jest_test > /dev/null
     fi
-    kill $prc
     exit 2
 }
 
@@ -50,6 +58,10 @@ while :; do
         --no-docker)
               echo 'skipping docker build'
               docker=false
+              ;;
+        --ci)
+              echo 'generating test reports'
+              opt="$opt --ci --reporters=default --reporters=jest-junit"
               ;;
         --)
             shift
@@ -84,21 +96,15 @@ if $docker; then
 fi
 
 echo -n "Building and running postchain node..."
-    chr build -s configs/jest-test.yml > /dev/null
+chr build -s configs/jest-test.yml > /dev/null
 
 chr node start -s configs/jest-test.yml --wipe \
     -np rell/config/jest-test/node-config.properties > ./logs/postchain.log &
 prc=$!
 
 printf "done!\n\n"
-i=0
-max=15
-while [ $i -lt $max ]
-do
-    printf "Waiting to start tests... $(( $max - $i )) \r"
-    true $(( i=i+1 ))
-    sleep 1
-done
+
+while ! nc -z localhost 7740; do sleep 1; done; sleep 1
 
 cp package.json client/lib/ft4/
 
@@ -111,12 +117,12 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
 else
     if $docker; then
         for f in ./**/[!_]*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
+            JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else
         for f in ./**/*.test.ts; do
-            npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
+            JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
             pids+=($!)
         done
     fi
@@ -135,7 +141,7 @@ else
     echo "Tests failed"
 fi
 
-kill $prc
+chr_stop
 
 if $docker; then
     $DOCKER stop ft4_jest_test  > /dev/null 

@@ -56,6 +56,7 @@ function test_an_invalid_descriptor_can_not_be_added() {
   );
 
   assert_fails(
+    "Operation 'lib.ft4.admin:register_account' failed",
     utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
   );
 }
