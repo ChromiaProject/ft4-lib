@@ -4,5 +4,6 @@
 
 ### Changed
 - BREAKING CHANGE: Make `get_accounts_by_participant_id` query paginated
+- BREAKING CHANGE: Make `get_account_auth_descriptors_by_participant_id` query paginated
 - updated signature for `evm_auth_operation_for` to take a `rell.test.op`
 - added default values for `lib.ft4.accounts` module_args, so they don't have to be included in `chromia.yml`
