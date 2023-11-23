@@ -24,6 +24,7 @@ pipelines:
 
           services:
             - postgres
+            - docker
   branches:
     ft4:
       - step:
