@@ -79,14 +79,16 @@ run_main_logic() {
 
     PMC="$PMC_EXEC_PATH"
 
-    log "Running Postgres container..."
-    $DOCKER run \
-        --name $DOCKER_POSTGRES_NAME \
-        -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
-        -e POSTGRES_PASSWORD=postchain \
-        -e POSTGRES_USER=postchain \
-        -p $POSTGRES_PORT:5432 \
-        -d postgres > /dev/null
+    if $postgres; then
+      log "Running Postgres container..."
+      $DOCKER run \
+          --name $DOCKER_POSTGRES_NAME \
+          -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
+          -e POSTGRES_PASSWORD=postchain \
+          -e POSTGRES_USER=postchain \
+          -p $POSTGRES_PORT:5432 \
+          -d postgres > /dev/null
+    fi
 
     debug "Creating PMC config..."
 
@@ -125,9 +127,10 @@ run_main_logic() {
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
     log "Building Directory Chain..."
+    chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
     chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
 
-    debug  "Copying FT library dependency to source folder..."
+    debug "Copying FT library dependency to source folder..."
 
     rm -rf "$DEPENDENCIES_PATH/multichain"
     mkdir -p "$DEPENDENCIES_PATH/multichain/"
@@ -161,6 +164,7 @@ run_main_logic() {
         debug "Generated $yml_filename and $rell_filepath"
 
         # Build the Multichain dApp Chain for each blockchain
+        chr install -s $yml_filename > /dev/null
         chr build -s $yml_filename > /dev/null
     done
 
@@ -177,7 +181,7 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
-        run-node > logs/multichain-postchain.log &
+        run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
@@ -256,8 +260,13 @@ exitfn() {
     trap "forceexit" 2
 
     log 'Stopping and cleaning up. Hit Ctrl+C to force quit.'
-    $DOCKER stop $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
-    $DOCKER rm $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
+    $DOCKER stop $DOCKER_NODE_NAME > /dev/null
+    $DOCKER rm $DOCKER_NODE_NAME > /dev/null
+
+    if $postgres; then
+      $DOCKER stop $DOCKER_POSTGRES_NAME > /dev/null
+      $DOCKER rm $DOCKER_POSTGRES_NAME > /dev/null
+    fi
 
     # If we are in interactive mode, return the exit code
     if echo "$-" | grep -q "i"; then
