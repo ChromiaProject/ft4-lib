@@ -19,7 +19,7 @@ class MockedBrowserProvider {
   }
 }
 
-import original = require("ethers");
+import * as original from "ethers";
 
 module.exports = {
   ethers: {
