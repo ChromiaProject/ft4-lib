@@ -67,7 +67,7 @@ export const lessOrEqual = (
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
  * the "equal" (=) operation for the provided variable.
- * Example: equala(opCount(10))
+ * Example: equals(opCount(10))
  * @param variableValue the variable value to use
  * @returns a rule variable
  */

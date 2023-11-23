@@ -5,24 +5,26 @@ import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import {
   aggregateSigners,
   gtv,
-  deriveAccountId,
+  deriveAuthDescriptorId,
   AnyAuthDescriptorRegistration,
   AnyAuthDescriptor,
 } from "/ft4/accounts/auth-descriptor";
 import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
-  authDescriptorRegistration: AnyAuthDescriptorRegistration,
+  authDescriptor: AnyAuthDescriptor,
   keyStore: FtKeyStore,
 ): KeyHandler {
-  const adId = deriveAccountId(
-    gtv.authDescriptorRegistrationToGtv(authDescriptorRegistration),
-  );
+  const adId = authDescriptor
+    ? deriveAuthDescriptorId(
+        gtv.authDescriptorRegistrationToGtv(authDescriptor),
+      )
+    : undefined;
   return Object.freeze({
-    authDescriptorRegistration,
+    authDescriptor,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      hasAuthDescriptorFlags(authDescriptorRegistration, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
     authorize: (
       accountId: BufferId,
       operation: Operation,
@@ -30,13 +32,13 @@ export function createFtKeyHandler(
       _authDataService: AuthDataService,
     ) => authorize(accountId, adId, operation),
     sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
-    getSigners: () => aggregateSigners(authDescriptorRegistration),
+    getSigners: () => aggregateSigners(authDescriptor),
   });
 }
 
 async function authorize(
   accountId: BufferId,
-  authDescriptorId: BufferId,
+  authDescriptorId: BufferId | undefined,
   operation: Operation,
 ): Promise<Operation[]> {
   return [ftAuth(accountId, authDescriptorId), operation];

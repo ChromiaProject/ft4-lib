@@ -125,7 +125,7 @@ export async function getById(
   connection: Connection,
   id: BufferId,
 ): Promise<Account | null> {
-  const accountId = await connection.query<Buffer>(accountById(id));
+  const accountId = await connection.query(accountById(id));
 
   return accountId && createAccountObject(connection, accountId);
 }
@@ -135,7 +135,7 @@ export async function getByParticipantId(
   id: BufferId,
 ): Promise<Account[]> {
   const accountIds =
-    (await connection.query<Buffer[]>(accountsByParticipantId(id))) ?? [];
+    (await connection.query(accountsByParticipantId(id))) ?? [];
 
   return accountIds.map((id) => createAccountObject(connection, id));
 }
@@ -158,7 +158,7 @@ export async function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): Promise<boolean> {
-  return (await connection.query<boolean>(
+  return (await connection.query(
     Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }
@@ -169,9 +169,7 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
 ): Promise<AnyAuthDescriptor[]> {
   return connection
-    .query<RawAnyAuthDescriptor[]>(
-      accountAuthDescriptorsByParticipantId(accountId, participantId),
-    )
+    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
     .then((authDescriptors) =>
       authDescriptors ? gtv.mapAuthDescriptors(authDescriptors) : [],
     );

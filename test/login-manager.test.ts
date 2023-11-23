@@ -10,8 +10,8 @@ import { transfer } from "/ft4/accounts/account-operations";
 import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
-import { createSingleSignatureAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
-import { aggregateSigners, deriveAccountId } from "/ft4/accounts";
+import { createSingleSigAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
+import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
 import { getPubkey } from "/ft4/utils";
 
 describe("Login manager", () => {
@@ -26,11 +26,9 @@ describe("Login manager", () => {
   it("adds disposable auth descriptor to account", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account],
-        signer: keyStore.address,
-      },
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.address,
       null,
     );
     const accountId = await createAccount(client, ad);
@@ -53,11 +51,9 @@ describe("Login manager", () => {
     const keyPair = encryption.makeKeyPair();
     const asset = await getNewAsset(client, undefined, undefined, 5);
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account],
-        signer: keyStore.address,
-      },
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.address,
       null,
     );
     const accountId = await createAccount(client, ad);
@@ -82,23 +78,21 @@ describe("Login manager", () => {
     const disposableAuthHandler =
       session.account.authenticator.keyHandlers.filter(
         (keyHandler) =>
-          deriveAccountId(keyHandler.authDescriptorRegistration) !==
+          deriveAuthDescriptorId(keyHandler.authDescriptor) !==
           keyStore.address,
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(
-      aggregateSigners(disposableAuthHandler.authDescriptorRegistration),
+      aggregateSigners(disposableAuthHandler.authDescriptor),
     );
   });
 
   it("does not login when account does not have admin auth descriptor that corresponds to used key store", async () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
-    const ad = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account],
-        signer: keyStore.id,
-      },
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.id,
       null,
     );
     const accountId = await createAccount(client, ad);
@@ -109,11 +103,9 @@ describe("Login manager", () => {
     ).getSession(accountId);
 
     const keyPair2 = encryption.makeKeyPair();
-    const ad2 = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: ["X"],
-        signer: keyPair2.pubKey,
-      },
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      ["X"],
+      keyPair2.pubKey,
       null,
     );
     await session.account.addAuthDescriptor(ad2, keyPair2);
@@ -134,11 +126,9 @@ describe("Login manager", () => {
   it("uses key pair stored in login key store", async () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
-    const ad = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account],
-        signer: keyStore.id,
-      },
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.id,
       null,
     );
     const accountId = await createAccount(client, ad);
@@ -150,11 +140,9 @@ describe("Login manager", () => {
 
     const loginKeyStore = createInMemoryLoginKeyStore();
     const keyPair2 = await loginKeyStore.createKeyPair(accountId);
-    const ad2 = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: ["X"],
-        signer: getPubkey(keyPair2),
-      },
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      ["X"],
+      getPubkey(keyPair2),
       null,
     );
     await session.account.addAuthDescriptor(ad2, keyPair2);

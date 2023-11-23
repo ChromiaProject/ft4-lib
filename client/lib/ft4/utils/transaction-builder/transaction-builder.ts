@@ -1,6 +1,7 @@
 import {
   Authenticator,
   KeyHandler,
+  KeyStore,
   createNoopAuthenticator,
 } from "/ft4/authentication";
 import { Buffer } from "buffer";
@@ -137,13 +138,21 @@ export function transactionBuilder(
   async function build(): Promise<Buffer> {
     const tx = await this.buildUnsigned();
     await Promise.all(
-      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
+      this._keyhandlersUsed.map((store: KeyHandler) => store.sign(tx)),
     );
     return gtx.serialize(tx);
   }
 
-  function addSigners(...signers: KeyHandler[]): TransactionBuilder {
-    signers.forEach((signer) => this._keyhandlersUsed.push(signer));
+  function addSigners(
+    ...signers: (KeyStore | KeyHandler)[]
+  ): TransactionBuilder {
+    signers.forEach((signer) => {
+      if (isKeyHandler(signer)) {
+        this._keyhandlersUsed.push(signer);
+      } else {
+        this._keyhandlersUsed.push(signer.createKeyHandler());
+      }
+    });
     return this;
   }
 
@@ -299,3 +308,6 @@ export function transactionBuilder(
 
   return context as TransactionBuilder;
 }
+
+const isKeyHandler = (handler: KeyHandler | KeyStore): handler is KeyHandler =>
+  (handler as KeyHandler).sign !== undefined;

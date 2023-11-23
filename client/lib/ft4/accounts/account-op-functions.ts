@@ -18,7 +18,11 @@ import {
   transfer as transferOp,
 } from "./account-operations";
 import { createAccountObject } from "./account-query-functions";
-import { AnyAuthDescriptor, deriveAccountId } from "./auth-descriptor";
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+} from "./auth-descriptor";
 import { AuthenticatedAccount } from "./types";
 
 export function createAuthenticatedAccount(
@@ -47,22 +51,16 @@ export function createAuthenticatedAccount(
 async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  authDescriptorRegistration: AnyAuthDescriptor,
+  authDescriptorRegistration: AnyAuthDescriptorRegistration,
   newSigner: SignatureProvider | KeyPair,
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const newKeyHandler = createInMemoryFtKeyStore(newSigner).createKeyHandler(
-    authDescriptorRegistration,
-  );
+  const newKeyHandler = createInMemoryFtKeyStore(newSigner).createKeyHandler();
 
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptorRegistration))
-    .addSigners(
-      createInMemoryFtKeyStore(newSigner).createKeyHandler(
-        authDescriptorRegistration,
-      ),
-    )
+    .addSigners(newKeyHandler)
     .build();
 
   const newAuth = createAuthenticator(
@@ -85,7 +83,7 @@ async function deleteAuthDescriptor(
   const newAuth = createAuthenticator(
     authenticator.accountId,
     authenticator.keyHandlers.filter((kh) =>
-      deriveAccountId(kh.authDescriptorRegistration).compare(
+      deriveAuthDescriptorId(kh.authDescriptor).compare(
         formatter.ensureBuffer(authDescriptorId),
       ),
     ),

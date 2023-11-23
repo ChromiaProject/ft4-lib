@@ -10,7 +10,7 @@ import {
 } from "./types";
 import {
   AnyAuthDescriptorRegistration,
-  AuthDescriptorRegistration,
+  AuthDescriptor,
   AuthType,
   SingleSig,
   aggregateSigners,
@@ -65,22 +65,24 @@ export function createNoopAuthenticator(
 const nullKeyStore: KeyStore = Object.freeze({
   id: Buffer.alloc(32),
   isInteractive: false,
-  createKeyHandler: (_authDescriptor: AnyAuthDescriptorRegistration) =>
-    noopKeyHandler,
+  createKeyHandler: (
+    _authDescriptor: AnyAuthDescriptorRegistration | undefined,
+  ) => noopKeyHandler,
 });
 
-const nullAuthDescriptorRegistration: AuthDescriptorRegistration<SingleSig> =
-  Object.freeze({
-    authType: AuthType.SingleSig,
-    args: {
-      flags: [] as string[],
-      signer: Buffer.alloc(32, 0),
-    },
-    rule: null,
-  });
+const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
+  id: Buffer.from(""),
+  authType: AuthType.SingleSig,
+  args: {
+    flags: [] as string[],
+    signer: Buffer.alloc(32, 0),
+  },
+  rule: null,
+  created: 0,
+});
 
 const noopKeyHandler: KeyHandler = Object.freeze({
-  authDescriptorRegistration: nullAuthDescriptorRegistration,
+  authDescriptor: nullAuthDescriptor,
   keyStore: nullKeyStore,
   satisfiesAuthRequirements: (_flags: string[]) => true,
   authorize: (
@@ -140,16 +142,15 @@ function createAuthenticatorSession(
       usedKeyHandlers.forEach(
         (keyHandler) =>
           (signers = new Set([
-            ...aggregateSigners(keyHandler.authDescriptorRegistration),
+            ...aggregateSigners(keyHandler.authDescriptor),
             ...signers,
           ])),
       );
       return signers;
     },
     authorize: async (operation: Operation) => {
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
       if (!keyHandler) {
         throw new Error(`Cannot authenticate operation: ${operation.name}`);
       }

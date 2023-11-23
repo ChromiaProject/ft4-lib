@@ -19,7 +19,7 @@ import {
 import {
   addAuthDescriptorTo,
   createAccount,
-  createTestAuthDescriptorRegistration,
+  createTestAuthDescriptor,
 } from "./util/util";
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
@@ -30,8 +30,8 @@ import {
   and,
   blockHeight,
   blockTime,
-  createSingleSignatureAuthDescriptorRegistration,
-  deriveAccountId,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
   greaterOrEqual,
   greaterThan,
   lessOrEqual,
@@ -63,18 +63,18 @@ async function getAuthedAccountsFromAuthDescriptorRule(
   const accountAdmin = await sourceAccount();
 
   await accountAdmin.addAuthDescriptor(
-    user2.authDescriptorRegistration,
+    user2.authDescriptor,
     user2.signatureProvider,
   );
 
   const accounts = await _connection.getAccountsByAuthDescriptorId(
-    deriveAccountId(user2.authDescriptorRegistration),
+    deriveAuthDescriptorId(user2.authDescriptor),
   );
   if (accounts.data.length > 1) throw new Error("Found more than one account");
 
   const keyHandler = createInMemoryFtKeyStore(
     user2.signatureProvider,
-  ).createKeyHandler(user2.authDescriptorRegistration);
+  ).createKeyHandler(user2.authDescriptor);
   const authenticator = createAuthenticator(
     accountAdmin.id,
     [keyHandler],
@@ -291,9 +291,8 @@ describe("Auth Descriptor Rule", () => {
       greaterThan(blockTime(Date.now() - 20000)),
       lessThan(blockTime(Date.now() - 10000)),
     );
-    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules,
-    );
+    const [limitedAccount] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const account2 = await destinationAccount();
 
@@ -311,9 +310,8 @@ describe("Auth Descriptor Rule", () => {
       lessThan(blockTime(Date.now() + 10000)),
     );
 
-    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules,
-    );
+    const [limitedAccount] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const account2 = await destinationAccount();
 
@@ -383,7 +381,7 @@ describe("Auth Descriptor Rule", () => {
     const destAccount = await destinationAccount();
 
     await accountAdmin.addAuthDescriptor(
-      user3.authDescriptorRegistration,
+      user3.authDescriptor,
       user3.signatureProvider,
     );
 
@@ -411,7 +409,7 @@ describe("Auth Descriptor Rule", () => {
     );
 
     await accountAdmin.addAuthDescriptor(
-      user3.authDescriptorRegistration,
+      user3.authDescriptor,
       user3.signatureProvider,
     );
 
@@ -419,26 +417,31 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should delete auth descriptors", async () => {
-    const { keyPair: kp1, authDescriptorRegistration: ad1 } =
-      createTestAuthDescriptorRegistration(["A"]);
-    const { keyPair: kp2, authDescriptorRegistration: ad2 } =
-      createTestAuthDescriptorRegistration(["A"], lessOrEqual(opCount(1)));
-    const { keyPair: kp3, authDescriptorRegistration: ad3 } =
-      createTestAuthDescriptorRegistration(["A"], lessOrEqual(opCount(1)));
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
+      ["A"],
+      lessOrEqual(opCount(1)),
+    );
+    const { keyPair: kp3, authDescriptor: ad3 } = createTestAuthDescriptor(
+      ["A"],
+      lessOrEqual(opCount(1)),
+    );
 
     const accountId = await createAccount(_connection.client, ad1);
 
     const user1 = {
       signatureProvider: newSignatureProvider(kp1),
-      authDescriptorRegistration: ad1,
+      authDescriptor: ad1,
     };
     const user2 = {
       signatureProvider: newSignatureProvider(kp2),
-      authDescriptorRegistration: ad2,
+      authDescriptor: ad2,
     };
     const user3 = {
       signatureProvider: newSignatureProvider(kp3),
-      authDescriptorRegistration: ad3,
+      authDescriptor: ad3,
     };
 
     await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
@@ -450,7 +453,11 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(deriveAccountId(ad1), [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
 
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
@@ -460,7 +467,7 @@ describe("Auth Descriptor Rule", () => {
       .add(
         deleteAllAuthDescriptorsExclude(
           session.account.id,
-          deriveAccountId(ad1),
+          deriveAuthDescriptorId(ad1),
         ),
       )
       .build();
@@ -470,10 +477,10 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
-    const { keyPair: kp1, authDescriptorRegistration: ad1 } =
-      createTestAuthDescriptorRegistration(["A"]);
-    const { authDescriptorRegistration: ad2 } =
-      createTestAuthDescriptorRegistration(["A"]);
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A"]);
 
     await createAccount(_connection.client, ad1);
     await createAccount(_connection.client, ad2);
@@ -483,28 +490,36 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(deriveAccountId(ad1), [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
 
-    const promise = session.account.deleteAuthDescriptor(deriveAccountId(ad2));
+    const promise = session.account.deleteAuthDescriptor(
+      deriveAuthDescriptorId(ad2),
+    );
     await expect(promise).rejects.toThrowError();
   });
 
   it("should delete auth descriptor", async () => {
-    const { keyPair: kp1, authDescriptorRegistration: ad1 } =
-      createTestAuthDescriptorRegistration(["A"]);
-    const { keyPair: kp2, authDescriptorRegistration: ad2 } =
-      createTestAuthDescriptorRegistration(["A"]);
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
+      "A",
+    ]);
 
     const accountId = await createAccount(_connection.client, ad1);
 
     const user1 = {
       signatureProvider: newSignatureProvider(kp1),
-      authDescriptorRegistration: ad1,
+      authDescriptor: ad1,
     };
     const user2 = {
       signatureProvider: newSignatureProvider(kp2),
-      authDescriptorRegistration: ad2,
+      authDescriptor: ad2,
     };
 
     await addAuthDescriptorTo(_connection.client, accountId, user1, user2);
@@ -514,9 +529,13 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(deriveAccountId(ad1), [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
-    await session.account.deleteAuthDescriptor(deriveAccountId(ad2));
+    await session.account.deleteAuthDescriptor(deriveAuthDescriptorId(ad2));
 
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
@@ -547,21 +566,16 @@ describe("Auth Descriptor Rule", () => {
     const account = await sourceAccount();
 
     await expect(
-      account.addAuthDescriptor(
-        user.authDescriptorRegistration,
-        user.signatureProvider,
-      ),
+      account.addAuthDescriptor(user.authDescriptor, user.signatureProvider),
     ).rejects.toThrowError();
   });
 
   it("shouldn't be able to create an account with a limited auth descriptor", async () => {
     const sp = newSignatureProvider();
 
-    const ad = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: ["A", "T"],
-        signer: sp.pubKey,
-      },
+    const ad = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      sp.pubKey,
       lessOrEqual(opCount(2)),
     );
 

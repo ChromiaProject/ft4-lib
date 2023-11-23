@@ -4,18 +4,16 @@ import { createInMemoryFtKeyStore } from "../client/lib/ft4/authentication/ft/ke
 import { op } from "../client/lib/ft4/utils";
 import { createChromiaClient } from "./util/blockchain-util";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createTestAuthDescriptorRegistration } from "./util/util";
-import { aggregateSigners, deriveAccountId } from "/ft4/accounts";
+import { createTestAuthDescriptor } from "./util/util";
+import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
     const accountId = encryption.randomBytes(32);
-    const { keyPair, authDescriptorRegistration } =
-      createTestAuthDescriptorRegistration();
+    const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
-      authDescriptorRegistration,
-    );
+    const keyHandler =
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     const operations = await keyHandler.authorize(
       accountId,
       op("foo"),
@@ -24,27 +22,25 @@ describe("FT key handler", () => {
     );
 
     expect(operations).toEqual([
-      ftAuth(accountId, deriveAccountId(authDescriptorRegistration)),
+      ftAuth(accountId, deriveAuthDescriptorId(authDescriptor)),
       op("foo"),
     ]);
   });
 
   it("should sign transaction", async () => {
-    const { keyPair, authDescriptorRegistration } =
-      createTestAuthDescriptorRegistration();
+    const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const client = await createChromiaClient();
     const transaction = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [] as RellOperation[],
-      signers: aggregateSigners(authDescriptorRegistration),
+      signers: aggregateSigners(authDescriptor),
       signatures: [],
     };
     transaction.operations.push({ opName: "foo", args: [] });
 
-    const keyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(
-      authDescriptorRegistration,
-    );
+    const keyHandler =
+      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
     await keyHandler.sign(transaction);
 
     const digestToSign = gtx.getDigestToSign(transaction);

@@ -2,22 +2,22 @@ import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
-import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor/types";
-import { gtv, deriveAccountId } from "/ft4/accounts/auth-descriptor";
-import { TxContext, TxBuilderTransaction, BufferId } from "/ft4/utils/types";
+import { deriveAuthDescriptorId } from "/ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
 
 const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
   accountId.toString("hex") + authDescriptorId.toString("hex");
 
 export function createEvmKeyHandler(
-  authDescriptorRegistration: AnyAuthDescriptorRegistration,
+  authDescriptor: AnyAuthDescriptor,
   keyStore: EvmKeyStore,
 ): KeyHandler {
   return Object.freeze({
-    authDescriptorRegistration,
+    authDescriptor,
     keyStore,
     satisfiesAuthRequirements: (requiredFlags: string[]) =>
-      hasAuthDescriptorFlags(authDescriptorRegistration, requiredFlags),
+      hasAuthDescriptorFlags(authDescriptor, requiredFlags),
     authorize: (
       accountId: BufferId,
       operation: Operation,
@@ -26,9 +26,7 @@ export function createEvmKeyHandler(
     ) =>
       authorize(
         accountId,
-        deriveAccountId(
-          gtv.authDescriptorRegistrationToGtv(authDescriptorRegistration),
-        ),
+        deriveAuthDescriptorId(authDescriptor),
         operation,
         authDataService,
         context,
@@ -47,9 +45,8 @@ async function authorize(
   context: TxContext,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
   const nonce = await getNonce(
     authDataService,
     accountId,

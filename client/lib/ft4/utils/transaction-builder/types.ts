@@ -5,7 +5,7 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import { Authenticator, KeyHandler } from "/ft4/authentication";
+import { Authenticator, KeyHandler, KeyStore } from "/ft4/authentication";
 import {
   RequireTogether,
   TxContext,
@@ -53,12 +53,12 @@ export type TransactionBuilder = {
     handler?: OnAnchoredHandler | undefined,
   ) => TransactionBuilder;
   /**
-   * Add key handlers that will also be included as signers to this operation.
-   * If `build` is called, the key handlers will also sign the transaction
-   * @param keyHandlers the key handlers to use for signing
+   * Add key stores that will also be included as signers to this transaction.
+   * If `build` is called, the key stores will also be used to sign the transaction
+   * @param keyStores the key stores to use for signing
    * @returns an instance of the transaction builder object
    */
-  addSigners: (...keyHandlers: KeyHandler[]) => TransactionBuilder;
+  addSigners: (...keyStores: (KeyStore | KeyHandler)[]) => TransactionBuilder;
   /**
    * Builds a transaction the same way as `buildUnsigned` and also signs it
    * using the same key handlers that were used to authorize the operations,
@@ -84,15 +84,13 @@ export type TransactionBuilder = {
   keyHandlersUsed: () => KeyHandler[];
 
   /**
-   * Builds a transaction and signs it with the keyhandlers provided.
+   * Builds a transaction and signs it with the keystores provided.
    * When using this function, the builder will completely ignore any
-   * other keyhandlers previously provided.
-   * @param keyHandlers the keyhandler to user
+   * other keystores previously provided.
+   * @param keyStores the keystores to user
    * @returns a signed transaction
    */
-  buildWithSigners: (
-    ...keyHandlers: KeyHandler[]
-  ) => Promise<SignedTransaction>;
+  buildWithSigners: (...keystores: KeyStore[]) => Promise<SignedTransaction>;
 
   /**
    * Build the transaction and submits it to the blockchain. Will return

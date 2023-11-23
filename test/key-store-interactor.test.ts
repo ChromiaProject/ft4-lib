@@ -13,7 +13,7 @@ import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
 } from "/ft4/authentication";
-import { createSingleSignatureAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
+import { createSingleSigAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
 
 let connection: Connection;
 
@@ -87,20 +87,16 @@ describe("Key store interactor", () => {
       .withParticipant(keyPair1)
       .build();
 
-    const ad1 = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: ["M"],
-        signer: keyPair1.pubKey,
-      },
+    const ad1 = createSingleSigAuthDescriptorRegistration(
+      ["M"],
+      keyPair1.pubKey,
       null,
     );
     await account.addAuthDescriptor(ad1, keyPair1);
 
-    const ad2 = createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Transfer],
-        signer: keyPair2.pubKey,
-      },
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
+      keyPair2.pubKey,
       null,
     );
     await account.addAuthDescriptor(ad2, keyPair2);

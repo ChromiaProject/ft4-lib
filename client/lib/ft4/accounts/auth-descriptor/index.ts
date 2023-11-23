@@ -55,7 +55,7 @@ function hashAuthDescriptor(
  * @param firstAuthDescriptor registration to compute id for
  * @returns account id as Buffer
  */
-export function deriveAccountId(
+export function deriveAuthDescriptorId(
   firstAuthDescriptor:
     | RawAuthDescriptorRegistration<RawAuthDescriptorArgs>
     | AnyAuthDescriptorRegistration,
@@ -72,13 +72,14 @@ export function deriveAccountId(
  * @param rule any rules to be included in the registration
  * @returns the created registration
  */
-export function createSingleSignatureAuthDescriptorRegistration(
-  args: SingleSigAuthDescriptorArgs,
+export function createSingleSigAuthDescriptorRegistration(
+  flags: string[],
+  signer: Buffer,
   rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null,
 ): AuthDescriptorRegistration<SingleSigAuthDescriptorArgs> {
   return {
     authType: AuthType.SingleSig,
-    args,
+    args: { flags, signer },
     rule,
   };
 }
@@ -89,13 +90,15 @@ export function createSingleSignatureAuthDescriptorRegistration(
  * @param rule any rules to be included in the registration
  * @returns the created registration
  */
-export function createMultiSignatureAuthDescriptorRegistration(
-  args: MultiSigAuthDescriptorArgs,
+export function createMultiSigAuthDescriptorRegistration(
+  flags: string[],
+  signers: Buffer[],
+  signaturesRequired: number,
   rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null,
 ): AuthDescriptorRegistration<MultiSigAuthDescriptorArgs> {
   return {
     authType: AuthType.MultiSig,
-    args,
+    args: { flags, signers, signaturesRequired },
     rule,
   };
 }
@@ -147,7 +150,7 @@ export {
   and,
 };
 
-export const gtv = {
+export const gtv = Object.freeze({
   authDescriptorRegistrationToGtv,
   mapAuthDescriptors,
-};
+});

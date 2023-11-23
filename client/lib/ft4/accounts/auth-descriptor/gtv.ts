@@ -1,9 +1,4 @@
-import {
-  authTypeFromString,
-  ruleOperatorFromString,
-  ruleVariableFromString,
-  serializeAuthType,
-} from "./enum-parsers";
+import { enumValueFromString, serializeAuthType } from "./enum-parsers";
 import {
   isGtvSimpleRule,
   isSimpleRule,
@@ -21,13 +16,16 @@ import {
   RawAuthDescriptorArgs,
   RawAuthDescriptorRegistration,
   RawAuthDescriptorRule,
-  RawAuthDescriptorRules,
+  RawComplexAuthDescriptorRule,
   RawMultiSigAuthDescriptorArgs,
   RawSingleSigAuthDescriptorArgs,
   MultiSig,
   MultiSigAuthDescriptorArgs,
   SingleSig,
   SingleSigAuthDescriptorArgs,
+  AuthType,
+  RuleOperator,
+  RuleVariable,
 } from "./types";
 
 export function mapSingleSigAuthDescriptor(
@@ -37,7 +35,7 @@ export function mapSingleSigAuthDescriptor(
   const [flags, signer] = args;
   return Object.freeze({
     id,
-    authType: authTypeFromString(auth_type),
+    authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
       signer,
@@ -52,9 +50,9 @@ export function mapMultiSigAuthDescriptor(
 ): AuthDescriptor<MultiSig> {
   const { id, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
-  const a = Object.freeze({
+  return Object.freeze({
     id,
-    authType: authTypeFromString(auth_type),
+    authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
       signaturesRequired,
@@ -63,7 +61,6 @@ export function mapMultiSigAuthDescriptor(
     rule: rules ? rulesFromGtv(rules) : rules,
     created,
   });
-  return a;
 }
 
 export function mapAuthDescriptors(
@@ -91,6 +88,7 @@ export function multiSigAuthDescriptorArgsToGtv(
 export function authDescriptorRegistrationToGtv(
   registration: AnyAuthDescriptorRegistration,
 ): RawAuthDescriptorRegistration<RawAuthDescriptorArgs> {
+  if (!registration) console.trace();
   const { authType, args, rule } = registration;
   return [
     serializeAuthType(authType),
@@ -102,11 +100,11 @@ export function authDescriptorRegistrationToGtv(
 }
 
 export function rulesFromGtv(
-  gtvRules: RawAuthDescriptorRule | RawAuthDescriptorRules,
+  gtvRules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule,
 ): AuthDescriptorRule | ComplexAuthDescriptorRule {
   const mapRule = (gtv: RawAuthDescriptorRule) => ({
-    operator: ruleOperatorFromString(gtv[0]),
-    variable: ruleVariableFromString(gtv[1]),
+    operator: enumValueFromString(gtv[0], RuleOperator),
+    variable: enumValueFromString(gtv[1], RuleVariable),
     value: gtv[2],
   });
   if (isGtvSimpleRule(gtvRules)) {
@@ -120,7 +118,7 @@ export function rulesFromGtv(
 
 export function rulesToGtv(
   rule: AuthDescriptorRule | ComplexAuthDescriptorRule,
-): RawAuthDescriptorRule | RawAuthDescriptorRules {
+): RawAuthDescriptorRule | RawComplexAuthDescriptorRule {
   const toGtv = (rule: AuthDescriptorRule): RawAuthDescriptorRule => [
     rule.operator,
     rule.variable,
@@ -132,7 +130,7 @@ export function rulesToGtv(
   }
 
   const flattenRules = (
-    rule: ComplexAuthDescriptorRule | AuthDescriptorRule,
+    rule: ComplexAuthDescriptorRule,
   ): AuthDescriptorRule[] => {
     if (isSimpleRule(rule)) {
       return [rule];

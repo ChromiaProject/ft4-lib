@@ -1,9 +1,9 @@
 import {
   FlagsType,
-  deriveAccountId,
+  deriveAuthDescriptorId,
   AnyAuthDescriptorRegistration,
   AuthDescriptorRule,
-  createSingleSignatureAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
 import { Asset, Balance, SupportedNumber } from "/ft4/asset/types";
 import { Account, AuthenticatedAccount } from "/ft4/accounts/types";
@@ -29,6 +29,7 @@ import {
 import { nop } from "/ft4/utils";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
 import { op } from "/ft4";
+import { testAdFromRegistration } from "./util";
 
 class AccountBuilder {
   private connection: Connection;
@@ -116,15 +117,14 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const accountManager = await this.registerAndBuildManagerAuthenticated(
-      manager,
-    );
+    const accountManager =
+      await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
     await accountManager.addAuthDescriptor(ad, this.participant);
 
     const keyHandler = createInMemoryFtKeyStore(
       this.participant,
-    ).createKeyHandler(ad);
+    ).createKeyHandler(testAdFromRegistration(ad));
     const authenticator = createAuthenticator(
       accountManager.id,
       [keyHandler],
@@ -143,10 +143,13 @@ class AccountBuilder {
       admin().signatureProvider,
       ad,
     );
-    const account = await this.connection.getAccountById(deriveAccountId(ad));
+    const account = await this.connection.getAccountById(
+      deriveAuthDescriptorId(ad),
+    );
     const connection = createConnection(await createChromiaClient());
-    const keyHandler =
-      createInMemoryFtKeyStore(managerSigProv).createKeyHandler(ad);
+    const keyHandler = createInMemoryFtKeyStore(
+      managerSigProv,
+    ).createKeyHandler(testAdFromRegistration(ad));
 
     const authenticator = createAuthenticator(
       account!.id,
@@ -233,21 +236,17 @@ class AccountBuilder {
   }
 
   private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
-    return createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: this.flags.concat(FlagsType.Account),
-        signer: managerSigProv.pubKey,
-      },
+    return createSingleSigAuthDescriptorRegistration(
+      this.flags.concat(FlagsType.Account),
+      managerSigProv.pubKey,
       null,
     );
   }
 
   private getAuthDescriptorRegistration() {
-    return createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: this.flags,
-        signer: this.participant.pubKey,
-      },
+    return createSingleSigAuthDescriptorRegistration(
+      this.flags,
+      this.participant.pubKey,
       this.rules,
     );
   }

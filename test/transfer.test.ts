@@ -1,8 +1,8 @@
 import { newSignatureProvider } from "postchain-client";
 import {
   FlagsType,
-  deriveAccountId,
-  createMultiSignatureAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  createMultiSigAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
 import { createAmount } from "/ft4/asset/amount";
 import { Asset } from "/ft4/asset/types";
@@ -93,15 +93,10 @@ describe("Transfer", () => {
       .withPoints(1)
       .build();
 
-    const authDescriptor = createMultiSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account, FlagsType.Transfer],
-        signaturesRequired: 2,
-        signers: [
-          user2.signatureProvider.pubKey,
-          user3.signatureProvider.pubKey,
-        ],
-      },
+    const authDescriptor = createMultiSigAuthDescriptorRegistration(
+      [FlagsType.Account, FlagsType.Transfer],
+      [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey],
+      2,
       null,
     );
     await registerAccount(
@@ -111,7 +106,7 @@ describe("Transfer", () => {
     );
 
     const account2 = await createConnection(connection.client).getAccountById(
-      deriveAccountId(authDescriptor),
+      deriveAuthDescriptorId(authDescriptor),
     );
 
     await account1.transfer(

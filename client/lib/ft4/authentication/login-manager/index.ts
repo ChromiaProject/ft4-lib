@@ -8,7 +8,7 @@ import { LoginManger, LoginOptions } from "./types";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import {
   FlagsType,
-  createSingleSignatureAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
 import { createAuthDataService, createSession } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
@@ -142,15 +142,13 @@ async function addDisposableAuthDescriptor(
   const keyPair = await loginKeyStore.createKeyPair(accountId);
   const ks = createInMemoryFtKeyStore(keyPair);
 
-  const ad = createSingleSignatureAuthDescriptorRegistration(
-    {
-      flags,
-      signer: getPubkey(keyPair),
-    },
+  const ad = createSingleSigAuthDescriptorRegistration(
+    flags,
+    getPubkey(keyPair),
     null,
   );
 
   await session.account.addAuthDescriptor(ad, keyPair);
 
-  return ks.createKeyHandler(ad);
+  return ks.createKeyHandler();
 }

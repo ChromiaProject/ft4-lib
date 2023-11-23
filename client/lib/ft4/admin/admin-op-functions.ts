@@ -1,11 +1,8 @@
 import { IClient, SignatureProvider } from "postchain-client";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
-import * as ops from "./admin-operations";
-import {
-  AnyAuthDescriptorRegistration,
-  gtv,
-} from "/ft4/accounts/auth-descriptor";
 import { Asset } from "../asset/types";
+import * as ops from "./admin-operations";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
 import { BufferId, TransactionCompletion } from "/ft4/utils/types";
 
 /**
@@ -23,10 +20,9 @@ export async function registerAccount(
   adminSignatureProvider: SignatureProvider,
   authDescriptor: AnyAuthDescriptorRegistration,
 ): Promise<TransactionCompletion> {
-  const ad = gtv.authDescriptorRegistrationToGtv(authDescriptor);
   return {
     receipt: await chromiaClient.signAndSendUniqueTransaction(
-      ops.registerAccount(ad),
+      ops.registerAccount(authDescriptor),
       adminSignatureProvider,
     ),
   };

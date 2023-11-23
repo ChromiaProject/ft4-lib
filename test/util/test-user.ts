@@ -6,15 +6,18 @@ import {
   Operation,
   SignatureProvider,
 } from "postchain-client";
-import { KeyManager } from "/ft4/accounts/auth/types";
 import {
-  AuthDescriptorRegistration,
   AuthDescriptorRule,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
   FlagsType,
   SingleSigAuthDescriptorArgs,
-  createSingleSignatureAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
-import { ComplexAuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
+import {
+  AuthDescriptor,
+  ComplexAuthDescriptorRule,
+} from "/ft4/accounts/auth-descriptor/types";
+import { KeyManager } from "/ft4/accounts/auth/types";
 
 export default function singleSigUser(
   rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null = null,
@@ -40,23 +43,24 @@ export function newSingleSigUser(
     ),
     sign: (gtx: Buffer) => Promise.resolve(gtx),
   };
-  const singleSigAuthDescriptor =
-    createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account, FlagsType.Transfer],
-        signer: signatureProvider.pubKey,
-      },
-      rule,
-    );
+  const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+    [FlagsType.Account, FlagsType.Transfer],
+    signatureProvider.pubKey,
+    rule,
+  );
   return {
     signatureProvider,
     keyManagers: [keymanager],
-    authDescriptorRegistration: singleSigAuthDescriptor,
+    authDescriptor: {
+      ...singleSigAuthDescriptor,
+      id: deriveAuthDescriptorId(singleSigAuthDescriptor),
+      created: Date.now(),
+    },
   };
 }
 
 export type User = {
   signatureProvider: SignatureProvider;
   keyManagers: KeyManager[];
-  authDescriptorRegistration: AuthDescriptorRegistration<SingleSigAuthDescriptorArgs>;
+  authDescriptor: AuthDescriptor<SingleSigAuthDescriptorArgs>;
 };

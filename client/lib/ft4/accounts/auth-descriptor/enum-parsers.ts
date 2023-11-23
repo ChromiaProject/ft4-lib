@@ -1,38 +1,16 @@
-import {
-  AuthDescriptorError,
-  RuleOperator,
-  RuleVariable,
-  AuthType,
-} from "./types";
+import { AuthDescriptorError, AuthType, EnumLike } from "./types";
 
-export function ruleVariableFromString(str: string): RuleVariable {
-  const enumValues = Object.values(RuleVariable);
+export function enumValueFromString<T extends EnumLike>(
+  str: string,
+  enumType: T,
+): T[keyof T] {
+  const enumValues = Object.values(enumType);
   for (const value of enumValues) {
     if (value === str) {
-      return value;
+      return value as T[keyof T];
     }
   }
-  throw new AuthDescriptorError(`No rule variable named: '${str}'`);
-}
-
-export function ruleOperatorFromString(str: string): RuleOperator {
-  const enumValues = Object.values(RuleOperator);
-  for (const value of enumValues) {
-    if (value === str) {
-      return value;
-    }
-  }
-  throw new AuthDescriptorError(`No rule operator named: '${str}'`);
-}
-
-export function authTypeFromString(str: string): AuthType {
-  const enumValues = Object.values(AuthType);
-  for (const value of enumValues) {
-    if (value === str) {
-      return value;
-    }
-  }
-  throw new AuthDescriptorError(`No auth type named: '${str}'`);
+  throw new AuthDescriptorError(`No enum value named: '${str}'`);
 }
 
 const authTypeSerializationMap = Object.values(AuthType)

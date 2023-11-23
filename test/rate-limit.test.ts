@@ -7,7 +7,7 @@ import TestUser, { User } from "./util/test-user";
 import { BufferId, Config } from "/ft4/utils/types";
 import { ftAuth } from "/ft4/authentication";
 import { op } from "/ft4";
-import { deriveAccountId } from "/ft4/accounts";
+import { deriveAuthDescriptorId } from "/ft4/accounts";
 
 jest.setTimeout(2000000);
 
@@ -87,9 +87,9 @@ describe("Rate Limit", () => {
 
       const tx = {
         operations: [
-          ftAuth(account.id, deriveAccountId(user.authDescriptorRegistration)),
+          ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
           op("test_authenticated_operation"),
-          ftAuth(account.id, deriveAccountId(user.authDescriptorRegistration)),
+          ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
           op("test_authenticated_operation"),
         ],
         signers: [user.signatureProvider.pubKey],

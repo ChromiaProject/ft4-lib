@@ -1,38 +1,41 @@
+import { Buffer } from "buffer";
 import {
-  encryption,
-  gtv as pclGtv,
   IClient,
-  SignatureProvider,
   KeyPair,
   Operation,
   RellOperation,
+  SignatureProvider,
+  encryption,
+  gtv as pclGtv,
 } from "postchain-client";
+import adminUser from "./admin_user";
+import { Connection } from "/ft4";
+import { addAuthDescriptor } from "/ft4/accounts/account-operations";
 import {
+  createMultiSigAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
+import {
+  AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
+  AnySig,
+  AuthDescriptor,
   AuthDescriptorRegistration,
   AuthDescriptorRule,
   MultiSig,
   SingleSig,
 } from "/ft4/accounts/auth-descriptor/types";
-import { Buffer } from "buffer";
-import { op } from "/ft4/utils";
-import adminUser from "./admin_user";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator } from "/ft4/authentication";
-import { transactionBuilder } from "/ft4/utils/transaction-builder";
-import { addAuthDescriptor } from "/ft4/accounts/account-operations";
-import {
-  gtv,
-  deriveAccountId,
-  createMultiSignatureAuthDescriptorRegistration,
-  createSingleSignatureAuthDescriptorRegistration,
-} from "/ft4/accounts/auth-descriptor";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import {
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
 } from "/ft4/ft-session";
-import { Connection } from "/ft4";
+import { op } from "/ft4/utils";
+import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { BufferId } from "/ft4/utils/types";
 
 function generateNumber(): number {
@@ -85,29 +88,30 @@ class LocalStorageMock implements Storage {
 }
 
 export {
+  LocalStorageMock,
+  blockchainAccountId,
   generateAssetName,
   generateAssetSymbol,
   generateId,
-  blockchainAccountId,
-  LocalStorageMock,
 };
 
-export function createTestAuthDescriptorRegistration(
+export function createTestAuthDescriptor(
   flags: string[] = [],
   rules: AuthDescriptorRule | null = null,
 ): {
   keyPair: KeyPair;
-  authDescriptorRegistration: AuthDescriptorRegistration<SingleSig>;
+  authDescriptor: AuthDescriptor<SingleSig>;
 } {
   const keyPair = encryption.makeKeyPair();
-  const ad = createSingleSignatureAuthDescriptorRegistration(
-    {
-      flags,
-      signer: keyPair.pubKey,
-    },
+  const ad = createSingleSigAuthDescriptorRegistration(
+    flags,
+    keyPair.pubKey,
     rules,
   );
-  return { keyPair, authDescriptorRegistration: ad };
+  return {
+    keyPair,
+    authDescriptor: { ...ad, id: deriveAuthDescriptorId(ad), created: 0 },
+  };
 }
 
 export function createTestMultisigAuthDescriptorRegistration(
@@ -120,16 +124,24 @@ export function createTestMultisigAuthDescriptorRegistration(
   const keyPairs = Array.from({ length: signaturesRequired }, () =>
     encryption.makeKeyPair(),
   );
-  const descriptor = createMultiSignatureAuthDescriptorRegistration(
-    {
-      flags,
-      signaturesRequired,
-      signers: keyPairs.map((kp) => kp.pubKey),
-    },
+  const descriptor = createMultiSigAuthDescriptorRegistration(
+    flags,
+    keyPairs.map((kp) => kp.pubKey),
+    signaturesRequired,
     null,
   );
 
   return { keyPairs, authDescriptorRegistration: descriptor };
+}
+
+export function testAdFromRegistration<T extends AnySig>(
+  reg: AuthDescriptorRegistration<T>,
+): AuthDescriptor<T> {
+  return {
+    ...reg,
+    id: deriveAuthDescriptorId(reg as any),
+    created: Date.now(),
+  };
 }
 
 export async function addAuthDescriptorTo(
@@ -137,20 +149,20 @@ export async function addAuthDescriptorTo(
   accountId: Buffer,
   user: {
     signatureProvider: SignatureProvider;
-    authDescriptorRegistration: AnyAuthDescriptorRegistration;
+    authDescriptor: AnyAuthDescriptor;
   },
   newUser: {
     signatureProvider: SignatureProvider;
-    authDescriptorRegistration: AnyAuthDescriptorRegistration;
+    authDescriptor: AnyAuthDescriptor;
   },
 ) {
   const keyHandlerUser1 = createInMemoryFtKeyStore(
     user.signatureProvider,
-  ).createKeyHandler(user.authDescriptorRegistration);
+  ).createKeyHandler(user.authDescriptor);
 
   const keyHandlerUser2 = createInMemoryFtKeyStore(
     newUser.signatureProvider,
-  ).createKeyHandler(newUser.authDescriptorRegistration);
+  ).createKeyHandler(newUser.authDescriptor);
 
   const authDataService = createAuthDataService(createConnection(client));
   const authenticator = createAuthenticator(
@@ -160,7 +172,7 @@ export async function addAuthDescriptorTo(
   );
 
   const tx = await transactionBuilder(authenticator, client)
-    .add(addAuthDescriptor(newUser.authDescriptorRegistration))
+    .add(addAuthDescriptor(newUser.authDescriptor))
     .addSigners(keyHandlerUser2)
     .build();
   return client.sendTransaction(tx);
@@ -177,7 +189,7 @@ export async function createAccount(
     ),
     adminUser().signatureProvider,
   );
-  return deriveAccountId(descriptor);
+  return deriveAuthDescriptorId(descriptor);
 }
 
 export async function getSessionForAccount(

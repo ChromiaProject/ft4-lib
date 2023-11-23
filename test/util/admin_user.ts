@@ -4,8 +4,9 @@ import { Buffer } from "buffer";
 import { User } from "./test-user";
 import {
   FlagsType,
-  createSingleSignatureAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
+import { testAdFromRegistration } from "./util";
 
 export default function adminUser(): User {
   const km = {
@@ -30,18 +31,15 @@ export default function adminUser(): User {
     ),
     sign: (gtx: Buffer) => Promise.resolve(gtx),
   };
-  const singleSigAuthDescriptor =
-    createSingleSignatureAuthDescriptorRegistration(
-      {
-        flags: [FlagsType.Account, FlagsType.Transfer],
-        signer: signatureProvider.pubKey,
-      },
-      null,
-    );
+  const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+    [FlagsType.Account, FlagsType.Transfer],
+    signatureProvider.pubKey,
+    null,
+  );
   return {
     signatureProvider,
     keyManagers: [keymanager],
-    authDescriptorRegistration: singleSigAuthDescriptor,
+    authDescriptor: testAdFromRegistration(singleSigAuthDescriptor),
   };
 }
 

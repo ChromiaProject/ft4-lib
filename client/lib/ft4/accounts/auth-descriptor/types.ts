@@ -24,6 +24,8 @@ export enum RuleOperator {
   GreaterOrEqual = "ge",
 }
 
+export type EnumLike = Record<string, string | number>;
+
 export class AuthDescriptorError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -102,7 +104,7 @@ export type RawAuthDescriptorArgs =
   | RawMultiSigAuthDescriptorArgs;
 
 export type RawAuthDescriptorRule = readonly [string, string, number];
-export type RawAuthDescriptorRules = readonly [
+export type RawComplexAuthDescriptorRule = readonly [
   "and",
   ...RawAuthDescriptorRule[],
 ];
@@ -113,7 +115,7 @@ export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
   readonly [
     auth_type: number,
     args: T,
-    rules: RawAuthDescriptorRule | RawAuthDescriptorRules | null,
+    rules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule | null,
   ];
 
 export type RawAnyAuthDescriptorRegistration =
@@ -131,5 +133,5 @@ export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: RawAuthDescriptorRule | RawAuthDescriptorRules | null;
+  rules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule | null;
 };
