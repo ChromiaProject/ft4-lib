@@ -66,6 +66,11 @@ describe("Transfer", () => {
         "rell/config/jest-test/node-config.properties",
         "--wipe",
       ])
+      .withLogConsumer((stream) => {
+        stream.on("data", (line) => console.log(line));
+        stream.on("err", (line) => console.error(line));
+        stream.on("end", () => console.log("Stream closed"));
+      })
       .withWaitStrategy(Wait.forLogMessage("Blockchain has been started"))
       .withStartupTimeout(60000)
       .start();
