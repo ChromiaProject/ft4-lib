@@ -8,7 +8,7 @@ import ^^^.lib.ft4.admin;
 import ^^.operations;
 
 struct module_args {
-    admin_priv_key: text; 
+    admin_priv_key: byte_array;
 }
 
 import ^^^.lib.ft4.auth;
@@ -45,14 +45,14 @@ function create_test_account(rell.test.keypair, permissions: list<text> = ["T"])
     );
 }
 
-function admin_priv_key() = byte_array(chain_context.args.admin_priv_key);
+function admin_priv_key() = chain_context.args.admin_priv_key;
 
 function create_test_account_with_auth_descriptor(
     acc.auth_descriptor, 
     user_keypair: rell.test.keypair
 ) {
     admin.register_account(auth_descriptor)
-        .sign(byte_array(chain_context.args.admin_priv_key))
+        .sign(chain_context.args.admin_priv_key)
         .sign(user_keypair)
         .run();
 }
@@ -95,7 +95,7 @@ function create_asset(name: text, symbol: text, decimals: integer, icon_url: tex
         decimals,
         icon_url
     )
-    .sign(byte_array(chain_context.args.admin_priv_key))
+    .sign(chain_context.args.admin_priv_key)
     .run();
 
     return assets.asset @ { .id == (name, chain_context.blockchain_rid).hash() };
@@ -118,7 +118,7 @@ function create_crosschain_asset(
         icon_url,
         origin_blockchain_rid
     )
-    .sign(byte_array(chain_context.args.admin_priv_key))
+    .sign(chain_context.args.admin_priv_key)
     .run();
 
     return assets.asset @ { .id == (name, issuing_blockchain_rid).hash() };
@@ -130,7 +130,7 @@ function mint(acc.account, assets.asset, amount: big_integer) {
         asset.id,
         amount
     )
-    .sign(byte_array(chain_context.args.admin_priv_key))
+    .sign(chain_context.args.admin_priv_key)
     .run();
 }
 
@@ -151,7 +151,7 @@ function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test
  */
 function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): account_data {
     admin.register_account(auth_descriptor)
-        .sign(byte_array(chain_context.args.admin_priv_key))
+        .sign(chain_context.args.admin_priv_key)
         .sign(keypair)
         .run();
     
@@ -176,10 +176,9 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
  */
 function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): account_data {
     val op = admin.register_account(auth_descriptor);
-    val admin_privkey = byte_array(chain_context.args.admin_priv_key);
     val admin_keypair = rell.test.keypair(
-        priv=admin_privkey, 
-        pub=crypto.privkey_to_pubkey(admin_privkey, true)
+        priv=chain_context.args.admin_priv_key,
+        pub=crypto.privkey_to_pubkey(chain_context.args.admin_priv_key, true)
     );
     keys.add(admin_keypair);
     var tx = _sign_many(op, keys); 
