@@ -10,15 +10,77 @@ import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
 import TestUser from "./util/test-user";
 import { registerAccount } from "/ft4/admin/admin-op-functions";
 import { Connection } from "/ft4/types";
+import { cwd } from "process";
+import {
+  GenericContainer,
+  Network,
+  StartedTestContainer,
+  Wait,
+} from "testcontainers";
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
+import { IClient } from "postchain-client";
+
+let postgres: StartedPostgreSqlContainer;
+let container: StartedTestContainer;
 
 let asset: Asset;
 let connection: Connection;
+let client: IClient;
 const admin = adminUser();
 
 describe("Transfer", () => {
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
+    // Start a new network for containers
+    const network = await new Network().start();
+
+    // Start a PostgreSQL container
+    postgres = await new PostgreSqlContainer("postgres:14.9-alpine3.18")
+      .withNetwork(network)
+      .withExposedPorts(5432)
+      .withDatabase("postchain")
+      .withPassword("postchain")
+      .withUsername("postchain")
+      .withNetworkAliases("postgres")
+      .start();
+
+    // Start a Chromia node container
+    container = await new GenericContainer(
+      "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.13.2",
+    )
+      .withNetwork(network)
+      .withCopyDirectoriesToContainer([{ source: cwd(), target: "/usr/app" }])
+      .withExposedPorts(7740)
+      .withEnvironment({
+        CHR_DB_URL: "jdbc:postgresql://postgres/postchain",
+      })
+      .withCommand([
+        "chr",
+        "node",
+        "start",
+        "-s",
+        "configs/jest-test.yml",
+        "-np",
+        "rell/config/jest-test/node-config.properties",
+        "--wipe",
+      ])
+      .withWaitStrategy(Wait.forLogMessage("Blockchain has been started"))
+      .withStartupTimeout(60000)
+      .start();
+
+    client = await createChromiaClient(
+      "http://localhost:" + container.getMappedPort(7740),
+    );
+    connection = createConnection(client);
     asset = await getNewAsset(connection.client, undefined, undefined, 5);
+  });
+
+  // Stop containers after all tests are complete
+  afterAll(async () => {
+    await container.stop();
+    await postgres.stop();
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {
@@ -132,7 +194,7 @@ describe("Transfer", () => {
       .build();
 
     const session = await createKeyStoreInteractor(
-      await createChromiaClient(),
+      client,
       createInMemoryFtKeyStore(keyPair),
     ).getSession(account.id);
     await session.account.burn(asset.id, createAmount(10, asset.decimals));
