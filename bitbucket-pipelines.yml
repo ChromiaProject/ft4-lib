@@ -13,7 +13,7 @@ pipelines:
             - node
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
+            - curl -fsSL https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg
             - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install -y netcat-openbsd chr default-jre
