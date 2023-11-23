@@ -14,13 +14,14 @@ pipelines:
           script:
             - apt update
             - curl -fsSL https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install -y netcat-openbsd chr default-jre
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
             - cp package.json client/lib/ft4/
+            - export TESTCONTAINERS_RYUK_DISABLED=true
             - npx jest -maxWorkers=1 --testPathPattern=test/transfer.test.ts
 
           services:
