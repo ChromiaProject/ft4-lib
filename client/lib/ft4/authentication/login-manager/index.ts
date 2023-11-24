@@ -177,8 +177,6 @@ async function addDisposableAuthDescriptor(
  * day, which means it will be off by a second (e.g. starts at 14:00:00 and expires the next
  * day at 13:59:59).
  */
-export const milliseconds = (ms: number) => ms;
-export const seconds = (s: number) => s * 1000;
 export const minutes = (m: number) => m * 60000;
 export const hours = (h: number) => h * 3600000;
 export const days = (d: number) => d * 86400000;

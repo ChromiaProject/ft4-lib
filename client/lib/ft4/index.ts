@@ -15,8 +15,6 @@ export {
   createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
   createEvmKeyHandler,
-  milliseconds,
-  seconds,
   minutes,
   hours,
   days,
