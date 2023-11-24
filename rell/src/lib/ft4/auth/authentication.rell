@@ -117,16 +117,19 @@ function _validate_ft4_signature(auth_args: list<gtv>): accounts.account {
 function _recover_eth_address(message: text, signature) {
     require(message != "", "Empty messages are not allowed");
 
-    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
-    val eth_pubkey = eth_ecrecover(
+    val msg_hash = _eth_message_hash(message);
+    val eth_pubkey = crypto.eth_ecrecover(
         signature.r,
         signature.s,
         signature.v - 27,
         msg_hash
     );
     
-    return utils.evm_address_from_pubkey(eth_pubkey);
+    return crypto.eth_pubkey_to_address(eth_pubkey);
 }
+
+function _eth_message_hash(message: text): byte_array =
+    keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
 
 function _validate_eth_address(message: text, signature, accounts.account_auth_descriptor) {
     val recovered_address = _recover_eth_address(message, signature);
