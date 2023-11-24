@@ -9,6 +9,7 @@ import {
   Operation,
   TransactionReceipt,
 } from "postchain-client";
+import { LoginManger, LoginKeyStore } from "./authentication/login-manager";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -23,7 +24,11 @@ export interface Connection extends Queryable {
   getVersion: () => Promise<string>;
 
   getAccountById: (accountId: BufferId) => Promise<Account | null>;
-  getAccountsByParticipantId: (participantId: BufferId) => Promise<Account[]>;
+  getAccountsByParticipantId: (
+    participantId: BufferId,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Account>>;
   getAccountsByAuthDescriptorId: (
     id: BufferId,
     limit?: number,
@@ -49,3 +54,18 @@ export interface Session extends Connection {
   callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
   transactionBuilder: () => TransactionBuilder;
 }
+
+export type KeyStoreInteractor = {
+  /**
+   * Retrieves a list of Accounts associated with the pubkey. At most MAX_PAGE_SIZE.
+   * To fetch more Accounts, use @see getAccountsPaginated
+   */
+  getAccounts(): Promise<Account[]>;
+  getAccountsPaginated(
+    limit: number,
+    cursor: OptionalPageCursor,
+  ): Promise<PaginatedEntity<Account>>;
+  getSession(accountId: BufferId): Promise<Session>;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
+  onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
+};
