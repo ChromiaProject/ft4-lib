@@ -103,6 +103,7 @@ function create_account_with_auth(auth_descriptor): byte_array {
     val recovery_time = chain_context.args.rate_limit_recovery_time;
     val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
     
+    require(op_context.block_height > 0, "Cannot create account in genesis block");
     create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
     
     return id;
@@ -227,6 +228,7 @@ namespace Unsafe {
         val recovery_time = chain_context.args.rate_limit_recovery_time;
         val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
         
+        require(op_context.block_height > 0, "Cannot create account in genesis block");
         create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
         
         return id;
