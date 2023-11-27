@@ -66,11 +66,15 @@ export function mapMultiSigAuthDescriptor(
 export function mapAuthDescriptors(
   response: RawAnyAuthDescriptor[],
 ): AnyAuthDescriptor[] {
-  return response.map((res) =>
-    isSingleSigGtv(res)
-      ? mapSingleSigAuthDescriptor(res)
-      : mapMultiSigAuthDescriptor(res),
-  );
+  return response.map(mapOneAuthDescriptor);
+}
+
+export function mapOneAuthDescriptor(
+  res: RawAnyAuthDescriptor,
+): AnyAuthDescriptor {
+  return isSingleSigGtv(res)
+    ? mapSingleSigAuthDescriptor(res)
+    : mapMultiSigAuthDescriptor(res);
 }
 
 export function singleSigAuthDescriptorArgsToGtv(

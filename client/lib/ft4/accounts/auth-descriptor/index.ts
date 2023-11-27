@@ -1,6 +1,10 @@
 import { Buffer } from "buffer";
 import { gtv as pclGtv } from "postchain-client";
-import { authDescriptorRegistrationToGtv, mapAuthDescriptors } from "./gtv";
+import {
+  authDescriptorRegistrationToGtv,
+  mapAuthDescriptors,
+  mapOneAuthDescriptor,
+} from "./gtv";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
@@ -152,5 +156,6 @@ export {
 
 export const gtv = Object.freeze({
   authDescriptorRegistrationToGtv,
+  mapOneAuthDescriptor,
   mapAuthDescriptors,
 });

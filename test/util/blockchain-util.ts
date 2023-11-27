@@ -70,9 +70,9 @@ export function anchoredHandlerCallbackParameters(
       [
         Buffer.from(client.config.blockchainRid, "hex"),
         operations.map((o) => [o.name, o.args]),
-        [],
+        expect.any(Array),
       ],
-      [],
+      expect.any(Array),
     ]),
   });
 }

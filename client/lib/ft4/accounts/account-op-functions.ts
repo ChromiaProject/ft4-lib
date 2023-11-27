@@ -7,23 +7,25 @@ import { call, createSession } from "../ft-session";
 import { Connection } from "../types";
 import { transactionBuilder } from "../utils/transaction-builder";
 import {
-  BufferId,
-  TransactionCompletion,
-  TransactionSessionCompletion,
-} from "/ft4/utils/types";
-import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
 } from "./account-operations";
+import { authDescriptorById } from "./account-queries";
 import { createAccountObject } from "./account-query-functions";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   deriveAuthDescriptorId,
+  gtv,
 } from "./auth-descriptor";
 import { AuthenticatedAccount } from "./types";
+import {
+  BufferId,
+  TransactionCompletion,
+  TransactionSessionCompletion,
+} from "/ft4/utils/types";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -56,21 +58,31 @@ async function addAuthDescriptor(
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const newKeyHandler = createInMemoryFtKeyStore(newSigner).createKeyHandler();
+  const newKeyStore = createInMemoryFtKeyStore(newSigner);
 
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptorRegistration))
-    .addSigners(newKeyHandler)
+    .addSigners(newKeyStore)
     .build();
+
+  const receipt = await connection.client.sendTransaction(tx);
+  const ad = await connection.query(
+    authDescriptorById(
+      authenticator.accountId,
+      deriveAuthDescriptorId(authDescriptorRegistration),
+    ),
+  );
 
   const newAuth = createAuthenticator(
     authenticator.accountId,
-    authenticator.keyHandlers.concat(newKeyHandler),
+    authenticator.keyHandlers.concat(
+      newKeyStore.createKeyHandler(gtv.mapOneAuthDescriptor(ad)),
+    ),
     authenticator.authDataService,
   );
 
   return {
-    receipt: await connection.client.sendTransaction(tx),
+    receipt,
     session: createSession(connection, newAuth),
   };
 }

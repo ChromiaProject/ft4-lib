@@ -30,6 +30,7 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRid } from "..";
+import { txToBuffer } from ".";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -55,14 +56,16 @@ export function transactionBuilder(
     return this;
   }
 
-  function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
+  function toPubkeys(keyHandlers: (KeyHandler | KeyStore)[]): Buffer[] {
     return keyHandlers
-      .map((handler) => handler.getSigners())
+      .map((handler) =>
+        isKeyHandler(handler) ? handler.getSigners() : handler.id,
+      )
       .filter((pubKey): pubKey is Buffer[] => !!pubKey)
       .flat();
   }
 
-  async function buildUnsigned() {
+  async function buildUnsigned(): Promise<TxBuilderTransaction> {
     const [operations, keyHandlers] = await authenticateOperations(
       this._operations,
       this._context,
@@ -136,9 +139,31 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx = await this.buildUnsigned();
-    await Promise.all(
-      this._keyhandlersUsed.map((store: KeyHandler) => store.sign(tx)),
+    const getKeyHandlersForSigners = (
+      keyhandlersUsed: (KeyHandler | KeyStore)[],
+      signers: Buffer[],
+    ) => {
+      const keyHandlers = keyhandlersUsed.reduce(
+        (acc, curr: KeyHandler | KeyStore) => {
+          if (isKeyHandler(curr)) {
+            return { [curr.keyStore.id.toString()]: curr, ...acc };
+          }
+          return { [curr.id.toString()]: curr, ...acc };
+        },
+        {},
+      );
+      return signers.map((pk) => keyHandlers[pk.toString()]);
+    };
+
+    const tx: TxBuilderTransaction = await this.buildUnsigned();
+    const keyHandlers = getKeyHandlersForSigners(
+      this._keyhandlersUsed,
+      tx.signers,
+    );
+    tx.signatures = await Promise.all(
+      keyHandlers.map((kh) => {
+        return kh.sign(txToBuffer(tx));
+      }),
     );
     return gtx.serialize(tx);
   }
@@ -146,13 +171,7 @@ export function transactionBuilder(
   function addSigners(
     ...signers: (KeyStore | KeyHandler)[]
   ): TransactionBuilder {
-    signers.forEach((signer) => {
-      if (isKeyHandler(signer)) {
-        this._keyhandlersUsed.push(signer);
-      } else {
-        this._keyhandlersUsed.push(signer.createKeyHandler());
-      }
-    });
+    signers.forEach((signer) => this._keyhandlersUsed.push(signer));
     return this;
   }
 
@@ -161,7 +180,9 @@ export function transactionBuilder(
     tx.signers = [
       ...new Set(signers.map((signer) => signer.getSigners()).flat()),
     ];
-    await Promise.all(signers.map((handler: KeyHandler) => handler.sign(tx)));
+    tx.signatures = await Promise.all(
+      signers.map((handler: KeyHandler) => handler.sign(txToBuffer(tx))),
+    );
     return gtx.serialize(tx);
   }
 
@@ -310,4 +331,4 @@ export function transactionBuilder(
 }
 
 const isKeyHandler = (handler: KeyHandler | KeyStore): handler is KeyHandler =>
-  (handler as KeyHandler).sign !== undefined;
+  (handler as KeyStore).id === undefined;

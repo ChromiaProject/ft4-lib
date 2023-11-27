@@ -15,6 +15,7 @@ import {
   SingleSig,
   aggregateSigners,
 } from "/ft4/accounts";
+import { txToBuffer } from "../utils/transaction-builder";
 
 export * from "./evm";
 export * from "./ft";
@@ -65,6 +66,7 @@ export function createNoopAuthenticator(
 const nullKeyStore: KeyStore = Object.freeze({
   id: Buffer.alloc(32),
   isInteractive: false,
+  sign: (tx: Buffer) => Promise.resolve(tx),
   createKeyHandler: (
     _authDescriptor: AnyAuthDescriptorRegistration | undefined,
   ) => noopKeyHandler,
@@ -91,7 +93,7 @@ const noopKeyHandler: KeyHandler = Object.freeze({
     _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
-  sign: () => Promise.resolve(),
+  sign: (digest: Buffer) => Promise.resolve(digest),
   getSigners: (): Buffer[] => [],
 });
 
@@ -163,9 +165,11 @@ function createAuthenticatorSession(
       );
     },
     sign: async (transaction: TxBuilderTransaction) => {
-      await Promise.all(
-        Array.from(usedKeyHandlers).map((keyHandler) =>
-          keyHandler.sign(transaction),
+      transaction.signatures = transaction.signatures.concat(
+        await Promise.all(
+          Array.from(usedKeyHandlers).map((keyHandler) =>
+            keyHandler.sign(txToBuffer(transaction)),
+          ),
         ),
       );
     },

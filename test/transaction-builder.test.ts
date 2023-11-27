@@ -86,17 +86,18 @@ describe("Transaction Builder", () => {
     const { authDescriptor, keyPair } = createTestAuthDescriptor([
       FlagsType.Account,
     ]);
+    const keyStore = createInMemoryFtKeyStore(keyPair);
     const keyHandlerMock: KeyHandler = {
       authDescriptor,
-      keyStore: createInMemoryFtKeyStore(keyPair),
+      keyStore,
       satisfiesAuthRequirements: jest.fn(),
       authorize: jest
         .fn()
         .mockImplementation((accountId, operation) =>
           Promise.resolve([operation]),
         ),
-      sign: jest.fn(),
-      getSigners: jest.fn(),
+      sign: jest.fn().mockImplementation((v) => keyStore.sign(v)),
+      getSigners: jest.fn().mockReturnValue([keyPair.pubKey]),
     };
     const authenticatorMock: Authenticator = {
       accountId: Buffer.alloc(32),
@@ -255,12 +256,28 @@ describe("Transaction Builder", () => {
 
   describe("block anchored handling", () => {
     it("can build and submit a function", async () => {
-      const { authenticatorMock } = getMocks();
+      const { authenticatorMock, keyPair } = getMocks();
       const operation = nop();
-      const expectedTx = client.encodeTransaction({
-        operations: [emptyOp(), operation],
-        signers: [],
-      });
+      const expectedTx = gtx.serialize(
+        await gtx.sign(
+          {
+            blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+            operations: [
+              {
+                opName: emptyOp().name,
+                args: emptyOp().args ?? [],
+              },
+              {
+                opName: operation.name,
+                args: operation.args ?? [],
+              },
+            ],
+            signers: [keyPair.pubKey],
+            signatures: [],
+          },
+          gtx.newSignatureProvider(keyPair),
+        ),
+      );
 
       const { tx } = await transactionBuilder(authenticatorMock, client)
         .add(emptyOp())
@@ -354,6 +371,7 @@ describe("Transaction Builder", () => {
         null,
       );
     });
+
     it("calls callback with an error if polling times out", async () => {
       (isBlockAnchored as any)
         .mockReturnValueOnce(false)

@@ -6,6 +6,7 @@ import { createChromiaClient } from "./util/blockchain-util";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "./util/util";
 import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
+import { txToBuffer } from "/ft4/utils/transaction-builder";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -35,17 +36,17 @@ describe("FT key handler", () => {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [] as RellOperation[],
       signers: aggregateSigners(authDescriptor),
-      signatures: [],
+      signatures: [] as Buffer[],
     };
     transaction.operations.push({ opName: "foo", args: [] });
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    await keyHandler.sign(transaction);
+    transaction.signatures = [await keyHandler.sign(txToBuffer(transaction))];
 
     const digestToSign = gtx.getDigestToSign(transaction);
-    const signature = encryption.signDigest(digestToSign, keyPair.privKey);
+    const signature2 = encryption.signDigest(digestToSign, keyPair.privKey);
 
-    expect(transaction.signatures).toEqual([signature]);
+    expect(transaction.signatures).toEqual([signature2]);
   });
 });

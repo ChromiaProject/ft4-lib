@@ -110,3 +110,16 @@ export function accountAuthDescriptors(
     },
   };
 }
+
+export function authDescriptorById(
+  accountId: BufferId,
+  id: BufferId,
+): QueryObject<RawAnyAuthDescriptor, { account_id: Buffer; id: Buffer }> {
+  return {
+    name: "ft4.get_account_auth_descriptor_by_id",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      id: formatter.ensureBuffer(id),
+    },
+  };
+}

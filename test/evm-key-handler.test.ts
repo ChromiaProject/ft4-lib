@@ -3,14 +3,14 @@ import { EthersError, ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
 import { createChromiaClient } from "./util/blockchain-util";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAccount } from "./util/util";
+import { createAccount, testAdFromRegistration } from "./util/util";
 import {
   FlagsType,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
 } from "/ft4/accounts/auth-descriptor";
 import { createAuthenticator } from "/ft4/authentication";
-import { evmAuth } from "/ft4/authentication/evm";
+import { createEvmKeyHandler, evmAuth } from "/ft4/authentication/evm";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
 import { createKeyStoreInteractor } from "/ft4/ft-session";
 import { op } from "/ft4/utils";
@@ -52,7 +52,7 @@ describe("EVM key handler", () => {
       keyStore.address,
       null,
     );
-    const keyHandler = keyStore.createKeyHandler();
+    const keyHandler = keyStore.createKeyHandler(testAdFromRegistration(ad));
     const authData = {
       flags: [],
       message: "Message to sign",
@@ -89,7 +89,7 @@ describe("EVM key handler", () => {
     });
     const authenticator = createAuthenticator(
       accountId,
-      [keyStore.createKeyHandler()],
+      [keyStore.createKeyHandler(testAdFromRegistration(ad))],
       authService,
     );
 
@@ -149,7 +149,7 @@ describe("EVM key handler", () => {
     authService.getNonce = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
-      [keyStore.createKeyHandler()],
+      [keyStore.createKeyHandler(testAdFromRegistration(ad))],
       authService,
     );
 
@@ -218,7 +218,11 @@ describe("EVM key handler", () => {
       foo: { flags: ["T"], message },
     });
     authService.getNonce = () => Promise.resolve(0);
-    const authenticator = createAuthenticator(accountId, [], authService);
+    const authenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
+      authService,
+    );
 
     await expect(
       transactionBuilder(authenticator, client)

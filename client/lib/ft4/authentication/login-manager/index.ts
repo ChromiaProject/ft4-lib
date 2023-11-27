@@ -5,10 +5,13 @@ import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import { LoginManger, LoginOptions } from "./types";
+import { authDescriptorById } from "/ft4/accounts/account-queries";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import {
   FlagsType,
   createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
 } from "/ft4/accounts/auth-descriptor";
 import { createAuthDataService, createSession } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
@@ -142,13 +145,18 @@ async function addDisposableAuthDescriptor(
   const keyPair = await loginKeyStore.createKeyPair(accountId);
   const ks = createInMemoryFtKeyStore(keyPair);
 
-  const ad = createSingleSigAuthDescriptorRegistration(
+  const registration = createSingleSigAuthDescriptorRegistration(
     flags,
     getPubkey(keyPair),
     null,
   );
 
-  await session.account.addAuthDescriptor(ad, keyPair);
+  await session.account.addAuthDescriptor(registration, keyPair);
+  const ad = gtv.mapOneAuthDescriptor(
+    await connection.query(
+      authDescriptorById(accountId, deriveAuthDescriptorId(registration)),
+    ),
+  );
 
-  return ks.createKeyHandler();
+  return ks.createKeyHandler(ad);
 }

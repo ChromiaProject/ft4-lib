@@ -1,25 +1,23 @@
 import { Buffer } from "buffer";
-import { Operation, SignatureProvider, gtx } from "postchain-client";
+import { Operation, SignatureProvider } from "postchain-client";
 import { ftAuth } from ".";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import {
-  aggregateSigners,
-  gtv,
-  deriveAuthDescriptorId,
-  AnyAuthDescriptorRegistration,
   AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  aggregateSigners,
+  deriveAuthDescriptorId,
+  gtv,
 } from "/ft4/accounts/auth-descriptor";
-import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
+import { BufferId, TxContext } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
   keyStore: FtKeyStore,
 ): KeyHandler {
-  const adId = authDescriptor
-    ? deriveAuthDescriptorId(
-        gtv.authDescriptorRegistrationToGtv(authDescriptor),
-      )
-    : undefined;
+  const adId = deriveAuthDescriptorId(
+    gtv.authDescriptorRegistrationToGtv(authDescriptor),
+  );
   return Object.freeze({
     authDescriptor,
     keyStore,
@@ -31,32 +29,17 @@ export function createFtKeyHandler(
       _context: TxContext,
       _authDataService: AuthDataService,
     ) => authorize(accountId, adId, operation),
-    sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
+    sign: (transaction: Buffer) => keyStore.sign(transaction), //sign(transaction, keyStore),
     getSigners: () => aggregateSigners(authDescriptor),
   });
 }
 
 async function authorize(
   accountId: BufferId,
-  authDescriptorId: BufferId | undefined,
+  authDescriptorId: BufferId,
   operation: Operation,
 ): Promise<Operation[]> {
   return [ftAuth(accountId, authDescriptorId), operation];
-}
-
-async function sign(
-  transaction: TxBuilderTransaction,
-  keyStore: FtKeyStore,
-): Promise<void> {
-  transaction.signatures.push(
-    await keyStore.sign(
-      gtx.getDigestToSign({
-        blockchainRid: transaction.blockchainRid,
-        signers: transaction.signers,
-        operations: transaction.operations,
-      }),
-    ),
-  );
 }
 
 export function hasAuthDescriptorFlags(

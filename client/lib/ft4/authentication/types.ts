@@ -26,7 +26,7 @@ export interface KeyHandler {
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 
-  sign(transaction: TxBuilderTransaction): Promise<void>;
+  sign(transaction: Buffer): Promise<Buffer>;
 
   // FIXME
   getSigners(): Buffer[] | null;
@@ -36,7 +36,8 @@ export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;
-  createKeyHandler(authDescriptor?: AnyAuthDescriptor | undefined): KeyHandler;
+  sign: (digestToSign: Buffer) => Promise<Buffer>;
+  createKeyHandler(authDescriptor: AnyAuthDescriptor): KeyHandler;
 }
 
 export interface AuthenticatorSession {

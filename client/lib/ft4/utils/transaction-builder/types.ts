@@ -15,7 +15,7 @@ import {
 
 export type TransactionBuilder = {
   _operations: OperationContext[];
-  _keyhandlersUsed: KeyHandler[];
+  _keyhandlersUsed: (KeyStore | KeyHandler)[];
   _context: TxContext;
   _noopAuthenticator: Authenticator;
 
