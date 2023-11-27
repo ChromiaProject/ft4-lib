@@ -1,6 +1,21 @@
 #!/bin/sh
 DOCKER=${DOCKER:-docker}
 
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo
+    echo "Options:"
+    echo "  -h, --help               Display this help message"
+    echo "  --no-docker              Skip Docker build"
+    echo "  -t, --tests=<tests>      Specify tests to run (e.g., -t=tests.accounts.auth_basic_single_sig:test_not_signed)"
+    echo
+    echo "Example:"
+    echo "  % $0 -t=tests.accounts.auth_basic_single_sig:test_not_signed"
+    echo
+    echo "Remember to run 'npm run stop-postchain:rell' after running tests."
+    exit 1
+}
+
 forceexit(){
     echo
     echo 'Remember to run "npm run stop-postchain:rell"!'
@@ -38,6 +53,10 @@ while :; do
     shift
     [ -z "$1" ] && break
 done
+
+if [ -z "$tests" ]; then
+    usage
+fi
 
 if $docker; then
     $DOCKER run --name ft4_rell_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \

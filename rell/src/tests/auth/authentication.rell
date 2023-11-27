@@ -1,0 +1,39 @@
+@test
+module;
+
+import auth_pub: ^^^.lib.ft4.auth.external;
+import ^^.main;
+import ^^.utils;
+import ^.extensions.auth.authentication as auth_ext;
+
+operation test_authenticate() {
+  auth.authenticate();
+}
+
+function test_before_authenticate_extension_is_called() {
+    val alice = utils.register_alice(); // Assuming register_alice is a helper function
+
+    // Perform an authentication operation
+    rell.test.tx()
+        .op(auth_pub.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(test_authenticate())
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_true(auth_ext.auth_extensions_state.is_before_authenticate_called);
+    assert_equals(auth_ext.auth_extensions_state.before_authenticate_account, alice.account.id);
+}
+
+function test_after_authenticate_extension_is_called() {
+    val alice = utils.register_alice(); // Assuming register_alice is a helper function
+
+    // Perform an authentication operation
+    rell.test.tx()
+        .op(auth_pub.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(test_authenticate())
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_true(auth_ext.auth_extensions_state.is_after_authenticate_called);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_account, alice.account.id);
+}

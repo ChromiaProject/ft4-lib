@@ -2,7 +2,7 @@
  * This function can be extended by users to add custom logic before authentication.
  */
 @extendable
-function after_authenticate(accounts.account, accounts.account_auth_descriptor);
+function before_authenticate(accounts.account, accounts.account_auth_descriptor);
 
 /*
  * This function can be extended by users to add custom logic after authentication.
