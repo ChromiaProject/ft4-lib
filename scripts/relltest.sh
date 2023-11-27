@@ -38,6 +38,9 @@ additional_args=""
 
 while :; do
     case $1 in
+        -h|--help)
+            usage
+            ;;
         --no-docker)
               echo 'skipping docker build'
               docker=false
@@ -53,10 +56,6 @@ while :; do
     shift
     [ -z "$1" ] && break
 done
-
-if [ -z "$tests" ]; then
-    usage
-fi
 
 if $docker; then
     $DOCKER run --name ft4_rell_test -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 \
