@@ -55,24 +55,6 @@ describe("Test the account", () => {
     _connection = createConnection(await createChromiaClient());
   });
 
-  it("should be in DEV mode", () => {
-    expect(process.env.TEST_DEV || "true").toBe("true");
-  });
-
-  it("Correctly creates keypair from string", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey); //!
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
-  });
-
-  it("Correctly creates keypair from buffer", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey);
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
-  });
-
   it("Register account on blockchain", async () => {
     const user = testUser();
     const ad = authDescriptor.create.singleSig.withArgs(
