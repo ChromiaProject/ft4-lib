@@ -1,5 +1,7 @@
 #!/bin/bash
 
+postgres=true
+
 source ./scripts/multichain-runner.sh
 
 generate_keypairs() {

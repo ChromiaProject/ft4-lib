@@ -137,10 +137,14 @@ export async function getById(
 export async function getByParticipantId(
   connection: Connection,
   id: BufferId,
-): Promise<Account[]> {
-  const accountIds = await connection.query(accountsByParticipantId(id));
-
-  return accountIds.map((id) => createAccountObject(connection, id));
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Account>> {
+  return createEntityRetriever<Account, Buffer>(
+    connection,
+    accountsByParticipantId(id, limit, cursor),
+    (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
+  ).retrieve();
 }
 
 export async function getByAuthDescriptorId(
@@ -170,10 +174,18 @@ export async function getAuthDescriptorsByParticipantId(
   connection: Connection,
   accountId: BufferId,
   participantId: BufferId,
-): Promise<AuthDescriptor[]> {
-  return connection
-    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
-    .then((authDescriptors) =>
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<AuthDescriptor>> {
+  return createEntityRetriever<AuthDescriptor, AuthDescriptorResponse | null>(
+    connection,
+    accountAuthDescriptorsByParticipantId(
+      accountId,
+      participantId,
+      limit,
+      cursor,
+    ),
+    (authDescriptors) =>
       authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
-    );
+  ).retrieve();
 }
