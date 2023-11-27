@@ -7,8 +7,8 @@ import { createFakeAuthDataService } from "./util/fake-auth-data-service";
 import { KeyHandler } from "/ft4/authentication/types";
 import { createTestAuthDescriptor, opToRellOp } from "./util/util";
 import { Buffer } from "buffer";
-import { createChromiaClient } from "./util/blockchain-util";
 import { TxBuilderTransaction } from "/ft4/utils/types";
+import { createMockClient } from "./util/blockchain-util";
 
 describe("Authenticator session", () => {
   it("should insert FT auth operation", async () => {
@@ -37,7 +37,7 @@ describe("Authenticator session", () => {
   it("should sign transaction", async () => {
     const accountId = encryption.randomBytes(32);
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
-    const client = await createChromiaClient();
+    const client = await createMockClient();
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
