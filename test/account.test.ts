@@ -218,7 +218,7 @@ describe("Test the account", () => {
       user.signatureProvider.pubKey,
     );
 
-    expect(accounts.length).toEqual(1);
+    expect(accounts.data.length).toEqual(1);
   });
 
   it("should return two accounts when public key is used in two accounts", async () => {
@@ -237,7 +237,7 @@ describe("Test the account", () => {
       keyPair1.pubKey,
     );
 
-    expect(accounts.length).toEqual(2);
+    expect(accounts.data.length).toEqual(2);
   });
 
   it("should return account by id", async () => {
@@ -454,7 +454,7 @@ describe("Test the account", () => {
     );
 
     expect((await acc.getAuthDescriptors()).data.length).toBe(2);
-    await acc.deleteAuthDescriptor(ads[0].id);
+    await acc.deleteAuthDescriptor(ads.data[0].id);
     expect((await acc.getAuthDescriptors()).data.length).toBe(1);
   });
 

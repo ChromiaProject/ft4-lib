@@ -22,12 +22,6 @@ query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_
     });
 }
 
-query _get_account_auth_descriptors(id: byte_array) {
-    return accounts.account_auth_descriptor @* {
-        .account.id == id
-    } ( accounts.get_auth_descriptor_data($.to_struct()) );
-}
-
 query get_account_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         accounts.get_paginated_auth_descriptors(id, page_size, page_cursor), 
@@ -35,13 +29,10 @@ query get_account_auth_descriptors(id: byte_array, page_size: integer, page_curs
     );
 }
 
-query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array) {
-    return (ad: accounts.account_auth_descriptor, p: accounts.auth_descriptor_participant) @* {
-        ad.account.id == account_id,
-        p.id == participant_id,
-        ad == p.account_auth_descriptor
-    } (
-        accounts.get_auth_descriptor_data(ad.to_struct())
+query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        accounts.get_paginated_auth_descriptors_by_participant_id(account_id, participant_id, page_size, page_cursor),
+        page_size
     );
 }
 
@@ -60,8 +51,11 @@ query get_account_by_auth_descriptor(accounts.auth_descriptor) {
     return accounts.account @? { .id == auth_descriptor.hash() } ( .id );
 }
 
-query get_accounts_by_participant_id(id: byte_array) {
-    return accounts.auth_descriptor_participant @* { id } ( .account_auth_descriptor.account.id );
+query get_accounts_by_participant_id(id: byte_array, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        accounts.get_paginated_accounts_by_participant_id(id, page_size, page_cursor),
+        page_size
+    );
 }
 
 query _get_accounts_by_auth_descriptor_id(id: byte_array) {

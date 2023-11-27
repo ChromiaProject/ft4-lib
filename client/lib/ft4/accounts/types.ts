@@ -41,7 +41,7 @@ export interface Account {
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getAuthDescriptorsByParticipantId: (
     partiticipantId: BufferId,
-  ) => Promise<AnyAuthDescriptor[]>;
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
     limit?: number,

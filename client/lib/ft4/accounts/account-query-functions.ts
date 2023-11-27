@@ -30,6 +30,7 @@ import {
   pendingTransfersForAccount,
 } from "../crosschain";
 import { mapPendingTransfers } from "../crosschain/query-functions";
+import { mapAuthDescriptors } from "./auth-descriptor/gtv";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -133,11 +134,14 @@ export async function getById(
 export async function getByParticipantId(
   connection: Connection,
   id: BufferId,
-): Promise<Account[]> {
-  const accountIds =
-    (await connection.query(accountsByParticipantId(id))) ?? [];
-
-  return accountIds.map((id) => createAccountObject(connection, id));
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Account>> {
+  return createEntityRetriever<Account, Buffer>(
+    connection,
+    accountsByParticipantId(id, limit, cursor),
+    (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
+  ).retrieve();
 }
 
 export async function getByAuthDescriptorId(
@@ -167,10 +171,18 @@ export async function getAuthDescriptorsByParticipantId(
   connection: Connection,
   accountId: BufferId,
   participantId: BufferId,
-): Promise<AnyAuthDescriptor[]> {
-  return connection
-    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
-    .then((authDescriptors) =>
-      authDescriptors ? gtv.mapAuthDescriptors(authDescriptors) : [],
-    );
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<AnyAuthDescriptor>> {
+  return createEntityRetriever<AnyAuthDescriptor, RawAnyAuthDescriptor>(
+    connection,
+    accountAuthDescriptorsByParticipantId(
+      accountId,
+      participantId,
+      limit,
+      cursor,
+    ),
+    (authDescriptors) =>
+      authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
+  ).retrieve();
 }
