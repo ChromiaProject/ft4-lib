@@ -3,7 +3,6 @@ import { BufferId } from "/ft4/cryptoUtils";
 import testUser from "./util/test-user";
 import adminUser from "./util/admin_user";
 import AccountBuilder from "./util/account-builder";
-import { createChromiaClient } from "./util/blockchain-util";
 import { Connection } from "/ft4/types";
 import {
   AuthDescriptor,
@@ -28,6 +27,7 @@ import {
   addAuthDescriptor,
 } from "/ft4/accounts/account-operations";
 import { AuthorizationError } from "/ft4/utils/transaction-builder";
+import { useChromiaNode } from "/util/chromia-node";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -51,8 +51,11 @@ async function multiSigCall(
 }
 
 describe("Test the account", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    _connection = createConnection(await createChromiaClient());
+    const client = getClient();
+    _connection = createConnection(client);
   });
 
   it("should be in DEV mode", () => {
