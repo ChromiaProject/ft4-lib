@@ -7,13 +7,36 @@ import acc: ^^^.lib.ft4.accounts;
 import test_op: ^^.operations.auth;
 import ^^^.lib.ft4.admin;
 
-function test_create_account_in_genesis_block_is_not_allowed() {
+function test_create_account_in_genesis_block() {
   val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A"]);
 
   admin.register_account(auth_descriptor)
       .sign(utils.admin_priv_key())
       .sign(rell.test.keypairs.alice)
-      .run_must_fail("Cannot create account in genesis block");
+      .run();
+
+    val account = acc.account_auth_descriptor @ {
+        .id == auth_descriptor.hash()
+    } ( .account );
+
+    assert_equals(acc.rl_state @ { .account == account } (.last_update), 0);
+}
+
+function test_create_account_after_genesis_block() {
+  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A"]);
+
+  rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
+
+  admin.register_account(auth_descriptor)
+      .sign(utils.admin_priv_key())
+      .sign(rell.test.keypairs.alice)
+      .run();
+
+    val account = acc.account_auth_descriptor @ {
+        .id == auth_descriptor.hash()
+    } ( .account );
+
+    assert_equals(acc.rl_state @ { .account == account } (.last_update), rell.test.DEFAULT_FIRST_BLOCK_TIME);
 }
 
 function test_rate_limit_points_increased_after_authenticated_operation_and_time_passed() {
