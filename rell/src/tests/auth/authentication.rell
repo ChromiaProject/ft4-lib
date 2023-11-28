@@ -1,14 +1,10 @@
 @test
 module;
 
+import ^^.assets.utils;
 import auth_pub: ^^^.lib.ft4.auth.external;
-import ^^.main;
-import ^^.utils;
-import ^.extensions.auth.authentication as auth_ext;
-
-operation test_authenticate() {
-  auth.authenticate();
-}
+import auth_ext: ^^.extensions.auth.*;
+import test_operations: ^^.operations;
 
 function test_before_authenticate_extension_is_called() {
     val alice = utils.register_alice(); // Assuming register_alice is a helper function
@@ -16,7 +12,7 @@ function test_before_authenticate_extension_is_called() {
     // Perform an authentication operation
     rell.test.tx()
         .op(auth_pub.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(test_authenticate())
+        .op(test_operations.test_auth.test_authenticated_operation())
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -30,7 +26,7 @@ function test_after_authenticate_extension_is_called() {
     // Perform an authentication operation
     rell.test.tx()
         .op(auth_pub.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(test_authenticate())
+        .op(test_operations.test_auth.test_authenticated_operation())
         .sign(rell.test.keypairs.alice)
         .run();
     

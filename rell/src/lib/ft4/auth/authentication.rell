@@ -24,13 +24,13 @@ function authenticate(is_strict: boolean = true) {
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
     before_authenticate(account, auth_descriptor);
 
-    val account = when (previous_op.name) {
+    val is_validated = when (previous_op.name) {
         "ft4.evm_auth" -> _validate_eth_signature(previous_op, is_strict, account, auth_descriptor);
         "ft4.ft_auth" -> _validate_ft4_signature(previous_op.args, account, auth_descriptor);
-        else -> null;
+        else -> false;
     };
 
-    require(account, "Invalid auth operation: %s".format(previous_op.name));
+    require(is_validated, "Invalid auth operation: %s".format(previous_op.name));
     accounts.rate_limit(account);
 
     after_authenticate(account, auth_descriptor);
@@ -86,6 +86,7 @@ function _validate_eth_signature(
         else _recover_multiple_eth_keys(message, validated_args.signatures, auth_descriptor);
     
     accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    return true;
 }
 
 function create_message_from_template(accounts.eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
@@ -133,6 +134,7 @@ function _validate_ft4_signature(
 ) {
     val flags = get_auth_flags(op_context.get_all_operations()[op_context.op_index].name, is_strict=false);
     accounts.require_auth(account, auth_descriptor, list(flags));
+    return true;
 }
 
 function _recover_eth_address(message: text, signature) {

@@ -1,4 +1,5 @@
-import ^^.lib.ft4.accounts; // Path might be different based on your project structure
+import ^^^.lib.ft4.auth;
+import acc: ^^^.lib.ft4.accounts;
 
 object auth_extensions_state {
     mutable is_before_authenticate_called: boolean = false;
@@ -10,13 +11,13 @@ object auth_extensions_state {
     mutable after_authenticate_auth_descriptor: byte_array = x"";
 }
 
-@extend(accounts.before_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
+@extend(auth.before_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
     auth_extensions_state.is_before_authenticate_called = true;
     auth_extensions_state.before_authenticate_account = account.id;
     auth_extensions_state.before_authenticate_auth_descriptor = auth_descriptor.id;
 }
 
-@extend(accounts.after_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
+@extend(auth.after_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
     auth_extensions_state.is_after_authenticate_called = true;
     auth_extensions_state.after_authenticate_account = account.id;
     auth_extensions_state.after_authenticate_auth_descriptor = auth_descriptor.id;
