@@ -1,17 +1,19 @@
 @test
 module;
 
+import ^^^.lib.ft4.test.utils. { evm_sign };
 import ^^.assets.utils;
 import auth_ext: ^^.extensions.auth.*;
+import auth_pub: ^^^.lib.ft4.auth.external;
 import test_operations: ^^.operations;
 
-function test_before_authenticate_extension_is_called() {
-    val alice = utils.register_alice(); // Assuming register_alice is a helper function
+function test_before_authenticate_extension_is_called_with_ft_auth() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
     // Perform an authentication operation
     rell.test.tx()
         .op(alice.ft_auth())
-        .op(test_operations.test_auth.test_authenticated_operation_no_auth_handler())
+        .op(test_operations.test_auth.test_authenticated_operation())
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -19,13 +21,59 @@ function test_before_authenticate_extension_is_called() {
     assert_equals(auth_ext.auth_extensions_state.before_authenticate_account, alice.account.id);
 }
 
-function test_after_authenticate_extension_is_called() {
-    val alice = utils.register_alice(); // Assuming register_alice is a helper function
+function test_before_authenticate_extension_is_called_with_evm_auth() {
+    val alice = utils.evm_register_alice(["A"]);
+
+    val signature = evm_sign(
+      "Blockchain:\n%s\n\n\n\nNonce: %s".format(
+        chain_context.blockchain_rid.to_hex(),
+        "0"
+      ),
+      alice.keypair.priv
+    );
+
+    // Perform an authentication operation
+    rell.test.tx()
+        .op(auth_pub.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+        .op(test_operations.test_auth.test_empty_auth_message())
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_true(auth_ext.auth_extensions_state.is_before_authenticate_called);
+    assert_equals(auth_ext.auth_extensions_state.before_authenticate_account, alice.account.id);
+}
+
+function test_after_authenticate_extension_is_called_with_ft_auth() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
     // Perform an authentication operation
     rell.test.tx()
         .op(alice.ft_auth())
-        .op(test_operations.test_auth.test_authenticated_operation_no_auth_handler())
+        .op(test_operations.test_auth.test_authenticated_operation())
+        .sign(rell.test.keypairs.alice)
+        .run();
+    
+    assert_true(auth_ext.auth_extensions_state.is_after_authenticate_called);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_account, alice.account.id);
+}
+
+function test_after_authenticate_extension_is_called_with_evm_auth() {
+    val alice = utils.evm_register_alice(["A"]);
+
+    val signature = evm_sign(
+      "Blockchain:\n%s\n\n\n\nNonce: %s".format(
+        chain_context.blockchain_rid.to_hex(),
+        "0"
+      ),
+      alice.keypair.priv
+    );
+
+
+    // Perform an authentication operation
+    rell.test.tx()
+        .op(alice.ft_auth())
+        .op(auth_pub.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+        .op(test_operations.test_auth.test_empty_auth_message())
         .sign(rell.test.keypairs.alice)
         .run();
     
