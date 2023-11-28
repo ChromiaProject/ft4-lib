@@ -42,6 +42,10 @@ function test_authenticated_operation_message(gtv) {
     return "{nonce}";
 }
 
+operation test_authenticated_operation_no_auth_handler() {
+  auth.authenticate();
+}
+
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(test_authenticated_operation).mount_name,

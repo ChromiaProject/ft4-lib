@@ -2,7 +2,6 @@
 module;
 
 import ^^.assets.utils;
-import auth_pub: ^^^.lib.ft4.auth.external;
 import auth_ext: ^^.extensions.auth.*;
 import test_operations: ^^.operations;
 
@@ -11,8 +10,8 @@ function test_before_authenticate_extension_is_called() {
 
     // Perform an authentication operation
     rell.test.tx()
-        .op(auth_pub.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(test_operations.test_auth.test_authenticated_operation())
+        .op(alice.ft_auth())
+        .op(test_operations.test_auth.test_authenticated_operation_no_auth_handler())
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -25,8 +24,8 @@ function test_after_authenticate_extension_is_called() {
 
     // Perform an authentication operation
     rell.test.tx()
-        .op(auth_pub.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(test_operations.test_auth.test_authenticated_operation())
+        .op(alice.ft_auth())
+        .op(test_operations.test_auth.test_authenticated_operation_no_auth_handler())
         .sign(rell.test.keypairs.alice)
         .run();
     
