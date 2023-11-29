@@ -52,7 +52,7 @@ entity rl_state {
 }
 
 
-function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): byte_array {
+function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): account_auth_descriptor {
     val id = auth_descriptor.hash();
 
     validate_auth_descriptor_args(auth_descriptor);
@@ -68,7 +68,7 @@ function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean 
     );
 
     _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe);
-    return id;
+    return account_auth_descriptor;
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
@@ -91,9 +91,9 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
     };
 }
 
-function create_account_with_auth(auth_descriptor): byte_array = _create_account_with_auth(auth_descriptor, safe = true);
+function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = true);
 
-function _create_account_with_auth(auth_descriptor, safe: boolean = true): byte_array {
+function _create_account_with_auth(auth_descriptor, safe: boolean = true): account {
     require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
     
     val id = auth_descriptor.hash();
@@ -107,7 +107,7 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): byte_
     
     create rl_state(acc, .points = points_at_start, .last_update = latest_time(), max_points, recovery_time);
     
-    return id;
+    return acc;
 }
 
 function _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
@@ -218,7 +218,7 @@ function validate_auth_descriptor_args(auth_descriptor) {
 
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
-    function create_account_with_auth(auth_descriptor): byte_array = _create_account_with_auth(auth_descriptor, safe = false);
+    function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = false);
 }
 
 function latest_time() = if (op_context.block_height > 0) op_context.last_block_time else 0;
