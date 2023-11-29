@@ -151,7 +151,7 @@ describe("Asset", () => {
     expect(asset.iconUrl).toBe(validUrl);
   });
 
-  // Update after addding new admin functions
+  // Update after adding new admin functions
   it("should fail to register with invalid icon URL", async () => {
     const wrapper = async () =>
       registerAsset(
