@@ -1,7 +1,6 @@
 #!/bin/bash
 
 exitfn() {
-    rm client/lib/ft4/package.json
     exit 2
 }
 
@@ -52,8 +51,6 @@ done
 if [ -z "$opt" ]; then
     opt=""
 fi
-
-cp package.json client/lib/ft4/
 
 printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 
