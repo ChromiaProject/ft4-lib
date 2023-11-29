@@ -1,8 +1,8 @@
-import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
+import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
 import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
-import { createAccount } from "./util/util";
+import { createAccount } from "../util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";

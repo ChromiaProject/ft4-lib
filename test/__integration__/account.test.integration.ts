@@ -1,9 +1,9 @@
 import * as pcl from "postchain-client";
 import { BufferId } from "/ft4/cryptoUtils";
-import testUser from "./util/test-user";
-import adminUser from "./util/admin_user";
-import AccountBuilder from "./util/account-builder";
-import { createChromiaClient } from "./util/blockchain-util";
+import testUser from "../util/test-user";
+import adminUser from "../util/admin_user";
+import AccountBuilder from "../util/account-builder";
+import { createChromiaClient } from "../util/blockchain-util";
 import { Connection } from "/ft4/types";
 import {
   AuthDescriptor,
@@ -22,7 +22,7 @@ import {
   createAccount,
   createTestAuthDescriptor,
   getSessionForAccount,
-} from "./util/util";
+} from "../util/util";
 import {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,

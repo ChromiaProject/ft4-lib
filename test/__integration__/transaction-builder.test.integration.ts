@@ -1,6 +1,6 @@
-import { createTestAuthDescriptor, emptyOp } from "./util/util";
+import { createTestAuthDescriptor, emptyOp } from "../util/util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import {
   createAuthenticator,
   createNoopAuthenticator,
@@ -13,7 +13,7 @@ import {
 import {
   anchoredHandlerCallbackParameters,
   createChromiaClient,
-} from "./util/blockchain-util";
+} from "../util/blockchain-util";
 import { nop } from "/ft4/utils";
 import {
   AuthDataService,

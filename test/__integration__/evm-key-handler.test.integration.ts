@@ -2,8 +2,8 @@ import { IClient, encryption } from "postchain-client";
 import { authDescriptor } from "/ft4/accounts/auth-descriptor";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
 import { createKeyStoreInteractor } from "/ft4/ft-session";
-import { createAccount } from "./util/util";
-import { createChromiaClient } from "./util/blockchain-util";
+import { createAccount } from "../util/util";
+import { createChromiaClient } from "../util/blockchain-util";
 
 describe("EVM key handler", () => {
   let client: IClient;
