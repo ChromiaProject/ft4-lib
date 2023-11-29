@@ -52,7 +52,7 @@ entity rl_state {
 }
 
 
-function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): byte_array {
+function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): account_auth_descriptor {
     val id = auth_descriptor.hash();
 
     validate_auth_descriptor_args(auth_descriptor);
@@ -68,7 +68,7 @@ function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean 
     );
 
     _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe);
-    return id;
+    return account_auth_descriptor;
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
