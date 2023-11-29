@@ -13,7 +13,7 @@ function test_an_account_can_be_created() {
   
   utils.create_test_account(alice);
   
-  assert_equals(acc.account @ {}( .id ), auth_descriptor.hash());
+  assert_not_null(acc.account @? { auth_descriptor.hash() });
 }
 
 function test_multi_sig_auth_descriptor_can_be_added() {
@@ -32,7 +32,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
 
   utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
 
-  assert_equals(acc.account_auth_descriptor @ {}( .id ), auth_descriptor.hash());
+  assert_not_null(acc.account_auth_descriptor @? { .id == auth_descriptor.hash() });
 }
 
 function test_an_invalid_descriptor_can_not_be_added() {
