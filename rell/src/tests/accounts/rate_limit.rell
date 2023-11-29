@@ -12,7 +12,6 @@ function test_create_account_in_genesis_block() {
 
   admin.register_account(auth_descriptor)
       .sign(utils.admin_priv_key())
-      .sign(rell.test.keypairs.alice)
       .run();
 
     val account = acc.account_auth_descriptor @ {
@@ -29,7 +28,6 @@ function test_create_account_after_genesis_block() {
 
   admin.register_account(auth_descriptor)
       .sign(utils.admin_priv_key())
-      .sign(rell.test.keypairs.alice)
       .run();
 
     val account = acc.account_auth_descriptor @ {

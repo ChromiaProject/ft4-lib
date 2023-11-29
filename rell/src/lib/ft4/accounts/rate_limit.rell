@@ -7,7 +7,7 @@ function rate_limit(account) {
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
     );
-    val delta = current_timestamp() - stat.last_update;
+    val delta = latest_time() - stat.last_update;
     var got_points = 0;
     var update_time = stat.last_update;
 
@@ -16,9 +16,8 @@ function rate_limit(account) {
         update_time = stat.last_update + got_points * recovery_time;
         if (got_points + stat.points > max_counter) {
             got_points = max_counter - stat.points;
-            // if user is at maximum reset his 
-            // timer
-            update_time = current_timestamp();
+            // if user is at maximum reset his timer
+            update_time = latest_time();
         }
     }
     
