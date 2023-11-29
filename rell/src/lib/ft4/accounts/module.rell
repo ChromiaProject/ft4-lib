@@ -105,7 +105,7 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
     val recovery_time = chain_context.args.rate_limit_recovery_time;
     val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
     
-    create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), max_points, recovery_time);
     
     return acc;
 }
@@ -220,3 +220,5 @@ namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
     function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = false);
 }
+
+function latest_time() = if (op_context.block_height > 0) op_context.last_block_time else 0;
