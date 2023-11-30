@@ -1,14 +1,20 @@
 ## [Unreleased]
- 
-### Breaking
-- The internal structure of the rules has been changed. So auth descriptors which used rules will cause a runtime error when trying to be used.
-- Removed the functions evm_address_from_pubkey and evm_address_from_privkey, use crypto.eth_pubkey_to_address and crypto.eth_privkey_to_address in Rell standard library instead. 
+
+### Added
+- Default values for `lib.ft4.accounts` module_args to simplify `chromia.yml` configuration.
 
 ### Changed
-- BREAKING CHANGE: Make `get_accounts_by_participant_id` query paginated
-- BREAKING CHANGE: Make `get_account_auth_descriptors_by_participant_id` query paginated
-- updated signature for `evm_auth_operation_for` to take a `rell.test.op`
-- added default values for `lib.ft4.accounts` module_args, so they don't have to be included in `chromia.yml`
+- Updated signature for `evm_auth_operation_for` to accept a `rell.test.op`.
+- `before_authenticate` function is now extendable for adding custom pre-authentication logic.
+- `after_authenticate` function is now extendable for executing logic after authentication completes.
+- Allow account creation with `create_account_with_auth` without op_context.
+
+### Breaking Changes
+- **Paginated Queries**: Queries `get_accounts_by_participant_id` and `get_account_auth_descriptors_by_participant_id` are now paginated. This change impacts how these queries are consumed and might require adjustments in the calling code.
+- **Rules Structure**: Revised internal structure of the rules. Existing auth descriptors using rules will no longer function and will cause a runtime error when invoked.
+- **Address Functions Removed**: Deprecated `evm_address_from_pubkey` and `evm_address_from_privkey`. Use corresponding functions `crypto.eth_pubkey_to_address` and `crypto.eth_privkey_to_address` from Rell standard library for Ethereum address generation.
+- **create_account_with_auth** function return `account` instead of `byte_array`.
+- **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
 
 ### Added
 - Added support for TTL in login config, defined in milliseconds.
