@@ -18,7 +18,7 @@ function setup_account_with_many_ads() {
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
   test_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
-  val account = acc.account @ {};
+  val account = acc.account @ { alice_ad.hash() };
   val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
   val eve_ad = test_utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
   val trudy_ad = test_utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
