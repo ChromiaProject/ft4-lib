@@ -1,5 +1,4 @@
 import { logger } from "postchain-client";
-import { version } from "./package.json";
 
 // Authentication module
 export {
@@ -86,7 +85,6 @@ export {
 } from "./crosschain";
 
 export const ft = Object.freeze({
-  getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
 });
 
