@@ -24,8 +24,17 @@ app/
 /.env.sample
 /db.log
 /jest.config.js
+/jest.config.multichain.js
 /jest.setup.js
 /tsconfig.json
+/tsconfig.dist.json
 /index.js
 
-bitbucket-pipelines.yml
+/bitbucket-pipelines.yml
+
+/configs
+/examples
+/rell-changelog.md
+/scripts
+/doc
+/compile-changelog.sh
