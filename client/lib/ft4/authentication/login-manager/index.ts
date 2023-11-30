@@ -179,6 +179,6 @@ async function addDisposableAuthDescriptor(
  * day at 13:59:59).
  */
 export const minutes = (m: number) => m * 60000;
-export const hours = (h: number) => h * 3600000;
-export const days = (d: number) => d * 86400000;
-export const weeks = (w: number) => w * 604800000;
+export const hours = (h: number) => h * minutes(60);
+export const days = (d: number) => d * hours(24);
+export const weeks = (w: number) => w * days(7);
