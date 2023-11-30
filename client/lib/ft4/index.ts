@@ -1,5 +1,4 @@
 import { logger } from "postchain-client";
-import { version } from "./package.json";
 
 // Authentication module
 export {
@@ -52,13 +51,17 @@ export {
 } from "./accounts";
 
 // Root imports
-export { Session, Connection, OptionalPageCursor } from "./types";
+export {
+  Session,
+  Connection,
+  KeyStoreInteractor,
+  OptionalPageCursor,
+} from "./types";
 
 export {
   createConnection,
   createSession,
   createKeyStoreInteractor,
-  KeyStoreInteractor,
 } from "./ft-session";
 
 // Utils & Others
@@ -78,7 +81,6 @@ export {
 } from "./crosschain";
 
 export const ft = Object.freeze({
-  getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
 });
 

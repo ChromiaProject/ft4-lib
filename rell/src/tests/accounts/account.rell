@@ -35,6 +35,8 @@ function get_single_sig_args(gtv): acc.single_sig_args {
 }
 
 function test_auth_descriptors_are_returned_in_correct_order() {
+  rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
+
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors(account.id, 4, null);
 

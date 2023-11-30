@@ -28,7 +28,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TransactionBuilder` now has a function `buildAndSend` which immediately submits the built transaction
 - Functions that add operations to `TransactionBuilder` now accepts an optional callback which will be invoked when the transaction is included in a block that has been anchored on the anchoring chain
 
-
 ## [0.1.6] - 2023-09-29
 
 ### Fixed

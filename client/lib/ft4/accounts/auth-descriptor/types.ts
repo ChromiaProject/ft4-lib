@@ -6,15 +6,10 @@ export enum AuthType {
 }
 
 export type AuthDescriptorSimpleRule = readonly [string, string, number];
-export type AuthDescriptorCompositeRule = readonly [
-  AuthDescriptorAnyRule,
+export type AuthDescriptorRule = readonly [
   "and",
-  AuthDescriptorAnyRule,
+  ...AuthDescriptorSimpleRule[],
 ];
-type AuthDescriptorAnyRule =
-  | AuthDescriptorCompositeRule
-  | AuthDescriptorSimpleRule;
-export type AuthDescriptorRule = AuthDescriptorAnyRule;
 
 export type AuthDescriptor = {
   id: Buffer;

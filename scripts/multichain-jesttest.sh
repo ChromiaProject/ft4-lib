@@ -1,17 +1,52 @@
 #!/bin/bash
 
+postgres=true
+while :; do
+    case $1 in
+        -f|--file)
+            if [ "$2" ]; then
+                opt="$opt --runTestsByPath $2"
+                shift
+            else
+                echo 'ERROR: "--file" requires a non-empty option argument.'
+                exit 1
+            fi
+            ;;
+        --file=?*)
+            opt="$opt --runTestsByPath ${1#*=}"
+            ;;
+        --file=)
+            echo 'ERROR: "--file" requires a non-empty option argument.'
+            exit 1
+            ;;
+        --no-postgres)
+              echo 'skipping postgres'
+              postgres=false
+              ;;
+        --ci)
+              echo 'generating test reports'
+              opt="$opt --ci --reporters=default --reporters=jest-junit"
+              ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)
+            break
+            ;;
+    esac
+    shift
+done
+
 source ./scripts/multichain-runner.sh
 
 log "Running Jest tests..."
 
-if [[ "$1" == "-f" || "$1" == "--file" ]]; then
-    FILE_OPTION="--runTestsByPath $2"
-else
-    FILE_OPTION=""
-fi
-
-NODE_OPTIONS='--stack-trace-limit=100' npx jest \
+NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
     --config=jest.config.multichain.js \
     --maxWorkers=1 \
     --testPathPattern=__multichain__ \
-    $FILE_OPTION
+    $opt
