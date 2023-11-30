@@ -19,6 +19,10 @@ export {
   hours,
   days,
   weeks,
+  LoginConfigSimpleRule,
+  LoginConfigNullRule,
+  LoginConfigRule,
+  ttlLoginRule,
 } from "./authentication";
 
 // Admin module

@@ -4,6 +4,9 @@ import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
 
+import { LoginConfig } from "./login-manager/types";
+export { LoginConfig } from "./login-manager/types";
+
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
@@ -58,11 +61,6 @@ export interface AuthDataService {
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;
-  getLoginConfig(name: string | undefined): Promise<LoginConfigResponse>;
+  getLoginConfig(name: string | undefined): Promise<LoginConfig>;
   getBrid(): Buffer;
 }
-
-export type LoginConfigResponse = {
-  flags: string[];
-  ttl: number;
-};

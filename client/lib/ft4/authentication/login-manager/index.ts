@@ -3,10 +3,16 @@ import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
-import { LoginManager, LoginOptions } from "./types";
+import {
+  LoginConfigRule,
+  LoginConfigSimpleRule,
+  LoginManager,
+  LoginOptions,
+} from "./types";
 import { createAccountObject } from "../../accounts/account-query-functions";
 import {
   AuthDescriptorRule,
+  AuthDescriptorSimpleRule,
   FlagsType,
   authDescriptor,
 } from "../../accounts/auth-descriptor";
@@ -14,6 +20,10 @@ import { createAuthDataService, createSession } from "../../ft-session";
 import { Connection } from "../../types";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { allow } from "/ft4/accounts/auth-descriptor/rules";
+import {
+  isLoginConfigNullRule,
+  isLoginConfigSimpleRule,
+} from "./type-assertions";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -121,24 +131,59 @@ async function getFlagsAndRules(
   let rules: AuthDescriptorRule;
   if (options.config) {
     flags = options.config.flags;
-    rules = options.config.ttl
-      ? // if we have ttl, use it
-        allow.blockTime.lessThan(Date.now() + options.config.ttl).only
-      : // if we have rules, use them. Otherwise, allow all (no rules)
-        options.config.rules ?? allow.all;
+    rules = await getRulesFromLoginConfig(options.config.rules);
   } else {
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
     );
     flags = loginConfig.flags;
-    rules = loginConfig.ttl
-      ? allow.blockTime.lessThan(Date.now() + loginConfig.ttl).only
-      : allow.all;
+    rules = await getRulesFromLoginConfig(options.config.rules);
   }
   return {
     flags,
     rules,
   };
+}
+
+async function getRulesFromLoginConfig(
+  rules: LoginConfigRule,
+): Promise<AuthDescriptorRule> {
+  let currentHeight: number;
+  const getBlockHeight = async () => {
+    if (currentHeight === undefined) currentHeight = await 1; //getBlocksInfo
+    return currentHeight;
+  };
+  if (isLoginConfigNullRule(rules)) return allow.all;
+  else if (isLoginConfigSimpleRule(rules)) {
+    return getRuleFromSingleLoginConfigRule(rules, getBlockHeight);
+  } else {
+    return [
+      "and",
+      ...(await Promise.all(
+        (rules.slice(1) as LoginConfigSimpleRule[]).map((rule) =>
+          getRuleFromSingleLoginConfigRule(rule, getBlockHeight),
+        ),
+      )),
+    ];
+  }
+}
+
+async function getRuleFromSingleLoginConfigRule(
+  loginRule: LoginConfigSimpleRule,
+  getBlockHeight: () => Promise<number>,
+): Promise<AuthDescriptorSimpleRule> {
+  const operator = loginRule[0];
+  const variable = loginRule[1];
+  let value: number;
+  if (variable === "op_count") {
+    value = parseInt(loginRule[2]);
+  } else if (variable === "block_time") {
+    value = Date.now() + parseInt(loginRule[2].replace(/[{}]/g, ""));
+  } else if (variable === "block_height") {
+    value =
+      (await getBlockHeight()) + parseInt(loginRule[2].replace(/[{}]/g, ""));
+  } else throw "unexpected variable: " + variable;
+  return [operator, variable, value];
 }
 
 async function addDisposableAuthDescriptor(
@@ -182,3 +227,7 @@ export const minutes = (m: number) => m * 60000;
 export const hours = (h: number) => h * 3600000;
 export const days = (d: number) => d * 86400000;
 export const weeks = (w: number) => w * 604800000;
+
+export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
+  return ["lt", "block_time", `{${ttl}}`];
+}

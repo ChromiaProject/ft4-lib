@@ -1,23 +1,10 @@
 import { BufferId } from "../../cryptoUtils";
 import { Session } from "../../types";
-import { AuthDescriptorRule } from "/ft4/accounts";
 
 export type LoginConfig = {
   flags: string[];
-} & (
-  | {
-      ttl: number;
-      rules?: never;
-    }
-  | {
-      ttl?: never;
-      rules: AuthDescriptorRule;
-    }
-  | {
-      ttl?: never;
-      rules?: never;
-    }
-);
+  rules: LoginConfigRule;
+};
 
 export type LoginOptions = {
   accountId: BufferId;
@@ -40,3 +27,10 @@ export type LoginManager = {
   login: (loginOptions: LoginOptions) => Promise<Session>;
   logout: (accountId: Buffer) => void;
 };
+
+export type LoginConfigSimpleRule = readonly [string, string, string];
+export type LoginConfigNullRule = null;
+export type LoginConfigRule =
+  | readonly ["and", ...LoginConfigSimpleRule[]]
+  | LoginConfigSimpleRule
+  | LoginConfigNullRule;

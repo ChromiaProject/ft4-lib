@@ -14,7 +14,16 @@ import { AuthDescriptor, AuthType } from "../accounts";
 export * from "./evm";
 export * from "./ft";
 export * from "./types";
-export { minutes, hours, days, weeks } from "./login-manager";
+export {
+  minutes,
+  hours,
+  days,
+  weeks,
+  LoginConfigSimpleRule,
+  LoginConfigNullRule,
+  LoginConfigRule,
+  ttlLoginRule,
+} from "./login-manager";
 
 export {
   createSessionStorageLoginKeyStore,

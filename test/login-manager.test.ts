@@ -17,6 +17,7 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
 import { allow } from "/ft4/accounts/auth-descriptor/rules";
 
+const dateNow = Date.now;
 Date.now = jest.fn(() => 0);
 
 describe("Login manager", () => {
@@ -26,6 +27,9 @@ describe("Login manager", () => {
   beforeAll(async () => {
     client = await createChromiaClient();
     connection = createConnection(client);
+  });
+  afterAll(async () => {
+    Date.now = dateNow;
   });
 
   it("adds disposable auth descriptor to account", async () => {
