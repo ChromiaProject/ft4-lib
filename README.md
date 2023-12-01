@@ -81,6 +81,20 @@ npm run test:js 'user'
 npm run test:js 'rate|sso'
 ```
 
+## Running End-to-End Tests with Cypress
+
+### Interactive Mode
+Run e2e tests interactively:
+```bash
+npm run test:e2e
+```
+
+### Headless Mode
+Run e2e tests in headless mode:
+```bash
+npm run test:e2e:headless
+```
+
 ## How to Run the Blockchain
 
 For running different blockchain configurations, you can use the following npm commands:
