@@ -22,5 +22,8 @@
       ]
     }
   },
-  "include": ["./client/lib/ft4/**/*", "./test/**/*"]
+  "include": ["./client/lib/ft4/**/*", "./test/**/*"],
+  "exclude": [
+    "node_modules"
+  ]
 }
