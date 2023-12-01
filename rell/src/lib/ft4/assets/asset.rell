@@ -21,24 +21,30 @@ entity balance {
 
 val max_asset_amount = big_integer.from_hex("ff".repeat(32));
 
-function increase_balance(accounts.account, asset, amount: big_integer) {
+function increase_balance(accounts.account, asset, amount: big_integer): big_integer {
     val balance = balance @? { account, asset };
     if (balance != null) {
-        balance.amount += amount;
+        val new_amount = balance.amount + amount;
+        balance.amount = new_amount;
+        return new_amount;
     } else {
         create balance(account, asset, amount);
+        return amount;
     }
 }
 
-function deduct_balance(accounts.account, asset, amount: big_integer) {
+function deduct_balance(accounts.account, asset, amount: big_integer): big_integer {
     val balance = balance @? { account, asset };
     require(balance, "User does not have asset <%s> in account <%s>".format(asset.id, account.id));
     require(balance.amount >= amount, "Balance is too low");
 
    if (balance.amount - amount == 0L) {
        delete balance;
+       return 0L;
    } else {
-       balance.amount -= amount;
+       val new_amount = balance.amount - amount;
+       balance.amount = new_amount;
+       return new_amount;
    }
 }
 
