@@ -140,10 +140,11 @@ export async function getByParticipantId(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
-  return createEntityRetriever<Account, Buffer>(
+  return createEntityRetriever<Account, { id: Buffer }>(
     connection,
     accountsByParticipantId(id, limit, cursor),
-    (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
+    (accounts) =>
+      accounts.map((acc) => createAccountObject(connection, acc.id)),
   ).retrieve();
 }
 
