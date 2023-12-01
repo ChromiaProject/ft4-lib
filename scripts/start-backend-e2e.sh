@@ -11,11 +11,21 @@ POSTGRES_CONTAINER_NAME="ft4_demo"
 # Exit script on any error
 set -e
 
+forceexit() {
+    echo "Forcing exit. Please remember to clean up manually."
+    exit 2
+}
+
 # Clean exit function
 exitfn() {
     trap "forceexit" 2
 
-    echo 'Stopping and cleaning up. Hit Ctrl+C to force quit.'
+    echo 'Stopping and cleaning up Rell node and Postgres container. Hit Ctrl+C to force quit.'
+
+    if [ ! -z "$NODE_PID" ]; then
+        kill $NODE_PID || true
+    fi
+
     $DOCKER stop $POSTGRES_CONTAINER_NAME > /dev/null
     $DOCKER rm $POSTGRES_CONTAINER_NAME > /dev/null
 
@@ -73,6 +83,21 @@ ETH_PRIVATE_KEY=$(node -e "
 ")
 echo "Ethereum private key generated."
 
+# Start Node
+echo "Starting the Chromia node..."
+chr node start &
+NODE_PID=$!
+echo "Waiting for the node to initialize..."
+
+# Wait for the node to be ready (adjust the condition as needed)
+while ! nc -z localhost 7740; do   
+  sleep 1
+done
+echo "Node started with PID: $NODE_PID"
+
+# Navigate back to the project root
+cd - > /dev/null
+
 # TODO: Use the generated EVM address in Metamask with Cypress
 # TODO: Register account and the asset and mint some to the account
 
@@ -95,11 +120,8 @@ echo "Ethereum private key generated."
 #     "<amount>" --await --secret $KEYPAIR)
 # echo "Mint Asset Result: $MINT_ASSET_RESULT"
 
-# Start Node
-echo "Starting the Rell node..."
-chr node start
-
 echo "Backend setup and started successfully."
 
-# Navigate back to the project root
-cd - > /dev/null
+# Cleanup
+wait $NODE_PID
+exitfn
