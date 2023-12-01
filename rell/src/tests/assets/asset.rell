@@ -8,6 +8,7 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 import ^^^.lib.ft4.assets;
 import ft4_utils: ^^^.lib.ft4.utils;
 import ^.utils;
+import test_op: ^^.operations;
 
 val too_big = assets.max_asset_amount + 1;
 
@@ -313,6 +314,39 @@ function test_paginated_asset_balances_have_correct_format() {
         ],
         next_cursor = null
     ));
+}
+
+function test_assets_by_name_are_paginated() {
+    rell.test.tx(test_op.register_asset("test1", "TST1", 0, "0".to_bytes(), "")).run();
+    rell.test.tx(test_op.register_asset("test1", "TST2", 0, "1".to_bytes(), "")).run();
+
+    val page1 = ft4.assets_ext.get_assets_by_name("test1", 1, null);
+    val page2 = ft4.assets_ext.get_assets_by_name("test1", 1, page1.next_cursor);
+
+    val asset1 = assets.asset @ { .symbol == "TST1" }(
+        id = asset.id,
+        name = asset.name,
+        symbol = asset.symbol,
+        decimals = asset.decimals,
+        brid = asset.issuing_brid,
+        icon_url = asset.icon_url,
+        supply = asset.total_supply
+    );
+    
+    val asset2 = assets.asset @ { .symbol == "TST2" }(
+        id = asset.id,
+        name = asset.name,
+        symbol = asset.symbol,
+        decimals = asset.decimals,
+        brid = asset.issuing_brid,
+        icon_url = asset.icon_url,
+        supply = asset.total_supply
+    );
+
+    assert_equals(page1.data.size(), 1);
+    assert_equals(page1.data[0], asset1.to_gtv_pretty());
+    assert_equals(page2.data.size(), 1);
+    assert_equals(page2.data[0], asset2.to_gtv_pretty());
 }
 
 function test_assets_are_returned_in_correct_order() {
