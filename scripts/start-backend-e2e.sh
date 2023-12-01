@@ -58,6 +58,43 @@ else
     echo "Keypair already exists."
 fi
 
+echo "Generating Ethereum address and private key..."
+ETH_ADDRESS=$(node -e "
+    const ethers = require('ethers');
+    const wallet = ethers.Wallet.createRandom();
+    console.log(wallet.address);
+")
+echo "Ethereum address generated: $ETH_ADDRESS"
+
+ETH_PRIVATE_KEY=$(node -e "
+    const ethers = require('ethers');
+    const wallet = ethers.Wallet.createRandom();
+    console.log(wallet.privateKey);
+")
+echo "Ethereum private key generated."
+
+# TODO: Use the generated EVM address in Metamask with Cypress
+# TODO: Register account and the asset and mint some to the account
+
+# echo "Registering account with Ethereum address..."
+# REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
+#     "[0, [['A','T'], x'${ETH_ADDRESS//0x}'], null]" \
+#     --await --secret $KEYPAIR)
+# echo "Account registration result: $REGISTER_ACCOUNT_RESULT"
+
+# echo "Registering test asset..."
+# REGISTER_ASSET_RESULT=$(chr tx ft4.admin.register_asset \
+#     TestAsset TST 6 http://url-to-asset-icon \
+#     --await --secret $KEYPAIR)
+# echo "Asset Registration Result: $REGISTER_ASSET_RESULT"
+
+# echo "Minting asset to account..."
+# MINT_ASSET_RESULT=$(chr tx ft4.admin.mint \
+#     "<account_id>" \
+#     "<asset_id>" \
+#     "<amount>" --await --secret $KEYPAIR)
+# echo "Mint Asset Result: $MINT_ASSET_RESULT"
+
 # Start Node
 echo "Starting the Rell node..."
 chr node start
