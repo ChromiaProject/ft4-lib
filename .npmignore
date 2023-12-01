@@ -21,11 +21,26 @@ test/
 test_admin/
 app/
 
+/.husky
 /.env.sample
+/.eslintignore
+/.eslintrc.json
+/.prettierignore
+/.prettierrc.json
 /db.log
-/jest.config.js
-/jest.setup.js
-/tsconfig.json
 /index.js
+/jest.config.js
+/jest.config.multichain.js
+/jest.setup.js
+/rollup.config.mjs
+/tsconfig.dist.json
+/tsconfig.json
 
-bitbucket-pipelines.yml
+/bitbucket-pipelines.yml
+
+/configs
+/examples
+/rell-changelog.md
+/scripts
+/doc
+/compile-changelog.sh
