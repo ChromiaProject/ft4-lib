@@ -3,4 +3,4 @@
 !/test
 !/test_admin
 !/examples
-cypress.config.ts
+!/cypress

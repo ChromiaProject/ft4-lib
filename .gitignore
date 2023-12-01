@@ -40,3 +40,7 @@ client/lib/ft4/package.json
 
 # Coverage Reports
 coverage
+
+# Examples
+examples/demo/client/package-lock.json
+examples/demo/rell/.admin_keypair
