@@ -1,11 +1,15 @@
 @mount('ft')
 module;
 
+struct rate_limit_config {
+    active: boolean = true;
+	max_points: integer = 10;
+    recovery_time: integer = 5000;
+    points_at_account_creation: integer = 1;
+}
+
 struct module_args {
-	rate_limit_active: boolean = true;
-	rate_limit_max_points: integer = 10;
-    rate_limit_recovery_time: integer = 5000;
-    rate_limit_points_at_account_creation: integer = 1;
+	rate_limit: rate_limit_config = rate_limit_config();
 }
 
 import ^.auth;
@@ -101,9 +105,9 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
 
     add_auth_descriptor_to_account(acc, auth_descriptor, safe);
 
-    val max_points = chain_context.args.rate_limit_max_points;
-    val recovery_time = chain_context.args.rate_limit_recovery_time;
-    val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
+    val max_points = chain_context.args.rate_limit.max_points;
+    val recovery_time = chain_context.args.rate_limit.recovery_time;
+    val points_at_start = chain_context.args.rate_limit.points_at_account_creation;
     
     create rl_state(acc, .points = points_at_start, .last_update = latest_time(), max_points, recovery_time);
     

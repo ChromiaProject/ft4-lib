@@ -15,3 +15,4 @@
 - **Address Functions Removed**: Deprecated `evm_address_from_pubkey` and `evm_address_from_privkey`. Use corresponding functions `crypto.eth_pubkey_to_address` and `crypto.eth_privkey_to_address` from Rell standard library for Ethereum address generation.
 - **create_account_with_auth** function return `account` instead of `byte_array`.
 - **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
+- **Rate limit config** New format for rate limit configuration.
