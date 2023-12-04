@@ -1,8 +1,4 @@
 
-query _get_asset_balances(account_id: byte_array) {
-    return assets.get_asset_balances(account_id);
-}
-
 query get_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances(account_id, page_size, page_cursor),
@@ -38,10 +34,6 @@ query get_asset_by_id(asset_id: byte_array) {
 query get_asset_by_symbol(symbol: text) {
     return assets.asset @? { .symbol == symbol } ( assets.map_asset($) );
 } 
-
-query _get_all_assets() {
-    return assets.asset @* {} ( assets.map_asset($) );
-}
 
 query get_all_assets(page_size: integer, page_cursor: text?) {
     return utils.make_page(
