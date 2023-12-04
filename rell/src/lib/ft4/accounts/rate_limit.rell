@@ -1,8 +1,8 @@
 function rate_limit(account) {
-    if (chain_context.args.rate_limit_active == false) return;
+    if (chain_context.args.rate_limit.active == false) return;
     
-    val max_counter = chain_context.args.rate_limit_max_points;
-    val recovery_time = chain_context.args.rate_limit_recovery_time;
+    val max_counter = chain_context.args.rate_limit.max_points;
+    val recovery_time = chain_context.args.rate_limit.recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
@@ -37,11 +37,4 @@ function add_rate_limit_points(account, amount: integer) {
 	state.points += amount;
 }
 
-function get_rate_limit_config() {
-    return (
-        active = chain_context.args.rate_limit_active,
-        max_points = chain_context.args.rate_limit_max_points,
-        recovery_time = chain_context.args.rate_limit_recovery_time,
-        points_at_account_creation = chain_context.args.rate_limit_points_at_account_creation
-    );
-}
+function get_rate_limit_config() = chain_context.args.rate_limit;
