@@ -9,7 +9,7 @@ blockchains:
         rate_limit_points_at_account_creation: 2
 
       lib.ft4.admin:
-        admin_pubkey: x"021841CEEF7CC5D32077C35909A02763C8CBC97B9A3E37BD166E53589ED704AB88"
+        admin_pubkey: x"02D44929DC9C5F9A4A35AA38329542373388514EE3E3C6360129ECFA555D43755D"
 
 
 compile:
