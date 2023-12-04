@@ -8,13 +8,13 @@ import { createEvmKeyHandler, evmAuth } from "/ft4/authentication/evm";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { createAuthenticator } from "/ft4/authentication";
 import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createMockClient } from "./util/blockchain-util";
+import { createStubClient } from "./util/blockchain-util";
 
 describe("EVM key handler", () => {
   let client: IClient;
 
   beforeAll(async () => {
-    client = await createMockClient();
+    client = await createStubClient();
   });
 
   it("should sign message", async () => {

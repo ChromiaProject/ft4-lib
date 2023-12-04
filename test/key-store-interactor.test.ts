@@ -4,13 +4,13 @@ import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
 } from "/ft4/authentication";
-import { createMockClient } from "./util/blockchain-util";
+import { createStubClient } from "./util/blockchain-util";
 
 let connection: Connection;
 
 describe("Key store interactor", () => {
   beforeAll(async () => {
-    connection = createConnection(await createMockClient());
+    connection = createConnection(await createStubClient());
   });
 
   describe("account updates", () => {

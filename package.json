@@ -19,7 +19,7 @@
     "version:rell": "./scripts/version.sh",
     "test:js-coverage": "./scripts/jesttest.sh -- --coverage",
     "test:js": "./scripts/jesttest.sh",
-    "test:js:integration": "./scripts/integration-jesttest.sh",
+    "test:js-integration": "./scripts/integration-jesttest.sh",
     "test:rell": "./scripts/relltest.sh -- $@",
     "test:multichain": "./scripts/multichain-jesttest.sh",
     "test": "./scripts/relltest.sh -- ; ./scripts/jesttest.sh",

@@ -32,7 +32,7 @@ export async function createChromiaClient(nodeUrl?: string, iid = 0) {
   });
 }
 
-export async function createMockClient() {
+export async function createStubClient() {
   return createClient({
     nodeUrlPool: "http://127.0.0.1:7740",
     blockchainRid:

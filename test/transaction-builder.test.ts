@@ -22,7 +22,7 @@ import { FlagsType } from "/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
 import { registerAccount } from "/ft4/admin/admin-operations";
 import { createAmount } from "/ft4/asset/amount";
-import { createMockClient } from "/util/blockchain-util";
+import { createStubClient } from "/util/blockchain-util";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -97,7 +97,7 @@ describe("Transaction Builder", () => {
 
   beforeEach(async () => {
     setupTestEnvironment();
-    client = await createMockClient();
+    client = await createStubClient();
   });
 
   it("builds an unsigned transaction", async () => {
