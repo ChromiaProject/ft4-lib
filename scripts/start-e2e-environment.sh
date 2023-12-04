@@ -130,28 +130,41 @@ forceexit() {
 }
 
 cleanup() {
-    echo 'Stopping and cleaning up Chromia node, Postgres container, and frontend. Hit Ctrl+C to force quit.'
-    trap "forceexit" 2
+    echo 'Stopping and cleaning up Chromia node, Postgres container, and frontend. Please wait...'
 
     # Stop Chromia node
     if [ ! -z "$NODE_PID" ]; then
-        kill $NODE_PID || true
+        echo "Stopping Chromia node with PID $NODE_PID..."
+
+        kill -TERM $NODE_PID 2>/dev/null \
+            || echo "Failed to stop Chromia node with PID $NODE_PID."
+
+        wait $NODE_PID 2>/dev/null || true
     fi
 
     # Stop Postgres container
-    $DOCKER stop $POSTGRES_CONTAINER_NAME > /dev/null || true
-    $DOCKER rm $POSTGRES_CONTAINER_NAME > /dev/null || true
+    $DOCKER stop $POSTGRES_CONTAINER_NAME > /dev/null 2>&1 \
+        || echo "Failed to stop Postgres container $POSTGRES_CONTAINER_NAME."
+    $DOCKER rm $POSTGRES_CONTAINER_NAME > /dev/null 2>&1 \
+        || true
 
-    # Stop Frontend processes by targeting its port
-    for PID in $(lsof -t -i:$FRONTEND_PORT); do
-        echo "Stopping Frontend process with PID $PID..."
-        kill -9 $PID || echo "Failed to stop Frontend process with PID $PID."
-    done
+    # Find and stop the Frontend processes by targeting its port with a graceful shutdown
+    FRONTEND_PIDS=$(lsof -t -i:$FRONTEND_PORT)
+    if [ ! -z "$FRONTEND_PIDS" ]; then
+        echo "Stopping Frontend processes with PIDs: $FRONTEND_PIDS..."
+
+        kill -TERM $FRONTEND_PIDS 2>/dev/null \
+            || echo "Failed to stop Frontend processes with PIDs: $FRONTEND_PIDS."
+
+        for PID in $FRONTEND_PIDS; do
+            wait $PID 2>/dev/null || true
+        done
+    fi
 
     echo 'Cleanup complete.'
 }
 
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 start_backend
 start_frontend
