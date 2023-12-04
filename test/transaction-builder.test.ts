@@ -23,6 +23,7 @@ import { Buffer } from "buffer";
 import { registerAccount } from "/ft4/admin/admin-operations";
 import { createAmount } from "/ft4/asset/amount";
 import { createStubClient } from "/util/blockchain-util";
+import { emptyOp } from "./util/util";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -239,5 +240,34 @@ describe("Transaction Builder", () => {
       .buildUnsigned();
 
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
+  });
+
+  it("can build and submit a transaction", async () => {
+    const { authenticatorMock } = getMocks();
+    const operation = nop();
+    const expectedTx = client.encodeTransaction({
+      operations: [emptyOp(), operation],
+      signers: [],
+    });
+
+    const originalSendTransaction = client.sendTransaction;
+    try {
+      client.sendTransaction = jest.fn().mockReturnValue(
+        Promise.resolve({
+          status: "confirmed",
+          statusCode: 200,
+          transactionRid: Buffer.alloc(32),
+        }),
+      );
+
+      const { tx } = await transactionBuilder(authenticatorMock, client)
+        .add(emptyOp())
+        .add(operation)
+        .buildAndSend();
+
+      expect(gtx.deserialize(tx)).toEqual(gtx.deserialize(expectedTx));
+    } finally {
+      client.sendTransaction = originalSendTransaction;
+    }
   });
 });

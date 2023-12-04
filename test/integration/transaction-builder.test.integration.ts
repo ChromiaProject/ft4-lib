@@ -11,7 +11,7 @@ import {
 } from "../util/blockchain-util";
 import { nop } from "/ft4/utils";
 import { Authenticator, KeyHandler } from "/ft4/authentication/types";
-import { IClient, gtx, isBlockAnchored } from "postchain-client";
+import { IClient, isBlockAnchored } from "postchain-client";
 import { FlagsType } from "/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
 
@@ -46,22 +46,6 @@ describe("Transaction Builder", () => {
 
   beforeEach(async () => {
     client = await createChromiaClient();
-  });
-
-  it("can build and submit a function", async () => {
-    const { authenticatorMock } = getMocks();
-    const operation = nop();
-    const expectedTx = client.encodeTransaction({
-      operations: [emptyOp(), operation],
-      signers: [],
-    });
-
-    const { tx } = await transactionBuilder(authenticatorMock, client)
-      .add(emptyOp())
-      .add(operation)
-      .buildAndSend();
-
-    expect(gtx.deserialize(tx)).toEqual(gtx.deserialize(expectedTx));
   });
 
   describe("block anchored handling", () => {
