@@ -4,6 +4,7 @@ import {
   authDescriptor,
   createKeyStoreInteractor,
   minutes,
+  ttlLoginRule,
 } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
@@ -93,7 +94,7 @@ describe("Login manager", () => {
 
     await loginManager.login({
       accountId: account.id,
-      config: { flags: ["T"], ttl: minutes(30) },
+      config: { flags: ["T"], rules: ttlLoginRule(minutes(30)) },
     });
     const expectedExpiration = Date.now() + 1800000; // 30 min from now
 
@@ -146,7 +147,7 @@ describe("Login manager", () => {
 
     await loginManager.login({
       accountId: account.id,
-      config: { flags: ["T"] },
+      config: { flags: ["T"], rules: allow.all },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin.data[1].rule).toEqual(null);
@@ -171,6 +172,7 @@ describe("Login manager", () => {
       accountId: accountId,
       config: {
         flags: [FlagsType.Transfer],
+        rules: allow.all,
       },
     });
 

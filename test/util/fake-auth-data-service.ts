@@ -1,9 +1,7 @@
 import { Operation } from "postchain-client";
 import { BufferId } from "/ft4/cryptoUtils";
-import {
-  AuthDataService,
-  LoginConfigResponse,
-} from "/ft4/authentication/types";
+import { AuthDataService } from "/ft4/authentication/types";
+import { LoginConfig } from "/ft4/authentication/login-manager";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
@@ -21,7 +19,7 @@ export function createFakeAuthDataService(
       generator.next().value,
     // eslint-disable-next-line
     getLoginConfig: (configName: string) =>
-      Promise.resolve({ flags: [], ttl: null } as LoginConfigResponse),
+      Promise.resolve({ flags: [], rules: null } as LoginConfig),
     getBrid: () => Buffer.from(""),
   };
 }

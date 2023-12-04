@@ -1,12 +1,12 @@
 import { AuthDescriptorRule, AuthDescriptorNullRule } from "./types";
 
-enum RuleVariables {
+export enum RuleVariables {
   BlockHeight = 0,
   BlockTime = 1,
   OpCount = 2,
 }
 
-enum RuleOperator {
+export enum RuleOperator {
   LessThan = 0,
   LessOrEqual = 1,
   Equals = 2,

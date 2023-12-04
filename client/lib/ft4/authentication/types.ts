@@ -3,9 +3,7 @@ import { BufferId } from "../cryptoUtils";
 import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
-
 import { LoginConfig } from "./login-manager/types";
-export { LoginConfig } from "./login-manager/types";
 
 export interface Authenticator {
   accountId: Buffer;

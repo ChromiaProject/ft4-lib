@@ -19,9 +19,14 @@ import {
 import { createAuthDataService, createSession } from "../../ft-session";
 import { Connection } from "../../types";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { allow } from "/ft4/accounts/auth-descriptor/rules";
+import {
+  RuleOperator,
+  RuleVariables,
+  allow,
+} from "/ft4/accounts/auth-descriptor/rules";
 import {
   isLoginConfigNullRule,
+  isLoginConfigRule,
   isLoginConfigSimpleRule,
 } from "./type-assertions";
 
@@ -137,7 +142,7 @@ async function getFlagsAndRules(
       options.configName,
     );
     flags = loginConfig.flags;
-    rules = await getRulesFromLoginConfig(options.config.rules);
+    rules = await getRulesFromLoginConfig(loginConfig.rules);
   }
   return {
     flags,
@@ -146,13 +151,15 @@ async function getFlagsAndRules(
 }
 
 async function getRulesFromLoginConfig(
-  rules: LoginConfigRule,
+  rules: LoginConfigRule | AuthDescriptorRule,
 ): Promise<AuthDescriptorRule> {
   let currentHeight: number;
   const getBlockHeight = async () => {
+    // Update postchain version and fix
     if (currentHeight === undefined) currentHeight = await 1; //getBlocksInfo
     return currentHeight;
   };
+  if (!isLoginConfigRule(rules)) return rules;
   if (isLoginConfigNullRule(rules)) return allow.all;
   else if (isLoginConfigSimpleRule(rules)) {
     return getRuleFromSingleLoginConfigRule(rules, getBlockHeight);
@@ -175,15 +182,15 @@ async function getRuleFromSingleLoginConfigRule(
   const operator = loginRule[0];
   const variable = loginRule[1];
   let value: number;
-  if (variable === "op_count") {
+  if (variable === RuleVariables.OpCount) {
     value = parseInt(loginRule[2]);
-  } else if (variable === "block_time") {
+  } else if (variable === RuleVariables.BlockTime) {
     value = Date.now() + parseInt(loginRule[2].replace(/[{}]/g, ""));
-  } else if (variable === "block_height") {
+  } else if (variable === RuleVariables.BlockHeight) {
     value =
       (await getBlockHeight()) + parseInt(loginRule[2].replace(/[{}]/g, ""));
   } else throw "unexpected variable: " + variable;
-  return [operator, variable, value];
+  return [operator, variable, value] as unknown as AuthDescriptorSimpleRule;
 }
 
 async function addDisposableAuthDescriptor(
@@ -229,5 +236,5 @@ export const days = (d: number) => d * hours(24);
 export const weeks = (w: number) => w * days(7);
 
 export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
-  return ["lt", "block_time", `{${ttl}}`];
+  return [RuleOperator.LessThan, RuleVariables.BlockTime, `{${ttl}}`];
 }
