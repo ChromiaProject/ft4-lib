@@ -16,10 +16,6 @@ query get_asset_balance(account_id: byte_array, asset_id: byte_array) {
     );
 }
 
-query get_asset_by_name(name) {
-    return assets.asset @* { name } ( assets.map_asset($) );
-}
-
 query get_assets_by_name(name, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_asset_balances_by_name(name, page_size, page_cursor),
