@@ -120,7 +120,7 @@ function test_transfer_fails_when_sender_is_same_as_receiver() {
         .run_must_fail("Sender and receiver have to be different");
 }
 
-function test_transfer_succeeds_when_enough_balance() {
+function test_transfer_succeeds_when_more_than_enough_balance() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
 
@@ -133,8 +133,26 @@ function test_transfer_succeeds_when_enough_balance() {
         .sign(alice.keypair)
         .run();
 
-    assert_equals(assets.ensure_balance(alice.account, asset).amount, 7);
-    assert_equals(assets.ensure_balance(bob.account, asset).amount, 3);
+    assert_equals(assets.get_asset_balance(alice.account, asset), 7);
+    assert_equals(assets.get_asset_balance(bob.account, asset), 3);
+}
+
+function test_transfer_when_just_enough_balance_will_delete_balance_entity() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 10))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(alice.account, asset), 0);
+    assert_null(assets.balance @? { alice.account, asset });
+    assert_equals(assets.get_asset_balance(bob.account, asset), 10);
 }
 
 function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() {
@@ -179,8 +197,8 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 5))
         .run();
 
-    assert_equals(assets.ensure_balance(alice.account, asset).amount, 10);
-    assert_equals(assets.ensure_balance(bob.account, asset).amount, 5);
+    assert_equals(assets.get_asset_balance(alice.account, asset), 10);
+    assert_equals(assets.get_asset_balance(bob.account, asset), 5);
 }
 
 function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_sender() {

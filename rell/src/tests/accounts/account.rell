@@ -18,7 +18,7 @@ function setup_account_with_many_ads() {
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
   test_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
-  val account = acc.account @ {};
+  val account = acc.account @ { alice_ad.hash() };
   val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
   val eve_ad = test_utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
   val trudy_ad = test_utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
@@ -75,7 +75,43 @@ function test_paginated_items_have_the_correct_return_format() {
   assert_equals(descriptors.data[0], alice_gtv_ad.to_gtv_pretty());
 }
 
-function test_accounts_by_ad_id_are_paginated() {
+function test_get_account_auth_descriptors_by_participant_id_is_paginated() {
+  val account = test_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val ad1 = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["A"]);
+  val ad2 = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["T"]);
+  
+  rell.test.tx(test_op.add_ad_to_account(account.account, ad1)).sign(rell.test.keypairs.bob).run();
+  rell.test.tx(test_op.add_ad_to_account(account.account, ad2)).sign(rell.test.keypairs.bob).run();
+  
+  val page1 = acc_external.get_account_auth_descriptors_by_participant_id(account.account.id, rell.test.keypairs.bob.pub, 1, null);
+  val page2 = acc_external.get_account_auth_descriptors_by_participant_id(account.account.id, rell.test.keypairs.bob.pub, 1, page1.next_cursor);
+
+  val descriptors = acc.auth_descriptor_participant @* {
+    .id == rell.test.keypairs.bob.pub
+  }( 
+    acc.get_auth_descriptor_data($.account_auth_descriptor.to_struct()).to_gtv_pretty()
+  );
+
+  assert_equals(page1.data.size(), 1);
+  assert_equals(page1.data[0], descriptors[0]);
+  assert_equals(page2.data.size(), 1);
+  assert_equals(page2.data[0], descriptors[1]);
+}
+
+function test_get_accounts_by_participant_id_is_paginated() {
+  val account1 = test_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val account2 = test_utils.create_test_account(rell.test.keypairs.alice, ["2"]);
+
+  val page1 = acc_external.get_accounts_by_participant_id(rell.test.keypairs.alice.pub, 1, null);
+  val page2 = acc_external.get_accounts_by_participant_id(rell.test.keypairs.alice.pub, 1, page1.next_cursor);
+
+  assert_equals(page1.data.size(), 1);
+  assert_equals(page1.data[0], account1.account.to_struct().to_gtv_pretty());
+  assert_equals(page2.data.size(), 1);
+  assert_equals(page2.data[0], account2.account.to_struct().to_gtv_pretty());
+}
+
+function test_accounts_by_ad_id_is_paginated() {
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
   val bob = test_utils.register_bob();
   val eve = test_utils.register_eve();

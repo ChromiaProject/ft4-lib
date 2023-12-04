@@ -7,6 +7,7 @@
 - Updated signature for `evm_auth_operation_for` to accept a `rell.test.op`.
 - `before_authenticate` function is now extendable for adding custom pre-authentication logic.
 - `after_authenticate` function is now extendable for executing logic after authentication completes.
+- Allow account creation with `create_account_with_auth` without op_context.
 
 ### Breaking Changes
 - **Paginated Queries**: Queries `get_accounts_by_participant_id` and `get_account_auth_descriptors_by_participant_id` are now paginated. This change impacts how these queries are consumed and might require adjustments in the calling code.
@@ -14,3 +15,4 @@
 - **Address Functions Removed**: Deprecated `evm_address_from_pubkey` and `evm_address_from_privkey`. Use corresponding functions `crypto.eth_pubkey_to_address` and `crypto.eth_privkey_to_address` from Rell standard library for Ethereum address generation.
 - **create_account_with_auth** function return `account` instead of `byte_array`.
 - **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
+- **Rate limit config** New format for rate limit configuration.

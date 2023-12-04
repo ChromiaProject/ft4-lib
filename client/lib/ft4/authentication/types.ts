@@ -9,7 +9,6 @@ export interface Authenticator {
   keyHandlers: KeyHandler[];
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
-  createSession(): AuthenticatorSession;
   getKeyHandlerForOperation(
     operation: Operation,
   ): Promise<KeyHandler | undefined>;
@@ -40,14 +39,6 @@ export interface KeyStore {
   // when false, signing is performed without user interaction
   isInteractive: boolean;
   createKeyHandler(authDescriptor: AuthDescriptor): KeyHandler;
-}
-
-export interface AuthenticatorSession {
-  authenticator: Authenticator;
-  getUsedKeyHandlers(): Set<KeyHandler>;
-  getSigners(): Set<Buffer>;
-  authorize(operation: Operation): Promise<Operation[]>;
-  sign(transaction: TxBuilderTransaction): Promise<void>;
 }
 
 export interface AuthDataService {
