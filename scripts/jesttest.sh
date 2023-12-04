@@ -59,7 +59,7 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
     npx jest -maxWorkers=1 --detectOpenHandles $opt -t "${test_string%?}" &
     pids+=($!)
 else
-    for f in ./**/*.test.ts; do
+    for f in test/unit/*.test.ts; do
         JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
         pids+=($!)
     done

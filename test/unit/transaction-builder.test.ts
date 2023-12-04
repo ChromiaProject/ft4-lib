@@ -1,6 +1,6 @@
-import { createTestAuthDescriptor } from "./util/util";
+import { createTestAuthDescriptor } from "../util/util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import {
   createAuthenticator,
   createNoopAuthenticator,
@@ -23,7 +23,7 @@ import { Buffer } from "buffer";
 import { registerAccount } from "/ft4/admin/admin-operations";
 import { createAmount } from "/ft4/asset/amount";
 import { createStubClient } from "/util/blockchain-util";
-import { emptyOp } from "./util/util";
+import { emptyOp } from "../util/util";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

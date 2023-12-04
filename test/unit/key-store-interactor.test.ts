@@ -4,7 +4,7 @@ import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
 } from "/ft4/authentication";
-import { createStubClient } from "./util/blockchain-util";
+import { createStubClient } from "../util/blockchain-util";
 
 let connection: Connection;
 
