@@ -1,10 +1,10 @@
 import { encryption, gtx } from "postchain-client";
-import { createTestAuthDescriptor } from "./util/util";
+import { createTestAuthDescriptor } from "../util/util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { op } from "/ft4/utils";
 import { ftAuth } from "/ft4/authentication/ft";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createChromiaClient } from "./util/blockchain-util";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { createStubClient } from "../util/blockchain-util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -29,7 +29,7 @@ describe("FT key handler", () => {
   it("should sign transaction", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const client = await createChromiaClient();
+    const client = await createStubClient();
     const transaction = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],

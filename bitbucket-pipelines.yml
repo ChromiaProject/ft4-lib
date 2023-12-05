@@ -20,7 +20,8 @@ pipelines:
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
-            - ./scripts/jesttest.sh --no-docker --ci
+            - ./scripts/jesttest.sh --ci
+            - ./scripts/integration-jesttest.sh --no-docker --ci
 
           services:
             - postgres
