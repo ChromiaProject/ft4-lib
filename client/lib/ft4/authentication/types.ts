@@ -4,6 +4,7 @@ import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
 import { LoginConfig } from "./login-manager/types";
+import { Connection } from "../types";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -52,6 +53,7 @@ export interface AuthenticatorSession {
 }
 
 export interface AuthDataService {
+  connection: Connection;
   isOperationExposed(operationName: string): Promise<boolean>;
   getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;

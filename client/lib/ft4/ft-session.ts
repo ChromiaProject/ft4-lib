@@ -138,6 +138,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   };
 
   return Object.freeze({
+    connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
         await fetchAndCacheOperations();

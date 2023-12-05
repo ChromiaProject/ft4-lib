@@ -134,15 +134,26 @@ async function getFlagsAndRules(
 ): Promise<{ flags: string[]; rules: AuthDescriptorRule }> {
   let flags: string[];
   let rules: AuthDescriptorRule;
+
+  let currentHeight: number;
+  const getBlockHeight = async () => {
+    if (currentHeight === undefined) {
+      const blocks = await authDataService.connection.client.getBlocksInfo(1);
+      currentHeight = blocks[0].height;
+      console.log("\n\n\n\n\n\n" + currentHeight);
+    }
+    return currentHeight;
+  };
+
   if (options.config) {
     flags = options.config.flags;
-    rules = await getRulesFromLoginConfig(options.config.rules);
+    rules = await getRulesFromLoginConfig(options.config.rules, getBlockHeight);
   } else {
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
     );
     flags = loginConfig.flags;
-    rules = await getRulesFromLoginConfig(loginConfig.rules);
+    rules = await getRulesFromLoginConfig(loginConfig.rules, getBlockHeight);
   }
   return {
     flags,
@@ -152,13 +163,8 @@ async function getFlagsAndRules(
 
 async function getRulesFromLoginConfig(
   rules: LoginConfigRule | AuthDescriptorRule,
+  getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorRule> {
-  let currentHeight: number;
-  const getBlockHeight = async () => {
-    // Update postchain version and fix
-    if (currentHeight === undefined) currentHeight = await 1; //getBlocksInfo
-    return currentHeight;
-  };
   if (!isLoginConfigRule(rules)) return rules;
   if (isLoginConfigNullRule(rules)) return allow.all;
   else if (isLoginConfigSimpleRule(rules)) {
@@ -238,3 +244,5 @@ export const weeks = (w: number) => w * days(7);
 export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
   return [RuleOperator.LessThan, RuleVariables.BlockTime, `{${ttl}}`];
 }
+
+//TODO: Add conversion AuthDescriptorRule -> LoginConfigRule after new rules PR
