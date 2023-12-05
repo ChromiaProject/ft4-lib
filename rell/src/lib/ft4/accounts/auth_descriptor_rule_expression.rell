@@ -28,12 +28,12 @@ function serialize_rules(rules: list<rule_expression>): gtv {
 		return GTV_NULL;
 	}
 	if (rules.size() == 1) {
-			return rules[0].to_gtv();
+		return rules[0].to_gtv();
 	}
 
 	val rules_gtv = ["and".to_gtv()];
 	for (rule in rules) {
-			rules_gtv.add(rule.to_gtv());
+		rules_gtv.add(rule.to_gtv());
 	}
 	return rules_gtv.to_gtv();
 }

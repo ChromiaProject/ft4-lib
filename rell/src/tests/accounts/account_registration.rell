@@ -22,7 +22,7 @@ function test_cannot_create_account_with_expiring_ad() {
   admin.register_account(auth_descriptor)
     .sign(utils.admin_priv_key())
     .sign(bob)
-    .run_must_fail();
+    .run_must_fail("Cannot create an account with a restricted auth descriptor");
 }
 
 function test_multi_sig_auth_descriptor_can_be_added() {
