@@ -3,13 +3,14 @@ import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
 import { LocalStorageMock } from "../util/util";
-import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
+import { getNewAsset } from "../util/blockchain-util";
 import { createAmount } from "/ft4/asset/amount";
 import { TransferHistoryType } from "/ft4/accounts/transfer-history/types";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { IClient, gtv, newSignatureProvider } from "postchain-client";
 import { createTransferHistoryRetriever } from "/ft4/accounts/transfer-history/transfer-history-retrieval";
+import { useChromiaNode } from "/util/chromia-node";
 
 let asset: Asset;
 let connection: Connection;
@@ -17,9 +18,11 @@ let client: IClient;
 const NULL_ACCOUNT = gtv.encode(null);
 
 describe("Transfer history", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
-    client = await createChromiaClient();
+    client = getClient();
     asset = await getNewAsset(client);
     connection = createConnection(client);
   });

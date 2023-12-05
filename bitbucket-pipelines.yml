@@ -22,7 +22,7 @@ pipelines:
             - npm ci
             - ./scripts/jesttest.sh --ci
             - export TESTCONTAINERS_RYUK_DISABLED=true
-            - npx jest -maxWorkers=1 --testPathPattern=test/transfer.test.ts
+            - npx jest -maxWorkers=1 --testPathPattern=integration/*.test.ts
 
           services:
             - postgres

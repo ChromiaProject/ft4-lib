@@ -4,7 +4,7 @@ import { Connection } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
 import { AuthenticatedAccount } from "/ft4/accounts/types";
 import { AuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
-import { getNewAsset, createChromiaClient } from "../util/blockchain-util";
+import { getNewAsset } from "../util/blockchain-util";
 import { allow } from "/ft4/accounts/auth-descriptor/rules";
 import { createAmount } from "/ft4/asset/amount";
 import { IClient } from "postchain-client";
@@ -26,6 +26,7 @@ import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operation
 import { registerAccount } from "/ft4/admin/admin-op-functions";
 import adminUser from "../util/admin_user";
 import { authDescriptor } from "/ft4";
+import { useChromiaNode } from "/util/chromia-node";
 
 let _connection: Connection;
 let asset: Asset;
@@ -74,8 +75,10 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 }
 
 describe("Auth Descriptor Rule", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     _connection = createConnection(client);
     asset = await getNewAsset(_connection.client);
   });

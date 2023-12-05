@@ -1,4 +1,4 @@
-import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
+import { getNewAsset } from "../util/blockchain-util";
 import { FlagsType, authDescriptor, createKeyStoreInteractor } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
@@ -10,13 +10,16 @@ import { transfer } from "/ft4/accounts/account-operations";
 import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
+import { useChromiaNode } from "/util/chromia-node";
 
 describe("Login manager", () => {
   let client: IClient;
   let connection: Connection;
 
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     connection = createConnection(client);
   });
 

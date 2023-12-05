@@ -5,15 +5,13 @@ import {
   AnchoringTimeoutError,
   transactionBuilder,
 } from "/ft4/utils/transaction-builder";
-import {
-  anchoredHandlerCallbackParameters,
-  createChromiaClient,
-} from "../util/blockchain-util";
+import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import { nop } from "/ft4/utils";
 import { Authenticator, KeyHandler } from "/ft4/authentication/types";
 import { IClient, isBlockAnchored } from "postchain-client";
 import { FlagsType } from "/ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
+import { useChromiaNode } from "/util/chromia-node";
 
 describe("Transaction Builder", () => {
   let client: IClient;
@@ -44,8 +42,10 @@ describe("Transaction Builder", () => {
     return { authenticatorMock, keyHandlerMock, keyPair, authDescriptor };
   }
 
+  const getClient = useChromiaNode();
+
   beforeEach(async () => {
-    client = await createChromiaClient();
+    client = getClient();
   });
 
   describe("block anchored handling", () => {
