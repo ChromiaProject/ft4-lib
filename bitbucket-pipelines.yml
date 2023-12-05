@@ -22,7 +22,8 @@ pipelines:
             - npm ci
             - ./scripts/jesttest.sh --ci
             - export TESTCONTAINERS_RYUK_DISABLED=true
-            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/*.test.ts
+            - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/*.test.ts --ci --reporters=default --reporters=jest-junit
 
           services:
             - postgres
