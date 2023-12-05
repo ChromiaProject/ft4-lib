@@ -29,7 +29,7 @@ describe("Login manager", () => {
     Date.now = jest.fn(() => 10);
   });
 
-  afterAll(async () => {
+  afterAll(() => {
     Date.now = dateNow;
   });
 
