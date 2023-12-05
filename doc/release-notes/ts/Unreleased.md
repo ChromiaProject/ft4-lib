@@ -1,6 +1,10 @@
 ## [Unreleased]
 
+### Breaking
+- Removed `getClientVersion()` function
+- Removed `AuthenticatorSession`
+- The API for creating auth descriptor rules has been updated
+
 ### Changed 
-- Upgrade postchain-client to 1.8.1.
-- BREAKING CHANGE: The API for creating auth descriptor rules has been updated
+- Upgrade postchain-client to 1.9.0.
 - Added a function `getAccountsPaginated()` to get all accounts

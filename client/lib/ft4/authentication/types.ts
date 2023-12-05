@@ -1,14 +1,13 @@
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
-import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
 import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
+import { BufferId, TxContext } from "/ft4/utils/types";
 
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
-  createSession(): AuthenticatorSession;
   getKeyHandlerForOperation(operation: Operation): Promise<KeyHandler | null>;
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
@@ -38,14 +37,6 @@ export interface KeyStore {
   isInteractive: boolean;
   sign: (digestToSign: Buffer) => Promise<Buffer>;
   createKeyHandler(authDescriptor: AnyAuthDescriptor): KeyHandler;
-}
-
-export interface AuthenticatorSession {
-  authenticator: Authenticator;
-  getUsedKeyHandlers(): Set<KeyHandler>;
-  getSigners(): Set<Buffer>;
-  authorize(operation: Operation): Promise<Operation[]>;
-  sign(transaction: TxBuilderTransaction): Promise<void>;
 }
 
 export interface AuthDataService {

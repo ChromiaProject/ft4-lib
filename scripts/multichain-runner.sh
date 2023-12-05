@@ -68,7 +68,7 @@ run_main_logic() {
         if [[ "$OSTYPE" == "darwin"* ]]; then
             echo "You are running macOS. If you haven't installed chr, please do so using:"
             echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
-            echo "% brew install chr"
+            echo "% brew install chromia/core/chr"
         fi
 
         # TODO: Add some more instructions for Linux

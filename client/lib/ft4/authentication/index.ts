@@ -1,21 +1,13 @@
 import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
-import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
-import {
-  AuthDataService,
-  Authenticator,
-  AuthenticatorSession,
-  KeyHandler,
-  KeyStore,
-} from "./types";
+import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
+import { BufferId, TxContext } from "/ft4/utils/types";
 import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthType,
   SingleSig,
-  aggregateSigners,
 } from "/ft4/accounts";
-import { txToBuffer } from "../utils/transaction-builder";
 
 export * from "./evm";
 export * from "./ft";
@@ -31,36 +23,28 @@ export function createAuthenticator(
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService,
 ): Authenticator {
-  const authenticator = Object.freeze({
+  return Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
     authDataService,
     keyHandlers,
-    createSession: () =>
-      createAuthenticatorSession(authenticator, authDataService),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
   });
-
-  return authenticator;
 }
 
 export function createNoopAuthenticator(
   authDataService: AuthDataService,
 ): Authenticator {
-  const authenticator = Object.freeze({
+  return Object.freeze({
     accountId: Buffer.alloc(32),
     keyHandlers: [noopKeyHandler],
     authDataService,
-    createSession: () =>
-      createAuthenticatorSession(authenticator, authDataService),
     getKeyHandlerForOperation: (_operation: Operation) =>
       Promise.resolve(noopKeyHandler),
     getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
   });
-
-  return authenticator;
 }
 
 const nullKeyStore: KeyStore = Object.freeze({
@@ -128,50 +112,4 @@ async function getKeyHandlerForOperation(
   }
 
   return null;
-}
-
-function createAuthenticatorSession(
-  authenticator: Authenticator,
-  authDataService: AuthDataService,
-): AuthenticatorSession {
-  const usedKeyHandlers = new Set<KeyHandler>();
-
-  return Object.freeze({
-    authenticator,
-    getUsedKeyHandlers: () => new Set(usedKeyHandlers),
-    getSigners: () => {
-      let signers = new Set<Buffer>();
-      usedKeyHandlers.forEach(
-        (keyHandler) =>
-          (signers = new Set([
-            ...aggregateSigners(keyHandler.authDescriptor),
-            ...signers,
-          ])),
-      );
-      return signers;
-    },
-    authorize: async (operation: Operation) => {
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
-      if (!keyHandler) {
-        throw new Error(`Cannot authenticate operation: ${operation.name}`);
-      }
-      usedKeyHandlers.add(keyHandler);
-      return await keyHandler.authorize(
-        authenticator.accountId,
-        operation,
-        {},
-        authDataService,
-      );
-    },
-    sign: async (transaction: TxBuilderTransaction) => {
-      transaction.signatures = transaction.signatures.concat(
-        await Promise.all(
-          Array.from(usedKeyHandlers).map((keyHandler) =>
-            keyHandler.sign(txToBuffer(transaction)),
-          ),
-        ),
-      );
-    },
-  });
 }

@@ -32,7 +32,7 @@ export function accountsByParticipantId(
   limit: number,
   cursor: OptionalPageCursor,
 ): QueryObject<
-  Buffer[],
+  { id: Buffer }[],
   { id: Buffer; page_size: number; page_cursor: OptionalPageCursor }
 > {
   return {

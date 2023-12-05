@@ -50,6 +50,7 @@ function create_test_account_with_auth_descriptor(
     acc.auth_descriptor, 
     user_keypair: rell.test.keypair
 ) {
+    rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
     admin.register_account(auth_descriptor)
         .sign(chain_context.args.admin_priv_key)
         .sign(user_keypair)
@@ -61,6 +62,7 @@ function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T
     val auth_descriptor = create_auth_descriptor(address, flags);
     val auth_descriptor_id = auth_descriptor.hash();
 
+    rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
     operations.register_account_test(auth_descriptor)
         .sign(keypair)
         .run();
@@ -149,6 +151,7 @@ function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test
  * returns "account_data"
  */
 function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): account_data {
+    rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
     admin.register_account(auth_descriptor)
         .sign(chain_context.args.admin_priv_key)
         .sign(keypair)
@@ -174,6 +177,7 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
  * returns "account_data"
  */
 function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): account_data {
+    rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
     val op = admin.register_account(auth_descriptor);
     val admin_keypair = rell.test.keypair(
         priv=chain_context.args.admin_priv_key,

@@ -1,11 +1,4 @@
 
-function deduct_balance(accounts.account, asset, amount: big_integer) {
-    val balance = balance @? { account, asset };
-    require(balance, "User does not have asset <%s> in account <%s>".format(asset.id, account.id));
-    require(balance.amount >= amount, "Balance is too low");
-    balance.amount -= amount;
-}
-
 namespace Unsafe {
    
    function transfer(from: accounts.account, to: accounts.account, assets.asset, amount: big_integer) {
@@ -30,7 +23,7 @@ namespace Unsafe {
          .transfer_args = args.to_gtv().to_bytes()
       );
       
-      ensure_balance(to, asset).amount += amount;
+      increase_balance(to, asset, amount);
       create transfer_history_entry(
          .account = to,
          .asset = asset,
