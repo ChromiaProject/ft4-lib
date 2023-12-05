@@ -39,14 +39,17 @@ function add_login_config(
 
 function create_login_rule(gtv_rules_to_translate: gtv): gtv{
     val rules = list<gtv>.from_gtv(gtv_rules_to_translate);
+
     if (rules[0] == "and".to_gtv()) {
         var login_rules: list<gtv>;
         login_rules = [rules[0]];
+
         val rules_without_and = rules.sub(1);
         for (rule in rules_without_and) {
             val rule_exp = accounts.rule_expression.from_gtv(rule);
             login_rules.add(convert_rule_to_login_rule(rule_exp).to_gtv());
         }
+        
         return login_rules.to_gtv();
     } else {
         val rule_exp = accounts.rule_expression.from_gtv(gtv_rules_to_translate);
