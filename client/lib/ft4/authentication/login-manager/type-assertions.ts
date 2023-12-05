@@ -3,24 +3,26 @@ import {
   LoginConfigRule,
   LoginConfigSimpleRule,
 } from "./types";
-import { AuthDescriptorRule } from "/ft4/accounts";
+import {
+  AuthDescriptorNullRule,
+  AuthDescriptorRule,
+  AuthDescriptorSimpleRule,
+} from "/ft4/accounts";
 
 export function isLoginConfigRule(
-  rule: LoginConfigRule | AuthDescriptorRule,
-): rule is LoginConfigRule {
-  return (
-    rule === null ||
-    (rule[0] !== "and" && typeof rule[2] === "string") ||
-    (rule[0] === "and" && typeof rule[1][2] === "string")
-  );
-}
-export function isLoginConfigSimpleRule(
-  rule: LoginConfigRule,
+  rule: LoginConfigSimpleRule | AuthDescriptorSimpleRule,
 ): rule is LoginConfigSimpleRule {
+  return typeof rule[2] === "string";
+}
+
+export function isSimpleRule(
+  rule: LoginConfigRule | AuthDescriptorRule,
+): rule is LoginConfigSimpleRule | AuthDescriptorSimpleRule {
   return rule !== null && rule[0] !== "and";
 }
-export function isLoginConfigNullRule(
-  rule: LoginConfigRule,
-): rule is LoginConfigNullRule {
+
+export function isNullRule(
+  rule: LoginConfigRule | AuthDescriptorRule,
+): rule is LoginConfigNullRule | AuthDescriptorNullRule {
   return rule === null;
 }

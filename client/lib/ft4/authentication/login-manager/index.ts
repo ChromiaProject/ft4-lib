@@ -4,6 +4,7 @@ import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import {
+  LoginConfigError,
   LoginConfigRule,
   LoginConfigSimpleRule,
   LoginManager,
@@ -24,11 +25,7 @@ import {
   RuleVariables,
   allow,
 } from "/ft4/accounts/auth-descriptor/rules";
-import {
-  isLoginConfigNullRule,
-  isLoginConfigRule,
-  isLoginConfigSimpleRule,
-} from "./type-assertions";
+import { isLoginConfigRule, isNullRule, isSimpleRule } from "./type-assertions";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -160,41 +157,77 @@ async function getFlagsAndRules(
   };
 }
 
+/**
+ * Takes as input some rules which could be formatted as login config rules or as auth
+ * descriptor rules, and ensures they can be used in an auth descriptor.
+ *
+ * For example,
+ *  null => null
+ *  ["lt", "block_time", "{1000}"] => ["lt", "block_time", Date.now()+1000]
+ *  ["lt", "op_count", "10"] => ["lt", "op_count", 10]
+ *  ["and", loginRule1, authDescRule2] => ["and", authDescRule1, authDescRule2]
+ *
+ * @param rules Rules we need to ensure are Auth Descriptor rules
+ * @param getBlockHeight a function which returns the current block height of the chain.
+ * It allows caching
+ * @returns The rules that will be used by the auth descriptor
+ */
 async function getRulesFromLoginConfig(
   rules: LoginConfigRule | AuthDescriptorRule,
   getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorRule> {
-  if (!isLoginConfigRule(rules)) return rules;
-  if (isLoginConfigNullRule(rules)) return allow.all;
-  else if (isLoginConfigSimpleRule(rules)) {
-    return getRuleFromSingleLoginConfigRule(rules, getBlockHeight);
+  if (isNullRule(rules)) {
+    return allow.all;
+  } else if (isSimpleRule(rules)) {
+    return ensureAuthDescriptorRule(rules, getBlockHeight);
   } else {
-    return [
+    const simpleRules = (rules.slice(1) as LoginConfigSimpleRule[]).map(
+      (rule) => ensureAuthDescriptorRule(rule, getBlockHeight),
+    );
+
+    const result = [
       "and",
-      ...(await Promise.all(
-        (rules.slice(1) as LoginConfigSimpleRule[]).map((rule) =>
-          getRuleFromSingleLoginConfigRule(rule, getBlockHeight),
-        ),
-      )),
-    ];
+      ...(await Promise.all(simpleRules)),
+    ] as AuthDescriptorRule;
+
+    return result;
   }
 }
 
-async function getRuleFromSingleLoginConfigRule(
-  loginRule: LoginConfigSimpleRule,
+/**
+ * Takes a login config simple rule and transforms it into an auth descriptor rule.
+ * for example, ["lt", "block_time", "{1000}"] becomes ["lt", "block_time", Date.now()+1000]
+ *
+ * Only works with simple rules, so nothing that starts with ["and", ...] is supported
+ *
+ * @param rule the simple rule which we want to ensure is an auth descriptor rule
+ * @param getBlockHeight a function that returns the current block height (with caching)
+ * @returns the auth descriptor rule that corresponds to the rule passed in as argument
+ */
+async function ensureAuthDescriptorRule(
+  rule: LoginConfigSimpleRule | AuthDescriptorSimpleRule,
   getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorSimpleRule> {
-  const operator = loginRule[0];
-  const variable = loginRule[1];
+  if (!isLoginConfigRule(rule)) {
+    return rule;
+  }
+
+  const [operator, variable, loginValue] = rule;
+
   let value: number;
   if (variable === RuleVariables.OpCount) {
-    value = parseInt(loginRule[2]);
+    value = parseInt(loginValue);
   } else if (variable === RuleVariables.BlockTime) {
-    value = Date.now() + parseInt(loginRule[2].replace(/[{}]/g, ""));
+    const num = parseInt(loginValue.replace(/[{}]/g, ""));
+    value = Date.now() + num;
   } else if (variable === RuleVariables.BlockHeight) {
-    value =
-      (await getBlockHeight()) + parseInt(loginRule[2].replace(/[{}]/g, ""));
-  } else throw "unexpected variable: " + variable;
+    const blockHeight = await getBlockHeight();
+    const num = parseInt(loginValue.replace(/[{}]/g, ""));
+    value = blockHeight + num;
+  } else {
+    throw new LoginConfigError("unexpected variable: " + variable);
+  }
+
   return [operator, variable, value] as unknown as AuthDescriptorSimpleRule;
 }
 

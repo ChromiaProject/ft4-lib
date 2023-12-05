@@ -29,6 +29,14 @@ export type LoginManager = {
   logout: (accountId: Buffer) => void;
 };
 
+export class LoginConfigError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "LoginConfigError";
+  }
+}
+
 export type LoginConfigSimpleRule = readonly [number, number, string];
 export type LoginConfigNullRule = null;
 export type LoginConfigRule =
