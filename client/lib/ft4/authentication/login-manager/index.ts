@@ -140,7 +140,6 @@ async function getFlagsAndRules(
     if (currentHeight === undefined) {
       const blocks = await authDataService.connection.client.getBlocksInfo(1);
       currentHeight = blocks[0].height;
-      console.log("\n\n\n\n\n\n" + currentHeight);
     }
     return currentHeight;
   };
