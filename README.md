@@ -40,8 +40,6 @@ Build TypeScript library into `dist/`:
 npm run build
 ```
 
-Note that this will temporarily copy `package.json` into the source directory in order to extract the version string.
-
 ## How to Run Tests
 
 ### Comprehensive Test Suite

@@ -5,7 +5,7 @@ import {
   FtKeyStore,
   createFtKeyHandler,
 } from "/ft4/authentication/ft/key-handler";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { op } from "/ft4/utils";
 
 describe("Authenticator", () => {

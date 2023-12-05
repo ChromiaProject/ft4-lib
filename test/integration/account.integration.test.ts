@@ -1,8 +1,8 @@
 import * as pcl from "postchain-client";
 import { BufferId } from "/ft4/cryptoUtils";
-import testUser from "./util/test-user";
-import adminUser from "./util/admin_user";
-import AccountBuilder from "./util/account-builder";
+import testUser from "../util/test-user";
+import adminUser from "../util/admin_user";
+import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
 import {
   AuthDescriptor,
@@ -21,7 +21,7 @@ import {
   createAccount,
   createTestAuthDescriptor,
   getSessionForAccount,
-} from "./util/util";
+} from "../util/util";
 import {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
@@ -56,24 +56,6 @@ describe("Test the account", () => {
   beforeAll(async () => {
     const client = getClient();
     _connection = createConnection(client);
-  });
-
-  it("should be in DEV mode", () => {
-    expect(process.env.TEST_DEV || "true").toBe("true");
-  });
-
-  it("Correctly creates keypair from string", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey); //!
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
-  });
-
-  it("Correctly creates keypair from buffer", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey);
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
   });
 
   it("Register account on blockchain", async () => {
