@@ -1,37 +1,46 @@
+# Global Ignores
 *~
-
-.env
 .DS_STORE
+.env
+.secret
 .idea/*
 .project
 .vscode/*
-.secret
 .pmc
 .chromia
 
-db.log
-
+# Node.js specific
 node_modules/
-
-logs/
-postchain/runtime
-
 **.pid
 
+# Logs
+logs/
+db.log
+yarn.log
+postchain/runtime
+multichain-postchain.log
+
+# Build Directories
 dist/
+build/
+
+# Rell Specific
 rell/target
 rell/out
 rell/src/lib/*
 !rell/src/lib/ft4/
-
-yarn.log
-coverage
-
-# chr build directories
-build/
-
-# Rell dependencies
 rell/dep
 rell/src/lib/iccf
 
+# Client Auto-generated
+client/lib/ft4/package.json
+
+# Test Reports
 /test-reports/
+
+# Coverage Reports
+coverage
+
+# Examples
+examples/demo/client/package-lock.json
+examples/demo/rell/.admin_keypair
