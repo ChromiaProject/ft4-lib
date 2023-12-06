@@ -13,14 +13,16 @@ pipelines:
             - node
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install -y netcat-openbsd chr default-jre
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
-            - ./scripts/jesttest.sh --no-docker --ci
+            - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
+            - ./scripts/integration-jesttest.sh --no-docker --ci
 
           services:
             - postgres
@@ -30,8 +32,8 @@ pipelines:
           name: deploy:latest
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install default-jre -y
             - apt install chr
@@ -46,8 +48,8 @@ pipelines:
           name: deploy:stable
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install default-jre -y
             - apt install chr
@@ -61,8 +63,8 @@ pipelines:
           name: deploy:latest
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install default-jre -y
             - apt install chr

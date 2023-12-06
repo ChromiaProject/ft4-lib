@@ -1,0 +1,93 @@
+@test module;
+
+import test_utils: ^^.assets.utils;
+import test_op: ^^.operations;
+import ^.helpers;
+import ^^^.lib.ft4.accounts;
+import ^^^.lib.ft4.admin;
+import auth: ^^.operations.auth;
+import auth_ext: ^^^.lib.ft4.auth.external;
+
+val alice = rell.test.keypairs.alice;
+val bob = rell.test.keypairs.bob;
+
+function test_an_account_can_be_created() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub);
+  
+  test_utils.create_test_account(alice);
+  
+  assert_not_null(accounts.account @? { auth_descriptor.hash() });
+}
+
+function test_cannot_create_account_with_expiring_ad() {
+  val auth_descriptor = test_utils.create_auth_descriptor(
+    rell.test.pubkeys.bob,
+    ["A"],
+    accounts.serialize_rules([
+      accounts.less_than(accounts.block_height(100))
+    ])
+  );
+  
+  admin.register_account(auth_descriptor)
+    .sign(test_utils.admin_priv_key())
+    .sign(bob)
+    .run_must_fail("Cannot create an account with a restricted auth descriptor");
+}
+
+function test_multi_sig_auth_descriptor_can_be_added() {
+  val auth_descriptor = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        0x2.to_gtv(),
+        [
+          alice.pub.to_hex(),
+          bob.pub.to_hex()
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  test_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
+
+  
+  assert_not_null(accounts.account @? { auth_descriptor.hash() });;
+}
+
+function test_an_invalid_descriptor_can_not_be_added() {
+  val auth_descriptor = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        alice.pub.to_hex().to_gtv(),
+        bob.pub.to_hex().to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  assert_fails(
+    "Operation 'lib.ft4.admin:register_account' failed",
+    test_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
+  );
+}
+
+function test_create_account_with_auth_in_operation_in_genesis_block() {
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  test_op.register_account_test(auth_descriptor)
+      .run();
+  assert_equals(accounts.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), 0);
+}
+
+function test_create_account_with_auth_in_operation_after_genesis_block() {
+  rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
+
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  test_op.register_account_test(auth_descriptor)
+      .run();
+  assert_equals(accounts.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), rell.test.DEFAULT_FIRST_BLOCK_TIME);
+}
+
+function test_create_account_auth_in_without_operation_in_genesis_block() {
+  val account_id = helpers.init_object.account_id;
+  assert_equals(accounts.rl_state @ { .account.id == account_id } (.last_update), 0);
+}

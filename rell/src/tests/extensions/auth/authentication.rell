@@ -1,0 +1,24 @@
+import ^^^.lib.ft4.auth;
+import acc: ^^^.lib.ft4.accounts;
+
+object auth_extensions_state {
+    mutable is_before_authenticate_called: boolean = false;
+    mutable before_authenticate_account: byte_array = x"";
+    mutable before_authenticate_auth_descriptor: byte_array = x"";
+
+    mutable is_after_authenticate_called: boolean = false;
+    mutable after_authenticate_account: byte_array = x"";
+    mutable after_authenticate_auth_descriptor: byte_array = x"";
+}
+
+@extend(auth.before_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
+    auth_extensions_state.is_before_authenticate_called = true;
+    auth_extensions_state.before_authenticate_account = account.id;
+    auth_extensions_state.before_authenticate_auth_descriptor = auth_descriptor.id;
+}
+
+@extend(auth.after_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
+    auth_extensions_state.is_after_authenticate_called = true;
+    auth_extensions_state.after_authenticate_account = account.id;
+    auth_extensions_state.after_authenticate_auth_descriptor = auth_descriptor.id;
+}

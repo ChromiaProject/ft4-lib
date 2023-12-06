@@ -177,12 +177,12 @@ export function transactionBuilder(
   }
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
-    const systemClient = await createClient({
+    const directoryClient = await createClient({
       nodeUrlPool: client.config.endpointPool.slice(),
       blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(
-      systemClient,
+      directoryClient,
       client.config.blockchainRid,
     );
     const rawTx = gtv.decode(tx) as RawGtx;
@@ -212,7 +212,7 @@ export function transactionBuilder(
             return proofCache.get(brid.toString("hex"));
 
           const proof = await createIccfProofTx(
-            systemClient,
+            directoryClient,
             txRid,
             tx,
             rawTx[0][2], // signers

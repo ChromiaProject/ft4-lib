@@ -6,7 +6,7 @@ import auth: ^^^.lib.ft4.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import acc: ^^^.lib.ft4.accounts;
 import acc_ext: ^^^.lib.ft4.accounts.external;
-import ^^^.lib.ft4.test.utils. { evm_sign, evm_address_from_privkey, evm_auth_operation_for };
+import ^^^.lib.ft4.test.utils. { evm_sign, evm_auth_operation_for };
 import test_operations: ^^.operations;
 
 val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
@@ -62,8 +62,8 @@ function test_multisig_external_signature() {
       set(["A"]).to_gtv(),
       0x2.to_gtv(),
       [
-        evm_address_from_privkey(rell.test.keypairs.alice.priv).to_gtv(),
-        evm_address_from_privkey(rell.test.keypairs.bob.priv).to_gtv()
+        crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv).to_gtv(),
+        crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv).to_gtv()
       ].to_gtv()
     ],
     rules = null.to_gtv()
@@ -103,8 +103,8 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
       set(["A"]).to_gtv(),
       0x3.to_gtv(),
       [
-        evm_address_from_privkey(rell.test.keypairs.alice.priv).to_gtv(),
-        evm_address_from_privkey(rell.test.keypairs.bob.priv).to_gtv()
+        crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv).to_gtv(),
+        crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv).to_gtv()
       ].to_gtv()
     ],
     rules = null.to_gtv()
@@ -143,7 +143,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     [
       set(["A"]).to_gtv(),
       0x1.to_gtv(),
-      [evm_address_from_privkey(rell.test.keypairs.alice.priv).to_gtv()].to_gtv()
+      [crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv).to_gtv()].to_gtv()
     ],
     rules = null.to_gtv()
   );

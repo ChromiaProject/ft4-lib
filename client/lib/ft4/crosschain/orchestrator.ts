@@ -228,7 +228,7 @@ async function createBaseOrcestrator(
   };
 
   const directoryClient = await createClient({
-    directoryNodeUrlPool: session.client.config.endpointPool.slice(),
+    nodeUrlPool: session.client.config.endpointPool.slice(),
     blockchainIid: 0,
   });
 

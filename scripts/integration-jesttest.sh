@@ -20,7 +20,6 @@ forceexit() {
 }
 
 exitfn() {
-    rm client/lib/ft4/package.json
     trap "forceexit" 2
     chr_stop
     if $docker; then
@@ -106,8 +105,6 @@ printf "done!\n\n"
 
 while ! nc -z localhost 7740; do sleep 1; done; sleep 1
 
-cp package.json client/lib/ft4/
-
 printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 
 pids=()
@@ -116,12 +113,12 @@ if [[ $opt == *"--runTestsByPath"* ]]; then
     pids+=($!)
 else
     if $docker; then
-        for f in ./**/[!_]*.test.ts; do
+        for f in test/integration/[!_]*.test.ts; do
             JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" --detectOpenHandles $opt -t "${test_string%?}" &
             pids+=($!)
         done;
     else
-        for f in ./**/*.test.ts; do
+        for f in test/integration/*.test.ts; do
             JEST_JUNIT_OUTPUT_NAME="${f}.xml" npx jest -maxWorkers=1 --testPathPattern="$f" $opt &
             pids+=($!)
         done

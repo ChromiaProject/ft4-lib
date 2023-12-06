@@ -1,9 +1,9 @@
 import * as pcl from "postchain-client";
 import { BufferId } from "/ft4/cryptoUtils";
-import testUser from "./util/test-user";
-import adminUser from "./util/admin_user";
-import AccountBuilder from "./util/account-builder";
-import { createChromiaClient } from "./util/blockchain-util";
+import testUser from "../util/test-user";
+import adminUser from "../util/admin_user";
+import AccountBuilder from "../util/account-builder";
+import { createChromiaClient } from "../util/blockchain-util";
 import { Connection } from "/ft4/types";
 import {
   AuthDescriptor,
@@ -22,7 +22,7 @@ import {
   createAccount,
   createTestAuthDescriptor,
   getSessionForAccount,
-} from "./util/util";
+} from "../util/util";
 import {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
@@ -53,24 +53,6 @@ async function multiSigCall(
 describe("Test the account", () => {
   beforeAll(async () => {
     _connection = createConnection(await createChromiaClient());
-  });
-
-  it("should be in DEV mode", () => {
-    expect(process.env.TEST_DEV || "true").toBe("true");
-  });
-
-  it("Correctly creates keypair from string", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey); //!
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
-  });
-
-  it("Correctly creates keypair from buffer", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey);
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
   });
 
   it("Register account on blockchain", async () => {
@@ -201,7 +183,7 @@ describe("Test the account", () => {
       user.signatureProvider.pubKey,
     );
 
-    expect(accounts.length).toEqual(1);
+    expect(accounts.data.length).toEqual(1);
   });
 
   it("should return two accounts when public key is used in two accounts", async () => {
@@ -220,7 +202,7 @@ describe("Test the account", () => {
       keyPair1.pubKey,
     );
 
-    expect(accounts.length).toEqual(2);
+    expect(accounts.data.length).toEqual(2);
   });
 
   it("should return account by id", async () => {
@@ -412,7 +394,7 @@ describe("Test the account", () => {
     );
 
     expect((await acc.getAuthDescriptors()).data.length).toBe(2);
-    await acc.deleteAuthDescriptor(ads[0].id);
+    await acc.deleteAuthDescriptor(ads.data[0].id);
     expect((await acc.getAuthDescriptors()).data.length).toBe(1);
   });
 

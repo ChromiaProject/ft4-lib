@@ -29,10 +29,6 @@ namespace Unsafe {
             chain_context.blockchain_rid != sender.id,
             "Cannot transfer from this blockchain's account"
         );
-        assets.require_zero_exclusive_asset_amount_limits(
-            amount,
-            "Parameter amount"
-        );
         require(
             chain_context.blockchain_rid != receiver.id,
             "Cannot transfer to this blockchain's account"
@@ -78,7 +74,7 @@ namespace Unsafe {
             or not is_receiver_blockchain
             or origin_brid != receiver.id
         ) {
-            assets.ensure_balance(receiver, asset).amount += amount;
+            assets.increase_balance(receiver, asset, amount);
         }
 
         create assets.transfer_history_entry(
