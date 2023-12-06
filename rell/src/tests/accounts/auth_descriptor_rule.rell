@@ -1,0 +1,55 @@
+@test module;
+
+import acc: ^^^.lib.ft4.accounts;
+import test_utils: ^^.assets.utils;
+import test_op: ^^.operations;
+
+function test_valid_combinator() {
+  rules_test([
+    "and".to_gtv(),
+    acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 5).to_gtv()
+  ].to_gtv())
+    .run();
+}
+
+function test_invalid_combinator() {
+  rules_test([
+    "bogus".to_gtv(),
+    acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 5).to_gtv()
+  ].to_gtv())
+    .run_must_fail("Wrong Gtv array size for struct");
+}
+
+function test_block_height_negative() {
+  rules_test(acc.serialize_rules([
+      acc.rule_expression(acc.rule_variable.block_height, acc.rule_operator.gt, -1)
+  ]))
+    .run_must_fail("rule variable block_height must be a non-negative value");
+}
+
+function test_block_time_negative() {
+  rules_test(acc.serialize_rules([
+      acc.rule_expression(acc.rule_variable.block_time, acc.rule_operator.gt, -1)
+  ]))
+    .run_must_fail("rule variable block_time must be a non-negative value");
+}
+
+function test_op_count_gt() {
+  rules_test(acc.serialize_rules([
+      acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.gt, 1)
+  ]))
+    .run_must_fail("rule variable op_count must be lt or le");
+}
+
+function test_op_count_non_positive() {
+  rules_test(acc.serialize_rules([
+      acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 0)
+  ]))
+    .run_must_fail("rule variable op_count must be a positive value");
+}
+
+function rules_test(rules: gtv) {
+  val account = test_utils.register_alice().account;
+  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, rules = rules);
+  return rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob);
+}
