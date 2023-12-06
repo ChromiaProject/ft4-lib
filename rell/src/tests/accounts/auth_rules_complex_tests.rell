@@ -18,7 +18,7 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
 function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
-  return "Cannot find auth descriptor <%s> for account <%s>".format(ad_id, account_id);
+  return "Auth descriptor '%s' not found for account '%s'".format(ad_id, account_id);
 }
 
 struct account_data {

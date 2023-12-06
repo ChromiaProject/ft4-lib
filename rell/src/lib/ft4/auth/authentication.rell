@@ -8,7 +8,7 @@ function before_authenticate(accounts.account, accounts.account_auth_descriptor)
  * This function can be extended by users to add custom logic after authentication.
  */
 @extendable
-function after_authenticate(accounts.account, accounts.account_auth_descriptor);
+function after_authenticate(accounts.account, accounts.account_auth_descriptor?);
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
@@ -33,7 +33,8 @@ function authenticate(is_strict: boolean = true) {
     require(is_validated, "Invalid auth operation: %s".format(previous_op.name));
     accounts.rate_limit(account);
 
-    after_authenticate(account, auth_descriptor);
+    val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
+    after_authenticate(account, auth_desc_after);
     return account;
 }
 
