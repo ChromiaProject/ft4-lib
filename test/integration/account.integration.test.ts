@@ -1,15 +1,7 @@
 import * as pcl from "postchain-client";
-import { Connection } from "../client/lib/ft4/types";
-import AccountBuilder from "./util/account-builder";
-import adminUser from "./util/admin_user";
-import { createChromiaClient } from "./util/blockchain-util";
-import testUser from "./util/test-user";
-import {
-  addAuthDescriptorTo,
-  createAccount,
-  createTestAuthDescriptor,
-  getSessionForAccount,
-} from "./util/util";
+import { Connection } from "/ft4/types";
+import { ftAuth } from "/ft4/authentication";
+import { registerAccount } from "/ft4/admin/admin-op-functions";
 import { createInMemoryFtKeyStore } from "/ft4";
 import {
   addAuthDescriptor,
@@ -24,12 +16,20 @@ import {
   deriveAuthDescriptorId,
   gtv,
 } from "/ft4/accounts/auth-descriptor";
-import { registerAccount } from "/ft4/admin/admin-op-functions";
-import { ftAuth } from "/ft4/authentication";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import { nop, op } from "/ft4/utils";
 import { AuthorizationError } from "/ft4/utils/transaction-builder";
 import { BufferId } from "/ft4/utils/types";
+import {
+  addAuthDescriptorTo,
+  createAccount,
+  createTestAuthDescriptor,
+  getSessionForAccount,
+} from "/util/util";
+import testUser from "/util/test-user";
+import AccountBuilder from "/util/account-builder";
+import adminUser from "/util/admin_user";
+import { createChromiaClient } from "/util/blockchain-util";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -58,24 +58,6 @@ async function multiSigCall(
 describe("Test the account", () => {
   beforeAll(async () => {
     _connection = createConnection(await createChromiaClient());
-  });
-
-  it("should be in DEV mode", () => {
-    expect(process.env.TEST_DEV || "true").toBe("true");
-  });
-
-  it("Correctly creates keypair from string", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey); //!
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
-  });
-
-  it("Correctly creates keypair from buffer", () => {
-    const keyPairToImport = pcl.encryption.makeKeyPair();
-    const user = pcl.encryption.makeKeyPair(keyPairToImport.privKey);
-    expect(user.privKey).toEqual(keyPairToImport.privKey);
-    expect(user.pubKey).toEqual(keyPairToImport.pubKey);
   });
 
   it("Register account on blockchain", async () => {

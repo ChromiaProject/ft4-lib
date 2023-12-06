@@ -11,6 +11,7 @@ import { Asset } from "/ft4/asset/types";
 import adminUser from "./admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
 import { BufferId } from "/ft4/utils/types";
+import { createClient } from "postchain-client";
 
 export async function createChromiaClientToMultichain(
   brid: BufferId,
@@ -28,6 +29,14 @@ export async function createChromiaClient(nodeUrl?: string, iid = 0) {
   return chromiaClient({
     nodeUrlPool: url,
     blockchainIid: iid,
+  });
+}
+
+export async function createStubClient() {
+  return createClient({
+    nodeUrlPool: "http://127.0.0.1:7740",
+    blockchainRid:
+      "0000000000000000000000000000000000000000000000000000000000000000",
   });
 }
 

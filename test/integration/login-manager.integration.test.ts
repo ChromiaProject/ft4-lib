@@ -1,8 +1,7 @@
-import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import { FlagsType, createKeyStoreInteractor } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
-import { createAccount } from "./util/util";
+import { createAccount } from "../util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";
@@ -13,6 +12,7 @@ import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/s
 import { createSingleSigAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
 import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
 import { getPubkey } from "/ft4/utils";
+import { createChromiaClient, getNewAsset } from "/util/blockchain-util";
 
 describe("Login manager", () => {
   let client: IClient;

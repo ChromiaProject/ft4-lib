@@ -1,5 +1,5 @@
-import testUser from "./util/test-user";
-import AccountBuilder from "./util/account-builder";
+import testUser from "../util/test-user";
+import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
 import { AuthenticatedAccount } from "/ft4/accounts/types";
@@ -7,7 +7,6 @@ import {
   AuthDescriptorRule,
   ComplexAuthDescriptorRule,
 } from "/ft4/accounts/auth-descriptor/types";
-import { getNewAsset, createChromiaClient } from "./util/blockchain-util";
 import { createAmount } from "/ft4/asset/amount";
 import { IClient, newSignatureProvider } from "postchain-client";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
@@ -20,12 +19,11 @@ import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
-} from "./util/util";
+} from "../util/util";
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
 import { registerAccount } from "/ft4/admin/admin-op-functions";
-import adminUser from "./util/admin_user";
 import {
   and,
   blockHeight,
@@ -38,6 +36,8 @@ import {
   lessThan,
   opCount,
 } from "/ft4/accounts";
+import { createChromiaClient, getNewAsset } from "/util/blockchain-util";
+import adminUser from "/util/admin_user";
 
 let _connection: Connection;
 let asset: Asset;

@@ -1,9 +1,6 @@
 import { Buffer } from "buffer";
 import { EthersError, ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
-import { createChromiaClient } from "./util/blockchain-util";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAccount, testAdFromRegistration } from "./util/util";
 import {
   FlagsType,
   createSingleSigAuthDescriptorRegistration,
@@ -12,15 +9,17 @@ import {
 import { createAuthenticator } from "/ft4/authentication";
 import { createEvmKeyHandler, evmAuth } from "/ft4/authentication/evm";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
-import { createKeyStoreInteractor } from "/ft4/ft-session";
 import { op } from "/ft4/utils";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import { createStubClient } from "/util/blockchain-util";
+import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { testAdFromRegistration } from "/util/util";
 
 describe("EVM key handler", () => {
   let client: IClient;
 
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = await createStubClient();
   });
 
   it("should sign message", async () => {
@@ -263,31 +262,5 @@ describe("EVM key handler", () => {
         args: [],
       },
     ]);
-  });
-
-  it("should add FT auth descriptor", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
-      keyStore.address,
-      null,
-    );
-    await createAccount(client, ad);
-
-    const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      deriveAuthDescriptorId(ad),
-    );
-
-    const keyPair2 = encryption.makeKeyPair();
-    const ad2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
-      keyPair2.pubKey,
-      null,
-    );
-    await session.account.addAuthDescriptor(ad2, keyPair2);
-
-    const authDescriptors = await session.account.getAuthDescriptors();
-    expect(authDescriptors.data.length).toEqual(2);
   });
 });

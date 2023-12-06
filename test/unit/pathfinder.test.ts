@@ -26,10 +26,10 @@ jest.mock("postchain-client", () => {
   };
 });
 
-import { generateId } from "./util/util";
+import { generateId } from "../util/util";
 import { IClient, formatter } from "postchain-client";
 import { Connection } from "/ft4/types";
-import { createChromiaClient } from "./util/blockchain-util";
+import { createChromiaClient } from "../util/blockchain-util";
 import { createConnection } from "/ft4";
 import { Asset } from "/ft4/asset/types";
 import { findPathToChainForAsset } from "/ft4/crosschain/pathfinder";

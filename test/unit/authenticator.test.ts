@@ -1,6 +1,6 @@
 import { encryption } from "postchain-client";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createTestAuthDescriptor } from "./util/util";
+import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { createTestAuthDescriptor } from "/util/util";
 import {
   AnyAuthDescriptor,
   FlagsType,

@@ -1,13 +1,13 @@
-import { generateAssetName, generateAssetSymbol } from "./util/util";
+import { generateAssetName, generateAssetSymbol } from "../util/util";
 import { Connection } from "/ft4/types";
-import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
+import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
 import { InvalidUrlError } from "/ft4/asset/interfaces";
 import { createConnection } from "/ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
 import { op } from "/ft4";
-import adminUser, { adminKeyPair } from "./util/admin_user";
+import adminUser, { adminKeyPair } from "../util/admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
 
 let connection: Connection;
@@ -151,7 +151,7 @@ describe("Asset", () => {
     expect(asset.iconUrl).toBe(validUrl);
   });
 
-  // Update after addding new admin functions
+  // Update after adding new admin functions
   it("should fail to register with invalid icon URL", async () => {
     const wrapper = async () =>
       registerAsset(
