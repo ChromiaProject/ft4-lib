@@ -4,7 +4,6 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 import { op } from "/ft4/utils";
 import { ftAuth } from "/ft4/authentication/ft";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createStubClient } from "../util/blockchain-util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -29,9 +28,11 @@ describe("FT key handler", () => {
   it("should sign transaction", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const client = await createStubClient();
     const transaction = {
-      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+      blockchainRid: Buffer.from(
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "hex",
+      ),
       operations: [],
       signers: authDescriptor.signers,
       signatures: [],
