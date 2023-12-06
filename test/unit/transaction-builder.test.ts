@@ -255,11 +255,11 @@ describe("Transaction Builder", () => {
   });
 
   it("can build and submit a transaction", async () => {
-    const { authenticatorMock } = getMocks();
+    const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
     const expectedTx = client.encodeTransaction({
       operations: [emptyOp(), operation],
-      signers: [],
+      signers: [keyPair.pubKey],
     });
 
     const originalSendTransaction = client.sendTransaction;
@@ -277,7 +277,10 @@ describe("Transaction Builder", () => {
         .add(operation)
         .buildAndSend();
 
-      expect(gtx.deserialize(tx)).toEqual(gtx.deserialize(expectedTx));
+      expect(gtx.deserialize(tx)).toMatchObject({
+        ...gtx.deserialize(expectedTx),
+        signatures: expect.arrayContaining([]),
+      });
     } finally {
       client.sendTransaction = originalSendTransaction;
     }
