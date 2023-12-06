@@ -20,7 +20,8 @@ pipelines:
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
-            - ./scripts/jesttest.sh --ci
+            - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
             - ./scripts/integration-jesttest.sh --no-docker --ci
 
           services:
