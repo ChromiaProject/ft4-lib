@@ -103,7 +103,7 @@ prc=$!
 
 printf "done!\n\n"
 
-while ! nc -z localhost 7740; do sleep 1; done; sleep 1
+while ! nc -z localhost 7740; do sleep 1; done; sleep 5
 
 printf "\n> Starting jest tests with options: $opt -t \"${test_string%?}\" \n"
 

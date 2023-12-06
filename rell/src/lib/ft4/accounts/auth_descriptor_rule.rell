@@ -162,7 +162,7 @@ function validate_auth_descriptor_rules(rules: gtv) {
 	}
 	
 	require(rules_gtv[0] == "and".to_gtv(), "First element in rules list must be 'and'");
-	require(rules_gtv.size() <= 8, "Too many rules"); // TODO: Make this parameter configurable
+	require(rules_gtv.size() <= chain_context.args.max_auth_descriptor_rules, "Too many rules");
 	
 	for (gtv_rule in rules_gtv.sub(1)) {
 		validate_rule(rule_expression.from_gtv(gtv_rule));
