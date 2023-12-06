@@ -2,8 +2,8 @@ import { enumValueFromString, serializeAuthType } from "./enum-parsers";
 import {
   isGtvSimpleRule,
   isSimpleRule,
-  isSingleSigArgs,
-  isSingleSigGtv,
+  isRawSingleSig,
+  isSingleSigRegistration,
 } from "./type-predicates";
 import {
   AnyAuthDescriptor,
@@ -13,8 +13,6 @@ import {
   ComplexAuthDescriptorRule,
   RawAnyAuthDescriptor,
   RawAuthDescriptor,
-  RawAuthDescriptorArgs,
-  RawAuthDescriptorRegistration,
   RawAuthDescriptorRule,
   RawComplexAuthDescriptorRule,
   RawMultiSigAuthDescriptorArgs,
@@ -26,6 +24,7 @@ import {
   AuthType,
   RuleOperator,
   RuleVariable,
+  RawAnyAuthDescriptorRegistration,
 } from "./types";
 
 export function mapSingleSigAuthDescriptor(
@@ -72,7 +71,7 @@ export function mapAuthDescriptors(
 export function mapOneAuthDescriptor(
   res: RawAnyAuthDescriptor,
 ): AnyAuthDescriptor {
-  return isSingleSigGtv(res)
+  return isRawSingleSig(res)
     ? mapSingleSigAuthDescriptor(res)
     : mapMultiSigAuthDescriptor(res);
 }
@@ -91,16 +90,19 @@ export function multiSigAuthDescriptorArgsToGtv(
 
 export function authDescriptorRegistrationToGtv(
   registration: AnyAuthDescriptorRegistration,
-): RawAuthDescriptorRegistration<RawAuthDescriptorArgs> {
-  if (!registration) console.trace();
-  const { authType, args, rule } = registration;
-  return [
-    serializeAuthType(authType),
-    isSingleSigArgs(args)
-      ? singleSigAuthDescriptorArgsToGtv(args)
-      : multiSigAuthDescriptorArgsToGtv(args),
-    rule ? rulesToGtv(rule) : rule,
-  ];
+): RawAnyAuthDescriptorRegistration {
+  const { authType, rule } = registration;
+  return isSingleSigRegistration(registration)
+    ? [
+        serializeAuthType(authType),
+        singleSigAuthDescriptorArgsToGtv(registration.args),
+        rule ? rulesToGtv(rule) : rule,
+      ]
+    : [
+        serializeAuthType(authType),
+        multiSigAuthDescriptorArgsToGtv(registration.args),
+        rule ? rulesToGtv(rule) : rule,
+      ];
 }
 
 export function rulesFromGtv(

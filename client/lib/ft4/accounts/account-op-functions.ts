@@ -15,7 +15,6 @@ import {
 import { authDescriptorById } from "./account-queries";
 import { createAccountObject } from "./account-query-functions";
 import {
-  AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
@@ -34,7 +33,7 @@ export function createAuthenticatedAccount(
   return {
     authenticator,
     addAuthDescriptor: (
-      authDescriptor: AnyAuthDescriptor,
+      authDescriptor: AnyAuthDescriptorRegistration,
       newSigner: SignatureProvider | KeyPair,
     ) =>
       addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
@@ -95,9 +94,7 @@ async function deleteAuthDescriptor(
   const newAuth = createAuthenticator(
     authenticator.accountId,
     authenticator.keyHandlers.filter((kh) =>
-      deriveAuthDescriptorId(kh.authDescriptor).compare(
-        formatter.ensureBuffer(authDescriptorId),
-      ),
+      kh.authDescriptor.id.compare(formatter.ensureBuffer(authDescriptorId)),
     ),
     authenticator.authDataService,
   );

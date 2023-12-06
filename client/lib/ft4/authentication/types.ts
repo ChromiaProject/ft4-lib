@@ -28,7 +28,7 @@ export interface KeyHandler {
   sign(transaction: Buffer): Promise<Buffer>;
 
   // FIXME
-  getSigners(): Buffer[] | null;
+  getSigners(): Buffer[];
 }
 
 export interface KeyStore {

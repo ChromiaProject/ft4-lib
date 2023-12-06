@@ -2,7 +2,6 @@ import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { AuthDataService, KeyHandler } from "../types";
-import { deriveAuthDescriptorId } from "/ft4/accounts/auth-descriptor";
 import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
 import { BufferId, TxContext } from "/ft4/utils/types";
 
@@ -26,14 +25,14 @@ export function createEvmKeyHandler(
     ) =>
       authorize(
         accountId,
-        deriveAuthDescriptorId(authDescriptor),
+        authDescriptor.id,
         operation,
         authDataService,
         context,
         keyStore,
       ),
     sign: (transaction: Buffer) => Promise.resolve(transaction),
-    getSigners: () => null,
+    getSigners: () => [],
   });
 }
 

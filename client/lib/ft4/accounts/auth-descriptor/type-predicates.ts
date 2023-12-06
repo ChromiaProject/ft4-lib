@@ -1,15 +1,16 @@
+import { deserializeAuthType } from "./enum-parsers";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   AnySig,
   AuthDescriptor,
+  AuthDescriptorRegistration,
   AuthDescriptorRule,
   AuthType,
   ComplexAuthDescriptorRule,
   RawAnyAuthDescriptor,
+  RawAnyAuthDescriptorRegistration,
   RawAuthDescriptor,
-  RawAuthDescriptorArgs,
-  RawAuthDescriptorRegistration,
   RawAuthDescriptorRule,
   RawComplexAuthDescriptorRule,
   RawSingleSigAuthDescriptorArgs,
@@ -26,18 +27,26 @@ export function isSimpleRule(
   return (rule as ComplexAuthDescriptorRule).and === undefined;
 }
 
-export function isAuthDescriptorRegistrationGtv(
-  ad:
-    | RawAuthDescriptorRegistration<RawAuthDescriptorArgs>
-    | AnyAuthDescriptorRegistration,
-): ad is RawAuthDescriptorRegistration<RawAuthDescriptorArgs> {
+export function isRawAnyAuthDescriptorRegistration(
+  ad: RawAnyAuthDescriptorRegistration | AnyAuthDescriptorRegistration,
+): ad is RawAnyAuthDescriptorRegistration {
   return Array.isArray(ad);
 }
 
-export function isSingleSigGtv(
-  res: RawAnyAuthDescriptor,
+export function isRawSingleSig(
+  res: RawAnyAuthDescriptor | RawAnyAuthDescriptorRegistration,
 ): res is RawAuthDescriptor<RawSingleSigAuthDescriptorArgs> {
-  return res.auth_type === AuthType.SingleSig;
+  return (
+    (res as RawAnyAuthDescriptor).auth_type === AuthType.SingleSig ||
+    deserializeAuthType((res as RawAnyAuthDescriptorRegistration)[0]) ===
+      AuthType.SingleSig
+  );
+}
+
+export function isSingleSigRegistration(
+  res: AnyAuthDescriptorRegistration,
+): res is AuthDescriptorRegistration<SingleSig> {
+  return res.authType === AuthType.SingleSig;
 }
 
 export function isSingleSig(

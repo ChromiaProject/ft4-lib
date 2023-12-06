@@ -18,19 +18,17 @@ import {
   AuthDescriptorAndRule,
   FlagsType,
   RawAnyAuthDescriptor,
-  RawAuthDescriptorArgs,
   RawAuthDescriptorRegistration,
-  RawMultiSigAuthDescriptorArgs,
-  RawSingleSigAuthDescriptorArgs,
   MultiSig,
   MultiSigAuthDescriptorArgs,
   RuleOperator,
   RuleVariable,
   SingleSig,
   SingleSigAuthDescriptorArgs,
+  RawAnyAuthDescriptorRegistration,
 } from "./types";
 import {
-  isAuthDescriptorRegistrationGtv,
+  isRawAnyAuthDescriptorRegistration,
   isSingleSigArgs,
 } from "./type-predicates";
 import {
@@ -45,28 +43,24 @@ import {
   opCount,
 } from "./rules";
 
-function hashAuthDescriptor(
-  ad: RawAuthDescriptorRegistration<
-    RawSingleSigAuthDescriptorArgs | RawMultiSigAuthDescriptorArgs
-  >,
-) {
+function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
   return pclGtv.gtvHash(ad);
 }
 
 /**
- * Computes the account id that would be the result of creating
- * an account from the provided auth descriptor registration
- * @param firstAuthDescriptor registration to compute id for
- * @returns account id as Buffer
+ * Computes the resulting auth descriptor id for the data
+ * in an auth descriptor registration.
+ * @param authDescriptor registration to compute id for
+ * @returns auth descriptor id as Buffer
  */
 export function deriveAuthDescriptorId(
-  firstAuthDescriptor:
-    | RawAuthDescriptorRegistration<RawAuthDescriptorArgs>
+  authDescriptor:
+    | RawAnyAuthDescriptorRegistration
     | AnyAuthDescriptorRegistration,
 ): Buffer {
-  const ad = isAuthDescriptorRegistrationGtv(firstAuthDescriptor)
-    ? firstAuthDescriptor
-    : authDescriptorRegistrationToGtv(firstAuthDescriptor);
+  const ad = isRawAnyAuthDescriptorRegistration(authDescriptor)
+    ? authDescriptor
+    : authDescriptorRegistrationToGtv(authDescriptor);
   return hashAuthDescriptor(ad);
 }
 
@@ -79,7 +73,7 @@ export function deriveAuthDescriptorId(
 export function createSingleSigAuthDescriptorRegistration(
   flags: string[],
   signer: Buffer,
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null,
+  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null = null,
 ): AuthDescriptorRegistration<SingleSigAuthDescriptorArgs> {
   return {
     authType: AuthType.SingleSig,
@@ -124,9 +118,8 @@ export function aggregateSigners(
 
 export {
   AnyAuthDescriptor,
-  RawAuthDescriptorArgs as GtvAuthDescriptorArgs,
-  RawAnyAuthDescriptor as GtvAnyAuthDescriptor,
-  RawAuthDescriptorRegistration as GtvAuthDescriptorRegistration,
+  RawAnyAuthDescriptor,
+  RawAuthDescriptorRegistration,
   FlagsType,
   SingleSig,
   MultiSig,
