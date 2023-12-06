@@ -10,6 +10,7 @@ struct rate_limit_config {
 
 struct module_args {
 	rate_limit: rate_limit_config = rate_limit_config();
+    max_auth_descriptor_rules: integer = 8;
 }
 
 import ^.auth;

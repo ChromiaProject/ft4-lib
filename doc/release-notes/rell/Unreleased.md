@@ -2,6 +2,7 @@
 
 ### Added
 - Default values for `lib.ft4.accounts` module_args to simplify `chromia.yml` configuration.
+- Added configuration parameter `max_auth_descriptor_rules` for `lib.ft4.accounts` module_args, with default value 8. 
 
 ### Changed
 - Updated signature for `evm_auth_operation_for` to accept a `rell.test.op`.
