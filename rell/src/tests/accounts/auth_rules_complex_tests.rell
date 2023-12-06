@@ -16,6 +16,11 @@ import test_op: ^^.operations;
 import auth: ^^.operations.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 
+val rules_violated_error_message = "The rules for this auth descriptor have been violated";
+function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
+  return "Cannot find auth descriptor <%s> for account <%s>".format(ad_id, account_id);
+}
+
 struct account_data {
     test_auth_ops: list<rell.test.op>;
     accounts.account;
@@ -80,7 +85,7 @@ namespace test_basic_functionality {
         greater_than(block_height(100))
       ])
     );
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 
   function test_transaction_with_two_both_working_rule() {
@@ -98,7 +103,7 @@ namespace test_basic_functionality {
         greater_than(block_height(100)), greater_than(block_time(20000000000000))
       ])
     );;
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 
   function test_transaction_with_first_failing_rule() {
@@ -107,7 +112,7 @@ namespace test_basic_functionality {
         greater_than(block_height(100)), less_than(block_time(20000000000000))
       ])
     );
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 
   function test_transaction_with_second_failing_rule() {
@@ -116,7 +121,7 @@ namespace test_basic_functionality {
         less_than(block_height(100)), greater_than(block_time(20000000000000))
       ])
     );
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 
   function test_transaction_with_two_similar_rules() {
@@ -151,7 +156,7 @@ namespace test_basic_functionality {
     
     val bob_ad_id = bob_ad.hash();
     test_op.add_ad_to_account(alice.account, bob_ad)
-      .sign(rell.test.keypairs.bob).run_must_fail();
+      .sign(rell.test.keypairs.bob).run_must_fail("Too many rules");
   }
 }
 
@@ -171,7 +176,9 @@ namespace test_multiple_ops_with_op_count {
         less_or_equal(op_count(3))
       ])
     );
-    authenticate_account_signed_tx(acc_data, 4).run_must_fail();
+    authenticate_account_signed_tx(acc_data, 4).run_must_fail(
+      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+    );
   }
 
   function test_two_transactions_with_simple_working_rule() {
@@ -191,7 +198,9 @@ namespace test_multiple_ops_with_op_count {
       ])
     );
     authenticate_account_signed_tx(acc_data, 3).run();
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(
+      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+    );
   }
 }
 
@@ -211,7 +220,7 @@ namespace test_block_time_span {
         greater_than(block_time(19000000000000)), less_than(block_time(20000000000000))
       ])
     );
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 
   function test_transaction_after_span() {
@@ -220,7 +229,7 @@ namespace test_block_time_span {
         greater_than(block_time(19000000000)), less_than(block_time(20000000000))
       ])
     );
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 }
 
@@ -242,7 +251,9 @@ namespace test_deletion_after_expiration {
     assert_false(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
     
     //6th authentication: should fail
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    authenticate_account_signed_tx(acc_data).run_must_fail(
+      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+    );
   }
 
   function test_delete_expired_ad_on_authentication_with_different_auth_descriptor() {
@@ -254,7 +265,9 @@ namespace test_deletion_after_expiration {
     //auth desc exists
     assert_true(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
     
-    authenticate_account_signed_tx(acc_data).run_must_fail();
+    //auth desc does not work -> not deleted since the tx doesn't go through
+    authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
+
     //authenticate with a different auth descriptor
     authenticate_alice(acc_data.account.id);
     
