@@ -20,7 +20,6 @@ import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator, ftAuth } from "/ft4/authentication";
 import { createAuthDataService, createConnection } from "/ft4/ft-session";
-import { createChromiaClient } from "./blockchain-util";
 import { Connection } from "/ft4/types";
 import {
   addRateLimitPoints,
@@ -117,9 +116,8 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const accountManager = await this.registerAndBuildManagerAuthenticated(
-      manager,
-    );
+    const accountManager =
+      await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
     await accountManager.addAuthDescriptor(ad, this.participant);
 
@@ -147,7 +145,6 @@ class AccountBuilder {
     const account = await this.connection.getAccountById(
       deriveAuthDescriptorId(ad),
     );
-    const connection = createConnection(await createChromiaClient());
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,
     ).createKeyHandler(testAdFromRegistration(ad));
@@ -155,7 +152,7 @@ class AccountBuilder {
     const authenticator = createAuthenticator(
       account!.id,
       [keyHandler],
-      createAuthDataService(connection),
+      createAuthDataService(createConnection(this.connection.client)),
     );
 
     const acc = createAuthenticatedAccount(this.connection, authenticator);
