@@ -19,6 +19,6 @@ libs:
     rid: x"593D6EBA650BAC473E105C047B2C43A099164870304B3E5E324F714FF2F3F82F"
 
 compile:
-  source: ../rell/src
-  target: ../rell/out
+  source: src
+  target: out
   rellVersion: 0.13.5
