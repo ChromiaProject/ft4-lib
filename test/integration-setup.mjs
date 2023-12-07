@@ -30,8 +30,8 @@ export default async function (globalConfig, projectConfig) {
     "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.13.4",
   )
     .withNetwork(network)
-    .withCopyDirectoriesToContainer([{ source: `${cwd()}/rell`, target: "/usr/app" }])
-    .withCopyDirectoriesToContainer([{ source: `${cwd()}/configs`, target: "/usr/app" }])
+    .withCopyDirectoriesToContainer([{ source: `${cwd()}/rell`, target: "/usr/app/rell" }])
+    .withCopyDirectoriesToContainer([{ source: `${cwd()}/configs`, target: "/usr/app/configs" }])
     .withExposedPorts(7740)
     .withEnvironment({
       CHR_DB_URL: "jdbc:postgresql://postgres/postchain",
@@ -41,9 +41,9 @@ export default async function (globalConfig, projectConfig) {
       "node",
       "start",
       "-s",
-      "jest-test.yml",
+      "configs/jest-test.yml",
       "-np",
-      "config/jest-test/node-config.properties",
+      "rell/config/jest-test/node-config.properties",
       "--wipe",
     ])
     .withWaitStrategy(Wait.forLogMessage("Blockchain has been started"))
