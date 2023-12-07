@@ -216,7 +216,7 @@ function validate_rule(rule: rule_expression) {
 		}
 		rule_variable.op_count -> {
 			when (rule.operator) {
-				rule_operator.lt -> require(rule.value > 1, "rule variable op_count must be a positive value");
+				rule_operator.lt -> require(rule.value > 1, "rule variable op_count must be a positive value greater than 1");
 				rule_operator.le -> require(rule.value > 0, "rule variable op_count must be a positive value");
 				else -> require(false, "rule variable op_count must be lt or le");
 			}
