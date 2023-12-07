@@ -1,59 +1,125 @@
 import { Buffer } from "buffer";
 
-export enum AuthType {
-  single_sig = "S",
-  multi_sig = "M",
+export enum FlagsType {
+  Account = "A", // Change Account settings
+  Transfer = "T", // Transfer balance
 }
 
-export type AuthDescriptorSimpleRule = readonly [string, string, number];
-export type AuthDescriptorRule =
-  | readonly ["and", ...AuthDescriptorSimpleRule[]]
-  | AuthDescriptorSimpleRule
-  | null;
+export enum AuthType {
+  SingleSig = "S",
+  MultiSig = "M",
+}
 
-export type AuthDescriptor = {
-  id: Buffer;
-  authType: AuthType;
-  flags: Set<string>;
-  signaturesRequired: number;
-  signers: Buffer[];
-  rule: AuthDescriptorRule;
-  created: number;
+export enum RuleVariable {
+  BlockHeight = "block_height",
+  BlockTime = "block_time",
+  OpCount = "op_count",
+}
+
+export enum RuleOperator {
+  LessThan = "lt",
+  LessOrEqual = "le",
+  Equals = "eq",
+  GreaterThan = "gt",
+  GreaterOrEqual = "ge",
+}
+
+export type EnumLike = Record<string, string | number>;
+
+export class AuthDescriptorError extends Error {
+  constructor(msg?: string) {
+    super(msg);
+    this.name = "AuthDescriptorError";
+  }
+}
+
+// ======== Client side data model ============
+
+export type AuthDescriptorSimpleRule = {
+  variable: RuleVariable;
+  operator: RuleOperator;
+  value: number;
 };
 
-export type GtvAuthDescriptor = readonly [
-  id: Buffer,
-  authType: number,
-  args: AuthDescriptorArgs,
-  rule: AuthDescriptorRule | null,
-  created: number,
-];
+export type AuthDescriptorComplexRule = {
+  operator: "and";
+  rules: AuthDescriptorRules[];
+};
+export type AuthDescriptorRules =
+  | AuthDescriptorSimpleRule
+  | AuthDescriptorComplexRule;
 
-export type MultiSigAuthDescriptorArgs = readonly [
+export type AuthDescriptor<T extends SingleSig | MultiSig> = {
+  id: Buffer;
+  authType: AuthType;
+  rules: AuthDescriptorRules | null;
+  created: Date;
+  args: T;
+};
+
+export type AuthDescriptorRegistration<T extends SingleSig | MultiSig> = {
+  authType: AuthType;
+  args: T;
+  rules: AuthDescriptorRules | null;
+};
+
+export type AnyAuthDescriptor =
+  | AuthDescriptor<SingleSig>
+  | AuthDescriptor<MultiSig>;
+export type AnyAuthDescriptorRegistration =
+  | AuthDescriptorRegistration<SingleSig>
+  | AuthDescriptorRegistration<MultiSig>;
+
+export type SingleSig = {
+  flags: string[];
+  signer: Buffer;
+};
+
+export type MultiSig = {
+  flags: string[];
+  signaturesRequired: number;
+  signers: Buffer[];
+};
+
+// ======== Server side =======================
+export type RawMultiSig = readonly [
   flags: string[],
   signaturesRequired: number,
   signers: Buffer[],
 ];
 
-export type SingleSigAuthDescriptorArgs = readonly [
-  flags: string[],
-  signer: Buffer,
+export type RawSingleSig = readonly [flags: string[], signer: Buffer];
+
+export type RawAuthDescriptorRule = readonly [string, string, number];
+export type RawComplexAuthDescriptorRule = readonly [
+  "and",
+  ...RawAuthDescriptorRule[],
 ];
 
-export type AuthDescriptorArgs =
-  | SingleSigAuthDescriptorArgs
-  | MultiSigAuthDescriptorArgs;
+// ======== Server side request model =========
 
-export type RawAuthDescriptor = [
-  auth_type: number,
-  args: AuthDescriptorArgs,
-  rules: AuthDescriptorRule | null,
-];
+type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
+export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
+  readonly [
+    auth_type: number,
+    args: T,
+    rules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule | null,
+  ];
 
-export type AuthDescriptorResponse = {
-  args: AuthDescriptorArgs;
+export type RawAnyAuthDescriptorRegistration =
+  | RawAuthDescriptorRegistration<RawSingleSig>
+  | RawAuthDescriptorRegistration<RawMultiSig>;
+
+// ======== Server side response model ========
+
+export type RawAnyAuthDescriptor =
+  | RawAuthDescriptor<RawSingleSig>
+  | RawAuthDescriptor<RawMultiSig>;
+
+export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
+  args: T;
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: AuthDescriptorRule | null;
+  rules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule | null;
 };

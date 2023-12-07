@@ -1,94 +1,147 @@
-import { AuthDescriptorRule } from "./types";
+import {
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
+  RuleOperator,
+  RuleVariable,
+  AuthDescriptorRules,
+} from "./types";
 
-export enum RuleVariables {
-  BlockHeight = 0,
-  BlockTime = 1,
-  OpCount = 2,
-}
+type RuleVariableValue = [RuleVariable, number];
 
-export enum RuleOperator {
-  LessThan = 0,
-  LessOrEqual = 1,
-  Equals = 2,
-  GreaterThen = 3,
-  GreaterOrEqual = 4,
-}
+/**
+ * Creates a block height rule variable object that can be passed
+ * into a function that produces a rule
+ * @param value the block height to use
+ * @returns rule variable value
+ */
+export const blockHeight = (value: number): RuleVariableValue => [
+  RuleVariable.BlockHeight,
+  value,
+];
 
-export const allow = {
-  ...chooseVariable(),
-  all: null,
+/**
+ * Creates a block time rule variable object that can be passed
+ * into a function that produces a rule
+ * @param value the block time to use
+ * @returns rule variable value
+ */
+export const blockTime = (value: number): RuleVariableValue => [
+  RuleVariable.BlockTime,
+  value,
+];
+
+/**
+ * Creates an operation count rule variable object that can be passed
+ * into a function that produces a rule
+ * @param value the operation count to use
+ * @returns rule variable value
+ */
+export const opCount = (value: number): RuleVariableValue => [
+  RuleVariable.OpCount,
+  value,
+];
+
+/**
+ * Creates a rule variable that (can be passed to an auth descriptor) with
+ * the "less than" (<) operation for the provided variable.
+ * Example: lessThan(opCount(10))
+ * @param variableValue the variable value to use
+ * @returns a rule variable
+ */
+export const lessThan = (
+  ...variableValue: RuleVariableValue | [RuleVariableValue]
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.LessThan, ...variableValue);
+
+/**
+ * Creates a rule variable that (can be passed to an auth descriptor) with
+ * the "less than or equal" (<=) operation for the provided variable.
+ * Example: lessOrEqual(opCount(10))
+ * @param variableValue the variable value to use
+ * @returns a rule variable
+ */
+export const lessOrEqual = (
+  ...variableValue: RuleVariableValue | [RuleVariableValue]
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.LessOrEqual, ...variableValue);
+
+/**
+ * Creates a rule variable that (can be passed to an auth descriptor) with
+ * the "equal" (=) operation for the provided variable.
+ * Example: equals(opCount(10))
+ * @param variableValue the variable value to use
+ * @returns a rule variable
+ */
+export const equals = (
+  ...variableValue: RuleVariableValue | [RuleVariableValue]
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.Equals, ...variableValue);
+
+/**
+ * Creates a rule variable that (can be passed to an auth descriptor) with
+ * the "greater than" (>) operation for the provided variable.
+ * Example: greaterThan(opCount(10))
+ * @param variableValue the variable value to use
+ * @returns a rule variable
+ */
+export const greaterThan = (
+  ...variableValue: RuleVariableValue | [RuleVariableValue]
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.GreaterThan, ...variableValue);
+
+/**
+ * Creates a rule variable that (can be passed to an auth descriptor) with
+ * the "greater than or equal" (>=) operation for the provided variable.
+ * Example: greaterOrEqual(opCount(10))
+ * @param variableValue the variable value to use
+ * @returns a rule variable
+ */
+export const greaterOrEqual = (
+  ...variableValue: RuleVariableValue | [RuleVariableValue]
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.GreaterOrEqual, ...variableValue);
+
+/**
+ * Creates a combination of rules that will be evaluated using the equivalent of a boolean 'and' operator.
+ * I.e., for the expression returned by this function to be true, all of the provided rules must evaluate
+ * to true as well, the rules will be evaluated in the same order as they are provided and will short circuit
+ * if any rule evaluates to false.
+ *
+ * The object that is returned from this function can be used when creating an auth descriptor.
+ *
+ * Example:
+ * ```
+ *  and(
+ *    greaterThan(blockHeight(50)),
+ *    lessThan(blockHeight(10)),
+ *  )
+ * ```
+ * @param rules the rules to combine
+ * @returns a set of rules which will be evaluated together using the 'and' operator
+ */
+export const and = (
+  ...rules: AuthDescriptorRules[]
+): AuthDescriptorComplexRule => {
+  return {
+    operator: "and",
+    rules,
+  };
 };
 
-function chooseOperator(start: any[], variable: number) {
-  return {
-    lessThan: (value: number) => {
-      const current = start
-        ? start[0] === "and"
-          ? [...start, [RuleOperator.LessThan, variable, value]]
-          : ["and", start, [RuleOperator.LessThan, variable, value]]
-        : [RuleOperator.LessThan, variable, value];
-      return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable(current),
-      };
-    },
-
-    lessOrEqual: (value: number) => {
-      const current = start
-        ? start[0] === "and"
-          ? [...start, [RuleOperator.LessOrEqual, variable, value]]
-          : ["and", start, [RuleOperator.LessOrEqual, variable, value]]
-        : [RuleOperator.LessOrEqual, variable, value];
-      return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable(current),
-      };
-    },
-
-    equals: (value: number) => {
-      const current = start
-        ? start[0] === "and"
-          ? [...start, [RuleOperator.Equals, variable, value]]
-          : ["and", start, [RuleOperator.Equals, variable, value]]
-        : [RuleOperator.Equals, variable, value];
-      return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable(current),
-      };
-    },
-
-    greaterOrEqual: (value: number) => {
-      const current = start
-        ? start[0] === "and"
-          ? [...start, [RuleOperator.GreaterOrEqual, variable, value]]
-          : ["and", start, [RuleOperator.GreaterOrEqual, variable, value]]
-        : [RuleOperator.GreaterOrEqual, variable, value];
-      return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable(current),
-      };
-    },
-
-    greaterThan: (value: number) => {
-      const current = start
-        ? start[0] === "and"
-          ? [...start, [RuleOperator.GreaterThen, variable, value]]
-          : ["and", start, [RuleOperator.GreaterThen, variable, value]]
-        : [RuleOperator.GreaterThen, variable, value];
-      return {
-        only: <AuthDescriptorRule>Object.freeze(current),
-        and: chooseVariable(current),
-      };
-    },
-  };
-}
-
-function chooseVariable(start?) {
-  return {
-    blockHeight: chooseOperator(start, RuleVariables.BlockHeight),
-    blockTime: chooseOperator(start, RuleVariables.BlockTime),
-    operationCount: chooseOperator(start, RuleVariables.OpCount),
-  };
-}
-
-//const exampleUsage = allow.blockHeight.equals(3).and.blockTime.lessOrEqual(2).only
+const produceRule = (
+  operator: RuleOperator,
+  ...variableValue: RuleVariableValue | [RuleVariableValue]
+): AuthDescriptorSimpleRule => {
+  const isNested = (
+    variableValue: RuleVariableValue | [RuleVariableValue],
+  ): variableValue is [RuleVariableValue] => Array.isArray(variableValue[0]);
+  if (isNested(variableValue)) {
+    return {
+      operator,
+      variable: variableValue[0][0],
+      value: variableValue[0][1],
+    };
+  } else {
+    return { operator, variable: variableValue[0], value: variableValue[1] };
+  }
+};

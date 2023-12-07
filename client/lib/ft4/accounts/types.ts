@@ -1,21 +1,24 @@
-import { SignatureProvider, KeyPair } from "postchain-client";
-import { Balance } from "../asset/types";
-import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId } from "../cryptoUtils";
-import {
-  TransferHistoryFilter,
-  TransferHistoryResponse,
-  TransferHistoryEntry,
-} from "./transfer-history/types";
-import { Authenticator } from "../authentication/types";
+import { Buffer } from "buffer";
+import { KeyPair, SignatureProvider } from "postchain-client";
 import { Amount } from "../asset/interfaces";
+import { Balance } from "../asset/types";
+import { Authenticator } from "../authentication/types";
 import { OptionalPageCursor } from "../types";
 import {
+  BufferId,
   PaginatedEntity,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "../utils/types";
-import { Buffer } from "buffer";
+} from "/ft4/utils/types";
+import {
+  TransferHistoryEntry,
+  TransferHistoryFilter,
+  TransferHistoryResponse,
+} from "./transfer-history/types";
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor/types";
 import { PendingTransfer } from "../crosschain/types";
 
 export type RateLimit = {
@@ -35,10 +38,10 @@ export interface Account {
   getAuthDescriptors: (
     limit?: number,
     cursor?: OptionalPageCursor,
-  ) => Promise<PaginatedEntity<AuthDescriptor>>;
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getAuthDescriptorsByParticipantId: (
     partiticipantId: BufferId,
-  ) => Promise<PaginatedEntity<AuthDescriptor>>;
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
     limit?: number,
@@ -56,7 +59,7 @@ export interface Account {
 export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
-    authDescriptor: AuthDescriptor,
+    authDescriptor: AnyAuthDescriptorRegistration,
     newSigner: SignatureProvider | KeyPair,
   ) => Promise<TransactionSessionCompletion>;
   deleteAuthDescriptor: (

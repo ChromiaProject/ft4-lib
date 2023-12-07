@@ -1,5 +1,5 @@
 import { Connection } from "/ft4/types";
-import { createChromiaClient } from "./util/blockchain-util";
+import { createChromiaClient } from "../util/blockchain-util";
 import { Config } from "/ft4/utils/types";
 import { createConnection } from "/ft4/ft-session";
 

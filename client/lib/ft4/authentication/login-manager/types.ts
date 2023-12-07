@@ -1,10 +1,6 @@
-import { BufferId } from "../../cryptoUtils";
-import { Session } from "../../types";
-import { AuthDescriptorRule } from "/ft4/accounts";
-import {
-  RuleOperator,
-  RuleVariables,
-} from "/ft4/accounts/auth-descriptor/rules";
+import { Session } from "/ft4/types";
+import { BufferId } from "/ft4/utils/types";
+import { AuthDescriptorRules, RuleOperator, RuleVariable } from "/ft4/accounts";
 
 export type LoginConfig = {
   flags: string[];
@@ -42,7 +38,7 @@ export class LoginConfigError extends Error {
 }
 
 export type LoginConfigSimpleRule = {
-  variable: RuleVariables;
+  variable: RuleVariable;
   operator: RuleOperator;
   value: string;
 };
@@ -55,7 +51,7 @@ export type LoginConfigRules =
   | LoginConfigSimpleRule
   | null;
 
-export type Rules = LoginConfigRules | AuthDescriptorRule;
+export type Rules = LoginConfigRules | AuthDescriptorRules;
 
 export type RawLoginConfigSimpleRule = readonly [number, number, string];
 export type RawLoginConfigComplexRule = readonly ["and", ...RawRules[]];

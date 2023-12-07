@@ -1,4 +1,5 @@
 import { createAuthenticator } from "..";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
@@ -11,21 +12,21 @@ import {
   LoginOptions,
 } from "./types";
 import { createAccountObject } from "../../accounts/account-query-functions";
-import {
-  AuthDescriptorRule,
-  AuthDescriptorSimpleRule,
-  FlagsType,
-  authDescriptor,
-} from "../../accounts/auth-descriptor";
 import { createAuthDataService, createSession } from "../../ft-session";
 import { Connection } from "../../types";
-import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import {
-  RuleOperator,
-  RuleVariables,
-  allow,
-} from "/ft4/accounts/auth-descriptor/rules";
 import { isLoginConfigRule, isNullRule, isSimpleRule } from "./type-assertions";
+import { authDescriptorById } from "/ft4/accounts/account-queries";
+import {
+  AuthDescriptorRules,
+  AuthDescriptorSimpleRule,
+  FlagsType,
+  RuleOperator,
+  RuleVariable,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
+import { getPubkey } from "/ft4/utils";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -49,7 +50,7 @@ export function createLoginManager(
       // We need need an auth descriptor with admin flag in order to add a
       // disposable key
       const adminAuthDescriptor = authDescriptors.data.find((authDescriptor) =>
-        authDescriptor.flags.has(FlagsType.Account),
+        authDescriptor.args.flags.includes(FlagsType.Account),
       );
 
       if (!adminAuthDescriptor) {
@@ -60,7 +61,7 @@ export function createLoginManager(
         );
       }
 
-      let disposableKeyHandlers = [];
+      let disposableKeyHandlers: KeyHandler[] = [];
 
       const authDataService = createAuthDataService(connection);
       // Get list of flags that will be added to new auth descriptor
@@ -74,7 +75,7 @@ export function createLoginManager(
       if (keyPair) {
         const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
         const disposableAuthDescriptors =
-          await account.getAuthDescriptorsByParticipantId(keyPair.pubKey);
+          await account.getAuthDescriptorsByParticipantId(getPubkey(keyPair));
         disposableKeyHandlers = disposableAuthDescriptors.data
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
@@ -128,9 +129,9 @@ export function createLoginManager(
 async function getFlagsAndRules(
   authDataService: AuthDataService,
   options: LoginOptions,
-): Promise<{ flags: string[]; rules: AuthDescriptorRule }> {
+): Promise<{ flags: string[]; rules: AuthDescriptorRules }> {
   let flags: string[];
-  let rules: AuthDescriptorRule;
+  let rules: AuthDescriptorRules;
 
   let currentHeight: number;
   const getBlockHeight = async () => {
@@ -173,9 +174,9 @@ async function getFlagsAndRules(
  * @returns The rules that will be used by the auth descriptor
  */
 async function getRulesFromLoginConfig(
-  rules: LoginConfigRule | AuthDescriptorRule,
+  rules: LoginConfigRule | AuthDescriptorRules,
   getBlockHeight: () => Promise<number>,
-): Promise<AuthDescriptorRule> {
+): Promise<AuthDescriptorRules> {
   if (isNullRule(rules)) {
     return allow.all;
   } else if (isSimpleRule(rules)) {
@@ -188,7 +189,7 @@ async function getRulesFromLoginConfig(
     const result = [
       "and",
       ...(await Promise.all(simpleRules)),
-    ] as AuthDescriptorRule;
+    ] as AuthDescriptorRules;
 
     return result;
   }
@@ -215,12 +216,12 @@ async function ensureAuthDescriptorRule(
   const { operator, variable, value } = rule;
 
   let finalValue: number;
-  if (variable === RuleVariables.OpCount) {
+  if (variable === RuleVariable.OpCount) {
     finalValue = parseInt(value);
-  } else if (variable === RuleVariables.BlockTime) {
+  } else if (variable === RuleVariable.BlockTime) {
     const num = parseInt(value.replace(/[{}]/g, ""));
     finalValue = Date.now() + num;
-  } else if (variable === RuleVariables.BlockHeight) {
+  } else if (variable === RuleVariable.BlockHeight) {
     const blockHeight = await getBlockHeight();
     const num = parseInt(value.replace(/[{}]/g, ""));
     finalValue = blockHeight + num;
@@ -241,7 +242,7 @@ async function addDisposableAuthDescriptor(
   accountId: Buffer,
   adminAuthHandler: KeyHandler,
   flags: string[],
-  rules: AuthDescriptorRule,
+  rules: AuthDescriptorRules,
 ): Promise<KeyHandler> {
   const authenticator = createAuthenticator(
     accountId,
@@ -254,11 +255,18 @@ async function addDisposableAuthDescriptor(
   const keyPair = await loginKeyStore.createKeyPair(accountId);
   const ks = createInMemoryFtKeyStore(keyPair);
 
-  const ad = authDescriptor.create.singleSig
-    .withArgs(flags, keyPair.pubKey)
-    .andRules(rules);
+  const registration = createSingleSigAuthDescriptorRegistration(
+    flags,
+    getPubkey(keyPair),
+    rules,
+  );
 
-  await session.account.addAuthDescriptor(ad, keyPair);
+  await session.account.addAuthDescriptor(registration, keyPair);
+  const ad = gtv.authDescriptorFromGtv(
+    await connection.query(
+      authDescriptorById(accountId, deriveAuthDescriptorId(registration)),
+    ),
+  );
 
   return ks.createKeyHandler(ad);
 }
@@ -280,7 +288,7 @@ export const weeks = (w: number) => w * days(7);
 export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
   return {
     operator: RuleOperator.LessThan,
-    variable: RuleVariables.BlockTime,
+    variable: RuleVariable.BlockTime,
     value: `{${ttl}}`,
   };
 }

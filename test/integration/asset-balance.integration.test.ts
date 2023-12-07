@@ -4,8 +4,8 @@ import { Amount } from "/ft4/asset/interfaces";
 import { Asset } from "/ft4/asset/types";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
-import AccountBuilder from "./util/account-builder";
-import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
+import AccountBuilder from "../util/account-builder";
+import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 
 let connection: Connection;

@@ -13,8 +13,8 @@ const chains = [arbitrum, mainnet, polygon]
 let client = undefined;
 
 createClient({
-  nodeURLPool: "http://localhost:7741",
-  blockchainIID: 0
+  nodeUrlPool: "http://localhost:7741",
+  blockchainIid: 0
 }).then(c => {client = c});
 
 const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])

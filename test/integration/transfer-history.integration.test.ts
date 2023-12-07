@@ -1,9 +1,9 @@
-import TestUser from "./util/test-user";
-import AccountBuilder from "./util/account-builder";
+import TestUser from "../util/test-user";
+import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
-import { LocalStorageMock } from "./util/util";
-import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
+import { LocalStorageMock } from "../util/util";
+import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
 import { createAmount } from "/ft4/asset/amount";
 import { TransferHistoryType } from "/ft4/accounts/transfer-history/types";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
@@ -324,7 +324,7 @@ describe("Transfer history", () => {
 
     const foundAccount = await connection.getAccountById(account1.id);
 
-    const history = await foundAccount.getTransferHistory();
+    const history = await foundAccount!.getTransferHistory();
 
     const entry = await foundAccount!.getTransferHistoryEntry(
       history.data[0].rowid,

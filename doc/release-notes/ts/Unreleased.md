@@ -2,6 +2,8 @@
 
 ### Breaking
 - Removed `getClientVersion()` function
+- Removed `AuthenticatorSession`
+- The API for creating auth descriptor rules has been updated
 
 ### Changed 
 - Upgrade postchain-client to 1.9.0.
