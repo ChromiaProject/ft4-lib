@@ -2,17 +2,19 @@ import { IClient, encryption } from "postchain-client";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
 import { createKeyStoreInteractor } from "/ft4/ft-session";
 import { createAccount } from "/util/util";
-import { createChromiaClient } from "/util/blockchain-util";
 import {
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
 } from "/ft4/accounts/auth-descriptor";
+import { useChromiaNode } from "/util/chromia-node";
 
 describe("EVM key handler", () => {
   let client: IClient;
 
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
   });
 
   it("should add FT auth descriptor", async () => {

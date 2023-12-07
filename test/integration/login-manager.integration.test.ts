@@ -12,14 +12,17 @@ import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/s
 import { createSingleSigAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
 import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
 import { getPubkey } from "/ft4/utils";
-import { createChromiaClient, getNewAsset } from "/util/blockchain-util";
+import { getNewAsset } from "/util/blockchain-util";
+import { useChromiaNode } from "/util/chromia-node";
 
 describe("Login manager", () => {
+  const getClient = useChromiaNode();
+
   let client: IClient;
   let connection: Connection;
 
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     connection = createConnection(client);
   });
 

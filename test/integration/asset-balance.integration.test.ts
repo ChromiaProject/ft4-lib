@@ -5,8 +5,9 @@ import { Asset } from "/ft4/asset/types";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
 import AccountBuilder from "../util/account-builder";
-import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
+import { getNewAsset } from "../util/blockchain-util";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;
 let client: IClient;
@@ -24,9 +25,11 @@ function makeAmountBareBones(amount: Amount): {
 }
 
 describe("Asset balance", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
-    client = await createChromiaClient();
+    client = getClient();
+    connection = createConnection(client);
     asset1 = await getNewAsset(client);
     asset2 = await getNewAsset(client, undefined, undefined, 5);
   });

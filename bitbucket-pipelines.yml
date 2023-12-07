@@ -22,10 +22,12 @@ pipelines:
             - npm ci
             - export JEST_JUNIT_OUTPUT_NAME=unit.xml
             - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
-            - ./scripts/integration-jesttest.sh --no-docker --ci
-
+            - export TESTCONTAINERS_RYUK_DISABLED=true
+            - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit
           services:
             - postgres
+            - docker
   branches:
     ft4:
       - step:

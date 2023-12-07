@@ -21,6 +21,8 @@ import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
 import { registerAccount } from "/ft4/admin/admin-op-functions";
+import adminUser from "../util/admin_user";
+import { useChromiaNode } from "/util/chromia-node";
 import {
   and,
   blockHeight,
@@ -33,8 +35,7 @@ import {
   lessThan,
   opCount,
 } from "/ft4/accounts";
-import { createChromiaClient, getNewAsset } from "/util/blockchain-util";
-import adminUser from "/util/admin_user";
+import { getNewAsset } from "/util/blockchain-util";
 
 let _connection: Connection;
 let asset: Asset;
@@ -83,8 +84,10 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 }
 
 describe("Auth Descriptor Rule", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     _connection = createConnection(client);
     asset = await getNewAsset(_connection.client);
   });

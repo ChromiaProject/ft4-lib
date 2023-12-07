@@ -7,13 +7,16 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
 import AccountBuilder from "/util/account-builder";
-import { createChromiaClient } from "/util/blockchain-util";
+import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;
 
 describe("Key store interactor", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
+    const client = getClient();
+    connection = createConnection(client);
   });
 
   it("should return one account if corresponding key is used in one account", async () => {

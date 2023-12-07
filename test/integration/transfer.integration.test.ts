@@ -10,18 +10,24 @@ import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-m
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
 import AccountBuilder from "../util/account-builder";
 import adminUser from "../util/admin_user";
-import { getNewAsset, createChromiaClient } from "../util/blockchain-util";
+import { getNewAsset } from "../util/blockchain-util";
 import TestUser from "../util/test-user";
 import { registerAccount } from "/ft4/admin/admin-op-functions";
 import { Connection } from "/ft4/types";
+import { useChromiaNode } from "/util/chromia-node";
+import { IClient } from "postchain-client";
 
 let asset: Asset;
 let connection: Connection;
+let client: IClient;
 const admin = adminUser();
 
 describe("Transfer", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
+    client = getClient();
+    connection = createConnection(client);
     asset = await getNewAsset(connection.client, undefined, undefined, 5);
   });
 
@@ -136,7 +142,7 @@ describe("Transfer", () => {
       .build();
 
     const session = await createKeyStoreInteractor(
-      await createChromiaClient(),
+      client,
       createInMemoryFtKeyStore(keyPair),
     ).getSession(account.id);
     await session.account.burn(asset.id, createAmount(10, asset.decimals));
