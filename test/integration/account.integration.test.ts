@@ -1,46 +1,51 @@
 import * as pcl from "postchain-client";
-import { BufferId } from "/ft4/cryptoUtils";
-import testUser from "../util/test-user";
-import adminUser from "../util/admin_user";
-import AccountBuilder from "../util/account-builder";
-import { createChromiaClient } from "../util/blockchain-util";
 import { Connection } from "/ft4/types";
-import {
-  AuthDescriptor,
-  authDescriptor,
-  createSingleSignatureAuthDescriptor,
-  FlagsType,
-  singleSigArgs,
-  toGtv,
-} from "/ft4/accounts/auth-descriptor";
-import { nop, op } from "/ft4/utils";
-import { createConnection } from "/ft4/ft-session";
 import { ftAuth } from "/ft4/authentication";
 import { registerAccount } from "/ft4/admin/admin-op-functions";
+import { createInMemoryFtKeyStore } from "/ft4";
+import {
+  addAuthDescriptor,
+  deleteAllAuthDescriptorsExclude,
+} from "/ft4/accounts/account-operations";
+import {
+  AuthDescriptorRegistration,
+  FlagsType,
+  MultiSig,
+  createMultiSigAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
+import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
+import { nop, op } from "/ft4/utils";
+import { AuthorizationError } from "/ft4/utils/transaction-builder";
+import { BufferId } from "/ft4/utils/types";
 import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
   getSessionForAccount,
-} from "../util/util";
-import {
-  deleteAllAuthDescriptorsExclude,
-  addAuthDescriptor,
-} from "/ft4/accounts/account-operations";
-import { AuthorizationError } from "/ft4/utils/transaction-builder";
+} from "/util/util";
+import testUser from "/util/test-user";
+import AccountBuilder from "/util/account-builder";
+import adminUser from "/util/admin_user";
+import { createChromiaClient } from "/util/blockchain-util";
 
 let _connection: Connection;
 const admin = adminUser();
 
 async function multiSigCall(
   accountId: BufferId,
-  multiSigAuthDescriptor: AuthDescriptor,
+  multiSigAuthDescriptor: AuthDescriptorRegistration<MultiSig>,
   signers: (pcl.SignatureProvider | pcl.KeyPair)[],
   ...ops: pcl.Operation[]
 ) {
+  const adId = deriveAuthDescriptorId(multiSigAuthDescriptor);
   const tx = {
-    operations: [ftAuth(accountId, multiSigAuthDescriptor.id), ...ops, nop()],
-    signers: signers.map((s) => s.pubKey),
+    operations: [ftAuth(accountId, adId), ...ops, nop()],
+    signers: signers
+      .map((s) => s.pubKey)
+      .filter((pk): pk is Buffer => pk !== undefined),
   };
 
   let signedTx: Buffer | pcl.Transaction = tx;
@@ -57,10 +62,11 @@ describe("Test the account", () => {
 
   it("Register account on blockchain", async () => {
     const user = testUser();
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account, FlagsType.Transfer],
       user.signatureProvider.pubKey,
-    ).andNoRules;
+      null,
+    );
 
     const accountPromise = registerAccount(
       _connection.client,
@@ -99,9 +105,12 @@ describe("Test the account", () => {
 
     expect(session.account.authenticator.keyHandlers.length).toBe(2);
     const keyHandler = session.account.authenticator.keyHandlers.find(
-      (kh) => !kh.authDescriptor.id.compare(authDescriptor2.id),
+      (kh) =>
+        !deriveAuthDescriptorId(kh.authDescriptor).compare(
+          deriveAuthDescriptorId(authDescriptor2),
+        ),
     );
-    expect(keyHandler.authDescriptor.flags).toEqual(new Set(["T"]));
+    expect(keyHandler?.authDescriptor.args.flags).toEqual(["T"]);
   });
 
   it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
@@ -120,10 +129,12 @@ describe("Test the account", () => {
   it("updates account if 2 signatures provided", async () => {
     const kp1 = pcl.newSignatureProvider();
     const kp2 = pcl.newSignatureProvider();
-    const ad = authDescriptor.create.multiSig.withArgs(["A"], 2, [
-      kp1.pubKey,
-      kp2.pubKey,
-    ]).andNoRules;
+    const ad = createMultiSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      [kp1.pubKey, kp2.pubKey],
+      2,
+      null,
+    );
 
     const account = await AccountBuilder.account(_connection)
       .withAuthDescriptor(ad, [kp1, kp2])
@@ -144,32 +155,38 @@ describe("Test the account", () => {
   it("should fail if only one signature provided", async () => {
     const user1 = testUser();
     const user2 = testUser();
+    const registration = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
+      user1.signatureProvider.pubKey,
+      null,
+    );
     const user3 = {
-      authDescriptor: authDescriptor.create.singleSig.withArgs(
-        [FlagsType.Transfer],
-        user1.signatureProvider.pubKey,
-      ).andNoRules,
+      authDescriptor: {
+        ...registration,
+        id: deriveAuthDescriptorId(registration),
+        created: new Date(),
+      },
       signatureProvider: user1.signatureProvider,
       keyManagers: user1.keyManagers,
     };
 
-    const ad = authDescriptor.create.multiSig.withArgs(
+    const ad = createMultiSigAuthDescriptorRegistration(
       [FlagsType.Account, FlagsType.Transfer],
-      2,
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
-    ).andNoRules;
+      2,
+      null,
+    );
 
     await registerAccount(_connection.client, admin.signatureProvider, ad);
 
-    const promise = addAuthDescriptorTo(
-      _connection.client,
-      ad.id,
-      user1,
-      user3,
-    );
+    const adId = deriveAuthDescriptorId(ad);
+    const promise = addAuthDescriptorTo(_connection.client, adId, user1, {
+      signatureProvider: user3.signatureProvider,
+      authDescriptor: user3.authDescriptor,
+    });
     await expect(promise).rejects.toBeInstanceOf(Error);
-    const acc = await _connection.getAccountById(ad!.id);
-    expect((await acc.getAuthDescriptors()).data.length).toBe(1);
+    const acc = await _connection.getAccountById(adId);
+    expect((await acc!.getAuthDescriptors()).data.length).toBe(1);
   });
 
   it("should be returned when queried by participant id", async () => {
@@ -237,8 +254,11 @@ describe("Test the account", () => {
     ]);
 
     expect(
-      (await _connection.getAccountsByAuthDescriptorId(authDescriptor1.id)).data
-        .length,
+      (
+        await _connection.getAccountsByAuthDescriptorId(
+          deriveAuthDescriptorId(authDescriptor1),
+        )
+      ).data.length,
     ).toBe(2);
   });
 
@@ -260,7 +280,7 @@ describe("Test the account", () => {
 
     const { data: accounts1, nextCursor } =
       await _connection.getAccountsByAuthDescriptorId(
-        authDescriptor1.id,
+        deriveAuthDescriptorId(authDescriptor1),
         2,
         null,
       );
@@ -268,7 +288,7 @@ describe("Test the account", () => {
     expect(nextCursor).not.toBeNull();
 
     const { data: accounts2 } = await _connection.getAccountsByAuthDescriptorId(
-      authDescriptor1.id,
+      deriveAuthDescriptorId(authDescriptor1),
       2,
       nextCursor,
     );
@@ -277,47 +297,59 @@ describe("Test the account", () => {
 
   it("has correct format when fetching paginated auth descriptors", async () => {
     const keyPair = pcl.encryption.makeKeyPair();
-    const ad = authDescriptor.create.singleSig.withArgs(
-      ["A"],
-      keyPair.pubKey,
-    ).andNoRules;
+    const keyStore = createInMemoryFtKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.pubKey,
+      null,
+    );
 
     await createAccount(_connection.client, ad);
 
-    const session = await getSessionForAccount(_connection, ad.id, keyPair);
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore,
+    ).getSession(deriveAuthDescriptorId(ad));
 
     const keyPair2 = pcl.encryption.makeKeyPair();
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       keyPair2.pubKey,
-    ).andNoRules;
+      null,
+    );
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const { data } = await session.account.getAuthDescriptors(1);
-    const authDesc = createSingleSignatureAuthDescriptor(
-      singleSigArgs([FlagsType.Account], keyPair.pubKey),
+    const authDesc = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.pubKey,
       null,
-      data[0].created,
     );
-    expect(data[0]).toStrictEqual(authDesc);
+    expect(data[0]).toMatchObject(authDesc);
   });
 
   it("can fetch paginated auth descriptors", async () => {
     const keyPair = pcl.encryption.makeKeyPair();
-    const ad = authDescriptor.create.singleSig.withArgs(
-      ["A"],
-      keyPair.pubKey,
-    ).andNoRules;
+    const keyStore = createInMemoryFtKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.pubKey,
+      null,
+    );
 
     await createAccount(_connection.client, ad);
 
-    const session = await getSessionForAccount(_connection, ad.id, keyPair);
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore,
+    ).getSession(deriveAuthDescriptorId(ad));
 
     const keyPair2 = pcl.encryption.makeKeyPair();
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       keyPair2.pubKey,
-    ).andNoRules;
+      null,
+    );
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const { data, nextCursor } = await session.account.getAuthDescriptors(1);
@@ -336,7 +368,7 @@ describe("Test the account", () => {
 
     const session = await getSessionForAccount(
       _connection,
-      authDescriptor.id,
+      deriveAuthDescriptorId(authDescriptor),
       keyPair,
     );
 
@@ -348,7 +380,10 @@ describe("Test the account", () => {
     const tx = await session
       .transactionBuilder()
       .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
+        deleteAllAuthDescriptorsExclude(
+          session.account.id,
+          deriveAuthDescriptorId(authDescriptor),
+        ),
       )
       .build();
     await _connection.client.sendTransaction(tx);
@@ -359,12 +394,17 @@ describe("Test the account", () => {
   it("registers account by directly calling 'register_account' operation", async () => {
     const user = testUser();
 
-    const adGtv = toGtv(user.authDescriptor);
     const tx = {
       operations: [
-        op("ft4.admin.register_account", [adGtv[1], adGtv[2], adGtv[3]]),
+        op(
+          "ft4.admin.register_account",
+          gtv.authDescriptorRegistrationToGtv(user.authDescriptor),
+        ),
       ],
-      signers: user.authDescriptor.signers.concat(admin.authDescriptor.signers),
+      signers: [
+        user.authDescriptor.args.signer,
+        admin.authDescriptor.args.signer,
+      ],
     };
     let signed = await _connection.client.signTransaction(
       tx,
@@ -376,7 +416,9 @@ describe("Test the account", () => {
     );
     await _connection.client.sendTransaction(signed);
 
-    const account = await _connection.getAccountById(user.authDescriptor.id);
+    const account = await _connection.getAccountById(
+      deriveAuthDescriptorId(user.authDescriptor),
+    );
 
     expect(account).not.toBeNull();
   });
@@ -408,18 +450,21 @@ describe("Test the account", () => {
       .withPoints(2)
       .build();
 
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      ["A"],
+    const authDescriptor2 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       user2.signatureProvider.pubKey,
-    ).andNoRules;
-    const ad3 = authDescriptor.create.singleSig.withArgs(
-      ["A", "T"],
+      null,
+    );
+
+    const authDescriptor3 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       user3.signatureProvider.pubKey,
-    ).andNoRules;
+      null,
+    );
 
     await Promise.all([
-      acc1.addAuthDescriptor(ad2, user2.signatureProvider),
-      acc1.addAuthDescriptor(ad3, user3.signatureProvider),
+      acc1.addAuthDescriptor(authDescriptor2, user2.signatureProvider),
+      acc1.addAuthDescriptor(authDescriptor3, user3.signatureProvider),
     ]);
 
     const { account: acc2 } = await getSessionForAccount(
@@ -429,41 +474,9 @@ describe("Test the account", () => {
     );
 
     expect((await acc2.getAuthDescriptors()).data.length).toBe(3);
-    await acc2.deleteAuthDescriptor(ad3.id);
-    expect((await acc2.getAuthDescriptors()).data.length).toBe(2);
-  });
-
-  it("auth descriptor without admin flag doesn't delete other", async () => {
-    const user1 = testUser();
-    const user2 = testUser();
-    const user3 = testUser();
-
-    const acc1 = await AccountBuilder.account(_connection)
-      .withParticipant(user1.signatureProvider)
-      .build();
-
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
-      user2.signatureProvider.pubKey,
-    ).andNoRules;
-    const ad3 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
-      user3.signatureProvider.pubKey,
-    ).andNoRules;
-
-    await Promise.all([
-      acc1.addAuthDescriptor(ad2, user2.signatureProvider),
-      acc1.addAuthDescriptor(ad3, user3.signatureProvider),
-    ]);
-
-    const { account: acc2 } = await getSessionForAccount(
-      _connection,
-      acc1.id,
-      user2.signatureProvider,
-    );
-
-    expect((await acc2.getAuthDescriptors()).data.length).toBe(3);
-    await expect(acc2.deleteAuthDescriptor(ad3.id)).rejects.toThrow();
+    await expect(
+      acc2.deleteAuthDescriptor(deriveAuthDescriptorId(authDescriptor3)),
+    ).rejects.toThrow();
     expect((await acc2.getAuthDescriptors()).data.length).toBe(3);
   });
 
@@ -476,14 +489,17 @@ describe("Test the account", () => {
       .withPoints(2)
       .build();
 
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      ["A"],
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
       user2.signatureProvider.pubKey,
-    ).andNoRules;
-    const ad3 = authDescriptor.create.singleSig.withArgs(
-      ["A", "T"],
+      null,
+    );
+
+    const ad3 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account, FlagsType.Transfer],
       user2.signatureProvider.pubKey,
-    ).andNoRules;
+      null,
+    );
 
     await Promise.all([
       acc1.addAuthDescriptor(ad2, user2.signatureProvider),
@@ -497,7 +513,9 @@ describe("Test the account", () => {
     );
 
     expect(acc2.authenticator.keyHandlers.length).toBe(2);
-    const { session } = await acc2.deleteAuthDescriptor(ad3.id);
+    const { session } = await acc2.deleteAuthDescriptor(
+      deriveAuthDescriptorId(ad3),
+    );
     expect(session.account.authenticator.keyHandlers.length).toBe(1);
   });
 });

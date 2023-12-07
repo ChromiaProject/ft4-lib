@@ -8,11 +8,11 @@ export function createInMemoryLoginKeyStore(): LoginKeyStore {
       accountIdKeyPairMap.delete(accountId);
     },
     getKeyPair: (accountId: Buffer) =>
-      Promise.resolve(accountIdKeyPairMap.get(accountId)),
+      Promise.resolve(accountIdKeyPairMap.get(accountId) || null),
     createKeyPair: (accountId: Buffer) => {
       if (accountIdKeyPairMap.get(accountId)) {
         throw new Error(
-          `KeyPair already exists for account <${accountId.toString("hex")}>`
+          `KeyPair already exists for account <${accountId.toString("hex")}>`,
         );
       }
 

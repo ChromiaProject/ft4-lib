@@ -1,9 +1,13 @@
-import { Operation, formatter } from "postchain-client";
-import { BufferId } from "../cryptoUtils";
-import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
-import { TxContext } from "../utils/types";
 import { Buffer } from "buffer";
-import { AuthDescriptor, AuthType } from "../accounts";
+import { Operation, formatter } from "postchain-client";
+import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
+import { BufferId, TxContext } from "/ft4/utils/types";
+import {
+  AnyAuthDescriptorRegistration,
+  AuthDescriptor,
+  AuthType,
+  SingleSig,
+} from "/ft4/accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -46,17 +50,21 @@ export function createNoopAuthenticator(
 const nullKeyStore: KeyStore = Object.freeze({
   id: Buffer.alloc(32),
   isInteractive: false,
-  createKeyHandler: (_authDescriptor: AuthDescriptor) => noopKeyHandler,
+  sign: (tx: Buffer) => Promise.resolve(tx),
+  createKeyHandler: (
+    _authDescriptor: AnyAuthDescriptorRegistration | undefined,
+  ) => noopKeyHandler,
 });
 
-const nullAuthDescriptor: AuthDescriptor = Object.freeze({
-  id: Buffer.alloc(0),
-  authType: AuthType.single_sig,
-  flags: new Set<string>(),
-  signaturesRequired: 0,
-  signers: [],
-  rule: null,
-  created: 0,
+const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
+  id: Buffer.from(""),
+  authType: AuthType.SingleSig,
+  args: {
+    flags: [] as string[],
+    signer: Buffer.alloc(32, 0),
+  },
+  rules: null,
+  created: new Date(0),
 });
 
 const noopKeyHandler: KeyHandler = Object.freeze({
@@ -69,7 +77,7 @@ const noopKeyHandler: KeyHandler = Object.freeze({
     _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
-  sign: () => Promise.resolve(),
+  sign: (digest: Buffer) => Promise.resolve(digest),
   getSigners: (): Buffer[] => [],
 });
 

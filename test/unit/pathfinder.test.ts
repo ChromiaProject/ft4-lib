@@ -33,7 +33,7 @@ import { createStubClient } from "../util/blockchain-util";
 import { createConnection } from "/ft4";
 import { Asset } from "/ft4/asset/types";
 import { findPathToChainForAsset } from "/ft4/crosschain/pathfinder";
-import { BufferId } from "/ft4/cryptoUtils";
+import { BufferId } from "/ft4/utils/types";
 
 createClientMock.mockImplementation(
   async () =>

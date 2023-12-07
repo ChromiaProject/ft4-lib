@@ -3,6 +3,7 @@ import {
   encryption,
   RawGtv,
   IClient,
+  KeyPair,
   gtv,
   RawGtx,
 } from "postchain-client";
@@ -35,6 +36,10 @@ export function getTransactionRid(tx: RawGtx): Buffer {
 
 export async function getVersion(session: IClient): Promise<string> {
   return Object.freeze(await session.query<string>("ft4.get_version"));
+}
+
+export function getPubkey(keyPair: KeyPair): Buffer {
+  return keyPair.pubKey ?? encryption.createPublicKey(keyPair.privKey);
 }
 
 type DeepReadonly<T> = T extends (infer R)[]

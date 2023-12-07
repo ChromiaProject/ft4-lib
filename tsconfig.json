@@ -8,6 +8,7 @@
     "sourceMap": true,
     "declaration": true,
     "downlevelIteration": true,
+    "strictNullChecks": true,
     "lib": [
       "es2015",
       "es2019",
