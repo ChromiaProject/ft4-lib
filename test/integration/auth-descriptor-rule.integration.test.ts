@@ -288,8 +288,9 @@ describe("Auth Descriptor Rule", () => {
       greaterThan(blockTime(Date.now() - 20000)),
       lessThan(blockTime(Date.now() - 10000)),
     );
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
@@ -307,8 +308,9 @@ describe("Auth Descriptor Rule", () => {
       lessThan(blockTime(Date.now() + 10000)),
     );
 
-    const [limitedAccount] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
+      rules,
+    );
 
     const account2 = await destinationAccount();
 
