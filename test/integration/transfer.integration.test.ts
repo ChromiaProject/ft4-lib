@@ -1,5 +1,9 @@
 import { newSignatureProvider } from "postchain-client";
-import { authDescriptor as ad, FlagsType } from "/ft4/accounts/auth-descriptor";
+import {
+  FlagsType,
+  deriveAuthDescriptorId,
+  createMultiSigAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 import { createAmount } from "/ft4/asset/amount";
 import { Asset } from "/ft4/asset/types";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
@@ -95,12 +99,12 @@ describe("Transfer", () => {
       .withPoints(1)
       .build();
 
-    const authDescriptor = ad.create.multiSig.withArgs(
+    const authDescriptor = createMultiSigAuthDescriptorRegistration(
       [FlagsType.Account, FlagsType.Transfer],
-      2,
       [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey],
-    ).andNoRules;
-
+      2,
+      null,
+    );
     await registerAccount(
       connection.client,
       admin.signatureProvider,
@@ -108,17 +112,17 @@ describe("Transfer", () => {
     );
 
     const account2 = await createConnection(connection.client).getAccountById(
-      authDescriptor.id,
+      deriveAuthDescriptorId(authDescriptor),
     );
 
     await account1.transfer(
-      account2.id,
+      account2!.id,
       asset.id,
       createAmount(10, asset.decimals),
     );
 
     const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
-    const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
+    const assetBalance2 = await account2!.getBalanceByAssetId(asset.id);
 
     expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
       true,

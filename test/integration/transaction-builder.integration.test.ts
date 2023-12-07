@@ -53,7 +53,7 @@ describe("Transaction Builder", () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const { authenticatorMock } = getMocks();
       const operation = nop();
-      let callback = null;
+      let callback: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(authenticatorMock, client)
           .add(
@@ -75,8 +75,8 @@ describe("Transaction Builder", () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const { authenticatorMock } = getMocks();
       const operation = nop();
-      let callback = null;
-      let callback2 = null;
+      let callback: jest.Mock<any, any, any> = jest.fn();
+      let callback2: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(authenticatorMock, client)
           .add(
@@ -116,7 +116,7 @@ describe("Transaction Builder", () => {
         .mockReturnValueOnce(true);
       const { authenticatorMock } = getMocks();
       const operation = nop();
-      let callback = null;
+      let callback: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(authenticatorMock, client)
           .add(
@@ -139,7 +139,7 @@ describe("Transaction Builder", () => {
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(false);
       const { authenticatorMock } = getMocks();
-      let callback = null;
+      let callback: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(authenticatorMock, client, {
           retryCount: 2,

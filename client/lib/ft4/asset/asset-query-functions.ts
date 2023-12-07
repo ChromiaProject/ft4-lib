@@ -1,4 +1,3 @@
-import { BufferId } from "../cryptoUtils";
 import {
   balanceByAccountId,
   assetById,
@@ -9,14 +8,14 @@ import {
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalPageCursor } from "../types";
-import { PaginatedEntity, freeze } from "../utils/types";
+import { BufferId, PaginatedEntity, freeze } from "/ft4/utils/types";
 import { createAmountFromBalance } from "./amount";
 import { createEntityRetriever } from "../utils/entity-retriever";
 
 export async function getAssetById(
   connection: Connection,
   id: BufferId,
-): Promise<Asset> {
+): Promise<Asset | null> {
   const response = await connection.query(assetById(id));
   return response ? createAssetObject(response) : null;
 }
@@ -24,7 +23,7 @@ export async function getAssetById(
 export async function getAssetBySymbol(
   connection: Connection,
   symbol: string,
-): Promise<Asset> {
+): Promise<Asset | null> {
   const response = await connection.query(assetBySymbol(symbol));
   return response ? createAssetObject(response) : null;
 }

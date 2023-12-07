@@ -3,11 +3,9 @@ import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
 import { AuthenticatedAccount } from "/ft4/accounts/types";
-import { AuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
-import { getNewAsset } from "../util/blockchain-util";
-import { allow } from "/ft4/accounts/auth-descriptor/rules";
+import { AuthDescriptorRules } from "/ft4/accounts/auth-descriptor/types";
 import { createAmount } from "/ft4/asset/amount";
-import { IClient } from "postchain-client";
+import { IClient, newSignatureProvider } from "postchain-client";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import {
   createAuthDataService,
@@ -21,12 +19,23 @@ import {
 } from "../util/util";
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { newSignatureProvider } from "postchain-client";
 import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
 import { registerAccount } from "/ft4/admin/admin-op-functions";
 import adminUser from "../util/admin_user";
-import { authDescriptor } from "/ft4";
 import { useChromiaNode } from "/util/chromia-node";
+import {
+  and,
+  blockHeight,
+  blockTime,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  greaterOrEqual,
+  greaterThan,
+  lessOrEqual,
+  lessThan,
+  opCount,
+} from "/ft4/accounts";
+import { getNewAsset } from "/util/blockchain-util";
 
 let _connection: Connection;
 let asset: Asset;
@@ -44,7 +53,7 @@ function destinationAccount(): Promise<AuthenticatedAccount> {
 }
 
 async function getAuthedAccountsFromAuthDescriptorRule(
-  rule: AuthDescriptorRule,
+  rule: AuthDescriptorRules,
 ): Promise<
   [limitedAccount: AuthenticatedAccount, accountAdmin: AuthenticatedAccount]
 > {
@@ -57,7 +66,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
   );
 
   const accounts = await _connection.getAccountsByAuthDescriptorId(
-    user2.authDescriptor.id,
+    deriveAuthDescriptorId(user2.authDescriptor),
   );
   if (accounts.data.length > 1) throw new Error("Found more than one account");
 
@@ -85,7 +94,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should succeed when number of called operations is less than or equal to value set by operation count rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.operationCount.lessOrEqual(2).only,
+      lessOrEqual(opCount(2)),
     );
 
     const account2 = await destinationAccount();
@@ -107,7 +116,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail when number of called operations is greater than value set by operation count rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.operationCount.lessThan(2).only,
+      lessThan(opCount(2)),
     );
 
     const account2 = await destinationAccount();
@@ -129,7 +138,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail when current time is greater than time defined by 'less than' block time rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockTime.lessThan(Date.now() - 10000).only,
+      lessThan(blockTime(Date.now() - 10000)),
     );
 
     const account2 = await destinationAccount();
@@ -144,7 +153,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should succeed when current time is less than time defined by 'less than' block time rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockTime.lessThan(Date.now() + 10000).only,
+      lessThan(blockTime(Date.now() + 10000)),
     );
 
     const account2 = await destinationAccount();
@@ -159,7 +168,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should succeed when current block height is less than value defined by 'less than' block height rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockHeight.lessThan(10000).only,
+      lessThan(blockHeight(10000)),
     );
 
     const account2 = await destinationAccount();
@@ -174,7 +183,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail when current block height is greater than value defined by 'less than' block height rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockHeight.lessThan(1).only,
+      lessThan(blockHeight(1)),
     );
 
     const account2 = await destinationAccount();
@@ -189,7 +198,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail if operation is executed before timestamp defined by 'greater than' block time rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockTime.greaterThan(Date.now() + 10000).only,
+      greaterThan(blockTime(Date.now() + 10000)),
     );
 
     const account2 = await destinationAccount();
@@ -204,7 +213,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should succeed if operation is executed after timestamp defined by 'greater than' block time rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockTime.greaterThan(Date.now() - 10000).only,
+      greaterThan(blockTime(Date.now() - 10000)),
     );
 
     const account2 = await destinationAccount();
@@ -219,7 +228,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail if operation is executed before block defined by 'greater than' block height rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(10000).only,
+      greaterThan(blockHeight(10000)),
     );
 
     const account2 = await destinationAccount();
@@ -234,7 +243,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should succeed if operation is executed after block defined by 'greater than' block height rule", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(1).only,
+      greaterThan(blockHeight(1)),
     );
 
     const account2 = await destinationAccount();
@@ -249,7 +258,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should be able to create complex rules", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10000).only,
+      and(greaterThan(blockHeight(1)), lessThan(blockHeight(10000))),
     );
 
     const account2 = await destinationAccount();
@@ -264,7 +273,7 @@ describe("Auth Descriptor Rule", () => {
 
   it("should fail if block heights defined by 'greater than' and 'less than' block height rules are less than current block height", async () => {
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      allow.blockHeight.greaterThan(1).and.blockHeight.lessThan(10).only,
+      and(greaterThan(blockHeight(1)), lessThan(blockHeight(10))),
     );
 
     const account2 = await destinationAccount();
@@ -278,9 +287,10 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should fail if block times defined by 'greater than' and 'less than' block time rules are in the past", async () => {
-    const rules = allow.blockTime
-      .greaterThan(Date.now() - 20000)
-      .and.blockTime.lessThan(Date.now() - 10000).only;
+    const rules = and(
+      greaterThan(blockTime(Date.now() - 20000)),
+      lessThan(blockTime(Date.now() - 10000)),
+    );
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       rules,
     );
@@ -296,9 +306,11 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should succeed if current time is within period defined by 'greater than' and 'less than' block time rules", async () => {
-    const rules = allow.blockTime
-      .greaterThan(Date.now() - 10000)
-      .and.blockTime.lessThan(Date.now() + 10000).only;
+    const rules = and(
+      greaterThan(blockTime(Date.now() - 10000)),
+      lessThan(blockTime(Date.now() + 10000)),
+    );
+
     const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
       rules,
     );
@@ -314,10 +326,8 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should delete expired auth descriptor", async () => {
-    const rules = allow.operationCount.lessThan(2).only;
-
     const [limitedAccount, accountAdmin] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+      await getAuthedAccountsFromAuthDescriptorRule(lessThan(opCount(2)));
 
     const destAccount = await destinationAccount();
 
@@ -341,10 +351,8 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("shouldn't delete non-expired auth descriptor", async () => {
-    const rules = allow.operationCount.lessThan(10).only;
-
     const [limitedAccount, accountAdmin] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+      await getAuthedAccountsFromAuthDescriptorRule(lessThan(opCount(10)));
 
     const destAccount = await destinationAccount();
 
@@ -367,11 +375,10 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should delete only expired auth descriptor if multiple expiring descriptors exist", async () => {
-    const rules = allow.operationCount.lessOrEqual(1).only;
-    const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
+    const user3 = testUser(lessOrEqual(opCount(1)));
 
     const [limitedAccount, accountAdmin] =
-      await getAuthedAccountsFromAuthDescriptorRule(rules);
+      await getAuthedAccountsFromAuthDescriptorRule(lessOrEqual(opCount(1)));
 
     const destAccount = await destinationAccount();
 
@@ -397,11 +404,10 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("should add auth descriptors", async () => {
-    const rules = allow.operationCount.lessOrEqual(1).only;
-    const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
+    const user3 = testUser(lessOrEqual(opCount(1)));
 
     const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules,
+      lessOrEqual(opCount(1)),
     );
 
     await accountAdmin.addAuthDescriptor(
@@ -418,11 +424,11 @@ describe("Auth Descriptor Rule", () => {
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
       ["A"],
-      allow.operationCount.lessOrEqual(1).only,
+      lessOrEqual(opCount(1)),
     );
     const { keyPair: kp3, authDescriptor: ad3 } = createTestAuthDescriptor(
       ["A"],
-      allow.operationCount.lessOrEqual(1).only,
+      lessOrEqual(opCount(1)),
     );
 
     const accountId = await createAccount(_connection.client, ad1);
@@ -449,14 +455,23 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
 
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
 
     const tx = await session
       .transactionBuilder()
-      .add(deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .add(
+        deleteAllAuthDescriptorsExclude(
+          session.account.id,
+          deriveAuthDescriptorId(ad1),
+        ),
+      )
       .build();
     await _connection.client.sendTransaction(tx);
 
@@ -477,10 +492,16 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
 
-    const promise = session.account.deleteAuthDescriptor(ad2.id);
+    const promise = session.account.deleteAuthDescriptor(
+      deriveAuthDescriptorId(ad2),
+    );
     await expect(promise).rejects.toThrowError();
   });
 
@@ -510,18 +531,23 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
-    await session.account.deleteAuthDescriptor(ad2.id);
+    await session.account.deleteAuthDescriptor(deriveAuthDescriptorId(ad2));
 
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });
 
   it("Should be able to create same rules with different value", async () => {
-    const rules = allow.blockHeight
-      .greaterThan(1)
-      .and.blockHeight.greaterThan(10000)
-      .and.blockTime.greaterOrEqual(122222999).only;
+    const rules = and(
+      greaterThan(blockHeight(1)),
+      greaterThan(blockHeight(10000)),
+      greaterOrEqual(blockHeight(122222999)),
+    );
 
     const promise = getAuthedAccountsFromAuthDescriptorRule(rules);
 
@@ -529,15 +555,16 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("shouldn't be able to create too many rules", async () => {
-    let rules = allow.blockHeight
-      .greaterThan(1)
-      .and.blockHeight.greaterThan(10000)
-      .and.blockTime.greaterOrEqual(122222999);
+    let rules = and(
+      greaterThan(blockHeight(1)),
+      greaterThan(blockHeight(10000)),
+      greaterOrEqual(blockHeight(122222999)),
+    );
     for (let i = 0; i < 400; i++) {
-      rules = rules.and.blockHeight.greaterOrEqual(i);
+      rules = and(rules, greaterOrEqual(blockHeight(1)));
     }
 
-    const user = testUser(rules.only);
+    const user = testUser(rules);
     const account = await sourceAccount();
 
     await expect(
@@ -546,12 +573,13 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("shouldn't be able to create an account with a limited auth descriptor", async () => {
-    const rules = allow.operationCount.lessOrEqual(2).only;
     const sp = newSignatureProvider();
 
-    const ad = authDescriptor.create.singleSig
-      .withArgs(["A", "T"], sp.pubKey)
-      .andRules(rules);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      sp.pubKey,
+      lessOrEqual(opCount(2)),
+    );
 
     const promise = registerAccount(
       _connection.client,

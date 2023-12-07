@@ -5,6 +5,7 @@ import {
   formatter,
 } from "postchain-client";
 import { Buffer } from "buffer";
+import { getPubkey } from ".";
 
 function storeLocalStoragePrivateKey(privKey?: Buffer | string) {
   const kp = encryption.makeKeyPair(privKey);
@@ -20,7 +21,7 @@ export function clearLocalStorageSignatureProvider() {
 }
 
 export const createLocalStorageSignatureProvider = (
-  privKey?: Buffer | string
+  privKey?: Buffer | string,
 ): SignatureProvider => {
   const priv = localStorage.getItem("__localSigProvPrivKey");
   let kp: KeyPair;
@@ -29,7 +30,7 @@ export const createLocalStorageSignatureProvider = (
       throw new SignatureProviderError(
         "privKey was defined, but localStorage had one already in memory. " +
           "Please clear localStorage before setting a new privKey if you're sure " +
-          "you want to lose access to the old key pair."
+          "you want to lose access to the old key pair.",
       );
     }
     kp = encryption.makeKeyPair(priv);
@@ -39,7 +40,7 @@ export const createLocalStorageSignatureProvider = (
   }
 
   return Object.freeze({
-    pubKey: kp.pubKey,
+    pubKey: getPubkey(kp),
     sign: async (gtx: Buffer) =>
       encryption.signDigest(gtx, formatter.ensureBuffer(kp.privKey)),
   });

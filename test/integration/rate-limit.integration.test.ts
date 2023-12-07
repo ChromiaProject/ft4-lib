@@ -1,12 +1,12 @@
 import { IClient, Transaction } from "postchain-client";
 import { createConnection } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
-import AccountBuilder from "../util/account-builder";
-import TestUser, { User } from "../util/test-user";
-import { Config } from "/ft4/utils/types";
+import AccountBuilder from "/util/account-builder";
+import TestUser, { User } from "/util/test-user";
+import { BufferId, Config } from "/ft4/utils/types";
 import { ftAuth } from "/ft4/authentication";
-import { BufferId } from "/ft4/cryptoUtils";
 import { op } from "/ft4";
+import { deriveAuthDescriptorId } from "/ft4/accounts";
 import { useChromiaNode } from "/util/chromia-node";
 
 jest.setTimeout(2000000);
@@ -90,9 +90,9 @@ describe("Rate Limit", () => {
 
       const tx = {
         operations: [
-          ftAuth(account.id, user.authDescriptor.id),
+          ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
           op("test_authenticated_operation"),
-          ftAuth(account.id, user.authDescriptor.id),
+          ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
           op("test_authenticated_operation"),
         ],
         signers: [user.signatureProvider.pubKey],

@@ -327,7 +327,7 @@ describe("Transfer history", () => {
 
     const foundAccount = await connection.getAccountById(account1.id);
 
-    const history = await foundAccount.getTransferHistory();
+    const history = await foundAccount!.getTransferHistory();
 
     const entry = await foundAccount!.getTransferHistoryEntry(
       history.data[0].rowid,
