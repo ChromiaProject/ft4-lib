@@ -27,19 +27,21 @@ function serialize_rules(rules: list<rule_expression>): gtv {
 		return GTV_NULL;
 	}
 	if (rules.size() == 1) {
-			return rules[0].to_gtv();
+		return rule_expression_to_gtv(rules[0]);
 	}
 
 	val rules_gtv = ["and".to_gtv()];
 	for (rule in rules) {
-			rules_gtv.add([
-				rule.operator.name.to_gtv(),
-				rule.variable.name.to_gtv(),
-				rule.value.to_gtv()
-			].to_gtv());
+		rules_gtv.add(rule_expression_to_gtv(rule));
 	}
 	return rules_gtv.to_gtv();
 }
+
+function rule_expression_to_gtv(rule_expression): gtv = [
+        rule_expression.operator.name.to_gtv(),
+        rule_expression.variable.name.to_gtv(),
+        rule_expression.value.to_gtv()
+    ].to_gtv();
 
 function rule_expression_from_gtv(gtv) {
 	val components = list<gtv>.from_gtv(gtv);

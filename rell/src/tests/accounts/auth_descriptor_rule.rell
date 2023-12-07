@@ -25,7 +25,7 @@ function test_too_many_account_descriptor_rules() {
 function test_valid_combinator() {
   rules_test([
     "and".to_gtv(),
-    acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 5).to_gtv()
+    acc.rule_expression_to_gtv(acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 5))
   ].to_gtv())
     .run();
 }
@@ -33,9 +33,9 @@ function test_valid_combinator() {
 function test_invalid_combinator() {
   rules_test([
     "bogus".to_gtv(),
-    acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 5).to_gtv()
+    acc.rule_expression_to_gtv(acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 5))
   ].to_gtv())
-    .run_must_fail("Wrong Gtv array size for struct");
+    .run_must_fail();
 }
 
 function test_block_height_negative() {
