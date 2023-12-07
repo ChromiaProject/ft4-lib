@@ -32,7 +32,11 @@ function serialize_rules(rules: list<rule_expression>): gtv {
 
 	val rules_gtv = ["and".to_gtv()];
 	for (rule in rules) {
-			rules_gtv.add(rule.to_gtv());
+			rules_gtv.add([
+				rule.operator.name.to_gtv(),
+				rule.variable.name.to_gtv(),
+				rule.value.to_gtv()
+			].to_gtv());
 	}
 	return rules_gtv.to_gtv();
 }
