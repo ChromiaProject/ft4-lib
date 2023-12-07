@@ -1,39 +1,36 @@
+import { Buffer } from "buffer";
 import { formatter, IClient } from "postchain-client";
+import { balancesByAccountId } from "../asset/asset-queries";
 import {
-  accountById,
-  accountsByParticipantId,
-  RateLimitQuery,
+  createBalanceObject,
+  getBalanceByAccountId,
+} from "../asset/asset-query-functions";
+import { Balance, BalanceResponse } from "../asset/types";
+import { Connection, OptionalPageCursor } from "../types";
+import { getConfig } from "../utils";
+import { createEntityRetriever } from "../utils/entity-retriever";
+import { BufferId, PaginatedEntity } from "/ft4/utils/types";
+import * as Query from "./account-queries";
+import {
   accountAuthDescriptors,
   accountAuthDescriptorsByParticipantId,
+  accountById,
   accountsByAuthDescriptorId,
+  accountsByParticipantId,
+  RateLimitQuery,
 } from "./account-queries";
-import * as Query from "./account-queries";
-import { Account, RateLimit } from "./types";
-import { BufferId } from "../cryptoUtils";
-import { getConfig } from "../utils";
-import {
-  getBalanceByAccountId,
-  createBalanceObject,
-} from "../asset/asset-query-functions";
-import { Connection, OptionalPageCursor } from "../types";
 import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
 import { TransferHistoryFilter } from "./transfer-history/types";
-import {
-  AuthDescriptor,
-  AuthDescriptorResponse,
-  mapAuthDescriptors,
-} from "./auth-descriptor";
-import { createEntityRetriever } from "../utils/entity-retriever";
-import { Balance, BalanceResponse } from "../asset/types";
-import { balancesByAccountId } from "../asset/asset-queries";
-import { Buffer } from "buffer";
-import { PaginatedEntity } from "../utils/types";
+import { Account, RateLimit } from "./types";
+import { AnyAuthDescriptor, gtv } from "/ft4/accounts/auth-descriptor";
+import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
 import {
   PendingTransfer,
   PendingTransferResponse,
   pendingTransfersForAccount,
 } from "../crosschain";
 import { mapPendingTransfers } from "../crosschain/query-functions";
+import { mapAuthDescriptorsFromGtv } from "./auth-descriptor/gtv";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -87,12 +84,12 @@ export function createAccountObject(
       cursor: OptionalPageCursor = null,
     ) => {
       const retriever = createEntityRetriever<
-        AuthDescriptor,
-        AuthDescriptorResponse
+        AnyAuthDescriptor,
+        RawAnyAuthDescriptor
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
-        mapAuthDescriptors,
+        gtv.mapAuthDescriptorsFromGtv,
       );
       return retriever.retrieve(limit, cursor);
     },
@@ -177,8 +174,8 @@ export async function getAuthDescriptorsByParticipantId(
   participantId: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null,
-): Promise<PaginatedEntity<AuthDescriptor>> {
-  return createEntityRetriever<AuthDescriptor, AuthDescriptorResponse | null>(
+): Promise<PaginatedEntity<AnyAuthDescriptor>> {
+  return createEntityRetriever<AnyAuthDescriptor, RawAnyAuthDescriptor>(
     connection,
     accountAuthDescriptorsByParticipantId(
       accountId,
@@ -187,6 +184,6 @@ export async function getAuthDescriptorsByParticipantId(
       cursor,
     ),
     (authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
+      authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
   ).retrieve();
 }

@@ -1,14 +1,21 @@
 import { createAuthenticator } from "..";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
 import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import { LoginManger, LoginOptions } from "./types";
-import { createAccountObject } from "../../accounts/account-query-functions";
-import { FlagsType, authDescriptor } from "../../accounts/auth-descriptor";
-import { createAuthDataService, createSession } from "../../ft-session";
-import { Connection } from "../../types";
-import { hasAuthDescriptorFlags } from "../ft/key-handler";
+import { authDescriptorById } from "/ft4/accounts/account-queries";
+import { createAccountObject } from "/ft4/accounts/account-query-functions";
+import {
+  FlagsType,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
+import { createAuthDataService, createSession } from "/ft4/ft-session";
+import { Connection } from "/ft4/types";
+import { getPubkey } from "/ft4/utils";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -32,7 +39,7 @@ export function createLoginManager(
       // We need need an auth descriptor with admin flag in order to add a
       // disposable key
       const adminAuthDescriptor = authDescriptors.data.find((authDescriptor) =>
-        authDescriptor.flags.has(FlagsType.Account),
+        authDescriptor.args.flags.includes(FlagsType.Account),
       );
 
       if (!adminAuthDescriptor) {
@@ -43,7 +50,7 @@ export function createLoginManager(
         );
       }
 
-      let disposableKeyHandlers = [];
+      let disposableKeyHandlers: KeyHandler[] = [];
 
       const authDataService = createAuthDataService(connection);
       // Get list of flags that will be added to new auth descriptor
@@ -57,7 +64,7 @@ export function createLoginManager(
       if (keyPair) {
         const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
         const disposableAuthDescriptors =
-          await account.getAuthDescriptorsByParticipantId(keyPair.pubKey);
+          await account.getAuthDescriptorsByParticipantId(getPubkey(keyPair));
         disposableKeyHandlers = disposableAuthDescriptors.data
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
@@ -117,7 +124,7 @@ async function getFlags(
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
     );
-    return loginConfig.flags;
+    return loginConfig?.flags ?? [];
   }
 }
 
@@ -139,12 +146,18 @@ async function addDisposableAuthDescriptor(
   const keyPair = await loginKeyStore.createKeyPair(accountId);
   const ks = createInMemoryFtKeyStore(keyPair);
 
-  const ad = authDescriptor.create.singleSig.withArgs(
+  const registration = createSingleSigAuthDescriptorRegistration(
     flags,
-    keyPair.pubKey,
-  ).andNoRules;
+    getPubkey(keyPair),
+    null,
+  );
 
-  await session.account.addAuthDescriptor(ad, keyPair);
+  await session.account.addAuthDescriptor(registration, keyPair);
+  const ad = gtv.authDescriptorFromGtv(
+    await connection.query(
+      authDescriptorById(accountId, deriveAuthDescriptorId(registration)),
+    ),
+  );
 
   return ks.createKeyHandler(ad);
 }

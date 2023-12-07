@@ -87,10 +87,10 @@ describe("Asset", () => {
 
     const expectedAsset = await connection.getAssetById(assetId);
 
-    expect(expectedAsset.name).toEqual(assetName);
-    expect(expectedAsset.id).toEqual(assetId);
-    expect(expectedAsset.decimals).toEqual(3);
-    expect(expectedAsset.brid).toEqual(brid);
+    expect(expectedAsset!.name).toEqual(assetName);
+    expect(expectedAsset!.id).toEqual(assetId);
+    expect(expectedAsset!.decimals).toEqual(3);
+    expect(expectedAsset!.brid).toEqual(brid);
   });
 
   it("is returned when queried by symbol", async () => {

@@ -2,9 +2,9 @@ import { Buffer } from "buffer";
 import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "../events";
 import { OrchestratorError } from "./errors";
-import { BufferId } from "../cryptoUtils";
 import { TransactionBuilder } from "../utils/transaction-builder";
 import { Session } from "../types";
+import { BufferId } from "/ft4/utils/types";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -20,7 +20,7 @@ export type OrchestratorEvents = {
   TransferError: [OrchestratorError];
 };
 
-type OrchestratorState = {
+export type OrchestratorState = {
   currentHopIndex: number;
   path: Buffer[];
   tx?: RawGtx;

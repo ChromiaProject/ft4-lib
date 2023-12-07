@@ -34,11 +34,12 @@ import {
   Orchestrator,
   OrchestratorBase,
   OrchestratorEvents,
+  OrchestratorState,
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { BufferId } from "../cryptoUtils";
 import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
+import { BufferId } from "/ft4/utils/types";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -220,7 +221,7 @@ async function createBaseOrcestrator(
   session: Session,
   path: Buffer[],
 ): Promise<OrchestratorBase> {
-  const state = {
+  const state: OrchestratorState = {
     currentHopIndex: 0,
     path,
     tx: undefined,
@@ -295,6 +296,11 @@ async function createBaseOrcestrator(
   }
 
   async function walkPath() {
+    if (!state.initialTx) {
+      throw new OrchestratorError(
+        "Unable to perform transfer as no initial tx supplied",
+      );
+    }
     for (
       let hopIndex = state.currentHopIndex;
       hopIndex < path.length;
@@ -379,7 +385,7 @@ async function createBaseOrcestrator(
 
     await new Promise<void>((resolve) => {
       tb.add(iccfOp)
-        .add(completeTransferOp(tx, transfer?.opIndex || 1), () => {
+        .add(completeTransferOp(tx, transfer?.opIndex ?? 1), () => {
           resolve();
         })
         .add(nop())

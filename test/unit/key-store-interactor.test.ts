@@ -15,7 +15,7 @@ describe("Key store interactor", () => {
 
   describe("account updates", () => {
     it("emits a new interactor on account change", async () => {
-      let handler = undefined;
+      let handler: ((...args: any[]) => void) | undefined = undefined;
       const providerMock: Partial<Eip1193Provider> = {
         request: jest
           .fn()
@@ -24,7 +24,7 @@ describe("Key store interactor", () => {
         once: (eventName: string, h: (...args: any[]) => void) => {
           expect(eventName).toBe("accountsChanged");
           handler = h;
-          return this;
+          return {} as Eip1193Provider;
         },
       };
       const keyStore = await createWeb3ProviderEvmKeyStore(
@@ -43,7 +43,7 @@ describe("Key store interactor", () => {
         });
       });
 
-      handler();
+      handler!();
 
       await promise;
       expect(callback).toHaveBeenCalled();
