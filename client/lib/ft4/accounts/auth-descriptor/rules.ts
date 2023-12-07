@@ -1,4 +1,4 @@
-import { AuthDescriptorRule, AuthDescriptorNullRule } from "./types";
+import { AuthDescriptorRule } from "./types";
 
 export enum RuleVariables {
   BlockHeight = 0,
@@ -16,7 +16,7 @@ export enum RuleOperator {
 
 export const allow = {
   ...chooseVariable(),
-  all: null as AuthDescriptorNullRule,
+  all: null,
 };
 
 function chooseOperator(start: any[], variable: number) {

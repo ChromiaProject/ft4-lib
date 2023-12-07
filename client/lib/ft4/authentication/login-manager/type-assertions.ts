@@ -1,13 +1,5 @@
-import {
-  LoginConfigNullRule,
-  LoginConfigRule,
-  LoginConfigSimpleRule,
-} from "./types";
-import {
-  AuthDescriptorNullRule,
-  AuthDescriptorRule,
-  AuthDescriptorSimpleRule,
-} from "/ft4/accounts";
+import { LoginConfigRule, LoginConfigSimpleRule } from "./types";
+import { AuthDescriptorRule, AuthDescriptorSimpleRule } from "/ft4/accounts";
 
 export function isLoginConfigRule(
   rule: LoginConfigSimpleRule | AuthDescriptorSimpleRule,
@@ -23,6 +15,6 @@ export function isSimpleRule(
 
 export function isNullRule(
   rule: LoginConfigRule | AuthDescriptorRule,
-): rule is LoginConfigNullRule | AuthDescriptorNullRule {
+): rule is null {
   return rule === null;
 }

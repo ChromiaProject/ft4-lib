@@ -212,23 +212,27 @@ async function ensureAuthDescriptorRule(
     return rule;
   }
 
-  const [operator, variable, loginValue] = rule;
+  const { operator, variable, value } = rule;
 
-  let value: number;
+  let finalValue: number;
   if (variable === RuleVariables.OpCount) {
-    value = parseInt(loginValue);
+    finalValue = parseInt(value);
   } else if (variable === RuleVariables.BlockTime) {
-    const num = parseInt(loginValue.replace(/[{}]/g, ""));
-    value = Date.now() + num;
+    const num = parseInt(value.replace(/[{}]/g, ""));
+    finalValue = Date.now() + num;
   } else if (variable === RuleVariables.BlockHeight) {
     const blockHeight = await getBlockHeight();
-    const num = parseInt(loginValue.replace(/[{}]/g, ""));
-    value = blockHeight + num;
+    const num = parseInt(value.replace(/[{}]/g, ""));
+    finalValue = blockHeight + num;
   } else {
     throw new LoginConfigError("unexpected variable: " + variable);
   }
 
-  return [operator, variable, value] as unknown as AuthDescriptorSimpleRule;
+  return [
+    operator,
+    variable,
+    finalValue,
+  ] as unknown as AuthDescriptorSimpleRule;
 }
 
 async function addDisposableAuthDescriptor(
@@ -274,7 +278,11 @@ export const days = (d: number) => d * hours(24);
 export const weeks = (w: number) => w * days(7);
 
 export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
-  return [RuleOperator.LessThan, RuleVariables.BlockTime, `{${ttl}}`];
+  return {
+    operator: RuleOperator.LessThan,
+    variable: RuleVariables.BlockTime,
+    value: `{${ttl}}`,
+  };
 }
 
 //TODO: Add conversion AuthDescriptorRule -> LoginConfigRule after new rules PR
