@@ -20,10 +20,9 @@ import {
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
-  AnySig,
   AuthDescriptor,
   AuthDescriptorRegistration,
-  AuthDescriptorRule,
+  AuthDescriptorRules,
   MultiSig,
   SingleSig,
 } from "/ft4/accounts/auth-descriptor/types";
@@ -97,7 +96,7 @@ export {
 
 export function createTestAuthDescriptor(
   flags: string[] = [],
-  rules: AuthDescriptorRule | null = null,
+  rules: AuthDescriptorRules | null = null,
 ): {
   keyPair: KeyPair;
   authDescriptor: AuthDescriptor<SingleSig>;
@@ -110,7 +109,11 @@ export function createTestAuthDescriptor(
   );
   return {
     keyPair,
-    authDescriptor: { ...ad, id: deriveAuthDescriptorId(ad), created: 0 },
+    authDescriptor: {
+      ...ad,
+      id: deriveAuthDescriptorId(ad),
+      created: new Date(0),
+    },
   };
 }
 
@@ -134,13 +137,13 @@ export function createTestMultisigAuthDescriptorRegistration(
   return { keyPairs, authDescriptorRegistration: descriptor };
 }
 
-export function testAdFromRegistration<T extends AnySig>(
+export function testAdFromRegistration<T extends SingleSig | MultiSig>(
   reg: AuthDescriptorRegistration<T>,
 ): AuthDescriptor<T> {
   return {
     ...reg,
     id: deriveAuthDescriptorId(reg as any),
-    created: Date.now(),
+    created: new Date(),
   };
 }
 
@@ -173,7 +176,7 @@ export async function addAuthDescriptorTo(
 
   const tx = await transactionBuilder(authenticator, client)
     .add(addAuthDescriptor(newUser.authDescriptor))
-    .addSigners(keyHandlerUser2)
+    .addSigners(keyHandlerUser2.keyStore)
     .build();
   return client.sendTransaction(tx);
 }

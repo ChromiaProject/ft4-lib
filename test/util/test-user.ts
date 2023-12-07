@@ -7,27 +7,24 @@ import {
   SignatureProvider,
 } from "postchain-client";
 import {
-  AuthDescriptorRule,
+  AuthDescriptorRules,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   FlagsType,
-  SingleSigAuthDescriptorArgs,
+  SingleSig,
 } from "/ft4/accounts/auth-descriptor";
-import {
-  AuthDescriptor,
-  ComplexAuthDescriptorRule,
-} from "/ft4/accounts/auth-descriptor/types";
+import { AuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
 import { KeyManager } from "/ft4/accounts/auth/types";
 
 export default function singleSigUser(
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null = null,
+  rule: AuthDescriptorRules | null = null,
 ): User {
   return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
 
 export function newSingleSigUser(
   keyPair: KeyPair,
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null = null,
+  rule: AuthDescriptorRules | null = null,
 ): User {
   const km = {
     flags: new Set([FlagsType.Account, FlagsType.Transfer]),
@@ -54,7 +51,7 @@ export function newSingleSigUser(
     authDescriptor: {
       ...singleSigAuthDescriptor,
       id: deriveAuthDescriptorId(singleSigAuthDescriptor),
-      created: Date.now(),
+      created: new Date(),
     },
   };
 }
@@ -62,5 +59,5 @@ export function newSingleSigUser(
 export type User = {
   signatureProvider: SignatureProvider;
   keyManagers: KeyManager[];
-  authDescriptor: AuthDescriptor<SingleSigAuthDescriptorArgs>;
+  authDescriptor: AuthDescriptor<SingleSig>;
 };

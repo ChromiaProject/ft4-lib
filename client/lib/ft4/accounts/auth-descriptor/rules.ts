@@ -1,9 +1,9 @@
 import {
-  AuthDescriptorAndRule,
-  AuthDescriptorRule,
-  ComplexAuthDescriptorRule,
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
   RuleOperator,
   RuleVariable,
+  AuthDescriptorRules,
 } from "./types";
 
 type RuleVariableValue = [RuleVariable, number];
@@ -50,7 +50,8 @@ export const opCount = (value: number): RuleVariableValue => [
  */
 export const lessThan = (
   ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorRule => produceRule(RuleOperator.LessThan, ...variableValue);
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.LessThan, ...variableValue);
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -61,7 +62,7 @@ export const lessThan = (
  */
 export const lessOrEqual = (
   ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorRule =>
+): AuthDescriptorSimpleRule =>
   produceRule(RuleOperator.LessOrEqual, ...variableValue);
 
 /**
@@ -73,7 +74,8 @@ export const lessOrEqual = (
  */
 export const equals = (
   ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorRule => produceRule(RuleOperator.Equals, ...variableValue);
+): AuthDescriptorSimpleRule =>
+  produceRule(RuleOperator.Equals, ...variableValue);
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -84,7 +86,7 @@ export const equals = (
  */
 export const greaterThan = (
   ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorRule =>
+): AuthDescriptorSimpleRule =>
   produceRule(RuleOperator.GreaterThan, ...variableValue);
 
 /**
@@ -96,7 +98,7 @@ export const greaterThan = (
  */
 export const greaterOrEqual = (
   ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorRule =>
+): AuthDescriptorSimpleRule =>
   produceRule(RuleOperator.GreaterOrEqual, ...variableValue);
 
 /**
@@ -118,17 +120,18 @@ export const greaterOrEqual = (
  * @returns a set of rules which will be evaluated together using the 'and' operator
  */
 export const and = (
-  ...rules: (AuthDescriptorRule | ComplexAuthDescriptorRule)[]
-): AuthDescriptorAndRule => {
+  ...rules: AuthDescriptorRules[]
+): AuthDescriptorComplexRule => {
   return {
-    and: rules,
+    operator: "and",
+    rules,
   };
 };
 
 const produceRule = (
   operator: RuleOperator,
   ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorRule => {
+): AuthDescriptorSimpleRule => {
   const isNested = (
     variableValue: RuleVariableValue | [RuleVariableValue],
   ): variableValue is [RuleVariableValue] => Array.isArray(variableValue[0]);

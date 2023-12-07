@@ -35,34 +35,32 @@ export class AuthDescriptorError extends Error {
 
 // ======== Client side data model ============
 
-export type AuthDescriptorRule = {
+export type AuthDescriptorSimpleRule = {
   variable: RuleVariable;
   operator: RuleOperator;
   value: number;
 };
 
-export type AuthDescriptorAndRule = {
-  and: (AuthDescriptorRule | ComplexAuthDescriptorRule)[];
-  or?: never;
+export type AuthDescriptorComplexRule = {
+  operator: "and";
+  rules: AuthDescriptorRules[];
 };
-// type AuthDescriptorOrRule = {
-//   and?: never
-//   or: ComplexAuthDescriptorRule[]
-// }
-export type ComplexAuthDescriptorRule = AuthDescriptorAndRule; // | AuthDescriptorOrRule
+export type AuthDescriptorRules =
+  | AuthDescriptorSimpleRule
+  | AuthDescriptorComplexRule;
 
-export type AuthDescriptor<T extends AnySig> = {
+export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
   authType: AuthType;
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null;
-  created: number;
+  rules: AuthDescriptorRules | null;
+  created: Date;
   args: T;
 };
 
-export type AuthDescriptorRegistration<T extends AnySig> = {
+export type AuthDescriptorRegistration<T extends SingleSig | MultiSig> = {
   authType: AuthType;
   args: T;
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null;
+  rules: AuthDescriptorRules | null;
 };
 
 export type AnyAuthDescriptor =
@@ -72,32 +70,25 @@ export type AnyAuthDescriptorRegistration =
   | AuthDescriptorRegistration<SingleSig>
   | AuthDescriptorRegistration<MultiSig>;
 
-export type AnySig = SingleSig | MultiSig;
-export type SingleSig = SingleSigAuthDescriptorArgs;
-export type MultiSig = MultiSigAuthDescriptorArgs;
-
-export type SingleSigAuthDescriptorArgs = {
+export type SingleSig = {
   flags: string[];
   signer: Buffer;
 };
 
-export type MultiSigAuthDescriptorArgs = {
+export type MultiSig = {
   flags: string[];
   signaturesRequired: number;
   signers: Buffer[];
 };
 
 // ======== Server side =======================
-export type RawMultiSigAuthDescriptorArgs = readonly [
+export type RawMultiSig = readonly [
   flags: string[],
   signaturesRequired: number,
   signers: Buffer[],
 ];
 
-export type RawSingleSigAuthDescriptorArgs = readonly [
-  flags: string[],
-  signer: Buffer,
-];
+export type RawSingleSig = readonly [flags: string[], signer: Buffer];
 
 export type RawAuthDescriptorRule = readonly [string, string, number];
 export type RawComplexAuthDescriptorRule = readonly [
@@ -107,10 +98,8 @@ export type RawComplexAuthDescriptorRule = readonly [
 
 // ======== Server side request model =========
 
-type RawAuthDescriptorAnyArgs =
-  | RawSingleSigAuthDescriptorArgs
-  | RawMultiSigAuthDescriptorArgs;
-export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorAnyArgs> =
+type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
+export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
   readonly [
     auth_type: number,
     args: T,
@@ -118,16 +107,16 @@ export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorAnyArgs> =
   ];
 
 export type RawAnyAuthDescriptorRegistration =
-  | RawAuthDescriptorRegistration<RawSingleSigAuthDescriptorArgs>
-  | RawAuthDescriptorRegistration<RawMultiSigAuthDescriptorArgs>;
+  | RawAuthDescriptorRegistration<RawSingleSig>
+  | RawAuthDescriptorRegistration<RawMultiSig>;
 
 // ======== Server side response model ========
 
 export type RawAnyAuthDescriptor =
-  | RawAuthDescriptor<RawSingleSigAuthDescriptorArgs>
-  | RawAuthDescriptor<RawMultiSigAuthDescriptorArgs>;
+  | RawAuthDescriptor<RawSingleSig>
+  | RawAuthDescriptor<RawMultiSig>;
 
-export type RawAuthDescriptor<T extends RawAuthDescriptorAnyArgs> = {
+export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   args: T;
   auth_type: string;
   created: number;

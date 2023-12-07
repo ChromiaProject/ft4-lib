@@ -58,7 +58,7 @@ export type TransactionBuilder = {
    * @param keyStores the key stores to use for signing
    * @returns an instance of the transaction builder object
    */
-  addSigners: (...keyStores: (KeyStore | KeyHandler)[]) => TransactionBuilder;
+  addSigners: (...keyStores: KeyStore[]) => TransactionBuilder;
   /**
    * Builds a transaction the same way as `buildUnsigned` and also signs it
    * using the same key handlers that were used to authorize the operations,

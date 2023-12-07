@@ -2,7 +2,7 @@ import {
   FlagsType,
   deriveAuthDescriptorId,
   AnyAuthDescriptorRegistration,
-  AuthDescriptorRule,
+  AuthDescriptorRules,
   createSingleSigAuthDescriptorRegistration,
 } from "/ft4/accounts/auth-descriptor";
 import { Asset, Balance, SupportedNumber } from "/ft4/asset/types";
@@ -34,7 +34,7 @@ import { testAdFromRegistration } from "./util";
 class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
-  private rules: AuthDescriptorRule | null = null;
+  private rules: AuthDescriptorRules | null = null;
   private participant: SignatureProvider = gtx.newSignatureProvider();
   private authDescInfo: {
     authDescriptor: AnyAuthDescriptorRegistration;
@@ -71,7 +71,7 @@ class AccountBuilder {
     return this;
   }
 
-  withRules(rules: AuthDescriptorRule): AccountBuilder {
+  withRules(rules: AuthDescriptorRules): AccountBuilder {
     this.rules = rules;
     return this;
   }

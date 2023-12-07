@@ -75,7 +75,7 @@ async function addAuthDescriptor(
   const newAuth = createAuthenticator(
     authenticator.accountId,
     authenticator.keyHandlers.concat(
-      newKeyStore.createKeyHandler(gtv.mapOneAuthDescriptor(ad)),
+      newKeyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
     ),
     authenticator.authDataService,
   );

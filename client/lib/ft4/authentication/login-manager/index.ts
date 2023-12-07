@@ -153,7 +153,7 @@ async function addDisposableAuthDescriptor(
   );
 
   await session.account.addAuthDescriptor(registration, keyPair);
-  const ad = gtv.mapOneAuthDescriptor(
+  const ad = gtv.authDescriptorFromGtv(
     await connection.query(
       authDescriptorById(accountId, deriveAuthDescriptorId(registration)),
     ),

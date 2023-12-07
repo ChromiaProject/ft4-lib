@@ -3,10 +3,7 @@ import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
 import { Asset } from "/ft4/asset/types";
 import { AuthenticatedAccount } from "/ft4/accounts/types";
-import {
-  AuthDescriptorRule,
-  ComplexAuthDescriptorRule,
-} from "/ft4/accounts/auth-descriptor/types";
+import { AuthDescriptorRules } from "/ft4/accounts/auth-descriptor/types";
 import { createAmount } from "/ft4/asset/amount";
 import { IClient, newSignatureProvider } from "postchain-client";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
@@ -55,7 +52,7 @@ function destinationAccount(): Promise<AuthenticatedAccount> {
 }
 
 async function getAuthedAccountsFromAuthDescriptorRule(
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule,
+  rule: AuthDescriptorRules,
 ): Promise<
   [limitedAccount: AuthenticatedAccount, accountAdmin: AuthenticatedAccount]
 > {

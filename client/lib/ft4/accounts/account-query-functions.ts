@@ -30,7 +30,7 @@ import {
   pendingTransfersForAccount,
 } from "../crosschain";
 import { mapPendingTransfers } from "../crosschain/query-functions";
-import { mapAuthDescriptors } from "./auth-descriptor/gtv";
+import { mapAuthDescriptorsFromGtv } from "./auth-descriptor/gtv";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -89,7 +89,7 @@ export function createAccountObject(
       >(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
-        gtv.mapAuthDescriptors,
+        gtv.mapAuthDescriptorsFromGtv,
       );
       return retriever.retrieve(limit, cursor);
     },
@@ -184,6 +184,6 @@ export async function getAuthDescriptorsByParticipantId(
       cursor,
     ),
     (authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
+      authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
   ).retrieve();
 }

@@ -2,30 +2,27 @@ import { Buffer } from "buffer";
 import { gtv as pclGtv } from "postchain-client";
 import {
   authDescriptorRegistrationToGtv,
-  mapAuthDescriptors,
-  mapOneAuthDescriptor,
+  mapAuthDescriptorsFromGtv,
+  authDescriptorFromGtv,
 } from "./gtv";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
-  AnySig,
   AuthDescriptor,
   AuthDescriptorError,
   AuthDescriptorRegistration,
-  AuthDescriptorRule,
   AuthType,
-  ComplexAuthDescriptorRule,
-  AuthDescriptorAndRule,
   FlagsType,
   RawAnyAuthDescriptor,
   RawAuthDescriptorRegistration,
   MultiSig,
-  MultiSigAuthDescriptorArgs,
   RuleOperator,
   RuleVariable,
   SingleSig,
-  SingleSigAuthDescriptorArgs,
   RawAnyAuthDescriptorRegistration,
+  AuthDescriptorRules,
+  AuthDescriptorComplexRule,
+  AuthDescriptorSimpleRule,
 } from "./types";
 import {
   isRawAnyAuthDescriptorRegistration,
@@ -73,12 +70,12 @@ export function deriveAuthDescriptorId(
 export function createSingleSigAuthDescriptorRegistration(
   flags: string[],
   signer: Buffer,
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null = null,
-): AuthDescriptorRegistration<SingleSigAuthDescriptorArgs> {
+  rules: AuthDescriptorRules | null = null,
+): AuthDescriptorRegistration<SingleSig> {
   return {
     authType: AuthType.SingleSig,
     args: { flags, signer },
-    rule,
+    rules,
   };
 }
 
@@ -92,12 +89,12 @@ export function createMultiSigAuthDescriptorRegistration(
   flags: string[],
   signers: Buffer[],
   signaturesRequired: number,
-  rule: AuthDescriptorRule | ComplexAuthDescriptorRule | null,
-): AuthDescriptorRegistration<MultiSigAuthDescriptorArgs> {
+  rules: AuthDescriptorRules | null,
+): AuthDescriptorRegistration<MultiSig> {
   return {
     authType: AuthType.MultiSig,
     args: { flags, signers, signaturesRequired },
-    rule,
+    rules,
   };
 }
 
@@ -123,19 +120,16 @@ export {
   FlagsType,
   SingleSig,
   MultiSig,
-  AnySig,
   AuthType,
   AuthDescriptor,
   RuleVariable,
   RuleOperator,
   AuthDescriptorError,
-  AuthDescriptorRule,
-  ComplexAuthDescriptorRule,
-  AuthDescriptorAndRule,
+  AuthDescriptorRules,
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
   AuthDescriptorRegistration,
   AnyAuthDescriptorRegistration,
-  SingleSigAuthDescriptorArgs,
-  MultiSigAuthDescriptorArgs,
   blockHeight,
   blockTime,
   opCount,
@@ -149,6 +143,6 @@ export {
 
 export const gtv = Object.freeze({
   authDescriptorRegistrationToGtv,
-  mapOneAuthDescriptor,
-  mapAuthDescriptors,
+  authDescriptorFromGtv,
+  mapAuthDescriptorsFromGtv,
 });

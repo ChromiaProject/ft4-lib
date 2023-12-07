@@ -63,8 +63,8 @@ const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
     flags: [] as string[],
     signer: Buffer.alloc(32, 0),
   },
-  rule: null,
-  created: 0,
+  rules: null,
+  created: new Date(0),
 });
 
 const noopKeyHandler: KeyHandler = Object.freeze({
