@@ -1,12 +1,11 @@
 import { RellOperation, encryption, gtx } from "postchain-client";
+import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
 import { ftAuth } from "/ft4/authentication/ft";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { op } from "/ft4/utils";
+import { txToBuffer } from "/ft4/utils/transaction-builder";
 import { createFakeAuthDataService } from "/util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "/util/util";
-import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
-import { txToBuffer } from "/ft4/utils/transaction-builder";
-import { createStubClient } from "/util/blockchain-util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -31,9 +30,11 @@ describe("FT key handler", () => {
   it("should sign transaction", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const client = await createStubClient();
     const transaction = {
-      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+      blockchainRid: Buffer.from(
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "hex",
+      ),
       operations: [] as RellOperation[],
       signers: aggregateSigners(authDescriptor),
       signatures: [] as Buffer[],

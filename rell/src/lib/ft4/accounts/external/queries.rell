@@ -58,10 +58,6 @@ query get_accounts_by_participant_id(id: byte_array, page_size: integer, page_cu
     );
 }
 
-query _get_accounts_by_auth_descriptor_id(id: byte_array) {
-    return accounts.account_auth_descriptor @* { id } ( .account.id );
-}
-
 query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         accounts.get_paginated_accounts_by_ad_id(id, page_size, page_cursor),
