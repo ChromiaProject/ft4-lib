@@ -45,8 +45,8 @@ export function getPubkey(keyPair: KeyPair): Buffer {
 type DeepReadonly<T> = T extends (infer R)[]
   ? DeepReadonlyArray<R>
   : T extends object
-  ? DeepReadonlyObject<T>
-  : T;
+    ? DeepReadonlyObject<T>
+    : T;
 
 interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
 
