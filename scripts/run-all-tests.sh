@@ -13,7 +13,11 @@ npx jest -maxWorkers=1 --testPathPattern=unit/
 
 # Running integration tests with Jest
 echo "Running integration tests..."
-TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/
+TESTCONTAINERS_RYUK_DISABLED=true \
+    npx jest \
+    -maxWorkers=1 \
+    --config=jest.config.integration.js \
+    --testPathPattern=integration/
 
 # Running E2E tests with Synpress
 echo "Running E2E tests..."
