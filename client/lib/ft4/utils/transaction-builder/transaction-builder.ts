@@ -112,9 +112,8 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(

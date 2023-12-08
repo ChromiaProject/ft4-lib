@@ -44,9 +44,8 @@ async function authorize(
   context: TxContext,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
   const nonce = await getNonce(
     authDataService,
     accountId,

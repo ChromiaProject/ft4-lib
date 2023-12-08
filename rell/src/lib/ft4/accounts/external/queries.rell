@@ -16,7 +16,7 @@ query get_account_rate_limit_last_update(account_id: byte_array) {
 }
 
 query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
-    return not accounts.has_violating_rules(accounts.account_auth_descriptor @ {
+    return not accounts.have_violating_rules(accounts.account_auth_descriptor @ {
         .account.id == account_id,
         .id == auth_descriptor_id
     });
