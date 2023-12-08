@@ -112,9 +112,8 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -169,20 +168,16 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
-  function addSigners(
-    ...signers: (KeyStore | KeyHandler)[]
-  ): TransactionBuilder {
+  function addSigners(...signers: KeyStore[]): TransactionBuilder {
     signers.forEach((signer) => this._keyhandlersUsed.push(signer));
     return this;
   }
 
-  async function buildWithSigners(...signers: KeyHandler[]) {
+  async function buildWithSigners(...keyStores: KeyStore[]) {
     const tx = await this.buildUnsigned();
-    tx.signers = [
-      ...new Set(signers.map((signer) => signer.getSigners()).flat()),
-    ];
+    tx.signers = [...new Set(keyStores.map((keyStore) => keyStore.id).flat())];
     tx.signatures = await Promise.all(
-      signers.map((handler: KeyHandler) => handler.sign(txToBuffer(tx))),
+      keyStores.map((handler: KeyStore) => handler.sign(txToBuffer(tx))),
     );
     return gtx.serialize(tx);
   }
