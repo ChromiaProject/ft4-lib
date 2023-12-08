@@ -1,5 +1,4 @@
 import { logger } from "postchain-client";
-import { version } from "./package.json";
 
 // Authentication module
 export {
@@ -8,12 +7,12 @@ export {
   EvmKeyStore,
   FtKeyStore,
   createAuthenticator,
-  createWeb3ProviderEvmKeyStore,
   createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
-  createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
+  createSessionStorageLoginKeyStore,
+  createWeb3ProviderEvmKeyStore,
   createEvmKeyHandler,
 } from "./authentication";
 
@@ -40,25 +39,50 @@ export {
 // Accounts module
 export {
   AuthDescriptor,
-  // TODO: Remove this export by merging
-  // [Refactor auth descriptor model](https://bitbucket.org/chromawallet/ft3-lib/pull-requests/266)
-  authDescriptor,
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  AuthDescriptorError,
+  AuthDescriptorRegistration,
+  AuthDescriptorRules,
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
+  AuthType,
   FlagsType,
   Account,
-  GtvAuthDescriptor,
+  MultiSig,
+  RuleOperator,
+  RuleVariable,
+  SingleSig,
   TransferHistoryEntry,
   TransferHistoryResponse,
   TransferHistoryType,
+  deriveAuthDescriptorId,
+  createSingleSigAuthDescriptorRegistration,
+  createMultiSigAuthDescriptorRegistration,
+  aggregateSigners,
+  blockHeight,
+  blockTime,
+  opCount,
+  lessThan,
+  lessOrEqual,
+  equals,
+  greaterThan,
+  greaterOrEqual,
+  and,
 } from "./accounts";
 
 // Root imports
-export { Session, Connection, OptionalPageCursor } from "./types";
+export {
+  Session,
+  Connection,
+  KeyStoreInteractor,
+  OptionalPageCursor,
+} from "./types";
 
 export {
   createConnection,
   createSession,
   createKeyStoreInteractor,
-  KeyStoreInteractor,
 } from "./ft-session";
 
 // Utils & Others
@@ -78,7 +102,6 @@ export {
 } from "./crosschain";
 
 export const ft = Object.freeze({
-  getClientVersion: () => version,
   setLogLevel: logger.setLogLevel,
 });
 

@@ -1,7 +1,7 @@
 import { Operation, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { KeyStore } from "../types";
 import { Buffer } from "buffer";
+import { BufferId } from "/ft4/utils/types";
 
 export function ftAuth(
   accountId: BufferId,

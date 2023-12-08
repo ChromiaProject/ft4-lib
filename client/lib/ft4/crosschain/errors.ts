@@ -19,26 +19,10 @@ export class OrchestratorError extends Error {
   }
 }
 
-export class FactoryError extends OrchestratorError {
-  constructor(message: string, originalError?: Error) {
-    super(message, originalError);
-  }
-}
+export class FactoryError extends OrchestratorError {}
 
-export class TransferExecutionError extends OrchestratorError {
-  constructor(message: string, originalError?: Error) {
-    super(message, originalError);
-  }
-}
+export class TransferExecutionError extends OrchestratorError {}
 
-export class InitTransferError extends TransferExecutionError {
-  constructor(message: string, originalError?: Error) {
-    super(message, originalError);
-  }
-}
+export class InitTransferError extends TransferExecutionError {}
 
-export class ApplyTransferError extends TransferExecutionError {
-  constructor(message: string, originalError?: Error) {
-    super(message, originalError);
-  }
-}
+export class ApplyTransferError extends TransferExecutionError {}

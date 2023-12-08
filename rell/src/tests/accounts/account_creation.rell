@@ -1,0 +1,27 @@
+@test module;
+
+import acc: ^^^.lib.ft4.accounts;
+import test_utils: ^^.assets.utils;
+import test_op: ^^.operations;
+import ^.helpers;
+
+function test_create_account_with_auth_in_operation_in_genesis_block() {
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  test_op.register_account_test(auth_descriptor)
+      .run();
+  assert_equals(acc.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), 0);
+}
+
+function test_create_account_with_auth_in_operation_after_genesis_block() {
+  rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
+
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  test_op.register_account_test(auth_descriptor)
+      .run();
+  assert_equals(acc.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), rell.test.DEFAULT_FIRST_BLOCK_TIME);
+}
+
+function test_create_account_auth_in_without_operation_in_genesis_block() {
+  val account_id = helpers.init_object.account_id;
+  assert_equals(acc.rl_state @ { .account.id == account_id } (.last_update), 0);
+}

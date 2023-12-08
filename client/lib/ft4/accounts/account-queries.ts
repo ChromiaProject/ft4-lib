@@ -1,9 +1,9 @@
-import { QueryObject, formatter } from "postchain-client";
-import { BufferId } from "../cryptoUtils";
-import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
-import { AuthDescriptorResponse } from "./auth-descriptor";
+import { QueryObject, formatter } from "postchain-client";
+import { OptionalPageCursor } from "/ft4/types";
 import { RateLimit } from "./types";
+import { RawAnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
+import { BufferId } from "/ft4//utils/types";
 
 export function RateLimitQuery(
   accountId: BufferId,
@@ -29,11 +29,18 @@ export function accountById(
 
 export function accountsByParticipantId(
   id: BufferId,
-): QueryObject<Buffer[], { id: Buffer }> {
+  limit: number,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  { id: Buffer }[],
+  { id: Buffer; page_size: number; page_cursor: OptionalPageCursor }
+> {
   return {
     name: "ft4.get_accounts_by_participant_id",
     args: {
       id: formatter.ensureBuffer(id),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }
@@ -76,15 +83,24 @@ export function isAuthDescriptorValid(
 export function accountAuthDescriptorsByParticipantId(
   accountId: BufferId,
   participantId: BufferId,
+  limit: number,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
-  AuthDescriptorResponse[],
-  { account_id: Buffer; participant_id: Buffer }
+  RawAnyAuthDescriptor[],
+  {
+    account_id: Buffer;
+    participant_id: Buffer;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
 > {
   return {
     name: "ft4.get_account_auth_descriptors_by_participant_id",
     args: {
       account_id: formatter.ensureBuffer(accountId),
       participant_id: formatter.ensureBuffer(participantId),
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }
@@ -94,8 +110,12 @@ export function accountAuthDescriptors(
   limit: number,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  AuthDescriptorResponse,
-  { id: Buffer; page_size: number; page_cursor: string | null }
+  RawAnyAuthDescriptor,
+  {
+    id: Buffer;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
 > {
   return {
     name: "ft4.get_account_auth_descriptors",
@@ -103,6 +123,19 @@ export function accountAuthDescriptors(
       id: formatter.ensureBuffer(accountId),
       page_size: limit,
       page_cursor: cursor,
+    },
+  };
+}
+
+export function authDescriptorById(
+  accountId: BufferId,
+  id: BufferId,
+): QueryObject<RawAnyAuthDescriptor, { account_id: Buffer; id: Buffer }> {
+  return {
+    name: "ft4.get_account_auth_descriptor_by_id",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      id: formatter.ensureBuffer(id),
     },
   };
 }

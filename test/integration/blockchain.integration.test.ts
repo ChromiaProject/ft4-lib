@@ -1,15 +1,16 @@
-import { version } from "../package.json";
 import { Connection } from "/ft4/types";
-import { createChromiaClient } from "./util/blockchain-util";
 import { Config } from "/ft4/utils/types";
-import { ft } from "/ft4";
 import { createConnection } from "/ft4/ft-session";
+import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;
 
 describe("Blockchain", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
+    const client = getClient();
+    connection = createConnection(client);
   });
   it("should provide info", async () => {
     const config = await connection.getConfig();
@@ -28,7 +29,5 @@ describe("Blockchain", () => {
     const info = await connection.getVersion();
 
     expect(info).toEqual("0.1.7");
-
-    expect(ft.getClientVersion()).toEqual(version);
   });
 });

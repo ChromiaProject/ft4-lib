@@ -1,15 +1,15 @@
-import { AuthDescriptor } from "../../../accounts/auth-descriptor/types";
-import { createFtKeyHandler } from "../key-handler";
-import { FtKeyStore } from "..";
+import { Buffer } from "buffer";
 import {
+  KeyPair,
   SignatureProvider,
   newSignatureProvider,
-  KeyPair,
 } from "postchain-client";
-import { Buffer } from "buffer";
+import { FtKeyStore } from "..";
+import { createFtKeyHandler } from "../key-handler";
+import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
 
 export function createInMemoryFtKeyStore(
-  keyHolder: KeyPair | SignatureProvider
+  keyHolder: KeyPair | SignatureProvider,
 ): FtKeyStore {
   const signatureProvider =
     "privKey" in keyHolder ? newSignatureProvider(keyHolder) : keyHolder;
@@ -22,8 +22,8 @@ export function createInMemoryFtKeyStore(
     // If transaction is signed on a different device, it would make sense to be able to display
     // transaction details, so user knows what is being signed.
     sign: (digestToSign: Buffer) => signatureProvider.sign(digestToSign),
-    createKeyHandler: (authDescriptor: AuthDescriptor) =>
-      createFtKeyHandler(authDescriptor, keyStore),
+    createKeyHandler: (ad: AnyAuthDescriptor) =>
+      createFtKeyHandler(ad, keyStore),
   });
 
   return keyStore;

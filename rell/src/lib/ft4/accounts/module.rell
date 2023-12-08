@@ -1,11 +1,16 @@
 @mount('ft')
 module;
 
+struct rate_limit_config {
+    active: boolean = true;
+	max_points: integer = 10;
+    recovery_time: integer = 5000;
+    points_at_account_creation: integer = 1;
+}
+
 struct module_args {
-	rate_limit_active: boolean = true;
-	rate_limit_max_points: integer = 10;
-    rate_limit_recovery_time: integer = 5000;
-    rate_limit_points_at_account_creation: integer = 1;
+	rate_limit: rate_limit_config = rate_limit_config();
+    max_auth_descriptor_rules: integer = 8;
 }
 
 import ^.auth;
@@ -52,7 +57,7 @@ entity rl_state {
 }
 
 
-function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
+function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): account_auth_descriptor {
     val id = auth_descriptor.hash();
 
     validate_auth_descriptor_args(auth_descriptor);
@@ -63,12 +68,12 @@ function add_auth_descriptor_to_account(account, auth_descriptor): byte_array {
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes(),
         rules = auth_descriptor.rules.to_gtv().to_bytes(),
-        created = op_context.last_block_time,
+        created = latest_time(),
         ctr = 0
     );
 
-    _add_auth_participant(account, auth_descriptor, account_auth_descriptor);
-    return id;
+    _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe);
+    return account_auth_descriptor;
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
@@ -91,28 +96,30 @@ function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_desc
     };
 }
 
-function create_account_with_auth(auth_descriptor): byte_array {
+function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = true);
+
+function _create_account_with_auth(auth_descriptor, safe: boolean = true): account {
     require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
     
     val id = auth_descriptor.hash();
     val acc = create account (id);
 
-    add_auth_descriptor_to_account(acc, auth_descriptor);
+    add_auth_descriptor_to_account(acc, auth_descriptor, safe);
 
-    val max_points = chain_context.args.rate_limit_max_points;
-    val recovery_time = chain_context.args.rate_limit_recovery_time;
-    val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
+    val max_points = chain_context.args.rate_limit.max_points;
+    val recovery_time = chain_context.args.rate_limit.recovery_time;
+    val points_at_start = chain_context.args.rate_limit.points_at_account_creation;
     
-    create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
+    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), max_points, recovery_time);
     
-    return id;
+    return acc;
 }
 
-function _add_auth_participant(account, auth_descriptor, account_auth_descriptor) {
+function _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
     val participants = get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
-    require(op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
+    require(not safe or op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
     for (participant in participants) {
-        require(op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
+        require(not safe or op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
         create auth_descriptor_participant(account_auth_descriptor, id = participant);
     }
 }
@@ -160,6 +167,20 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
     ) limit utils.fetch_data_size(page_size);
 }
 
+function get_paginated_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return auth_descriptor_participant @* {
+        .account_auth_descriptor.account.id == account_id,
+        .id == participant_id,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = get_auth_descriptor_data(.account_auth_descriptor.to_struct()).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     return (
         id = ad.id,
@@ -168,6 +189,19 @@ function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
         rules = gtv.from_bytes(ad.rules),
         created = ad.created
     );
+}
+
+function get_paginated_accounts_by_participant_id(id: byte_array, page_size: integer, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return auth_descriptor_participant @* {
+        id,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data=.account_auth_descriptor.account.to_struct().to_gtv_pretty(),
+            rowid=.rowid
+        )
+    ) limit utils.fetch_data_size(page_size); 
 }
 
 function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, page_cursor: text?) {
@@ -192,42 +226,11 @@ function validate_auth_descriptor_args(auth_descriptor) {
 
 namespace Unsafe {
     //WARNING: doesn't check that the account is being created by the owner(s)
-    function create_account_with_auth(auth_descriptor): byte_array {
-        require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
-        val id = auth_descriptor.hash();
-        val acc = create account (id);
-        _add_auth_descriptor(
-            acc, auth_descriptor
-        );
-        val max_points = chain_context.args.rate_limit_max_points;
-        val recovery_time = chain_context.args.rate_limit_recovery_time;
-        val points_at_start = chain_context.args.rate_limit_points_at_account_creation;
-        
-        create rl_state(acc, .points = points_at_start, .last_update = op_context.last_block_time, max_points, recovery_time);
-        
-        return id;
-    }
-
-    //WARNING: doesn't check that the auth_descriptor is being added by the participant(s) nor owner(s)
-    function _add_auth_descriptor(account, auth_descriptor): byte_array {
-        val id = auth_descriptor.hash();
-        
-        validate_auth_descriptor_args(auth_descriptor);
-        validate_auth_descriptor_rules(auth_descriptor.rules);
-        
-        val account_auth_descriptor = create account_auth_descriptor (
-            account, id,
-            auth_descriptor.auth_type,
-            args = auth_descriptor.args.to_gtv().to_bytes(),
-            rules = auth_descriptor.rules.to_gtv().to_bytes(),
-            created = op_context.last_block_time,
-            ctr = 0
-        );
-        
-        for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-            create auth_descriptor_participant(account_auth_descriptor, id = participant);
-        }
-        
-        return id;
-    }
+    function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = false);
 }
+
+function latest_time() =
+    if (op_context.exists and op_context.block_height > 0)
+        op_context.last_block_time
+    else
+        block @ {} (@max .timestamp) ?: 0;

@@ -1,0 +1,40 @@
+@test module;
+
+import ^^^.lib.ft4.assets;
+import assets_ext: ^^^.lib.ft4.assets.external;
+import ^.utils;
+import ^^^.lib.ft4.admin;
+
+val too_big = assets.max_asset_amount + 1;
+
+function test_get_asset_balance_no_account() {
+    val alice = utils.register_alice().account.id;
+    val asset = utils.create_asset("test", "TST", 0).id;
+
+    assert_null(assets_ext.get_asset_balance(x"abcd", asset));
+}
+
+function test_get_asset_balance_no_asset() {
+    val alice = utils.register_alice().account.id;
+    val asset = utils.create_asset("test", "TST", 0).id;
+
+    assert_null(assets_ext.get_asset_balance(alice, x"abcd"));
+}
+
+function test_get_asset_balance_zero() {
+    val alice = utils.register_alice().account.id;
+    val asset = utils.create_asset("test", "TST", 0).id;
+
+    assert_null(assets_ext.get_asset_balance(alice, asset));
+}
+
+function test_get_asset_balance_success() {
+    val alice = utils.register_alice().account.id;
+    val asset = utils.create_asset("test", "TST", 0).id;
+
+    admin.mint(alice, asset, 10L)
+        .sign(utils.admin_priv_key())
+        .run();
+    
+    assert_equals(assets_ext.get_asset_balance(alice, asset)?.amount, 10L);
+}

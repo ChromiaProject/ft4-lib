@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "es6",
+    "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
     "downlevelIteration": true,
+    "strictNullChecks": true,
     "lib": [
       "es2015",
       "es2019",

@@ -1,15 +1,14 @@
+import { IClient, formatter } from "postchain-client";
+import { TransferHistoryError, TransferHistoryRetriever } from "./interfaces";
+import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 import {
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
-  TransferHistoryType,
   TransferHistoryResponse,
+  TransferHistoryType,
 } from "./types";
-import { BufferId } from "../../cryptoUtils";
-import { IClient, formatter } from "postchain-client";
-import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
-import { TransferHistoryError, TransferHistoryRetriever } from "./interfaces";
-import { Buffer } from "buffer";
-import { OptionalPageCursor, PagedResponse } from "../../types";
+import { OptionalPageCursor, PagedResponse } from "/ft4/types";
+import { BufferId } from "/ft4/utils/types";
 
 export function createTransferHistoryRetriever(
   session: IClient,
