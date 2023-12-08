@@ -28,11 +28,15 @@ function getMocks() {
     accountId: Buffer.alloc(32),
     keyHandlers: [keyHandlerMock],
     authDataService: createFakeAuthDataService({}),
-    createSession: jest.fn(),
     getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
     getNonce: jest.fn(),
   };
-  return { authenticatorMock, keyHandlerMock, keyPair, authDescriptor };
+  return {
+    authenticatorMock,
+    keyHandlerMock,
+    keyPair,
+    authDescriptor,
+  };
 }
 
 describe("transaction builder", () => {
@@ -49,7 +53,7 @@ describe("transaction builder", () => {
 
   it("calls registered handler when block is anchored", async () => {
     const { authenticatorMock } = getMocks();
-    let callback = null;
+    let callback: jest.Mock<any, any, any> | null = null;
     const operation = nop();
 
     const promise = new Promise((resolve) => {

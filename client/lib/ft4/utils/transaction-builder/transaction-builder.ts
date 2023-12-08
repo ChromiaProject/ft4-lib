@@ -1,5 +1,9 @@
-import { Authenticator, KeyHandler } from "../../authentication/types";
-import { createNoopAuthenticator } from "../../authentication";
+import {
+  Authenticator,
+  KeyHandler,
+  KeyStore,
+  createNoopAuthenticator,
+} from "/ft4/authentication";
 import { Buffer } from "buffer";
 import {
   Operation,
@@ -15,7 +19,7 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxContext, TxBuilderTransaction } from "../types";
+import { TxContext, TxBuilderTransaction, BufferId } from "../types";
 import { OperationNotExistError } from "../errors";
 import {
   AnchoringTimeoutError,
@@ -26,7 +30,7 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRid } from "..";
-import { BufferId } from "../../cryptoUtils";
+import { txToBuffer } from ".";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -52,19 +56,23 @@ export function transactionBuilder(
     return this;
   }
 
-  function toPubkeys(keyHandlers: KeyHandler[]): Buffer[] {
+  function toPubkeys(keyHandlers: (KeyHandler | KeyStore)[]): Buffer[] {
     return keyHandlers
-      .map((handler) => handler.getSigners())
-      .filter((pubKey) => pubKey)
+      .map((handler) =>
+        isKeyHandler(handler) ? handler.getSigners() : handler.id,
+      )
+      .filter((pubKey): pubKey is Buffer[] => !!pubKey)
       .flat();
   }
 
-  async function buildUnsigned() {
+  async function buildUnsigned(): Promise<TxBuilderTransaction> {
     const [operations, keyHandlers] = await authenticateOperations(
       this._operations,
       this._context,
     );
+
     keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
+
     const txn: TxBuilderTransaction = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
@@ -104,9 +112,8 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
+      const keyHandler =
+        await authenticator.getKeyHandlerForOperation(operation);
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -132,14 +139,38 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx = await this.buildUnsigned();
-    await Promise.all(
-      this._keyhandlersUsed.map((handler: KeyHandler) => handler.sign(tx)),
+    const getKeyHandlersForSigners = (
+      keyhandlersUsed: (KeyHandler | KeyStore)[],
+      signers: Buffer[],
+    ) => {
+      const keyHandlers = keyhandlersUsed.reduce(
+        (acc, curr: KeyHandler | KeyStore) => {
+          if (isKeyHandler(curr)) {
+            return { [curr.keyStore.id.toString()]: curr, ...acc };
+          }
+          return { [curr.id.toString()]: curr, ...acc };
+        },
+        {},
+      );
+      return signers.map((pk) => keyHandlers[pk.toString()]);
+    };
+
+    const tx: TxBuilderTransaction = await this.buildUnsigned();
+    const keyHandlers = getKeyHandlersForSigners(
+      this._keyhandlersUsed,
+      tx.signers,
+    );
+    tx.signatures = await Promise.all(
+      keyHandlers.map((kh) => {
+        return kh.sign(txToBuffer(tx));
+      }),
     );
     return gtx.serialize(tx);
   }
 
-  function addSigners(...signers: KeyHandler[]): TransactionBuilder {
+  function addSigners(
+    ...signers: (KeyStore | KeyHandler)[]
+  ): TransactionBuilder {
     signers.forEach((signer) => this._keyhandlersUsed.push(signer));
     return this;
   }
@@ -149,7 +180,9 @@ export function transactionBuilder(
     tx.signers = [
       ...new Set(signers.map((signer) => signer.getSigners()).flat()),
     ];
-    await Promise.all(signers.map((handler: KeyHandler) => handler.sign(tx)));
+    tx.signatures = await Promise.all(
+      signers.map((handler: KeyHandler) => handler.sign(txToBuffer(tx))),
+    );
     return gtx.serialize(tx);
   }
 
@@ -207,9 +240,10 @@ export function transactionBuilder(
 
       if (isAnchored) {
         const proofCache = new Map<string, Operation>();
-        const createProof = async (brid: BufferId) => {
-          if (proofCache.has(brid.toString("hex")))
-            return proofCache.get(brid.toString("hex"));
+        const createProof = async (brid: BufferId): Promise<Operation> => {
+          if (proofCache.has(brid.toString("hex"))) {
+            return proofCache.get(brid.toString("hex"))!;
+          }
 
           const proof = await createIccfProofTx(
             directoryClient,
@@ -226,6 +260,7 @@ export function transactionBuilder(
         };
 
         operations.forEach((op: OperationContext, idx: number) => {
+          if (!op.onAnchoredHandler) return;
           op.onAnchoredHandler(
             {
               operation: op.operation,
@@ -241,6 +276,7 @@ export function transactionBuilder(
     }
 
     operations.forEach((op) => {
+      if (!op.onAnchoredHandler) return;
       op.onAnchoredHandler(
         null,
         new AnchoringTimeoutError(
@@ -293,3 +329,6 @@ export function transactionBuilder(
 
   return context as TransactionBuilder;
 }
+
+const isKeyHandler = (handler: KeyHandler | KeyStore): handler is KeyHandler =>
+  (handler as KeyStore).id === undefined;

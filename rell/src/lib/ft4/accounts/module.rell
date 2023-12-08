@@ -10,6 +10,7 @@ struct rate_limit_config {
 
 struct module_args {
 	rate_limit: rate_limit_config = rate_limit_config();
+    max_auth_descriptor_rules: integer = 8;
 }
 
 import ^.auth;
@@ -233,3 +234,5 @@ function latest_time() =
         op_context.last_block_time
     else
         block @ {} (@max .timestamp) ?: 0;
+
+function get_max_allowed_auth_descriptor_rules() = chain_context.args.max_auth_descriptor_rules;

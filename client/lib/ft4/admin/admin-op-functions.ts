@@ -1,10 +1,9 @@
 import { IClient, SignatureProvider } from "postchain-client";
-import { AuthDescriptor } from "../accounts/auth-descriptor";
-import * as ops from "./admin-operations";
-import { BufferId } from "../cryptoUtils";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
 import { Asset } from "../asset/types";
-import { TransactionCompletion } from "../utils/types";
+import * as ops from "./admin-operations";
+import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
+import { BufferId, TransactionCompletion } from "/ft4/utils/types";
 
 /**
  * registers a new account on the blockchain
@@ -19,7 +18,7 @@ import { TransactionCompletion } from "../utils/types";
 export async function registerAccount(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptorRegistration,
 ): Promise<TransactionCompletion> {
   return {
     receipt: await chromiaClient.signAndSendUniqueTransaction(

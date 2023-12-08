@@ -1,16 +1,15 @@
-import { BufferId } from "../../cryptoUtils";
-import { AuthDataService, KeyHandler, KeyStore } from "../types";
-import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
+import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { formatter, Operation } from "postchain-client";
-import { TxContext, TxBuilderTransaction } from "../../utils/types";
+import { AuthDataService, KeyHandler } from "../types";
+import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
+import { BufferId, TxContext } from "/ft4/utils/types";
 
 const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
   accountId.toString("hex") + authDescriptorId.toString("hex");
 
 export function createEvmKeyHandler(
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptor,
   keyStore: EvmKeyStore,
 ): KeyHandler {
   return Object.freeze({
@@ -32,8 +31,8 @@ export function createEvmKeyHandler(
         context,
         keyStore,
       ),
-    sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
-    getSigners: () => null,
+    sign: (transaction: Buffer) => Promise.resolve(transaction),
+    getSigners: () => [],
   });
 }
 
@@ -45,9 +44,8 @@ async function authorize(
   context: TxContext,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
   const nonce = await getNonce(
     authDataService,
     accountId,
@@ -68,13 +66,6 @@ async function authorize(
   const signature = await keyStore.signMessage(message);
   return [evmAuth(accountId, authDescriptorId, [signature]), operation];
 }
-
-/* eslint-disable */
-async function sign(
-  transaction: TxBuilderTransaction,
-  keyStore: KeyStore,
-): Promise<void> {}
-/* eslint-enable */
 
 async function getNonce(
   authDataService: AuthDataService,

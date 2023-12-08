@@ -1,10 +1,11 @@
-import { encryption, gtx } from "postchain-client";
-import { createTestAuthDescriptor } from "../util/util";
+import { RellOperation, encryption, gtx } from "postchain-client";
+import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
+import { ftAuth } from "/ft4/authentication/ft";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { op } from "/ft4/utils";
-import { ftAuth } from "/ft4/authentication/ft";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createStubClient } from "../util/blockchain-util";
+import { txToBuffer } from "/ft4/utils/transaction-builder";
+import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { createTestAuthDescriptor } from "/util/util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {
@@ -21,7 +22,7 @@ describe("FT key handler", () => {
     );
 
     expect(operations).toEqual([
-      ftAuth(accountId, authDescriptor.id),
+      ftAuth(accountId, deriveAuthDescriptorId(authDescriptor)),
       op("foo"),
     ]);
   });
@@ -29,22 +30,24 @@ describe("FT key handler", () => {
   it("should sign transaction", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
-    const client = await createStubClient();
     const transaction = {
-      blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
-      operations: [],
-      signers: authDescriptor.signers,
-      signatures: [],
+      blockchainRid: Buffer.from(
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        "hex",
+      ),
+      operations: [] as RellOperation[],
+      signers: aggregateSigners(authDescriptor),
+      signatures: [] as Buffer[],
     };
-    transaction.operations.push(op("foo"));
+    transaction.operations.push({ opName: "foo", args: [] });
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    await keyHandler.sign(transaction);
+    transaction.signatures = [await keyHandler.sign(txToBuffer(transaction))];
 
     const digestToSign = gtx.getDigestToSign(transaction);
-    const signature = encryption.signDigest(digestToSign, keyPair.privKey);
+    const signature2 = encryption.signDigest(digestToSign, keyPair.privKey);
 
-    expect(transaction.signatures).toEqual([signature]);
+    expect(transaction.signatures).toEqual([signature2]);
   });
 });

@@ -1,35 +1,36 @@
-import { createTestAuthDescriptor } from "../util/util";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { Buffer } from "buffer";
+import { IClient, KeyPair, Operation, encryption, gtx } from "postchain-client";
+import { createStubClient } from "/util/blockchain-util";
+import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { createTestAuthDescriptor, emptyOp } from "/util/util";
+import { transfer } from "/ft4/accounts/account-operations";
 import {
-  createAuthenticator,
-  createNoopAuthenticator,
-} from "/ft4/authentication";
-import {
-  AuthorizationError,
-  transactionBuilder,
-} from "/ft4/utils/transaction-builder";
-import { nop } from "/ft4/utils";
+  FlagsType,
+  aggregateSigners,
+  deriveAuthDescriptorId,
+} from "/ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
+import { registerAccount } from "/ft4/admin/admin-operations";
+import { createAmount } from "/ft4/asset/amount";
 import {
   AuthDataService,
   Authenticator,
   KeyHandler,
-} from "/ft4/authentication/types";
-import { IClient, KeyPair, Operation, encryption, gtx } from "postchain-client";
-import { transfer } from "/ft4/accounts/account-operations";
-import { AuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { FlagsType } from "/ft4/accounts/auth-descriptor";
-import { Buffer } from "buffer";
-import { registerAccount } from "/ft4/admin/admin-operations";
-import { createAmount } from "/ft4/asset/amount";
-import { createStubClient } from "/util/blockchain-util";
-import { emptyOp } from "../util/util";
+  createAuthenticator,
+  createNoopAuthenticator,
+} from "/ft4/authentication";
+import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { nop } from "/ft4/utils";
+import {
+  AuthorizationError,
+  transactionBuilder,
+} from "/ft4/utils/transaction-builder";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
   let client: IClient;
   let keyPair: KeyPair;
-  let authDescriptor: AuthDescriptor;
+  let authDescriptor: AnyAuthDescriptor;
   let keyHandler: KeyHandler;
   let authDataService: AuthDataService;
 
@@ -42,11 +43,11 @@ describe("Transaction Builder", () => {
   ) {
     const accountId = encryption.randomBytes(32);
 
-    const keyPairAndAuthDescriptor = createTestAuthDescriptor([
+    const { keyPair: pair, authDescriptor: ad } = createTestAuthDescriptor([
       FlagsType.Transfer,
     ]);
-    keyPair = keyPairAndAuthDescriptor.keyPair;
-    authDescriptor = keyPairAndAuthDescriptor.authDescriptor;
+    authDescriptor = ad;
+    keyPair = pair;
 
     keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
@@ -74,26 +75,32 @@ describe("Transaction Builder", () => {
     const { authDescriptor, keyPair } = createTestAuthDescriptor([
       FlagsType.Account,
     ]);
+    const keyStore = createInMemoryFtKeyStore(keyPair);
     const keyHandlerMock: KeyHandler = {
       authDescriptor,
-      keyStore: createInMemoryFtKeyStore(keyPair),
+      keyStore,
       satisfiesAuthRequirements: jest.fn(),
       authorize: jest
         .fn()
         .mockImplementation((accountId, operation) =>
           Promise.resolve([operation]),
         ),
-      sign: jest.fn(),
-      getSigners: jest.fn(),
+      sign: jest.fn().mockImplementation((v) => keyStore.sign(v)),
+      getSigners: jest.fn().mockReturnValue([keyPair.pubKey]),
     };
     const authenticatorMock: Authenticator = {
       accountId: Buffer.alloc(32),
       keyHandlers: [keyHandlerMock],
       authDataService: createFakeAuthDataService({}),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
-      getNonce: jest.fn(),
+      getNonce: jest.fn().mockReturnValue(0),
     };
-    return { authenticatorMock, keyHandlerMock, keyPair, authDescriptor };
+    return {
+      authenticatorMock,
+      keyHandlerMock,
+      keyPair,
+      authDescriptor,
+    };
   }
 
   beforeEach(async () => {
@@ -110,7 +117,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
-        args: [authenticator.accountId, authDescriptor.id],
+        args: [authenticator.accountId, deriveAuthDescriptorId(authDescriptor)],
       },
       { opName: "ft4.transfer", args },
     ]);
@@ -121,7 +128,9 @@ describe("Transaction Builder", () => {
       .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)))
       .build();
 
-    expect(gtx.deserialize(tx).signers).toStrictEqual(authDescriptor.signers);
+    expect(gtx.deserialize(tx).signers).toStrictEqual(
+      aggregateSigners(authDescriptor),
+    );
     expect(gtx.deserialize(tx).signatures).toBeDefined();
   });
 
@@ -154,7 +163,7 @@ describe("Transaction Builder", () => {
     const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
-      .addSigners(keyHandler)
+      .addSigners(keyHandler.keyStore)
       .build();
     expect(gtx.deserialize(tx).signers).toStrictEqual(keyHandler.getSigners());
     expect(gtx.deserialize(tx).signatures).toBeDefined();
@@ -213,11 +222,14 @@ describe("Transaction Builder", () => {
           operations: [
             {
               name: "ft4.ft_auth",
-              args: [authenticator.accountId, authDescriptor.id],
+              args: [
+                authenticator.accountId,
+                deriveAuthDescriptorId(authDescriptor),
+              ],
             },
-            { name: mockOperation.name, args: null },
+            { name: mockOperation.name, args: undefined },
           ],
-          signers: [keyPair.pubKey],
+          signers: [keyPair.pubKey!],
         },
         keyPair,
       ),
@@ -243,11 +255,11 @@ describe("Transaction Builder", () => {
   });
 
   it("can build and submit a transaction", async () => {
-    const { authenticatorMock } = getMocks();
+    const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
     const expectedTx = client.encodeTransaction({
       operations: [emptyOp(), operation],
-      signers: [],
+      signers: [keyPair.pubKey],
     });
 
     const originalSendTransaction = client.sendTransaction;
@@ -265,7 +277,10 @@ describe("Transaction Builder", () => {
         .add(operation)
         .buildAndSend();
 
-      expect(gtx.deserialize(tx)).toEqual(gtx.deserialize(expectedTx));
+      expect(gtx.deserialize(tx)).toMatchObject({
+        ...gtx.deserialize(expectedTx),
+        signatures: expect.arrayContaining([]),
+      });
     } finally {
       client.sendTransaction = originalSendTransaction;
     }

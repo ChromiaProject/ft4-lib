@@ -1,16 +1,22 @@
 import { newSignatureProvider } from "postchain-client";
-import { FlagsType, authDescriptor } from "/ft4/accounts/auth-descriptor";
+import {
+  FlagsType,
+  createSingleSigAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
-import AccountBuilder from "../util/account-builder";
 import { Connection } from "/ft4/types";
-import { createChromiaClient } from "../util/blockchain-util";
+import AccountBuilder from "/util/account-builder";
+import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;
 
 describe("Key store interactor", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
+    const client = getClient();
+    connection = createConnection(client);
   });
 
   it("should return one account if corresponding key is used in one account", async () => {
@@ -78,16 +84,18 @@ describe("Key store interactor", () => {
       .withParticipant(keyPair1)
       .build();
 
-    const ad1 = authDescriptor.create.singleSig.withArgs(
+    const ad1 = createSingleSigAuthDescriptorRegistration(
       ["M"],
       keyPair1.pubKey,
-    ).andNoRules;
+      null,
+    );
     await account.addAuthDescriptor(ad1, keyPair1);
 
-    const ad2 = authDescriptor.create.singleSig.withArgs(
+    const ad2 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Transfer],
       keyPair2.pubKey,
-    ).andNoRules;
+      null,
+    );
     await account.addAuthDescriptor(ad2, keyPair2);
 
     const session = await createKeyStoreInteractor(
