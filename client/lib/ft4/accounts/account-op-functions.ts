@@ -30,7 +30,7 @@ export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator,
 ): AuthenticatedAccount {
-  return {
+  return Object.freeze({
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AnyAuthDescriptorRegistration,
@@ -46,7 +46,7 @@ export function createAuthenticatedAccount(
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
-  };
+  });
 }
 
 async function addAuthDescriptor(
