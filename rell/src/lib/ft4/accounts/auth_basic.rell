@@ -97,7 +97,7 @@ function check_auth_args(a_t: auth_type, args: byte_array, participants: list<by
  * 4. Clean away expired Auth Descs on the account.
  */
 function require_auth(account, account_auth_descriptor, required_flags: list<text>) {
-	require(not is_violating_rules(account_auth_descriptor), "The rules for this auth descriptor has been violated");
+	require(not has_violating_rules(account_auth_descriptor), "The rules for this auth descriptor has been violated");
 
 	val result: utils.validation_result = check_auth_args(
        		account_auth_descriptor.auth_type,
