@@ -38,6 +38,7 @@ import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { BufferId } from "/ft4/utils/types";
 
 function generateNumber(): number {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2); // sleep for 2 milliseconds
   return Date.now();
 }
 
@@ -46,7 +47,7 @@ function generateAssetName(prefix = "CHROMA"): string {
 }
 
 function generateAssetSymbol(): string {
-  return `C${generateNumber()}${generateNumber()}`;
+  return `C${generateNumber()}`;
 }
 
 function generateId(): Buffer {
