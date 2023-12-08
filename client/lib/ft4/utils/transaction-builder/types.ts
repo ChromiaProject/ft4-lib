@@ -15,7 +15,7 @@ import {
 
 export type TransactionBuilder = {
   _operations: OperationContext[];
-  _keyhandlersUsed: (KeyStore | KeyHandler)[];
+  _keysUsed: (KeyStore | KeyHandler)[];
   _context: TxContext;
   _noopAuthenticator: Authenticator;
 
@@ -82,15 +82,6 @@ export type TransactionBuilder = {
    * and which consequently should sign the transaction.
    */
   keyHandlersUsed: () => KeyHandler[];
-
-  /**
-   * Builds a transaction and signs it with the keystores provided.
-   * When using this function, the builder will completely ignore any
-   * other keystores previously provided.
-   * @param keyStores the keystores to user
-   * @returns a signed transaction
-   */
-  buildWithSigners: (...keystores: KeyStore[]) => Promise<SignedTransaction>;
 
   /**
    * Build the transaction and submits it to the blockchain. Will return
