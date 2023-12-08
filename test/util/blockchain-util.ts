@@ -10,7 +10,7 @@ import { createConnection } from "/ft4/ft-session";
 import { Asset } from "/ft4/asset/types";
 import adminUser from "./admin_user";
 import { registerAsset } from "/ft4/admin/admin-op-functions";
-import { BufferId } from "/ft4/cryptoUtils";
+import { BufferId } from "/ft4/utils/types";
 import { createClient } from "postchain-client";
 
 export async function createChromiaClientToMultichain(
@@ -61,6 +61,9 @@ export async function getNewAsset(
     formatter.ensureBuffer(client.config.blockchainRid),
   ]);
   const asset = await createConnection(client).getAssetById(id);
+  if (!asset) {
+    throw new Error("Unable to fetch the new asset");
+  }
   return asset;
 }
 
@@ -76,9 +79,9 @@ export function anchoredHandlerCallbackParameters(
       [
         Buffer.from(client.config.blockchainRid, "hex"),
         operations.map((o) => [o.name, o.args]),
-        [],
+        expect.any(Array),
       ],
-      [],
+      expect.any(Array),
     ]),
   });
 }

@@ -137,7 +137,7 @@ namespace test_basic_functionality {
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
     val rule_list = list<accounts.rule_expression>();
-    for (i in range(accounts.MAX_AD_RULES)) {
+    for (i in range(accounts.get_max_allowed_auth_descriptor_rules())) {
       rule_list.add(
         accounts.rule_expression(
           accounts.rule_variable.block_height,
@@ -324,16 +324,6 @@ namespace test_deletion_after_expiration {
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([
           less_than(block_height(0))
-        ])
-      ),
-      add_expiring_auth_descriptor(account, 
-        accounts.serialize_rules([
-          less_than(op_count(0))
-        ])
-      ),
-      add_expiring_auth_descriptor(account, 
-        accounts.serialize_rules([
-          greater_than(op_count(100))
         ])
       )
     ];

@@ -284,8 +284,8 @@ function test_it_creates_gtv_from_single_rule() {
   assert_equals(
     serialize_rules([expr]),
     [
-      rule_operator.lt.to_gtv(),
-      rule_variable.op_count.to_gtv(),
+      rule_operator.lt.name.to_gtv(),
+      rule_variable.op_count.name.to_gtv(),
       0x1.to_gtv()
     ].to_gtv()
   );
@@ -299,13 +299,13 @@ function test_it_creates_gtv_from_multiple_rules() {
     [
       "and".to_gtv(),
       [
-        rule_operator.lt.to_gtv(),
-        rule_variable.op_count.to_gtv(),
+        rule_operator.lt.name.to_gtv(),
+        rule_variable.op_count.name.to_gtv(),
         0x1.to_gtv()
       ].to_gtv(),
       [
-        rule_operator.lt.to_gtv(),
-        rule_variable.op_count.to_gtv(),
+        rule_operator.lt.name.to_gtv(),
+        rule_variable.op_count.name.to_gtv(),
         0x2.to_gtv()
       ].to_gtv()
     ].to_gtv()

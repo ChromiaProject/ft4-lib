@@ -1,15 +1,23 @@
-import { BufferId } from "../../cryptoUtils";
-import { AuthDataService, KeyHandler, KeyStore } from "../types";
-import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
-import { Operation, SignatureProvider, gtx } from "postchain-client";
 import { Buffer } from "buffer";
+import { Operation, SignatureProvider } from "postchain-client";
 import { ftAuth } from ".";
-import { TxContext, TxBuilderTransaction } from "../../utils/types";
+import { AuthDataService, KeyHandler, KeyStore } from "../types";
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  aggregateSigners,
+  deriveAuthDescriptorId,
+  gtv,
+} from "/ft4/accounts/auth-descriptor";
+import { BufferId, TxContext } from "/ft4/utils/types";
 
 export function createFtKeyHandler(
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptor,
   keyStore: FtKeyStore,
 ): KeyHandler {
+  const adId = deriveAuthDescriptorId(
+    gtv.authDescriptorRegistrationToGtv(authDescriptor),
+  );
   return Object.freeze({
     authDescriptor,
     keyStore,
@@ -20,9 +28,9 @@ export function createFtKeyHandler(
       operation: Operation,
       _context: TxContext,
       _authDataService: AuthDataService,
-    ) => authorize(accountId, authDescriptor.id, operation),
-    sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
-    getSigners: () => authDescriptor.signers,
+    ) => authorize(accountId, adId, operation),
+    sign: (transaction: Buffer) => keyStore.sign(transaction), //sign(transaction, keyStore),
+    getSigners: () => aggregateSigners(authDescriptor),
   });
 }
 
@@ -34,26 +42,13 @@ async function authorize(
   return [ftAuth(accountId, authDescriptorId), operation];
 }
 
-async function sign(
-  transaction: TxBuilderTransaction,
-  keyStore: FtKeyStore,
-): Promise<void> {
-  transaction.signatures.push(
-    await keyStore.sign(
-      gtx.getDigestToSign({
-        blockchainRid: transaction.blockchainRid,
-        signers: transaction.signers,
-        operations: transaction.operations,
-      }),
-    ),
-  );
-}
-
 export function hasAuthDescriptorFlags(
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
   requiredFlags: string[],
 ): boolean {
-  return requiredFlags.every((flag) => authDescriptor.flags.has(flag));
+  return requiredFlags.every((flag) =>
+    authDescriptor.args.flags.includes(flag),
+  );
 }
 
 export interface FtKeyStore extends KeyStore, SignatureProvider {

@@ -36,6 +36,13 @@ query get_account_auth_descriptors_by_participant_id(account_id: byte_array, par
     );
 }
 
+query get_account_auth_descriptor_by_id(account_id: byte_array, id: byte_array) {
+    return accounts.account_auth_descriptor @ {
+        .id == id,
+        .account.id == account_id
+    } ( accounts.get_auth_descriptor_data($.to_struct()) );
+}
+
 query get_account_by_id(id: byte_array) {
     return accounts.account @? { id } ( .id );
 }
@@ -49,10 +56,6 @@ query get_accounts_by_participant_id(id: byte_array, page_size: integer, page_cu
         accounts.get_paginated_accounts_by_participant_id(id, page_size, page_cursor),
         page_size
     );
-}
-
-query _get_accounts_by_auth_descriptor_id(id: byte_array) {
-    return accounts.account_auth_descriptor @* { id } ( .account.id );
 }
 
 query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer, page_cursor: text?) {

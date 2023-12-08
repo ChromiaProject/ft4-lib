@@ -1,29 +1,29 @@
-import testUser from "../util/test-user";
+import { IClient, newSignatureProvider } from "postchain-client";
 import AccountBuilder from "../util/account-builder";
-import { Connection } from "/ft4/types";
-import { Asset } from "/ft4/asset/types";
-import { AuthenticatedAccount } from "/ft4/accounts/types";
-import { AuthDescriptorRule } from "/ft4/accounts/auth-descriptor/types";
-import { getNewAsset, createChromiaClient } from "../util/blockchain-util";
-import { allow } from "/ft4/accounts/auth-descriptor/rules";
-import { IClient } from "postchain-client";
-import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
-import {
-  createAuthDataService,
-  createConnection,
-  createSession,
-} from "/ft4/ft-session";
+import adminUser from "../util/admin_user";
+import testUser from "../util/test-user";
 import {
   addAuthDescriptorTo,
   createAccount,
   createTestAuthDescriptor,
 } from "../util/util";
+import { addRateLimitPoints } from "/ft4";
+import { deriveAuthDescriptorId, lessOrEqual, opCount } from "/ft4/accounts";
+import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
+import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
+import { AuthDescriptorRules } from "/ft4/accounts/auth-descriptor/types";
+import { AuthenticatedAccount } from "/ft4/accounts/types";
+import { Asset } from "/ft4/asset/types";
 import { createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { newSignatureProvider } from "postchain-client";
-import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
-import adminUser from "../util/admin_user";
-import { addRateLimitPoints } from "/ft4";
+import {
+  createAuthDataService,
+  createConnection,
+  createSession,
+} from "/ft4/ft-session";
+import { Connection } from "/ft4/types";
+import { getNewAsset } from "/util/blockchain-util";
+import { useChromiaNode } from "/util/chromia-node";
 
 let _connection: Connection;
 let asset: Asset;
@@ -37,7 +37,7 @@ function sourceAccount(): Promise<AuthenticatedAccount> {
 }
 
 async function getAuthedAccountsFromAuthDescriptorRule(
-  rule: AuthDescriptorRule,
+  rule: AuthDescriptorRules,
 ): Promise<
   [limitedAccount: AuthenticatedAccount, accountAdmin: AuthenticatedAccount]
 > {
@@ -50,7 +50,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
   );
 
   const accounts = await _connection.getAccountsByAuthDescriptorId(
-    user2.authDescriptor.id,
+    deriveAuthDescriptorId(user2.authDescriptor),
   );
   if (accounts.data.length > 1) throw new Error("Found more than one account");
 
@@ -68,18 +68,19 @@ async function getAuthedAccountsFromAuthDescriptorRule(
 }
 
 describe("Auth Descriptor Rule", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     _connection = createConnection(client);
     asset = await getNewAsset(_connection.client);
   });
 
   it("should add auth descriptors", async () => {
-    const rules = allow.operationCount.lessOrEqual(1).only;
-    const user3 = testUser(allow.operationCount.lessOrEqual(1).only);
+    const user3 = testUser(lessOrEqual(opCount(1)));
 
     const [, accountAdmin] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules,
+      lessOrEqual(opCount(1)),
     );
 
     await accountAdmin.addAuthDescriptor(
@@ -96,11 +97,11 @@ describe("Auth Descriptor Rule", () => {
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
       ["A"],
-      allow.operationCount.lessOrEqual(1).only,
+      lessOrEqual(opCount(1)),
     );
     const { keyPair: kp3, authDescriptor: ad3 } = createTestAuthDescriptor(
       ["A"],
-      allow.operationCount.lessOrEqual(1).only,
+      lessOrEqual(opCount(1)),
     );
 
     const accountId = await createAccount(_connection.client, ad1);
@@ -128,14 +129,23 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
 
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
 
     const tx = await session
       .transactionBuilder()
-      .add(deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .add(
+        deleteAllAuthDescriptorsExclude(
+          session.account.id,
+          deriveAuthDescriptorId(ad1),
+        ),
+      )
       .build();
     await _connection.client.sendTransaction(tx);
 
@@ -156,10 +166,16 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
 
-    const promise = session.account.deleteAuthDescriptor(ad2.id);
+    const promise = session.account.deleteAuthDescriptor(
+      deriveAuthDescriptorId(ad2),
+    );
     await expect(promise).rejects.toThrowError();
   });
 
@@ -189,9 +205,13 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(
+        deriveAuthDescriptorId(ad1),
+        [keyHandler],
+        authDataService,
+      ),
     );
-    await session.account.deleteAuthDescriptor(ad2.id);
+    await session.account.deleteAuthDescriptor(deriveAuthDescriptorId(ad2));
 
     expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
   });

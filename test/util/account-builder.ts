@@ -1,14 +1,17 @@
-import { authDescriptor, FlagsType } from "/ft4/accounts/auth-descriptor";
 import {
-  AuthDescriptor,
-  AuthDescriptorRule,
-} from "/ft4/accounts/auth-descriptor/types";
+  FlagsType,
+  deriveAuthDescriptorId,
+  AnyAuthDescriptorRegistration,
+  AuthDescriptorRules,
+  createSingleSigAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 import { Asset, Balance, SupportedNumber } from "/ft4/asset/types";
 import { Account, AuthenticatedAccount } from "/ft4/accounts/types";
 import {
   gtx,
   KeyPair,
   newSignatureProvider,
+  Operation,
   SignatureProvider,
 } from "postchain-client";
 import admin from "./admin_user";
@@ -16,7 +19,7 @@ import { createAmount } from "/ft4/asset/amount";
 import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createAuthenticator, ftAuth } from "/ft4/authentication";
-import { createAuthDataService } from "/ft4/ft-session";
+import { createAuthDataService, createConnection } from "/ft4/ft-session";
 import { Connection } from "/ft4/types";
 import {
   addRateLimitPoints,
@@ -25,14 +28,15 @@ import {
 import { nop } from "/ft4/utils";
 import { addAuthDescriptor } from "/ft4/accounts/account-operations";
 import { op } from "/ft4";
+import { testAdFromRegistration } from "./util";
 
 class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
-  private rules: AuthDescriptorRule | null = null;
+  private rules: AuthDescriptorRules | null = null;
   private participant: SignatureProvider = gtx.newSignatureProvider();
   private authDescInfo: {
-    authDescriptor: AuthDescriptor;
+    authDescriptor: AnyAuthDescriptorRegistration;
     signers: (SignatureProvider | KeyPair)[];
   };
   private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
@@ -54,7 +58,7 @@ class AccountBuilder {
 
   withAuthDescriptor(
     //this will never be the manager
-    authDescriptor: AuthDescriptor,
+    authDescriptor: AnyAuthDescriptorRegistration,
     signers: (SignatureProvider | KeyPair)[],
   ): AccountBuilder {
     this.authDescInfo = { authDescriptor, signers };
@@ -66,7 +70,7 @@ class AccountBuilder {
     return this;
   }
 
-  withRules(rules: AuthDescriptorRule): AccountBuilder {
+  withRules(rules: AuthDescriptorRules): AccountBuilder {
     this.rules = rules;
     return this;
   }
@@ -112,15 +116,14 @@ class AccountBuilder {
 
   async buildAsNonManager(): Promise<AuthenticatedAccount> {
     const manager = newSignatureProvider();
-    const accountManager = await this.registerAndBuildManagerAuthenticated(
-      manager,
-    );
-    const ad = this.getAuthDescriptor();
+    const accountManager =
+      await this.registerAndBuildManagerAuthenticated(manager);
+    const ad = this.getAuthDescriptorRegistration();
     await accountManager.addAuthDescriptor(ad, this.participant);
 
     const keyHandler = createInMemoryFtKeyStore(
       this.participant,
-    ).createKeyHandler(ad);
+    ).createKeyHandler(testAdFromRegistration(ad));
     const authenticator = createAuthenticator(
       accountManager.id,
       [keyHandler],
@@ -139,14 +142,17 @@ class AccountBuilder {
       admin().signatureProvider,
       ad,
     );
-    const account = await this.connection.getAccountById(ad.id);
-    const keyHandler =
-      createInMemoryFtKeyStore(managerSigProv).createKeyHandler(ad);
+    const account = await this.connection.getAccountById(
+      deriveAuthDescriptorId(ad),
+    );
+    const keyHandler = createInMemoryFtKeyStore(
+      managerSigProv,
+    ).createKeyHandler(testAdFromRegistration(ad));
 
     const authenticator = createAuthenticator(
-      account.id,
+      account!.id,
       [keyHandler],
-      createAuthDataService(this.connection),
+      createAuthDataService(createConnection(this.connection.client)),
     );
 
     const acc = createAuthenticatedAccount(this.connection, authenticator);
@@ -159,12 +165,12 @@ class AccountBuilder {
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
       const adminSignatureProvider = admin().signatureProvider;
-      const tx = {
+      const tx: { operations: Operation[]; signers: Buffer[] } = {
         operations: [],
         signers: [adminSignatureProvider.pubKey],
       };
 
-      this.balances.forEach(async (balance) => {
+      this.balances.forEach((balance) => {
         tx.operations.push(
           op(
             "ft4.admin.mint",
@@ -207,7 +213,9 @@ class AccountBuilder {
         ],
         signers: [
           managerSigProvider.pubKey,
-          ...this.authDescInfo.signers.map((s) => s.pubKey),
+          ...this.authDescInfo.signers
+            .map((s) => s.pubKey)
+            .filter((pk): pk is Buffer => pk !== undefined),
         ],
       };
 
@@ -225,17 +233,20 @@ class AccountBuilder {
     }
   }
 
-  private getAuthDescriptor() {
-    return authDescriptor.create.singleSig
-      .withArgs(this.flags, this.participant.pubKey)
-      .andRules(this.rules);
+  private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
+    return createSingleSigAuthDescriptorRegistration(
+      this.flags.concat(FlagsType.Account),
+      managerSigProv.pubKey,
+      null,
+    );
   }
 
-  private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
-    return authDescriptor.create.singleSig.withArgs(
-      [...new Set(this.flags.concat(FlagsType.Account))],
-      managerSigProv.pubKey,
-    ).andNoRules;
+  private getAuthDescriptorRegistration() {
+    return createSingleSigAuthDescriptorRegistration(
+      this.flags,
+      this.participant.pubKey,
+      this.rules,
+    );
   }
 }
 

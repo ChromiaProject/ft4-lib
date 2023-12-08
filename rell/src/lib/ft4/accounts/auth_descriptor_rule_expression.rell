@@ -23,21 +23,6 @@ struct rule_parameters {
 	value: integer;
 }
 
-function serialize_rules(rules: list<rule_expression>): gtv {
-	if (rules.size() == 0) {
-		return GTV_NULL;
-	}
-	if (rules.size() == 1) {
-		return rules[0].to_gtv();
-	}
-
-	val rules_gtv = ["and".to_gtv()];
-	for (rule in rules) {
-		rules_gtv.add(rule.to_gtv());
-	}
-	return rules_gtv.to_gtv();
-}
-
 /*
  * Operator functions
  */
