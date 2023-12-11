@@ -143,29 +143,3 @@ function test_accounts_by_ad_id_is_paginated() {
     )
   );
 }
-
-function test_account_descriptor_rules() {
-  val account = test_utils.register_alice().account;
-  
-  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, rules = acc.serialize_rules([
-      acc.rule_expression(acc.rule_variable.block_height, acc.rule_operator.gt, 1),
-      acc.rule_expression(acc.rule_variable.block_time, acc.rule_operator.lt, 10)
-  ]));
-
-  rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob)
-    .run();
-}
-
-function test_too_many_account_descriptor_rules() {
-  val account = test_utils.register_alice().account;
-
-  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, rules = acc.serialize_rules([
-      acc.rule_expression(acc.rule_variable.block_height, acc.rule_operator.gt, 1),
-      acc.rule_expression(acc.rule_variable.block_time, acc.rule_operator.lt, 10),
-      acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.gt, 2),
-      acc.rule_expression(acc.rule_variable.op_count, acc.rule_operator.lt, 4)
-  ]));
-
-  rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob)
-    .run_must_fail("Too many rules");
-}

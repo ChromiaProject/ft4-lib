@@ -1,4 +1,3 @@
-import { createChromiaClient, getNewAsset } from "../util/blockchain-util";
 import {
   FlagsType,
   createKeyStoreInteractor,
@@ -26,14 +25,18 @@ import {
 } from "/ft4/accounts/auth-descriptor";
 import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
 import { getPubkey } from "/ft4/utils";
+import { getNewAsset } from "/util/blockchain-util";
+import { useChromiaNode } from "/util/chromia-node";
 
 describe("Login manager", () => {
+  const getClient = useChromiaNode();
+
   let client: IClient;
   let connection: Connection;
   const dateNow = Date.now;
 
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     connection = createConnection(client);
     Date.now = jest.fn(() => 10);
   });
@@ -231,7 +234,7 @@ describe("Login manager", () => {
     );
     const loginManager = keyStoreInteractor.getLoginManager();
 
-    expect(loginManager.login({ accountId })).rejects.toThrowError(
+    expect(loginManager.login({ accountId })).rejects.toThrow(
       `Admin auth descriptor does not exist for provided key store <${keyPair2.pubKey.toString(
         "hex",
       )}>`,

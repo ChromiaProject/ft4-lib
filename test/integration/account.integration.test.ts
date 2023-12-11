@@ -29,7 +29,7 @@ import {
 import testUser from "/util/test-user";
 import AccountBuilder from "/util/account-builder";
 import adminUser from "/util/admin_user";
-import { createChromiaClient } from "/util/blockchain-util";
+import { useChromiaNode } from "/util/chromia-node";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -56,8 +56,11 @@ async function multiSigCall(
 }
 
 describe("Test the account", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    _connection = createConnection(await createChromiaClient());
+    const client = getClient();
+    _connection = createConnection(client);
   });
 
   it("Register account on blockchain", async () => {

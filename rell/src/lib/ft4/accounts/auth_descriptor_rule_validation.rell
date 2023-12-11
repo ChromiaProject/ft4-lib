@@ -1,24 +1,3 @@
-
-enum rule_variable {
-	block_height,
-	block_time,
-	op_count
-}
-
-enum rule_operator {
-	lt,
-	le,
-	eq,
-	ge,
-	gt
-}
-
-struct rule_expression {
-	operator: rule_operator;
-	variable: rule_variable;
-	value: integer;
-}
-
 val GTV_NULL = null.to_gtv();
 val GTV_NULL_BYTES = null.to_gtv().to_bytes();
 
@@ -27,19 +6,21 @@ function serialize_rules(rules: list<rule_expression>): gtv {
 		return GTV_NULL;
 	}
 	if (rules.size() == 1) {
-			return rules[0].to_gtv();
+		return rule_expression_to_gtv(rules[0]);
 	}
 
 	val rules_gtv = ["and".to_gtv()];
 	for (rule in rules) {
-			rules_gtv.add([
-				rule.operator.name.to_gtv(),
-				rule.variable.name.to_gtv(),
-				rule.value.to_gtv()
-			].to_gtv());
+		rules_gtv.add(rule_expression_to_gtv(rule));
 	}
 	return rules_gtv.to_gtv();
 }
+
+function rule_expression_to_gtv(rule_expression): gtv = [
+        rule_expression.operator.name.to_gtv(),
+        rule_expression.variable.name.to_gtv(),
+        rule_expression.value.to_gtv()
+    ].to_gtv();
 
 function rule_expression_from_gtv(gtv) {
 	val components = list<gtv>.from_gtv(gtv);
@@ -80,6 +61,8 @@ function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 	val rules_gtv = list<gtv>.from_gtv(gtv.from_bytes(auth_descriptor.rules));
 	val variables = map<text, gtv>();
 	variables[rule_variable.op_count.name] = (auth_descriptor.ctr + 1).to_gtv();
+	variables[rule_variable.block_height.name] = op_context.block_height.to_gtv();
+	variables[rule_variable.block_time.name] = op_context.last_block_time.to_gtv();
 
 	if (rules_gtv[0] != "and".to_gtv()) {
 		require(
@@ -145,8 +128,14 @@ function is_rule_active(rule: rule_expression): boolean {
  *  Variables
  */
 
-function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, gtv>): boolean {
-	val current_value = variable_value(rule.variable, variables);
+function evaluate_int_variable_rule(
+	rule: rule_expression,
+	variables: map<text, gtv>
+): boolean {
+	val current_value = variable_value(
+		rule.variable,
+		variables
+	);
 	val defined_value = rule.value;
 
 	when (rule.operator) {
@@ -168,13 +157,16 @@ function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, 
 	}
 }
  
-function variable_value(variable: rule_variable, variables: map<text, gtv>): integer {
+function variable_value(
+	variable: rule_variable,
+	variables: map<text, gtv>
+): integer {
 	when (variable) {
 		rule_variable.block_height -> {
-			return op_context.block_height;
+			return integer.from_gtv(variables[rule_variable.block_height.name]);
 		}
 		rule_variable.block_time -> {
-			return op_context.last_block_time;
+			return integer.from_gtv(variables[rule_variable.block_time.name]);
 		}
 		rule_variable.op_count -> {
 			return integer.from_gtv(variables[rule_variable.op_count.name]);
@@ -192,15 +184,33 @@ function validate_auth_descriptor_rules(rules: gtv) {
 
 	val rules_gtv = list<gtv>.from_gtv(rules);
 	if (rules_gtv[0] != "and".to_gtv()) {
-		rule_expression_from_gtv(rules_gtv.to_gtv());
+		validate_rule(rule_expression_from_gtv(rules_gtv.to_gtv()));
 		return;
 	}
 	
 	require(rules_gtv[0] == "and".to_gtv(), "First element in rules list must be 'and'");
 	require(rules_gtv.size() <= chain_context.args.max_auth_descriptor_rules, "Too many rules");
 	
-	for (rule in rules_gtv.sub(1)) {
-		rule_expression_from_gtv(rule);
+	for (gtv_rule in rules_gtv.sub(1)) {
+		validate_rule(rule_expression_from_gtv(gtv_rule));
+	}
+}
+
+function validate_rule(rule: rule_expression) {
+	when (rule.variable) {
+		rule_variable.block_height -> {
+			require(rule.value >= 0, "rule variable block_height must be a non-negative value");
+		}
+		rule_variable.block_time -> {
+			require(rule.value >= 0, "rule variable block_time must be a non-negative value");
+		}
+		rule_variable.op_count -> {
+			when (rule.operator) {
+				rule_operator.lt -> require(rule.value > 1, "rule variable op_count must be a positive value greater than 1");
+				rule_operator.le -> require(rule.value > 0, "rule variable op_count must be a positive value");
+				else -> require(false, "rule variable op_count must be lt or le");
+			}
+		}
 	}
 }
 

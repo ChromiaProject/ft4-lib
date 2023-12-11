@@ -17,8 +17,8 @@ object auth_extensions_state {
     auth_extensions_state.before_authenticate_auth_descriptor = auth_descriptor.id;
 }
 
-@extend(auth.after_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor) {
+@extend(auth.after_authenticate) function(account: acc.account, auth_descriptor: acc.account_auth_descriptor?) {
     auth_extensions_state.is_after_authenticate_called = true;
     auth_extensions_state.after_authenticate_account = account.id;
-    auth_extensions_state.after_authenticate_auth_descriptor = auth_descriptor.id;
+    auth_extensions_state.after_authenticate_auth_descriptor = auth_descriptor?.id ?: x"";
 }
