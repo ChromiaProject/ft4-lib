@@ -179,11 +179,11 @@ echo "Backend and frontend services are ready. Running Cypress tests next..."
 case "$1" in
     --run-tests-headless)
         # Run Cypress tests in headless mode
-        npx cypress run
+        PRIVATE_KEY=$ETH_PRIVATE_KEY DEBUG=cypress:* npx cypress run
         ;;
     --run-tests-interactive)
         # Run Cypress tests in interactive mode
-        npx cypress open
+        PRIVATE_KEY=$ETH_PRIVATE_KEY DEBUG=cypress:* npx cypress open
         ;;
     --wait-for-node)
         # Just wait for the Chromia node process to finish
