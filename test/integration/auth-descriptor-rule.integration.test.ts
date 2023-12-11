@@ -288,9 +288,8 @@ describe("Auth Descriptor Rule", () => {
       greaterThan(blockTime(Date.now() - 20000)),
       lessThan(blockTime(Date.now() - 10000)),
     );
-    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules,
-    );
+    const [limitedAccount] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const account2 = await destinationAccount();
 
@@ -308,9 +307,8 @@ describe("Auth Descriptor Rule", () => {
       lessThan(blockTime(Date.now() + 10000)),
     );
 
-    const [limitedAccount] = await getAuthedAccountsFromAuthDescriptorRule(
-      rules,
-    );
+    const [limitedAccount] =
+      await getAuthedAccountsFromAuthDescriptorRule(rules);
 
     const account2 = await destinationAccount();
 
@@ -552,21 +550,21 @@ describe("Auth Descriptor Rule", () => {
   });
 
   it("shouldn't be able to create too many rules", async () => {
-    let rules = and(
+    const rules = [
       greaterThan(blockHeight(1)),
       greaterThan(blockHeight(10000)),
       greaterOrEqual(blockHeight(122222999)),
-    );
+    ];
     for (let i = 0; i < 400; i++) {
-      rules = and(rules, greaterOrEqual(blockHeight(1)));
+      rules.push(greaterOrEqual(blockHeight(1)));
     }
 
-    const user = testUser(rules);
+    const user = testUser(and(...rules));
     const account = await sourceAccount();
 
     await expect(
       account.addAuthDescriptor(user.authDescriptor, user.signatureProvider),
-    ).rejects.toThrowError();
+    ).rejects.toThrow();
   });
 
   it("shouldn't be able to create an account with a limited auth descriptor", async () => {
