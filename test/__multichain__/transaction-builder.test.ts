@@ -1,11 +1,11 @@
 jest.unmock("postchain-client");
 
 import { IClient, createClient } from "postchain-client";
-import { nop } from "/ft4/utils";
-import { transactionBuilder } from "/ft4/utils/transaction-builder";
+import { nop } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { createTestAuthDescriptor, emptyOp } from "/util/util";
-import { FlagsType, createInMemoryFtKeyStore } from "/ft4";
-import { Authenticator, KeyHandler } from "/ft4/authentication";
+import { FlagsType, createInMemoryFtKeyStore } from "@ft4";
+import { Authenticator, KeyHandler } from "@ft4/authentication";
 import { createFakeAuthDataService } from "/util/fake-auth-data-service";
 import { fetchBlockchains } from "./util/blockchain";
 import { anchoredHandlerCallbackParameters } from "/util/blockchain-util";

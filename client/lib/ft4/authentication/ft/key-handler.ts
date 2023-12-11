@@ -8,8 +8,8 @@ import {
   aggregateSigners,
   deriveAuthDescriptorId,
   gtv,
-} from "/ft4/accounts/auth-descriptor";
-import { BufferId, TxContext } from "/ft4/utils/types";
+} from "@ft4/accounts/auth-descriptor";
+import { BufferId, TxContext } from "@ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,

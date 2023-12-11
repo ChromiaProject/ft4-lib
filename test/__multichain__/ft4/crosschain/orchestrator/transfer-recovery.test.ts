@@ -5,24 +5,24 @@ import {
   createConnection,
   mint,
   registerCrosschainAsset,
-} from "/ft4";
-import { AuthenticatedAccount } from "/ft4/accounts";
-import { Asset } from "/ft4/asset/types";
-import { PendingTransfer, findPathToChainForAsset } from "/ft4/crosschain";
+} from "@ft4";
+import { AuthenticatedAccount } from "@ft4/accounts";
+import { Asset } from "@ft4/asset/types";
+import { PendingTransfer, findPathToChainForAsset } from "@ft4/crosschain";
 import {
   createOrchestrator,
   createResumeOrchestrator,
-} from "/ft4/crosschain/orchestrator";
-import { createSession } from "/ft4/ft-session";
-import { Connection, Session } from "/ft4/types";
-import { PaginatedEntity } from "/ft4/utils/types";
+} from "@ft4/crosschain/orchestrator";
+import { createSession } from "@ft4/ft-session";
+import { Connection, Session } from "@ft4/types";
+import { PaginatedEntity } from "@ft4/utils/types";
 import AccountBuilder from "/util/account-builder";
 import adminUser from "/util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
 } from "/util/blockchain-util";
-import { initTransfer } from "/ft4/crosschain/operations";
+import { initTransfer } from "@ft4/crosschain/operations";
 import { formatter } from "postchain-client";
 
 jest.unmock("postchain-client");

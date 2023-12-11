@@ -9,7 +9,7 @@ import {
   PaginatedEntity,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "/ft4/utils/types";
+} from "@ft4/utils/types";
 import {
   TransferHistoryEntry,
   TransferHistoryFilter,
@@ -18,7 +18,7 @@ import {
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
-} from "/ft4/accounts/auth-descriptor/types";
+} from "@ft4/accounts/auth-descriptor/types";
 import { PendingTransfer } from "../crosschain/types";
 
 export type RateLimit = {

@@ -9,14 +9,14 @@ import {
   gtv as pclGtv,
 } from "postchain-client";
 import adminUser from "./admin_user";
-import { Connection } from "/ft4";
-import { addAuthDescriptor } from "/ft4/accounts/account-operations";
+import { Connection } from "@ft4/index";
+import { addAuthDescriptor } from "@ft4/accounts/account-operations";
 import {
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
-} from "/ft4/accounts/auth-descriptor";
+} from "@ft4/accounts/auth-descriptor";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
@@ -25,17 +25,17 @@ import {
   AuthDescriptorRules,
   MultiSig,
   SingleSig,
-} from "/ft4/accounts/auth-descriptor/types";
-import { createAuthenticator } from "/ft4/authentication";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+} from "@ft4/accounts/auth-descriptor/types";
+import { createAuthenticator } from "@ft4/authentication";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import {
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
-} from "/ft4/ft-session";
-import { op } from "/ft4/utils";
-import { transactionBuilder } from "/ft4/utils/transaction-builder";
-import { BufferId } from "/ft4/utils/types";
+} from "@ft4/ft-session";
+import { op } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
+import { BufferId } from "@ft4/utils/types";
 
 function generateNumber(): number {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2); // sleep for 2 milliseconds

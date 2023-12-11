@@ -1,12 +1,12 @@
 import * as pcl from "postchain-client";
-import { Connection } from "/ft4/types";
-import { ftAuth } from "/ft4/authentication";
-import { registerAccount } from "/ft4/admin/admin-op-functions";
-import { createInMemoryFtKeyStore } from "/ft4";
+import { Connection } from "@ft4/types";
+import { ftAuth } from "@ft4/authentication";
+import { registerAccount } from "@ft4/admin/admin-op-functions";
+import { createInMemoryFtKeyStore } from "@ft4";
 import {
   addAuthDescriptor,
   deleteAllAuthDescriptorsExclude,
-} from "/ft4/accounts/account-operations";
+} from "@ft4/accounts/account-operations";
 import {
   AuthDescriptorRegistration,
   FlagsType,
@@ -15,11 +15,11 @@ import {
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
-} from "/ft4/accounts/auth-descriptor";
-import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
-import { nop, op } from "/ft4/utils";
-import { AuthorizationError } from "/ft4/utils/transaction-builder";
-import { BufferId } from "/ft4/utils/types";
+} from "@ft4/accounts/auth-descriptor";
+import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
+import { nop, op } from "@ft4/utils";
+import { AuthorizationError } from "@ft4/utils/transaction-builder";
+import { BufferId } from "@ft4/utils/types";
 import {
   addAuthDescriptorTo,
   createAccount,

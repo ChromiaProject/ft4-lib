@@ -1,14 +1,14 @@
 import { generateAssetName, generateAssetSymbol } from "../util/util";
-import { Connection } from "/ft4/types";
+import { Connection } from "@ft4/types";
 import { getNewAsset } from "../util/blockchain-util";
-import { InvalidUrlError } from "/ft4/asset/interfaces";
-import { createConnection } from "/ft4/ft-session";
+import { InvalidUrlError } from "@ft4/asset/interfaces";
+import { createConnection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
-import { op } from "/ft4";
+import { op } from "@ft4";
 import adminUser, { adminKeyPair } from "../util/admin_user";
-import { registerAsset } from "/ft4/admin/admin-op-functions";
+import { registerAsset } from "@ft4/admin/admin-op-functions";
 import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;

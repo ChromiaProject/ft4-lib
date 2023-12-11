@@ -1,30 +1,30 @@
 import { Buffer } from "buffer";
 import { IClient, KeyPair, Operation, encryption, gtx } from "postchain-client";
-import { createStubClient } from "/util/blockchain-util";
-import { createFakeAuthDataService } from "/util/fake-auth-data-service";
-import { createTestAuthDescriptor, emptyOp } from "/util/util";
-import { transfer } from "/ft4/accounts/account-operations";
+import { createStubClient } from "../util/blockchain-util";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { createTestAuthDescriptor, emptyOp } from "../util/util";
+import { transfer } from "@ft4/accounts/account-operations";
 import {
   FlagsType,
   aggregateSigners,
   deriveAuthDescriptorId,
-} from "/ft4/accounts/auth-descriptor";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { registerAccount } from "/ft4/admin/admin-operations";
-import { createAmount } from "/ft4/asset/amount";
+} from "@ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { registerAccount } from "@ft4/admin/admin-operations";
+import { createAmount } from "@ft4/asset/amount";
 import {
   AuthDataService,
   Authenticator,
   KeyHandler,
   createAuthenticator,
   createNoopAuthenticator,
-} from "/ft4/authentication";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { nop } from "/ft4/utils";
+} from "@ft4/authentication";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { nop } from "@ft4/utils";
 import {
   AuthorizationError,
   transactionBuilder,
-} from "/ft4/utils/transaction-builder";
+} from "@ft4/utils/transaction-builder";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;

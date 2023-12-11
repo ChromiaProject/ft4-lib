@@ -1,15 +1,15 @@
 import { createTestAuthDescriptor, emptyOp } from "../util/util";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import {
   AnchoringTimeoutError,
   transactionBuilder,
-} from "/ft4/utils/transaction-builder";
+} from "@ft4/utils/transaction-builder";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
-import { nop } from "/ft4/utils";
-import { Authenticator, KeyHandler } from "/ft4/authentication/types";
+import { nop } from "@ft4/utils";
+import { Authenticator, KeyHandler } from "@ft4/authentication/types";
 import { IClient, isBlockAnchored } from "postchain-client";
-import { FlagsType } from "/ft4/accounts/auth-descriptor";
+import { FlagsType } from "@ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
 import { useChromiaNode } from "/util/chromia-node";
 

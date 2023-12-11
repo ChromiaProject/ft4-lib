@@ -7,21 +7,21 @@ import {
   createAccount,
   createTestAuthDescriptor,
 } from "../util/util";
-import { addRateLimitPoints } from "/ft4";
-import { deriveAuthDescriptorId, lessOrEqual, opCount } from "/ft4/accounts";
-import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
-import { deleteAllAuthDescriptorsExclude } from "/ft4/accounts/account-operations";
-import { AuthDescriptorRules } from "/ft4/accounts/auth-descriptor/types";
-import { AuthenticatedAccount } from "/ft4/accounts/types";
-import { Asset } from "/ft4/asset/types";
-import { createAuthenticator } from "/ft4/authentication";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { addRateLimitPoints } from "@ft4";
+import { deriveAuthDescriptorId, lessOrEqual, opCount } from "@ft4/accounts";
+import { createAuthenticatedAccount } from "@ft4/accounts/account-op-functions";
+import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
+import { AuthDescriptorRules } from "@ft4/accounts/auth-descriptor/types";
+import { AuthenticatedAccount } from "@ft4/accounts/types";
+import { Asset } from "@ft4/asset/types";
+import { createAuthenticator } from "@ft4/authentication";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import {
   createAuthDataService,
   createConnection,
   createSession,
-} from "/ft4/ft-session";
-import { Connection } from "/ft4/types";
+} from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
 import { getNewAsset } from "/util/blockchain-util";
 import { useChromiaNode } from "/util/chromia-node";
 

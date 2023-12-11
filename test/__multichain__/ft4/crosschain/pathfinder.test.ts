@@ -1,11 +1,11 @@
 import { generateId } from "../../../util/util";
 import { fetchBlockchains } from "/__multichain__/util/blockchain";
-import { createConnection, registerCrosschainAsset } from "/ft4";
+import { createConnection, registerCrosschainAsset } from "@ft4";
 import {
   PathfinderError,
   findPathToChainForAsset,
-} from "/ft4/crosschain/pathfinder";
-import { Connection } from "/ft4/types";
+} from "@ft4/crosschain/pathfinder";
+import { Connection } from "@ft4/types";
 import adminUser from "/util/admin_user";
 import {
   createChromiaClientToMultichain,

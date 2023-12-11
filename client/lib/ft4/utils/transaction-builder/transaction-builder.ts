@@ -3,7 +3,7 @@ import {
   KeyHandler,
   KeyStore,
   createNoopAuthenticator,
-} from "/ft4/authentication";
+} from "@ft4/authentication";
 import { Buffer } from "buffer";
 import {
   Operation,

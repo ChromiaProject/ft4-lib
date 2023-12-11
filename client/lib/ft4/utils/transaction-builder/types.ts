@@ -5,7 +5,7 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import { Authenticator, KeyHandler, KeyStore } from "/ft4/authentication";
+import { Authenticator, KeyHandler, KeyStore } from "@ft4/authentication";
 import {
   RequireTogether,
   TxContext,

@@ -1,11 +1,11 @@
 import { IClient, encryption } from "postchain-client";
-import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
-import { createKeyStoreInteractor } from "/ft4/ft-session";
+import { createInMemoryEvmKeyStore } from "@ft4/authentication/evm/key-stores/in-memory";
+import { createKeyStoreInteractor } from "@ft4/ft-session";
 import { createAccount } from "/util/util";
 import {
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
-} from "/ft4/accounts/auth-descriptor";
+} from "@ft4/accounts/auth-descriptor";
 import { useChromiaNode } from "/util/chromia-node";
 
 describe("EVM key handler", () => {

@@ -8,9 +8,9 @@ import {
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalPageCursor } from "../types";
-import { BufferId, PaginatedEntity, freeze } from "/ft4/utils/types";
+import { BufferId, PaginatedEntity, freeze } from "@ft4/utils/types";
 import { createAmountFromBalance } from "./amount";
-import { createEntityRetriever } from "../utils/entity-retriever";
+import { createEntityRetriever } from "@ft4/utils/entity-retriever";
 
 export async function getAssetById(
   connection: Connection,

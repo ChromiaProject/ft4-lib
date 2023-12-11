@@ -4,9 +4,9 @@ import {
   AnyAuthDescriptorRegistration,
   AuthDescriptorRules,
   createSingleSigAuthDescriptorRegistration,
-} from "/ft4/accounts/auth-descriptor";
-import { Asset, Balance, SupportedNumber } from "/ft4/asset/types";
-import { Account, AuthenticatedAccount } from "/ft4/accounts/types";
+} from "@ft4/accounts/auth-descriptor";
+import { Asset, Balance, SupportedNumber } from "@ft4/asset/types";
+import { Account, AuthenticatedAccount } from "@ft4/accounts/types";
 import {
   gtx,
   KeyPair,
@@ -15,19 +15,19 @@ import {
   SignatureProvider,
 } from "postchain-client";
 import admin from "./admin_user";
-import { createAmount } from "/ft4/asset/amount";
-import { createAuthenticatedAccount } from "/ft4/accounts/account-op-functions";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator, ftAuth } from "/ft4/authentication";
-import { createAuthDataService, createConnection } from "/ft4/ft-session";
-import { Connection } from "/ft4/types";
+import { createAmount } from "@ft4/asset/amount";
+import { createAuthenticatedAccount } from "@ft4/accounts/account-op-functions";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { createAuthenticator, ftAuth } from "@ft4/authentication";
+import { createAuthDataService, createConnection } from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
 import {
   addRateLimitPoints,
   registerAccount,
-} from "/ft4/admin/admin-op-functions";
-import { nop } from "/ft4/utils";
-import { addAuthDescriptor } from "/ft4/accounts/account-operations";
-import { op } from "/ft4";
+} from "@ft4/admin/admin-op-functions";
+import { nop } from "@ft4/utils";
+import { addAuthDescriptor } from "@ft4/accounts/account-operations";
+import { op } from "@ft4";
 import { testAdFromRegistration } from "./util";
 
 class AccountBuilder {

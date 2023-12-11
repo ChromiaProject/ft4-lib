@@ -1,12 +1,12 @@
 import { IClient, encryption } from "postchain-client";
-import { createAmount } from "/ft4/asset/amount";
-import { Amount } from "/ft4/asset/interfaces";
-import { Asset } from "/ft4/asset/types";
-import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
-import { Connection } from "/ft4/types";
+import { createAmount } from "@ft4/asset/amount";
+import { Amount } from "@ft4/asset/interfaces";
+import { Asset } from "@ft4/asset/types";
+import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
 import AccountBuilder from "../util/account-builder";
 import { getNewAsset } from "../util/blockchain-util";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;

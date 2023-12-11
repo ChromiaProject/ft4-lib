@@ -17,8 +17,8 @@
     "resolveJsonModule": true,
     "types": ["jest"],
     "paths": {
-      "/*": [
-        "./client/lib/*",
+      "@ft4/*": [
+        "./client/lib/ft4/*",
         "./test/*"
       ]
     }

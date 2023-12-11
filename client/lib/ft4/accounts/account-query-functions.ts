@@ -7,9 +7,9 @@ import {
 } from "../asset/asset-query-functions";
 import { Balance, BalanceResponse } from "../asset/types";
 import { Connection, OptionalPageCursor } from "../types";
-import { getConfig } from "../utils";
-import { createEntityRetriever } from "../utils/entity-retriever";
-import { BufferId, PaginatedEntity } from "/ft4/utils/types";
+import { getConfig } from "@ft4/utils/index";
+import { createEntityRetriever } from "@ft4/utils/entity-retriever";
+import { BufferId, PaginatedEntity } from "@ft4/utils/types";
 import * as Query from "./account-queries";
 import {
   accountAuthDescriptors,
@@ -22,7 +22,7 @@ import {
 import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
 import { TransferHistoryFilter } from "./transfer-history/types";
 import { Account, RateLimit } from "./types";
-import { AnyAuthDescriptor, gtv } from "/ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor, gtv } from "@ft4/accounts/auth-descriptor";
 import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
 import {
   PendingTransfer,
