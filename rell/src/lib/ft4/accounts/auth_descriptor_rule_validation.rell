@@ -53,18 +53,23 @@ function map_rule_expressions_from_gtv(gtv_rules: list<gtv>) {
 	return rules;
 }
 
-function have_violating_rules(auth_descriptor: account_auth_descriptor) = are_rules_violating(gtv.from_bytes(auth_descriptor.rules), auth_descriptor.ctr);
+function have_violating_rules(auth_descriptor: account_auth_descriptor) =
+	are_rules_violating(gtv.from_bytes(auth_descriptor.rules), load_variables(auth_descriptor.ctr));
 
-function are_rules_violating(rules: gtv, op_count: integer): boolean {
+function load_variables(op_count: integer): map<text, gtv> {
+	val variables = map<text, gtv>();
+	variables[rule_variable.op_count.name] = (op_count + 1).to_gtv();
+	variables[rule_variable.block_height.name] = op_context.block_height.to_gtv();
+	variables[rule_variable.block_time.name] = op_context.last_block_time.to_gtv();
+	return variables;
+}
+
+function are_rules_violating(rules: gtv, variables: map<text, gtv>): boolean {
 	if (rules == GTV_NULL) {
 		return false;
 	}
 
 	val rules_gtv = list<gtv>.from_gtv(rules);
-	val variables = map<text, gtv>();
-	variables[rule_variable.op_count.name] = (op_count + 1).to_gtv();
-	variables[rule_variable.block_height.name] = op_context.block_height.to_gtv();
-	variables[rule_variable.block_time.name] = op_context.last_block_time.to_gtv();
 
 	if (rules_gtv[0] != "and".to_gtv()) {
 		require(
@@ -75,7 +80,6 @@ function are_rules_violating(rules: gtv, op_count: integer): boolean {
 		return is_rule_violated(rule_expression_from_gtv(rules_gtv.to_gtv()), variables);
 	}
 
-	val operand = text.from_gtv(rules_gtv[0]);
 	return are_and_rules_violated(map_rule_expressions_from_gtv(rules_gtv.sub(1)), variables);
 }
 
@@ -196,7 +200,8 @@ function validate_auth_descriptor_rules(rules: gtv) {
 		}
 	}
 
-	require((not are_rules_active(rules)) or (not are_rules_violating(rules, op_count = 0)), "Active and invalid rules detected");
+	require((not are_rules_active(rules)) or (not are_rules_violating(rules, load_variables(op_count = 0))),
+		"Active and invalid rules detected");
 }
 
 function validate_rule(rule: rule_expression) {
