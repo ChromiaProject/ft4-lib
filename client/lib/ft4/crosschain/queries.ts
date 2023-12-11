@@ -1,8 +1,8 @@
 import { QueryObject, formatter } from "postchain-client";
-import { BufferId } from "../cryptoUtils";
 import { Buffer } from "buffer";
 import { OptionalPageCursor } from "../types";
 import { PendingTransferResponse } from "./types";
+import { BufferId } from "/ft4/utils/types";
 
 export function assetOriginById(
   assetId: BufferId,

@@ -15,8 +15,8 @@ export function createEntityRetriever<
     retrieve: async (): Promise<PaginatedEntity<T>> => {
       const res = await session.query(query);
       return {
-        data: dataMapper(res.data),
-        nextCursor: res.next_cursor,
+        data: dataMapper(res?.data || []),
+        nextCursor: res?.next_cursor || null,
       };
     },
   };

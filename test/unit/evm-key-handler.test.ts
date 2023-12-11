@@ -1,22 +1,25 @@
 import { Buffer } from "buffer";
 import { EthersError, ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
-import { createChromiaClient } from "./util/blockchain-util";
-import { authDescriptor } from "/ft4/accounts/auth-descriptor";
+import {
+  FlagsType,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+} from "/ft4/accounts/auth-descriptor";
+import { createAuthenticator } from "/ft4/authentication";
+import { createEvmKeyHandler, evmAuth } from "/ft4/authentication/evm";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
 import { op } from "/ft4/utils";
-import { createEvmKeyHandler, evmAuth } from "/ft4/authentication/evm";
-import { createKeyStoreInteractor } from "/ft4/ft-session";
 import { transactionBuilder } from "/ft4/utils/transaction-builder";
-import { createAuthenticator } from "/ft4/authentication";
-import { createFakeAuthDataService } from "./util/fake-auth-data-service";
-import { createAccount } from "./util/util";
+import { createStubClient } from "/util/blockchain-util";
+import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { testAdFromRegistration } from "/util/util";
 
 describe("EVM key handler", () => {
   let client: IClient;
 
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = await createStubClient();
   });
 
   it("should sign message", async () => {
@@ -33,9 +36,8 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
-      message,
-    );
+    const signedMessage =
+      await createInMemoryEvmKeyStore(keyPair).signMessage(message);
 
     expect(signedMessage).toEqual(expectedSignature);
   });
@@ -44,11 +46,12 @@ describe("EVM key handler", () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [],
       keyStore.address,
-    ).andNoRules;
-    const keyHandler = keyStore.createKeyHandler(ad);
+      null,
+    );
+    const keyHandler = keyStore.createKeyHandler(testAdFromRegistration(ad));
     const authData = {
       flags: [],
       message: "Message to sign",
@@ -65,7 +68,7 @@ describe("EVM key handler", () => {
 
     const signature = await keyStore.signMessage(authData.message);
     expect(operations).toEqual([
-      evmAuth(accountId, ad.id, [signature]),
+      evmAuth(accountId, deriveAuthDescriptorId(ad), [signature]),
       op("foo"),
     ]);
   });
@@ -75,16 +78,17 @@ describe("EVM key handler", () => {
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
-      ["T"],
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       keyStore.address,
-    ).andNoRules;
+      null,
+    );
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
     const authenticator = createAuthenticator(
       accountId,
-      [keyStore.createKeyHandler(ad)],
+      [keyStore.createKeyHandler(testAdFromRegistration(ad))],
       authService,
     );
 
@@ -103,7 +107,11 @@ describe("EVM key handler", () => {
     expect(gtx.deserialize(tx).operations).toEqual([
       {
         opName: "ft4.evm_auth",
-        args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
+        args: [
+          accountId,
+          deriveAuthDescriptorId(ad),
+          [[signature1.r, signature1.s, signature1.v]],
+        ],
       },
       {
         opName: "foo",
@@ -111,7 +119,11 @@ describe("EVM key handler", () => {
       },
       {
         opName: "ft4.evm_auth",
-        args: [accountId, ad.id, [[signature2.r, signature2.s, signature2.v]]],
+        args: [
+          accountId,
+          deriveAuthDescriptorId(ad),
+          [[signature2.r, signature2.s, signature2.v]],
+        ],
       },
       {
         opName: "foo",
@@ -125,17 +137,18 @@ describe("EVM key handler", () => {
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
-      ["T"],
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       keyStore.address,
-    ).andNoRules;
+      null,
+    );
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
     authService.getNonce = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
-      [keyStore.createKeyHandler(ad)],
+      [keyStore.createKeyHandler(testAdFromRegistration(ad))],
       authService,
     );
 
@@ -156,10 +169,11 @@ describe("EVM key handler", () => {
       .add(op("foo"))
       .build();
 
+    const adId = deriveAuthDescriptorId(ad);
     expect(gtx.deserialize(tx2).operations).toEqual([
       {
         opName: "ft4.evm_auth",
-        args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
+        args: [accountId, adId, [[signature1.r, signature1.s, signature1.v]]],
       },
       {
         opName: "foo",
@@ -167,7 +181,7 @@ describe("EVM key handler", () => {
       },
       {
         opName: "ft4.evm_auth",
-        args: [accountId, ad.id, [[signature2.r, signature2.s, signature2.v]]],
+        args: [accountId, adId, [[signature2.r, signature2.s, signature2.v]]],
       },
       {
         opName: "foo",
@@ -181,10 +195,11 @@ describe("EVM key handler", () => {
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
     let keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
-      ["T"],
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
       keyStore.address,
-    ).andNoRules;
+      null,
+    );
 
     // Rewire the keystore to let us fake an user rejection on first call
     const oldSignFunc = keyStore.signMessage;
@@ -204,7 +219,7 @@ describe("EVM key handler", () => {
     authService.getNonce = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
-      [createEvmKeyHandler(ad, keyStore)],
+      [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
       authService,
     );
 
@@ -212,6 +227,7 @@ describe("EVM key handler", () => {
       transactionBuilder(authenticator, client)
         .add(op("foo"))
         .add(op("foo"))
+        .addSigners(keyStore)
         .build(),
     ).rejects.toThrow(Error);
 
@@ -227,10 +243,11 @@ describe("EVM key handler", () => {
       .add(op("foo"))
       .build();
 
+    const adId = deriveAuthDescriptorId(ad);
     expect(gtx.deserialize(tx2).operations).toEqual([
       {
         opName: "ft4.evm_auth",
-        args: [accountId, ad.id, [[signature1.r, signature1.s, signature1.v]]],
+        args: [accountId, adId, [[signature1.r, signature1.s, signature1.v]]],
       },
       {
         opName: "foo",
@@ -238,36 +255,12 @@ describe("EVM key handler", () => {
       },
       {
         opName: "ft4.evm_auth",
-        args: [accountId, ad.id, [[signature2.r, signature2.s, signature2.v]]],
+        args: [accountId, adId, [[signature2.r, signature2.s, signature2.v]]],
       },
       {
         opName: "foo",
         args: [],
       },
     ]);
-  });
-
-  it("should add FT auth descriptor", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
-      ["A"],
-      keyStore.address,
-    ).andNoRules;
-    await createAccount(client, ad);
-
-    const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      ad.id,
-    );
-
-    const keyPair2 = encryption.makeKeyPair();
-    const ad2 = authDescriptor.create.singleSig.withArgs(
-      ["T"],
-      keyPair2.pubKey,
-    ).andNoRules;
-    await session.account.addAuthDescriptor(ad2, keyPair2);
-
-    const authDescriptors = await session.account.getAuthDescriptors();
-    expect(authDescriptors.data.length).toEqual(2);
   });
 });

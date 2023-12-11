@@ -7,9 +7,9 @@ import {
   initTransfer as initTransferOp,
 } from "./operations";
 import { call } from "../ft-session";
-import { BufferId } from "../cryptoUtils";
 import { Amount } from "../asset/interfaces";
 import { GtvInitTransferArgs } from "./types";
+import { BufferId } from "/ft4/utils/types";
 
 export async function initTransfer(
   connection: Connection,

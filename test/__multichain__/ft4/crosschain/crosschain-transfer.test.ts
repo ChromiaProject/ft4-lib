@@ -15,12 +15,9 @@ import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
 } from "/ft4/crosschain/operations";
-import {
-  OnAnchoredHandler,
-  transactionBuilder,
-} from "/ft4/utils/transaction-builder";
+import { transactionBuilder } from "/ft4/utils/transaction-builder";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "/ft4/cryptoUtils";
+import { BufferId } from "/ft4/utils/types";
 
 jest.unmock("postchain-client");
 
@@ -62,7 +59,7 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler: OnAnchoredHandler = async (
+      const onAnchoringHandler = async (
         data: {
           operation: Operation;
           opIndex: number;
@@ -73,6 +70,9 @@ describe("Crosschain transfer", () => {
       ) => {
         if (error) {
           throw error;
+        }
+        if (!data) {
+          throw new Error("No data provided");
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
 
