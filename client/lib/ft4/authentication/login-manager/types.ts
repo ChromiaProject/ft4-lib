@@ -1,6 +1,10 @@
 import { Session } from "/ft4/types";
 import { BufferId } from "/ft4/utils/types";
 import { AuthDescriptorRules, RuleOperator, RuleVariable } from "/ft4/accounts";
+import {
+  AuthDescriptorSimpleRule,
+  RawAuthDescriptorSimpleRule,
+} from "/ft4/accounts/auth-descriptor/types";
 
 export type LoginConfig = {
   flags: string[];
@@ -44,7 +48,7 @@ export type LoginConfigSimpleRule = {
 };
 export type LoginConfigComplexRule = {
   operator: "and";
-  rules: Rules[];
+  rules: AnySimpleRule[];
 };
 export type LoginConfigRules =
   | LoginConfigComplexRule
@@ -60,4 +64,9 @@ export type RawLoginConfigRules =
   | RawLoginConfigSimpleRule
   | null;
 
-export type RawRules = RawLoginConfigRules; // | RawAuthDescriptorRule;
+export type RawRules = RawLoginConfigRules | RawAuthDescriptorSimpleRule;
+export type AnySimpleRule =
+  | RawLoginConfigSimpleRule
+  | LoginConfigSimpleRule
+  | RawAuthDescriptorSimpleRule
+  | AuthDescriptorSimpleRule;

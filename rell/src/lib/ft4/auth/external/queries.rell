@@ -2,3 +2,17 @@
 query get_auth_flags(op_name: name) = auth.get_auth_handler(op_name, is_strict=false).flags;
 
 query get_auth_message_template(op_name: name, op_args: gtv) = auth.get_auth_message_template(op_name, op_args, is_strict=false);
+
+query get_login_config(name? = null) {
+    val configs = auth.login_config();
+    val config_name = name ?: auth.DEFAULT_LOGIN_CONFIG_NAME;
+
+    if (config_name == auth.DEFAULT_LOGIN_CONFIG_NAME) {
+        return if (config_name in configs) configs[config_name] else auth._login_config(flags = []);
+    }
+    
+    return require(
+        configs.get_or_null(config_name), 
+        "Unknown login configuration <%s>".format(config_name)
+    );
+}

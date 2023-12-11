@@ -5,16 +5,22 @@ import { AuthDataService, KeyHandler, KeyStore } from "../types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import {
+  AnySimpleRule,
   LoginConfigError,
-  LoginConfigRule,
   LoginConfigSimpleRule,
   LoginManager,
   LoginOptions,
+  Rules,
 } from "./types";
 import { createAccountObject } from "../../accounts/account-query-functions";
 import { createAuthDataService, createSession } from "../../ft-session";
 import { Connection } from "../../types";
-import { isLoginConfigRule, isNullRule, isSimpleRule } from "./type-assertions";
+import {
+  isRawRule,
+  isNullRule,
+  isSimpleRule,
+  isLoginConfigSimpleRule,
+} from "./type-predicates";
 import { authDescriptorById } from "/ft4/accounts/account-queries";
 import {
   AuthDescriptorRules,
@@ -27,6 +33,7 @@ import {
   gtv,
 } from "/ft4/accounts/auth-descriptor";
 import { getPubkey } from "/ft4/utils";
+import { rulesFromGtv } from "/ft4/accounts/auth-descriptor/gtv";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -174,22 +181,26 @@ async function getFlagsAndRules(
  * @returns The rules that will be used by the auth descriptor
  */
 async function getRulesFromLoginConfig(
-  rules: LoginConfigRule | AuthDescriptorRules,
+  rules: Rules,
   getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorRules> {
   if (isNullRule(rules)) {
-    return allow.all;
+    return null;
   } else if (isSimpleRule(rules)) {
     return ensureAuthDescriptorRule(rules, getBlockHeight);
   } else {
-    const simpleRules = (rules.slice(1) as LoginConfigSimpleRule[]).map(
-      (rule) => ensureAuthDescriptorRule(rule, getBlockHeight),
+    rules;
+    const rulesWithoutAnd: AnySimpleRule[] = isRawRule(rules)
+      ? <AnySimpleRule[]>rules.slice(1)
+      : rules.rules;
+    const simpleRules = rulesWithoutAnd.map((rule) =>
+      ensureAuthDescriptorRule(rule, getBlockHeight),
     );
 
-    const result = [
-      "and",
-      ...(await Promise.all(simpleRules)),
-    ] as AuthDescriptorRules;
+    const result: AuthDescriptorRules = {
+      operator: "and",
+      rules: await Promise.all(simpleRules),
+    };
 
     return result;
   }
@@ -206,14 +217,18 @@ async function getRulesFromLoginConfig(
  * @returns the auth descriptor rule that corresponds to the rule passed in as argument
  */
 async function ensureAuthDescriptorRule(
-  rule: LoginConfigSimpleRule | AuthDescriptorSimpleRule,
+  rule: AnySimpleRule,
   getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorSimpleRule> {
-  if (!isLoginConfigRule(rule)) {
-    return rule;
+  if (!isLoginConfigSimpleRule(rule)) {
+    return isRawRule(rule)
+      ? <AuthDescriptorSimpleRule>rulesFromGtv(rule)
+      : rule;
   }
 
-  const { operator, variable, value } = rule;
+  const { operator, variable, value } = isRawRule(rule)
+    ? { operator: rule[0], variable: rule[1], value: rule[2] }
+    : rule;
 
   let finalValue: number;
   if (variable === RuleVariable.OpCount) {

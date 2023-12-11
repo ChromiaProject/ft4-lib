@@ -12,10 +12,10 @@ import {
   RawAnyAuthDescriptor,
   RawAnyAuthDescriptorRegistration,
   RawAuthDescriptor,
-  RawAuthDescriptorRule,
-  RawComplexAuthDescriptorRule,
+  RawAuthDescriptorSimpleRule,
   RawSingleSig,
   SingleSig,
+  RawAuthDescriptorRules,
 } from "./types";
 
 export function isSingleSigArgs(ad: SingleSig | MultiSig): ad is SingleSig {
@@ -57,7 +57,11 @@ export function isSingleSig(
 }
 
 export function isGtvSimpleRule(
-  rule: RawAuthDescriptorRule | RawComplexAuthDescriptorRule,
-): rule is RawAuthDescriptorRule {
-  return rule[0] !== "and";
+  rule: RawAuthDescriptorRules,
+): rule is RawAuthDescriptorSimpleRule {
+  return rule !== null && rule[0] !== "and";
+}
+
+export function isNullRule(rule: AuthDescriptorRules): rule is null {
+  return rule === null;
 }

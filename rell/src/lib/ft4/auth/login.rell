@@ -7,20 +7,6 @@ struct login_rule_expression {
 	value: text;
 }
 
-query get_login_config(name? = null) {
-    val configs = login_config();
-    val config_name = name ?: DEFAULT_LOGIN_CONFIG_NAME;
-
-    if (config_name == DEFAULT_LOGIN_CONFIG_NAME) {
-        return if (config_name in configs) configs[config_name] else _login_config(flags = []);
-    }
-    
-    return require(
-        configs.get_or_null(config_name), 
-        "Unknown login configuration <%s>".format(config_name)
-    );
-}
-
 struct _login_config {
     flags: list<text>;
     rules: gtv = accounts.GTV_NULL;
@@ -46,13 +32,13 @@ function create_login_rule(gtv_rules_to_translate: gtv): gtv{
 
         val rules_without_and = rules.sub(1);
         for (rule in rules_without_and) {
-            val rule_exp = accounts.rule_expression.from_gtv(rule);
+            val rule_exp = accounts.rule_expression_from_gtv(rule);
             login_rules.add(convert_rule_to_login_rule(rule_exp).to_gtv());
         }
         
         return login_rules.to_gtv();
     } else {
-        val rule_exp = accounts.rule_expression.from_gtv(gtv_rules_to_translate);
+        val rule_exp = accounts.rule_expression_from_gtv(gtv_rules_to_translate);
         return convert_rule_to_login_rule(rule_exp).to_gtv();
     }
 }

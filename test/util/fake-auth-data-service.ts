@@ -10,7 +10,7 @@ export function createFakeAuthDataService(
 ): AuthDataService {
   const generator = numberGenerator();
   return {
-    connection: null as Connection,
+    connection: null as unknown as Connection,
     isOperationExposed: isOperationExposedFn || (() => Promise.resolve(true)),
     getAuthFlags: (operation: Operation) =>
       Promise.resolve(data[operation.name].flags),
