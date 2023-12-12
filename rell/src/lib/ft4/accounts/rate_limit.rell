@@ -1,8 +1,20 @@
+/**
+ * Extend this function to have different rate limiting for different accounts.
+ *
+ * @param account  the account
+ *
+ * @return rate limit configuration for the account, or `null` to use default config from blockchain configuration.
+ */
+@extendable
+function account_rate_limit_config(account): rate_limit_config? = null;
+
 function rate_limit(account) {
-    if (chain_context.args.rate_limit.active == false) return;
+    val rl_config = get_rate_limit_config_for_account(account);
+
+    if (rl_config.active == false) return;
     
-    val max_counter = chain_context.args.rate_limit.max_points;
-    val recovery_time = chain_context.args.rate_limit.recovery_time;
+    val max_counter = rl_config.max_points;
+    val recovery_time = rl_config.recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
@@ -37,4 +49,10 @@ function add_rate_limit_points(account, amount: integer) {
 	state.points += amount;
 }
 
-function get_rate_limit_config() = chain_context.args.rate_limit;
+function get_rate_limit_config(): rate_limit_config = chain_context.args.rate_limit;
+
+function get_rate_limit_config_for_account(account): rate_limit_config =
+    if (chain_context.args.rate_limit.active == false)
+        chain_context.args.rate_limit
+    else
+        account_rate_limit_config(account) ?: chain_context.args.rate_limit;
