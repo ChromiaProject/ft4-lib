@@ -7,6 +7,7 @@ import { LoginKeyStore } from "./stores/types";
 import {
   AnySimpleRule,
   LoginConfigError,
+  LoginConfigRules,
   LoginConfigSimpleRule,
   LoginManager,
   LoginOptions,
@@ -307,4 +308,29 @@ export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
   };
 }
 
-//TODO: Add conversion AuthDescriptorRule -> LoginConfigRule after new rules PR
+export function authDescriptorRuleToLoginConfigRule(
+  rule: AuthDescriptorRules,
+): LoginConfigRules {
+  if (isNullRule(rule)) {
+    return null;
+  }
+
+  const simpleRuleConversion = (rule: AuthDescriptorSimpleRule) => {
+    return {
+      ...rule,
+      value:
+        rule.variable === RuleVariable.OpCount
+          ? "" + rule.value
+          : `{${rule.value}}`,
+    };
+  };
+
+  if (isSimpleRule(rule)) {
+    return simpleRuleConversion(rule);
+  } else {
+    return {
+      operator: rule.operator,
+      rules: rule.rules.map(simpleRuleConversion),
+    };
+  }
+}
