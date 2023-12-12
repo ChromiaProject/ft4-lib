@@ -124,7 +124,7 @@ run_main_logic() {
     fi
 
     log "Installing Directory Chain dependencies..."
-    chr install --settings $DEPENDENCIES_PATH/directory-chain/config.yml > /dev/null
+    chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
     log "Building Directory Chain..."
     chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml

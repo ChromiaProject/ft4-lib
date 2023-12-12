@@ -7,7 +7,7 @@ describe("Multichain initialization", () => {
 
     // Check for the presence of system blockchains
     const systemBlockchains = [
-      "c0",
+      "directory_chain",
       "system_anchoring",
       "cluster_anchoring_system",
     ];
