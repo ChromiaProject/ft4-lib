@@ -58,18 +58,23 @@ export async function getBalanceByAccountId(
   connection: Connection,
   accountId: BufferId,
   assetId: BufferId,
-): Promise<Balance> {
+): Promise<Balance | null> {
   return await connection
     .query(balanceByAccountId(accountId, assetId))
-    .then(createBalanceObject);
+    .then((res) => (res !== null ? createBalanceObject(res) : res));
 }
 
 export async function getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId,
-): Promise<Balance[]> {
-  const balances = await connection.query(balancesByAccountId(accountId));
-  return balances.map(createBalanceObject);
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Balance>> {
+  return createEntityRetriever<Balance, BalanceResponse>(
+    connection,
+    balancesByAccountId(accountId, limit, cursor),
+    (balances) => balances.map(createBalanceObject),
+  ).retrieve();
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {

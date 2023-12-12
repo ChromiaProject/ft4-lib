@@ -6,8 +6,8 @@ import {
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
-import AccountBuilder from "/util/account-builder";
-import { useChromiaNode } from "/util/chromia-node";
+import AccountBuilder from "@ft4/util/account-builder";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let connection: Connection;
 

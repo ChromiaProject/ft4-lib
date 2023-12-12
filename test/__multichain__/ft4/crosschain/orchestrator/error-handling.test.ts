@@ -1,5 +1,5 @@
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { createAmount, createOrchestrator } from "@ft4";
+import { createAmount, createOrchestrator } from "@ft4/index";
 import { createSession } from "@ft4/ft-session";
 
 describe("Error Handling and Recovery", () => {

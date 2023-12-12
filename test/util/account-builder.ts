@@ -27,7 +27,7 @@ import {
 } from "@ft4/admin/admin-op-functions";
 import { nop } from "@ft4/utils";
 import { addAuthDescriptor } from "@ft4/accounts/account-operations";
-import { op } from "@ft4";
+import { op } from "@ft4/index";
 import { testAdFromRegistration } from "./util";
 
 class AccountBuilder {

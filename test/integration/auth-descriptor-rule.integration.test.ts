@@ -7,7 +7,7 @@ import {
   createAccount,
   createTestAuthDescriptor,
 } from "../util/util";
-import { addRateLimitPoints } from "@ft4";
+import { addRateLimitPoints } from "@ft4/index";
 import { deriveAuthDescriptorId, lessOrEqual, opCount } from "@ft4/accounts";
 import { createAuthenticatedAccount } from "@ft4/accounts/account-op-functions";
 import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
@@ -22,8 +22,8 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
-import { getNewAsset } from "/util/blockchain-util";
-import { useChromiaNode } from "/util/chromia-node";
+import { getNewAsset } from "@ft4/util/blockchain-util";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let _connection: Connection;
 let asset: Asset;

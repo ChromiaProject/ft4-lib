@@ -1,22 +1,22 @@
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
+import { fetchBlockchains } from "../../../util/blockchain";
 import {
   FlagsType,
   createAmount,
   createConnection,
   mint,
   registerCrosschainAsset,
-} from "@ft4";
+} from "@ft4/index";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "/util/blockchain-util";
-import adminUser from "/util/admin_user";
-import AccountBuilder from "/util/account-builder";
+} from "../../../../util/blockchain-util";
+import adminUser from "../../../../util/admin_user";
+import AccountBuilder from "../../../../util/account-builder";
 import { createSession } from "@ft4/ft-session";
 import { Connection, Session } from "@ft4/types";
 import { Asset } from "@ft4/asset/types";
 import { AuthenticatedAccount } from "@ft4/accounts";
-import { Blockchain } from "/__multichain__/util/types";
+import { Blockchain } from "../../../util/types";
 import { Amount } from "@ft4/asset/interfaces";
 
 export type TestContext = {

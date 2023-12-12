@@ -6,10 +6,10 @@ import { createConnection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";
 import { randomBytes } from "crypto";
-import { op } from "@ft4";
+import { op } from "@ft4/index";
 import adminUser, { adminKeyPair } from "../util/admin_user";
 import { registerAsset } from "@ft4/admin/admin-op-functions";
-import { useChromiaNode } from "/util/chromia-node";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let connection: Connection;
 let client: IClient;

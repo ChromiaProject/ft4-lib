@@ -14,7 +14,7 @@ import { getNewAsset } from "../util/blockchain-util";
 import TestUser from "../util/test-user";
 import { registerAccount } from "@ft4/admin/admin-op-functions";
 import { Connection } from "@ft4/types";
-import { useChromiaNode } from "/util/chromia-node";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 import { IClient } from "postchain-client";
 
 let asset: Asset;
@@ -48,10 +48,10 @@ describe("Transfer", () => {
     const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
     const assetBalance2 = await account2.getBalanceByAssetId(asset.id);
 
-    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
+    expect(assetBalance1!.amount.eq(createAmount(190, asset.decimals))).toBe(
       true,
     );
-    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
+    expect(assetBalance2!.amount.eq(createAmount(10, asset.decimals))).toBe(
       true,
     );
   });
@@ -124,10 +124,10 @@ describe("Transfer", () => {
     const assetBalance1 = await account1.getBalanceByAssetId(asset.id);
     const assetBalance2 = await account2!.getBalanceByAssetId(asset.id);
 
-    expect(assetBalance1.amount.eq(createAmount(190, asset.decimals))).toBe(
+    expect(assetBalance1!.amount.eq(createAmount(190, asset.decimals))).toBe(
       true,
     );
-    expect(assetBalance2.amount.eq(createAmount(10, asset.decimals))).toBe(
+    expect(assetBalance2!.amount.eq(createAmount(10, asset.decimals))).toBe(
       true,
     );
   });
@@ -149,7 +149,7 @@ describe("Transfer", () => {
     const assetBalance = await session.account.getBalanceByAssetId(asset.id);
 
     expect(
-      assetBalance.amount.eq(createAmount(190, asset.decimals)),
+      assetBalance!.amount.eq(createAmount(190, asset.decimals)),
     ).toBeTruthy();
   });
 });

@@ -1,8 +1,12 @@
 import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { createAmount, Orchestrator, registerCrosschainAsset } from "@ft4";
+import {
+  createAmount,
+  Orchestrator,
+  registerCrosschainAsset,
+} from "@ft4/index";
 import { Amount } from "@ft4/asset/interfaces";
-import adminUser from "/util/admin_user";
+import adminUser from "../../../../util/admin_user";
 
 // This is needed to allow to check whether transaction is anchored
 jest.unmock("postchain-client");
@@ -34,9 +38,11 @@ describe("Asset Hierarchy", () => {
           `account${accountNum}`
         ].getBalanceByAssetId(testContext.sampleAsset.id);
 
-        expect(actualBalance.amount.toString()).toEqual(
-          expectedBalance.toString(),
-        );
+        expect(
+          (
+            actualBalance?.amount || createAmount(0, expectedBalance.decimals)
+          ).toString(),
+        ).toEqual(expectedBalance.toString());
       }
     }
   }

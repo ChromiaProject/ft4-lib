@@ -3,12 +3,12 @@ jest.unmock("postchain-client");
 import { IClient, createClient } from "postchain-client";
 import { nop } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
-import { createTestAuthDescriptor, emptyOp } from "/util/util";
-import { FlagsType, createInMemoryFtKeyStore } from "@ft4";
+import { createTestAuthDescriptor, emptyOp } from "../util/util";
+import { FlagsType, createInMemoryFtKeyStore } from "@ft4/index";
 import { Authenticator, KeyHandler } from "@ft4/authentication";
-import { createFakeAuthDataService } from "/util/fake-auth-data-service";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { fetchBlockchains } from "./util/blockchain";
-import { anchoredHandlerCallbackParameters } from "/util/blockchain-util";
+import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 
 function getMocks() {
   const { authDescriptor, keyPair } = createTestAuthDescriptor([

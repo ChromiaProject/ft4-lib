@@ -80,7 +80,7 @@ export function balancesByAccountId(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  BalanceResponse[],
+  PaginatedEntity<BalanceResponse>,
   {
     account_id: Buffer;
     page_size: number;

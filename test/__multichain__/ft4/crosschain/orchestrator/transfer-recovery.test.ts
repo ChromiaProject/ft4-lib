@@ -1,11 +1,11 @@
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
+import { fetchBlockchains } from "../../../util/blockchain";
 import {
   FlagsType,
   createAmount,
   createConnection,
   mint,
   registerCrosschainAsset,
-} from "@ft4";
+} from "@ft4/index";
 import { AuthenticatedAccount } from "@ft4/accounts";
 import { Asset } from "@ft4/asset/types";
 import { PendingTransfer, findPathToChainForAsset } from "@ft4/crosschain";
@@ -16,12 +16,12 @@ import {
 import { createSession } from "@ft4/ft-session";
 import { Connection, Session } from "@ft4/types";
 import { PaginatedEntity } from "@ft4/utils/types";
-import AccountBuilder from "/util/account-builder";
-import adminUser from "/util/admin_user";
+import AccountBuilder from "../../../../util/account-builder";
+import adminUser from "../../../../util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "/util/blockchain-util";
+} from "../../../../util/blockchain-util";
 import { initTransfer } from "@ft4/crosschain/operations";
 import { formatter } from "postchain-client";
 

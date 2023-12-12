@@ -11,7 +11,7 @@ import { Authenticator, KeyHandler } from "@ft4/authentication/types";
 import { IClient, isBlockAnchored } from "postchain-client";
 import { FlagsType } from "@ft4/accounts/auth-descriptor";
 import { Buffer } from "buffer";
-import { useChromiaNode } from "/util/chromia-node";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 describe("Transaction Builder", () => {
   let client: IClient;

@@ -2,15 +2,15 @@ import { Operation, RawGtx } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "/util/blockchain-util";
+} from "../../../util/blockchain-util";
 import {
   FlagsType,
   createAmount,
   createConnection,
   registerCrosschainAsset,
-} from "@ft4";
-import adminUser from "/util/admin_user";
-import AccountBuilder from "/util/account-builder";
+} from "@ft4/index";
+import adminUser from "../../../util/admin_user";
+import AccountBuilder from "../../../util/account-builder";
 import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
@@ -90,7 +90,7 @@ describe("Crosschain transfer", () => {
     });
 
     expect(
-      (await account01.getBalanceByAssetId(asset00.id)).amount.value,
+      (await account01.getBalanceByAssetId(asset00.id))?.amount.value,
     ).toEqual(createAmount(100, asset00.decimals).value);
   });
 });

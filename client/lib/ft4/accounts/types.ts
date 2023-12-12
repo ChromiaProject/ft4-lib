@@ -33,7 +33,7 @@ export interface Account {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Balance>>;
-  getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
+  getBalanceByAssetId: (assetId: BufferId) => Promise<Balance | null>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: (
     limit?: number,

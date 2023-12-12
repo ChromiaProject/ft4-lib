@@ -37,6 +37,6 @@ module.exports = {
      */
     //"maxWorkers": 1,
     'moduleNameMapper': {
-        '^/(.*)$': ['<rootDir>/client/lib/$1', '<rootDir>/test/$1']
+        '^@ft4/(.*)$': ['<rootDir>/client/lib/ft4/$1', '<rootDir>/test/$1']
     }
 };

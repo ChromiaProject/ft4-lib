@@ -7,7 +7,7 @@ import { Connection } from "@ft4/types";
 import AccountBuilder from "../util/account-builder";
 import { getNewAsset } from "../util/blockchain-util";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { useChromiaNode } from "/util/chromia-node";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let connection: Connection;
 let client: IClient;
@@ -86,8 +86,8 @@ describe("Asset balance", () => {
     const balance = await account.getBalanceByAssetId(asset2.id);
 
     expect({
-      asset: balance.asset,
-      amount: makeAmountBareBones(balance.amount),
+      asset: balance!.asset,
+      amount: makeAmountBareBones(balance!.amount),
     }).toEqual({
       asset: {
         id: asset2.id,

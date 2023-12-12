@@ -2,7 +2,7 @@ import * as pcl from "postchain-client";
 import { Connection } from "@ft4/types";
 import { ftAuth } from "@ft4/authentication";
 import { registerAccount } from "@ft4/admin/admin-op-functions";
-import { createInMemoryFtKeyStore } from "@ft4";
+import { createInMemoryFtKeyStore } from "@ft4/index";
 import {
   addAuthDescriptor,
   deleteAllAuthDescriptorsExclude,
@@ -25,11 +25,11 @@ import {
   createAccount,
   createTestAuthDescriptor,
   getSessionForAccount,
-} from "/util/util";
-import testUser from "/util/test-user";
-import AccountBuilder from "/util/account-builder";
-import adminUser from "/util/admin_user";
-import { useChromiaNode } from "/util/chromia-node";
+} from "@ft4/util/util";
+import testUser from "@ft4/util/test-user";
+import AccountBuilder from "@ft4/util/account-builder";
+import adminUser from "@ft4/util/admin_user";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let _connection: Connection;
 const admin = adminUser();

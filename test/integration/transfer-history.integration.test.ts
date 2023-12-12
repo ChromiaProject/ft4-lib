@@ -10,7 +10,7 @@ import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { IClient, gtv, newSignatureProvider } from "postchain-client";
 import { createTransferHistoryRetriever } from "@ft4/accounts/transfer-history/transfer-history-retrieval";
-import { useChromiaNode } from "/util/chromia-node";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let asset: Asset;
 let connection: Connection;
