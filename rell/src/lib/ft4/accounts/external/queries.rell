@@ -6,7 +6,7 @@ query get_config() {
 }
 
 query get_account_rate_limit_last_update(account_id: byte_array) {
-    val account = accounts.account @ { .id == account_id };
+    val account = accounts.Account(account_id);
     if (accounts.get_rate_limit_config_for_account(account).active == false) return (points = 0, last_update = 0);
     
     return accounts.rl_state @ { account }

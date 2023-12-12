@@ -49,6 +49,10 @@ function add_rate_limit_points(account, amount: integer) {
 	state.points += amount;
 }
 
-function get_rate_limit_config() = chain_context.args.rate_limit;
+function get_rate_limit_config(): rate_limit_config = chain_context.args.rate_limit;
 
-function get_rate_limit_config_for_account(account) = account_rate_limit(account) ?: chain_context.args.rate_limit;
+function get_rate_limit_config_for_account(account): rate_limit_config =
+    if (chain_context.args.rate_limit.active == false)
+        chain_context.args.rate_limit
+    else
+        account_rate_limit(account) ?: chain_context.args.rate_limit;
