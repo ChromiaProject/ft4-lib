@@ -117,6 +117,8 @@ pipelines:
             - cypress/screenshots/**
             - cypress/videos/**
 definitions: 
+  caches:
+    cypress: cypress
   services: 
     postgres: 
       image: postgres 
