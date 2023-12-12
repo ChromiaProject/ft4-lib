@@ -1,0 +1,34 @@
+@mount('gtx_api')
+module;
+
+/** Return value of `priority_check_v1` query. */
+struct priority_state_v1 {
+    /** id of account which wants to push the transaction forward */
+    account_id: byte_array?;
+
+    /** number of points currently associated with the account */
+    account_points: integer;
+
+    /** number of points which this transaction costs */
+    tx_cost_points: integer;
+
+    /** priority, higher is better */
+    priority: decimal;
+}
+
+/**
+ * This query is used by Postchain.
+ * See https://gitlab.com/chromaway/postchain/blob/dev/postchain-base/src/main/kotlin/net/postchain/base/BaseTransactionPrioritizer.kt
+ *
+ * @param tx_body             the transaction
+ * @param tx_enter_timestamp  when the transaction entered the queue
+ * @param current_timestamp   the current timestamp
+ */
+query priority_check_v1(tx_body: gtx_transaction_body, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
+    log("gtx_api.priority_check_v1((%s, %s, %s), %s, %s)".format(
+        tx_body.blockchain_rid, tx_body.operations.size(), tx_body.signers.size(), tx_enter_timestamp, current_timestamp));
+
+    // TODO add transaction priority logic here
+
+    return priority_state_v1(account_id = null, account_points = 0, tx_cost_points = 0, priority = 0.0);
+}
