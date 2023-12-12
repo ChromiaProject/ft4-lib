@@ -1,6 +1,8 @@
 @mount('gtx_api')
 module;
 
+import ^^.auth;
+
 /** Return value of `priority_check_v1` query. */
 struct priority_state_v1 {
     /** id of account which wants to push the transaction forward */
@@ -25,14 +27,44 @@ struct priority_state_v1 {
  * @param current_timestamp   the current timestamp
  */
 query priority_check_v1(tx_body: gtx_transaction_body, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
-    log("gtx_api.priority_check_v1((%s, %s, %s), %s, %s)".format(
-        tx_body.blockchain_rid, tx_body.operations.size(), tx_body.signers.size(), tx_enter_timestamp, current_timestamp));
+    val accounts_and_auth_descriptors = tx_body.operations @*
+        { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] }
+        (auth.fetch_account_and_auth_descriptor($.args));
 
-    // TODO add transaction priority logic here
+    when (accounts_and_auth_descriptors.size()) {
+        0 -> {
+            log("No authenticated operations found");
+            return priority_state_v1(
+                account_id = x"", // TODO should be null when Postchain supports it
+                account_points = 0,
+                tx_cost_points = 0,
+                priority = 0.0
+            );
+        }
+        1 -> {
+            log("One authenticated operation found");
+            val (account, auth_descriptor) = accounts_and_auth_descriptors[0];
 
-    val account_id = x""; // TODO should be null when Postchain supports it
-    val account_points = 0;
-    val tx_cost_points = 0;
-    val priority = 0.0;
-    return priority_state_v1(account_id, account_points, tx_cost_points, priority);
+            // TODO add transaction priority logic here
+
+            return priority_state_v1(
+                account_id = account.id,
+                account_points = 0,
+                tx_cost_points = 0,
+                priority = 0.0
+            );
+        }
+        else -> {
+            log("Multiple authenticated operations found");
+
+            // TODO How should we handle multiple authenticated operations?
+
+            return priority_state_v1(
+                account_id = x"", // TODO should be null when Postchain supports it
+                account_points = 0,
+                tx_cost_points = 0,
+                priority = 0.0
+            );
+        }
+    }
 }
