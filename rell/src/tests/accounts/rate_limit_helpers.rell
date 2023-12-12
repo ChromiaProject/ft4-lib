@@ -10,7 +10,7 @@ operation set_admin_account(accounts.account) {
     create admin_account(account);
 }
 
-@extend(accounts.account_rate_limit) function(accounts.account) =
+@extend(accounts.account_rate_limit_config) function(accounts.account) =
     if (exists(admin_account @? { account }))
         accounts.rate_limit_config(active = false)
     else

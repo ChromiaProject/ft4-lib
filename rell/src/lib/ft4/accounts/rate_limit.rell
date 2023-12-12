@@ -6,7 +6,7 @@
  * @return rate limit configuration for the account, or `null` to use default config from blockchain configuration.
  */
 @extendable
-function account_rate_limit(account): rate_limit_config? = null;
+function account_rate_limit_config(account): rate_limit_config? = null;
 
 function rate_limit(account) {
     val rl_config = get_rate_limit_config_for_account(account);
@@ -55,4 +55,4 @@ function get_rate_limit_config_for_account(account): rate_limit_config =
     if (chain_context.args.rate_limit.active == false)
         chain_context.args.rate_limit
     else
-        account_rate_limit(account) ?: chain_context.args.rate_limit;
+        account_rate_limit_config(account) ?: chain_context.args.rate_limit;
