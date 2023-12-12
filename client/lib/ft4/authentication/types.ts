@@ -1,23 +1,21 @@
-import { Operation } from "postchain-client";
-import { BufferId } from "../cryptoUtils";
-import { TxContext, TxBuilderTransaction } from "../utils/types";
-import { AuthDescriptor } from "../accounts/auth-descriptor/types";
 import { Buffer } from "buffer";
+import { LoginConfig } from "./login-manager/types";
+import { Connection } from "../types";
+import { Operation } from "postchain-client";
+import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
+import { BufferId, TxContext } from "/ft4/utils/types";
 
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
-  createSession(): AuthenticatorSession;
-  getKeyHandlerForOperation(
-    operation: Operation,
-  ): Promise<KeyHandler | undefined>;
+  getKeyHandlerForOperation(operation: Operation): Promise<KeyHandler | null>;
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
 
 export interface KeyHandler {
-  authDescriptor: AuthDescriptor;
+  authDescriptor: AnyAuthDescriptor;
   keyStore: KeyStore;
 
   satisfiesAuthRequirements(flags: string[]): boolean;
@@ -29,7 +27,7 @@ export interface KeyHandler {
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 
-  sign(transaction: TxBuilderTransaction): Promise<void>;
+  sign(transaction: Buffer): Promise<Buffer>;
 
   // FIXME
   getSigners(): Buffer[];
@@ -39,18 +37,12 @@ export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;
-  createKeyHandler(authDescriptor: AuthDescriptor): KeyHandler;
-}
-
-export interface AuthenticatorSession {
-  authenticator: Authenticator;
-  getUsedKeyHandlers(): Set<KeyHandler>;
-  getSigners(): Set<Buffer>;
-  authorize(operation: Operation): Promise<Operation[]>;
-  sign(transaction: TxBuilderTransaction): Promise<void>;
+  sign: (digestToSign: Buffer) => Promise<Buffer>;
+  createKeyHandler(authDescriptor: AnyAuthDescriptor): KeyHandler;
 }
 
 export interface AuthDataService {
+  connection: Connection;
   isOperationExposed(operationName: string): Promise<boolean>;
   getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
@@ -58,11 +50,6 @@ export interface AuthDataService {
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;
-  getLoginConfig(name: string | undefined): Promise<LoginConfigResponse>;
+  getLoginConfig(name: string | undefined): Promise<LoginConfig>;
   getBrid(): Buffer;
 }
-
-export type LoginConfigResponse = {
-  flags: string[];
-  ttl: number;
-};

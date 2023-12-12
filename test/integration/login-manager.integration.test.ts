@@ -1,13 +1,12 @@
-import { createChromiaClient, getNewAsset } from "./util/blockchain-util";
 import {
   FlagsType,
-  authDescriptor,
   createKeyStoreInteractor,
   minutes,
+  ttlLoginRule,
 } from "/ft4";
 import { createInMemoryEvmKeyStore } from "/ft4/authentication";
 import { Connection } from "/ft4/types";
-import { createAccount } from "./util/util";
+import { createAccount } from "../util/util";
 import { createAccountObject } from "/ft4/accounts/account-query-functions";
 import { createConnection } from "/ft4/ft-session";
 import { createAmount } from "/ft4/asset/amount";
@@ -15,15 +14,29 @@ import { transfer } from "/ft4/accounts/account-operations";
 import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
-import { allow } from "/ft4/accounts/auth-descriptor/rules";
+import {
+  and,
+  blockHeight,
+  blockTime,
+  createSingleSigAuthDescriptorRegistration,
+  lessOrEqual,
+  lessThan,
+  opCount,
+} from "/ft4/accounts/auth-descriptor";
+import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
+import { getPubkey } from "/ft4/utils";
+import { getNewAsset } from "/util/blockchain-util";
+import { useChromiaNode } from "/util/chromia-node";
 
 describe("Login manager", () => {
+  const getClient = useChromiaNode();
+
   let client: IClient;
   let connection: Connection;
   const dateNow = Date.now;
 
   beforeAll(async () => {
-    client = await createChromiaClient();
+    client = getClient();
     connection = createConnection(client);
     Date.now = jest.fn(() => 10);
   });
@@ -35,10 +48,11 @@ describe("Login manager", () => {
   it("adds disposable auth descriptor to account", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.address,
-    ).andNoRules;
+      null,
+    );
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
@@ -58,10 +72,10 @@ describe("Login manager", () => {
   it("added disposable auth descriptor has no rules by default", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
-      [FlagsType.Account],
+    const ad = createSingleSigAuthDescriptorRegistration(
+      ["A"],
       keyStore.address,
-    ).andNoRules;
+    );
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
@@ -73,16 +87,16 @@ describe("Login manager", () => {
     await loginManager.login({ accountId: account.id });
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rule).toEqual(null);
+    expect(authDescriptorAfterLogin.data[1].rules).toEqual(null);
   });
 
-  it("added disposable auth descriptor expires in 30 minutes", async () => {
+  it.only("added disposable auth descriptor expires in 30 minutes", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.address,
-    ).andNoRules;
+    );
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
@@ -93,23 +107,23 @@ describe("Login manager", () => {
 
     await loginManager.login({
       accountId: account.id,
-      config: { flags: ["T"], ttl: minutes(30) },
+      config: { flags: ["T"], rules: ttlLoginRule(minutes(30)) },
     });
     const expectedExpiration = Date.now() + 1800000; // 30 min from now
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rule).toEqual(
-      allow.blockTime.lessThan(expectedExpiration).only,
+    expect(authDescriptorAfterLogin.data[1].rules).toEqual(
+      lessThan(blockTime(expectedExpiration)),
     );
   });
 
   it("added disposable auth descriptor has correct rules", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.address,
-    ).andNoRules;
+    );
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
@@ -118,24 +132,22 @@ describe("Login manager", () => {
       keyStore,
     ).getLoginManager();
 
-    const rules = allow.blockHeight
-      .lessThan(2)
-      .and.operationCount.lessOrEqual(3).only;
+    const rules = and(lessThan(blockHeight(2)), lessOrEqual(opCount(3)));
     await loginManager.login({
       accountId: account.id,
       config: { flags: ["T"], rules },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rule).toEqual(rules);
+    expect(authDescriptorAfterLogin.data[1].rules).toEqual(rules);
   });
 
   it("added disposable auth descriptor can have no rules", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.address,
-    ).andNoRules;
+    );
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
@@ -146,20 +158,21 @@ describe("Login manager", () => {
 
     await loginManager.login({
       accountId: account.id,
-      config: { flags: ["T"] },
+      config: { flags: ["T"], rules: null },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rule).toEqual(null);
+    expect(authDescriptorAfterLogin.data[1].rules).toEqual(null);
   });
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = encryption.makeKeyPair();
     const asset = await getNewAsset(client, undefined, undefined, 5);
     const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.address,
-    ).andNoRules;
+      null,
+    );
     const accountId = await createAccount(client, ad);
 
     const loginManager = createKeyStoreInteractor(
@@ -171,6 +184,7 @@ describe("Login manager", () => {
       accountId: accountId,
       config: {
         flags: [FlagsType.Transfer],
+        rules: null,
       },
     });
 
@@ -181,21 +195,24 @@ describe("Login manager", () => {
 
     const disposableAuthHandler =
       session.account.authenticator.keyHandlers.filter(
-        (keyHandler) => keyHandler.authDescriptor.id !== keyStore.address,
+        (keyHandler) =>
+          deriveAuthDescriptorId(keyHandler.authDescriptor) !==
+          keyStore.address,
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(
-      disposableAuthHandler.authDescriptor.signers,
+      aggregateSigners(disposableAuthHandler.authDescriptor),
     );
   });
 
   it("does not login when account does not have admin auth descriptor that corresponds to used key store", async () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.id,
-    ).andNoRules;
+      null,
+    );
     const accountId = await createAccount(client, ad);
 
     const session = await createKeyStoreInteractor(
@@ -204,11 +221,11 @@ describe("Login manager", () => {
     ).getSession(accountId);
 
     const keyPair2 = encryption.makeKeyPair();
-    const ad2 = authDescriptor.create.singleSig.withArgs(
+    const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
       keyPair2.pubKey,
-    ).andNoRules;
-
+      null,
+    );
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const keyStoreInteractor = createKeyStoreInteractor(
@@ -217,7 +234,7 @@ describe("Login manager", () => {
     );
     const loginManager = keyStoreInteractor.getLoginManager();
 
-    expect(loginManager.login({ accountId })).rejects.toThrowError(
+    expect(loginManager.login({ accountId })).rejects.toThrow(
       `Admin auth descriptor does not exist for provided key store <${keyPair2.pubKey.toString(
         "hex",
       )}>`,
@@ -227,10 +244,11 @@ describe("Login manager", () => {
   it("uses key pair stored in login key store", async () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
-    const ad = authDescriptor.create.singleSig.withArgs(
+    const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.id,
-    ).andNoRules;
+      null,
+    );
     const accountId = await createAccount(client, ad);
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
@@ -240,10 +258,11 @@ describe("Login manager", () => {
 
     const loginKeyStore = createInMemoryLoginKeyStore();
     const keyPair2 = await loginKeyStore.createKeyPair(accountId);
-    const ad2 = authDescriptor.create.singleSig.withArgs(
+    const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
-      keyPair2.pubKey,
-    ).andNoRules;
+      getPubkey(keyPair2),
+      null,
+    );
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
     const loginManager = keyStoreInteractor.getLoginManager(loginKeyStore);

@@ -1,7 +1,6 @@
-import { BufferId } from "./cryptoUtils";
 import { Account, AuthenticatedAccount } from "./accounts/types";
 import { Asset } from "./asset/types";
-import { Config, PaginatedEntity } from "./utils/types";
+import { BufferId, Config, PaginatedEntity } from "./utils/types";
 import { TransactionBuilder } from "./utils/transaction-builder";
 import {
   IClient,
@@ -9,7 +8,7 @@ import {
   Operation,
   TransactionReceipt,
 } from "postchain-client";
-import { LoginManger, LoginKeyStore } from "./authentication/login-manager";
+import { LoginKeyStore, LoginManager } from "./authentication/login-manager";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -66,6 +65,6 @@ export type KeyStoreInteractor = {
     cursor: OptionalPageCursor,
   ): Promise<PaginatedEntity<Account>>;
   getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManager;
   onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
 };

@@ -1,3 +1,6 @@
+import { gtx } from "postchain-client";
+import { TxBuilderTransaction } from "../types";
+
 export {
   AuthorizationError,
   AnchoringTimeoutError,
@@ -7,3 +10,11 @@ export {
 } from "./types";
 
 export { transactionBuilder } from "./transaction-builder";
+
+export function txToBuffer(tx: TxBuilderTransaction): Buffer {
+  return gtx.getDigestToSign({
+    blockchainRid: tx.blockchainRid,
+    signers: tx.signers,
+    operations: tx.operations,
+  });
+}

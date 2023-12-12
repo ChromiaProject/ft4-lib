@@ -21,7 +21,12 @@ import {
   getAssetBySymbol,
   getAssetsByName,
 } from "./asset/asset-query-functions";
-import { createAuthenticator } from "./authentication";
+import {
+  AuthDataService,
+  Authenticator,
+  KeyStore,
+  createAuthenticator,
+} from "./authentication";
 import { createLoginManager } from "./authentication/login-manager";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import {
@@ -30,12 +35,6 @@ import {
   loginConfig,
   nonce,
 } from "./authentication/queries";
-import {
-  AuthDataService,
-  Authenticator,
-  KeyStore,
-} from "./authentication/types";
-import { BufferId } from "./cryptoUtils";
 import { ftEventEmitter } from "./events";
 import {
   Connection,
@@ -46,6 +45,7 @@ import {
 import { getConfig, getVersion, nop } from "./utils";
 import { fetchExposedOperations } from "./utils/exposed-operations";
 import { transactionBuilder } from "./utils/transaction-builder";
+import { BufferId } from "./utils/types";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -138,6 +138,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   };
 
   return Object.freeze({
+    connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
         await fetchAndCacheOperations();

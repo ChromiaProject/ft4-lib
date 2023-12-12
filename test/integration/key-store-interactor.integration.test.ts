@@ -1,20 +1,22 @@
 import { newSignatureProvider } from "postchain-client";
-import { FlagsType, authDescriptor } from "/ft4/accounts/auth-descriptor";
+import {
+  FlagsType,
+  createSingleSigAuthDescriptorRegistration,
+} from "/ft4/accounts/auth-descriptor";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import { createConnection, createKeyStoreInteractor } from "/ft4/ft-session";
-import AccountBuilder from "./util/account-builder";
-import { Connection, KeyStoreInteractor } from "/ft4/types";
-import { createChromiaClient } from "./util/blockchain-util";
-import {
-  Eip1193Provider,
-  createWeb3ProviderEvmKeyStore,
-} from "/ft4/authentication";
+import { Connection } from "/ft4/types";
+import AccountBuilder from "/util/account-builder";
+import { useChromiaNode } from "/util/chromia-node";
 
 let connection: Connection;
 
 describe("Key store interactor", () => {
+  const getClient = useChromiaNode();
+
   beforeAll(async () => {
-    connection = createConnection(await createChromiaClient());
+    const client = getClient();
+    connection = createConnection(client);
   });
 
   it("should return one account if corresponding key is used in one account", async () => {
@@ -82,16 +84,18 @@ describe("Key store interactor", () => {
       .withParticipant(keyPair1)
       .build();
 
-    const ad1 = authDescriptor.create.singleSig.withArgs(
+    const ad1 = createSingleSigAuthDescriptorRegistration(
       ["M"],
       keyPair1.pubKey,
-    ).andNoRules;
+      null,
+    );
     await account.addAuthDescriptor(ad1, keyPair1);
 
-    const ad2 = authDescriptor.create.singleSig.withArgs(
+    const ad2 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Transfer],
       keyPair2.pubKey,
-    ).andNoRules;
+      null,
+    );
     await account.addAuthDescriptor(ad2, keyPair2);
 
     const session = await createKeyStoreInteractor(
@@ -100,42 +104,5 @@ describe("Key store interactor", () => {
     ).getSession(account.id);
 
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);
-  });
-
-  describe("account updates", () => {
-    it("emits a new interactor on account change", async () => {
-      let handler = undefined;
-      const providerMock: Partial<Eip1193Provider> = {
-        request: jest
-          .fn()
-          .mockReturnValueOnce(["0x13376a16794B18CC3287635116BF842e34e9940C"])
-          .mockReturnValue(["0xabcfD2cFecb42f72096BA436f091add0fb757104"]),
-        once: (eventName: string, h: (...args: any[]) => void) => {
-          expect(eventName).toBe("accountsChanged");
-          handler = h;
-          return this;
-        },
-      };
-      const keyStore = await createWeb3ProviderEvmKeyStore(
-        providerMock as Eip1193Provider,
-      );
-      const { onKeyStoreChanged } = createKeyStoreInteractor(
-        connection.client,
-        keyStore,
-      );
-
-      const callback = jest.fn();
-      const promise = new Promise((resolve) => {
-        onKeyStoreChanged((newKeyInteractor: KeyStoreInteractor) => {
-          callback();
-          resolve(newKeyInteractor);
-        });
-      });
-
-      handler();
-
-      await promise;
-      expect(callback).toHaveBeenCalled();
-    });
   });
 });

@@ -1,51 +1,311 @@
-@test module;
+@test
+module;
 
 import ^^^.lib.ft4.accounts.{
   rule_expression,
   rule_variable,
   rule_operator,
-  serialize_rules
+  serialize_rules,
+  is_rule_violated,
+  block_height,
+  block_time,
+  op_count,
+  less_than,
+  less_or_equal,
+  equals,
+  greater_than,
+  greater_or_equal
 };
 
-function test_it_creates_gtv_from_single_rule() {
-  val expr = rule_expression(
-    rule_variable.op_count,
-    rule_operator.lt,
-    1
+function assert_rule_result(
+  rule: rule_expression,
+  op_count: integer = 0,
+  height: integer = 0,
+  time: integer = 0, 
+  result: boolean = true
+) {
+  val rule_variables = map<text, gtv>();
+
+	rule_variables[rule_variable.op_count.name] = op_count.to_gtv();
+	rule_variables[rule_variable.block_height.name] = height.to_gtv();
+	rule_variables[rule_variable.block_time.name] = time.to_gtv();
+
+  assert_equals(
+    is_rule_violated(
+      rule,
+      rule_variables
+    ),
+    not result
   );
+}
+
+namespace test_block_height {
+  function test_block_height_rule_gt_works() {
+    assert_rule_result(
+      greater_than(block_height(2)),
+      height = 3, result = true
+    );
+  }
+
+  function test_block_height_rule_gt_fails() {
+    assert_rule_result(
+      greater_than(block_height(2)),
+      height = 1, result = false
+    );
+  }
+
+  function test_block_height_rule_ge_works() {
+    assert_rule_result(
+      greater_or_equal(block_height(2)),
+      height = 3, result = true
+    );
+    assert_rule_result(
+      greater_or_equal(block_height(3)),
+      height = 3, result = true
+    );
+  }
+
+  function test_block_height_rule_ge_fails() {
+    assert_rule_result(
+      greater_or_equal(block_height(2)),
+      height = 1, result = false
+    );
+  }
+
+  function test_block_height_rule_eq_works() {
+    assert_rule_result(
+      equals(block_height(2)),
+      height = 2, result = true
+    );
+  }
+
+  function test_block_height_rule_eq_fails() {
+    assert_rule_result(
+      equals(block_height(2)),
+      height = 1, result = false
+    );
+  }
+
+  function test_block_height_rule_le_works() {
+    assert_rule_result(
+      less_or_equal(block_height(3)),
+      height = 3, result = true
+    );
+    assert_rule_result(
+      less_or_equal(block_height(3)),
+      height = 2, result = true
+    );
+  }
+
+  function test_block_height_rule_le_fails() {
+    assert_rule_result(
+      less_or_equal(block_height(2)),
+      height = 3, result = false
+    );
+  }
+
+  function test_block_height_rule_lt_works() {
+    assert_rule_result(
+      less_than(block_height(2)),
+      height = 1, result = true
+    );
+  }
+
+  function test_block_height_rule_lt_fails() {
+    assert_rule_result(
+      less_than(block_height(3)),
+      height = 4, result = false
+    );
+  }
+}
+
+namespace test_block_time {
+  function test_block_time_rule_gt_works() {
+    assert_rule_result(
+      greater_than(block_time(2)),
+      time = 3, result = true
+    );
+  }
+
+  function test_block_time_rule_gt_fails() {
+    assert_rule_result(
+      greater_than(block_time(2)),
+      time = 1, result = false
+    );
+  }
+
+  function test_block_time_rule_ge_works() {
+    assert_rule_result(
+      greater_or_equal(block_time(2)),
+      time = 3, result = true
+    );
+    assert_rule_result(
+      greater_or_equal(block_time(3)),
+      time = 3, result = true
+    );
+  }
+
+  function test_block_time_rule_ge_fails() {
+    assert_rule_result(
+      greater_or_equal(block_time(2)),
+      time = 1, result = false
+    );
+  }
+
+  function test_block_time_rule_eq_works() {
+    assert_rule_result(
+      equals(block_time(2)),
+      time = 2, result = true
+    );
+  }
+
+  function test_block_time_rule_eq_fails() {
+    assert_rule_result(
+      equals(block_time(2)),
+      time = 1, result = false
+    );
+  }
+
+  function test_block_time_rule_le_works() {
+    assert_rule_result(
+      less_or_equal(block_time(3)),
+      time = 3, result = true
+    );
+    assert_rule_result(
+      less_or_equal(block_time(3)),
+      time = 2, result = true
+    );
+  }
+
+  function test_block_time_rule_le_fails() {
+    assert_rule_result(
+      less_or_equal(block_time(2)),
+      time = 3, result = false
+    );
+  }
+
+  function test_block_time_rule_lt_works() {
+    assert_rule_result(
+      less_than(block_time(2)),
+      time = 1, result = true
+    );
+  }
+
+  function test_block_time_rule_lt_fails() {
+    assert_rule_result(
+      less_than(block_time(3)),
+      time = 4, result = false
+    );
+  }
+}
+
+namespace test_op_count {
+  function test_op_count_rule_gt_works() {
+    assert_rule_result(
+      greater_than(op_count(2)),
+      op_count = 3, result = true
+    );
+  }
+
+  function test_op_count_rule_gt_fails() {
+    assert_rule_result(
+      greater_than(op_count(2)),
+      op_count = 1, result = false
+    );
+  }
+
+  function test_op_count_rule_ge_works() {
+    assert_rule_result(
+      greater_or_equal(op_count(2)),
+      op_count = 3, result = true
+    );
+    assert_rule_result(
+      greater_or_equal(op_count(3)),
+      op_count = 3, result = true
+    );
+  }
+
+  function test_op_count_rule_ge_fails() {
+    assert_rule_result(
+      greater_or_equal(op_count(2)),
+      op_count = 1, result = false
+    );
+  }
+
+  function test_op_count_rule_eq_works() {
+    assert_rule_result(
+      equals(op_count(2)),
+      op_count = 2, result = true
+    );
+  }
+
+  function test_op_count_rule_eq_fails() {
+    assert_rule_result(
+      equals(op_count(2)),
+      op_count = 1, result = false
+    );
+  }
+
+  function test_op_count_rule_le_works() {
+    assert_rule_result(
+      less_or_equal(op_count(3)),
+      op_count = 3, result = true
+    );
+    assert_rule_result(
+      less_or_equal(op_count(3)),
+      op_count = 2, result = true
+    );
+  }
+
+  function test_op_count_rule_le_fails() {
+    assert_rule_result(
+      less_or_equal(op_count(2)),
+      op_count = 3, result = false
+    );
+  }
+
+  function test_op_count_rule_lt_works() {
+    assert_rule_result(
+      less_than(op_count(2)),
+      op_count = 1, result = true
+    );
+  }
+
+  function test_op_count_rule_lt_fails() {
+    assert_rule_result(
+      less_than(op_count(3)),
+      op_count = 4, result = false
+    );
+  }
+}
+
+function test_it_creates_gtv_from_single_rule() {
+  val expr = less_than(op_count(1));
   assert_equals(
     serialize_rules([expr]),
     [
-      rule_operator.lt.to_gtv(),
-      rule_variable.op_count.to_gtv(),
+      rule_operator.lt.name.to_gtv(),
+      rule_variable.op_count.name.to_gtv(),
       0x1.to_gtv()
     ].to_gtv()
   );
 }
 
 function test_it_creates_gtv_from_multiple_rules() {
-  val expr1 = rule_expression(
-    rule_variable.op_count,
-    rule_operator.lt,
-    1
-  );
-  val expr2 = rule_expression(
-    rule_variable.op_count,
-    rule_operator.lt,
-    2
-  );
+  val expr1 = less_than(op_count(1));
+  val expr2 = less_than(op_count(2));
   assert_equals(
     serialize_rules([expr1, expr2]),
     [
       "and".to_gtv(),
       [
-        rule_operator.lt.to_gtv(),
-        rule_variable.op_count.to_gtv(),
+        rule_operator.lt.name.to_gtv(),
+        rule_variable.op_count.name.to_gtv(),
         0x1.to_gtv()
       ].to_gtv(),
       [
-        rule_operator.lt.to_gtv(),
-        rule_variable.op_count.to_gtv(),
+        rule_operator.lt.name.to_gtv(),
+        rule_variable.op_count.name.to_gtv(),
         0x2.to_gtv()
       ].to_gtv()
     ].to_gtv()

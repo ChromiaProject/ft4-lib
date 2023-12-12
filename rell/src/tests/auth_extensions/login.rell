@@ -2,31 +2,83 @@
 module;
 
 import ^^^.lib.ft4.auth;
+import auth_external: ^^^.lib.ft4.auth.external;
+import ^^^.lib.ft4.accounts;
 
 /*
  *  Tests login_config extension defined in tests/extensions/auth.rell
  */
 function test_default_login_config_can_be_overriden() {
-    val config = auth.get_login_config("default");
+    val config = auth_external.get_login_config("default");
 
     assert_equals(config, auth._login_config(flags = ["B"]));
 }
 
 function test_querying_login_config_without_name_returns_default_config() {
-    val config = auth.get_login_config();
+    val config = auth_external.get_login_config();
 
     assert_equals(config, auth._login_config(flags = ["B"]));
 }
 
 function test_custom_login_config_can_be_fetched() {
-    val config = auth.get_login_config("custom_config");
+    val config = auth_external.get_login_config("custom_config");
 
     assert_equals(config, auth._login_config(flags = ["X", "Y"]));
 }
 
 function test_custom_login_config_can_have_ttl() {
-    val config = auth.get_login_config("custom_config_with_ttl");
+    val config = auth_external.get_login_config("custom_config_with_ttl");
 
-    assert_equals(config, auth._login_config(flags = ["Z"], ttl = 10));
+    assert_equals(
+        config,
+        auth._login_config(
+            flags = ["Z"],
+            rules = auth.login_rule_expression(
+                accounts.rule_operator.lt,
+                accounts.rule_variable.block_time,
+                "{10}"
+            ).to_gtv()
+        )
+    );
+}
+
+function test_custom_login_config_can_have_simple_rule() {
+    val config = auth_external.get_login_config("custom_config_with_simple_rule");
+
+    assert_equals(
+        config,
+        auth._login_config(
+            flags = ["W"],
+            rules = auth.login_rule_expression(
+                accounts.rule_operator.lt,
+                accounts.rule_variable.block_height,
+                "{5}"
+            ).to_gtv()
+        )
+    );
+}
+
+function test_custom_login_config_can_have_complex_rule() {
+    val config = auth_external.get_login_config("custom_config_with_complex_rule");
+
+    assert_equals(
+        config,
+        auth._login_config(
+            flags = ["A", "Z"],
+            rules = [
+                "and".to_gtv(),
+                auth.login_rule_expression(
+                    accounts.rule_operator.lt,
+                    accounts.rule_variable.block_height,
+                    "{5}"
+                ).to_gtv(),
+                auth.login_rule_expression(
+                    accounts.rule_operator.le,
+                    accounts.rule_variable.op_count,
+                    "7"
+                ).to_gtv()
+            ].to_gtv()
+        )
+    );
 }
 
