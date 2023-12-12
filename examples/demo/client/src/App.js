@@ -6,7 +6,7 @@ import {
     createKeyStoreInteractor,
     createWeb3ProviderEvmKeyStore,
     createSessionStorageLoginKeyStore,
-} from 'ft3-lib';
+} from '@chromia/ft4';
 
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
