@@ -28,6 +28,19 @@ pipelines:
           services:
             - postgres
             - docker
+      - step:
+          name: E2E Tests
+          image: cypress/browsers:node18.16.0-chrome101-ff99
+          size: 2x
+          caches:
+            - node
+            - cypress
+          script:
+            - npm ci
+            - npm run test:e2e:headless
+          artifacts:
+            - cypress/screenshots/**
+            - cypress/videos/**
   branches:
     ft4:
       - step:
