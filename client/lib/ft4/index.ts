@@ -19,7 +19,7 @@ export {
   days,
   weeks,
   LoginConfigSimpleRule,
-  LoginConfigRule,
+  LoginConfigRules,
   ttlLoginRule,
 } from "./authentication";
 

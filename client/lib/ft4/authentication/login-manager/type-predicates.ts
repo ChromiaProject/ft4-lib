@@ -17,7 +17,9 @@ export function isLoginConfigSimpleRule(
 export function isSimpleRule(rule: Rules | RawRules): rule is AnySimpleRule {
   return (
     rule !== null &&
-    (isRawRule(rule) ? rule[0] !== "and" : rule.operator === undefined)
+    (isRawRule(rule)
+      ? rule[0] !== "and"
+      : Object.prototype.hasOwnProperty.call(rule, "variable"))
   );
 }
 

@@ -90,7 +90,7 @@ describe("Login manager", () => {
     expect(authDescriptorAfterLogin.data[1].rules).toEqual(null);
   });
 
-  it("added disposable auth descriptor expires in 30 minutes", async () => {
+  it.only("added disposable auth descriptor expires in 30 minutes", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(

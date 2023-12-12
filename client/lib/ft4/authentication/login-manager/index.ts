@@ -189,7 +189,6 @@ async function getRulesFromLoginConfig(
   } else if (isSimpleRule(rules)) {
     return ensureAuthDescriptorRule(rules, getBlockHeight);
   } else {
-    rules;
     const rulesWithoutAnd: AnySimpleRule[] = isRawRule(rules)
       ? <AnySimpleRule[]>rules.slice(1)
       : rules.rules;
@@ -244,11 +243,11 @@ async function ensureAuthDescriptorRule(
     throw new LoginConfigError("unexpected variable: " + variable);
   }
 
-  return [
+  return {
     operator,
     variable,
-    finalValue,
-  ] as unknown as AuthDescriptorSimpleRule;
+    value: finalValue,
+  };
 }
 
 async function addDisposableAuthDescriptor(
