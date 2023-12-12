@@ -20,6 +20,7 @@ export {
   LoginConfigSimpleRule,
   LoginConfigRules,
   ttlLoginRule,
+  authDescriptorRuleToLoginConfigRule,
 } from "./login-manager";
 
 export {

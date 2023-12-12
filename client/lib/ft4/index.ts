@@ -21,6 +21,7 @@ export {
   LoginConfigSimpleRule,
   LoginConfigRules,
   ttlLoginRule,
+  authDescriptorRuleToLoginConfigRule,
 } from "./authentication";
 
 // Admin module
