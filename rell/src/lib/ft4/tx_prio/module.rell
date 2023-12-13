@@ -1,8 +1,8 @@
 @mount('gtx_api')
 module;
 
-import ^^.auth;
-import ^^.accounts;
+import ^.auth;
+import ^.accounts;
 
 /** Return value of `priority_check_v1` query. */
 struct priority_state_v1 {
@@ -42,7 +42,7 @@ query priority_check_v1(tx_body: gtx_transaction_body, tx_enter_timestamp: times
     val current_points = accounts.rl_state @? { account } (.points);
     if (current_points == null) return no_account_proirity_state(1.0);
 
-    val priority = current_points / max_points;
+    val priority = current_points.to_decimal() / max_points;
 
     return priority_state_v1(
         account_id = account.id,

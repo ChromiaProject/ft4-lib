@@ -1,0 +1,76 @@
+@test module;
+
+import ^^.assets.utils;
+import ^^^.lib.ft4.tx_prio;
+import ^^^.lib.ft4.accounts;
+
+function test_no_authenticated_operations() {
+    val priority_state = tx_prio.priority_check_v1(
+        gtx_transaction_body(
+            blockchain_rid = chain_context.blockchain_rid,
+            operations = [
+                gtx_operation("foo", list<gtv>())
+            ],
+            signers = list<gtv>()
+        ),
+        tx_enter_timestamp = 0,
+        current_timestamp = 0
+    );
+
+    assert_equals(priority_state.account_id, x""); // TODO should be null when Postchain supports it
+    assert_equals(priority_state.priority, 0.0);
+}
+
+function test_one_authenticated_operation() {
+    assert_equals(accounts.get_rate_limit_config().active, true);
+    assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+    assert_equals(accounts.get_rate_limit_config().max_points, 5);
+
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+    val priority_state = tx_prio.priority_check_v1(
+        gtx_transaction_body(
+            blockchain_rid = chain_context.blockchain_rid,
+            operations = [
+                alice.ft_auth().to_gtx_operation(),
+                gtx_operation("foo", list<gtv>())
+            ],
+            signers = list<gtv>()
+        ),
+        tx_enter_timestamp = 0,
+        current_timestamp = 0
+    );
+
+    assert_equals(priority_state.account_id, alice.account.id);
+    assert_equals(priority_state.account_points, 1);
+    assert_equals(priority_state.tx_cost_points, 1);
+    assert_equals(priority_state.priority, 0.2);
+}
+
+function test_two_authenticated_operations() {
+    assert_equals(accounts.get_rate_limit_config().active, true);
+    assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+    assert_equals(accounts.get_rate_limit_config().max_points, 5);
+
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+    val priority_state = tx_prio.priority_check_v1(
+        gtx_transaction_body(
+            blockchain_rid = chain_context.blockchain_rid,
+            operations = [
+                alice.ft_auth().to_gtx_operation(),
+                gtx_operation("foo", list<gtv>()),
+                alice.ft_auth().to_gtx_operation(),
+                gtx_operation("bar", list<gtv>())
+            ],
+            signers = list<gtv>()
+        ),
+        tx_enter_timestamp = 0,
+        current_timestamp = 0
+    );
+
+    assert_equals(priority_state.account_id, alice.account.id);
+    assert_equals(priority_state.account_points, 1);
+    assert_equals(priority_state.tx_cost_points, 2);
+    assert_equals(priority_state.priority, 0.2);
+}
