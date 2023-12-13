@@ -29,15 +29,21 @@ pipelines:
             - postgres
             - docker
       - step:
+          max-time: 15
           name: E2E Tests
-          image: cypress/browsers:node18.16.0-chrome101-ff99
+          image: cypress/browsers:node18.12.0-chrome107
           size: 2x
           caches:
             - node
             - cypress
           script:
+            - apt-get update
+            - apt-get install -y fluxbox xvfb
+            - export DISPLAY=:0.0
+            - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
+            - fluxbox &
             - npm ci
-            - npm run test:e2e:headless
+            - npm run test:e2e
           artifacts:
             - cypress/screenshots/**
             - cypress/videos/**
@@ -118,7 +124,7 @@ pipelines:
             - cypress/videos/**
 definitions: 
   caches:
-    cypress: cypress
+    cypress: $BITBUCKET_CLONE_DIR/.cache/Cypress
   services: 
     postgres: 
       image: postgres 
