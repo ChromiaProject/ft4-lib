@@ -23,6 +23,9 @@ const cypressWebpackConfig: webpack.Configuration = {
             plugins: ['@babel/plugin-transform-runtime'], // For async/await support
           },
         },
+        // This is basically the whole point of this file
+        // Only transpile Synpress modules in order to make it possible
+        // for the end-to-end tests to be implemented in TypeScript
         exclude: modulePath =>
           /node_modules/.test(modulePath) &&
           !/node_modules\/@synthetixio\/synpress/.test(modulePath),
