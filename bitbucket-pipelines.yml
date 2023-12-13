@@ -39,6 +39,9 @@ pipelines:
             - node
             - cypress
           script:
+            # Clean up duplicate entries in the sources list for Microsoft Edge
+            - rm -vf /etc/apt/sources.list.d/microsoft-edge-stable.list
+            - rm -vf /etc/apt/sources.list.d/microsoft-edge.list
             - apt-get update
             - apt-get install -y curl lsof fluxbox xvfb netcat-openbsd
             - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
