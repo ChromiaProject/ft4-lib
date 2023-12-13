@@ -61,7 +61,7 @@ start_backend() {
     if [ ! -f "$KEYPAIR" ]; then
         echo "Generating keypair..."
         chr keygen --save $KEYPAIR
-        echo "Keypair generated. Remember to update the admin_pubkey field in demo/rell.config.yml."
+        echo "Keypair generated."
     else
         echo "Keypair already exists."
     fi
