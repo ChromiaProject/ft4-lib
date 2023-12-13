@@ -45,11 +45,12 @@ pipelines:
             # - mkdir -p /usr/share/man/man1
 
             - apt-get update
+            - apt install -y gnupg software-properties-common
 
             - wget -O- https://apt.corretto.aws/corretto.key | apt-key add - 
             - add-apt-repository 'deb https://apt.corretto.aws stable main'
 
-            - apt install -y curl lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk gnupg software-properties-common
+            - apt install -y curl lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk
             - java -version
 
             - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
