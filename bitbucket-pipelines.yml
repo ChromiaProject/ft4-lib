@@ -1,7 +1,7 @@
 image: node:18
 
 options:
-  max-time: 15
+  max-time: 30
 
 pipelines:
   pull-requests:
