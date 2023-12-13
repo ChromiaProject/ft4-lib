@@ -20,4 +20,4 @@
 - **Rate limit config** New format for rate limit configuration.
 
 ### Added
-- Added support for TTL in login config, defined in milliseconds.
+- Added support for rules in login config.
