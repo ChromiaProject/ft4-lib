@@ -19,8 +19,8 @@ export function createInMemoryFtKeyStore(
     id: signatureProvider.pubKey,
     pubKey: signatureProvider.pubKey,
     isInteractive: false,
-    sign: (digestToSign: TxBuilderTransaction) =>
-      signatureProvider.sign(txToBuffer(digestToSign)),
+    sign: (transaction: TxBuilderTransaction) =>
+      signatureProvider.sign(txToBuffer(transaction)),
     createKeyHandler: (ad: AnyAuthDescriptor) =>
       createFtKeyHandler(ad, keyStore),
   });
