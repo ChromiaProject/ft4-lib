@@ -26,14 +26,15 @@ print_usage() {
     echo "Usage: $0 [OPTION]"
     echo
     echo "Options:"
-    echo "  --run-tests-headless        Run Cypress tests in headless mode."
-    echo "  --run-tests-interactive     Run Cypress tests in interactive mode."
-    echo "  --wait-for-node             Wait for the Chromia node process to finish."
-    echo "  --enable-cypress-debug      Enable Cypress debug mode (must be combined with test run options)."
-    echo "  --help                      Display this usage information."
+    echo "  --clean-env                  Perform environment cleanup before starting."
+    echo "  --run-tests-headless         Run Cypress tests in headless mode."
+    echo "  --run-tests-interactive      Run Cypress tests in interactive mode."
+    echo "  --wait-for-node              Wait for the Chromia node process to finish."
+    echo "  --enable-cypress-debug       Enable Cypress debug mode (must be combined with test run options)."
+    echo "  --help                       Display this usage information."
     echo
     echo "Examples:"
-    echo "  $0 --run-tests-headless"
+    echo "  $0 --clean-env --run-tests-headless"
     echo "  $0 --run-tests-interactive"
     echo "  $0 --run-tests-headless --enable-cypress-debug"
 }
@@ -180,12 +181,60 @@ cleanup() {
     echo 'Cleanup complete.'
 }
 
-if [[ "$#" -eq 0 ]] || [[ "$1" == "--help" ]]; then
+clean_env() {
+    echo "Cleaning up the environment..."
+
+    # Kill all Chrome and Chromedriver processes that may interfere with testing
+    pkill -f chromedriver || true
+    pkill -f 'Google Chrome' || true
+}
+
+trap cleanup EXIT INT TERM
+
+# Process flags and arguments
+CLEAN_ENV_FLAG=false
+CYPRESS_DEBUG_MODE=""
+COMMAND_TO_RUN=""
+
+for arg in "$@"; do
+    case $arg in
+        --clean-env)
+            CLEAN_ENV_FLAG=true
+            ;;
+        --run-tests-headless)
+            COMMAND_TO_RUN="run_tests_headless"
+            ;;
+        --run-tests-interactive)
+            COMMAND_TO_RUN="run_tests_interactive"
+            ;;
+        --wait-for-node)
+            COMMAND_TO_RUN="wait_for_node"
+            ;;
+        --enable-cypress-debug)
+            CYPRESS_DEBUG_MODE="DEBUG=cypress:*"
+            ;;
+        --help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+# Check command to run is specified
+if [ -z "$COMMAND_TO_RUN" ]; then
+    echo "Error: No command specified to run."
     print_usage
     exit 1
 fi
 
-trap cleanup EXIT INT TERM
+# Reset the environment if specified
+if [ "$CLEAN_ENV_FLAG" = true ]; then
+    clean_env
+fi
 
 start_backend
 start_frontend
@@ -193,35 +242,21 @@ start_frontend
 wait_for_services_ready
 setup_blockchain_resources
 
-echo "Backend and frontend services are ready. Running Cypress tests next..."
+SERVICES_READY_MESSAGE="Backend and frontend services are ready."
 
-# Determine script behavior based on passed argument
-CYPRESS_DEBUG_MODE=""
+SYNPRESS_COMMAND="PRIVATE_KEY=$ETH_PRIVATE_KEY \
+    $CYPRESS_DEBUG_MODE \
+    ./node_modules/.bin/synpress run \
+    --configFile cypress.config.ts"
 
-if [ "$2" == "--enable-cypress-debug" ]; then
-    CYPRESS_DEBUG_MODE="DEBUG=cypress:*"
+# Run the appropriate command
+if [ "$COMMAND_TO_RUN" = "run_tests_headless" ]; then
+    echo "$SERVICES_READY_MESSAGE Running Synpress tests in headless mode..."
+    eval "$SYNPRESS_COMMAND --headless"
+elif [ "$COMMAND_TO_RUN" = "run_tests_interactive" ]; then
+    echo "$SERVICES_READY_MESSAGE Running Synpress tests in interactive mode..."
+    eval "$SYNPRESS_COMMAND"
+elif [ "$COMMAND_TO_RUN" = "wait_for_node" ]; then
+    echo "$SERVICES_READY_MESSAGE Waiting for node..."
+    wait $NODE_PID
 fi
-
-echo "ETH private key", $ETH_PRIVATE_KEY
-case "$1" in
-    --run-tests-headless)
-        # Run Cypress tests in headless mode
-        PRIVATE_KEY=$ETH_PRIVATE_KEY \
-            $CYPRESS_DEBUG_MODE \
-            ./node_modules/.bin/synpress run --configFile cypress.config.ts --headless
-        ;;
-    --run-tests-interactive)
-        # Run Cypress tests in interactive mode
-        PRIVATE_KEY=$ETH_PRIVATE_KEY \
-            $CYPRESS_DEBUG_MODE \
-            ./node_modules/.bin/synpress open --configFile cypress.config.ts
-        ;;
-    --wait-for-node)
-        # Just wait for the Chromia node process to finish
-        wait $NODE_PID
-        ;;
-    *)
-        echo "Invalid argument or no argument provided. Exiting."
-        exit 1
-        ;;
-esac
