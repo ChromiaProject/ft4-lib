@@ -38,7 +38,10 @@ pipelines:
             - cypress
           script:
             - apt-get update
-            - apt-get install -y lsof fluxbox xvfb
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
+            - apt update
+            - apt install -y lsof fluxbox xvfb netcat-openbsd chr default-jre
             - export DISPLAY=:0.0
             - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
             - fluxbox &
@@ -48,6 +51,7 @@ pipelines:
             - cypress/screenshots/**
             - cypress/videos/**
           services:
+            - postgres
             - docker
   branches:
     ft4:
