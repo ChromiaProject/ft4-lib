@@ -32,8 +32,8 @@ pipelines:
           max-time: 15
           name: E2E Tests
           # image: cypress/browsers:node18.12.0-chrome107
-          # image: cypress/browsers:node-18.15.0-chrome-106.0.5249.61-1-ff-99.0.1-edge-114.0.1823.51-1
-          image: cypress/browsers:node-18.16.1-chrome-114.0.5735.133-1-ff-114.0.2-edge-114.0.1823.51-1
+          image: cypress/browsers:node-18.15.0-chrome-106.0.5249.61-1-ff-99.0.1-edge-114.0.1823.51-1
+          # image: cypress/browsers:node-18.16.1-chrome-114.0.5735.133-1-ff-114.0.2-edge-114.0.1823.51-1
           size: 2x
           caches:
             - node
