@@ -1,0 +1,18 @@
+@test module;
+
+import ^^.assets.utils;
+import ^^^.lib.ft4.tx_prio;
+import ^^^.lib.ft4.accounts;
+
+function test_tx_prio() {
+    rell.test.set_block_interval(1000); // set block interval to 1 second
+
+    assert_equals(accounts.get_rate_limit_config().active, true);
+    assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+    val priority_state = tx_prio.priority_check_v1(gtx_transaction_body(x"", [gtx_operation("foo", list<gtv>())], list<gtv>()), 0, 0);
+
+    // TODO test it
+}

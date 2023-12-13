@@ -17,7 +17,6 @@ import ^.auth;
 import ^.utils;
 import ^.version;
 import .external;
-import .tx_prio;
 
 enum auth_type {
     S, M, ES, EM,

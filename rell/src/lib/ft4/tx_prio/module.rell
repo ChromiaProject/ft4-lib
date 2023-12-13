@@ -1,8 +1,8 @@
 @mount('gtx_api')
 module;
 
-import ^^.auth;
-import ^^.accounts;
+import ^.auth;
+import ^.accounts;
 
 /** Return value of `priority_check_v1` query. */
 struct priority_state_v1 {
