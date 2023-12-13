@@ -67,7 +67,7 @@ start_backend() {
     fi
 
     # Start Node
-    echo "Starting the Chromia node..."
+    echo "Starting Chromia node..."
     chr node start --wipe &
     NODE_PID=$!
 
@@ -76,6 +76,7 @@ start_backend() {
 }
 
 start_frontend() {
+    echo "Starting React frontend..."
     cd $FRONTEND_PATH
 
     npm install

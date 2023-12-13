@@ -32,25 +32,18 @@ pipelines:
           max-time: 15
           name: E2E Tests
           image: cypress/browsers:node18.12.0-chrome107
-          # image: cypress/browsers:node-18.15.0-chrome-106.0.5249.61-1-ff-99.0.1-edge-114.0.1823.51-1
-          # image: cypress/browsers:node-18.16.1-chrome-114.0.5735.133-1-ff-114.0.2-edge-114.0.1823.51-1
           size: 2x
           caches:
             - node
             - cypress
           script:
-            # Clean up duplicate entries in the sources list for Microsoft Edge
-            # - rm -vf /etc/apt/sources.list.d/microsoft-edge-stable.list
-            # - rm -vf /etc/apt/sources.list.d/microsoft-edge.list
-            # - mkdir -p /usr/share/man/man1
-
             - apt update
-            - apt install -y curl gnupg software-properties-common
+            # - apt install -y gnupg software-properties-common
 
             - wget -O - https://apt.corretto.aws/corretto.key | gpg --dearmor -o /usr/share/keyrings/corretto-keyring.gpg
             - echo "deb [signed-by=/usr/share/keyrings/corretto-keyring.gpg] https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/corretto.list
 
-            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - wget -q -O - https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg
             - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
 
             - apt update
