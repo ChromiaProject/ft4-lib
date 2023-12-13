@@ -43,11 +43,11 @@ pipelines:
             - rm -vf /etc/apt/sources.list.d/microsoft-edge-stable.list
             - rm -vf /etc/apt/sources.list.d/microsoft-edge.list
             - apt-get update
-            - apt-get install -y curl lsof fluxbox xvfb netcat-openbsd
+            - apt-get install -y curl lsof fluxbox xvfb netcat-openbsd default-jre
             - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
             - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
-            - apt install -y chr default-jre
+            - apt install -y chr
             - export DISPLAY=:0.0
             - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
             - fluxbox &
