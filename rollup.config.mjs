@@ -4,6 +4,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import terser from "@rollup/plugin-terser";
 
 export default [
   //ESM
@@ -25,6 +26,7 @@ export default [
       commonjs({ transformMixedEsModules: true }),
       peerDepsExternal(),
       json(),
+      terser(),
     ],
   },
   //UMD
@@ -50,6 +52,7 @@ export default [
       nodeResolve({ browser: true }),
       commonjs({ transformMixedEsModules: true }),
       json(),
+      terser(),
     ],
   },  
   //NODE
