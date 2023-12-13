@@ -51,7 +51,6 @@ pipelines:
             - cypress/screenshots/**
             - cypress/videos/**
           services:
-            - postgres
             - docker
   branches:
     ft4:
