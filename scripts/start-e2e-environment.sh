@@ -11,7 +11,7 @@ KEYPAIR_PATH="$RELL_PATH/$KEYPAIR"
 
 # Service ports
 NODE_PORT=7740
-FRONTEND_PORT=9000
+FRONTEND_PORT=8080
 
 # Container configurations
 POSTGRES_CONTAINER_NAME="ft4_demo"
@@ -21,6 +21,22 @@ DOCKER=${DOCKER:-docker}
 
 # Exit script on any error
 set -e
+
+print_usage() {
+    echo "Usage: $0 [OPTION]"
+    echo
+    echo "Options:"
+    echo "  --run-tests-headless        Run Cypress tests in headless mode."
+    echo "  --run-tests-interactive     Run Cypress tests in interactive mode."
+    echo "  --wait-for-node             Wait for the Chromia node process to finish."
+    echo "  --enable-cypress-debug      Enable Cypress debug mode (must be combined with test run options)."
+    echo "  --help                      Display this usage information."
+    echo
+    echo "Examples:"
+    echo "  $0 --run-tests-headless"
+    echo "  $0 --run-tests-interactive"
+    echo "  $0 --run-tests-headless --enable-cypress-debug"
+}
 
 start_backend() {
     cd $RELL_PATH
@@ -164,6 +180,11 @@ cleanup() {
     echo 'Cleanup complete.'
 }
 
+if [[ "$#" -eq 0 ]] || [[ "$1" == "--help" ]]; then
+    print_usage
+    exit 1
+fi
+
 trap cleanup EXIT INT TERM
 
 start_backend
@@ -175,15 +196,25 @@ setup_blockchain_resources
 echo "Backend and frontend services are ready. Running Cypress tests next..."
 
 # Determine script behavior based on passed argument
+CYPRESS_DEBUG_MODE=""
 
+if [ "$2" == "--enable-cypress-debug" ]; then
+    CYPRESS_DEBUG_MODE="DEBUG=cypress:*"
+fi
+
+echo "ETH private key", $ETH_PRIVATE_KEY
 case "$1" in
     --run-tests-headless)
         # Run Cypress tests in headless mode
-        PRIVATE_KEY=$ETH_PRIVATE_KEY DEBUG=cypress:* npx cypress run
+        PRIVATE_KEY=$ETH_PRIVATE_KEY \
+            $CYPRESS_DEBUG_MODE \
+            ./node_modules/.bin/synpress run --configFile cypress.config.ts --headless
         ;;
     --run-tests-interactive)
         # Run Cypress tests in interactive mode
-        PRIVATE_KEY=$ETH_PRIVATE_KEY DEBUG=cypress:* npx cypress open
+        PRIVATE_KEY=$ETH_PRIVATE_KEY \
+            $CYPRESS_DEBUG_MODE \
+            ./node_modules/.bin/synpress open --configFile cypress.config.ts
         ;;
     --wait-for-node)
         # Just wait for the Chromia node process to finish
