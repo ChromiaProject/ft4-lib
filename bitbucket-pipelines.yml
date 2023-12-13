@@ -49,7 +49,7 @@ pipelines:
             - wget -O- https://apt.corretto.aws/corretto.key | apt-key add - 
             - add-apt-repository 'deb https://apt.corretto.aws stable main'
 
-            - apt install -y curl lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk
+            - apt install -y curl lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk gnupg software-properties-common
             - java -version
 
             - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
