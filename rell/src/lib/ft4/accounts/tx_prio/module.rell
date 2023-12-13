@@ -2,6 +2,7 @@
 module;
 
 import ^^.auth;
+import ^^.accounts;
 
 /** Return value of `priority_check_v1` query. */
 struct priority_state_v1 {
@@ -27,44 +28,34 @@ struct priority_state_v1 {
  * @param current_timestamp   the current timestamp
  */
 query priority_check_v1(tx_body: gtx_transaction_body, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
-    val accounts_and_auth_descriptors = tx_body.operations @*
+    val tx_accounts = tx_body.operations @*
         { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] }
-        (auth.fetch_account_and_auth_descriptor($.args));
+        (auth.fetch_account_and_auth_descriptor($.args)[0]);
 
-    when (accounts_and_auth_descriptors.size()) {
-        0 -> {
-            log("No authenticated operations found");
-            return priority_state_v1(
-                account_id = x"", // TODO should be null when Postchain supports it
-                account_points = 0,
-                tx_cost_points = 0,
-                priority = 0.0
-            );
-        }
-        1 -> {
-            log("One authenticated operation found");
-            val (account, auth_descriptor) = accounts_and_auth_descriptors[0];
+    if (tx_accounts.empty()) return no_account_proirity_state(0.0);
+    val account = tx_accounts[0]; // TODO handle multiple accounts
 
-            // TODO add transaction priority logic here
+    val rl_config = accounts.get_rate_limit_config_for_account(account);
+    if (rl_config.active == false) return no_account_proirity_state(1.0);
+    val max_points = rl_config.max_points;
 
-            return priority_state_v1(
-                account_id = account.id,
-                account_points = 0,
-                tx_cost_points = 0,
-                priority = 0.0
-            );
-        }
-        else -> {
-            log("Multiple authenticated operations found");
+    val current_points = accounts.rl_state @? { account } (.points);
+    if (current_points == null) return no_account_proirity_state(1.0);
 
-            // TODO How should we handle multiple authenticated operations?
+    val priority = current_points / max_points;
 
-            return priority_state_v1(
-                account_id = x"", // TODO should be null when Postchain supports it
-                account_points = 0,
-                tx_cost_points = 0,
-                priority = 0.0
-            );
-        }
-    }
+    return priority_state_v1(
+        account_id = account.id,
+        account_points = current_points,
+        tx_cost_points = tx_accounts.size(),
+        priority = priority
+    );
 }
+
+function no_account_proirity_state(priority: decimal) =
+    priority_state_v1(
+        account_id = x"",                   // TODO should be null when Postchain supports it
+        account_points = integer.MAX_VALUE, // TODO should be 0
+        tx_cost_points = 1,                 // TODO should be 0
+        priority = priority
+    );
