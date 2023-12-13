@@ -115,20 +115,6 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
-    ft4-201-e2e-pipeline:
-      - step:
-          name: E2E Tests
-          image: cypress/browsers:node18.16.0-chrome101-ff99
-          size: 2x
-          caches:
-            - node
-            - cypress
-          script:
-            - npm ci
-            - npm run test:e2e:headless
-          artifacts:
-            - cypress/screenshots/**
-            - cypress/videos/**
 definitions: 
   caches:
     cypress: $BITBUCKET_CLONE_DIR/.cache/Cypress
