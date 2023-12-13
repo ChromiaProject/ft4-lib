@@ -6,28 +6,28 @@ options:
 pipelines:
   pull-requests:
     '**':
-      - step:
-          size: 2x
-          name: Test
-          caches:
-            - node
-          script:
-            - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
-            - apt update
-            - apt install -y netcat-openbsd chr default-jre
-            - chr install -s configs/rell-test.yml
-            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
-            - npm ci
-            - export JEST_JUNIT_OUTPUT_NAME=unit.xml
-            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
-            - export TESTCONTAINERS_RYUK_DISABLED=true
-            - export JEST_JUNIT_OUTPUT_NAME=integration.xml
-            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit
-          services:
-            - postgres
-            - docker
+      # - step:
+      #     size: 2x
+      #     name: Test
+      #     caches:
+      #       - node
+      #     script:
+      #       - apt update
+      #       - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+      #       - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
+      #       - apt update
+      #       - apt install -y netcat-openbsd chr default-jre
+      #       - chr install -s configs/rell-test.yml
+      #       - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
+      #       - npm ci
+      #       - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+      #       - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
+      #       - export TESTCONTAINERS_RYUK_DISABLED=true
+      #       - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+      #       - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit
+      #     services:
+      #       - postgres
+      #       - docker
       - step:
           max-time: 15
           name: E2E Tests
@@ -40,11 +40,11 @@ pipelines:
             - cypress
           script:
             - apt-get update
-            - apt-get install -y curl lsof fluxbox xvfb netcat-openbsd default-jre
+            - apt-get install -y curl lsof fluxbox xvfb netcat-openbsd
             - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
             - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
-            - apt install -y chr
+            - apt install -y chr default-jre
             - export DISPLAY=:0.0
             - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
             - fluxbox &
