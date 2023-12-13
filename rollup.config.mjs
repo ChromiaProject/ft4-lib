@@ -1,7 +1,6 @@
 import { cwd } from "process";
 import alias from "@rollup/plugin-alias";
 import commonjs from "@rollup/plugin-commonjs";
-import inject from "@rollup/plugin-inject";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
@@ -22,7 +21,7 @@ export default [
           { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
         ]
       }),
-      nodeResolve(),
+      nodeResolve({ browser: true }),
       commonjs({ transformMixedEsModules: true }),
       peerDepsExternal(),
       json(),
