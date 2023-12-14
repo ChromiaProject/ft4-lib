@@ -68,7 +68,8 @@ start_backend() {
 
     # Start Node
     echo "Starting Chromia node..."
-    chr node start --wipe &
+    mkdir -p ./logs
+    chr node start --wipe > ./logs/e2e-postchain.log 2>&1 &
     NODE_PID=$!
 
     cd - > /dev/null
