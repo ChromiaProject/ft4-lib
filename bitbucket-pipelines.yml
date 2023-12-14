@@ -12,6 +12,7 @@ e2e-tests: &e2e-tests-anchor
     size: 2x
     caches:
       - node
+      - demo-node
       - cypress
     script:
       - apt update
@@ -31,7 +32,7 @@ e2e-tests: &e2e-tests-anchor
       - export DISPLAY=:0.0
       - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
       - fluxbox &
-      - NODE_ENV=development npm ci
+      - npm ci
       - npm run test:e2e
     artifacts:
       - cypress/screenshots/**
@@ -115,8 +116,10 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
-definitions: 
+definitions:
   caches:
+    node: node_modules
+    demo-node: examples/demo/client/node_modules
     cypress: $BITBUCKET_CLONE_DIR/.cache/Cypress
   services: 
     postgres: 
