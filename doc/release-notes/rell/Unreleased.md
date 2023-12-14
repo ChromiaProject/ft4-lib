@@ -11,6 +11,7 @@
 - `before_authenticate` function is now extendable for adding custom pre-authentication logic.
 - `after_authenticate` function is now extendable for executing logic after authentication completes.
 - Allow account creation with `create_account_with_auth` without op_context.
+- Validate auth descriptors, do not allow creation of expired auth descriptors.
 
 ### Breaking Changes
 - **Paginated Queries**: Queries `get_accounts_by_participant_id` and `get_account_auth_descriptors_by_participant_id` are now paginated. This change impacts how these queries are consumed and might require adjustments in the calling code.
