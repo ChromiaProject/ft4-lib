@@ -26,7 +26,7 @@ import {
   MultiSig,
   SingleSig,
 } from "/ft4/accounts/auth-descriptor/types";
-import { createAuthenticator } from "/ft4/authentication";
+import { FtKeyStore, createAuthenticator } from "/ft4/authentication";
 import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
 import {
   createAuthDataService,
@@ -176,7 +176,7 @@ export async function addAuthDescriptorTo(
 
   const tx = await transactionBuilder(authenticator, client)
     .add(addAuthDescriptor(newUser.authDescriptor))
-    .addSigners(keyHandlerUser2.keyStore)
+    .addSigners(keyHandlerUser2.keyStore as FtKeyStore)
     .build();
   return client.sendTransaction(tx);
 }

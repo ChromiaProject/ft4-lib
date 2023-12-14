@@ -173,7 +173,7 @@ describe("Transaction Builder", () => {
     const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
-      .addSigners(keyHandler.keyStore)
+      .addSigners(keyHandler.keyStore as FtKeyStore)
       .build();
     expect(gtx.deserialize(tx).signers).toStrictEqual(keyHandler.getSigners());
     expect(gtx.deserialize(tx).signatures).toBeDefined();
