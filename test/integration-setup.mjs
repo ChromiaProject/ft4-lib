@@ -1,10 +1,13 @@
 import { GenericContainer, Network, Wait } from "testcontainers";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { cwd } from "process";
-import { writeFile, unlink, open } from "node:fs/promises";
+import { writeFile, unlink, open, mkdir } from "node:fs/promises";
 
 export default async function (globalConfig, projectConfig) {
   console.log("Starting node...");
+
+  // recursive -> don't reject if it exists
+  await mkdir("logs", { recursive: true });
 
   const filename = "logs/integration.log";
   await unlink(filename).catch(err => {
