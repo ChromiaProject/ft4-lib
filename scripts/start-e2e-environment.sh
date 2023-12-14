@@ -186,9 +186,8 @@ cleanup() {
 clean_env() {
     echo "Cleaning up the environment..."
 
-    # Kill all Chrome and Chromedriver processes that may interfere with testing
+    # Kill all Chromedriver processes that may interfere with testing
     pkill -f chromedriver || true
-    pkill -f 'Google Chrome' || true
 }
 
 trap cleanup EXIT INT TERM
