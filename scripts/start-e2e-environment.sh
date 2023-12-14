@@ -79,8 +79,6 @@ start_backend() {
 start_frontend() {
     echo "Starting React frontend..."
     cd $FRONTEND_PATH
-
-    npm install
     PORT=$FRONTEND_PORT npm start &
 
     cd - > /dev/null
