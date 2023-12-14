@@ -3,6 +3,7 @@ import {
   KeyHandler,
   KeyStore,
   createNoopAuthenticator,
+  isFtKeyStore,
 } from "/ft4/authentication";
 import { Buffer } from "buffer";
 import {
@@ -30,7 +31,7 @@ import {
   TransactionBuilderConfig,
 } from "./types";
 import { getTransactionRid } from "..";
-import { txToBuffer } from ".";
+import { FtKeyStore } from "../../authentication";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -56,13 +57,25 @@ export function transactionBuilder(
     return this;
   }
 
-  function toPubkeys(keyHandlers: (KeyHandler | KeyStore)[]): Buffer[] {
+  function getSigners(keyHandlers: (KeyHandler | KeyStore)[]): Buffer[] {
     return keyHandlers
       .map((handler) =>
-        isKeyHandler(handler) ? handler.getSigners() : handler.id,
+        isKeyHandler(handler)
+          ? handler.getSigners()
+          : isFtKeyStore(handler)
+            ? [handler.pubKey]
+            : [],
       )
-      .filter((pubKey): pubKey is Buffer[] => !!pubKey)
       .flat();
+  }
+
+  function getFtKeyStores(
+    keyHandlers: (KeyHandler | KeyStore)[],
+  ): FtKeyStore[] {
+    return keyHandlers
+      .map((handler) => (isKeyHandler(handler) ? handler.keyStore : handler))
+      .map((store) => (isFtKeyStore(store) ? store : null))
+      .filter((store): store is FtKeyStore => !!store);
   }
 
   async function buildUnsigned(): Promise<TxBuilderTransaction> {
@@ -71,17 +84,19 @@ export function transactionBuilder(
       this._context,
     );
 
-    keyHandlers.forEach((kh) => this._keyhandlersUsed.push(kh));
+    keyHandlers.forEach((kh) => this._keysUsed.push(kh));
 
     const txn: TxBuilderTransaction = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
-      signers: toPubkeys(this._keyhandlersUsed),
+      signers: getSigners(this._keysUsed),
       signatures: [],
     };
+
     const addOperation = (op: Operation) => {
       txn.operations.push({ opName: op.name, args: op.args ?? [] });
     };
+
     operations.forEach((op: Operation | Operation[]) => {
       Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
     });
@@ -139,51 +154,22 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const getKeyHandlersForSigners = (
-      keyhandlersUsed: (KeyHandler | KeyStore)[],
-      signers: Buffer[],
-    ) => {
-      const keyHandlers = keyhandlersUsed.reduce(
-        (acc, curr: KeyHandler | KeyStore) => {
-          if (isKeyHandler(curr)) {
-            return { [curr.keyStore.id.toString()]: curr, ...acc };
-          }
-          return { [curr.id.toString()]: curr, ...acc };
-        },
-        {},
-      );
-      return signers.map((pk) => keyHandlers[pk.toString()]);
-    };
-
     const tx: TxBuilderTransaction = await this.buildUnsigned();
-    const keyHandlers = getKeyHandlersForSigners(
-      this._keyhandlersUsed,
-      tx.signers,
-    );
+    const signersMap = getSignersMap(getFtKeyStores(this._keysUsed));
     tx.signatures = await Promise.all(
-      keyHandlers.map((kh) => {
-        return kh.sign(txToBuffer(tx));
-      }),
+      // For some signers we don't have access to their key stores, therefor we insert zero buffer
+      // as a placeholder for their signatures
+      tx.signers.map(
+        (signer) =>
+          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
+      ),
     );
     return gtx.serialize(tx);
   }
 
-  function addSigners(
-    ...signers: (KeyStore | KeyHandler)[]
-  ): TransactionBuilder {
-    signers.forEach((signer) => this._keyhandlersUsed.push(signer));
+  function addSigners(...signers: FtKeyStore[]): TransactionBuilder {
+    signers.forEach((signer) => this._keysUsed.push(signer));
     return this;
-  }
-
-  async function buildWithSigners(...signers: KeyHandler[]) {
-    const tx = await this.buildUnsigned();
-    tx.signers = [
-      ...new Set(signers.map((signer) => signer.getSigners()).flat()),
-    ];
-    tx.signatures = await Promise.all(
-      signers.map((handler: KeyHandler) => handler.sign(txToBuffer(tx))),
-    );
-    return gtx.serialize(tx);
   }
 
   async function buildAndSend(): Promise<{
@@ -312,9 +298,19 @@ export function transactionBuilder(
     return this;
   }
 
+  function getSignersMap(stores: FtKeyStore[]) {
+    return stores.reduce(
+      (acc, curr: FtKeyStore) => ({
+        [curr.pubKey.toString("hex")]: curr,
+        ...acc,
+      }),
+      {},
+    );
+  }
+
   const context: Partial<TransactionBuilder> = {
     _operations: [],
-    _keyhandlersUsed: [],
+    _keysUsed: [],
     session: client,
     _context: {},
   };
@@ -324,7 +320,6 @@ export function transactionBuilder(
   context.addSigners = addSigners.bind(context);
   context.addWithAuthenticator = addWithAuthenticator.bind(context);
   context.addWithoutAuthenticator = addWithoutAuthenticator.bind(context);
-  context.buildWithSigners = buildWithSigners.bind(context);
   context.buildAndSend = buildAndSend.bind(context);
 
   return context as TransactionBuilder;
