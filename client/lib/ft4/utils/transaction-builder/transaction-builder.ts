@@ -50,14 +50,15 @@ export function transactionBuilder(
   config: TransactionBuilderConfig = defaultConfig,
 ): TransactionBuilder {
   const _operations: OperationContext[] = [];
+  const _keysUsed: (KeyStore | KeyHandler)[] = [];
   const _context: TxContext = {};
   let _noopAuthenticator: Authenticator;
 
   function add(
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    onAnchoredHandler?: OnAnchoredHandler | undefined,
   ): TransactionBuilder {
-    _operations.push({ operation, authenticator, onAnchoredHandler: handler });
+    _operations.push({ operation, authenticator, onAnchoredHandler });
     return me;
   }
 
@@ -158,8 +159,8 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx: TxBuilderTransaction = await this.buildUnsigned();
-    const signersMap = getSignersMap(getFtKeyStores(this._keysUsed));
+    const tx: TxBuilderTransaction = await buildUnsigned();
+    const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
     tx.signatures = await Promise.all(
       // For some signers we don't have access to their key stores, therefor we insert zero buffer
       // as a placeholder for their signatures
@@ -172,7 +173,7 @@ export function transactionBuilder(
   }
 
   function addSigners(...signers: FtKeyStore[]): TransactionBuilder {
-    signers.forEach((signer) => this._keysUsed.push(signer));
+    signers.forEach((signer) => _keysUsed.push(signer));
     return me;
   }
 
@@ -279,15 +280,15 @@ export function transactionBuilder(
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator,
-    handler?: OnAnchoredHandler | undefined,
+    onAnchoredHandler?: OnAnchoredHandler | undefined,
   ): TransactionBuilder {
-    _operations.push({ operation, authenticator, onAnchoredHandler: handler });
+    _operations.push({ operation, authenticator, onAnchoredHandler });
     return me;
   }
 
   function addWithoutAuthenticator(
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    onAnchoredHandler?: OnAnchoredHandler | undefined,
   ): TransactionBuilder {
     if (_noopAuthenticator === undefined) {
       _noopAuthenticator = createNoopAuthenticator(
@@ -297,7 +298,7 @@ export function transactionBuilder(
     _operations.push({
       operation,
       authenticator: _noopAuthenticator,
-      onAnchoredHandler: handler,
+      onAnchoredHandler,
     });
     return me;
   }
