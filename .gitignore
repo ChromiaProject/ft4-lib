@@ -46,5 +46,4 @@ cypress/screenshots
 cypress/videos
 
 # Examples
-examples/demo/client/package-lock.json
 examples/demo/rell/.admin_keypair
