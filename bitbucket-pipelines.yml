@@ -31,7 +31,7 @@ e2e-tests: &e2e-tests-anchor
       - export DISPLAY=:0.0
       - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
       - fluxbox &
-      - npm ci
+      - NODE_ENV=development npm ci
       - npm run test:e2e
     artifacts:
       - cypress/screenshots/**
