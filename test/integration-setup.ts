@@ -3,7 +3,7 @@ import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { cwd } from "process";
 import { writeFile, unlink, open, mkdir } from "node:fs/promises";
 
-export default async function (globalConfig, projectConfig) {
+export default async function () {
   console.log("Starting node...");
 
   // recursive -> don't reject if it exists
