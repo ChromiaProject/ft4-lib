@@ -1,24 +1,3 @@
-
-enum rule_variable {
-	block_height,
-	block_time,
-	op_count
-}
-
-enum rule_operator {
-	lt,
-	le,
-	eq,
-	ge,
-	gt
-}
-
-struct rule_expression {
-	operator: rule_operator;
-	variable: rule_variable;
-	value: integer;
-}
-
 val GTV_NULL = null.to_gtv();
 val GTV_NULL_BYTES = null.to_gtv().to_bytes();
 
@@ -74,14 +53,23 @@ function map_rule_expressions_from_gtv(gtv_rules: list<gtv>) {
 	return rules;
 }
 
-function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
-	if (auth_descriptor.rules == GTV_NULL_BYTES) {
+function have_violating_rules(auth_descriptor: account_auth_descriptor) =
+	are_rules_violating(gtv.from_bytes(auth_descriptor.rules), load_variables(auth_descriptor.ctr));
+
+function load_variables(op_count: integer): map<text, gtv> {
+	val variables = map<text, gtv>();
+	variables[rule_variable.op_count.name] = (op_count + 1).to_gtv();
+	variables[rule_variable.block_height.name] = op_context.block_height.to_gtv();
+	variables[rule_variable.block_time.name] = op_context.last_block_time.to_gtv();
+	return variables;
+}
+
+function are_rules_violating(rules: gtv, variables: map<text, gtv>): boolean {
+	if (rules == GTV_NULL) {
 		return false;
 	}
 
-	val rules_gtv = list<gtv>.from_gtv(gtv.from_bytes(auth_descriptor.rules));
-	val variables = map<text, gtv>();
-	variables[rule_variable.op_count.name] = (auth_descriptor.ctr + 1).to_gtv();
+	val rules_gtv = list<gtv>.from_gtv(rules);
 
 	if (rules_gtv[0] != "and".to_gtv()) {
 		require(
@@ -92,9 +80,7 @@ function is_violating_rules(auth_descriptor: account_auth_descriptor): boolean {
 		return is_rule_violated(rule_expression_from_gtv(rules_gtv.to_gtv()), variables);
 	}
 
-	val operand = text.from_gtv(rules_gtv[0]);
-	val rules = map_rule_expressions_from_gtv(rules_gtv.sub(1));
-	return are_and_rules_violated(rules, variables);
+	return are_and_rules_violated(map_rule_expressions_from_gtv(rules_gtv.sub(1)), variables);
 }
 
 function is_rule_violated(rule: rule_expression, variables: map<text, gtv>): boolean {
@@ -110,15 +96,16 @@ function are_and_rules_violated(rules: list<rule_expression>, variables: map<tex
 	return false;
 }
 
-function is_active(account_auth_descriptor): boolean {
-	if (account_auth_descriptor.rules == GTV_NULL_BYTES) { 
+function is_active(account_auth_descriptor) = are_rules_active(gtv.from_bytes(account_auth_descriptor.rules));
+
+function are_rules_active(rules: gtv): boolean {
+	if (rules == GTV_NULL) {
 		return true;
 	}
 
-	val gtv_rules = list<gtv>.from_gtv(gtv.from_bytes(account_auth_descriptor.rules));
+	val gtv_rules = list<gtv>.from_gtv(rules);
 	if (gtv_rules[0] == "and".to_gtv()) {
-		val rules = gtv_rules.sub(1);
-		for (rule in rules) {
+		for (rule in gtv_rules.sub(1)) {
 			if (not is_rule_active(rule_expression_from_gtv(rule))) {
 				return false;
 			}
@@ -147,8 +134,14 @@ function is_rule_active(rule: rule_expression): boolean {
  *  Variables
  */
 
-function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, gtv>): boolean {
-	val current_value = variable_value(rule.variable, variables);
+function evaluate_int_variable_rule(
+	rule: rule_expression,
+	variables: map<text, gtv>
+): boolean {
+	val current_value = variable_value(
+		rule.variable,
+		variables
+	);
 	val defined_value = rule.value;
 
 	when (rule.operator) {
@@ -170,13 +163,16 @@ function evaluate_int_variable_rule(rule: rule_expression, variables: map<text, 
 	}
 }
  
-function variable_value(variable: rule_variable, variables: map<text, gtv>): integer {
+function variable_value(
+	variable: rule_variable,
+	variables: map<text, gtv>
+): integer {
 	when (variable) {
 		rule_variable.block_height -> {
-			return op_context.block_height;
+			return integer.from_gtv(variables[rule_variable.block_height.name]);
 		}
 		rule_variable.block_time -> {
-			return op_context.last_block_time;
+			return integer.from_gtv(variables[rule_variable.block_time.name]);
 		}
 		rule_variable.op_count -> {
 			return integer.from_gtv(variables[rule_variable.op_count.name]);
@@ -195,15 +191,17 @@ function validate_auth_descriptor_rules(rules: gtv) {
 	val rules_gtv = list<gtv>.from_gtv(rules);
 	if (rules_gtv[0] != "and".to_gtv()) {
 		validate_rule(rule_expression_from_gtv(rules_gtv.to_gtv()));
-		return;
+	} else {
+		require(rules_gtv[0] == "and".to_gtv(), "First element in rules list must be 'and'");
+		require(rules_gtv.size() <= chain_context.args.max_auth_descriptor_rules, "Too many rules");
+
+		for (gtv_rule in rules_gtv.sub(1)) {
+			validate_rule(rule_expression_from_gtv(gtv_rule));
+		}
 	}
-	
-	require(rules_gtv[0] == "and".to_gtv(), "First element in rules list must be 'and'");
-	require(rules_gtv.size() <= chain_context.args.max_auth_descriptor_rules, "Too many rules");
-	
-	for (gtv_rule in rules_gtv.sub(1)) {
-		validate_rule(rule_expression_from_gtv(gtv_rule));
-	}
+
+	require((not are_rules_active(rules)) or (not are_rules_violating(rules, load_variables(op_count = 0))),
+		"Active and invalid rules detected");
 }
 
 function validate_rule(rule: rule_expression) {
@@ -236,7 +234,7 @@ function delete_expired_auth_descriptors(account) {
 	val auth_descriptors = account_auth_descriptor @* { account };
 	
 	for (auth_descriptor in auth_descriptors) {
-		if (is_active(auth_descriptor) and is_violating_rules(auth_descriptor)) {
+		if (is_active(auth_descriptor) and have_violating_rules(auth_descriptor)) {
 			_delete_auth_descriptor(auth_descriptor);
 		}
 	}

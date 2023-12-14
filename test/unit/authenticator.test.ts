@@ -7,10 +7,7 @@ import {
   deriveAuthDescriptorId,
 } from "/ft4/accounts/auth-descriptor";
 import { createAuthenticator } from "/ft4/authentication";
-import {
-  FtKeyStore,
-  createFtKeyHandler,
-} from "/ft4/authentication/ft/key-handler";
+import { FtKeyStore, createFtKeyHandler } from "/ft4/authentication";
 import { op } from "/ft4/utils";
 
 describe("Authenticator", () => {

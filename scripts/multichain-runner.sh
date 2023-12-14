@@ -127,7 +127,6 @@ run_main_logic() {
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
     log "Building Directory Chain..."
-    chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
     chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
 
     debug "Copying FT library dependency to source folder..."

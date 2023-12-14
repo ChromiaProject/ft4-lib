@@ -8,7 +8,7 @@ function before_authenticate(accounts.account, accounts.account_auth_descriptor)
  * This function can be extended by users to add custom logic after authentication.
  */
 @extendable
-function after_authenticate(accounts.account, accounts.account_auth_descriptor);
+function after_authenticate(accounts.account, accounts.account_auth_descriptor?);
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
@@ -33,7 +33,8 @@ function authenticate(is_strict: boolean = true) {
     require(is_validated, "Invalid auth operation: %s".format(previous_op.name));
     accounts.rate_limit(account);
 
-    after_authenticate(account, auth_descriptor);
+    val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
+    after_authenticate(account, auth_desc_after);
     return account;
 }
 
@@ -115,7 +116,7 @@ function _validate_eth_arguments(
     require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
 
     val signatures = list<signature>.from_gtv(auth_args[2]);
-    require(not accounts.is_violating_rules(auth_descriptor));
+    require(not accounts.have_violating_rules(auth_descriptor));
     
     val has_all_flags = when (auth_descriptor.auth_type) {
         S, ES -> accounts.single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);

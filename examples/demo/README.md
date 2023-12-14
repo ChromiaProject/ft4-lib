@@ -42,7 +42,7 @@ Several commands in this guide use the `--secret .admin_keypair` argument. To ge
 chr keygen --save .admin_keypair
 ```
 
-After generating the new keypair, remember to update the `admin_pubkey` field in `demo/rell.config.yml` with your new public key.
+After generating the new keypair, remember to update the `admin_pubkey` field in `rell/chromia.yml` with your new public key.
 
 ### Start Node
 
