@@ -10,12 +10,12 @@ export default async function (globalConfig, projectConfig) {
   await mkdir("logs", { recursive: true });
 
   const filename = "logs/integration.log";
-  await unlink(filename).catch(err => {
-    if (err.code !== 'ENOENT') {
-      console.log(err)
+  await unlink(filename).catch((err) => {
+    if (err.code !== "ENOENT") {
+      console.error(err);
     }
   });
-  const file = await open(filename, "ax");
+  const file = await open(filename, "a");
 
   // Start a new network for containers
   const network = await new Network().start();
@@ -58,8 +58,8 @@ export default async function (globalConfig, projectConfig) {
     .withWaitStrategy(Wait.forLogMessage("Blockchain has been started"))
     .withStartupTimeout(60000)
     .withLogConsumer((stream) => {
-      stream.on("data", data => file.writeFile(data));
-      stream.on("err", data => file.writeFile(data));
+      stream.on("data", (data) => file.writeFile(data));
+      stream.on("err", (data) => file.writeFile(data));
       stream.on("end", file.close);
     })
     .start();
