@@ -16,7 +16,7 @@ export type TransactionBuilder = {
    */
   add: (
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
@@ -30,7 +30,7 @@ export type TransactionBuilder = {
   addWithAuthenticator: (
     operation: Operation,
     authenticator: Authenticator,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
@@ -40,7 +40,7 @@ export type TransactionBuilder = {
    */
   addWithoutAuthenticator: (
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Add key stores that will also be included as signers to this transaction.

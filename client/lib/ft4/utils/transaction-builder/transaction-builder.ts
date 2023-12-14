@@ -56,7 +56,7 @@ export function transactionBuilder(
 
   function add(
     operation: Operation,
-    onAnchoredHandler?: OnAnchoredHandler | undefined,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
     _operations.push({ operation, authenticator, onAnchoredHandler });
     return me;
@@ -280,7 +280,7 @@ export function transactionBuilder(
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator,
-    onAnchoredHandler?: OnAnchoredHandler | undefined,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
     _operations.push({ operation, authenticator, onAnchoredHandler });
     return me;
@@ -288,7 +288,7 @@ export function transactionBuilder(
 
   function addWithoutAuthenticator(
     operation: Operation,
-    onAnchoredHandler?: OnAnchoredHandler | undefined,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
     if (_noopAuthenticator === undefined) {
       _noopAuthenticator = createNoopAuthenticator(
