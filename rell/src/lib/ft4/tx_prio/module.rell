@@ -39,8 +39,15 @@ query priority_check_v1(tx_body: gtx_transaction_body, tx_enter_timestamp: times
     if (rl_config.active == false) return no_account_proirity_state(1.0);
     val max_points = rl_config.max_points;
 
-    val current_points = accounts.rl_state @? { account } (.points);
-    if (current_points == null) return no_account_proirity_state(1.0);
+    val rl_state = accounts.rl_state @? { account } (.points, .last_update);
+    if (rl_state == null) return no_account_proirity_state(1.0);
+    val (previous_points, last_update) = rl_state;
+
+    val delta = current_timestamp - last_update;
+    val current_points = if (delta > rl_config.recovery_time)
+        min(rl_config.max_points, previous_points + delta / rl_config.recovery_time)
+    else
+        previous_points;
 
     val priority = current_points.to_decimal() / max_points;
 

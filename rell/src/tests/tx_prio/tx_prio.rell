@@ -4,6 +4,13 @@ import ^^.assets.utils;
 import ^^^.lib.ft4.tx_prio;
 import ^^^.lib.ft4.accounts;
 
+function test_rate_limit_config() {
+    assert_equals(accounts.get_rate_limit_config().active, true);
+    assert_equals(accounts.get_rate_limit_config().max_points, 5);
+    assert_equals(accounts.get_rate_limit_config().recovery_time, 5000);
+    assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+}
+
 function test_no_authenticated_operations() {
     val priority_state = tx_prio.priority_check_v1(
         gtx_transaction_body(
@@ -13,8 +20,8 @@ function test_no_authenticated_operations() {
             ],
             signers = list<gtv>()
         ),
-        tx_enter_timestamp = 0,
-        current_timestamp = 0
+        tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME
     );
 
     assert_equals(priority_state.account_id, x""); // TODO should be null when Postchain supports it
@@ -22,10 +29,6 @@ function test_no_authenticated_operations() {
 }
 
 function test_one_authenticated_operation() {
-    assert_equals(accounts.get_rate_limit_config().active, true);
-    assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
-    assert_equals(accounts.get_rate_limit_config().max_points, 5);
-
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
     val priority_state = tx_prio.priority_check_v1(
@@ -37,8 +40,8 @@ function test_one_authenticated_operation() {
             ],
             signers = list<gtv>()
         ),
-        tx_enter_timestamp = 0,
-        current_timestamp = 0
+        tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 1000
     );
 
     assert_equals(priority_state.account_id, alice.account.id);
@@ -48,10 +51,6 @@ function test_one_authenticated_operation() {
 }
 
 function test_two_authenticated_operations() {
-    assert_equals(accounts.get_rate_limit_config().active, true);
-    assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
-    assert_equals(accounts.get_rate_limit_config().max_points, 5);
-
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
     val priority_state = tx_prio.priority_check_v1(
@@ -65,12 +64,56 @@ function test_two_authenticated_operations() {
             ],
             signers = list<gtv>()
         ),
-        tx_enter_timestamp = 0,
-        current_timestamp = 0
+        tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 1000
     );
 
     assert_equals(priority_state.account_id, alice.account.id);
     assert_equals(priority_state.account_points, 1);
     assert_equals(priority_state.tx_cost_points, 2);
     assert_equals(priority_state.priority, 0.2);
+}
+
+function test_increase_current_points_with_time() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+    val priority_state = tx_prio.priority_check_v1(
+        gtx_transaction_body(
+            blockchain_rid = chain_context.blockchain_rid,
+            operations = [
+                alice.ft_auth().to_gtx_operation(),
+                gtx_operation("foo", list<gtv>())
+            ],
+            signers = list<gtv>()
+        ),
+        tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 5001
+    );
+
+    assert_equals(priority_state.account_id, alice.account.id);
+    assert_equals(priority_state.account_points, 2);
+    assert_equals(priority_state.tx_cost_points, 1);
+    assert_equals(priority_state.priority, 0.4);
+}
+
+function test_increase_current_points_with_time_up_to_max() {
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+    val priority_state = tx_prio.priority_check_v1(
+        gtx_transaction_body(
+            blockchain_rid = chain_context.blockchain_rid,
+            operations = [
+                alice.ft_auth().to_gtx_operation(),
+                gtx_operation("foo", list<gtv>())
+            ],
+            signers = list<gtv>()
+        ),
+        tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + (10 * 5000)
+    );
+
+    assert_equals(priority_state.account_id, alice.account.id);
+    assert_equals(priority_state.account_points, 5);
+    assert_equals(priority_state.tx_cost_points, 1);
+    assert_equals(priority_state.priority, 1.0);
 }
