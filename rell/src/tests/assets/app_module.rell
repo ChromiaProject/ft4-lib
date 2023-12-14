@@ -3,4 +3,4 @@ module;
 import ^^^.main;
 import ^^.extensions;
 import ^^.operations;
-import ^^^.lib.ft4.tx_prio;
+import ^^^.lib.ft4.tx_priority;

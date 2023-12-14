@@ -7,7 +7,7 @@ blockchains:
         - tests.assets        
         - tests.auth
         - tests.crosschain
-        - tests.tx_prio
+        - tests.tx_priority
       moduleArgs:
         lib.ft4.accounts:
           rate_limit:
