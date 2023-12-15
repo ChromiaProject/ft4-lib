@@ -12,9 +12,9 @@ import {
   deriveAuthDescriptorId,
   FlagsType,
   SingleSig,
-} from "/ft4/accounts/auth-descriptor";
-import { AuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { KeyManager } from "/ft4/accounts/auth/types";
+} from "@ft4/accounts/auth-descriptor";
+import { AuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { KeyManager } from "@ft4/accounts/auth/types";
 
 export default function singleSigUser(
   rule: AuthDescriptorRules | null = null,

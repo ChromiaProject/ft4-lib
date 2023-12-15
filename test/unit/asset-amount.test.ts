@@ -7,8 +7,8 @@ import {
   createAmount,
   createAmountFromBalance,
   stringify,
-} from "/ft4/asset/amount";
-import { DecimalFormat } from "/ft4/asset/types";
+} from "@ft4/asset/amount";
+import { DecimalFormat } from "@ft4/asset/types";
 
 describe("Asset amount", () => {
   const amounts = [
@@ -426,7 +426,7 @@ describe("Asset amount", () => {
   });
 
   it("should not export certain arithmetic functions", async () => {
-    const myModule = await import("/ft4/asset/amount");
+    const myModule = await import("@ft4/asset/amount");
     const nonExportedFunctions = [
       "sum",
       "sub",

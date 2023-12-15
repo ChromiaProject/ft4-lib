@@ -1,13 +1,13 @@
 import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
-import { BufferId, TxContext } from "/ft4/utils/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthType,
   SingleSig,
-} from "/ft4/accounts";
+} from "@ft4/accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -77,7 +77,8 @@ const noopKeyHandler: KeyHandler = Object.freeze({
     _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
-  sign: (digest: Buffer) => Promise.resolve(digest),
+  sign: (_transaction: TxBuilderTransaction) =>
+    Promise.resolve(Buffer.alloc(64)),
   getSigners: (): Buffer[] => [],
 });
 

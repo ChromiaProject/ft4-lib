@@ -4,3 +4,4 @@
 !/test_admin
 !/examples
 !/cypress
+!cypress.config.ts

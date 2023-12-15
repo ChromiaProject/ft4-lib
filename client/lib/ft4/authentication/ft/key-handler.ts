@@ -1,15 +1,14 @@
-import { Buffer } from "buffer";
-import { Operation, SignatureProvider } from "postchain-client";
-import { ftAuth } from ".";
-import { AuthDataService, KeyHandler, KeyStore } from "../types";
+import { Operation } from "postchain-client";
+import { FtKeyStore, ftAuth } from ".";
+import { AuthDataService, KeyHandler } from "../types";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   aggregateSigners,
   deriveAuthDescriptorId,
   gtv,
-} from "/ft4/accounts/auth-descriptor";
-import { BufferId, TxContext } from "/ft4/utils/types";
+} from "@ft4/accounts/auth-descriptor";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
@@ -29,7 +28,7 @@ export function createFtKeyHandler(
       _context: TxContext,
       _authDataService: AuthDataService,
     ) => authorize(accountId, adId, operation),
-    sign: (transaction: Buffer) => keyStore.sign(transaction), //sign(transaction, keyStore),
+    sign: (transaction: TxBuilderTransaction) => keyStore.sign(transaction),
     getSigners: () => aggregateSigners(authDescriptor),
   });
 }
@@ -49,8 +48,4 @@ export function hasAuthDescriptorFlags(
   return requiredFlags.every((flag) =>
     authDescriptor.args.flags.includes(flag),
   );
-}
-
-export interface FtKeyStore extends KeyStore, SignatureProvider {
-  pubKey: Buffer;
 }
