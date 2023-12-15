@@ -19,6 +19,6 @@ module.exports = {
         "<rootDir>/test/setupMocks.ts"
     ],
     'moduleNameMapper': {
-        '^/(.*)$': ['<rootDir>/client/lib/$1', '<rootDir>/test/$1']
+        '^@ft4/(.*)$': ['<rootDir>/client/lib/ft4/$1', '<rootDir>/test/$1']
     }
 };

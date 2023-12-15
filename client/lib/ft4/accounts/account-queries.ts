@@ -1,9 +1,9 @@
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
-import { OptionalPageCursor } from "/ft4/types";
+import { OptionalPageCursor } from "@ft4/types";
 import { RateLimit } from "./types";
-import { RawAnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { BufferId } from "/ft4//utils/types";
+import { RawAnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId } from "@ft4//utils/types";
 
 export function RateLimitQuery(
   accountId: BufferId,

@@ -11,7 +11,7 @@ export {
 
 export { transactionBuilder } from "./transaction-builder";
 
-export function txToBuffer(tx: TxBuilderTransaction): Buffer {
+export function txDigest(tx: TxBuilderTransaction): Buffer {
   return gtx.getDigestToSign({
     blockchainRid: tx.blockchainRid,
     signers: tx.signers,

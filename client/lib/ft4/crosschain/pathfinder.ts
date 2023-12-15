@@ -9,7 +9,7 @@ import { Connection } from "../types";
 import { Buffer } from "buffer";
 import { Asset } from "../asset/types";
 import { getAssetOriginById } from "./query-functions";
-import { BufferId } from "/ft4/utils/types";
+import { BufferId } from "@ft4/utils/types";
 
 export class PathfinderError extends Error {
   constructor(msg?) {

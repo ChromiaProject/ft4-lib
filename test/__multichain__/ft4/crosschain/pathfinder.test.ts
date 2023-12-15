@@ -1,16 +1,16 @@
 import { generateId } from "../../../util/util";
-import { fetchBlockchains } from "/__multichain__/util/blockchain";
-import { createConnection, registerCrosschainAsset } from "/ft4";
+import { fetchBlockchains } from "../../../__multichain__/util/blockchain";
+import { createConnection, registerCrosschainAsset } from "@ft4/index";
 import {
   PathfinderError,
   findPathToChainForAsset,
-} from "/ft4/crosschain/pathfinder";
-import { Connection } from "/ft4/types";
-import adminUser from "/util/admin_user";
+} from "@ft4/crosschain/pathfinder";
+import { Connection } from "@ft4/types";
+import adminUser from "../../../util/admin_user";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "/util/blockchain-util";
+} from "../../../util/blockchain-util";
 
 const connections: Connection[] = [];
 

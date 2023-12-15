@@ -21,8 +21,8 @@ module.exports = {
     "testPathIgnorePatterns": [
       "<rootDir>/test/__multichain__/"
     ],
-    "globalSetup": "<rootDir>/test/integration-setup.mjs",
-    "globalTeardown": "<rootDir>/test/integration-teardown.mjs",
+    "globalSetup": "<rootDir>/test/integration-setup.ts",
+    "globalTeardown": "<rootDir>/test/integration-teardown.ts",
 
     /*
      * https://github.com/jestjs/jest/issues/11617
@@ -37,6 +37,6 @@ module.exports = {
      */
     //"maxWorkers": 1,
     'moduleNameMapper': {
-        '^/(.*)$': ['<rootDir>/client/lib/$1', '<rootDir>/test/$1']
+        '^@ft4/(.*)$': ['<rootDir>/client/lib/ft4/$1', '<rootDir>/test/$1']
     }
 };

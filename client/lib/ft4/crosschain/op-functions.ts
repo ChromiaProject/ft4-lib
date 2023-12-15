@@ -9,7 +9,7 @@ import {
 import { call } from "../ft-session";
 import { Amount } from "../asset/interfaces";
 import { GtvInitTransferArgs } from "./types";
-import { BufferId } from "/ft4/utils/types";
+import { BufferId } from "@ft4/utils/types";
 
 export async function initTransfer(
   connection: Connection,

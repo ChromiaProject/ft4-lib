@@ -3,7 +3,7 @@ import { Connection, OptionalPageCursor } from "../types";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
 import { RawGtx, gtx } from "postchain-client";
-import { BufferId } from "/ft4/utils/types";
+import { BufferId } from "@ft4/utils/types";
 
 export async function getAssetOriginById(
   connection: Connection,

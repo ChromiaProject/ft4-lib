@@ -7,8 +7,8 @@ const commonChainBrid = Buffer.from("88", "hex");
 const assetOriginQueryMock = jest.fn();
 const createClientMock = jest.fn();
 
-jest.mock("/ft4/crosschain/query-functions", () => {
-  const originalModule = jest.requireActual("/ft4/crosschain/query-functions");
+jest.mock("@ft4/crosschain/query-functions", () => {
+  const originalModule = jest.requireActual("@ft4/crosschain/query-functions");
 
   return {
     __esModule: true,
@@ -28,12 +28,12 @@ jest.mock("postchain-client", () => {
 
 import { generateId } from "../util/util";
 import { IClient, formatter } from "postchain-client";
-import { Connection } from "/ft4/types";
+import { Connection } from "@ft4/types";
 import { createStubClient } from "../util/blockchain-util";
-import { createConnection } from "/ft4";
-import { Asset } from "/ft4/asset/types";
-import { findPathToChainForAsset } from "/ft4/crosschain/pathfinder";
-import { BufferId } from "/ft4/utils/types";
+import { createConnection } from "@ft4/index";
+import { Asset } from "@ft4/asset/types";
+import { findPathToChainForAsset } from "@ft4/crosschain/pathfinder";
+import { BufferId } from "@ft4/utils/types";
 
 createClientMock.mockImplementation(
   async () =>
