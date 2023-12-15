@@ -13,7 +13,7 @@ import {
   createAccountObject,
   getByAuthDescriptorId,
   getById,
-  getByParticipantId,
+  getBySigner,
 } from "./accounts/account-query-functions";
 import {
   getAllAssets,
@@ -59,11 +59,11 @@ export function createConnection(client: IClient): Connection {
     getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => getById(connection, id),
-    getAccountsByParticipantId: (
+    getAccountsBySigner: (
       id: BufferId,
       limit?: number,
       cursor: OptionalPageCursor = null,
-    ) => getByParticipantId(connection, id, limit, cursor),
+    ) => getBySigner(connection, id, limit, cursor),
     getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
@@ -165,14 +165,14 @@ export function createKeyStoreInteractor(
   const connection = createConnection(client);
   return Object.freeze({
     getAccounts: async () =>
-      (await connection.getAccountsByParticipantId(keyStore.id)).data,
+      (await connection.getAccountsBySigner(keyStore.id)).data,
     getAccountsPaginated: async (
       limit: number,
       cursor: OptionalPageCursor = null,
-    ) => connection.getAccountsByParticipantId(keyStore.id, limit, cursor),
+    ) => connection.getAccountsBySigner(keyStore.id, limit, cursor),
     getSession: async (accountId: Buffer) => {
       const account = createAccountObject(connection, accountId);
-      const authDescriptors = await account.getAuthDescriptorsByParticipantId(
+      const authDescriptors = await account.getAuthDescriptorsBySigner(
         keyStore.id,
       );
       const keyHandlers = authDescriptors.data.map((authDescriptor) =>

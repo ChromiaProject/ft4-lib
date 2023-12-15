@@ -157,11 +157,11 @@ function _eth_message_hash(message: text): byte_array =
 
 function _validate_eth_address(message: text, signature, accounts.account_auth_descriptor) {
     val recovered_address = _recover_eth_address(message, signature);
-    val participant = accounts.auth_descriptor_participant @? {
+    val signer = accounts.auth_descriptor_signer @? {
         .account_auth_descriptor == account_auth_descriptor,
         .id == recovered_address
     };
-    require(participant, "Invalid signature on message: \n%s".format(message));
+    require(signer, "Invalid signature on message: \n%s".format(message));
 
     return recovered_address;
 }

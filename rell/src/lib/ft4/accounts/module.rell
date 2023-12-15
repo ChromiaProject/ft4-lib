@@ -43,7 +43,7 @@ entity account_auth_descriptor {
     created: timestamp;
 }
 
-entity auth_descriptor_participant {
+entity auth_descriptor_signer {
     key account_auth_descriptor, id: byte_array;
 }
 
@@ -71,22 +71,22 @@ function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean 
         ctr = 0
     );
 
-    _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe);
+    _add_signer(account, auth_descriptor, account_auth_descriptor, safe);
     return account_auth_descriptor;
 }
 
 function _delete_auth_descriptor(auth_descriptor: account_auth_descriptor) {
     require(auth_descriptor.account.id != auth_descriptor.id, "Can't delete initial auth descriptor");
-    delete auth_descriptor_participant @* { auth_descriptor };
+    delete auth_descriptor_signer @* { auth_descriptor };
     delete auth_descriptor;
 }
 
 function _delete_all_auth_descriptors_exclude(auth_descriptor: account_auth_descriptor) {
-    delete (adp: auth_descriptor_participant, ad: account_auth_descriptor) @* {
+    delete (ads: auth_descriptor_signer, ad: account_auth_descriptor) @* {
         ad.account == auth_descriptor.account,
         ad.id != auth_descriptor.account.id,
         ad.id != auth_descriptor.id,
-        adp.account_auth_descriptor == ad
+        ads.account_auth_descriptor == ad
     };
     delete account_auth_descriptor @* {
        .account == auth_descriptor.account,
@@ -116,18 +116,18 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
     return acc;
 }
 
-function _add_auth_participant(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
-    val participants = get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
-    require(not safe or op_context.get_signers().size() >= participants.size(), "Too few transaction signers");
-    for (participant in participants) {
-        require(not safe or op_context.is_signer(participant), "One participant in the Auth Desc didn't sign this transaction.");
-        create auth_descriptor_participant(account_auth_descriptor, id = participant);
+function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
+    val signers = get_signers(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
+    require(not safe or op_context.get_signers().size() >= signers.size(), "Too few transaction signers");
+    for (signer in signers) {
+        require(not safe or op_context.is_signer(signer), "One signer in the Auth Desc didn't sign this transaction.");
+        create auth_descriptor_signer(account_auth_descriptor, id = signer);
     }
 }
 
-function _add_eth_auth_participant(account, auth_descriptor, account_auth_descriptor) {
-    for (participant in get_participants(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
-        create auth_descriptor_participant(account_auth_descriptor, id = participant);
+function _add_eth_signer(account, auth_descriptor, account_auth_descriptor) {
+    for (signer in get_signers(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
+        create auth_descriptor_signer(account_auth_descriptor, id = signer);
     }
 }
 
@@ -168,11 +168,11 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_paginated_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array, page_size: integer, page_cursor: text?) {
+function get_paginated_auth_descriptors_by_signer(account_id: byte_array, signer: byte_array, page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return auth_descriptor_participant @* {
+    return auth_descriptor_signer @* {
         .account_auth_descriptor.account.id == account_id,
-        .id == participant_id,
+        .id == signer,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
@@ -192,9 +192,9 @@ function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     );
 }
 
-function get_paginated_accounts_by_participant_id(id: byte_array, page_size: integer, page_cursor: text?) {
+function get_paginated_accounts_by_signer(id: byte_array, page_size: integer, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return auth_descriptor_participant @* {
+    return auth_descriptor_signer @* {
         id,
         .rowid > (before_rowid ?: rowid(0))
     } (

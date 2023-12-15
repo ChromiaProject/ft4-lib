@@ -31,7 +31,7 @@ describe("Transfer history", () => {
       const keyPair = newSignatureProvider();
 
       const account1 = await AccountBuilder.account(connection)
-        .withParticipant(keyPair)
+        .withSigner(keyPair)
         .withBalance(asset, 200)
         .withPoints(1)
         .build();
@@ -54,7 +54,7 @@ describe("Transfer history", () => {
       const keyPair = newSignatureProvider();
 
       const account1 = await AccountBuilder.account(connection)
-        .withParticipant(keyPair)
+        .withSigner(keyPair)
         .withBalance(asset, 200)
         .withPoints(1)
         .build();
@@ -88,7 +88,7 @@ describe("Transfer history", () => {
       const keyPair = newSignatureProvider();
 
       const account1 = await AccountBuilder.account(connection)
-        .withParticipant(keyPair)
+        .withSigner(keyPair)
         .withBalance(asset, 200)
         .withPoints(1)
         .build();
@@ -113,7 +113,7 @@ describe("Transfer history", () => {
       const user = TestUser();
 
       const account1 = await AccountBuilder.account(connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(2)
         .build();
@@ -141,7 +141,7 @@ describe("Transfer history", () => {
       const user = TestUser();
 
       const account1 = await AccountBuilder.account(connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(4)
         .build();
@@ -169,7 +169,7 @@ describe("Transfer history", () => {
       const user = TestUser();
 
       const account1 = await AccountBuilder.account(connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .withBalance(asset, 200)
         .withPoints(1)
         .build();
@@ -277,7 +277,7 @@ describe("Transfer history", () => {
     const user = TestUser();
 
     const account1 = await AccountBuilder.account(connection)
-      .withParticipant(user.signatureProvider)
+      .withSigner(user.signatureProvider)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
@@ -312,7 +312,7 @@ describe("Transfer history", () => {
     const user = TestUser();
 
     const account1 = await AccountBuilder.account(connection)
-      .withParticipant(user.signatureProvider)
+      .withSigner(user.signatureProvider)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();

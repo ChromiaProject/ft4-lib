@@ -20,3 +20,20 @@
 - **create_account_with_auth** function return `account` instead of `byte_array`.
 - **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
 - **Rate limit config** New format for rate limit configuration.
+- **Participants, pubkeys, signers** All instances of these words, when related to auth descriptors, were now renamed to **signers**. This is a list of all the rell-side changes:
+    - Externals (operations and queries)
+        - query `get_account_auth_descriptors_by_participant_id` -> `get_account_auth_descriptors_by_signer`
+        - query `get_accounts_by_participant_id` -> `get_accounts_by_signer`
+
+    - Accounts module:
+        - struct `single_sig_args.pubkey` -> `single_sig_args.signer`
+        - struct `multi_sig_args.pubkeys` -> `multi_sig_args.signers`
+        - function `get_participants` -> `get_signers`
+        - entity `auth_descriptor_participant` -> `auth_decriptor_signer`
+        - function `get_paginated_auth_descriptors_by_participant_id` -> `get_paginated_auth_descriptors_by_signer`
+        - function `get_paginated_accounts_by_participant_id` -> `get_paginated_accounts_by_signer`
+        - 
+
+    - Internals
+        - function `_add_auth_participant` -> `_add_signer`
+        - function `_add_eth_auth_participant` > `_add_eth_signer`

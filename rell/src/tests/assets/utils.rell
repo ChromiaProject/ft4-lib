@@ -85,7 +85,7 @@ function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T
 }
 
 function create_auth_descriptor(
-    participant_id: byte_array,
+    signer: byte_array,
     permissions: list<text> = ["T"],
     rules: gtv = null.to_gtv()
 ): acc.auth_descriptor {
@@ -93,7 +93,7 @@ function create_auth_descriptor(
             acc.auth_type.S,
             [
                 set(permissions).to_gtv(),
-                participant_id.to_hex().to_gtv()
+                signer.to_hex().to_gtv()
             ],
             rules
         );

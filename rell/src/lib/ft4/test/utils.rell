@@ -9,13 +9,13 @@ import ^^.accounts.{ eth_auth_args };
 import ^^.auth. { create_message_from_template, _eth_message_hash };
 
 /*
- * Creates an ft_auth operation for a specific pubkey.
- * If more than one auth_desciptor exists for the pubkey, first one found is chosen.
+ * Creates an ft_auth operation for a specific signer.
+ * If more than one auth_desciptor exists for the signer, first one found is chosen.
  */
-function ft_auth_operation_for(pubkey) {
+function ft_auth_operation_for(signer: byte_array) {
     val descriptor = require(
-        accounts.auth_descriptor_participant @? { pubkey }.account_auth_descriptor limit 1,
-        "No auth descriptor found for pubkey %s".format(pubkey)
+        accounts.auth_descriptor_signer @? { signer }.account_auth_descriptor limit 1,
+        "No auth descriptor found for signer %s".format(signer)
     );
 
     return auth_ext.ft_auth(descriptor.account.id, descriptor.id);
@@ -28,7 +28,7 @@ function ft_auth_operation_for(pubkey) {
 function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
     val evm_address = crypto.eth_privkey_to_address(evm_privkey);
     val descriptor = require(
-        accounts.auth_descriptor_participant @? { evm_address }.account_auth_descriptor limit 1,
+        accounts.auth_descriptor_signer @? { evm_address }.account_auth_descriptor limit 1,
         "No auth descriptor found for address %s".format(evm_address)
     );
     val eth_message = create_message_from_template(
