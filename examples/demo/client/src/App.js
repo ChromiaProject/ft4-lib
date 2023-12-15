@@ -5,6 +5,7 @@ import {
     createAmount,
     createKeyStoreInteractor,
     createWeb3ProviderEvmKeyStore,
+    createLocalStorageLoginKeyStore,
     createSessionStorageLoginKeyStore,
 } from '@chromia/ft4';
 
@@ -19,35 +20,35 @@ const useSession = () => {
   const [session, setSession] = useState(null);
   const [accounts, setAccounts] = useState([]);
 
-  useEffect(() => {
+  useEffect((storageType) => {
     const initializeSession = async () => {
-      try {
-        const url = 'http://localhost:7740';
+      const url = 'http://localhost:7740';
 
-        const client = await createClient({
-          nodeURLPool: url,
-          blockchainIID: 0,
-        });
+      const client = await createClient({
+        nodeUrlPool: url,
+        blockchainIid: 0,
+      });
 
-        const store = await createWeb3ProviderEvmKeyStore(window.ethereum);
-        const { getAccounts, getLoginManager } = createKeyStoreInteractor(client, store);
+      const store = await createWeb3ProviderEvmKeyStore(window.ethereum);
+      const { getAccounts, getLoginManager } = createKeyStoreInteractor(client, store);
 
-        const accountsData = await getAccounts();
-        setAccounts(accountsData);
+      const accountsData = await getAccounts();
+      setAccounts(accountsData);
 
-        if (!accountsData.length) {
-          console.log("No accounts found");
-          return;
-        }
-
-        const newSession = await getLoginManager(createSessionStorageLoginKeyStore()).login({
-          accountId: accountsData[0].id,
-        });
-
-        setSession(newSession);
-      } catch (error) {
-        console.error("Failed to initialize session:", error);
+      if (!accountsData.length) {
+        console.log("No accounts found");
+        return;
       }
+
+      const keyStore = storageType === 'local'
+        ? createLocalStorageLoginKeyStore()
+        : createSessionStorageLoginKeyStore();
+
+      const newSession = await getLoginManager(keyStore).login({
+        accountId: accountsData[0].id,
+      });
+
+      setSession(newSession);
     };
 
     initializeSession();
@@ -57,7 +58,10 @@ const useSession = () => {
 };
 
 function App() {
-  const { session, accounts } = useSession();
+  const queryParams = new URLSearchParams(window.location.search);
+  const storageType = queryParams.get('storageType') || 'session';
+
+  const { session, accounts } = useSession(storageType);
   const [assets, setAssets] = useState([]);
   const [receiverId, setReceiverId] = useState('');
   const [copied, setCopied] = useState(false);
