@@ -1,3 +1,4 @@
+import { Authenticator, FtKeyStore } from "@ft4/authentication";
 import {
   IClient,
   Operation,
@@ -5,20 +6,9 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import { Authenticator, KeyHandler, KeyStore } from "@ft4/authentication";
-import {
-  RequireTogether,
-  TxContext,
-  TxBuilderTransaction,
-  BufferId,
-} from "../types";
+import { BufferId, RequireTogether, TxBuilderTransaction } from "../types";
 
 export type TransactionBuilder = {
-  _operations: OperationContext[];
-  _keyhandlersUsed: (KeyStore | KeyHandler)[];
-  _context: TxContext;
-  _noopAuthenticator: Authenticator;
-
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
@@ -26,7 +16,7 @@ export type TransactionBuilder = {
    */
   add: (
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
@@ -40,7 +30,7 @@ export type TransactionBuilder = {
   addWithAuthenticator: (
     operation: Operation,
     authenticator: Authenticator,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
@@ -50,7 +40,7 @@ export type TransactionBuilder = {
    */
   addWithoutAuthenticator: (
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Add key stores that will also be included as signers to this transaction.
@@ -58,7 +48,7 @@ export type TransactionBuilder = {
    * @param keyStores the key stores to use for signing
    * @returns an instance of the transaction builder object
    */
-  addSigners: (...keyStores: KeyStore[]) => TransactionBuilder;
+  addSigners: (...keyStores: FtKeyStore[]) => TransactionBuilder;
   /**
    * Builds a transaction the same way as `buildUnsigned` and also signs it
    * using the same key handlers that were used to authorize the operations,
@@ -69,28 +59,11 @@ export type TransactionBuilder = {
   build: () => Promise<SignedTransaction>;
   /**
    * Builds an unsigned transaction containing the previously added
-   * transactions, as well as any authhorization operations as needed.
+   * transactions, as well as any authorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
    */
   buildUnsigned: () => Promise<TxBuilderTransaction>;
-  /**
-   * A function to extract the keyhandlers used to build a transaction,
-   * and thus should be the ones signing the transaction when
-   * `buildUnsigned` was called instead of `build`.
-   * @returns an array containing the keyhandlers used to build the transaction,
-   * and which consequently should sign the transaction.
-   */
-  keyHandlersUsed: () => KeyHandler[];
-
-  /**
-   * Builds a transaction and signs it with the keystores provided.
-   * When using this function, the builder will completely ignore any
-   * other keystores previously provided.
-   * @param keyStores the keystores to user
-   * @returns a signed transaction
-   */
-  buildWithSigners: (...keystores: KeyStore[]) => Promise<SignedTransaction>;
 
   /**
    * Build the transaction and submits it to the blockchain. Will return

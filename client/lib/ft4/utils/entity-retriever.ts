@@ -11,7 +11,7 @@ export function createEntityRetriever<
   query: QueryObject<R, DictPair>,
   dataMapper: (arg: V[]) => T[],
 ): EntityRetriever<T> {
-  return {
+  return Object.freeze({
     retrieve: async (): Promise<PaginatedEntity<T>> => {
       const res = await session.query(query);
       return {
@@ -19,5 +19,5 @@ export function createEntityRetriever<
         nextCursor: res?.next_cursor || null,
       };
     },
-  };
+  });
 }

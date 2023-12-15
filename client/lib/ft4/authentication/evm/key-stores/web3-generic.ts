@@ -15,9 +15,6 @@ export async function createGenericEvmKeyStore(config: {
     isInteractive: config.isInteractive ?? true,
     signMessage: (message: string) =>
       config.signMessage(message).then(sliceSignature),
-    sign: (_digestToSign: Buffer) => {
-      throw new Error("Cannot call sign method on an evm keystore");
-    },
     createKeyHandler: (authDescriptor: AnyAuthDescriptor) =>
       createEvmKeyHandler(authDescriptor, keyStore),
   });

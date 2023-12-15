@@ -52,7 +52,6 @@ entity rl_state {
     key account;
     mutable points: integer;
     mutable last_update: timestamp;
-    mutable max_points: integer;
     mutable recovery_time: timestamp;
 }
 
@@ -112,7 +111,7 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
     val recovery_time = rl_config.recovery_time;
     val points_at_start = rl_config.points_at_account_creation;
     
-    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), max_points, recovery_time);
+    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), recovery_time);
     
     return acc;
 }

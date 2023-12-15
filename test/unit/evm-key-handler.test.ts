@@ -227,7 +227,6 @@ describe("EVM key handler", () => {
       transactionBuilder(authenticator, client)
         .add(op("foo"))
         .add(op("foo"))
-        .addSigners(keyStore)
         .build(),
     ).rejects.toThrow(Error);
 

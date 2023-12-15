@@ -208,7 +208,8 @@ namespace test_block_time_span {
   function test_transaction_within_span() {
     val acc_data = setup_account_with_rules(
       accounts.serialize_rules([
-        greater_than(block_time(100)), less_than(block_time(20000000000000))
+        greater_than(block_time(100)),
+        less_than(block_time(rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 3))
       ])
     );
     authenticate_account_signed_tx(acc_data).run();
@@ -217,7 +218,8 @@ namespace test_block_time_span {
   function test_transaction_before_span() {
     val acc_data = setup_account_with_rules(
       accounts.serialize_rules([
-        greater_than(block_time(19000000000000)), less_than(block_time(20000000000000))
+        greater_than(block_time(rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2)),
+        less_than(block_time(rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 3))
       ])
     );
     authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
@@ -226,9 +228,11 @@ namespace test_block_time_span {
   function test_transaction_after_span() {
     val acc_data = setup_account_with_rules(
       accounts.serialize_rules([
-        greater_than(block_time(19000000000)), less_than(block_time(20000000000))
+        greater_than(block_time(100)),
+        less_than(block_time(rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2))
       ])
     );
+    rell.test.block().run();
     authenticate_account_signed_tx(acc_data).run_must_fail(rules_violated_error_message);
   }
 }
@@ -259,9 +263,12 @@ namespace test_deletion_after_expiration {
   function test_delete_expired_ad_on_authentication_with_different_auth_descriptor() {
     val acc_data = setup_account_with_rules(
       accounts.serialize_rules([
-        less_than(block_time(100))
+        less_than(block_time(rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2))
       ])
     );
+
+    rell.test.block().run();
+
     //auth desc exists
     assert_true(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
     
@@ -318,15 +325,17 @@ namespace test_deletion_after_expiration {
     val acc_data_invalid = [
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([
-          less_than(block_time(100))
+          less_than(block_time(rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 6))
         ])
       ),
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([
-          less_than(block_height(0))
+          less_than(block_height(8))
         ])
       )
     ];
+
+    rell.test.block().run();
 
     //valid auth descs exist
     for (data in acc_data_valid) {

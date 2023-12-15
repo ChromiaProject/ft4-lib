@@ -6,11 +6,8 @@ import {
   FlagsType,
   deriveAuthDescriptorId,
 } from "@ft4/accounts/auth-descriptor";
-import { createAuthenticator } from "@ft4/authentication";
-import {
-  FtKeyStore,
-  createFtKeyHandler,
-} from "@ft4/authentication/ft/key-handler";
+import { FtKeyStore, createAuthenticator } from "@ft4/authentication";
+import { createFtKeyHandler } from "@ft4/authentication/ft/key-handler";
 import { op } from "@ft4/utils";
 
 describe("Authenticator", () => {

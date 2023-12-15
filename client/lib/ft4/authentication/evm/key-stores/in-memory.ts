@@ -13,8 +13,6 @@ export function createInMemoryEvmKeyStore(keyPair: KeyPair): EvmKeyStore {
     address,
     isInteractive: false,
     signMessage: (message: string) => signMessage(message, wallet),
-    // FIXME
-    sign: (digestToSign: Buffer) => Promise.resolve(digestToSign),
     createKeyHandler: (authDescriptor: AnyAuthDescriptor) =>
       createEvmKeyHandler(authDescriptor, keyStore),
   });

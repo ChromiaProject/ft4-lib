@@ -3,7 +3,6 @@ import { aggregateSigners, deriveAuthDescriptorId } from "@ft4/accounts";
 import { ftAuth } from "@ft4/authentication/ft";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { op } from "@ft4/utils";
-import { txToBuffer } from "@ft4/utils/transaction-builder";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "../util/util";
 
@@ -43,7 +42,7 @@ describe("FT key handler", () => {
 
     const keyHandler =
       createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-    transaction.signatures = [await keyHandler.sign(txToBuffer(transaction))];
+    transaction.signatures = [await keyHandler.sign(transaction)];
 
     const digestToSign = gtx.getDigestToSign(transaction);
     const signature2 = encryption.signDigest(digestToSign, keyPair.privKey);

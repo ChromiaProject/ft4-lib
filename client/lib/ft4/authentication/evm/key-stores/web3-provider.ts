@@ -29,8 +29,6 @@ export async function createWeb3ProviderEvmKeyStore(
     address,
     isInteractive: true,
     signMessage: (message: string) => signMessage(message, signer),
-    // FIXME
-    sign: (digestToSign: Buffer) => Promise.resolve(digestToSign),
     createKeyHandler: (authDescriptor: AnyAuthDescriptor) =>
       createEvmKeyHandler(authDescriptor, keyStore),
   });
