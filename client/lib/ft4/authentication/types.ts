@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { BufferId, TxBuilderTransaction, TxContext } from "/ft4/utils/types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 export interface Authenticator {
   accountId: Buffer;

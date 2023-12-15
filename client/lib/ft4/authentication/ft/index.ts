@@ -1,9 +1,7 @@
 import { Operation, formatter } from "postchain-client";
 import { KeyStore } from "../types";
 import { Buffer } from "buffer";
-import { BufferId, TxBuilderTransaction } from "/ft4/utils/types";
-
-export * from "./key-handler";
+import { BufferId, TxBuilderTransaction } from "@ft4/utils/types";
 
 export function ftAuth(
   accountId: BufferId,

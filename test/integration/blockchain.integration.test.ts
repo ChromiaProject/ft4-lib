@@ -1,7 +1,7 @@
-import { Connection } from "/ft4/types";
-import { Config } from "/ft4/utils/types";
-import { createConnection } from "/ft4/ft-session";
-import { useChromiaNode } from "/util/chromia-node";
+import { Connection } from "@ft4/types";
+import { Config } from "@ft4/utils/types";
+import { createConnection } from "@ft4/ft-session";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let connection: Connection;
 

@@ -1,14 +1,14 @@
-import { emptyOp } from "../util/util";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { useChromiaNode } from "@ft4/util/chromia-node";
+import { nop } from "@ft4/utils";
 import {
   AnchoringTimeoutError,
   transactionBuilder,
-} from "/ft4/utils/transaction-builder";
-import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
-import { nop } from "/ft4/utils";
+} from "@ft4/utils/transaction-builder";
 import { IClient, isBlockAnchored } from "postchain-client";
-import { useChromiaNode } from "/util/chromia-node";
-import { createNoopAuthenticator } from "/ft4/authentication";
+import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { emptyOp } from "../util/util";
+import { createNoopAuthenticator } from "@ft4/authentication";
 
 describe("Transaction Builder", () => {
   let client: IClient;

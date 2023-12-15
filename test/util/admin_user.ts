@@ -1,11 +1,11 @@
 import { Operation, encryption, gtx } from "postchain-client";
-import { KeyManager } from "/ft4/accounts/auth/types";
+import { KeyManager } from "@ft4/accounts/auth/types";
 import { Buffer } from "buffer";
 import { User } from "./test-user";
 import {
   FlagsType,
   createSingleSigAuthDescriptorRegistration,
-} from "/ft4/accounts/auth-descriptor";
+} from "@ft4/accounts/auth-descriptor";
 import { testAdFromRegistration } from "./util";
 
 export default function adminUser(): User {

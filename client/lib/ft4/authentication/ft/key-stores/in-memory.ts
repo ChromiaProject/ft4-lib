@@ -5,9 +5,9 @@ import {
 } from "postchain-client";
 import { FtKeyStore } from "..";
 import { createFtKeyHandler } from "../key-handler";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { TxBuilderTransaction } from "/ft4/utils/types";
-import { txDigest } from "/ft4/utils/transaction-builder";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { TxBuilderTransaction } from "@ft4/utils/types";
+import { txDigest } from "@ft4/utils/transaction-builder";
 
 export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider,

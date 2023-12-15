@@ -1,3 +1,4 @@
+import { Authenticator, FtKeyStore } from "@ft4/authentication";
 import {
   IClient,
   Operation,
@@ -5,8 +6,7 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import { Authenticator, FtKeyStore } from "/ft4/authentication";
-import { RequireTogether, TxBuilderTransaction, BufferId } from "../types";
+import { BufferId, RequireTogether, TxBuilderTransaction } from "../types";
 
 export type TransactionBuilder = {
   /**

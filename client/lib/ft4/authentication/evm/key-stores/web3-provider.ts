@@ -3,8 +3,8 @@ import { ethers } from "ethers";
 import { EventEmitter } from "events";
 import { EvmKeyStore, signMessage } from "..";
 import { createEvmKeyHandler } from "../key-handler";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { ftEventEmitter } from "/ft4/events";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { ftEventEmitter } from "@ft4/events";
 
 export interface Eip1193Provider extends ethers.Eip1193Provider, EventEmitter {}
 

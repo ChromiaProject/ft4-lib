@@ -11,8 +11,8 @@ import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Session } from "../types";
-import { getTransactionRid, nop } from "../utils";
-import { transactionBuilder } from "../utils/transaction-builder";
+import { getTransactionRid, nop } from "@ft4/utils/index";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { Listener, EventEmitter } from "../events";
 import {
   ApplyTransferError,
@@ -38,8 +38,8 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
-import { BufferId } from "/ft4/utils/types";
+import { OnAnchoredHandlerData } from "@ft4/utils/transaction-builder/types";
+import { BufferId } from "@ft4/utils/types";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.

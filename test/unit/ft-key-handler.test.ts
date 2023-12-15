@@ -1,10 +1,10 @@
 import { RellOperation, encryption, gtx } from "postchain-client";
-import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
-import { ftAuth } from "/ft4/authentication/ft";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { op } from "/ft4/utils";
-import { createFakeAuthDataService } from "/util/fake-auth-data-service";
-import { createTestAuthDescriptor } from "/util/util";
+import { aggregateSigners, deriveAuthDescriptorId } from "@ft4/accounts";
+import { ftAuth } from "@ft4/authentication/ft";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { op } from "@ft4/utils";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { createTestAuthDescriptor } from "../util/util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {

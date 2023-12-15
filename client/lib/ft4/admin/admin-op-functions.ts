@@ -2,8 +2,8 @@ import { IClient, SignatureProvider } from "postchain-client";
 import { Amount, InvalidUrlError } from "../asset/interfaces";
 import { Asset } from "../asset/types";
 import * as ops from "./admin-operations";
-import { AnyAuthDescriptorRegistration } from "/ft4/accounts/auth-descriptor";
-import { BufferId, TransactionCompletion } from "/ft4/utils/types";
+import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
+import { BufferId, TransactionCompletion } from "@ft4/utils/types";
 
 /**
  * registers a new account on the blockchain
