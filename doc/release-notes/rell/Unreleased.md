@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+**This version is incompatible with older versions. To upgrade, you'll need to perform a database migration.** For more info, check out [this page](https://docs.chromia.com/rell/language-features/modules/entity#changing-existing-entities)
+
 ### Added
 - Default values for `lib.ft4.accounts` module_args to simplify `chromia.yml` configuration.
 - Added configuration parameter `max_auth_descriptor_rules` for `lib.ft4.accounts` module_args, with default value 8.
