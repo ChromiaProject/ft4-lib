@@ -5,25 +5,10 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import {
-  Authenticator,
-  FtKeyStore,
-  KeyHandler,
-  KeyStore,
-} from "/ft4/authentication";
-import {
-  RequireTogether,
-  TxContext,
-  TxBuilderTransaction,
-  BufferId,
-} from "../types";
+import { Authenticator, FtKeyStore } from "/ft4/authentication";
+import { RequireTogether, TxBuilderTransaction, BufferId } from "../types";
 
 export type TransactionBuilder = {
-  _operations: OperationContext[];
-  _keysUsed: (KeyStore | KeyHandler)[];
-  _context: TxContext;
-  _noopAuthenticator: Authenticator;
-
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
@@ -31,7 +16,7 @@ export type TransactionBuilder = {
    */
   add: (
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
@@ -45,7 +30,7 @@ export type TransactionBuilder = {
   addWithAuthenticator: (
     operation: Operation,
     authenticator: Authenticator,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Adds an operation to include in the final transaction.
@@ -55,7 +40,7 @@ export type TransactionBuilder = {
    */
   addWithoutAuthenticator: (
     operation: Operation,
-    handler?: OnAnchoredHandler | undefined,
+    handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
   /**
    * Add key stores that will also be included as signers to this transaction.
@@ -74,7 +59,7 @@ export type TransactionBuilder = {
   build: () => Promise<SignedTransaction>;
   /**
    * Builds an unsigned transaction containing the previously added
-   * transactions, as well as any authhorization operations as needed.
+   * transactions, as well as any authorization operations as needed.
    * @param signers array of participants that should sign this transaction
    * @returns A promise containing the signed transaction
    */

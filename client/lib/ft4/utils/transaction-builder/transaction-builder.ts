@@ -40,7 +40,7 @@ const defaultConfig: TransactionBuilderConfig = {
 
 /**
  * Creates a new TransactionBuilder instance
- * @param user object that holds authentication information for the transaction
+ * @param authenticator object that holds authentication information for the transaction
  * @param client object that holds connection info for the transaction
  * @returns a TransactionBuilder instance
  */
@@ -49,12 +49,17 @@ export function transactionBuilder(
   client: IClient,
   config: TransactionBuilderConfig = defaultConfig,
 ): TransactionBuilder {
+  const _operations: OperationContext[] = [];
+  const _keysUsed: (KeyStore | KeyHandler)[] = [];
+  const _context: TxContext = {};
+  let _noopAuthenticator: Authenticator;
+
   function add(
     operation: Operation,
     onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    this._operations.push({ operation, authenticator, onAnchoredHandler });
-    return this;
+    _operations.push({ operation, authenticator, onAnchoredHandler });
+    return me;
   }
 
   function getSigners(keyHandlers: (KeyHandler | KeyStore)[]): Buffer[] {
@@ -80,16 +85,16 @@ export function transactionBuilder(
 
   async function buildUnsigned(): Promise<TxBuilderTransaction> {
     const [operations, keyHandlers] = await authenticateOperations(
-      this._operations,
-      this._context,
+      _operations,
+      _context,
     );
 
-    keyHandlers.forEach((kh) => this._keysUsed.push(kh));
+    keyHandlers.forEach((kh) => _keysUsed.push(kh));
 
     const txn: TxBuilderTransaction = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
-      signers: getSigners(this._keysUsed),
+      signers: getSigners(_keysUsed),
       signatures: [],
     };
 
@@ -154,8 +159,8 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx: TxBuilderTransaction = await this.buildUnsigned();
-    const signersMap = getSignersMap(getFtKeyStores(this._keysUsed));
+    const tx: TxBuilderTransaction = await buildUnsigned();
+    const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
     tx.signatures = await Promise.all(
       // For some signers we don't have access to their key stores, therefor we insert zero buffer
       // as a placeholder for their signatures
@@ -168,18 +173,18 @@ export function transactionBuilder(
   }
 
   function addSigners(...signers: FtKeyStore[]): TransactionBuilder {
-    signers.forEach((signer) => this._keysUsed.push(signer));
-    return this;
+    signers.forEach((signer) => _keysUsed.push(signer));
+    return me;
   }
 
   async function buildAndSend(): Promise<{
     tx: SignedTransaction;
     receipt: TransactionReceipt;
   }> {
-    const tx = await (this as TransactionBuilder).build();
+    const tx = await build();
     const receipt = await client.sendTransaction(tx);
 
-    const operationsWithHandlers = this._operations.filter(
+    const operationsWithHandlers = _operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
 
@@ -275,27 +280,27 @@ export function transactionBuilder(
   function addWithAuthenticator(
     operation: Operation,
     authenticator: Authenticator,
-    handler?: OnAnchoredHandler,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    this._operations.push({ operation, authenticator, handler });
-    return this;
+    _operations.push({ operation, authenticator, onAnchoredHandler });
+    return me;
   }
 
   function addWithoutAuthenticator(
     operation: Operation,
-    handler?: OnAnchoredHandler,
+    onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    if (this._noopAuthenticator === undefined) {
-      this._noopAuthenticator = createNoopAuthenticator(
+    if (_noopAuthenticator === undefined) {
+      _noopAuthenticator = createNoopAuthenticator(
         authenticator.authDataService,
       );
     }
-    this._operations.push({
+    _operations.push({
       operation,
-      authenticator: this._noopAuthenticator,
-      handler,
+      authenticator: _noopAuthenticator,
+      onAnchoredHandler,
     });
-    return this;
+    return me;
   }
 
   function getSignersMap(stores: FtKeyStore[]) {
@@ -308,21 +313,18 @@ export function transactionBuilder(
     );
   }
 
-  const context: Partial<TransactionBuilder> = {
-    _operations: [],
-    _keysUsed: [],
+  const me = Object.freeze({
+    add,
+    addWithAuthenticator,
+    addWithoutAuthenticator,
+    addSigners,
+    build,
+    buildUnsigned,
+    buildAndSend,
     session: client,
-    _context: {},
-  };
-  context.add = add.bind(context);
-  context.build = build.bind(context);
-  context.buildUnsigned = buildUnsigned.bind(context);
-  context.addSigners = addSigners.bind(context);
-  context.addWithAuthenticator = addWithAuthenticator.bind(context);
-  context.addWithoutAuthenticator = addWithoutAuthenticator.bind(context);
-  context.buildAndSend = buildAndSend.bind(context);
+  });
 
-  return context as TransactionBuilder;
+  return me;
 }
 
 const isKeyHandler = (handler: KeyHandler | KeyStore): handler is KeyHandler =>
