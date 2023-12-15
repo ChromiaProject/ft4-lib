@@ -52,7 +52,6 @@ entity rl_state {
     key account;
     mutable points: integer;
     mutable last_update: timestamp;
-    mutable max_points: integer;
     mutable recovery_time: timestamp;
 }
 
@@ -106,11 +105,13 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
 
     add_auth_descriptor_to_account(acc, auth_descriptor, safe);
 
-    val max_points = chain_context.args.rate_limit.max_points;
-    val recovery_time = chain_context.args.rate_limit.recovery_time;
-    val points_at_start = chain_context.args.rate_limit.points_at_account_creation;
+    val rl_config = get_rate_limit_config_for_account(acc);
+
+    val max_points = rl_config.max_points;
+    val recovery_time = rl_config.recovery_time;
+    val points_at_start = rl_config.points_at_account_creation;
     
-    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), max_points, recovery_time);
+    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), recovery_time);
     
     return acc;
 }

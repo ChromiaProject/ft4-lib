@@ -2,7 +2,7 @@ import { QueryObject, formatter } from "postchain-client";
 import { OptionalPageCursor } from "../types";
 import { Buffer } from "buffer";
 import { AssetResponse, BalanceResponse } from "./types";
-import { BufferId, PaginatedEntity } from "/ft4/utils/types";
+import { BufferId, PaginatedEntity } from "@ft4/utils/types";
 
 export function assetById(
   assetId: BufferId,
@@ -80,7 +80,7 @@ export function balancesByAccountId(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
-  BalanceResponse[],
+  PaginatedEntity<BalanceResponse>,
   {
     account_id: Buffer;
     page_size: number;

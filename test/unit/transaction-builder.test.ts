@@ -1,30 +1,31 @@
 import { Buffer } from "buffer";
 import { IClient, KeyPair, Operation, encryption, gtx } from "postchain-client";
-import { createStubClient } from "/util/blockchain-util";
-import { createFakeAuthDataService } from "/util/fake-auth-data-service";
-import { createTestAuthDescriptor, emptyOp } from "/util/util";
-import { transfer } from "/ft4/accounts/account-operations";
+import { createStubClient } from "../util/blockchain-util";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { createTestAuthDescriptor, emptyOp } from "../util/util";
+import { transfer } from "@ft4/accounts/account-operations";
 import {
   FlagsType,
   aggregateSigners,
   deriveAuthDescriptorId,
-} from "/ft4/accounts/auth-descriptor";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { registerAccount } from "/ft4/admin/admin-operations";
-import { createAmount } from "/ft4/asset/amount";
+} from "@ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { registerAccount } from "@ft4/admin/admin-operations";
+import { createAmount } from "@ft4/asset/amount";
 import {
   AuthDataService,
   Authenticator,
+  FtKeyStore,
   KeyHandler,
   createAuthenticator,
   createNoopAuthenticator,
-} from "/ft4/authentication";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { nop } from "/ft4/utils";
+} from "@ft4/authentication";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { nop } from "@ft4/utils";
 import {
   AuthorizationError,
   transactionBuilder,
-} from "/ft4/utils/transaction-builder";
+} from "@ft4/utils/transaction-builder";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -75,17 +76,25 @@ describe("Transaction Builder", () => {
     const { authDescriptor, keyPair } = createTestAuthDescriptor([
       FlagsType.Account,
     ]);
-    const keyStore = createInMemoryFtKeyStore(keyPair);
+
+    const keyStoreMock: FtKeyStore = {
+      id: keyPair.pubKey,
+      pubKey: keyPair.pubKey,
+      isInteractive: false,
+      sign: jest.fn(),
+      createKeyHandler: jest.fn(),
+    };
+
     const keyHandlerMock: KeyHandler = {
       authDescriptor,
-      keyStore,
+      keyStore: keyStoreMock,
       satisfiesAuthRequirements: jest.fn(),
       authorize: jest
         .fn()
         .mockImplementation((accountId, operation) =>
           Promise.resolve([operation]),
         ),
-      sign: jest.fn().mockImplementation((v) => keyStore.sign(v)),
+      sign: keyStoreMock.sign,
       getSigners: jest.fn().mockReturnValue([keyPair.pubKey]),
     };
     const authenticatorMock: Authenticator = {
@@ -98,6 +107,7 @@ describe("Transaction Builder", () => {
     return {
       authenticatorMock,
       keyHandlerMock,
+      keyStoreMock,
       keyPair,
       authDescriptor,
     };
@@ -163,19 +173,20 @@ describe("Transaction Builder", () => {
     const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
       .add(operation)
-      .addSigners(keyHandler.keyStore)
+      .addSigners(keyHandler.keyStore as FtKeyStore)
       .build();
     expect(gtx.deserialize(tx).signers).toStrictEqual(keyHandler.getSigners());
     expect(gtx.deserialize(tx).signatures).toBeDefined();
   });
 
   it("uses custom authenticator if provided", async () => {
-    const { authenticatorMock, keyHandlerMock, authDescriptor } = getMocks();
+    const { authenticatorMock, keyHandlerMock, keyStoreMock, authDescriptor } =
+      getMocks();
     await transactionBuilder(authenticator, client)
       .addWithAuthenticator(registerAccount(authDescriptor), authenticatorMock)
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
-    expect(keyHandlerMock.sign).toHaveBeenCalled();
+    expect(keyStoreMock.sign).toHaveBeenCalled();
   });
 
   it("uses uses noop authenticator if authentication is not requested", async () => {

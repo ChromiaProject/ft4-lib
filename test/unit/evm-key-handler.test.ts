@@ -5,15 +5,15 @@ import {
   FlagsType,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
-} from "/ft4/accounts/auth-descriptor";
-import { createAuthenticator } from "/ft4/authentication";
-import { createEvmKeyHandler, evmAuth } from "/ft4/authentication/evm";
-import { createInMemoryEvmKeyStore } from "/ft4/authentication/evm/key-stores/in-memory";
-import { op } from "/ft4/utils";
-import { transactionBuilder } from "/ft4/utils/transaction-builder";
-import { createStubClient } from "/util/blockchain-util";
-import { createFakeAuthDataService } from "/util/fake-auth-data-service";
-import { testAdFromRegistration } from "/util/util";
+} from "@ft4/accounts/auth-descriptor";
+import { createAuthenticator } from "@ft4/authentication";
+import { createEvmKeyHandler, evmAuth } from "@ft4/authentication/evm";
+import { createInMemoryEvmKeyStore } from "@ft4/authentication/evm/key-stores/in-memory";
+import { op } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
+import { createStubClient } from "../util/blockchain-util";
+import { createFakeAuthDataService } from "../util/fake-auth-data-service";
+import { testAdFromRegistration } from "../util/util";
 
 describe("EVM key handler", () => {
   let client: IClient;
@@ -36,9 +36,8 @@ describe("EVM key handler", () => {
       v,
     };
 
-    const signedMessage = await createInMemoryEvmKeyStore(keyPair).signMessage(
-      message,
-    );
+    const signedMessage =
+      await createInMemoryEvmKeyStore(keyPair).signMessage(message);
 
     expect(signedMessage).toEqual(expectedSignature);
   });
@@ -228,7 +227,6 @@ describe("EVM key handler", () => {
       transactionBuilder(authenticator, client)
         .add(op("foo"))
         .add(op("foo"))
-        .addSigners(keyStore)
         .build(),
     ).rejects.toThrow(Error);
 

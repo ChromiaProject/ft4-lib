@@ -2,8 +2,8 @@ import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import { AuthDataService, KeyHandler } from "../types";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { BufferId, TxContext } from "/ft4/utils/types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
   accountId.toString("hex") + authDescriptorId.toString("hex");
@@ -31,7 +31,8 @@ export function createEvmKeyHandler(
         context,
         keyStore,
       ),
-    sign: (transaction: Buffer) => Promise.resolve(transaction),
+    sign: (_transaction: TxBuilderTransaction) =>
+      Promise.reject("Cannot sign the transaction with an EVM key store"),
     getSigners: () => [],
   });
 }
@@ -44,9 +45,8 @@ async function authorize(
   context: TxContext,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
   const nonce = await getNonce(
     authDataService,
     accountId,

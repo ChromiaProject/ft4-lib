@@ -9,7 +9,7 @@
  *
  * This mock provides a way to bypass these delays, ensuring fast and reliable test outcomes.
  */
-jest.mock("/ft4/utils/exposed-operations", () => ({
+jest.mock("@ft4/utils/exposed-operations", () => ({
   fetchExposedOperations: jest
     .fn()
     .mockResolvedValue(

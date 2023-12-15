@@ -1,4 +1,4 @@
-import { authDescriptorRuleToLoginConfigRule } from "/ft4";
+import { authDescriptorRuleToLoginConfigRule } from "@ft4/index";
 import {
   and,
   blockHeight,
@@ -7,7 +7,7 @@ import {
   greaterThan,
   lessThan,
   opCount,
-} from "/ft4/accounts/auth-descriptor";
+} from "@ft4/accounts/auth-descriptor";
 
 describe("Login manager", () => {
   it("converts ad rule to login config rule", async () => {

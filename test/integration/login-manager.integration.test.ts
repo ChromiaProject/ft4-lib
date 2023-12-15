@@ -3,17 +3,17 @@ import {
   createKeyStoreInteractor,
   minutes,
   ttlLoginRule,
-} from "/ft4";
-import { createInMemoryEvmKeyStore } from "/ft4/authentication";
-import { Connection } from "/ft4/types";
+} from "@ft4/index";
+import { createInMemoryEvmKeyStore } from "@ft4/authentication";
+import { Connection } from "@ft4/types";
 import { createAccount } from "../util/util";
-import { createAccountObject } from "/ft4/accounts/account-query-functions";
-import { createConnection } from "/ft4/ft-session";
-import { createAmount } from "/ft4/asset/amount";
-import { transfer } from "/ft4/accounts/account-operations";
+import { createAccountObject } from "@ft4/accounts/account-query-functions";
+import { createConnection } from "@ft4/ft-session";
+import { createAmount } from "@ft4/asset/amount";
+import { transfer } from "@ft4/accounts/account-operations";
 import { IClient, encryption, gtx } from "postchain-client";
-import { createInMemoryFtKeyStore } from "/ft4/authentication/ft/key-stores/in-memory";
-import { createInMemoryLoginKeyStore } from "/ft4/authentication/login-manager/stores/in-memory";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
 import {
   and,
   blockHeight,
@@ -22,11 +22,11 @@ import {
   lessOrEqual,
   lessThan,
   opCount,
-} from "/ft4/accounts/auth-descriptor";
-import { aggregateSigners, deriveAuthDescriptorId } from "/ft4/accounts";
-import { getPubkey } from "/ft4/utils";
-import { getNewAsset } from "/util/blockchain-util";
-import { useChromiaNode } from "/util/chromia-node";
+} from "@ft4/accounts/auth-descriptor";
+import { aggregateSigners, deriveAuthDescriptorId } from "@ft4/accounts";
+import { getPubkey } from "@ft4/utils";
+import { getNewAsset } from "@ft4/util/blockchain-util";
+import { useChromiaNode } from "@ft4/util/chromia-node";
 
 describe("Login manager", () => {
   const getClient = useChromiaNode();
@@ -38,7 +38,7 @@ describe("Login manager", () => {
   beforeAll(async () => {
     client = getClient();
     connection = createConnection(client);
-    Date.now = jest.fn(() => 10);
+    Date.now = jest.fn(() => 10000000000000);
   });
 
   afterAll(() => {

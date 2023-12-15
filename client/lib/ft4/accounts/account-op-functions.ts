@@ -5,7 +5,7 @@ import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-mem
 import { Authenticator } from "../authentication/types";
 import { call, createSession } from "../ft-session";
 import { Connection } from "../types";
-import { transactionBuilder } from "../utils/transaction-builder";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,
@@ -24,13 +24,13 @@ import {
   BufferId,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "/ft4/utils/types";
+} from "@ft4/utils/types";
 
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator,
 ): AuthenticatedAccount {
-  return {
+  return Object.freeze({
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AnyAuthDescriptorRegistration,
@@ -46,7 +46,7 @@ export function createAuthenticatedAccount(
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
-  };
+  });
 }
 
 async function addAuthDescriptor(

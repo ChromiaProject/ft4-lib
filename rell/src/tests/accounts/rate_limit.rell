@@ -6,6 +6,7 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 import acc: ^^^.lib.ft4.accounts;
 import test_op: ^^.operations.auth;
 import ^^^.lib.ft4.admin;
+import ^.rate_limit_helpers;
 
 function test_create_account_in_genesis_block() {
   val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A"]);
@@ -58,6 +59,9 @@ function test_rate_limit_points_increased_after_authenticated_operation_and_time
 function test_authenticated_operation_is_rate_limited() {
   rell.test.set_block_interval(1000); // set block interval to 1 second
 
+  assert_equals(acc.get_rate_limit_config().active, true);
+  assert_equals(acc.get_rate_limit_config().points_at_account_creation, 1);
+
   val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
   // Perform the transaction
@@ -92,6 +96,9 @@ function test_authenticated_operation_is_rate_limited() {
 
 function test_max_rate_limit_points() {
   rell.test.set_block_interval(1000); // set block interval to 1 second
+
+  assert_equals(acc.get_rate_limit_config().active, true);
+  assert_equals(acc.get_rate_limit_config().points_at_account_creation, 1);
 
   val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
@@ -138,4 +145,33 @@ function test_max_rate_limit_points() {
      .nop()
      .sign(rell.test.keypairs.alice)
      .run_must_fail("Insufficient rate limiter points");
+}
+
+function test_disable_rate_limit_for_account() {
+  rell.test.set_block_interval(1000); // set block interval to 1 second
+
+  assert_equals(acc.get_rate_limit_config().active, true);
+  assert_equals(acc.get_rate_limit_config().points_at_account_creation, 1);
+
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+
+  rell.test.tx()
+      .op(rate_limit_helpers.set_admin_account(alice.account))
+      .run();
+
+  // Perform the transaction
+  rell.test.tx()
+      .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+      .op(test_op.test_authenticated_operation())
+      .nop()
+      .sign(rell.test.keypairs.alice)
+      .run();
+
+  // Attempt to perform the transaction again quickly
+  rell.test.tx()
+      .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+      .op(test_op.test_authenticated_operation())
+      .nop()
+      .sign(rell.test.keypairs.alice)
+      .run();
 }

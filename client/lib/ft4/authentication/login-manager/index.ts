@@ -1,7 +1,11 @@
-import { createAuthenticator } from "..";
-import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { createInMemoryFtKeyStore } from "../ft/key-stores/in-memory";
-import { AuthDataService, KeyHandler, KeyStore } from "../types";
+import { createAuthenticator } from "@ft4/authentication";
+import { hasAuthDescriptorFlags } from "@ft4/authentication/ft/key-handler";
+import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import {
+  AuthDataService,
+  KeyHandler,
+  KeyStore,
+} from "@ft4/authentication/types";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import {
@@ -13,16 +17,16 @@ import {
   LoginOptions,
   Rules,
 } from "./types";
-import { createAccountObject } from "../../accounts/account-query-functions";
-import { createAuthDataService, createSession } from "../../ft-session";
-import { Connection } from "../../types";
+import { createAuthDataService, createSession } from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
 import {
   isRawRule,
   isNullRule,
   isSimpleRule,
   isLoginConfigSimpleRule,
 } from "./type-predicates";
-import { authDescriptorById } from "/ft4/accounts/account-queries";
+import { authDescriptorById } from "@ft4/accounts/account-queries";
+import { createAccountObject } from "@ft4/accounts/account-query-functions";
 import {
   AuthDescriptorRules,
   AuthDescriptorSimpleRule,
@@ -32,9 +36,9 @@ import {
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
-} from "/ft4/accounts/auth-descriptor";
-import { getPubkey } from "/ft4/utils";
-import { rulesFromGtv } from "/ft4/accounts/auth-descriptor/gtv";
+} from "@ft4/accounts/auth-descriptor";
+import { getPubkey } from "@ft4/utils/index";
+import { rulesFromGtv } from "@ft4/accounts/auth-descriptor/gtv";
 
 export * from "./types";
 export { LoginKeyStore };

@@ -2,8 +2,8 @@ import { Buffer } from "buffer";
 import { LoginConfig } from "./login-manager/types";
 import { Connection } from "../types";
 import { Operation } from "postchain-client";
-import { AnyAuthDescriptor } from "/ft4/accounts/auth-descriptor/types";
-import { BufferId, TxContext } from "/ft4/utils/types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -27,7 +27,7 @@ export interface KeyHandler {
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 
-  sign(transaction: Buffer): Promise<Buffer>;
+  sign(transaction: TxBuilderTransaction): Promise<Buffer>;
 
   // FIXME
   getSigners(): Buffer[];
@@ -37,7 +37,6 @@ export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;
-  sign: (digestToSign: Buffer) => Promise<Buffer>;
   createKeyHandler(authDescriptor: AnyAuthDescriptor): KeyHandler;
 }
 

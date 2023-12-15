@@ -1,7 +1,7 @@
 import { Account, AuthenticatedAccount } from "./accounts/types";
 import { Asset } from "./asset/types";
-import { BufferId, Config, PaginatedEntity } from "./utils/types";
-import { TransactionBuilder } from "./utils/transaction-builder";
+import { BufferId, Config, PaginatedEntity } from "@ft4/utils/types";
+import { TransactionBuilder } from "@ft4/utils/transaction-builder";
 import {
   IClient,
   Queryable,

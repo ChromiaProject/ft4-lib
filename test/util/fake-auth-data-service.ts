@@ -1,8 +1,8 @@
 import { Operation } from "postchain-client";
-import { AuthDataService } from "/ft4/authentication/types";
-import { LoginConfig } from "/ft4/authentication/login-manager";
-import { Connection } from "/ft4";
-import { BufferId } from "/ft4/utils/types";
+import { AuthDataService } from "@ft4/authentication/types";
+import { LoginConfig } from "@ft4/authentication/login-manager";
+import { Connection } from "@ft4/index";
+import { BufferId } from "@ft4/utils/types";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },

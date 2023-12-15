@@ -1,8 +1,10 @@
+import { cwd } from "process";
+import alias from "@rollup/plugin-alias";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
-import inject from "@rollup/plugin-inject";
-import alias from "@rollup/plugin-alias";
-import resolve from "@rollup/plugin-node-resolve";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import terser from "@rollup/plugin-terser";
 
 export default [
   //ESM
@@ -15,16 +17,16 @@ export default [
       sourcemap: true,
     },
     plugins: [
-      resolve({ browser: true }),
-      commonjs({transformMixedEsModules: true}),
-      inject({ Buffer: ["buffer", "Buffer"] }),
-      json(),
       alias({
         entries: [
-          { find: "crypto", replacement: "crypto-browserify" },
-          { find: "stream", replacement: "stream-browserify" },
-        ],
+          { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
+        ]
       }),
+      nodeResolve({ browser: true }),
+      commonjs({ transformMixedEsModules: true }),
+      peerDepsExternal(),
+      json(),
+      terser(),
     ],
   },
   //UMD
@@ -35,20 +37,25 @@ export default [
       format: "umd",
       name: "FT4 lib",
       sourcemap: true,
+      globals: {
+        buffer: 'buffer',
+        'postchain-client': 'postchain-client',
+      }
     },
     plugins: [
-      commonjs(),
-      inject({ Buffer: ["buffer", "Buffer"] }),
-      json(),
-      resolve({ browser: true }),
       alias({
         entries: [
-          { find: "crypto", replacement: "crypto-browserify" },
-          { find: "stream", replacement: "stream-browserify" },
-        ],
+          { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
+        ]
       }),
+      peerDepsExternal(),
+      nodeResolve({ browser: true }),
+      commonjs({ transformMixedEsModules: true }),
+      json(),
+      terser(),
     ],
-  },  //NODE
+  },  
+  //NODE
   {
     input: "./dist/index.js",
     output: {
@@ -58,7 +65,14 @@ export default [
       sourcemap: true,
     },
     plugins: [
-      commonjs(),
+      alias({
+        entries: [
+          { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
+        ]
+      }),
+      nodeResolve({ preferBuiltins: true }),
+      commonjs({ transformMixedEsModules: false }),
+      peerDepsExternal(),
       json()
     ],
   },
