@@ -29,7 +29,7 @@
         - struct `single_sig_args.pubkey` -> `single_sig_args.signer`
         - struct `multi_sig_args.pubkeys` -> `multi_sig_args.signers`
         - function `get_participants` -> `get_signers`
-        - entity `auth_descriptor_participant` -> `auth_decriptor_signer`
+        - entity `auth_descriptor_participant` -> `auth_descriptor_signer`
         - function `get_paginated_auth_descriptors_by_participant_id` -> `get_paginated_auth_descriptors_by_signer`
         - function `get_paginated_accounts_by_participant_id` -> `get_paginated_accounts_by_signer`
         - 
