@@ -269,12 +269,15 @@ describe("Transfer history", () => {
       createAmount(10, asset.decimals),
     );
 
-    const retreiver = createTransferHistoryRetriever(
+    const goldenRetriever = createTransferHistoryRetriever(
       connection.client,
       account1.id,
     );
-    const expectedEntry = (await retreiver.retrieve(1, null, null)).data[0];
-    const actualEntry = await retreiver.retrieveSingle(expectedEntry.rowid);
+    const expectedEntry = (await goldenRetriever.retrieve(1, null, null))
+      .data[0];
+    const actualEntry = await goldenRetriever.retrieveSingle(
+      expectedEntry.rowid,
+    );
 
     Object.assign(BigInt.prototype, {
       toJSON: function () {
