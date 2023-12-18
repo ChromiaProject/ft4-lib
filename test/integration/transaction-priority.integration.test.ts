@@ -1,13 +1,13 @@
-import { createConnection } from "/ft4/ft-session";
-import { Connection } from "/ft4/types";
-import AccountBuilder from "/util/account-builder";
-import TestUser from "/util/test-user";
-import { ftAuth } from "/ft4/authentication";
-import { op } from "/ft4";
-import { deriveAuthDescriptorId } from "/ft4/accounts";
-import { useChromiaNode } from "/util/chromia-node";
-import { Config } from "/ft4/utils/types";
+import { createConnection } from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
+import AccountBuilder from "@ft4/util/account-builder";
+import TestUser from "@ft4/util/test-user";
+import { ftAuth } from "@ft4/authentication";
+import { deriveAuthDescriptorId } from "@ft4/accounts";
+import { useChromiaNode } from "@ft4/util/chromia-node";
+import { Config } from "@ft4/utils/types";
 import { UnexpectedStatusError } from "postchain-client";
+import { op } from "@ft4/utils";
 
 jest.setTimeout(2000000);
 
