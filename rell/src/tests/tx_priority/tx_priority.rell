@@ -24,7 +24,7 @@ function test_no_authenticated_operations() {
         current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME
     );
 
-    assert_equals(priority_state.account_id, x""); // TODO should be null when Postchain supports it
+    assert_null(priority_state.account_id);
     assert_equals(priority_state.priority, 0.0);
 }
 

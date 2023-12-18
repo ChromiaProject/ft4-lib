@@ -7,7 +7,7 @@ import ^.accounts;
 /** Return value of `priority_check_v1` query. */
 struct priority_state_v1 {
     /** id of account which wants to push the transaction forward */
-    account_id: byte_array; // TODO should be nullable when Postchain supports it
+    account_id: byte_array?;
 
     /** number of points currently associated with the account */
     account_points: integer;
@@ -61,8 +61,8 @@ query priority_check_v1(tx_body: gtx_transaction_body, tx_enter_timestamp: times
 
 function no_account_proirity_state(priority: decimal) =
     priority_state_v1(
-        account_id = x"",                   // TODO should be null when Postchain supports it
-        account_points = integer.MAX_VALUE, // TODO should be 0
-        tx_cost_points = 1,                 // TODO should be 0
+        account_id = null,
+        account_points = 0,
+        tx_cost_points = 0,
         priority = priority
     );
