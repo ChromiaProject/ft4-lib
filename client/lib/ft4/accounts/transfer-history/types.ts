@@ -3,11 +3,6 @@ import { PageCursor } from "../../types";
 import { Buffer } from "buffer";
 import { Asset, AssetResponse } from "../../asset/types";
 
-type TransferHistoryTransferArgs = {
-  amount: Amount;
-  accountId: Buffer;
-};
-
 export type TransferHistoryEntryResponse = {
   id: number;
   delta: bigint;
@@ -28,7 +23,6 @@ export type TransferHistoryEntryResponse = {
   timestamp: number;
   block_height: number;
   entry_index: number;
-  transfer_args: string;
   tx_rid: Buffer;
   tx_data: string;
   operation_name: string;
@@ -45,8 +39,6 @@ export type TransferHistoryEntry = {
   assetData: Asset;
   entryIndex: number;
   data: Buffer;
-  transferInputArgs: TransferHistoryTransferArgs[];
-  transferOutputArgs: TransferHistoryTransferArgs[];
   timestamp: Date;
   transactionId: Buffer;
   blockHeight: number;
