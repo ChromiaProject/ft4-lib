@@ -50,3 +50,32 @@ query get_transfer_history_entry(rowid) {
     val entry = assets.transfer_history_entry @? { .rowid == rowid };
     return if (empty(entry)) null else assets.extract_data_from_transfer_history_entry(entry);
 }
+
+struct transfer_detail {
+    account_id: byte_array;
+    asset_id: byte_array;
+    delta: big_integer;
+    is_input: boolean;
+    entry_index: integer;
+}
+
+query get_transfer_details(tx_rid: byte_array, op_index: integer) {
+    return assets.transfer_history_entry @*
+        { .transaction.tx_rid == tx_rid, op_index }
+        (@sort @omit .entry_index, extract_details_from_transfer_history_entry($));
+}
+
+query get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array) {
+    return assets.transfer_history_entry @*
+        { .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id }
+        (@sort @omit .entry_index, extract_details_from_transfer_history_entry($));
+}
+
+function extract_details_from_transfer_history_entry(assets.transfer_history_entry) =
+    transfer_detail(
+        account_id = transfer_history_entry.account.id,
+        asset_id = transfer_history_entry.asset.id,
+        delta = transfer_history_entry.delta,
+        is_input = transfer_history_entry.is_input,
+        entry_index = transfer_history_entry.entry_index
+    );
