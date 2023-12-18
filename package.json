@@ -24,7 +24,6 @@
     "test:multichain": "./scripts/multichain-jesttest.sh",
     "test:e2e": "./scripts/start-e2e-environment.sh --run-tests-interactive",
     "test:e2e:headless": "./scripts/start-e2e-environment.sh --run-tests-headless",
-    "test": "./scripts/relltest.sh -- ; npx jest -maxWorkers=1 --testPathPattern=unit/ ; TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ ; ./scripts/start-e2e-environment.sh --run-tests-headless",
     "stop-postchain:jest": "docker stop ft4_jest_test; docker rm ft4_jest_test",
     "stop-postchain:demo": "docker stop ft4_demo; docker rm ft4_demo",
     "stop-postchain:rell": "docker stop postchain; docker rm postchain",
@@ -53,18 +52,23 @@
     "ethers": "^6.4.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.6",
+    "@babel/plugin-transform-runtime": "^7.23.6",
+    "@babel/preset-env": "^7.23.6",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-inject": "^5.0.3",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-terser": "^0.4.4",
+    "@synthetixio/synpress": "^3.7.2-beta.9",
     "@testcontainers/postgresql": "^10.2.2",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.2.5",
     "@types/node-fetch": "^2.6.1",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
+    "babel-loader": "^9.1.3",
     "cypress": "^13.6.0",
     "eslint": "^8.29.0",
     "eslint-config-prettier": "^9.1.0",
@@ -79,8 +83,10 @@
     "rollup-plugin-peer-deps-external": "^2.2.4",
     "testcontainers": "^10.2.2",
     "ts-jest": "^29.0.0",
+    "ts-loader": "^9.5.1",
     "tslint": "^6.1.3",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "webpack": "^5.89.0"
   },
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
