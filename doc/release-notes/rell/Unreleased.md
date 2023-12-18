@@ -20,3 +20,5 @@
 - **create_account_with_auth** function return `account` instead of `byte_array`.
 - **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
 - **Rate limit config** New format for rate limit configuration.
+- **Transfer history** Remove `transfer_args` from queries `get_transfer_history_entry` and `get_transfer_history`.
+ 

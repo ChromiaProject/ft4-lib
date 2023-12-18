@@ -177,7 +177,6 @@ function test_transfer_history_entry() {
             timestamp = entry.transaction.block.timestamp,
             block_height = entry.transaction.block.block_height,
             entry_index = entry.entry_index,
-            transfer_args = entry.transfer_args,
             tx_rid = entry.transaction.tx_rid,
             tx_data = entry.transaction.tx_data,
             operation_name = "ft4.admin.mint"

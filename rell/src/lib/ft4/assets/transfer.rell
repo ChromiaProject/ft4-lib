@@ -5,11 +5,6 @@ namespace Unsafe {
       require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
       require(from != to, "Sender and receiver have to be different");
 
-      val args = [
-         [(amount, from.id, 0)],
-         [(amount, to.id, 0)]
-      ];
-
       before_transfer(from, to, asset, amount);
 
       deduct_balance(from, asset, amount);
@@ -19,8 +14,7 @@ namespace Unsafe {
          .delta = amount,
          .op_index = op_context.op_index,
          .is_input = true,
-         .entry_index = 0,
-         .transfer_args = args.to_gtv().to_bytes()
+         .entry_index = 0
       );
       
       increase_balance(to, asset, amount);
@@ -30,8 +24,7 @@ namespace Unsafe {
          .delta = amount,
          .op_index = op_context.op_index,
          .is_input = false,
-         .entry_index = 0,
-         .transfer_args = args.to_gtv().to_bytes()
+         .entry_index = 0
       );
 
       after_transfer(from, to, asset, amount);

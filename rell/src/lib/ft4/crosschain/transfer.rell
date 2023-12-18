@@ -42,11 +42,6 @@ namespace Unsafe {
         val is_sender_blockchain = exists(blockchain_account @? { sender });
         val is_receiver_blockchain = exists(blockchain_account @? { receiver });
         
-        val args = [
-            [(amount, sender.id, 0)],
-            [(amount, receiver.id, 0)]
-        ];
-
         if (
             not exists(origin_brid)
             or not is_sender_blockchain
@@ -65,8 +60,7 @@ namespace Unsafe {
             .delta = amount,
             .op_index = op_context.op_index,
             .is_input = true,
-            .entry_index = 0,
-            .transfer_args = args.to_gtv().to_bytes()
+            .entry_index = 0
         );
 
         if (
@@ -83,8 +77,7 @@ namespace Unsafe {
             .delta = amount,
             .op_index = op_context.op_index,
             .is_input = false,
-            .entry_index = 0,
-            .transfer_args = args.to_gtv().to_bytes()
+            .entry_index = 0
         );
     }
 }
