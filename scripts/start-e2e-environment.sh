@@ -118,16 +118,11 @@ setup_blockchain_resources() {
     ")
     echo "Ethereum private key generated."
 
-    # TODO:
-    # - Use the generated EVM address in Metamask with Cypress
-    # - Register account and the asset and mint some to the account
-    # Jira: https://chromaway.atlassian.net/browse/FT4-202
-
-    # echo "Registering account with Ethereum address..."
-    # REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
-    #     "[0, [['A','T'], x'${ETH_ADDRESS:2}'], null]" \
-    #     --cid 0 --await --secret $KEYPAIR_PATH)
-    # echo "Account registration result: $REGISTER_ACCOUNT_RESULT"
+    echo "Registering account with Ethereum address..."
+    REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
+        "[0, [['A','T'], x'${ETH_ADDRESS:2}'], null]" \
+        --cid 0 --await --secret $KEYPAIR_PATH)
+    echo "Account registration result: $REGISTER_ACCOUNT_RESULT"
 
     # echo "Registering test asset..."
     # REGISTER_ASSET_RESULT=$(chr tx ft4.admin.register_asset \

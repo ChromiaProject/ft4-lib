@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-transform-private-property-in-object": "^7.23.4",
+    "@chromia/ft4": "^0.1.2",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.13.7",
@@ -10,7 +13,6 @@
     "@mui/system": "^5.13.7",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
-    "@chromia/ft4": "^0.1.2",
     "path-browserify": "^1.0.1",
     "postchain-client": "^1.5.4",
     "process": "^0.11.10",
