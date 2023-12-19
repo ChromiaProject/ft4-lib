@@ -117,7 +117,7 @@ setup_blockchain_resources() {
         console.log(wallet.privateKey);
     ")
     # echo "Ethereum private key generated."
-    echo "Ethereum private key generated: $ETH_PRIVATE_KEY"
+    echo "Ethereum private key generated."
 
     echo "Registering account with Ethereum address..."
     REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
