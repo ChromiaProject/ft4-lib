@@ -63,6 +63,6 @@ type ConfigResponse = {
   };
 };
 
-export { createEntityRetriever } from "./entity-retriever";
+export { retrievePaginatedEntity } from "./entity-retriever";
 
 export { EntityRetriever, PaginatedEntity } from "./types";
