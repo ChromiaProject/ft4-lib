@@ -9,7 +9,6 @@ import { TransferHistoryType } from "@ft4/accounts/transfer-history/types";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { IClient, newSignatureProvider } from "postchain-client";
-import { createTransferHistoryRetriever } from "@ft4/accounts/transfer-history/transfer-history-retrieval";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 
 let asset: Asset;
@@ -278,44 +277,6 @@ describe("Transfer history", () => {
     });
 
     expect(transferHistory.data.length).toEqual(2);
-  });
-
-  it("fetches a transfer history entry by rowid", async () => {
-    const user = TestUser();
-
-    const account1 = await AccountBuilder.account(connection)
-      .withParticipant(user.signatureProvider)
-      .withBalance(asset, 200)
-      .withPoints(1)
-      .build();
-
-    const account2 = await AccountBuilder.account(connection).build();
-
-    await account1.transfer(
-      account2.id,
-      asset.id,
-      createAmount(10, asset.decimals),
-    );
-
-    const goldenRetriever = createTransferHistoryRetriever(
-      connection.client,
-      account1.id,
-    );
-    const expectedEntry = (await goldenRetriever.retrieve(1, null, null))
-      .data[0];
-    const actualEntry = await goldenRetriever.retrieveSingle(
-      expectedEntry.rowid,
-    );
-
-    Object.assign(BigInt.prototype, {
-      toJSON: function () {
-        return this.toString();
-      },
-    });
-
-    expect(JSON.stringify(actualEntry)).toStrictEqual(
-      JSON.stringify(expectedEntry),
-    );
   });
 
   it("is possible to get a single entry from IAccount interface", async () => {

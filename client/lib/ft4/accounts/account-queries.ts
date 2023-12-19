@@ -4,6 +4,11 @@ import { OptionalPageCursor } from "@ft4/types";
 import { RateLimit } from "./types";
 import { RawAnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { BufferId } from "@ft4//utils/types";
+import {
+  TransferHistoryEntryResponse,
+  TransferHistoryFilter,
+  TransferHistoryType,
+} from "./transfer-history/types";
 
 export function RateLimitQuery(
   accountId: BufferId,
@@ -136,6 +141,31 @@ export function authDescriptorById(
     args: {
       account_id: formatter.ensureBuffer(accountId),
       id: formatter.ensureBuffer(id),
+    },
+  };
+}
+
+export function transferHistory(
+  accountId: BufferId,
+  filter: TransferHistoryFilter | null,
+  limit: number,
+  cursor: OptionalPageCursor = null,
+): QueryObject<
+  TransferHistoryEntryResponse[],
+  {
+    account_id: Buffer;
+    filter: [TransferHistoryType | null];
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.get_transfer_history",
+    args: {
+      account_id: formatter.ensureBuffer(accountId),
+      filter: [filter?.transferHistoryType ?? null],
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }
