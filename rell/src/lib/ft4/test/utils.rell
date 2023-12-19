@@ -5,8 +5,8 @@ import ^^.accounts;
 import auth_ext: ^^.auth.external;
 import ^^.auth.{ signature };
 import ^^.auth.external.{ get_auth_message_template };
-import ^^.accounts.{ eth_auth_args };
-import ^^.auth. { create_message_from_template, _eth_message_hash };
+import ^^.accounts.{ evm_auth_args };
+import ^^.auth. { create_message_from_template, _evm_message_hash };
 
 /*
  * Creates an ft_auth operation for a specific signer.
@@ -31,8 +31,8 @@ function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
         accounts.auth_descriptor_signer @? { evm_address }.account_auth_descriptor limit 1,
         "No auth descriptor found for address %s".format(evm_address)
     );
-    val eth_message = create_message_from_template(
-        eth_auth_args(
+    val evm_message = create_message_from_template(
+        evm_auth_args(
             account = descriptor.account,
             descriptor,
             signatures = []
@@ -41,7 +41,7 @@ function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
         op.args,
         descriptor.ctr
     );
-    val evm_signature = evm_sign(eth_message, evm_privkey);
+    val evm_signature = evm_sign(evm_message, evm_privkey);
     return auth_ext.evm_auth(descriptor.account.id, descriptor.id, [evm_signature]);
 }
 
@@ -50,7 +50,7 @@ function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
  */
 function evm_sign(message: text, evm_privkey: byte_array): signature {
     val sig = crypto.eth_sign(
-            _eth_message_hash(message),
+            _evm_message_hash(message),
             evm_privkey
         );
 

@@ -125,7 +125,7 @@ function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: bo
     }
 }
 
-function _add_eth_signer(account, auth_descriptor, account_auth_descriptor) {
+function _add_evm_signer(account, auth_descriptor, account_auth_descriptor) {
     for (signer in get_signers(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes())) {
         create auth_descriptor_signer(account_auth_descriptor, id = signer);
     }
