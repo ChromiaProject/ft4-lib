@@ -1,11 +1,9 @@
 import { Buffer } from "buffer";
 import { formatter, IClient } from "postchain-client";
-import { balancesByAccountId } from "../asset/asset-queries";
 import {
-  createBalanceObject,
   getBalanceByAccountId,
+  getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Balance, BalanceResponse } from "../asset/types";
 import { Connection, OptionalPageCursor } from "../types";
 import { getConfig } from "@ft4/utils/index";
 import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
@@ -70,13 +68,8 @@ export function createAccountObject(
     id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: (limit = 100, cursor: OptionalPageCursor = null) => {
-      return retrievePaginatedEntity<Balance, BalanceResponse>(
-        connection,
-        balancesByAccountId(accountId, limit, cursor),
-        (balances) => balances.map(createBalanceObject),
-      );
-    },
+    getBalances: (limit = 100, cursor: OptionalPageCursor = null) =>
+      getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: async (
