@@ -3,4 +3,4 @@ module;
 import ^^^.main;
 import ^^.extensions;
 import ^^.operations;
-import ^^^.lib.ft4.tx_priority;
+import ^^^.lib.ft4.default_prioritization;
