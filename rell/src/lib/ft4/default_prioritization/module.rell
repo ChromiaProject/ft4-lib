@@ -10,7 +10,7 @@ import ^.prioritization.*;
         (auth.fetch_account_and_auth_descriptor($.args)[0]);
 
     if (tx_accounts.empty()) return no_account_priority_state(0.0);
-    val account = tx_accounts[0]; // TODO handle multiple accounts
+    val account = tx_accounts[0]; // Use first account if there are multiple
 
     val rl_config = accounts.get_rate_limit_config_for_account(account);
     if (rl_config.active == false) return no_account_priority_state(1.0);
