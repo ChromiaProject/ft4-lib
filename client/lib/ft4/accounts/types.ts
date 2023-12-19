@@ -13,7 +13,6 @@ import {
 import {
   TransferHistoryEntry,
   TransferHistoryFilter,
-  TransferHistoryResponse,
 } from "./transfer-history/types";
 import {
   AnyAuthDescriptor,
@@ -52,7 +51,7 @@ export interface Account {
     limit?: number,
     filter?: TransferHistoryFilter,
     cursor?: OptionalPageCursor,
-  ) => Promise<TransferHistoryResponse>;
+  ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
   getTransferHistoryEntry: (
     rowid: number,
   ) => Promise<TransferHistoryEntry | null>;
