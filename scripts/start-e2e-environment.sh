@@ -104,20 +104,18 @@ wait_for_services_ready() {
 
 setup_blockchain_resources() {
     echo "Generating Ethereum address and private key..."
-    ETH_ADDRESS=$(node -e "
+    ETH_CREDENTIALS=$(node -e "
         const ethers = require('ethers');
         const wallet = ethers.Wallet.createRandom();
-        console.log(wallet.address);
+        console.log(wallet.address + ' ' + wallet.privateKey);
     ")
-    echo "Ethereum address generated: $ETH_ADDRESS"
 
-    ETH_PRIVATE_KEY=$(node -e "
-        const ethers = require('ethers');
-        const wallet = ethers.Wallet.createRandom();
-        console.log(wallet.privateKey);
-    ")
+    ETH_ADDRESS=$(echo $ETH_CREDENTIALS | cut -d ' ' -f 1)
+    ETH_PRIVATE_KEY=$(echo $ETH_CREDENTIALS | cut -d ' ' -f 2)
+
+    echo "Ethereum address generated: $ETH_ADDRESS"
     # echo "Ethereum private key generated."
-    echo "Ethereum private key generated."
+    echo "Ethereum private key generated: $ETH_PRIVATE_KEY"
 
     echo "Registering account with Ethereum address..."
     REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
@@ -247,6 +245,8 @@ SYNPRESS_COMMAND="PRIVATE_KEY=$ETH_PRIVATE_KEY \
     $CYPRESS_DEBUG_MODE \
     ./node_modules/.bin/synpress run \
     --configFile cypress.config.ts"
+
+echo "Synpress command: $SYNPRESS_COMMAND"
 
 # Run the appropriate command
 if [ "$COMMAND_TO_RUN" = "run_tests_headless" ]; then
