@@ -46,6 +46,8 @@ import { getConfig, getVersion, nop } from "./utils";
 import { fetchExposedOperations } from "./utils/exposed-operations";
 import { transactionBuilder } from "./utils/transaction-builder";
 import { BufferId } from "./utils/types";
+import { getTransferDetails } from "./accounts/transfer-history/transfer-history-query-functions";
+import { getTransferDetailsByAsset } from "./accounts/transfer-history/transfer-history-query-functions";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -78,6 +80,13 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
+    getTransferDetails: (txRid: BufferId, opIndex: number) =>
+      getTransferDetails(connection, txRid, opIndex),
+    getTransferDetailsByAsset: (
+      txRid: BufferId,
+      opIndex: number,
+      assetId: BufferId,
+    ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
   });
 
   return connection;

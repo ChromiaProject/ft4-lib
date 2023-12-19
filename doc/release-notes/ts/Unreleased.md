@@ -8,5 +8,6 @@
 - Removed type `TransferHistoryTransferArgs` and corresponding fields in `TransferHistoryEntry`
 
 ### Changed 
-- Upgrade postchain-client to 1.9.0.
+- Upgrade postchain-client to 1.9.0
 - Added a function `getAccountsPaginated()` to get all accounts
+- Added methods `getTransferDetails()` and `getTransferDetailsByAsset()` in `Connection`

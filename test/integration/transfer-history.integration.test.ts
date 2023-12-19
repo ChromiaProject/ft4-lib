@@ -61,11 +61,13 @@ describe("Transfer history", () => {
         createInMemoryFtKeyStore(keyPair),
       ).getSession(account1.id);
 
-      await session.account.transfer(
-        account2.id,
-        asset.id,
-        createAmount(10, asset.decimals),
-      );
+      const transferTransactionRid = (
+        await session.account.transfer(
+          account2.id,
+          asset.id,
+          createAmount(10, asset.decimals),
+        )
+      ).receipt.transactionRid;
 
       const history = await account1.getTransferHistory();
 
@@ -75,6 +77,32 @@ describe("Transfer history", () => {
       const entry = history.data[0];
 
       expect(entry.isInput).toEqual(true);
+      const expectedDetails = [
+        {
+          account_id: account1.id,
+          asset_id: asset.id,
+          delta: 10n,
+          is_input: true,
+          entry_index: 0,
+        },
+        {
+          account_id: account2.id,
+          asset_id: asset.id,
+          delta: 10n,
+          is_input: false,
+          entry_index: 0,
+        },
+      ];
+      expect(
+        await connection.getTransferDetails(transferTransactionRid, 1),
+      ).toEqual(expectedDetails);
+      expect(
+        await connection.getTransferDetailsByAsset(
+          transferTransactionRid,
+          1,
+          asset.id,
+        ),
+      ).toEqual(expectedDetails);
     });
 
     it("includes the name of the operation causing the history entry", async () => {
