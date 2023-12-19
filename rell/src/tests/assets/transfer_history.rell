@@ -227,14 +227,14 @@ function test_transfer_details() {
     val tx_rid = transaction @ { last_block } (.tx_rid);
 
     val expected = [
-        assets_ext.transfer_detail(
+        assets.transfer_detail(
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 1L,
             is_input = true,
             entry_index = 0
         ),
-        assets_ext.transfer_detail(
+        assets.transfer_detail(
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 1L,
@@ -245,5 +245,5 @@ function test_transfer_details() {
 
     assert_equals(ft4.assets_ext.get_transfer_details(tx_rid, 1), expected);
     assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset.id), expected);
-    assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset2.id), list<assets_ext.transfer_detail>());
+    assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset2.id), list<assets.transfer_detail>());
 }
