@@ -87,7 +87,7 @@ export {
 // Utils & Others
 export {
   op,
-  createEntityRetriever,
+  retrievePaginatedEntity,
   EntityRetriever,
   PaginatedEntity,
 } from "./utils";
