@@ -1,7 +1,14 @@
 import { Amount } from "../../asset/interfaces";
-import { PageCursor } from "../../types";
 import { Buffer } from "buffer";
 import { Asset, AssetResponse } from "../../asset/types";
+
+export class TransferHistoryError extends Error {
+  constructor(msg?) {
+    super(msg);
+    this.message = msg;
+    this.name = "TransferHistoryError";
+  }
+}
 
 type TransferHistoryTransferArgs = {
   amount: Amount;
@@ -11,18 +18,6 @@ type TransferHistoryTransferArgs = {
 export type TransferHistoryEntryResponse = {
   id: number;
   delta: bigint;
-  /**
-   * @deprecated Use `asset_data.decimals` instead
-   */
-  decimals: number;
-  /**
-   * @deprecated Use `asset_data` instead
-   */
-  asset: string;
-  /**
-   * @deprecated Use `asset_data.id` instead
-   */
-  asset_id: Buffer;
   asset_data: AssetResponse;
   is_input: number;
   timestamp: number;
@@ -38,10 +33,6 @@ export type TransferHistoryEntry = {
   rowid: number;
   isInput: boolean;
   delta: Amount;
-  /**
-   * @deprecated Use `asset_data` instead
-   */
-  asset: AssetInfo;
   assetData: Asset;
   entryIndex: number;
   data: Buffer;
@@ -53,11 +44,6 @@ export type TransferHistoryEntry = {
   operationName: string;
 };
 
-export type TransferHistoryResponse = {
-  data: TransferHistoryEntry[];
-  nextCursor: PageCursor | null;
-};
-
 export enum TransferHistoryType {
   Sent = 0,
   Received = 1,
@@ -65,9 +51,4 @@ export enum TransferHistoryType {
 
 export type TransferHistoryFilter = {
   transferHistoryType?: TransferHistoryType;
-};
-
-type AssetInfo = {
-  name: string;
-  id: Buffer;
 };

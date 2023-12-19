@@ -54,7 +54,6 @@ export {
   RuleVariable,
   SingleSig,
   TransferHistoryEntry,
-  TransferHistoryResponse,
   TransferHistoryType,
   deriveAuthDescriptorId,
   createSingleSigAuthDescriptorRegistration,
@@ -86,7 +85,13 @@ export {
 } from "./ft-session";
 
 // Utils & Others
-export { op } from "./utils";
+export {
+  op,
+  createEntityRetriever,
+  EntityRetriever,
+  PaginatedEntity,
+} from "./utils";
+
 export { Listener, EventEmitter } from "./events";
 
 // Crosschain
