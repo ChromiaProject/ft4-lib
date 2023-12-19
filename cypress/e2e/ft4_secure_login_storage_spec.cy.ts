@@ -6,7 +6,8 @@ describe('FT4 Library Secure Login Storage Test', () => {
       const sessionData = win.sessionStorage.getItem('FT_LOGIN_KEY_STORE');
       expect(sessionData).to.exist;
 
-      const parsedSessionData = JSON.parse(sessionData!);
+      console.log("sessionData", sessionData);
+      const parsedSessionData = JSON.parse(sessionData ?? '{}');
       expect(parsedSessionData).to.have.keys(['privKey', 'accountId']);
       expect(parsedSessionData.privKey).to.match(/[0-9a-f]{64}/i);
       expect(parsedSessionData.accountId).to.match(/[0-9a-f]{64}/i);
@@ -20,7 +21,7 @@ describe('FT4 Library Secure Login Storage Test', () => {
       const localData = win.localStorage.getItem('FT_LOGIN_KEY_STORE');
       expect(localData).to.exist;
 
-      const parsedLocalData = JSON.parse(localData!);
+      const parsedLocalData = JSON.parse(localData ?? '{}');
       expect(parsedLocalData).to.have.keys(['privKey', 'accountId']);
       expect(parsedLocalData.privKey).to.match(/[0-9a-f]{64}/i);
       expect(parsedLocalData.accountId).to.match(/[0-9a-f]{64}/i);

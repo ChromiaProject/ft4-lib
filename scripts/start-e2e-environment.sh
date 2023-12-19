@@ -116,11 +116,12 @@ setup_blockchain_resources() {
         const wallet = ethers.Wallet.createRandom();
         console.log(wallet.privateKey);
     ")
-    echo "Ethereum private key generated."
+    # echo "Ethereum private key generated."
+    echo "Ethereum private key generated: $ETH_PRIVATE_KEY"
 
     echo "Registering account with Ethereum address..."
     REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
-        "[0, [['A','T'], x\"${ETH_ADDRESS:2}\"], null]" \
+        '[0, [["A","T"], x"'${ETH_ADDRESS:2}'"], null]' \
         --cid 0 --await --secret $KEYPAIR_PATH)
     echo "Account registration result: $REGISTER_ACCOUNT_RESULT"
 
