@@ -50,6 +50,7 @@ export {
   FlagsType,
   Account,
   MultiSig,
+  RateLimit,
   RuleOperator,
   RuleVariable,
   SingleSig,
