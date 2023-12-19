@@ -5,6 +5,5 @@ export * from "./types";
 
 export {
   TransferHistoryEntry,
-  TransferHistoryResponse,
   TransferHistoryType,
 } from "./transfer-history/types";
