@@ -62,3 +62,7 @@ type ConfigResponse = {
     points_at_account_creation: number;
   };
 };
+
+export { createEntityRetriever } from "./entity-retriever";
+
+export { EntityRetriever, PaginatedEntity } from "./types";

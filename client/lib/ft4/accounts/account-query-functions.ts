@@ -18,9 +18,13 @@ import {
   accountsByAuthDescriptorId,
   accountsBySigner,
   RateLimitQuery,
+  transferHistory,
 } from "./account-queries";
-import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
-import { TransferHistoryFilter } from "./transfer-history/types";
+import {
+  TransferHistoryEntry,
+  TransferHistoryEntryResponse,
+  TransferHistoryFilter,
+} from "./transfer-history/types";
 import { Account, RateLimit } from "./types";
 import { AnyAuthDescriptor, gtv } from "@ft4/accounts/auth-descriptor";
 import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
@@ -31,6 +35,7 @@ import {
 } from "../crosschain";
 import { mapPendingTransfers } from "../crosschain/query-functions";
 import { mapAuthDescriptorsFromGtv } from "./auth-descriptor/gtv";
+import { createTransferHistoryEntryFromResponse } from "./transfer-history/transfer-history-entry";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -61,10 +66,6 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId,
 ): Account {
-  const transferHistoryRetriever = createTransferHistoryRetriever(
-    connection.client,
-    accountId,
-  );
   return Object.freeze({
     id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
@@ -101,10 +102,22 @@ export function createAccountObject(
       filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null,
     ) => {
-      return transferHistoryRetriever.retrieve(limit, filter, cursor);
+      const retriever = createEntityRetriever<
+        TransferHistoryEntry,
+        TransferHistoryEntryResponse
+      >(
+        connection,
+        transferHistory(accountId, filter, limit, cursor),
+        (entries) =>
+          entries.map((entry) => createTransferHistoryEntryFromResponse(entry)),
+      );
+      return retriever.retrieve(limit, cursor);
     },
-    getTransferHistoryEntry: async (rowid: number) =>
-      transferHistoryRetriever.retrieveSingle(rowid),
+    getTransferHistoryEntry: async (rowid: number) => {
+      return createTransferHistoryEntryFromResponse(
+        await connection.query("ft4.get_transfer_history_entry", { rowid }),
+      );
+    },
     getPendingCrosschainTransfers: async (
       limit = 100,
       cursor: OptionalPageCursor = null,

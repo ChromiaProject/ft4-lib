@@ -7,7 +7,6 @@ options:
 e2e-tests: &e2e-tests-anchor
     max-time: 15
     name: E2E Tests
-    trigger: manual
     image: cypress/browsers:node18.12.0-chrome107
     size: 2x
     caches:
