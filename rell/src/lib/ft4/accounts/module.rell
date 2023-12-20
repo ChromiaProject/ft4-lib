@@ -133,7 +133,20 @@ function _add_evm_signer(account, auth_descriptor, account_auth_descriptor) {
 
 function _auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
     rate_limit(account);
-    require_auth(account, auth_descriptor, required_flags);
+
+    require(not have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+
+   	val result: utils.validation_result = check_auth_args(
+        auth_descriptor.auth_type,
+        auth_descriptor.args,
+        get_signers(auth_descriptor.auth_type, auth_descriptor.args),
+        required_flags
+   	);
+
+   require(result.valid, result.error!!); // Prints a precise error message.
+
+   update_auth_descriptor_rule_variables(auth_descriptor);
+   delete_expired_auth_descriptors(account);
 }
 
 function auth_descriptor_by_id(account, id: byte_array) = require(
