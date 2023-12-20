@@ -223,7 +223,8 @@ function validate_rule(rule: rule_expression) {
 }
 
 function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
-	update account_auth_descriptor @ { .id == desc.id }( .ctr += 1 );
+	desc.ctr += 1;
+	return desc;
 }
 
 /*
@@ -232,12 +233,17 @@ function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
 
 function delete_expired_auth_descriptors(account) {
 	val auth_descriptors = account_auth_descriptor @* { account };
-	
+
+	val deleted_descriptors = set<account_auth_descriptor>();
+
 	for (auth_descriptor in auth_descriptors) {
 		if (is_active(auth_descriptor) and have_violating_rules(auth_descriptor)) {
 			_delete_auth_descriptor(auth_descriptor);
+			deleted_descriptors.add(auth_descriptor);
 		}
 	}
+
+	return deleted_descriptors;
 }
 
 /****************************************************************************************

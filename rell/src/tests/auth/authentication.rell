@@ -7,7 +7,7 @@ import auth_ext: ^^.extensions.auth.*;
 import auth_pub: ^^^.lib.ft4.auth.external;
 import test_operations: ^^.operations;
 
-function test_before_authenticate_extension_is_called_with_ft_auth() {
+function test_before_and_after_authenticate_extensions_are_called_with_ft_auth() {
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
 
     // Perform an authentication operation
@@ -19,9 +19,17 @@ function test_before_authenticate_extension_is_called_with_ft_auth() {
     
     assert_true(auth_ext.auth_extensions_state.is_before_authenticate_called);
     assert_equals(auth_ext.auth_extensions_state.before_authenticate_account, alice.account.id);
+    assert_true(auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_id.size() > 0);
+    assert_equals(auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_ctr, 0);
+
+    assert_true(auth_ext.auth_extensions_state.is_after_authenticate_called);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_account, alice.account.id);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_auth_descriptor_id,
+        auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_id);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_auth_descriptor_ctr, 1);
 }
 
-function test_before_authenticate_extension_is_called_with_evm_auth() {
+function test_before_and_after_authenticate_extensions_are_called_with_evm_auth() {
     val alice = utils.evm_register_alice(["A"]);
 
     val signature = evm_sign(
@@ -41,42 +49,12 @@ function test_before_authenticate_extension_is_called_with_evm_auth() {
     
     assert_true(auth_ext.auth_extensions_state.is_before_authenticate_called);
     assert_equals(auth_ext.auth_extensions_state.before_authenticate_account, alice.account.id);
-}
+    assert_true(auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_id.size() > 0);
+    assert_equals(auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_ctr, 0);
 
-function test_after_authenticate_extension_is_called_with_ft_auth() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
-
-    // Perform an authentication operation
-    rell.test.tx()
-        .op(alice.ft_auth())
-        .op(test_operations.test_auth.test_authenticated_operation())
-        .sign(rell.test.keypairs.alice)
-        .run();
-    
     assert_true(auth_ext.auth_extensions_state.is_after_authenticate_called);
     assert_equals(auth_ext.auth_extensions_state.after_authenticate_account, alice.account.id);
-}
-
-function test_after_authenticate_extension_is_called_with_evm_auth() {
-    val alice = utils.evm_register_alice(["A"]);
-
-    val signature = evm_sign(
-      "Blockchain:\n%s\n\n\n\nNonce: %s".format(
-        chain_context.blockchain_rid.to_hex(),
-        "0"
-      ),
-      alice.keypair.priv
-    );
-
-
-    // Perform an authentication operation
-    rell.test.tx()
-        .op(alice.ft_auth())
-        .op(auth_pub.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-        .op(test_operations.test_auth.test_empty_auth_message())
-        .sign(rell.test.keypairs.alice)
-        .run();
-    
-    assert_true(auth_ext.auth_extensions_state.is_after_authenticate_called);
-    assert_equals(auth_ext.auth_extensions_state.after_authenticate_account, alice.account.id);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_auth_descriptor_id,
+        auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_id);
+    assert_equals(auth_ext.auth_extensions_state.after_authenticate_auth_descriptor_ctr, 1);
 }

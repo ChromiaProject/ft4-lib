@@ -36,11 +36,11 @@ function authenticate(is_strict: boolean = true) {
         else -> require(false, "Invalid auth operation: %s".format(previous_op.name));
     };
 
-    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
-    accounts.delete_expired_auth_descriptors(account);
+    val auth_desc_after = accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    val deleted_descriptors = accounts.delete_expired_auth_descriptors(account);
 
-    val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
-    after_authenticate(account, auth_desc_after);
+    after_authenticate(account, if (auth_desc_after in deleted_descriptors) null else auth_desc_after);
+
     return account;
 }
 
