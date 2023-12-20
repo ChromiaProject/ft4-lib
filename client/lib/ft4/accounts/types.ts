@@ -22,8 +22,13 @@ import { PendingTransfer } from "../crosschain/types";
 
 export type RateLimit = {
   points: number;
-  lastUpdate: number;
+  lastUpdate: Date;
   getAvailablePoints: () => number | null;
+};
+
+export type RateLimitResponse = {
+  points: number;
+  lastUpdate: number;
 };
 
 export interface Account {
@@ -38,7 +43,7 @@ export interface Account {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
-  getAuthDescriptorsByParticipantId: (
+  getAuthDescriptorsBySigner: (
     partiticipantId: BufferId,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;

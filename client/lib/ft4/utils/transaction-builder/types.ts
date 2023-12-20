@@ -53,14 +53,14 @@ export type TransactionBuilder = {
    * Builds a transaction the same way as `buildUnsigned` and also signs it
    * using the same key handlers that were used to authorize the operations,
    * as well as any explicitly added key handlers.
-   * @param signers array of participants that should sign this transaction
+   * @param signers array of signers that should sign this transaction
    * @returns A promised containing the unsigned transaction
    */
   build: () => Promise<SignedTransaction>;
   /**
    * Builds an unsigned transaction containing the previously added
    * transactions, as well as any authorization operations as needed.
-   * @param signers array of participants that should sign this transaction
+   * @param signers array of signers that should sign this transaction
    * @returns A promise containing the signed transaction
    */
   buildUnsigned: () => Promise<TxBuilderTransaction>;
