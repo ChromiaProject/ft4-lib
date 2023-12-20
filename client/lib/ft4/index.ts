@@ -50,6 +50,7 @@ export {
   FlagsType,
   Account,
   MultiSig,
+  RateLimit,
   RuleOperator,
   RuleVariable,
   SingleSig,
@@ -87,7 +88,7 @@ export {
 // Utils & Others
 export {
   op,
-  createEntityRetriever,
+  retrievePaginatedEntity,
   EntityRetriever,
   PaginatedEntity,
 } from "./utils";

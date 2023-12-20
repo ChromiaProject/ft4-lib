@@ -1,14 +1,12 @@
 import { Buffer } from "buffer";
 import { formatter, IClient } from "postchain-client";
-import { balancesByAccountId } from "../asset/asset-queries";
 import {
-  createBalanceObject,
   getBalanceByAccountId,
+  getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Balance, BalanceResponse } from "../asset/types";
 import { Connection, OptionalPageCursor } from "../types";
 import { getConfig } from "@ft4/utils/index";
-import { createEntityRetriever } from "@ft4/utils/entity-retriever";
+import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
 import { BufferId, PaginatedEntity } from "@ft4/utils/types";
 import * as Query from "./account-queries";
 import {
@@ -43,7 +41,11 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query(RateLimitQuery(accountId));
+  const rateLimitResponse = await session.query(RateLimitQuery(accountId));
+  const rateLimit = {
+    points: rateLimitResponse.points,
+    lastUpdate: new Date(rateLimitResponse.lastUpdate),
+  };
 
   const chainInfo = await getConfig(session);
 
@@ -52,7 +54,7 @@ export async function getRateLimit(
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
       if (chainInfo.rateLimit.active) {
-        const deltaTime = Date.now() - rateLimit.lastUpdate;
+        const deltaTime = Date.now() - rateLimitResponse.lastUpdate;
         const points =
           rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
         return Math.min(points, chainInfo.rateLimit.maxPoints);
@@ -70,29 +72,19 @@ export function createAccountObject(
     id: formatter.ensureBuffer(accountId),
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: (limit = 100, cursor: OptionalPageCursor = null) => {
-      const retriever = createEntityRetriever<Balance, BalanceResponse>(
-        connection,
-        balancesByAccountId(accountId, limit, cursor),
-        (balances) => balances.map(createBalanceObject),
-      );
-      return retriever.retrieve(limit, cursor);
-    },
+    getBalances: (limit = 100, cursor: OptionalPageCursor = null) =>
+      getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: async (
       limit = 100,
       cursor: OptionalPageCursor = null,
     ) => {
-      const retriever = createEntityRetriever<
-        AnyAuthDescriptor,
-        RawAnyAuthDescriptor
-      >(
+      return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
         gtv.mapAuthDescriptorsFromGtv,
       );
-      return retriever.retrieve(limit, cursor);
     },
     getAuthDescriptorsBySigner: (signer: BufferId) =>
       getAuthDescriptorsBySigner(connection, accountId, signer),
@@ -102,7 +94,7 @@ export function createAccountObject(
       filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null,
     ) => {
-      const retriever = createEntityRetriever<
+      return retrievePaginatedEntity<
         TransferHistoryEntry,
         TransferHistoryEntryResponse
       >(
@@ -111,7 +103,6 @@ export function createAccountObject(
         (entries) =>
           entries.map((entry) => createTransferHistoryEntryFromResponse(entry)),
       );
-      return retriever.retrieve(limit, cursor);
     },
     getTransferHistoryEntry: async (rowid: number) => {
       return createTransferHistoryEntryFromResponse(
@@ -122,15 +113,11 @@ export function createAccountObject(
       limit = 100,
       cursor: OptionalPageCursor = null,
     ) => {
-      const retriever = createEntityRetriever<
-        PendingTransfer,
-        PendingTransferResponse
-      >(
+      return retrievePaginatedEntity<PendingTransfer, PendingTransferResponse>(
         connection,
         pendingTransfersForAccount(accountId, limit, cursor),
         mapPendingTransfers,
       );
-      return retriever.retrieve(limit, cursor);
     },
   });
 }
@@ -150,12 +137,12 @@ export async function getBySigner(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
-  return createEntityRetriever<Account, { id: Buffer }>(
+  return retrievePaginatedEntity<Account, { id: Buffer }>(
     connection,
     accountsBySigner(id, limit, cursor),
     (accounts) =>
       accounts.map((acc) => createAccountObject(connection, acc.id)),
-  ).retrieve();
+  );
 }
 
 export async function getByAuthDescriptorId(
@@ -164,11 +151,11 @@ export async function getByAuthDescriptorId(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
-  return createEntityRetriever<Account, Buffer>(
+  return retrievePaginatedEntity<Account, Buffer>(
     connection,
     accountsByAuthDescriptorId(id, limit, cursor),
     (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
-  ).retrieve();
+  );
 }
 
 export async function isAuthDescriptorValid(
@@ -188,10 +175,10 @@ export async function getAuthDescriptorsBySigner(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AnyAuthDescriptor>> {
-  return createEntityRetriever<AnyAuthDescriptor, RawAnyAuthDescriptor>(
+  return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
     connection,
     accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
     (authDescriptors) =>
       authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
-  ).retrieve();
+  );
 }
