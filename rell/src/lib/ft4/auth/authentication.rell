@@ -36,6 +36,9 @@ function authenticate(is_strict: boolean = true) {
         else -> require(false, "Invalid auth operation: %s".format(previous_op.name));
     };
 
+    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    accounts.delete_expired_auth_descriptors(account);
+
     val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
     after_authenticate(account, auth_desc_after);
     return account;
@@ -88,8 +91,6 @@ function _validate_evm_signature(
         _validate_evm_address(message, validated_args.signatures[0], auth_descriptor);
     else
         _validate_multiple_evm_addresses(message, validated_args.signatures, auth_descriptor);
-    
-    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
 }
 
 function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
@@ -142,9 +143,6 @@ function _validate_ft4_signature(
    	);
 
     require(result.valid, result.error!!); // Prints a precise error message.
-
-    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
-    accounts.delete_expired_auth_descriptors(account);
 }
 
 function _recover_evm_address(message: text, signature) {
