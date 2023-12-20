@@ -1,0 +1,48 @@
+import { QueryObject } from "postchain-client";
+import { BufferId } from "@ft4/utils/types";
+import { formatter } from "postchain-client";
+
+export type RawTransferDetail = {
+  account_id: Buffer;
+  asset_id: Buffer;
+  delta: bigint;
+  is_input: number;
+};
+
+export function transferDetails(
+  txRid: BufferId,
+  opIndex: number,
+): QueryObject<
+  RawTransferDetail[],
+  {
+    tx_rid: Buffer;
+    op_index: number;
+  }
+> {
+  return {
+    name: "ft4.get_transfer_details",
+    args: { tx_rid: formatter.ensureBuffer(txRid), op_index: opIndex },
+  };
+}
+
+export function transferDetailsByAsset(
+  txRid: BufferId,
+  opIndex: number,
+  assetId: BufferId,
+): QueryObject<
+  RawTransferDetail[],
+  {
+    tx_rid: Buffer;
+    op_index: number;
+    asset_id: Buffer;
+  }
+> {
+  return {
+    name: "ft4.get_transfer_details_by_asset",
+    args: {
+      tx_rid: formatter.ensureBuffer(txRid),
+      op_index: opIndex,
+      asset_id: formatter.ensureBuffer(assetId),
+    },
+  };
+}

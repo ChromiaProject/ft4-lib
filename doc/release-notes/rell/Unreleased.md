@@ -6,6 +6,7 @@
 - Default values for `lib.ft4.accounts` module_args to simplify `chromia.yml` configuration.
 - Added configuration parameter `max_auth_descriptor_rules` for `lib.ft4.accounts` module_args, with default value 8.
 - Added an option to customize the rate limiter for some accounts.
+- Queries `get_transfer_details` and `get_transfer_details_by_asset` to `lib.ft4.assets.external`.
 
 ### Changed
 - Updated signature for `evm_auth_operation_for` to accept a `rell.test.op`.
@@ -39,3 +40,4 @@
     - Internals
         - function `_add_auth_participant` -> `_add_signer`
         - function `_add_eth_auth_participant` > `_add_eth_signer`
+- **Transfer history** Remove `transfer_args` and `entry_index` from queries `get_transfer_history_entry` and `get_transfer_history`.

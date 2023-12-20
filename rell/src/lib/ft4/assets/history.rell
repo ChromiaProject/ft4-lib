@@ -1,13 +1,12 @@
 
 @log entity transfer_history_entry {
-    index accounts.account, asset;
-    delta: big_integer;
+    op_index: integer = op_context.op_index; // helps to locate exact position of transfer entry in transaction
+    index transaction, op_index;
 
-    // helps to locate exact position of transfer entry in transaction
-    op_index: integer;
+    index accounts.account;
+    index asset;
+    delta: big_integer;
     is_input: boolean;
-    entry_index: integer;
-    transfer_args: byte_array;
 }
 
 enum transfer_type {
@@ -44,8 +43,6 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
         is_input = entry.is_input,
         timestamp = entry.transaction.block.timestamp,
         block_height = entry.transaction.block.block_height,
-        entry_index = entry.entry_index,
-        transfer_args = entry.transfer_args,
         tx_rid = entry.transaction.tx_rid,
         tx_data = entry.transaction.tx_data,
         operation_name = extract_operation_name(entry)
@@ -72,3 +69,28 @@ function get_paginated_transfers(accounts.account, filter, page_size: integer, p
         )
     );
 }
+
+struct transfer_detail {
+    account_id: byte_array;
+    asset_id: byte_array;
+    delta: big_integer;
+    is_input: boolean;
+}
+
+function get_transfer_details(tx_rid: byte_array, op_index: integer) =
+    assets.transfer_history_entry @*
+        { .transaction.tx_rid == tx_rid, op_index }
+        (extract_details_from_transfer_history_entry($));
+
+function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array) =
+    assets.transfer_history_entry @*
+        { .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id }
+        (extract_details_from_transfer_history_entry($));
+
+function extract_details_from_transfer_history_entry(assets.transfer_history_entry) =
+    transfer_detail(
+        account_id = transfer_history_entry.account.id,
+        asset_id = transfer_history_entry.asset.id,
+        delta = transfer_history_entry.delta,
+        is_input = transfer_history_entry.is_input
+    );
