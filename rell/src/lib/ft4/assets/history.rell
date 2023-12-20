@@ -7,7 +7,6 @@
     index asset;
     delta: big_integer;
     is_input: boolean;
-    entry_index: integer;
 }
 
 enum transfer_type {
@@ -44,7 +43,6 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
         is_input = entry.is_input,
         timestamp = entry.transaction.block.timestamp,
         block_height = entry.transaction.block.block_height,
-        entry_index = entry.entry_index,
         tx_rid = entry.transaction.tx_rid,
         tx_data = entry.transaction.tx_data,
         operation_name = extract_operation_name(entry)
@@ -77,7 +75,6 @@ struct transfer_detail {
     asset_id: byte_array;
     delta: big_integer;
     is_input: boolean;
-    entry_index: integer;
 }
 
 function get_transfer_details(tx_rid: byte_array, op_index: integer) =
@@ -95,6 +92,5 @@ function extract_details_from_transfer_history_entry(assets.transfer_history_ent
         account_id = transfer_history_entry.account.id,
         asset_id = transfer_history_entry.asset.id,
         delta = transfer_history_entry.delta,
-        is_input = transfer_history_entry.is_input,
-        entry_index = transfer_history_entry.entry_index
+        is_input = transfer_history_entry.is_input
     );

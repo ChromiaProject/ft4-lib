@@ -83,14 +83,12 @@ describe("Transfer history", () => {
           assetId: asset.id,
           delta: 10n,
           isInput: true,
-          entryIndex: 0,
         },
         {
           accountId: account2.id,
           assetId: asset.id,
           delta: 10n,
           isInput: false,
-          entryIndex: 0,
         },
       ];
       expect(

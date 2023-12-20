@@ -59,8 +59,7 @@ namespace Unsafe {
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = true,
-            .entry_index = 0
+            .is_input = true
         );
 
         if (
@@ -76,8 +75,7 @@ namespace Unsafe {
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = false,
-            .entry_index = 0
+            .is_input = false
         );
     }
 }

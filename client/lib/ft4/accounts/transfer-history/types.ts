@@ -17,7 +17,6 @@ export type TransferHistoryEntryResponse = {
   is_input: number;
   timestamp: number;
   block_height: number;
-  entry_index: number;
   tx_rid: Buffer;
   tx_data: string;
   operation_name: string;
@@ -28,7 +27,6 @@ export type TransferHistoryEntry = {
   isInput: boolean;
   delta: Amount;
   assetData: Asset;
-  entryIndex: number;
   data: Buffer;
   timestamp: Date;
   transactionId: Buffer;

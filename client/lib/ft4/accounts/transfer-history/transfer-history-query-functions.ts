@@ -11,7 +11,6 @@ export type TransferDetail = {
   assetId: Buffer;
   delta: bigint;
   isInput: boolean;
-  entryIndex: number;
 };
 
 export function getTransferDetails(
@@ -41,6 +40,5 @@ function createTransferDetail(td: RawTransferDetail) {
     assetId: td.asset_id,
     delta: td.delta,
     isInput: td.is_input !== 0,
-    entryIndex: td.entry_index,
   });
 }

@@ -40,4 +40,4 @@
     - Internals
         - function `_add_auth_participant` -> `_add_signer`
         - function `_add_eth_auth_participant` > `_add_eth_signer`
-- **Transfer history** Remove `transfer_args` from queries `get_transfer_history_entry` and `get_transfer_history`.
+- **Transfer history** Remove `transfer_args` and `entry_index` from queries `get_transfer_history_entry` and `get_transfer_history`.

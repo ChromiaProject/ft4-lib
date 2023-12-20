@@ -156,8 +156,7 @@ namespace Unsafe {
             asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = false,
-            .entry_index = 0
+            .is_input = false
         );
 
         after_mint(account, asset, amount);
@@ -182,8 +181,7 @@ namespace Unsafe {
             asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = true,
-            .entry_index = 0
+            .is_input = true
         );
         after_burn(account, asset, amount);
     }

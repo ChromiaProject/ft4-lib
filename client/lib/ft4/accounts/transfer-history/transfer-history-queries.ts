@@ -7,7 +7,6 @@ export type RawTransferDetail = {
   asset_id: Buffer;
   delta: bigint;
   is_input: number;
-  entry_index: number;
 };
 
 export function transferDetails(

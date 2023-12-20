@@ -13,8 +13,7 @@ namespace Unsafe {
          .asset = asset,
          .delta = amount,
          .op_index = op_context.op_index,
-         .is_input = true,
-         .entry_index = 0
+         .is_input = true
       );
       
       increase_balance(to, asset, amount);
@@ -23,8 +22,7 @@ namespace Unsafe {
          .asset = asset,
          .delta = amount,
          .op_index = op_context.op_index,
-         .is_input = false,
-         .entry_index = 0
+         .is_input = false
       );
 
       after_transfer(from, to, asset, amount);

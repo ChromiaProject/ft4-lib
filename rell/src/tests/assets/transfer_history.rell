@@ -177,7 +177,6 @@ function test_transfer_history_entry() {
             is_input = entry.is_input,
             timestamp = entry.transaction.block.timestamp,
             block_height = entry.transaction.block.block_height,
-            entry_index = entry.entry_index,
             tx_rid = entry.transaction.tx_rid,
             tx_data = entry.transaction.tx_data,
             operation_name = "ft4.admin.mint"
@@ -231,15 +230,13 @@ function test_transfer_details() {
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 1L,
-            is_input = true,
-            entry_index = 0
+            is_input = true
         ),
         assets.transfer_detail(
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 1L,
-            is_input = false,
-            entry_index = 0
+            is_input = false
         )
     ];
 
