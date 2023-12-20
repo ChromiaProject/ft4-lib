@@ -34,7 +34,7 @@ class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRules | null = null;
-  private participant: SignatureProvider = gtx.newSignatureProvider();
+  private signer: SignatureProvider = gtx.newSignatureProvider();
   private authDescInfo: {
     authDescriptor: AnyAuthDescriptorRegistration;
     signers: (SignatureProvider | KeyPair)[];
@@ -65,8 +65,8 @@ class AccountBuilder {
     return this;
   }
 
-  withParticipant(participant: SignatureProvider): AccountBuilder {
-    this.participant = participant;
+  withSigner(signer: SignatureProvider): AccountBuilder {
+    this.signer = signer;
     return this;
   }
 
@@ -119,11 +119,11 @@ class AccountBuilder {
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
-    await accountManager.addAuthDescriptor(ad, this.participant);
+    await accountManager.addAuthDescriptor(ad, this.signer);
 
-    const keyHandler = createInMemoryFtKeyStore(
-      this.participant,
-    ).createKeyHandler(testAdFromRegistration(ad));
+    const keyHandler = createInMemoryFtKeyStore(this.signer).createKeyHandler(
+      testAdFromRegistration(ad),
+    );
     const authenticator = createAuthenticator(
       accountManager.id,
       [keyHandler],
@@ -134,7 +134,7 @@ class AccountBuilder {
 
   /* Private functions */
   private async registerAndBuildManagerAuthenticated(
-    managerSigProv = this.participant,
+    managerSigProv = this.signer,
   ): Promise<AuthenticatedAccount> {
     const ad = this.getAccountManagerAuthDescriptor(managerSigProv);
     await registerAccount(
@@ -233,7 +233,7 @@ class AccountBuilder {
     }
   }
 
-  private getAccountManagerAuthDescriptor(managerSigProv = this.participant) {
+  private getAccountManagerAuthDescriptor(managerSigProv = this.signer) {
     return createSingleSigAuthDescriptorRegistration(
       this.flags.concat(FlagsType.Account),
       managerSigProv.pubKey,
@@ -244,7 +244,7 @@ class AccountBuilder {
   private getAuthDescriptorRegistration() {
     return createSingleSigAuthDescriptorRegistration(
       this.flags,
-      this.participant.pubKey,
+      this.signer.pubKey,
       this.rules,
     );
   }

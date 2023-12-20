@@ -44,7 +44,7 @@ describe("Rate Limit", () => {
       const user = TestUser();
 
       const account = await AccountBuilder.account(_connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .build();
 
       const foundAccount = await _connection.getAccountById(account.id);
@@ -56,7 +56,7 @@ describe("Rate Limit", () => {
       const user = TestUser();
 
       const account = await AccountBuilder.account(_connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .withPoints(4)
         .build();
 
@@ -77,7 +77,7 @@ describe("Rate Limit", () => {
       const user = TestUser();
 
       const account = await AccountBuilder.account(_connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .withPoints(4)
         .build();
 

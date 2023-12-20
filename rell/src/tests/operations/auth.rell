@@ -22,12 +22,12 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
           .id == auth_descriptor_id,
           .account == account
     };
-    val participants = acc.get_participants(acc_auth_desc.auth_type, acc_auth_desc.args);
+    val signers = acc.get_signers(acc_auth_desc.auth_type, acc_auth_desc.args);
 
     val result = acc.check_auth_args(
        		acc_auth_desc.auth_type,
        		acc_auth_desc.args,
-            participants,
+            signers,
        		required_flags
 	  );
 

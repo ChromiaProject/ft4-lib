@@ -43,7 +43,7 @@ export interface Account {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
-  getAuthDescriptorsByParticipantId: (
+  getAuthDescriptorsBySigner: (
     partiticipantId: BufferId,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;

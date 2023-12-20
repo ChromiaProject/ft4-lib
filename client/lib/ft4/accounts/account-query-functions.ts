@@ -11,10 +11,10 @@ import { BufferId, PaginatedEntity } from "@ft4/utils/types";
 import * as Query from "./account-queries";
 import {
   accountAuthDescriptors,
-  accountAuthDescriptorsByParticipantId,
+  accountAuthDescriptorsBySigner,
   accountById,
   accountsByAuthDescriptorId,
-  accountsByParticipantId,
+  accountsBySigner,
   RateLimitQuery,
   transferHistory,
 } from "./account-queries";
@@ -86,8 +86,8 @@ export function createAccountObject(
         gtv.mapAuthDescriptorsFromGtv,
       );
     },
-    getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
-      getAuthDescriptorsByParticipantId(connection, accountId, participantId),
+    getAuthDescriptorsBySigner: (signer: BufferId) =>
+      getAuthDescriptorsBySigner(connection, accountId, signer),
     getRateLimit: () => getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
@@ -131,7 +131,7 @@ export async function getById(
   return accountId && createAccountObject(connection, accountId);
 }
 
-export async function getByParticipantId(
+export async function getBySigner(
   connection: Connection,
   id: BufferId,
   limit = 100,
@@ -139,7 +139,7 @@ export async function getByParticipantId(
 ): Promise<PaginatedEntity<Account>> {
   return retrievePaginatedEntity<Account, { id: Buffer }>(
     connection,
-    accountsByParticipantId(id, limit, cursor),
+    accountsBySigner(id, limit, cursor),
     (accounts) =>
       accounts.map((acc) => createAccountObject(connection, acc.id)),
   );
@@ -168,21 +168,16 @@ export async function isAuthDescriptorValid(
   ))!;
 }
 
-export async function getAuthDescriptorsByParticipantId(
+export async function getAuthDescriptorsBySigner(
   connection: Connection,
   accountId: BufferId,
-  participantId: BufferId,
+  signer: BufferId,
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AnyAuthDescriptor>> {
   return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
     connection,
-    accountAuthDescriptorsByParticipantId(
-      accountId,
-      participantId,
-      limit,
-      cursor,
-    ),
+    accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
     (authDescriptors) =>
       authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
   );

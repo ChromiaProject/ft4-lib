@@ -1,5 +1,5 @@
 
-struct eth_auth_args {
+struct evm_auth_args {
     account;
     account_auth_descriptor;
     signatures: list<auth.signature>;

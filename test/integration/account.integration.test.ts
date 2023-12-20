@@ -192,14 +192,14 @@ describe("Test the account", () => {
     expect((await acc!.getAuthDescriptors()).data.length).toBe(1);
   });
 
-  it("should be returned when queried by participant id", async () => {
+  it("should be returned when queried by signer", async () => {
     const user = testUser();
 
     await AccountBuilder.account(_connection)
-      .withParticipant(user.signatureProvider)
+      .withSigner(user.signatureProvider)
       .build();
 
-    const accounts = await _connection.getAccountsByParticipantId(
+    const accounts = await _connection.getAccountsBySigner(
       user.signatureProvider.pubKey,
     );
 
@@ -211,16 +211,14 @@ describe("Test the account", () => {
 
     await Promise.all([
       AccountBuilder.account(_connection) //owned by keyPair1
-        .withParticipant(pcl.newSignatureProvider(keyPair1))
+        .withSigner(pcl.newSignatureProvider(keyPair1))
         .build(),
       AccountBuilder.account(_connection) //keyPair1 is NOT the manager
-        .withParticipant(pcl.newSignatureProvider(keyPair1))
+        .withSigner(pcl.newSignatureProvider(keyPair1))
         .buildAsNonManager(),
     ]);
 
-    const accounts = await _connection.getAccountsByParticipantId(
-      keyPair1.pubKey,
-    );
+    const accounts = await _connection.getAccountsBySigner(keyPair1.pubKey);
 
     expect(accounts.data.length).toEqual(2);
   });
@@ -430,11 +428,11 @@ describe("Test the account", () => {
     const user = testUser();
 
     const acc = await AccountBuilder.account(_connection)
-      .withParticipant(user.signatureProvider)
+      .withSigner(user.signatureProvider)
       .buildAsNonManager();
 
     //vv this isn't paginated? vv
-    const ads = await acc.getAuthDescriptorsByParticipantId(
+    const ads = await acc.getAuthDescriptorsBySigner(
       user.signatureProvider.pubKey,
     );
 
@@ -449,7 +447,7 @@ describe("Test the account", () => {
     const user3 = testUser();
 
     const acc1 = await AccountBuilder.account(_connection)
-      .withParticipant(user1.signatureProvider)
+      .withSigner(user1.signatureProvider)
       .withPoints(2)
       .build();
 
@@ -488,7 +486,7 @@ describe("Test the account", () => {
     const user2 = testUser();
 
     const acc1 = await AccountBuilder.account(_connection)
-      .withParticipant(user1.signatureProvider)
+      .withSigner(user1.signatureProvider)
       .withPoints(2)
       .build();
 
