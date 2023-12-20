@@ -1,7 +1,7 @@
 @test module;
 
 import ^^.assets.utils;
-import ^^^.lib.ft4.default_prioritization;
+import default_prioritization: ^^^.lib.ft4.prioritization.default;
 import ^^^.lib.ft4.accounts;
 
 function test_rate_limit_config() {

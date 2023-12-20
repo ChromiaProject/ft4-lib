@@ -1,8 +1,8 @@
 module;
 
-import ^.auth;
-import ^.accounts;
-import ^.prioritization.*;
+import ^^.auth;
+import ^^.accounts;
+import ^^.prioritization.*;
 
 @extend(priority_check) function(tx_body: gtx_transaction_body, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
     val tx_accounts = tx_body.operations @*
@@ -35,4 +35,3 @@ import ^.prioritization.*;
         priority = priority
     );
 }
-
