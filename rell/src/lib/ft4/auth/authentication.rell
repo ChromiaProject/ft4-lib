@@ -12,7 +12,6 @@ function after_authenticate(accounts.account, accounts.account_auth_descriptor?)
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
-
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
@@ -22,6 +21,9 @@ function authenticate(is_strict: boolean = true) {
     );
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
+
+    accounts.rate_limit(account);
+
     before_authenticate(account, auth_descriptor);
 
     val is_validated = when (previous_op.name) {
@@ -29,9 +31,7 @@ function authenticate(is_strict: boolean = true) {
         "ft4.ft_auth" -> _validate_ft4_signature(previous_op.args, account, auth_descriptor);
         else -> false;
     };
-
     require(is_validated, "Invalid auth operation: %s".format(previous_op.name));
-    accounts.rate_limit(account);
 
     val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
     after_authenticate(account, auth_desc_after);
