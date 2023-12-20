@@ -14,19 +14,13 @@ import ^^.prioritization.*;
 
     val rl_config = accounts.get_rate_limit_config_for_account(account);
     if (rl_config.active == false) return no_account_priority_state(1.0);
-    val max_points = rl_config.max_points;
 
-    val rl_state = accounts.rl_state @? { account } (.points, .last_update);
+    val rl_state = accounts.rl_state @? { account };
     if (rl_state == null) return no_account_priority_state(1.0);
-    val (previous_points, last_update) = rl_state;
 
-    val delta = current_timestamp - last_update;
-    val current_points = if (delta > rl_config.recovery_time)
-        min(rl_config.max_points, previous_points + delta / rl_config.recovery_time)
-    else
-        previous_points;
+    val current_points = accounts.current_rate_limit_points(rl_config, rl_state, current_timestamp);
 
-    val priority = current_points.to_decimal() / max_points;
+    val priority = current_points.to_decimal() / rl_config.max_points;
 
     return priority_state_v1(
         account_id = account.id,
