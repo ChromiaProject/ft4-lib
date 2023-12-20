@@ -10,6 +10,7 @@ import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { IClient, newSignatureProvider } from "postchain-client";
 import { useChromiaNode } from "@ft4/util/chromia-node";
+import { TransferDetail } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
 
 let asset: Asset;
 let connection: Connection;
@@ -76,20 +77,20 @@ describe("Transfer history", () => {
       const entry = history.data[0];
 
       expect(entry.isInput).toEqual(true);
-      const expectedDetails = [
+      const expectedDetails: TransferDetail[] = [
         {
-          account_id: account1.id,
-          asset_id: asset.id,
+          accountId: account1.id,
+          assetId: asset.id,
           delta: 10n,
-          is_input: true,
-          entry_index: 0,
+          isInput: true,
+          entryIndex: 0,
         },
         {
-          account_id: account2.id,
-          asset_id: asset.id,
+          accountId: account2.id,
+          assetId: asset.id,
           delta: 10n,
-          is_input: false,
-          entry_index: 0,
+          isInput: false,
+          entryIndex: 0,
         },
       ];
       expect(

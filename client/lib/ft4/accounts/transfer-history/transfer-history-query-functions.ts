@@ -7,11 +7,11 @@ import {
 import { Queryable } from "postchain-client";
 
 export type TransferDetail = {
-  account_id: Buffer;
-  asset_id: Buffer;
+  accountId: Buffer;
+  assetId: Buffer;
   delta: bigint;
-  is_input: boolean;
-  entry_index: number;
+  isInput: boolean;
+  entryIndex: number;
 };
 
 export function getTransferDetails(
@@ -37,10 +37,10 @@ export function getTransferDetailsByAsset(
 
 function createTransferDetail(td: RawTransferDetail) {
   return Object.freeze({
-    account_id: td.account_id,
-    asset_id: td.asset_id,
+    accountId: td.account_id,
+    assetId: td.asset_id,
     delta: td.delta,
-    is_input: td.is_input !== 0,
-    entry_index: td.entry_index,
+    isInput: td.is_input !== 0,
+    entryIndex: td.entry_index,
   });
 }
