@@ -13,7 +13,7 @@ import {
   createAccountObject,
   getByAuthDescriptorId,
   getById,
-  getByParticipantId,
+  getBySigner,
 } from "./accounts/account-query-functions";
 import {
   getAllAssets,
@@ -46,6 +46,8 @@ import { getConfig, getVersion, nop } from "./utils";
 import { fetchExposedOperations } from "./utils/exposed-operations";
 import { transactionBuilder } from "./utils/transaction-builder";
 import { BufferId } from "./utils/types";
+import { getTransferDetails } from "./accounts/transfer-history/transfer-history-query-functions";
+import { getTransferDetailsByAsset } from "./accounts/transfer-history/transfer-history-query-functions";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -59,11 +61,11 @@ export function createConnection(client: IClient): Connection {
     getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => getById(connection, id),
-    getAccountsByParticipantId: (
+    getAccountsBySigner: (
       id: BufferId,
       limit?: number,
       cursor: OptionalPageCursor = null,
-    ) => getByParticipantId(connection, id, limit, cursor),
+    ) => getBySigner(connection, id, limit, cursor),
     getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
@@ -78,6 +80,13 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
+    getTransferDetails: (txRid: BufferId, opIndex: number) =>
+      getTransferDetails(connection, txRid, opIndex),
+    getTransferDetailsByAsset: (
+      txRid: BufferId,
+      opIndex: number,
+      assetId: BufferId,
+    ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
   });
 
   return connection;
@@ -166,14 +175,14 @@ export function createKeyStoreInteractor(
   const connection = createConnection(client);
   return Object.freeze({
     getAccounts: async () =>
-      (await connection.getAccountsByParticipantId(keyStore.id)).data,
+      (await connection.getAccountsBySigner(keyStore.id)).data,
     getAccountsPaginated: async (
       limit: number,
       cursor: OptionalPageCursor = null,
-    ) => connection.getAccountsByParticipantId(keyStore.id, limit, cursor),
+    ) => connection.getAccountsBySigner(keyStore.id, limit, cursor),
     getSession: async (accountId: Buffer) => {
       const account = createAccountObject(connection, accountId);
-      const authDescriptors = await account.getAuthDescriptorsByParticipantId(
+      const authDescriptors = await account.getAuthDescriptorsBySigner(
         keyStore.id,
       );
       const keyHandlers = authDescriptors.data.map((authDescriptor) =>

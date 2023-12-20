@@ -34,7 +34,7 @@ function test_it_decorates_messages_with_brid_and_nonce() {
   assert_true(message.contains("{nonce}"));
 }
 
-function test_it_rejects_wrong_eth_signatures() {
+function test_it_rejects_wrong_evm_signatures() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val wrong_signature = evm_sign("abc", external_auth_data.keypair.priv);
   
@@ -45,7 +45,7 @@ function test_it_rejects_wrong_eth_signatures() {
     .run_must_fail("Invalid signature");
 }
 
-function test_perform_eth_auth_transaction() {
+function test_perform_evm_auth_transaction() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
@@ -253,7 +253,7 @@ function test_ft_auth_fails_if_key_invalid() {
     .op(auth_ext.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.bob.priv)
-    .run_must_fail("The participant is not the signer of this transaction.");
+    .run_must_fail("The auth descriptor signer did not sign the transaction.");
 }
 
 function test_perform_ft_auth_transaction() {

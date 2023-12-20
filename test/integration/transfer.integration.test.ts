@@ -136,7 +136,7 @@ describe("Transfer", () => {
     const keyPair = newSignatureProvider();
 
     const account = await AccountBuilder.account(connection)
-      .withParticipant(keyPair)
+      .withSigner(keyPair)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();

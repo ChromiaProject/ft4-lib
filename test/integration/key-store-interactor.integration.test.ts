@@ -23,8 +23,8 @@ describe("Key store interactor", () => {
     const keyPair1 = newSignatureProvider();
     const keyPair2 = newSignatureProvider();
 
-    await AccountBuilder.account(connection).withParticipant(keyPair1).build();
-    await AccountBuilder.account(connection).withParticipant(keyPair2).build();
+    await AccountBuilder.account(connection).withSigner(keyPair1).build();
+    await AccountBuilder.account(connection).withSigner(keyPair2).build();
 
     const accounts = await createKeyStoreInteractor(
       connection.client,
@@ -39,10 +39,10 @@ describe("Key store interactor", () => {
     const keyPair2 = newSignatureProvider();
 
     const account1 = await AccountBuilder.account(connection)
-      .withParticipant(keyPair1)
+      .withSigner(keyPair1)
       .build();
     const account2 = await AccountBuilder.account(connection)
-      .withParticipant(keyPair2)
+      .withSigner(keyPair2)
       .build();
 
     await account1.addAuthDescriptor(
@@ -62,7 +62,7 @@ describe("Key store interactor", () => {
     const keyPair1 = newSignatureProvider();
 
     const account = await AccountBuilder.account(connection)
-      .withParticipant(keyPair1)
+      .withSigner(keyPair1)
       .build();
 
     const { getAccounts, getSession } = createKeyStoreInteractor(
@@ -81,7 +81,7 @@ describe("Key store interactor", () => {
     const keyPair2 = newSignatureProvider();
 
     const account = await AccountBuilder.account(connection)
-      .withParticipant(keyPair1)
+      .withSigner(keyPair1)
       .build();
 
     const ad1 = createSingleSigAuthDescriptorRegistration(
