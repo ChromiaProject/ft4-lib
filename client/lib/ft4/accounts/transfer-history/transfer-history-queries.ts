@@ -1,4 +1,6 @@
 import { QueryObject } from "postchain-client";
+import { BufferId } from "@ft4/utils/types";
+import { formatter } from "postchain-client";
 
 export type RawTransferDetail = {
   account_id: Buffer;
@@ -8,23 +10,40 @@ export type RawTransferDetail = {
   entry_index: number;
 };
 
-export function getTransferDetailsQueryObject(
-  txRid: Buffer,
+export function transferDetails(
+  txRid: BufferId,
   opIndex: number,
-): QueryObject<RawTransferDetail[]> {
+): QueryObject<
+  RawTransferDetail[],
+  {
+    tx_rid: Buffer;
+    op_index: number;
+  }
+> {
   return {
     name: "ft4.get_transfer_details",
-    args: { tx_rid: txRid, op_index: opIndex },
+    args: { tx_rid: formatter.ensureBuffer(txRid), op_index: opIndex },
   };
 }
 
-export function getTransferDetailsByAssetQueryObject(
-  txRid: Buffer,
+export function transferDetailsByAsset(
+  txRid: BufferId,
   opIndex: number,
-  assetId: Buffer,
-): QueryObject<RawTransferDetail[]> {
+  assetId: BufferId,
+): QueryObject<
+  RawTransferDetail[],
+  {
+    tx_rid: Buffer;
+    op_index: number;
+    asset_id: Buffer;
+  }
+> {
   return {
     name: "ft4.get_transfer_details_by_asset",
-    args: { tx_rid: txRid, op_index: opIndex, asset_id: assetId },
+    args: {
+      tx_rid: formatter.ensureBuffer(txRid),
+      op_index: opIndex,
+      asset_id: formatter.ensureBuffer(assetId),
+    },
   };
 }

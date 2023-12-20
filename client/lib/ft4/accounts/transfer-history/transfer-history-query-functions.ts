@@ -1,9 +1,10 @@
 import { BufferId } from "@ft4/utils/types";
-import { Connection } from "@ft4/types";
-import { getTransferDetailsQueryObject } from "@ft4/accounts/transfer-history/transfer-history-queries";
-import { formatter } from "postchain-client";
-import { getTransferDetailsByAssetQueryObject } from "@ft4/accounts/transfer-history/transfer-history-queries";
-import { RawTransferDetail } from "@ft4/accounts/transfer-history/transfer-history-queries";
+import {
+  transferDetails,
+  transferDetailsByAsset,
+  RawTransferDetail,
+} from "@ft4/accounts/transfer-history/transfer-history-queries";
+import { Queryable } from "postchain-client";
 
 export type TransferDetail = {
   account_id: Buffer;
@@ -14,31 +15,23 @@ export type TransferDetail = {
 };
 
 export function getTransferDetails(
-  connection: Connection,
+  connection: Queryable,
   txRid: BufferId,
   opIndex: number,
 ): Promise<TransferDetail[]> {
   return connection
-    .query(
-      getTransferDetailsQueryObject(formatter.ensureBuffer(txRid), opIndex),
-    )
+    .query(transferDetails(txRid, opIndex))
     .then((tds) => tds.map(createTransferDetail));
 }
 
 export function getTransferDetailsByAsset(
-  connection: Connection,
+  connection: Queryable,
   txRid: BufferId,
   opIndex: number,
   assetId: BufferId,
 ): Promise<TransferDetail[]> {
   return connection
-    .query(
-      getTransferDetailsByAssetQueryObject(
-        formatter.ensureBuffer(txRid),
-        opIndex,
-        formatter.ensureBuffer(assetId),
-      ),
-    )
+    .query(transferDetailsByAsset(txRid, opIndex, assetId))
     .then((tds) => tds.map(createTransferDetail));
 }
 
