@@ -41,7 +41,11 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query(RateLimitQuery(accountId));
+  const rateLimitResponse = await session.query(RateLimitQuery(accountId));
+  const rateLimit = {
+    points: rateLimitResponse.points,
+    lastUpdate: new Date(rateLimitResponse.lastUpdate),
+  };
 
   const chainInfo = await getConfig(session);
 
@@ -50,7 +54,7 @@ export async function getRateLimit(
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
       if (chainInfo.rateLimit.active) {
-        const deltaTime = Date.now() - rateLimit.lastUpdate;
+        const deltaTime = Date.now() - rateLimitResponse.lastUpdate;
         const points =
           rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
         return Math.min(points, chainInfo.rateLimit.maxPoints);
