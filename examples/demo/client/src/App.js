@@ -16,11 +16,11 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
-const useSession = () => {
+const useSession = (storageType) => {
   const [session, setSession] = useState(null);
   const [accounts, setAccounts] = useState([]);
 
-  useEffect((storageType) => {
+  useEffect(() => {
     const initializeSession = async () => {
       const url = 'http://localhost:7740';
 
@@ -52,7 +52,7 @@ const useSession = () => {
     };
 
     initializeSession();
-  }, []);
+  }, [storageType]);
 
   return { session, accounts };
 };

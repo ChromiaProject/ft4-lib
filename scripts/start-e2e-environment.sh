@@ -114,8 +114,7 @@ setup_blockchain_resources() {
     ETH_PRIVATE_KEY=$(echo $ETH_CREDENTIALS | cut -d ' ' -f 2)
 
     echo "Ethereum address generated: $ETH_ADDRESS"
-    # echo "Ethereum private key generated."
-    echo "Ethereum private key generated: $ETH_PRIVATE_KEY"
+    echo "Ethereum private key generated."
 
     echo "Registering account with Ethereum address..."
     REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
@@ -188,7 +187,7 @@ trap cleanup EXIT INT TERM
 
 # Process flags and arguments
 CLEAN_ENV_FLAG=false
-CYPRESS_DEBUG_MODE=""
+SYNPRESS_DEBUG_MODE=""
 COMMAND_TO_RUN=""
 
 for arg in "$@"; do
@@ -205,8 +204,8 @@ for arg in "$@"; do
         --wait-for-node)
             COMMAND_TO_RUN="wait_for_node"
             ;;
-        --enable-cypress-debug)
-            CYPRESS_DEBUG_MODE="DEBUG=cypress:*"
+        --enable-synpress-debug)
+            SYNPRESS_DEBUG_MODE="SYNDEBUG=true"
             ;;
         --help)
             print_usage
@@ -242,11 +241,10 @@ setup_blockchain_resources
 SERVICES_READY_MESSAGE="Backend and frontend services are ready."
 
 SYNPRESS_COMMAND="PRIVATE_KEY=$ETH_PRIVATE_KEY \
-    $CYPRESS_DEBUG_MODE \
+    $SYNPRESS_DEBUG_MODE \
+    CI=true \
     ./node_modules/.bin/synpress run \
     --configFile cypress.config.ts"
-
-echo "Synpress command: $SYNPRESS_COMMAND"
 
 # Run the appropriate command
 if [ "$COMMAND_TO_RUN" = "run_tests_headless" ]; then

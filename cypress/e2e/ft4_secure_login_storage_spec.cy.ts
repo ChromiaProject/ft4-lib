@@ -1,4 +1,11 @@
 describe('FT4 Library Secure Login Storage Test', () => {
+  before(() => {
+    cy.visit("/");
+    
+    // Metamask access has to be accepted only once
+    cy.acceptMetamaskAccess();
+  });
+
   it('stores and retrieves login details accurately from session storage', () => {
     cy.visit('/?storageType=session');
 
