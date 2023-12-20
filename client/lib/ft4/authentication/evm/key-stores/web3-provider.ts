@@ -15,8 +15,8 @@ export async function createWeb3ProviderEvmKeyStore(
   await provider.send("eth_requestAccounts", []);
 
   const signer = await provider.getSigner();
-  const ethAddress = await signer.getAddress();
-  const address = Buffer.from(ethAddress.slice(2), "hex");
+  const evmAddress = await signer.getAddress();
+  const address = Buffer.from(evmAddress.slice(2), "hex");
 
   externalProvider.once("accountsChanged", () => {
     createWeb3ProviderEvmKeyStore(externalProvider).then((keyStore) =>

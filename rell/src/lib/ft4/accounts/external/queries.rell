@@ -30,9 +30,9 @@ query get_account_auth_descriptors(id: byte_array, page_size: integer, page_curs
     );
 }
 
-query get_account_auth_descriptors_by_participant_id(account_id: byte_array, participant_id: byte_array, page_size: integer, page_cursor: text?) {
+query get_account_auth_descriptors_by_signer(account_id: byte_array, signer: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
-        accounts.get_paginated_auth_descriptors_by_participant_id(account_id, participant_id, page_size, page_cursor),
+        accounts.get_paginated_auth_descriptors_by_signer(account_id, signer, page_size, page_cursor),
         page_size
     );
 }
@@ -52,9 +52,9 @@ query get_account_by_auth_descriptor(accounts.auth_descriptor) {
     return accounts.account @? { .id == auth_descriptor.hash() } ( .id );
 }
 
-query get_accounts_by_participant_id(id: byte_array, page_size: integer, page_cursor: text?) {
+query get_accounts_by_signer(id: byte_array, page_size: integer, page_cursor: text?) {
     return utils.make_page(
-        accounts.get_paginated_accounts_by_participant_id(id, page_size, page_cursor),
+        accounts.get_paginated_accounts_by_signer(id, page_size, page_cursor),
         page_size
     );
 }

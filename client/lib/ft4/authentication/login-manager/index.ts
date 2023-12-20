@@ -36,7 +36,7 @@ export function createLoginManager(
       const account = createAccountObject(connection, loginOptions.accountId);
 
       // Get all auth descriptors that can be used with the provided key store
-      const authDescriptors = await account.getAuthDescriptorsByParticipantId(
+      const authDescriptors = await account.getAuthDescriptorsBySigner(
         keyStore.id,
       );
 
@@ -68,7 +68,7 @@ export function createLoginManager(
       if (keyPair) {
         const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
         const disposableAuthDescriptors =
-          await account.getAuthDescriptorsByParticipantId(getPubkey(keyPair));
+          await account.getAuthDescriptorsBySigner(getPubkey(keyPair));
         disposableKeyHandlers = disposableAuthDescriptors.data
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>

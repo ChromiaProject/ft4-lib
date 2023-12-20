@@ -10,7 +10,7 @@ import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalPageCursor } from "../types";
 import { BufferId, PaginatedEntity, freeze } from "@ft4/utils/types";
 import { createAmountFromBalance } from "./amount";
-import { createEntityRetriever } from "@ft4/utils/entity-retriever";
+import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
 
 export async function getAssetById(
   connection: Connection,
@@ -34,12 +34,11 @@ export function getAssetsByName(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ) {
-  const retriever = createEntityRetriever<Asset, AssetResponse>(
+  return retrievePaginatedEntity<Asset, AssetResponse>(
     connection,
     assetsByName(name, limit, cursor),
     (a) => a.map(createAssetObject),
   );
-  return retriever.retrieve();
 }
 
 export async function getAllAssets(
@@ -47,11 +46,11 @@ export async function getAllAssets(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
-  return createEntityRetriever<Asset, AssetResponse>(
+  return retrievePaginatedEntity<Asset, AssetResponse>(
     connection,
     allAssets(limit, cursor),
     (a) => a.map(createAssetObject),
-  ).retrieve();
+  );
 }
 
 export async function getBalanceByAccountId(
@@ -70,11 +69,11 @@ export async function getBalancesByAccountId(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Balance>> {
-  return createEntityRetriever<Balance, BalanceResponse>(
+  return retrievePaginatedEntity<Balance, BalanceResponse>(
     connection,
     balancesByAccountId(accountId, limit, cursor),
     (balances) => balances.map(createBalanceObject),
-  ).retrieve();
+  );
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {

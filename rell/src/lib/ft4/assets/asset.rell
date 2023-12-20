@@ -156,20 +156,7 @@ namespace Unsafe {
             asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = false,
-            .entry_index = 0,
-            transfer_args = [
-                [(
-                    amount, 
-                    account_id = null.to_gtv().to_bytes(), 
-                    entry_index = 0
-                )],
-                [(
-                    amount, 
-                    account_id = account.id,
-                    entry_index = 0
-                )]
-            ].to_gtv().to_bytes()
+            .is_input = false
         );
 
         after_mint(account, asset, amount);
@@ -194,20 +181,7 @@ namespace Unsafe {
             asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = true,
-            .entry_index = 0,
-            transfer_args = [
-                [(
-                    amount, 
-                    account_id = account.id,
-                    entry_index = 0
-                )],
-                [(
-                    amount, 
-                    account_id = null.to_gtv().to_bytes(), 
-                    entry_index = 0
-                )]
-            ].to_gtv().to_bytes()
+            .is_input = true
         );
         after_burn(account, asset, amount);
     }

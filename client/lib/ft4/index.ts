@@ -50,11 +50,11 @@ export {
   FlagsType,
   Account,
   MultiSig,
+  RateLimit,
   RuleOperator,
   RuleVariable,
   SingleSig,
   TransferHistoryEntry,
-  TransferHistoryResponse,
   TransferHistoryType,
   deriveAuthDescriptorId,
   createSingleSigAuthDescriptorRegistration,
@@ -86,7 +86,13 @@ export {
 } from "./ft-session";
 
 // Utils & Others
-export { op } from "./utils";
+export {
+  op,
+  retrievePaginatedEntity,
+  EntityRetriever,
+  PaginatedEntity,
+} from "./utils";
+
 export { Listener, EventEmitter } from "./events";
 
 // Crosschain

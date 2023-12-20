@@ -28,7 +28,7 @@ retrieve_account_id() {
   USER_ACCOUNT_ID_RAW_OUTPUT=$(
     chr query \
       --blockchain-rid $1 \
-      ft4.get_accounts_by_participant_id \
+      ft4.get_accounts_by_signer \
       -- "{id=$USER_PUBKEY}" \
       2>/dev/null
   )
