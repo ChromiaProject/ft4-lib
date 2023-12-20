@@ -44,7 +44,7 @@ describe("Transaction priority", () => {
       const user = TestUser();
 
       const account = await AccountBuilder.account(_connection)
-        .withParticipant(user.signatureProvider)
+        .withSigner(user.signatureProvider)
         .build();
 
       await expect(
