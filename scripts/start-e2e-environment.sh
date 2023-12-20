@@ -58,15 +58,6 @@ start_backend() {
     echo "Installing Rell dependencies..."
     chr install
 
-    # Generate Keypair
-    if [ ! -f "$KEYPAIR" ]; then
-        echo "Generating keypair..."
-        chr keygen --save $KEYPAIR
-        echo "Keypair generated."
-    else
-        echo "Keypair already exists."
-    fi
-
     # Start Node
     echo "Starting Chromia node..."
     chr node start --wipe > "$LOG_PATH/e2e-postchain.log" 2>&1 &
