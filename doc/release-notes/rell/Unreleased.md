@@ -6,7 +6,7 @@
 - Default values for `lib.ft4.accounts` module_args to simplify `chromia.yml` configuration.
 - Added configuration parameter `max_auth_descriptor_rules` for `lib.ft4.accounts` module_args, with default value 8.
 - Added an option to customize the rate limiter for some accounts.
-- Queries `get_transfer_details` and `get_transfer_details_by_asset` to `lib.ft4.assets.external`.
+- Queries `get_transfer_details`, `get_transfer_details_by_asset` and `get_transfer_history_from_height` to `lib.ft4.assets.external`.
 - Support for transaction priority.
 
 ### Changed

@@ -49,7 +49,7 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
     );
 }
 
-function get_paginated_transfers(accounts.account, filter, page_size: integer, page_cursor: text?) {
+function get_paginated_transfers(accounts.account?, asset?, filter, height: integer?, page_size: integer, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
         val cursor = utils.decode_cursor(page_cursor);
@@ -57,8 +57,10 @@ function get_paginated_transfers(accounts.account, filter, page_size: integer, p
     }
 
     val entries = transfer_history_entry @* {
-        account,
-        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent), 
+        if (account == null) true else .account == account,
+        if (asset == null) true else .asset == asset,
+        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent),
+        if (height == null) true else (.transaction.block.block_height > height),
         if (before_rowid??) (.rowid < before_rowid) else true
     } (@sort_desc $) limit utils.fetch_data_size(page_size);
     
