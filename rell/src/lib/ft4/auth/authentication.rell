@@ -22,6 +22,10 @@ function authenticate(is_strict: boolean = true) {
     );
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
+    require(
+        filter_allowed_auth_descriptors(op.name, [auth_descriptor.id], is_strict).size() == 1,
+        "The provided auth descriptor is not valid for this operation"
+    );
     before_authenticate(account, auth_descriptor);
 
     val is_validated = when (previous_op.name) {
@@ -36,6 +40,14 @@ function authenticate(is_strict: boolean = true) {
     val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
     after_authenticate(account, auth_desc_after);
     return account;
+}
+
+function filter_allowed_auth_descriptors(op_name: name, ad_ids: list<byte_array>, is_strict: boolean) {
+    val resolver = get_auth_handler(op_name, is_strict=false).resolver;
+  
+    if (resolver == null) return ad_ids;
+  
+    return ad_ids @* { resolver($) };
 }
 
 function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.account, accounts.account_auth_descriptor) {

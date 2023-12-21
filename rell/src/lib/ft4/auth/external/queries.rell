@@ -1,4 +1,22 @@
+struct _auth_handler_client {
+    name: text;
+    flags: list<text>;
+    dynamic: boolean;
+}
 
 query get_auth_flags(op_name: name) = auth.get_auth_handler(op_name, is_strict=false).flags;
 
 query get_auth_message_template(op_name: name, op_args: gtv) = auth.get_auth_message_template(op_name, op_args, is_strict=false);
+
+query get_allowed_auth_descriptors(op_name: name, ad_ids: list<byte_array>): list<byte_array> = auth.filter_allowed_auth_descriptors(op_name, ad_ids, is_strict=false);
+
+query get_all_auth_handlers() {
+  val auth_handlers = auth.auth_handler();
+  return auth_handlers @* {}(
+    _auth_handler_client(
+      name=$[0],
+      flags=$[1].flags,
+      dynamic=$[1].resolver != null
+    )
+  );
+}
