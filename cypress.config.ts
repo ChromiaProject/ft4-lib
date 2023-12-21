@@ -7,7 +7,7 @@ export default defineConfig({
   userAgent: 'synpress',
   chromeWebSecurity: true,
   e2e: {
-    testIsolation: false,
+    testIsolation: true,
     defaultCommandTimeout: 30000,
     pageLoadTimeout: 30000,
     requestTimeout: 30000,

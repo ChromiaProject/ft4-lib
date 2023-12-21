@@ -34,6 +34,7 @@ e2e-tests: &e2e-tests-anchor
       - npm ci
       - npm run test:e2e
     artifacts:
+      - logs/**
       - cypress/screenshots/**
       - cypress/videos/**
     services:
@@ -61,11 +62,14 @@ pipelines:
             - export TESTCONTAINERS_RYUK_DISABLED=true
             - export JEST_JUNIT_OUTPUT_NAME=integration.xml
             - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit
+          artifacts:
+            - logs/**
           services:
             - postgres
             - docker
-      - step: *e2e-tests-anchor
-        trigger: manual
+      - step:
+          <<: *e2e-tests-anchor
+          trigger: manual
   branches:
     ft4:
       - step:

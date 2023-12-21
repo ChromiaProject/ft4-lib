@@ -4,6 +4,7 @@
 DEMO_PATH="examples/demo"
 RELL_PATH="$DEMO_PATH/rell"
 FRONTEND_PATH="$DEMO_PATH/client"
+LOG_PATH="$(pwd)/logs"
 
 # Keypair configurations
 KEYPAIR=".admin_keypair"
@@ -57,19 +58,9 @@ start_backend() {
     echo "Installing Rell dependencies..."
     chr install
 
-    # Generate Keypair
-    if [ ! -f "$KEYPAIR" ]; then
-        echo "Generating keypair..."
-        chr keygen --save $KEYPAIR
-        echo "Keypair generated."
-    else
-        echo "Keypair already exists."
-    fi
-
     # Start Node
     echo "Starting Chromia node..."
-    mkdir -p ./logs
-    chr node start --wipe > ./logs/e2e-postchain.log 2>&1 &
+    chr node start --wipe > "$LOG_PATH/e2e-postchain.log" 2>&1 &
     NODE_PID=$!
 
     cd - > /dev/null
@@ -104,36 +95,29 @@ wait_for_services_ready() {
 
 setup_blockchain_resources() {
     echo "Generating Ethereum address and private key..."
-    ETH_ADDRESS=$(node -e "
+    ETH_CREDENTIALS=$(node -e "
         const ethers = require('ethers');
         const wallet = ethers.Wallet.createRandom();
-        console.log(wallet.address);
+        console.log(wallet.address + ' ' + wallet.privateKey);
     ")
-    echo "Ethereum address generated: $ETH_ADDRESS"
 
-    ETH_PRIVATE_KEY=$(node -e "
-        const ethers = require('ethers');
-        const wallet = ethers.Wallet.createRandom();
-        console.log(wallet.privateKey);
-    ")
+    ETH_ADDRESS=$(echo $ETH_CREDENTIALS | cut -d ' ' -f 1)
+    ETH_PRIVATE_KEY=$(echo $ETH_CREDENTIALS | cut -d ' ' -f 2)
+
+    echo "Ethereum address generated: $ETH_ADDRESS"
     echo "Ethereum private key generated."
 
-    # TODO:
-    # - Use the generated EVM address in Metamask with Cypress
-    # - Register account and the asset and mint some to the account
-    # Jira: https://chromaway.atlassian.net/browse/FT4-202
+    echo "Registering account with Ethereum address..."
+    REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
+        '[0, [["A","T"], x"'${ETH_ADDRESS:2}'"], null]' \
+        --cid 0 --await --secret $KEYPAIR_PATH)
+    echo "Account registration result: $REGISTER_ACCOUNT_RESULT"
 
-    # echo "Registering account with Ethereum address..."
-    # REGISTER_ACCOUNT_RESULT=$(chr tx ft4.admin.register_account \
-    #     "[0, [['A','T'], x'${ETH_ADDRESS:2}'], null]" \
-    #     --cid 0 --await --secret $KEYPAIR_PATH)
-    # echo "Account registration result: $REGISTER_ACCOUNT_RESULT"
-
-    # echo "Registering test asset..."
-    # REGISTER_ASSET_RESULT=$(chr tx ft4.admin.register_asset \
-    #     TestAsset TST 6 http://url-to-asset-icon \
-    #     --cid 0 --await --secret $KEYPAIR_PATH)
-    # echo "Asset Registration Result: $REGISTER_ASSET_RESULT"
+    echo "Registering test asset..."
+    REGISTER_ASSET_RESULT=$(chr tx ft4.admin.register_asset \
+        TestAsset TST 6 http://url-to-asset-icon \
+        --cid 0 --await --secret $KEYPAIR_PATH)
+    echo "Asset Registration Result: $REGISTER_ASSET_RESULT"
 
     # echo "Minting asset to account..."
     # MINT_ASSET_RESULT=$(chr tx ft4.admin.mint \
@@ -194,7 +178,7 @@ trap cleanup EXIT INT TERM
 
 # Process flags and arguments
 CLEAN_ENV_FLAG=false
-CYPRESS_DEBUG_MODE=""
+SYNPRESS_DEBUG_MODE=""
 COMMAND_TO_RUN=""
 
 for arg in "$@"; do
@@ -211,8 +195,8 @@ for arg in "$@"; do
         --wait-for-node)
             COMMAND_TO_RUN="wait_for_node"
             ;;
-        --enable-cypress-debug)
-            CYPRESS_DEBUG_MODE="DEBUG=cypress:*"
+        --enable-synpress-debug)
+            SYNPRESS_DEBUG_MODE="SYNDEBUG=true"
             ;;
         --help)
             print_usage
@@ -224,6 +208,8 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+mkdir -p "$LOG_PATH"
 
 # Check command to run is specified
 if [ -z "$COMMAND_TO_RUN" ]; then
@@ -246,7 +232,8 @@ setup_blockchain_resources
 SERVICES_READY_MESSAGE="Backend and frontend services are ready."
 
 SYNPRESS_COMMAND="PRIVATE_KEY=$ETH_PRIVATE_KEY \
-    $CYPRESS_DEBUG_MODE \
+    $SYNPRESS_DEBUG_MODE \
+    CI=true \
     ./node_modules/.bin/synpress run \
     --configFile cypress.config.ts"
 

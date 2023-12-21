@@ -8,6 +8,7 @@
 - Added an option to customize the rate limiter for some accounts.
 - Queries `get_transfer_details` and `get_transfer_details_by_asset` to `lib.ft4.assets.external`.
 - Added support for rules in login config.
+- Support for transaction priority.
 
 ### Changed
 - Updated signature for `evm_auth_operation_for` to accept a `rell.test.op`.
