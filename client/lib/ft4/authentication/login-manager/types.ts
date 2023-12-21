@@ -44,11 +44,11 @@ export class LoginConfigError extends Error {
 export type LoginConfigSimpleRule = {
   variable: RuleVariable;
   operator: RuleOperator;
-  value: string;
+  value: `${number}` | `{${number}}`;
 };
 export type LoginConfigComplexRule = {
   operator: "and";
-  rules: AnySimpleRule[];
+  rules: LoginConfigSimpleRule[];
 };
 export type LoginConfigRules =
   | LoginConfigComplexRule
@@ -57,7 +57,11 @@ export type LoginConfigRules =
 
 export type Rules = LoginConfigRules | AuthDescriptorRules;
 
-export type RawLoginConfigSimpleRule = readonly [number, number, string];
+export type RawLoginConfigSimpleRule = readonly [
+  string,
+  string,
+  `${number}` | `{${number}}`,
+];
 export type RawLoginConfigComplexRule = readonly ["and", ...RawRules[]];
 export type RawLoginConfigRules =
   | RawLoginConfigComplexRule
@@ -65,8 +69,8 @@ export type RawLoginConfigRules =
   | null;
 
 export type RawRules = RawLoginConfigRules | RawAuthDescriptorSimpleRule;
-export type AnySimpleRule =
+
+export type AnySimpleRule = LoginConfigSimpleRule | AuthDescriptorSimpleRule;
+export type RawAnySimpleRule =
   | RawLoginConfigSimpleRule
-  | LoginConfigSimpleRule
-  | RawAuthDescriptorSimpleRule
-  | AuthDescriptorSimpleRule;
+  | RawAuthDescriptorSimpleRule;

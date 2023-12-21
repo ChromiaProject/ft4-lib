@@ -9,13 +9,14 @@ import {
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import {
-  AnySimpleRule,
   LoginConfigError,
   LoginConfigRules,
   LoginConfigSimpleRule,
   LoginManager,
   LoginOptions,
   Rules,
+  AnySimpleRule,
+  RawAnySimpleRule,
 } from "./types";
 import { createAuthDataService, createSession } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
@@ -39,6 +40,7 @@ import {
 } from "@ft4/accounts/auth-descriptor";
 import { getPubkey } from "@ft4/utils/index";
 import { rulesFromGtv } from "@ft4/accounts/auth-descriptor/gtv";
+import { enumValueFromString } from "@ft4/accounts/auth-descriptor/enum-parsers";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -178,6 +180,7 @@ async function getFlagsAndRules(
  *  null => null
  *  ["lt", "block_time", "{1000}"] => ["lt", "block_time", Date.now()+1000]
  *  ["lt", "op_count", "10"] => ["lt", "op_count", 10]
+ *  ["lt", "block_time", 10] => ["lt", "block_time", 10]
  *  ["and", loginRule1, authDescRule2] => ["and", authDescRule1, authDescRule2]
  *
  * @param rules Rules we need to ensure are Auth Descriptor rules
@@ -194,8 +197,10 @@ async function getRulesFromLoginConfig(
   } else if (isSimpleRule(rules)) {
     return ensureAuthDescriptorRule(rules, getBlockHeight);
   } else {
-    const rulesWithoutAnd: AnySimpleRule[] = isRawRule(rules)
-      ? <AnySimpleRule[]>rules.slice(1)
+    const rulesWithoutAnd: (AnySimpleRule | RawAnySimpleRule)[] = isRawRule(
+      rules,
+    )
+      ? <(AnySimpleRule | RawAnySimpleRule)[]>rules.slice(1)
       : rules.rules;
     const simpleRules = rulesWithoutAnd.map((rule) =>
       ensureAuthDescriptorRule(rule, getBlockHeight),
@@ -221,7 +226,7 @@ async function getRulesFromLoginConfig(
  * @returns the auth descriptor rule that corresponds to the rule passed in as argument
  */
 async function ensureAuthDescriptorRule(
-  rule: AnySimpleRule,
+  rule: AnySimpleRule | RawAnySimpleRule,
   getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorSimpleRule> {
   if (!isLoginConfigSimpleRule(rule)) {
@@ -231,27 +236,32 @@ async function ensureAuthDescriptorRule(
   }
 
   const { operator, variable, value } = isRawRule(rule)
-    ? { operator: rule[0], variable: rule[1], value: rule[2] }
+    ? {
+        operator: enumValueFromString(rule[0], RuleOperator),
+        variable: enumValueFromString(rule[1], RuleVariable),
+        value: rule[2],
+      }
     : rule;
 
-  let finalValue: number;
-  if (variable === RuleVariable.OpCount) {
-    finalValue = parseInt(value);
-  } else if (variable === RuleVariable.BlockTime) {
-    const num = parseInt(value.replace(/[{}]/g, ""));
-    finalValue = Date.now() + num;
-  } else if (variable === RuleVariable.BlockHeight) {
-    const blockHeight = await getBlockHeight();
-    const num = parseInt(value.replace(/[{}]/g, ""));
-    finalValue = blockHeight + num;
+  const parsedVal = parseLoginConfigValue(value);
+
+  let valueToAdd: number;
+  if (parsedVal.relative && variable !== RuleVariable.OpCount) {
+    if (variable === RuleVariable.BlockHeight) {
+      valueToAdd = await getBlockHeight();
+    } else if (variable === RuleVariable.BlockTime) {
+      valueToAdd = Date.now();
+    } else {
+      throw new LoginConfigError("unexpected variable: " + variable);
+    }
   } else {
-    throw new LoginConfigError("unexpected variable: " + variable);
+    valueToAdd = 0;
   }
 
   return {
     operator,
     variable,
-    value: finalValue,
+    value: parsedVal.value + valueToAdd,
   };
 }
 
@@ -312,29 +322,49 @@ export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
   };
 }
 
-export function authDescriptorRuleToLoginConfigRule(
-  rule: AuthDescriptorRules,
+export function authDescriptorRuleToLoginConfigAndRule(
+  relativeRules: AuthDescriptorSimpleRule[],
+  absoluteRules: AuthDescriptorSimpleRule[],
 ): LoginConfigRules {
-  if (isNullRule(rule)) {
-    return null;
-  }
+  const convertedRules: LoginConfigSimpleRule[] = [];
 
-  const simpleRuleConversion = (rule: AuthDescriptorSimpleRule) => {
+  const simpleRuleConversion = (
+    rule: AuthDescriptorSimpleRule,
+    relative: boolean,
+  ): LoginConfigSimpleRule => {
     return {
       ...rule,
-      value:
-        rule.variable === RuleVariable.OpCount
-          ? "" + rule.value
-          : `{${rule.value}}`,
+      value: relative ? `{${rule.value}}` : `${rule.value}`,
     };
   };
 
-  if (isSimpleRule(rule)) {
-    return simpleRuleConversion(rule);
-  } else {
-    return {
-      operator: rule.operator,
-      rules: rule.rules.map(simpleRuleConversion),
-    };
+  relativeRules.forEach((r) =>
+    convertedRules.push(simpleRuleConversion(r, true)),
+  );
+  absoluteRules.forEach((r) =>
+    convertedRules.push(simpleRuleConversion(r, false)),
+  );
+
+  return convertedRules.length === 0
+    ? null
+    : {
+        operator: "and",
+        rules: convertedRules,
+      };
+}
+
+function parseLoginConfigValue(val: string): {
+  value: number;
+  relative: boolean;
+} {
+  // val must be in one of these formats: "15", "{15}"
+  if (!val.match(/(^\{\d+\}$)|(^\d+$)/)) {
+    throw new LoginConfigError(
+      `Login config rule value improperly formatted: ${val}`,
+    );
   }
+  return {
+    value: parseInt(val.replace(/[{}]/g, "")),
+    relative: val.startsWith("{"),
+  };
 }
