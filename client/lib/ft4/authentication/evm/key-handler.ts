@@ -54,14 +54,14 @@ async function authorize(
     context,
   );
 
-  const brid = authDataService.getBrid();
+  const blockchainRid = authDataService.getBlockchainRid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
       "{auth_descriptor_id}",
       formatter.ensureBuffer(authDescriptorId).toString("hex"),
     )
-    .replace("{brid}", brid.toString("hex"))
+    .replace("{blockchain_rid}", blockchainRid.toString("hex"))
     .replace("{nonce}", `${nonce}`);
 
   const signature = await keyStore.signMessage(message);

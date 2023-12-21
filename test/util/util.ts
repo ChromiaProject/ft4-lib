@@ -54,8 +54,8 @@ function generateId(): Buffer {
   return encryption.hash256(Buffer.from(`${generateNumber()}`));
 }
 
-function blockchainAccountId(brid: Buffer) {
-  return pclGtv.gtvHash(["B", brid]);
+function blockchainAccountId(blockchainRid: Buffer) {
+  return pclGtv.gtvHash(["B", blockchainRid]);
 }
 
 class LocalStorageMock implements Storage {

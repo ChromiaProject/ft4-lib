@@ -70,7 +70,7 @@ export function createAccountObject(
 ): Account {
   return Object.freeze({
     id: formatter.ensureBuffer(accountId),
-    brid: formatter.toBuffer(connection.client.config.blockchainRid),
+    blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
     getBalances: (limit = 100, cursor: OptionalPageCursor = null) =>

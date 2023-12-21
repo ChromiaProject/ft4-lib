@@ -24,7 +24,7 @@ export async function findPathToChainForAsset(
   blockchainRid: BufferId,
   maxPathLength = 100,
 ): Promise<Buffer[]> {
-  const rootNode = asset.brid;
+  const rootNode = asset.blockchainRid;
 
   const pathSourceToRoot = [
     formatter.toBuffer(connection.client.config.blockchainRid),
@@ -45,23 +45,23 @@ export async function findPathToChainForAsset(
       // Get the origin chain from the one we're currently exploring.
       // If the config is broken, two scenarios may arise:
       // 1. No origin chain. This call throws.
-      // 2. The origin chain is a wrong brid.
+      // 2. The origin chain is a wrong blockchainRid.
       //    2a. If the chain doesn't exist at all, the next step on this branch will
       //        throw.
       //    2b. If the chain doesn't have the asset, the next step throws.
       //    2c. If the next chain is also the previous one (circular dependency),
       //        this loop would run indefinitely. (might be introduced by malice or error)
-      //    2d. If the chain has the asset but no origin brid, next step is case 1
+      //    2d. If the chain has the asset but no origin blockchainRid, next step is case 1
       //
       // let's consider these things:
       //
       // - set a max search depth for the path to avoid 2c and long trees
-      // - check every brid on the list for circular dependencies to avoid 2c
+      // - check every blockchainRid on the list for circular dependencies to avoid 2c
       //   at the cost of speed
       let tmpConnection: Connection;
 
       try {
-        tmpConnection = await createConnectionToBrid(
+        tmpConnection = await createConnectionToBlockchainRid(
           connection.client,
           lastNode,
         );
@@ -132,16 +132,18 @@ export async function findPathToChainForAsset(
     .slice(1); // remove starting chain
 }
 
-export async function createConnectionToBrid(
+export async function createConnectionToBlockchainRid(
   oldClient: IClient,
-  newBrid: BufferId,
+  newBlockchainRid: BufferId,
 ) {
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
       directoryNodeUrlPool: oldClient.config.endpointPool.slice(),
       blockchainRid:
-        typeof newBrid == "string" ? newBrid : formatter.toString(newBrid),
+        typeof newBlockchainRid == "string"
+          ? newBlockchainRid
+          : formatter.toString(newBlockchainRid),
     }),
   );
 }

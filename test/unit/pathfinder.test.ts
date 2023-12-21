@@ -1,8 +1,8 @@
-// Not BRIDs, but allows for easier testing
-const startingChainBrid = Buffer.from("00", "hex");
-const endingChainBrid = Buffer.from("ff", "hex");
-const rootChainBrid = Buffer.from("11", "hex");
-const commonChainBrid = Buffer.from("88", "hex");
+// Not Blockchain RIDs, but allows for easier testing
+const startingChainRid = Buffer.from("00", "hex");
+const endingChainRid = Buffer.from("ff", "hex");
+const rootChainRid = Buffer.from("11", "hex");
+const commonChainRid = Buffer.from("88", "hex");
 
 const assetOriginQueryMock = jest.fn();
 const createClientMock = jest.fn();
@@ -42,7 +42,7 @@ createClientMock.mockImplementation(
         // we need this to create new clients from the old one
         endpointPool: [""],
         // this gives us the starting point, always the same
-        blockchainRid: startingChainBrid,
+        blockchainRid: startingChainRid,
       },
     }) as unknown as IClient,
 );
@@ -59,7 +59,12 @@ describe("Pathfinder", () => {
 
   it("finds a path", async () => {
     const asset = getMockAsset();
-    setOriginAssetsQueryResponsesByLength(3, 2, 2, asset.brid.toString("hex"));
+    setOriginAssetsQueryResponsesByLength(
+      3,
+      2,
+      2,
+      asset.blockchainRid.toString("hex"),
+    );
     // start
     //   ↳ 2           end
     //     ↳ 3        4 ↲
@@ -69,25 +74,30 @@ describe("Pathfinder", () => {
     const path = await findPathToChainForAsset(
       connection,
       asset,
-      endingChainBrid,
+      endingChainRid,
     );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
       "2222",
       "3333",
-      commonChainBrid.toString("hex"),
+      commonChainRid.toString("hex"),
       "4444",
-      endingChainBrid.toString("hex"),
+      endingChainRid.toString("hex"),
     ]);
   });
 
   it("finds a path with no duplicate hops", async () => {
     const asset = getMockAsset();
-    setOriginAssetsQueryResponsesByLength(3, 2, 2, asset.brid.toString("hex"));
+    setOriginAssetsQueryResponsesByLength(
+      3,
+      2,
+      2,
+      asset.blockchainRid.toString("hex"),
+    );
     const path = await findPathToChainForAsset(
       connection,
       asset,
-      endingChainBrid,
+      endingChainRid,
     );
 
     expect(path.length).toEqual(5);
@@ -96,11 +106,16 @@ describe("Pathfinder", () => {
 
   it("finds a path through root if no common nodes exist", async () => {
     const asset = getMockAsset();
-    setOriginAssetsQueryResponsesByLength(7, 3, 0, asset.brid.toString("hex"));
+    setOriginAssetsQueryResponsesByLength(
+      7,
+      3,
+      0,
+      asset.blockchainRid.toString("hex"),
+    );
     const path = await findPathToChainForAsset(
       connection,
       asset,
-      endingChainBrid,
+      endingChainRid,
     );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
@@ -110,10 +125,10 @@ describe("Pathfinder", () => {
       "4444",
       "5555",
       "6666",
-      rootChainBrid.toString("hex"),
+      rootChainRid.toString("hex"),
       "8888",
       "7777",
-      endingChainBrid.toString("hex"),
+      endingChainRid.toString("hex"),
     ]);
   });
 
@@ -123,7 +138,7 @@ describe("Pathfinder", () => {
     createClientMock.mockImplementationOnce(
       jest.requireActual("postchain-client").createClient,
     );
-    const promise = findPathToChainForAsset(connection, asset, endingChainBrid);
+    const promise = findPathToChainForAsset(connection, asset, endingChainRid);
 
     await expect(promise).rejects.toThrow(TypeError("Invalid URL"));
   });
@@ -136,17 +151,17 @@ describe("Pathfinder", () => {
         "2222",
         "3333",
         "4444",
-        endingChainBrid,
+        endingChainRid,
         "5555",
         "6666",
-        rootChainBrid,
+        rootChainRid,
       ],
-      ["5555", "6666", rootChainBrid],
+      ["5555", "6666", rootChainRid],
     );
     const path = await findPathToChainForAsset(
       connection,
       asset,
-      endingChainBrid,
+      endingChainRid,
     );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
@@ -154,29 +169,29 @@ describe("Pathfinder", () => {
       "2222",
       "3333",
       "4444",
-      endingChainBrid.toString("hex"),
+      endingChainRid.toString("hex"),
     ]);
   });
 
   it("works when second node is downstream of first node", async () => {
     const asset = getMockAsset();
     setOriginAssetsQueryResponses(
-      ["5555", "6666", rootChainBrid],
+      ["5555", "6666", rootChainRid],
       [
         "1111",
         "2222",
         "3333",
         "4444",
-        startingChainBrid,
+        startingChainRid,
         "5555",
         "6666",
-        rootChainBrid,
+        rootChainRid,
       ],
     );
     const path = await findPathToChainForAsset(
       connection,
       asset,
-      endingChainBrid,
+      endingChainRid,
     );
 
     expect(path.map((buf) => buf.toString("hex"))).toEqual([
@@ -184,7 +199,7 @@ describe("Pathfinder", () => {
       "3333",
       "2222",
       "1111",
-      endingChainBrid.toString("hex"),
+      endingChainRid.toString("hex"),
     ]);
   });
 });
@@ -213,21 +228,21 @@ function setOriginAssetsQueryResponses(
 //   D-E
 // Sending A->D with X in common and
 // Z as root, will have these parameters
-// (3, 2, 2, Z.brid)
+// (3, 2, 2, Z.blockchainRid)
 function setOriginAssetsQueryResponsesByLength(
   startToCommonHops: number,
   endToCommonHops: number,
   commonToRootHops: number,
-  rootBrid: BufferId,
+  rootBlockchainRid: BufferId,
 ) {
   let i = 0;
   const nextChain = () => Buffer.from(String(++i).repeat(4), "hex");
   // X-Y-Z
   const commonToRootArray = commonToRootHops
-    ? [commonChainBrid]
+    ? [commonChainRid]
         .concat(Array.from({ length: commonToRootHops - 1 }, nextChain))
-        .concat(formatter.ensureBuffer(rootBrid))
-    : [formatter.ensureBuffer(rootBrid)];
+        .concat(formatter.ensureBuffer(rootBlockchainRid))
+    : [formatter.ensureBuffer(rootBlockchainRid)];
 
   //B-C-X-Y-Z
   const startToRoot = Array.from(
@@ -247,6 +262,6 @@ function setOriginAssetsQueryResponsesByLength(
 function getMockAsset() {
   return {
     id: generateId(),
-    brid: rootChainBrid,
+    blockchainRid: rootChainRid,
   } as unknown as Asset;
 }

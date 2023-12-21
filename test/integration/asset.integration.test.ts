@@ -14,8 +14,8 @@ import { useChromiaNode } from "@ft4/util/chromia-node";
 let connection: Connection;
 let client: IClient;
 
-//used only to have different issuing_brid until we have xchain
-async function registerAssetWithCustomBrid(
+//used only to have different issuing_blockchain_rid without using xchain
+async function registerAssetWithCustomBlockchainRid(
   client: IClient,
   assetName: string,
   decimals = 0,
@@ -62,9 +62,9 @@ describe("Asset", () => {
 
   it("can fetch paginated assets by name", async () => {
     const assetName = generateAssetName();
-    await registerAssetWithCustomBrid(client, assetName);
-    await registerAssetWithCustomBrid(client, assetName);
-    await registerAssetWithCustomBrid(client, assetName);
+    await registerAssetWithCustomBlockchainRid(client, assetName);
+    await registerAssetWithCustomBlockchainRid(client, assetName);
+    await registerAssetWithCustomBlockchainRid(client, assetName);
 
     const { data: expectedAssets, nextCursor } =
       await connection.getAssetsByName(assetName, 2);
@@ -84,8 +84,11 @@ describe("Asset", () => {
   it("should be returned when queried by id", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = Buffer.from(connection.client.config.blockchainRid, "hex");
-    const assetId = gtv.gtvHash([assetName, brid]);
+    const blockchainRid = Buffer.from(
+      connection.client.config.blockchainRid,
+      "hex",
+    );
+    const assetId = gtv.gtvHash([assetName, blockchainRid]);
     await getNewAsset(client, assetName, assetSymbol, 3);
 
     const expectedAsset = await connection.getAssetById(assetId);
@@ -93,14 +96,17 @@ describe("Asset", () => {
     expect(expectedAsset!.name).toEqual(assetName);
     expect(expectedAsset!.id).toEqual(assetId);
     expect(expectedAsset!.decimals).toEqual(3);
-    expect(expectedAsset!.brid).toEqual(brid);
+    expect(expectedAsset!.blockchainRid).toEqual(blockchainRid);
   });
 
   it("is returned when queried by symbol", async () => {
     const assetName = generateAssetName();
     const assetSymbol = generateAssetSymbol();
-    const brid = Buffer.from(connection.client.config.blockchainRid, "hex");
-    const assetId = gtv.gtvHash([assetName, brid]);
+    const blockchainRid = Buffer.from(
+      connection.client.config.blockchainRid,
+      "hex",
+    );
+    const assetId = gtv.gtvHash([assetName, blockchainRid]);
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
 
@@ -110,7 +116,7 @@ describe("Asset", () => {
       name: assetName,
       id: assetId,
       decimals: 3,
-      brid,
+      blockchainRid,
       iconUrl,
     });
   });

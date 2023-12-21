@@ -28,9 +28,9 @@ function test_fails_if_insufficient_permissions() {
     .run_must_fail("The auth descriptor does not have the required permissions");
 }
 
-function test_it_decorates_messages_with_brid_and_nonce() {
+function test_it_decorates_messages_with_blockchain_rid_and_nonce() {
   val message = auth_ext.get_auth_message_template("test_empty_auth_message", null.to_gtv());
-  assert_true(message.contains("{brid}"));
+  assert_true(message.contains("{blockchain_rid}"));
   assert_true(message.contains("{nonce}"));
 }
 
@@ -379,7 +379,7 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
 function test_operation_without_auth_message_template_can_be_evm_authenticated() {
   val alice = utils.evm_register_alice();
 
-  var message = "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
+  var message = "Blockchain:\n{blockchain_rid}\n\nPlease sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
   message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
 
   val signature = evm_sign(utils.create_auth_message(message, alice), alice.keypair.priv);

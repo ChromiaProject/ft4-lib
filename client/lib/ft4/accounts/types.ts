@@ -33,7 +33,7 @@ export type RateLimitResponse = {
 
 export interface Account {
   id: Buffer;
-  brid: Buffer;
+  blockchainRid: Buffer;
   getBalances: (
     limit?: number,
     cursor?: OptionalPageCursor,

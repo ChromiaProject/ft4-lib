@@ -95,7 +95,7 @@ function _validate_evm_signature(
 
 function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
-    require(message_template.contains("{brid}"), "Message template has to include '{brid}'");
+    require(message_template.contains("{blockchain_rid}"), "Message template has to include '{blockchain_rid}'");
     var message = message_template;
     
     // TODO: check if this is still needed
@@ -107,7 +107,7 @@ function create_message_from_template(accounts.evm_auth_args, message_template: 
         .replace("{account_id}", evm_auth_args.account.id.to_hex())
         .replace("{auth_descriptor_id}", evm_auth_args.account_auth_descriptor.id.to_hex())
         .replace("{nonce}", ctr.to_text().replace("\"", ""))
-        .replace("{brid}", chain_context.blockchain_rid.to_hex());
+        .replace("{blockchain_rid}", chain_context.blockchain_rid.to_hex());
 }
 
 function _validate_evm_arguments(

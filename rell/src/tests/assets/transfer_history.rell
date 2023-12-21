@@ -170,7 +170,7 @@ function test_transfer_history_entry() {
                 name = entry.asset.name,
                 symbol = entry.asset.symbol,
                 decimals = entry.asset.decimals,
-                brid = entry.asset.issuing_brid,
+                blockchain_rid = entry.asset.issuing_blockchain_rid,
                 icon_url = entry.asset.icon_url,
                 supply = entry.asset.total_supply
             ),

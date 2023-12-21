@@ -163,7 +163,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       connection.query(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | undefined = undefined) =>
       connection.query(loginConfig(configName)),
-    getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
+    getBlockchainRid: () =>
+      Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
 }
 

@@ -113,7 +113,7 @@ export async function mint(
  * @param adminSignatureProvider a signature provider with the keypair stored
  * in chromia.yml under `lib.ft4.admin`
  * @param asset the asset to register
- * @param originBrid where this chain will get the asset from (might be different
+ * @param originBlockchainRid where this chain will get the asset from (might be different
  * from asset.issuingBrid)
  * @returns a TransactionReceipt object that allows to check the status of the
  * transaction and its RID
@@ -122,11 +122,11 @@ export async function registerCrosschainAsset(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
   asset: Asset,
-  originBrid: BufferId,
+  originBlockchainRid: BufferId,
 ): Promise<TransactionCompletion> {
   return {
     receipt: await chromiaClient.signAndSendUniqueTransaction(
-      ops.registerCrosschainAsset(asset, originBrid),
+      ops.registerCrosschainAsset(asset, originBlockchainRid),
       adminSignatureProvider,
     ),
   };
