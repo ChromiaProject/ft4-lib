@@ -17,3 +17,4 @@
 - Added a function `getAccountsPaginated()` to get all accounts
 - Added methods `getTransferDetails()` and `getTransferDetailsByAsset()` in `Connection`
 - Exported `RateLimit` type
+- Added `brid` to `Account` interface
