@@ -1,0 +1,31 @@
+module;
+
+import ^^.auth;
+import ^^.accounts;
+import ^^.prioritization.*;
+
+@extend(priority_check) function(tx_body: gtx_transaction_body, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
+    val tx_accounts = tx_body.operations @*
+        { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] }
+        (auth.fetch_account_and_auth_descriptor($.args)[0]);
+
+    if (tx_accounts.empty()) return no_account_priority_state(0.0);
+    val account = tx_accounts[0]; // Use first account if there are multiple
+
+    val rl_config = accounts.get_rate_limit_config_for_account(account);
+    if (rl_config.active == false) return no_account_priority_state(1.0);
+
+    val rl_state = accounts.rl_state @? { account };
+    if (rl_state == null) return no_account_priority_state(1.0);
+
+    val current_points = accounts.current_rate_limit_points(rl_config, rl_state, current_timestamp);
+
+    val priority = current_points.to_decimal() / rl_config.max_points;
+
+    return priority_state_v1(
+        account_id = account.id,
+        account_points = current_points,
+        tx_cost_points = tx_accounts.size(),
+        priority = priority
+    );
+}
