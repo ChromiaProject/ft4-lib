@@ -47,6 +47,17 @@ function authenticate(is_strict: boolean = true) {
     return account;
 }
 
+function _ft_auth(required_flags: list<text>, account: accounts.account, auth_descriptor: accounts.account_auth_descriptor) {
+    accounts.rate_limit(account);
+
+    require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+
+    _validate_ft4_signature(required_flags, account, auth_descriptor);
+
+    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    accounts.delete_expired_auth_descriptors(account);
+}
+
 function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.account, accounts.account_auth_descriptor) {
     val account_id = byte_array.from_gtv(auth_args[0]);
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
