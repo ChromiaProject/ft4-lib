@@ -25,7 +25,7 @@ function init_transfer_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.add_auth_handler(
+function () = auth.add_overridable_auth_handler(
     scope = rell.meta(init_transfer).mount_name,
     flags = ["T"],
     message = init_transfer_message(*)
