@@ -1,6 +1,8 @@
 import { QueryObject } from "postchain-client";
 import { BufferId } from "@ft4/utils/types";
 import { formatter } from "postchain-client";
+import { OptionalPageCursor } from "@ft4/types";
+import { TransferHistoryEntryResponse } from "@ft4/accounts/index";
 
 export type RawTransferDetail = {
   account_id: Buffer;
@@ -43,6 +45,31 @@ export function transferDetailsByAsset(
       tx_rid: formatter.ensureBuffer(txRid),
       op_index: opIndex,
       asset_id: formatter.ensureBuffer(assetId),
+    },
+  };
+}
+
+export function transferHistoryFromHeight(
+  height: number,
+  assetId: BufferId | null,
+  limit: number,
+  cursor: OptionalPageCursor = null,
+): QueryObject<
+  TransferHistoryEntryResponse[],
+  {
+    height: number;
+    asset_id: Buffer | null;
+    page_size: number;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.get_transfer_history_from_height",
+    args: {
+      height: height,
+      asset_id: assetId ? formatter.ensureBuffer(assetId) : null,
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

@@ -16,4 +16,5 @@
 - Upgrade postchain-client to 1.9.0
 - Added a function `getAccountsPaginated()` to get all accounts
 - Added methods `getTransferDetails()` and `getTransferDetailsByAsset()` in `Connection`
+- Added function `getTransferHistoryFromHeight`
 - Exported `RateLimit` type
