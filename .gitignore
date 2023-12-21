@@ -44,6 +44,3 @@ coverage
 # Cypress
 cypress/screenshots
 cypress/videos
-
-# Examples
-examples/demo/rell/.admin_keypair
