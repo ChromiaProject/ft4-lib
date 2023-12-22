@@ -339,11 +339,11 @@ describe("Transfer history", () => {
     const transferHistory = await getTransferHistoryFromHeight(
       connection,
       0,
-      asset.id,
+      asset2.id,
       10,
       null,
     );
 
-    expect(transferHistory.data.length).toEqual(5);
+    expect(transferHistory.data.length).toEqual(3);
   });
 });
