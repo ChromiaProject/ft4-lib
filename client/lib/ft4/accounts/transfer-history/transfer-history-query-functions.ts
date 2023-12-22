@@ -7,9 +7,9 @@ import {
 import { Queryable } from "postchain-client";
 import { transferHistoryFromHeight } from "@ft4/accounts/transfer-history/transfer-history-queries";
 import { OptionalPageCursor } from "@ft4/types";
-import { retrievePaginatedEntity } from "@ft4/utils/index";
-import { TransferHistoryEntry } from "@ft4/accounts/index";
-import { TransferHistoryEntryResponse } from "@ft4/accounts/index";
+import { retrievePaginatedEntity } from "@ft4/utils";
+import { TransferHistoryEntry } from "@ft4/accounts";
+import { TransferHistoryEntryResponse } from "@ft4/accounts";
 import { createTransferHistoryEntryFromResponse } from "@ft4/accounts/transfer-history/transfer-history-entry";
 
 export type TransferDetail = {

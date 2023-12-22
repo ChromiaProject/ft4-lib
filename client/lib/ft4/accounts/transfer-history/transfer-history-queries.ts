@@ -2,7 +2,7 @@ import { QueryObject } from "postchain-client";
 import { BufferId } from "@ft4/utils/types";
 import { formatter } from "postchain-client";
 import { OptionalPageCursor } from "@ft4/types";
-import { TransferHistoryEntryResponse } from "@ft4/accounts/index";
+import { TransferHistoryEntryResponse } from "@ft4/accounts";
 
 export type RawTransferDetail = {
   account_id: Buffer;
