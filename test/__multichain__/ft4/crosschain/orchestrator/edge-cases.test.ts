@@ -1,11 +1,11 @@
-import { createOrchestrator } from "/ft4/crosschain/orchestrator";
+import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { Amount } from "/ft4/asset/interfaces";
-import { Asset } from "/ft4/asset/types";
-import { createAmount, registerCrosschainAsset } from "/ft4";
-import adminUser from "/util/admin_user";
-import { getNewAsset } from "/util/blockchain-util";
-import { InitTransferError } from "/ft4/crosschain/errors";
+import { Amount } from "@ft4/asset/interfaces";
+import { Asset } from "@ft4/asset/types";
+import { createAmount, registerCrosschainAsset } from "@ft4/index";
+import adminUser from "../../../../util/admin_user";
+import { getNewAsset } from "../../../../util/blockchain-util";
+import { InitTransferError } from "@ft4/crosschain/errors";
 
 describe("Edge Cases", () => {
   const mintAmount = createAmount(100, 0);
@@ -34,7 +34,7 @@ describe("Edge Cases", () => {
       name: "Invalid Asset",
       symbol: "IA",
       decimals: 0,
-      brid: Buffer.from("invalid-brid"),
+      blockchainRid: Buffer.from("invalid-blockchain-rid"),
       supply: BigInt(0),
       iconUrl: "",
       ...overrides,

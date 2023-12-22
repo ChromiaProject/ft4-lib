@@ -2,25 +2,22 @@ import { Operation, RawGtx } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
-} from "/util/blockchain-util";
+} from "../../../util/blockchain-util";
 import {
   FlagsType,
   createAmount,
   createConnection,
   registerCrosschainAsset,
-} from "/ft4";
-import adminUser from "/util/admin_user";
-import AccountBuilder from "/util/account-builder";
+} from "@ft4/index";
+import adminUser from "../../../util/admin_user";
+import AccountBuilder from "../../../util/account-builder";
 import {
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
-} from "/ft4/crosschain/operations";
-import {
-  OnAnchoredHandler,
-  transactionBuilder,
-} from "/ft4/utils/transaction-builder";
+} from "@ft4/crosschain/operations";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "/ft4/cryptoUtils";
+import { BufferId } from "@ft4/utils/types";
 
 jest.unmock("postchain-client");
 
@@ -62,17 +59,20 @@ describe("Crosschain transfer", () => {
         [multichain01.rid],
       );
 
-      const onAnchoringHandler: OnAnchoredHandler = async (
+      const onAnchoringHandler = async (
         data: {
           operation: Operation;
           opIndex: number;
           tx: RawGtx;
-          createProof: (brid: BufferId) => Promise<Operation>;
+          createProof: (blockchainRid: BufferId) => Promise<Operation>;
         } | null,
         error: Error | null,
       ) => {
         if (error) {
           throw error;
+        }
+        if (!data) {
+          throw new Error("No data provided");
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
 
@@ -90,7 +90,7 @@ describe("Crosschain transfer", () => {
     });
 
     expect(
-      (await account01.getBalanceByAssetId(asset00.id)).amount.value,
+      (await account01.getBalanceByAssetId(asset00.id))?.amount.value,
     ).toEqual(createAmount(100, asset00.decimals).value);
   });
 });

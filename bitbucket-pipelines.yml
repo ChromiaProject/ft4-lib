@@ -1,34 +1,83 @@
 image: node:18
 
+options:
+  max-time: 15
+
+
+e2e-tests: &e2e-tests-anchor
+    max-time: 15
+    name: E2E Tests
+    image: cypress/browsers:node18.12.0-chrome107
+    size: 2x
+    caches:
+      - node
+      - demo-node
+      - cypress
+    script:
+      - apt update
+      - apt install -y gnupg software-properties-common
+
+      - wget -O - https://apt.corretto.aws/corretto.key | gpg --dearmor -o /usr/share/keyrings/corretto-keyring.gpg
+      - echo "deb [signed-by=/usr/share/keyrings/corretto-keyring.gpg] https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/corretto.list
+
+      - wget -q -O - https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg
+      - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
+
+      - apt update
+
+      - apt install -y lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk chr
+      - java -version
+
+      - export DISPLAY=:0.0
+      - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
+      - fluxbox &
+      - npm ci
+      - npm run test:e2e
+    artifacts:
+      - logs/**
+      - cypress/screenshots/**
+      - cypress/videos/**
+    services:
+      - docker
+
 pipelines:
   pull-requests:
     '**':
       - step:
           size: 2x
-          name: Test
+          name: Unit & Integration Tests
           caches:
             - node
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
-            - apt install default-jre -y
-            - apt install chr
-            - chr install -s configs/jest-test.yml
+            - apt install -y netcat-openbsd chr default-jre
+            - chr install -s configs/rell-test.yml
+            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
             - npm ci
-            - npm run test:pipeline
-
+            - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
+            - export TESTCONTAINERS_RYUK_DISABLED=true
+            - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit
+          artifacts:
+            - logs/**
           services:
             - postgres
+            - docker
+      - step:
+          <<: *e2e-tests-anchor
+          trigger: manual
   branches:
     ft4:
       - step:
           name: deploy:latest
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install default-jre -y
             - apt install chr
@@ -37,14 +86,16 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
+    development:
+      - step: *e2e-tests-anchor
   custom:
     deploy-to-stable:
       - step:
           name: deploy:stable
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install default-jre -y
             - apt install chr
@@ -58,8 +109,8 @@ pipelines:
           name: deploy:latest
           script:
             - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg | tee /usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" | tee /etc/apt/sources.list.d/chromia.list
+            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
+            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
             - apt update
             - apt install default-jre -y
             - apt install chr
@@ -68,8 +119,11 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
-
-definitions: 
+definitions:
+  caches:
+    node: node_modules
+    demo-node: examples/demo/client/node_modules
+    cypress: $BITBUCKET_CLONE_DIR/.cache/Cypress
   services: 
     postgres: 
       image: postgres 

@@ -1,16 +1,15 @@
-import { BufferId } from "../../cryptoUtils";
-import { AuthDataService, KeyHandler, KeyStore } from "../types";
-import { AuthDescriptor } from "../../accounts/auth-descriptor/types";
+import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { formatter, Operation } from "postchain-client";
-import { TxContext, TxBuilderTransaction } from "../../utils/types";
+import { AuthDataService, KeyHandler } from "../types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
   accountId.toString("hex") + authDescriptorId.toString("hex");
 
 export function createEvmKeyHandler(
-  authDescriptor: AuthDescriptor,
+  authDescriptor: AnyAuthDescriptor,
   keyStore: EvmKeyStore,
 ): KeyHandler {
   return Object.freeze({
@@ -32,8 +31,9 @@ export function createEvmKeyHandler(
         context,
         keyStore,
       ),
-    sign: (transaction: TxBuilderTransaction) => sign(transaction, keyStore),
-    getSigners: () => null,
+    sign: (_transaction: TxBuilderTransaction) =>
+      Promise.reject("Cannot sign the transaction with an EVM key store"),
+    getSigners: () => [],
   });
 }
 
@@ -45,9 +45,8 @@ async function authorize(
   context: TxContext,
   keyStore: EvmKeyStore,
 ): Promise<Operation[]> {
-  const messageTemplate = await authDataService.getAuthMessageTemplate(
-    operation,
-  );
+  const messageTemplate =
+    await authDataService.getAuthMessageTemplate(operation);
   const nonce = await getNonce(
     authDataService,
     accountId,
@@ -55,26 +54,19 @@ async function authorize(
     context,
   );
 
-  const brid = authDataService.getBrid();
+  const blockchainRid = authDataService.getBlockchainRid();
   const message = messageTemplate
     .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
       "{auth_descriptor_id}",
       formatter.ensureBuffer(authDescriptorId).toString("hex"),
     )
-    .replace("{brid}", brid.toString("hex"))
+    .replace("{blockchain_rid}", blockchainRid.toString("hex"))
     .replace("{nonce}", `${nonce}`);
 
   const signature = await keyStore.signMessage(message);
   return [evmAuth(accountId, authDescriptorId, [signature]), operation];
 }
-
-/* eslint-disable */
-async function sign(
-  transaction: TxBuilderTransaction,
-  keyStore: KeyStore,
-): Promise<void> {}
-/* eslint-enable */
 
 async function getNonce(
   authDataService: AuthDataService,

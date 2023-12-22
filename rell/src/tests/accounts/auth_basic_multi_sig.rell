@@ -138,42 +138,42 @@ function good_ad_3_of_3() = create_auth_descriptor_M_3_pub(
 /*
  * This valid Auth Desc has only one pub key despite being "M".
  */
-function create_auth_descriptor_M_1_pub(pubkey): acc.auth_descriptor {
+function create_auth_descriptor_M_1_pub(byte_array): acc.auth_descriptor {
     val number_of_sigs = 1;
     return acc.auth_descriptor(
         acc.auth_type.M,
         [
             ["T"].to_gtv(),
             number_of_sigs.to_gtv(), 
-            [ pubkey.to_hex().to_gtv() ].to_gtv()
+            [ byte_array.to_hex().to_gtv() ].to_gtv()
         ],
         rules = null.to_gtv());
 }
 
 /*
- * A normal Auth Desc with 2 participants.
+ * A normal Auth Desc with 2 signers.
  */
-function create_auth_descriptor_M_2_pub(pubkey1: pubkey, pubkey2: pubkey, required_signs: integer): acc.auth_descriptor {
+function create_auth_descriptor_M_2_pub(signer1: byte_array, signer2: byte_array, required_signs: integer): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.M,
         [
             ["T"].to_gtv(),
             required_signs.to_gtv(), 
-            [ pubkey1.to_hex().to_gtv(), pubkey2.to_hex().to_gtv()].to_gtv()
+            [ signer1.to_hex().to_gtv(), signer2.to_hex().to_gtv()].to_gtv()
         ],
         rules = null.to_gtv());
 }
 
 /*
- * A normal Auth Desc with 3 participants.
+ * A normal Auth Desc with 3 signers.
  */
-function create_auth_descriptor_M_3_pub(pubkey1: pubkey, pubkey2: pubkey, pubkey3: pubkey, required_signs: integer): acc.auth_descriptor {
+function create_auth_descriptor_M_3_pub(signer1: byte_array, signer2: byte_array, signer3: byte_array, required_signs: integer): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.M,
         [
             ["T"].to_gtv(),
             required_signs.to_gtv(), 
-            [ pubkey1.to_hex().to_gtv(), pubkey2.to_hex().to_gtv(), pubkey3.to_hex().to_gtv()].to_gtv()
+            [ signer1.to_hex().to_gtv(), signer2.to_hex().to_gtv(), signer3.to_hex().to_gtv()].to_gtv()
         ],
         rules = null.to_gtv());
 }

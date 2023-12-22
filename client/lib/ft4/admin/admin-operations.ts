@@ -1,14 +1,18 @@
-import { op } from "../utils";
 import { Operation, formatter } from "postchain-client";
-import { authDescriptor as authDesc } from "../accounts/auth-descriptor";
-import { AuthDescriptor } from "../accounts/auth-descriptor/types";
-import { BufferId } from "../cryptoUtils";
+import { gtv } from "../accounts/auth-descriptor";
 import { Amount } from "../asset/interfaces";
 import { Asset } from "../asset/types";
+import { op } from "@ft4/utils/index";
+import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId } from "@ft4/utils/types";
 
-export function registerAccount(authDescriptor: AuthDescriptor): Operation {
-  const ad = authDesc.toGtv(authDescriptor);
-  return op("ft4.admin.register_account", [ad[1], ad[2], ad[3]]);
+export function registerAccount(
+  authDescriptor: AnyAuthDescriptorRegistration,
+): Operation {
+  return op(
+    "ft4.admin.register_account",
+    gtv.authDescriptorRegistrationToGtv(authDescriptor),
+  );
 }
 
 export function addRateLimitPoints(
@@ -46,15 +50,15 @@ export function mint(
 
 export function registerCrosschainAsset(
   asset: Asset,
-  originBrid: BufferId,
+  originBlockchainRid: BufferId,
 ): Operation {
   return op(
     "ft4.admin.register_crosschain_asset",
     asset.name,
     asset.symbol,
     asset.decimals,
-    asset.brid,
+    asset.blockchainRid,
     asset.iconUrl,
-    formatter.ensureBuffer(originBrid),
+    formatter.ensureBuffer(originBlockchainRid),
   );
 }

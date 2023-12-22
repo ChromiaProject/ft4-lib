@@ -22,14 +22,14 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
           .id == auth_descriptor_id,
           .account == account
     };
-    val participants = acc.get_participants(acc_auth_desc.auth_type, acc_auth_desc.args);
+    val signers = acc.get_signers(acc_auth_desc.auth_type, acc_auth_desc.args);
 
     val result = acc.check_auth_args(
        		acc_auth_desc.auth_type,
        		acc_auth_desc.args,
-            participants,
+            signers,
        		required_flags
-	);
+	  );
 
     if (result.valid) {
         test_error.msg = "valid";
@@ -44,7 +44,7 @@ function test_authenticated_operation_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "test_authenticated_operation",
+    scope = rell.meta(test_authenticated_operation).mount_name,
     flags = ["A"],
     message = test_authenticated_operation_message(*)
 );
@@ -58,7 +58,7 @@ function empty_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "test_empty_auth_message",
+    scope = rell.meta(test_empty_auth_message).mount_name,
     flags = ["A"],
     message = empty_message(*)
 );
@@ -77,7 +77,7 @@ function test_perform_large_transfer_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "test_perform_large_transfer",
+    scope = rell.meta(test_perform_large_transfer).mount_name,
     flags = ["A"],
     message = test_perform_large_transfer_message(*)
 );

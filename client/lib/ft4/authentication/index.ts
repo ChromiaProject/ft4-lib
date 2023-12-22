@@ -1,15 +1,13 @@
-import { Operation, formatter } from "postchain-client";
-import { BufferId } from "../cryptoUtils";
-import {
-  AuthDataService,
-  Authenticator,
-  AuthenticatorSession,
-  KeyHandler,
-  KeyStore,
-} from "./types";
-import { TxContext, TxBuilderTransaction } from "../utils/types";
 import { Buffer } from "buffer";
-import { AuthDescriptor, AuthType } from "../accounts";
+import { Operation, formatter } from "postchain-client";
+import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+import {
+  AnyAuthDescriptorRegistration,
+  AuthDescriptor,
+  AuthType,
+  SingleSig,
+} from "@ft4/accounts";
 
 export * from "./evm";
 export * from "./ft";
@@ -25,52 +23,48 @@ export function createAuthenticator(
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService,
 ): Authenticator {
-  const authenticator = Object.freeze({
+  return Object.freeze({
     accountId: formatter.ensureBuffer(accountId),
     authDataService,
     keyHandlers,
-    createSession: () =>
-      createAuthenticatorSession(authenticator, authDataService),
     getKeyHandlerForOperation: (operation: Operation) =>
       getKeyHandlerForOperation(authDataService, keyHandlers, operation),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
   });
-
-  return authenticator;
 }
 
 export function createNoopAuthenticator(
   authDataService: AuthDataService,
 ): Authenticator {
-  const authenticator = Object.freeze({
+  return Object.freeze({
     accountId: Buffer.alloc(32),
     keyHandlers: [noopKeyHandler],
     authDataService,
-    createSession: () =>
-      createAuthenticatorSession(authenticator, authDataService),
     getKeyHandlerForOperation: (_operation: Operation) =>
       Promise.resolve(noopKeyHandler),
     getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
   });
-
-  return authenticator;
 }
 
 const nullKeyStore: KeyStore = Object.freeze({
   id: Buffer.alloc(32),
   isInteractive: false,
-  createKeyHandler: (_authDescriptor: AuthDescriptor) => noopKeyHandler,
+  sign: (tx: Buffer) => Promise.resolve(tx),
+  createKeyHandler: (
+    _authDescriptor: AnyAuthDescriptorRegistration | undefined,
+  ) => noopKeyHandler,
 });
 
-const nullAuthDescriptor: AuthDescriptor = Object.freeze({
-  id: Buffer.alloc(0),
-  authType: AuthType.single_sig,
-  flags: new Set<string>(),
-  signaturesRequired: 0,
-  signers: [],
-  rule: null,
-  created: 0,
+const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
+  id: Buffer.from(""),
+  authType: AuthType.SingleSig,
+  args: {
+    flags: [] as string[],
+    signer: Buffer.alloc(32, 0),
+  },
+  rules: null,
+  created: new Date(0),
 });
 
 const noopKeyHandler: KeyHandler = Object.freeze({
@@ -83,7 +77,8 @@ const noopKeyHandler: KeyHandler = Object.freeze({
     _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
-  sign: () => Promise.resolve(),
+  sign: (_transaction: TxBuilderTransaction) =>
+    Promise.resolve(Buffer.alloc(64)),
   getSigners: (): Buffer[] => [],
 });
 
@@ -118,49 +113,4 @@ async function getKeyHandlerForOperation(
   }
 
   return null;
-}
-
-function createAuthenticatorSession(
-  authenticator: Authenticator,
-  authDataService: AuthDataService,
-): AuthenticatorSession {
-  const usedKeyHandlers = new Set<KeyHandler>();
-
-  return Object.freeze({
-    authenticator,
-    getUsedKeyHandlers: () => new Set(usedKeyHandlers),
-    getSigners: () => {
-      let signers = new Set<Buffer>();
-      usedKeyHandlers.forEach(
-        (keyHandler) =>
-          (signers = new Set([
-            ...keyHandler.authDescriptor.signers,
-            ...signers,
-          ])),
-      );
-      return signers;
-    },
-    authorize: async (operation: Operation) => {
-      const keyHandler = await authenticator.getKeyHandlerForOperation(
-        operation,
-      );
-      if (!keyHandler) {
-        throw new Error(`Cannot authenticate operation: ${operation.name}`);
-      }
-      usedKeyHandlers.add(keyHandler);
-      return await keyHandler.authorize(
-        authenticator.accountId,
-        operation,
-        {},
-        authDataService,
-      );
-    },
-    sign: async (transaction: TxBuilderTransaction) => {
-      await Promise.all(
-        Array.from(usedKeyHandlers).map((keyHandler) =>
-          keyHandler.sign(transaction),
-        ),
-      );
-    },
-  });
 }

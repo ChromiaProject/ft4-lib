@@ -1,50 +1,58 @@
-import { SignatureProvider, KeyPair } from "postchain-client";
-import { Balance } from "../asset/types";
-import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId } from "../cryptoUtils";
-import {
-  TransferHistoryFilter,
-  TransferHistoryResponse,
-  TransferHistoryEntry,
-} from "./transfer-history/types";
-import { Authenticator } from "../authentication/types";
+import { Buffer } from "buffer";
+import { KeyPair, SignatureProvider } from "postchain-client";
 import { Amount } from "../asset/interfaces";
+import { Balance } from "../asset/types";
+import { Authenticator } from "../authentication/types";
 import { OptionalPageCursor } from "../types";
 import {
+  BufferId,
   PaginatedEntity,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "../utils/types";
-import { Buffer } from "buffer";
+} from "@ft4/utils/types";
+import {
+  TransferHistoryEntry,
+  TransferHistoryFilter,
+} from "./transfer-history/types";
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+} from "@ft4/accounts/auth-descriptor/types";
 import { PendingTransfer } from "../crosschain/types";
 
 export type RateLimit = {
   points: number;
-  lastUpdate: number;
+  lastUpdate: Date;
   getAvailablePoints: () => number | null;
+};
+
+export type RateLimitResponse = {
+  points: number;
+  lastUpdate: number;
 };
 
 export interface Account {
   id: Buffer;
+  blockchainRid: Buffer;
   getBalances: (
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Balance>>;
-  getBalanceByAssetId: (assetId: BufferId) => Promise<Balance>;
+  getBalanceByAssetId: (assetId: BufferId) => Promise<Balance | null>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: (
     limit?: number,
     cursor?: OptionalPageCursor,
-  ) => Promise<PaginatedEntity<AuthDescriptor>>;
-  getAuthDescriptorsByParticipantId: (
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  getAuthDescriptorsBySigner: (
     partiticipantId: BufferId,
-  ) => Promise<AuthDescriptor[]>;
+  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
     limit?: number,
     filter?: TransferHistoryFilter,
     cursor?: OptionalPageCursor,
-  ) => Promise<TransferHistoryResponse>;
+  ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
   getTransferHistoryEntry: (
     rowid: number,
   ) => Promise<TransferHistoryEntry | null>;
@@ -56,7 +64,7 @@ export interface Account {
 export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
-    authDescriptor: AuthDescriptor,
+    authDescriptor: AnyAuthDescriptorRegistration,
     newSigner: SignatureProvider | KeyPair,
   ) => Promise<TransactionSessionCompletion>;
   deleteAuthDescriptor: (

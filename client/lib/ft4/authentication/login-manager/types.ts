@@ -1,5 +1,5 @@
-import { BufferId } from "../../cryptoUtils";
-import { Session } from "../../types";
+import { Session } from "@ft4/types";
+import { BufferId } from "@ft4/utils/types";
 
 export type LoginConfig = {
   flags: string[];

@@ -11,8 +11,8 @@ import { Amount } from "../asset/interfaces";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Session } from "../types";
-import { getTransactionRid, nop } from "../utils";
-import { transactionBuilder } from "../utils/transaction-builder";
+import { getTransactionRid, nop } from "@ft4/utils/index";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { Listener, EventEmitter } from "../events";
 import {
   ApplyTransferError,
@@ -27,18 +27,22 @@ import {
   completeTransfer as completeTransferOp,
   initTransfer as initTransferOp,
 } from "./operations";
-import { createConnectionToBrid, findPathToChainForAsset } from "./pathfinder";
+import {
+  createConnectionToBlockchainRid,
+  findPathToChainForAsset,
+} from "./pathfinder";
 import { isTransferApplied } from "./queries";
 import {
   ExternalOrchestratorBase,
   Orchestrator,
   OrchestratorBase,
   OrchestratorEvents,
+  OrchestratorState,
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { BufferId } from "../cryptoUtils";
-import { OnAnchoredHandlerData } from "../utils/transaction-builder/types";
+import { OnAnchoredHandlerData } from "@ft4/utils/transaction-builder/types";
+import { BufferId } from "@ft4/utils/types";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -162,7 +166,7 @@ export async function createResumeOrchestrator(
     state.initialTx = pendingTransfer.tx;
     for (let i = 0; i < state.path.length; i++) {
       if (
-        await isAppliedOnBrid(
+        await isAppliedOnBlockchainRid(
           formatter.ensureBuffer(state.path[i]),
           getTransactionRid(state.tx),
           pendingTransfer.opIndex,
@@ -192,22 +196,22 @@ export async function createResumeOrchestrator(
 
   /**
    * Checks to see wether the specified transfer is already applied to
-   * this brid.
-   * @param targetChainBrid the brid of the chain to check
-   * @param txBrid the brid of the transaction containing the transfer
+   * this blockchainRid.
+   * @param targetChainRid the blockchain rid of the chain to check
+   * @param txBlockchainRid the blockchain rid of the transaction containing the transfer
    * @param opIndex the index of the transfer in the transaction
    * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
    */
-  async function isAppliedOnBrid(
-    targetChainBrid: Buffer,
-    txBrid: Buffer,
+  async function isAppliedOnBlockchainRid(
+    targetChainRid: Buffer,
+    txBlockchainRid: Buffer,
     opIndex: number,
   ): Promise<boolean> {
-    const connection = await createConnectionToBrid(
+    const connection = await createConnectionToBlockchainRid(
       session.client,
-      targetChainBrid,
+      targetChainRid,
     );
-    return connection.query(isTransferApplied(txBrid, opIndex));
+    return connection.query(isTransferApplied(txBlockchainRid, opIndex));
   }
 
   return Object.freeze({
@@ -220,7 +224,7 @@ async function createBaseOrcestrator(
   session: Session,
   path: Buffer[],
 ): Promise<OrchestratorBase> {
-  const state = {
+  const state: OrchestratorState = {
     currentHopIndex: 0,
     path,
     tx: undefined,
@@ -228,7 +232,7 @@ async function createBaseOrcestrator(
   };
 
   const directoryClient = await createClient({
-    directoryNodeUrlPool: session.client.config.endpointPool.slice(),
+    nodeUrlPool: session.client.config.endpointPool.slice(),
     blockchainIid: 0,
   });
 
@@ -236,25 +240,25 @@ async function createBaseOrcestrator(
   const localEmitter = new EventEmitter<OrchestratorEvents>();
 
   /**
-   * Apply the transfer operation targeting a specific bridge.
+   * Apply the transfer operation targeting a specific blockchain.
    * @param {RawGtx} initTransferTx - The tx that was used to initialize the transfer
-   * @param {Buffer} targetChainBrid - The ID of the target bridge.
+   * @param {Buffer} targetChainRid - The ID of the target blockchain.
    * @returns {Promise<void>}
    */
   async function applyTransfer(
     initTransferTx: RawGtx,
-    targetChainBrid: Buffer,
+    targetChainRid: Buffer,
   ): Promise<void> {
     if (!state.tx) {
       throw new OrchestratorError(
         "Unable to apply transfer for non existing transaction",
       );
     }
-    const tb = await getTransactionBuilderForChain(session, targetChainBrid);
+    const tb = await getTransactionBuilderForChain(session, targetChainRid);
 
     const iccfOp = await createIccfProofOperation(
-      targetChainBrid,
-      path.indexOf(targetChainBrid),
+      targetChainRid,
+      path.indexOf(targetChainRid),
     );
 
     return new Promise<void>((resolve, reject) => {
@@ -263,7 +267,7 @@ async function createBaseOrcestrator(
           applyTransferOp(
             initTransferTx,
             state.tx!,
-            path.indexOf(targetChainBrid),
+            path.indexOf(targetChainRid),
           ),
           (data: OnAnchoredHandlerData | null, error: Error | null) => {
             if (error) {
@@ -290,39 +294,50 @@ async function createBaseOrcestrator(
           ),
         );
     }).then(() => {
-      localEmitter.emit("TransferHop", targetChainBrid);
+      localEmitter.emit("TransferHop", targetChainRid);
     });
   }
 
   async function walkPath() {
+    if (!state.initialTx) {
+      throw new OrchestratorError(
+        "Unable to perform transfer as no initial tx supplied",
+      );
+    }
     for (
       let hopIndex = state.currentHopIndex;
       hopIndex < path.length;
       hopIndex++
     ) {
-      const nextBrid = path[hopIndex];
-      await applyTransfer(state.initialTx, nextBrid);
+      const nextBlockchainRid = path[hopIndex];
+      await applyTransfer(state.initialTx, nextBlockchainRid);
 
       state.currentHopIndex++;
     }
   }
 
-  async function getTransactionBuilderForChain(session: Session, brid: Buffer) {
-    const connection = await createConnectionToBrid(session.client, brid);
+  async function getTransactionBuilderForChain(
+    session: Session,
+    blockchainRid: Buffer,
+  ) {
+    const connection = await createConnectionToBlockchainRid(
+      session.client,
+      blockchainRid,
+    );
     const authDataService = createAuthDataService(connection);
     const noopAuthenticator = createNoopAuthenticator(authDataService);
     return transactionBuilder(noopAuthenticator, connection.client);
   }
 
   /**
-   * Create ICCF proof for a specific bridge.
+   * Create ICCF proof for a specific blockchain.
    *
-   * @param {Buffer} targetChainBrid - The ID of the target bridge.
+   * @param {Buffer} targetChainRid - The ID of the target blockchain.
    * @param {number} hopIndex - the hop index of the path where the transaction is anchored
    * @returns {Promise<Operation>} The ICCF proof operation.
    */
   async function createIccfProofOperation(
-    targetChainBrid: Buffer,
+    targetChainRid: Buffer,
     hopIndex: number,
   ): Promise<Operation> {
     if (!state.tx) {
@@ -340,7 +355,7 @@ async function createBaseOrcestrator(
       gtv.gtvHash(state.tx),
       state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
-      targetChainBrid.toString("hex"),
+      targetChainRid.toString("hex"),
     );
 
     return proofTx.iccfTx.operations[0];
@@ -369,17 +384,17 @@ async function createBaseOrcestrator(
   }
 
   async function completeTransfer(tx: RawGtx, transfer?: PendingTransfer) {
-    const targetChainBrid = path.slice(-1)[0];
+    const targetChainRid = path.slice(-1)[0];
     const tb = await getTransactionBuilderForChain(
       session,
       Buffer.from(session.client.config.blockchainRid, "hex"),
     );
 
-    const iccfOp = await createIccfProofOperation(targetChainBrid, path.length);
+    const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
 
     await new Promise<void>((resolve) => {
       tb.add(iccfOp)
-        .add(completeTransferOp(tx, transfer?.opIndex || 1), () => {
+        .add(completeTransferOp(tx, transfer?.opIndex ?? 1), () => {
           resolve();
         })
         .add(nop())

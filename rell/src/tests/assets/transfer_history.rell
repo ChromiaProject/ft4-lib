@@ -4,6 +4,7 @@ module;
 import ^^^.main.*;
 import ^^.extensions.*;
 import ^^^.lib.ft4.assets;
+import assets_ext: ^^^.lib.ft4.assets.external;
 import ^^^.lib.ft4.ft4_basic_dev.*;
 import acc: ^^^.lib.ft4.accounts;
 import test_utils: ^.utils;
@@ -169,15 +170,13 @@ function test_transfer_history_entry() {
                 name = entry.asset.name,
                 symbol = entry.asset.symbol,
                 decimals = entry.asset.decimals,
-                brid = entry.asset.issuing_brid,
+                blockchain_rid = entry.asset.issuing_blockchain_rid,
                 icon_url = entry.asset.icon_url,
                 supply = entry.asset.total_supply
             ),
             is_input = entry.is_input,
             timestamp = entry.transaction.block.timestamp,
             block_height = entry.transaction.block.block_height,
-            entry_index = entry.entry_index,
-            transfer_args = entry.transfer_args,
             tx_rid = entry.transaction.tx_rid,
             tx_data = entry.transaction.tx_data,
             operation_name = "ft4.admin.mint"
@@ -206,4 +205,71 @@ function test_transfer_history_operation_name() {
     assert_equals(
         ft4.assets_ext.get_transfer_history_entry(entries[1].rowid)!!.operation_name, "ft4.transfer"
     );
+}
+
+function test_transfer_details() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 5);
+    test_utils.mint(alice.account, asset, 1);
+
+    val asset2 = test_utils.create_asset("test2", "t2", 5);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
+    val tx_rid = transaction @ { last_block } (.tx_rid);
+
+    val expected = [
+        assets.transfer_detail(
+            account_id = alice.account.id,
+            asset_id = asset.id,
+            delta = 1L,
+            is_input = true
+        ),
+        assets.transfer_detail(
+            account_id = bob.account.id,
+            asset_id = asset.id,
+            delta = 1L,
+            is_input = false
+        )
+    ];
+
+    assert_equals(ft4.assets_ext.get_transfer_details(tx_rid, 1), expected);
+    assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset.id), expected);
+    assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset2.id), list<assets.transfer_detail>());
+}
+
+function test_history_by_asset() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 5);
+    test_utils.mint(alice.account, asset, 1);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val start_cursor = utils.encode_cursor(utils.page_cursor());
+    val response = ft4.assets_ext.get_transfer_history_from_height(5, asset.id, 10, start_cursor);
+    val expected_data = assets.extract_data_from_transfer_history_list(
+            assets.transfer_history_entry @* {
+                asset
+            } (@sort_desc @omit .rowid, $) limit 2
+        ) @* {} (.data);
+    val expected = utils.paged_result(
+        next_cursor = null,
+        data = expected_data
+    );
+
+    assert_equals(response.data.size(), 2);
+    assert_equals(response, expected);
 }

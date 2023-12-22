@@ -1,50 +1,53 @@
-import { Account } from "./accounts/types";
-import { Connection, Session, OptionalPageCursor } from "./types";
-import { getConfig, getVersion, nop } from "./utils";
-import { BufferId } from "./cryptoUtils";
+import { Buffer } from "buffer";
 import {
-  getByParticipantId,
-  getById,
+  DictPair,
+  IClient,
+  Operation,
+  QueryCallback,
+  QueryObject,
+  RawGtv,
+  TransactionReceipt,
+} from "postchain-client";
+import { createAuthenticatedAccount } from "./accounts/account-op-functions";
+import {
   createAccountObject,
   getByAuthDescriptorId,
+  getById,
+  getBySigner,
 } from "./accounts/account-query-functions";
 import {
+  getAllAssets,
   getAssetById,
   getAssetBySymbol,
-  getAllAssets,
   getAssetsByName,
 } from "./asset/asset-query-functions";
-import { createAuthenticatedAccount } from "./accounts/account-op-functions";
-import { transactionBuilder } from "./utils/transaction-builder";
 import {
   AuthDataService,
   Authenticator,
   KeyStore,
-} from "./authentication/types";
-import { createAuthenticator } from "./authentication";
+  createAuthenticator,
+} from "./authentication";
+import { createLoginManager } from "./authentication/login-manager";
+import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import {
   authFlags,
   authMessageTemplate,
   loginConfig,
   nonce,
 } from "./authentication/queries";
-import {
-  LoginManger,
-  createLoginManager,
-} from "./authentication/login-manager";
-import {
-  IClient,
-  QueryObject,
-  RawGtv,
-  Operation,
-  TransactionReceipt,
-  QueryCallback,
-  DictPair,
-} from "postchain-client";
-import { Buffer } from "buffer";
-import { LoginKeyStore } from "./authentication/login-manager/stores/types";
-import { fetchExposedOperations } from "./utils/exposed-operations";
 import { ftEventEmitter } from "./events";
+import {
+  Connection,
+  KeyStoreInteractor,
+  OptionalPageCursor,
+  Session,
+} from "./types";
+import { getConfig, getVersion, nop } from "./utils";
+import { fetchExposedOperations } from "./utils/exposed-operations";
+import { transactionBuilder } from "./utils/transaction-builder";
+import { BufferId } from "./utils/types";
+import { getTransferDetails } from "./accounts/transfer-history/transfer-history-query-functions";
+import { getTransferDetailsByAsset } from "./accounts/transfer-history/transfer-history-query-functions";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -58,8 +61,11 @@ export function createConnection(client: IClient): Connection {
     getVersion: () => getVersion(client),
 
     getAccountById: (id: BufferId) => getById(connection, id),
-    getAccountsByParticipantId: (id: BufferId) =>
-      getByParticipantId(connection, id),
+    getAccountsBySigner: (
+      id: BufferId,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getBySigner(connection, id, limit, cursor),
     getAccountsByAuthDescriptorId: (
       id: BufferId,
       limit?: number,
@@ -74,6 +80,13 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByName(connection, name, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
+    getTransferDetails: (txRid: BufferId, opIndex: number) =>
+      getTransferDetails(connection, txRid, opIndex),
+    getTransferDetailsByAsset: (
+      txRid: BufferId,
+      opIndex: number,
+      assetId: BufferId,
+    ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
   });
 
   return connection;
@@ -126,13 +139,6 @@ export async function callWithoutNop(
   return connection.client.sendTransaction(tx);
 }
 
-export type KeyStoreInteractor = {
-  getAccounts(): Promise<Account[]>;
-  getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
-  onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
-};
-
 export function createAuthDataService(connection: Connection): AuthDataService {
   let exposedOperations: Set<string> | null = null;
 
@@ -157,7 +163,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       connection.query(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | undefined = undefined) =>
       connection.query(loginConfig(configName)),
-    getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
+    getBlockchainRid: () =>
+      Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
 }
 
@@ -167,13 +174,18 @@ export function createKeyStoreInteractor(
 ): KeyStoreInteractor {
   const connection = createConnection(client);
   return Object.freeze({
-    getAccounts: async () => connection.getAccountsByParticipantId(keyStore.id),
+    getAccounts: async () =>
+      (await connection.getAccountsBySigner(keyStore.id)).data,
+    getAccountsPaginated: async (
+      limit: number,
+      cursor: OptionalPageCursor = null,
+    ) => connection.getAccountsBySigner(keyStore.id, limit, cursor),
     getSession: async (accountId: Buffer) => {
       const account = createAccountObject(connection, accountId);
-      const authDescriptors = await account.getAuthDescriptorsByParticipantId(
+      const authDescriptors = await account.getAuthDescriptorsBySigner(
         keyStore.id,
       );
-      const keyHandlers = authDescriptors.map((authDescriptor) =>
+      const keyHandlers = authDescriptors.data.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor),
       );
       const authenticator = createAuthenticator(

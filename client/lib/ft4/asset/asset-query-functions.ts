@@ -1,4 +1,3 @@
-import { BufferId } from "../cryptoUtils";
 import {
   balanceByAccountId,
   assetById,
@@ -9,14 +8,14 @@ import {
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalPageCursor } from "../types";
-import { PaginatedEntity, freeze } from "../utils/types";
+import { BufferId, PaginatedEntity, freeze } from "@ft4/utils/types";
 import { createAmountFromBalance } from "./amount";
-import { createEntityRetriever } from "../utils/entity-retriever";
+import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
 
 export async function getAssetById(
   connection: Connection,
   id: BufferId,
-): Promise<Asset> {
+): Promise<Asset | null> {
   const response = await connection.query(assetById(id));
   return response ? createAssetObject(response) : null;
 }
@@ -24,7 +23,7 @@ export async function getAssetById(
 export async function getAssetBySymbol(
   connection: Connection,
   symbol: string,
-): Promise<Asset> {
+): Promise<Asset | null> {
   const response = await connection.query(assetBySymbol(symbol));
   return response ? createAssetObject(response) : null;
 }
@@ -35,12 +34,11 @@ export function getAssetsByName(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ) {
-  const retriever = createEntityRetriever<Asset, AssetResponse>(
+  return retrievePaginatedEntity<Asset, AssetResponse>(
     connection,
     assetsByName(name, limit, cursor),
     (a) => a.map(createAssetObject),
   );
-  return retriever.retrieve();
 }
 
 export async function getAllAssets(
@@ -48,29 +46,34 @@ export async function getAllAssets(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
-  return createEntityRetriever<Asset, AssetResponse>(
+  return retrievePaginatedEntity<Asset, AssetResponse>(
     connection,
     allAssets(limit, cursor),
     (a) => a.map(createAssetObject),
-  ).retrieve();
+  );
 }
 
 export async function getBalanceByAccountId(
   connection: Connection,
   accountId: BufferId,
   assetId: BufferId,
-): Promise<Balance> {
+): Promise<Balance | null> {
   return await connection
     .query(balanceByAccountId(accountId, assetId))
-    .then(createBalanceObject);
+    .then((res) => (res !== null ? createBalanceObject(res) : res));
 }
 
 export async function getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId,
-): Promise<Balance[]> {
-  const balances = await connection.query(balancesByAccountId(accountId));
-  return balances.map(createBalanceObject);
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Balance>> {
+  return retrievePaginatedEntity<Balance, BalanceResponse>(
+    connection,
+    balancesByAccountId(accountId, limit, cursor),
+    (balances) => balances.map(createBalanceObject),
+  );
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
@@ -80,7 +83,7 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
       name: balance.asset.name,
       symbol: balance.asset.symbol,
       decimals: balance.asset.decimals,
-      brid: balance.asset.brid,
+      blockchainRid: balance.asset.blockchain_rid,
       supply: balance.asset.supply,
       iconUrl: balance.asset.icon_url,
     },
@@ -94,7 +97,7 @@ export function createAssetObject(asset: AssetResponse): Asset {
     name: asset.name,
     symbol: asset.symbol,
     decimals: asset.decimals,
-    brid: asset.brid,
+    blockchainRid: asset.blockchain_rid,
     supply: asset.supply,
     iconUrl: asset.icon_url,
   });

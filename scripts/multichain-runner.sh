@@ -7,14 +7,14 @@ POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
 
-NODE_VERSION='3.12.0'
-DIRECTORY_CHAIN_VERSION='1.9.2'
+NODE_VERSION='3.14.2'
+DIRECTORY_CHAIN_VERSION='1.28.0'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
 
-# PMC version 3.14.0
-PMC_DOWNLOAD_URL="https://gitlab.com/chromaway/core-tools/management-console/-/package_files/91637017/download"
+# PMC version 3.16.2
+PMC_DOWNLOAD_URL="https://gitlab.com/chromaway/core-tools/management-console/-/package_files/99889189/download"
 PMC_ARCHIVE_PATH="$DEPENDENCIES_PATH/management-console.tar.gz"
 PMC_EXEC_PATH="$DEPENDENCIES_PATH/management-console/bin/pmc"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
@@ -68,7 +68,7 @@ run_main_logic() {
         if [[ "$OSTYPE" == "darwin"* ]]; then
             echo "You are running macOS. If you haven't installed chr, please do so using:"
             echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
-            echo "% brew install chr"
+            echo "% brew install chromia/core/chr"
         fi
 
         # TODO: Add some more instructions for Linux
@@ -79,14 +79,16 @@ run_main_logic() {
 
     PMC="$PMC_EXEC_PATH"
 
-    log "Running Postgres container..."
-    $DOCKER run \
-        --name $DOCKER_POSTGRES_NAME \
-        -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
-        -e POSTGRES_PASSWORD=postchain \
-        -e POSTGRES_USER=postchain \
-        -p $POSTGRES_PORT:5432 \
-        -d postgres > /dev/null
+    if $postgres; then
+      log "Running Postgres container..."
+      $DOCKER run \
+          --name $DOCKER_POSTGRES_NAME \
+          -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
+          -e POSTGRES_PASSWORD=postchain \
+          -e POSTGRES_USER=postchain \
+          -p $POSTGRES_PORT:5432 \
+          -d postgres > /dev/null
+    fi
 
     debug "Creating PMC config..."
 
@@ -121,10 +123,13 @@ run_main_logic() {
         fi
     fi
 
-    log "Building Directory Chain..."
-    chr build --settings $DEPENDENCIES_PATH/directory-chain/config.yml
+    log "Installing Directory Chain dependencies..."
+    chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
-    debug  "Copying FT library dependency to source folder..."
+    log "Building Directory Chain..."
+    chr build --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml
+
+    debug "Copying FT library dependency to source folder..."
 
     rm -rf "$DEPENDENCIES_PATH/multichain"
     mkdir -p "$DEPENDENCIES_PATH/multichain/"
@@ -158,6 +163,7 @@ run_main_logic() {
         debug "Generated $yml_filename and $rell_filepath"
 
         # Build the Multichain dApp Chain for each blockchain
+        chr install -s $yml_filename > /dev/null
         chr build -s $yml_filename > /dev/null
     done
 
@@ -174,7 +180,7 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
-        run-node > logs/multichain-postchain.log &
+        run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
@@ -253,8 +259,13 @@ exitfn() {
     trap "forceexit" 2
 
     log 'Stopping and cleaning up. Hit Ctrl+C to force quit.'
-    $DOCKER stop $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
-    $DOCKER rm $DOCKER_POSTGRES_NAME $DOCKER_NODE_NAME > /dev/null
+    $DOCKER stop $DOCKER_NODE_NAME > /dev/null
+    $DOCKER rm $DOCKER_NODE_NAME > /dev/null
+
+    if $postgres; then
+      $DOCKER stop $DOCKER_POSTGRES_NAME > /dev/null
+      $DOCKER rm $DOCKER_POSTGRES_NAME > /dev/null
+    fi
 
     # If we are in interactive mode, return the exit code
     if echo "$-" | grep -q "i"; then

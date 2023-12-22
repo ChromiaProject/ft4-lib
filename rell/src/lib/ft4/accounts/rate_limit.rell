@@ -1,13 +1,25 @@
+/**
+ * Extend this function to have different rate limiting for different accounts.
+ *
+ * @param account  the account
+ *
+ * @return rate limit configuration for the account, or `null` to use default config from blockchain configuration.
+ */
+@extendable
+function account_rate_limit_config(account): rate_limit_config? = null;
+
 function rate_limit(account) {
-    if (chain_context.args.rate_limit_active == false) return;
+    val rl_config = get_rate_limit_config_for_account(account);
+
+    if (rl_config.active == false) return;
     
-    val max_counter = chain_context.args.rate_limit_max_points;
-    val recovery_time = chain_context.args.rate_limit_recovery_time;
+    val max_counter = rl_config.max_points;
+    val recovery_time = rl_config.recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
     );
-    val delta = op_context.last_block_time - stat.last_update;
+    val delta = latest_time() - stat.last_update;
     var got_points = 0;
     var update_time = stat.last_update;
 
@@ -16,9 +28,8 @@ function rate_limit(account) {
         update_time = stat.last_update + got_points * recovery_time;
         if (got_points + stat.points > max_counter) {
             got_points = max_counter - stat.points;
-            // if user is at maximum reset his 
-            // timer
-            update_time = op_context.last_block_time;
+            // if user is at maximum reset his timer
+            update_time = latest_time();
         }
     }
     
@@ -30,6 +41,14 @@ function rate_limit(account) {
     );
 }
 
+function current_rate_limit_points(rate_limit_config, rl_state, current_timestamp: timestamp) {
+    val delta = current_timestamp - rl_state.last_update;
+    return if (delta > rate_limit_config.recovery_time)
+        min(rate_limit_config.max_points, rl_state.points + delta / rate_limit_config.recovery_time)
+    else
+        rl_state.points;
+}
+
 function add_rate_limit_points(account, amount: integer) {
     var state = require(
         rl_state@?{account}, 
@@ -38,11 +57,10 @@ function add_rate_limit_points(account, amount: integer) {
 	state.points += amount;
 }
 
-function get_rate_limit_config() {
-    return (
-        active = chain_context.args.rate_limit_active,
-        max_points = chain_context.args.rate_limit_max_points,
-        recovery_time = chain_context.args.rate_limit_recovery_time,
-        points_at_account_creation = chain_context.args.rate_limit_points_at_account_creation
-    );
-}
+function get_rate_limit_config(): rate_limit_config = chain_context.args.rate_limit;
+
+function get_rate_limit_config_for_account(account): rate_limit_config =
+    if (chain_context.args.rate_limit.active == false)
+        chain_context.args.rate_limit
+    else
+        account_rate_limit_config(account) ?: chain_context.args.rate_limit;

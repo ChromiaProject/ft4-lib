@@ -1,14 +1,14 @@
 import { Buffer } from "buffer";
-import { BufferId } from "../cryptoUtils";
 import { Connection, OptionalPageCursor } from "../types";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
 import { RawGtx, gtx } from "postchain-client";
+import { BufferId } from "@ft4/utils/types";
 
 export async function getAssetOriginById(
   connection: Connection,
   id: BufferId,
-): Promise<Buffer> {
+): Promise<Buffer | null> {
   return await connection.query(Query.assetOriginById(id));
 }
 
@@ -34,7 +34,7 @@ export function mapPendingTransfers(
         deserialized.operations.map((op) => [op.opName, op.args]),
         deserialized.signers,
       ],
-      deserialized.signatures,
+      deserialized.signatures ?? [],
     ];
     return {
       accountId: transfer.account_id,

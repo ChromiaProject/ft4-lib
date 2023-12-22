@@ -14,7 +14,7 @@ function transfer_message(gtv) {
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.transfer",
+    scope = rell.meta(transfer).mount_name,
     flags = ["T"],
     message = transfer_message(*)
 );
@@ -26,7 +26,7 @@ operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_in
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    scope = "ft4.burn",
+    scope = rell.meta(burn).mount_name,
     flags = ["T"],
     message = burn_message(*)
 );

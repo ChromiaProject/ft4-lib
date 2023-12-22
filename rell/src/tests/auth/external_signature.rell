@@ -6,7 +6,7 @@ import auth: ^^^.lib.ft4.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import acc: ^^^.lib.ft4.accounts;
 import acc_ext: ^^^.lib.ft4.accounts.external;
-import ^^^.lib.ft4.test.utils. { evm_sign, evm_address_from_privkey, evm_auth_operation_for };
+import ^^^.lib.ft4.test.utils. { evm_sign, evm_auth_operation_for };
 import test_operations: ^^.operations;
 
 val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
@@ -28,13 +28,13 @@ function test_fails_if_insufficient_permissions() {
     .run_must_fail("The auth descriptor does not have the required permissions");
 }
 
-function test_it_decorates_messages_with_brid_and_nonce() {
+function test_it_decorates_messages_with_blockchain_rid_and_nonce() {
   val message = auth_ext.get_auth_message_template("test_empty_auth_message", null.to_gtv());
-  assert_true(message.contains("{brid}"));
+  assert_true(message.contains("{blockchain_rid}"));
   assert_true(message.contains("{nonce}"));
 }
 
-function test_it_rejects_wrong_eth_signatures() {
+function test_it_rejects_wrong_evm_signatures() {
   val external_auth_data = utils.evm_register_alice(["A"]);
   val wrong_signature = evm_sign("abc", external_auth_data.keypair.priv);
   
@@ -45,12 +45,12 @@ function test_it_rejects_wrong_eth_signatures() {
     .run_must_fail("Invalid signature");
 }
 
-function test_perform_eth_auth_transaction() {
+function test_perform_evm_auth_transaction() {
   val external_auth_data = utils.evm_register_alice(["A"]);
-
+  val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
-    .op(evm_auth_operation_for(external_auth_data.keypair.priv, "test_perform_large_transfer", [(1000).to_gtv(), to_addr.to_gtv()]))
-    .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
+    .op(evm_auth_operation_for(external_auth_data.keypair.priv, op))
+    .op(op)
     .sign(rell.test.keypairs.alice.priv)
     .run();
 }
@@ -62,8 +62,8 @@ function test_multisig_external_signature() {
       set(["A"]).to_gtv(),
       0x2.to_gtv(),
       [
-        evm_address_from_privkey(rell.test.keypairs.alice.priv).to_gtv(),
-        evm_address_from_privkey(rell.test.keypairs.bob.priv).to_gtv()
+        crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv).to_gtv(),
+        crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv).to_gtv()
       ].to_gtv()
     ],
     rules = null.to_gtv()
@@ -103,8 +103,8 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
       set(["A"]).to_gtv(),
       0x3.to_gtv(),
       [
-        evm_address_from_privkey(rell.test.keypairs.alice.priv).to_gtv(),
-        evm_address_from_privkey(rell.test.keypairs.bob.priv).to_gtv()
+        crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv).to_gtv(),
+        crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv).to_gtv()
       ].to_gtv()
     ],
     rules = null.to_gtv()
@@ -143,7 +143,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     [
       set(["A"]).to_gtv(),
       0x1.to_gtv(),
-      [evm_address_from_privkey(rell.test.keypairs.alice.priv).to_gtv()].to_gtv()
+      [crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv).to_gtv()].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -253,7 +253,7 @@ function test_ft_auth_fails_if_key_invalid() {
     .op(auth_ext.ft_auth(auth_descriptor_id, auth_descriptor_id))
     .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.bob.priv)
-    .run_must_fail("The participant is not the signer of this transaction.");
+    .run_must_fail("The auth descriptor signer did not sign the transaction.");
 }
 
 function test_perform_ft_auth_transaction() {
@@ -379,7 +379,7 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
 function test_operation_without_auth_message_template_can_be_evm_authenticated() {
   val alice = utils.evm_register_alice();
 
-  var message = "Blockchain:\n{brid}\n\nPlease sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
+  var message = "Blockchain:\n{blockchain_rid}\n\nPlease sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
   message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
 
   val signature = evm_sign(utils.create_auth_message(message, alice), alice.keypair.priv);

@@ -3,6 +3,7 @@ import {
   encryption,
   RawGtv,
   IClient,
+  KeyPair,
   gtv,
   RawGtx,
 } from "postchain-client";
@@ -37,11 +38,15 @@ export async function getVersion(session: IClient): Promise<string> {
   return Object.freeze(await session.query<string>("ft4.get_version"));
 }
 
+export function getPubkey(keyPair: KeyPair): Buffer {
+  return keyPair.pubKey ?? encryption.createPublicKey(keyPair.privKey);
+}
+
 type DeepReadonly<T> = T extends (infer R)[]
   ? DeepReadonlyArray<R>
   : T extends object
-  ? DeepReadonlyObject<T>
-  : T;
+    ? DeepReadonlyObject<T>
+    : T;
 
 interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
 
@@ -57,3 +62,7 @@ type ConfigResponse = {
     points_at_account_creation: number;
   };
 };
+
+export { retrievePaginatedEntity } from "./entity-retriever";
+
+export { EntityRetriever, PaginatedEntity } from "./types";

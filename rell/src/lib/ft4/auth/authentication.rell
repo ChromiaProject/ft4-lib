@@ -1,26 +1,74 @@
+/**
+ * This function can be extended by users to add custom logic before authentication.
+ */
+@extendable
+function before_authenticate(accounts.account, accounts.account_auth_descriptor);
+
+/**
+ * This function can be extended by users to add custom logic after authentication.
+ */
+@extendable
+function after_authenticate(accounts.account, accounts.account_auth_descriptor?);
+
+val EVM_AUTH_OP = "ft4.evm_auth";
+val FT_AUTH_OP = "ft4.ft_auth";
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
-
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
-        previous_op.name in ["ft4.evm_auth", "ft4.ft_auth"],
+        previous_op.name in [EVM_AUTH_OP, FT_AUTH_OP],
         "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
     );
 
-    val account = when (previous_op.name) {
-        "ft4.evm_auth" -> _validate_eth_signature(previous_op, is_strict);
-        "ft4.ft_auth" -> _validate_ft4_signature(previous_op.args);
-        else -> null;
+    val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
+
+    accounts.rate_limit(account);
+
+    before_authenticate(account, auth_descriptor);
+
+    require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+
+    val flags = get_auth_flags(op.name, is_strict);
+
+    when (previous_op.name) {
+        EVM_AUTH_OP -> _validate_evm_signature(op, previous_op, is_strict, flags, account, auth_descriptor);
+        FT_AUTH_OP -> _validate_ft4_signature(flags, account, auth_descriptor);
+        else -> require(false, "Invalid auth operation: %s".format(previous_op.name));
     };
 
-    val valid_account = require(account, "Invalid auth operation: %s".format(previous_op.name));
+    val auth_desc_after = accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    val deleted_descriptors = accounts.delete_expired_auth_descriptors(account);
 
-    accounts.rate_limit(valid_account);
+    after_authenticate(account, if (auth_desc_after in deleted_descriptors) null else auth_desc_after);
 
-    return valid_account;
+    return account;
+}
+
+function _ft_auth(required_flags: list<text>, account: accounts.account, auth_descriptor: accounts.account_auth_descriptor) {
+    accounts.rate_limit(account);
+
+    require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+
+    _validate_ft4_signature(required_flags, account, auth_descriptor);
+
+    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    accounts.delete_expired_auth_descriptors(account);
+}
+
+function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.account, accounts.account_auth_descriptor) {
+    val account_id = byte_array.from_gtv(auth_args[0]);
+    val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
+
+    val account = accounts.Account(account_id);
+    val auth_descriptor = require(
+        accounts.account_auth_descriptor @? { .id == auth_descriptor_id, .account == account },
+        "Auth descriptor '%s' not found for account '%s'".format(auth_descriptor_id, account_id)
+    );
+    
+    return (account, auth_descriptor);
 }
 
 function get_auth_flags(op_name: name, is_strict: boolean) = get_auth_handler(op_name, is_strict).flags;
@@ -36,30 +84,32 @@ function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boole
     return utils.make_auth_message(message);
 }
 
-function _validate_eth_signature(auth_op: gtx_operation, is_strict: boolean): accounts.account {
-    val op = op_context.get_all_operations()[op_context.op_index];
-    val flags = get_auth_flags(op.name, is_strict);
+function _validate_evm_signature(
+  op: gtx_operation,
+  auth_op: gtx_operation,
+  is_strict: boolean,
+  flags: list<text>,
+  account: accounts.account,
+  auth_descriptor: accounts.account_auth_descriptor
+) {
     val message_template = get_auth_message_template(op.name, op.args.to_gtv(), is_strict);
-    val validated_args = _validate_eth_arguments(auth_op.args, set(flags));
+    val validated_args = _validate_evm_arguments(auth_op.args, set(flags), account, auth_descriptor);
     val message = create_message_from_template(
         validated_args, 
         message_template, 
         op.args, 
-        validated_args.account_auth_descriptor.ctr
+        auth_descriptor.ctr
     );
 
-    var recovered_keys = 
-        if (validated_args.account_auth_descriptor.auth_type in [accounts.auth_type.S, accounts.auth_type.ES]) [_validate_eth_address(message, validated_args.signatures[0], validated_args.account_auth_descriptor)] 
-        else _recover_multiple_eth_keys(message, validated_args.signatures, validated_args.account_auth_descriptor);
-    
-    validated_args.account_auth_descriptor.ctr += 1;
-    
-    return validated_args.account;
+    if (auth_descriptor.auth_type in [accounts.auth_type.S, accounts.auth_type.ES])
+        _validate_evm_address(message, validated_args.signatures[0], auth_descriptor);
+    else
+        _validate_multiple_evm_addresses(message, validated_args.signatures, auth_descriptor);
 }
 
-function create_message_from_template(accounts.eth_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
+function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
     require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
-    require(message_template.contains("{brid}"), "Message template has to include '{brid}'");
+    require(message_template.contains("{blockchain_rid}"), "Message template has to include '{blockchain_rid}'");
     var message = message_template;
     
     // TODO: check if this is still needed
@@ -68,28 +118,22 @@ function create_message_from_template(accounts.eth_auth_args, message_template: 
     }
     
     return message
-        .replace("{account_id}", eth_auth_args.account.id.to_hex())
-        .replace("{auth_descriptor_id}", eth_auth_args.account_auth_descriptor.id.to_hex())
+        .replace("{account_id}", evm_auth_args.account.id.to_hex())
+        .replace("{auth_descriptor_id}", evm_auth_args.account_auth_descriptor.id.to_hex())
         .replace("{nonce}", ctr.to_text().replace("\"", ""))
-        .replace("{brid}", chain_context.blockchain_rid.to_hex());
+        .replace("{blockchain_rid}", chain_context.blockchain_rid.to_hex());
 }
 
-function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>): accounts.eth_auth_args {
+function _validate_evm_arguments(
+  auth_args: list<gtv>,
+  required_flags: set<text>,
+  account: accounts.account, 
+  auth_descriptor: accounts.account_auth_descriptor
+): accounts.evm_auth_args {
     require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
 
-    val account_id = byte_array.from_gtv(auth_args[0]);
-    val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
     val signatures = list<signature>.from_gtv(auth_args[2]);
 
-    val account = accounts.Account(account_id);
-    
-    val auth_descriptor = require(
-        accounts.account_auth_descriptor @? { .id == auth_descriptor_id, .account == account },
-        "Auth descriptor '%s' not found for account '%s'".format(auth_descriptor_id, account_id)
-    );
-
-    require(accounts.is_valid(auth_descriptor));
-    
     val has_all_flags = when (auth_descriptor.auth_type) {
         S, ES -> accounts.single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
         M, EM -> accounts.multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
@@ -97,54 +141,57 @@ function _validate_eth_arguments(auth_args: list<gtv>, required_flags: set<text>
     
     require(has_all_flags, "The auth descriptor does not have the required permissions");
 
-    return accounts.eth_auth_args(account, auth_descriptor, signatures);
+    return accounts.evm_auth_args(account, auth_descriptor, signatures);
 }
 
-function _validate_ft4_signature(auth_args: list<gtv>): accounts.account {
-    val account_id = byte_array.from_gtv(auth_args[0]);
-    val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
-    val flags = get_auth_flags(op_context.get_all_operations()[op_context.op_index].name, is_strict=false);
+function _validate_ft4_signature(
+  flags: list<text>,
+  account: accounts.account,
+  auth_descriptor: accounts.account_auth_descriptor
+) {
+   	val result: utils.validation_result = accounts.check_auth_args(
+          		auth_descriptor.auth_type,
+          		auth_descriptor.args,
+                accounts.get_signers(auth_descriptor.auth_type, auth_descriptor.args),
+          		flags
+   	);
 
-    val account = accounts.Account(account_id);
-    val auth_descriptor = require(
-        accounts.account_auth_descriptor @? { .account == account, .id == auth_descriptor_id },
-        "Cannot find auth descriptor <%s> for account <%s>".format(auth_descriptor_id, account_id)
-    );
-
-    accounts.require_auth(account, auth_descriptor, list(flags));
-    return account;
+    require(result.valid, result.error!!); // Prints a precise error message.
 }
 
-function _recover_eth_address(message: text, signature) {
+function _recover_evm_address(message: text, signature) {
     require(message != "", "Empty messages are not allowed");
 
-    val msg_hash = keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
-    val eth_pubkey = eth_ecrecover(
+    val msg_hash = _evm_message_hash(message);
+    val evm_pubkey = crypto.eth_ecrecover(
         signature.r,
         signature.s,
         signature.v - 27,
         msg_hash
     );
     
-    return utils.evm_address_from_pubkey(eth_pubkey);
+    return crypto.eth_pubkey_to_address(evm_pubkey);
 }
 
-function _validate_eth_address(message: text, signature, accounts.account_auth_descriptor) {
-    val recovered_address = _recover_eth_address(message, signature);
-    val participant = accounts.auth_descriptor_participant @? {
+function _evm_message_hash(message: text): byte_array =
+    keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
+
+function _validate_evm_address(message: text, signature, accounts.account_auth_descriptor) {
+    val recovered_address = _recover_evm_address(message, signature);
+    val signer = accounts.auth_descriptor_signer @? {
         .account_auth_descriptor == account_auth_descriptor,
         .id == recovered_address
     };
-    require(participant, "Invalid signature on message: \n%s".format(message));
+    require(signer, "Invalid signature on message: \n%s".format(message));
 
     return recovered_address;
 }
 
-function _recover_multiple_eth_keys(message: text, signatures: list<signature>, accounts.account_auth_descriptor) {
-    var recovered_keys = list<byte_array>();
+function _validate_multiple_evm_addresses(message: text, signatures: list<signature>, accounts.account_auth_descriptor) {
+    val recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
         recovered_keys.add(
-            _validate_eth_address(
+            _validate_evm_address(
                 message,
                 signatures[i],
                 account_auth_descriptor

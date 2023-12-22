@@ -5,5 +5,6 @@ export function rellAppStructure(): QueryObject<{
 }> {
   return {
     name: "rell.get_app_structure",
+    args: {},
   };
 }

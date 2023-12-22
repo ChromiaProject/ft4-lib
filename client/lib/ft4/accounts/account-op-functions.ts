@@ -1,34 +1,39 @@
+import { KeyPair, SignatureProvider, formatter } from "postchain-client";
+import { Amount } from "../asset/interfaces";
+import { createAuthenticator } from "../authentication";
+import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
+import { Authenticator } from "../authentication/types";
+import { call, createSession } from "../ft-session";
+import { Connection } from "../types";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
 } from "./account-operations";
-import { AuthenticatedAccount } from "./types";
+import { authDescriptorById } from "./account-queries";
 import { createAccountObject } from "./account-query-functions";
-import { AuthDescriptor } from "./auth-descriptor/types";
-import { BufferId } from "../cryptoUtils";
-import { SignatureProvider, KeyPair, formatter } from "postchain-client";
-import { Amount } from "../asset/interfaces";
-import { Connection } from "../types";
-import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
-import { transactionBuilder } from "../utils/transaction-builder";
-import { Authenticator } from "../authentication/types";
-import { call, createSession } from "../ft-session";
-import { createAuthenticator } from "../authentication";
 import {
+  AnyAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "./auth-descriptor";
+import { AuthenticatedAccount } from "./types";
+import {
+  BufferId,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "../utils/types";
+} from "@ft4/utils/types";
 
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator,
 ): AuthenticatedAccount {
-  return {
+  return Object.freeze({
     authenticator,
     addAuthDescriptor: (
-      authDescriptor: AuthDescriptor,
+      authDescriptor: AnyAuthDescriptorRegistration,
       newSigner: SignatureProvider | KeyPair,
     ) =>
       addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
@@ -41,33 +46,42 @@ export function createAuthenticatedAccount(
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
-  };
+  });
 }
 
 async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
-  authDescriptor: AuthDescriptor,
+  authDescriptorRegistration: AnyAuthDescriptorRegistration,
   newSigner: SignatureProvider | KeyPair,
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const newKeyHandler =
-    createInMemoryFtKeyStore(newSigner).createKeyHandler(authDescriptor);
+  const newKeyStore = createInMemoryFtKeyStore(newSigner);
 
   const tx = await tb
-    .add(addAuthDescriptorOp(authDescriptor))
-    .addSigners(newKeyHandler)
+    .add(addAuthDescriptorOp(authDescriptorRegistration))
+    .addSigners(newKeyStore)
     .build();
+
+  const receipt = await connection.client.sendTransaction(tx);
+  const ad = await connection.query(
+    authDescriptorById(
+      authenticator.accountId,
+      deriveAuthDescriptorId(authDescriptorRegistration),
+    ),
+  );
 
   const newAuth = createAuthenticator(
     authenticator.accountId,
-    authenticator.keyHandlers.concat(newKeyHandler),
+    authenticator.keyHandlers.concat(
+      newKeyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
+    ),
     authenticator.authDataService,
   );
 
   return {
-    receipt: await connection.client.sendTransaction(tx),
+    receipt,
     session: createSession(connection, newAuth),
   };
 }

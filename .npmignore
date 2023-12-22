@@ -1,19 +1,37 @@
+# System files and directories
 *~
-
-.env
 .DS_STORE
 .idea/*
 .project
 
-
+# Dependency directories
 node_modules/
 package-lock.json
 
+# Log files
 logs/
-postchain/runtime
-
 **.pid
+/db.log
 
+# Configuration files
+.env
+/.husky
+/.env.sample
+/.eslintignore
+/.eslintrc.json
+/.prettierignore
+/.prettierrc.json
+/tsconfig.dist.json
+/tsconfig.json
+/jest.config.js
+/jest.config.multichain.js
+/jest.setup.js
+/rollup.config.mjs
+
+# Build and pipeline files
+/bitbucket-pipelines.yml
+
+# Source and test directories
 client/
 postchain/
 rell/
@@ -21,11 +39,15 @@ test/
 test_admin/
 app/
 
-/.env.sample
-/db.log
-/jest.config.js
-/jest.setup.js
-/tsconfig.json
-/index.js
+# Miscellaneous files and directories
+postchain/runtime
+/configs
+/examples
+/rell-changelog.md
+/scripts
+/doc
+/compile-changelog.sh
 
-bitbucket-pipelines.yml
+# Cypress related files and directories
+/cypress
+cypress.config.ts

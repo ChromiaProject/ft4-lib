@@ -1,8 +1,12 @@
 import { Operation, encryption, gtx } from "postchain-client";
-import { authDescriptor, FlagsType } from "/ft4/accounts/auth-descriptor";
-import { KeyManager } from "/ft4/accounts/auth/types";
+import { KeyManager } from "@ft4/accounts/auth/types";
 import { Buffer } from "buffer";
 import { User } from "./test-user";
+import {
+  FlagsType,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts/auth-descriptor";
+import { testAdFromRegistration } from "./util";
 
 export default function adminUser(): User {
   const km = {
@@ -27,14 +31,15 @@ export default function adminUser(): User {
     ),
     sign: (gtx: Buffer) => Promise.resolve(gtx),
   };
-  const singleSigAuthDescriptor = authDescriptor.create.singleSig.withArgs(
+  const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [FlagsType.Account, FlagsType.Transfer],
     signatureProvider.pubKey,
-  ).andNoRules;
+    null,
+  );
   return {
     signatureProvider,
     keyManagers: [keymanager],
-    authDescriptor: singleSigAuthDescriptor,
+    authDescriptor: testAdFromRegistration(singleSigAuthDescriptor),
   };
 }
 

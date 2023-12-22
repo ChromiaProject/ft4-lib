@@ -1,39 +1,39 @@
+import { Buffer } from "buffer";
 import { formatter, IClient } from "postchain-client";
 import {
-  accountById,
-  accountsByParticipantId,
-  RateLimitQuery,
-  accountAuthDescriptors,
-  accountAuthDescriptorsByParticipantId,
-  accountsByAuthDescriptorId,
-} from "./account-queries";
-import * as Query from "./account-queries";
-import { Account, RateLimit } from "./types";
-import { BufferId } from "../cryptoUtils";
-import { getConfig } from "../utils";
-import {
   getBalanceByAccountId,
-  createBalanceObject,
+  getBalancesByAccountId,
 } from "../asset/asset-query-functions";
 import { Connection, OptionalPageCursor } from "../types";
-import { createTransferHistoryRetriever } from "./transfer-history/transfer-history-retrieval";
-import { TransferHistoryFilter } from "./transfer-history/types";
+import { getConfig } from "@ft4/utils/index";
+import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
+import { BufferId, PaginatedEntity } from "@ft4/utils/types";
+import * as Query from "./account-queries";
 import {
-  AuthDescriptor,
-  AuthDescriptorResponse,
-  mapAuthDescriptors,
-} from "./auth-descriptor";
-import { createEntityRetriever } from "../utils/entity-retriever";
-import { Balance, BalanceResponse } from "../asset/types";
-import { balancesByAccountId } from "../asset/asset-queries";
-import { Buffer } from "buffer";
-import { PaginatedEntity } from "../utils/types";
+  accountAuthDescriptors,
+  accountAuthDescriptorsBySigner,
+  accountById,
+  accountsByAuthDescriptorId,
+  accountsBySigner,
+  RateLimitQuery,
+  transferHistory,
+} from "./account-queries";
+import {
+  TransferHistoryEntry,
+  TransferHistoryEntryResponse,
+  TransferHistoryFilter,
+} from "./transfer-history/types";
+import { Account, RateLimit } from "./types";
+import { AnyAuthDescriptor, gtv } from "@ft4/accounts/auth-descriptor";
+import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
 import {
   PendingTransfer,
   PendingTransferResponse,
   pendingTransfersForAccount,
 } from "../crosschain";
 import { mapPendingTransfers } from "../crosschain/query-functions";
+import { mapAuthDescriptorsFromGtv } from "./auth-descriptor/gtv";
+import { createTransferHistoryEntryFromResponse } from "./transfer-history/transfer-history-entry";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -41,7 +41,11 @@ export async function getRateLimit(
   session: IClient,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimit = await session.query(RateLimitQuery(accountId));
+  const rateLimitResponse = await session.query(RateLimitQuery(accountId));
+  const rateLimit = {
+    points: rateLimitResponse.points,
+    lastUpdate: new Date(rateLimitResponse.lastUpdate),
+  };
 
   const chainInfo = await getConfig(session);
 
@@ -50,7 +54,7 @@ export async function getRateLimit(
     lastUpdate: rateLimit.lastUpdate,
     getAvailablePoints: () => {
       if (chainInfo.rateLimit.active) {
-        const deltaTime = Date.now() - rateLimit.lastUpdate;
+        const deltaTime = Date.now() - rateLimitResponse.lastUpdate;
         const points =
           rateLimit.points + deltaTime / chainInfo.rateLimit.recoveryTime;
         return Math.min(points, chainInfo.rateLimit.maxPoints);
@@ -64,63 +68,57 @@ export function createAccountObject(
   connection: Connection,
   accountId: BufferId,
 ): Account {
-  const transferHistoryRetriever = createTransferHistoryRetriever(
-    connection.client,
-    accountId,
-  );
   return Object.freeze({
     id: formatter.ensureBuffer(accountId),
+    blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: (limit = 100, cursor: OptionalPageCursor = null) => {
-      const retriever = createEntityRetriever<Balance, BalanceResponse>(
-        connection,
-        balancesByAccountId(accountId, limit, cursor),
-        (balances) => balances.map(createBalanceObject),
-      );
-      return retriever.retrieve(limit, cursor);
-    },
+    getBalances: (limit = 100, cursor: OptionalPageCursor = null) =>
+      getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: async (
       limit = 100,
       cursor: OptionalPageCursor = null,
     ) => {
-      const retriever = createEntityRetriever<
-        AuthDescriptor,
-        AuthDescriptorResponse
-      >(
+      return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
         connection,
         accountAuthDescriptors(accountId, limit, cursor),
-        mapAuthDescriptors,
+        gtv.mapAuthDescriptorsFromGtv,
       );
-      return retriever.retrieve(limit, cursor);
     },
-    getAuthDescriptorsByParticipantId: (participantId: BufferId) =>
-      getAuthDescriptorsByParticipantId(connection, accountId, participantId),
+    getAuthDescriptorsBySigner: (signer: BufferId) =>
+      getAuthDescriptorsBySigner(connection, accountId, signer),
     getRateLimit: () => getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
       filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null,
     ) => {
-      return transferHistoryRetriever.retrieve(limit, filter, cursor);
+      return retrievePaginatedEntity<
+        TransferHistoryEntry,
+        TransferHistoryEntryResponse
+      >(
+        connection,
+        transferHistory(accountId, filter, limit, cursor),
+        (entries) =>
+          entries.map((entry) => createTransferHistoryEntryFromResponse(entry)),
+      );
     },
-    getTransferHistoryEntry: async (rowid: number) =>
-      transferHistoryRetriever.retrieveSingle(rowid),
+    getTransferHistoryEntry: async (rowid: number) => {
+      return createTransferHistoryEntryFromResponse(
+        await connection.query("ft4.get_transfer_history_entry", { rowid }),
+      );
+    },
     getPendingCrosschainTransfers: async (
       limit = 100,
       cursor: OptionalPageCursor = null,
     ) => {
-      const retriever = createEntityRetriever<
-        PendingTransfer,
-        PendingTransferResponse
-      >(
+      return retrievePaginatedEntity<PendingTransfer, PendingTransferResponse>(
         connection,
         pendingTransfersForAccount(accountId, limit, cursor),
         mapPendingTransfers,
       );
-      return retriever.retrieve(limit, cursor);
     },
   });
 }
@@ -134,13 +132,18 @@ export async function getById(
   return accountId && createAccountObject(connection, accountId);
 }
 
-export async function getByParticipantId(
+export async function getBySigner(
   connection: Connection,
   id: BufferId,
-): Promise<Account[]> {
-  const accountIds = await connection.query(accountsByParticipantId(id));
-
-  return accountIds.map((id) => createAccountObject(connection, id));
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Account>> {
+  return retrievePaginatedEntity<Account, { id: Buffer }>(
+    connection,
+    accountsBySigner(id, limit, cursor),
+    (accounts) =>
+      accounts.map((acc) => createAccountObject(connection, acc.id)),
+  );
 }
 
 export async function getByAuthDescriptorId(
@@ -149,11 +152,11 @@ export async function getByAuthDescriptorId(
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
-  return createEntityRetriever<Account, Buffer>(
+  return retrievePaginatedEntity<Account, Buffer>(
     connection,
     accountsByAuthDescriptorId(id, limit, cursor),
     (accounts) => accounts.map((acc) => createAccountObject(connection, acc)),
-  ).retrieve();
+  );
 }
 
 export async function isAuthDescriptorValid(
@@ -166,14 +169,17 @@ export async function isAuthDescriptorValid(
   ))!;
 }
 
-export async function getAuthDescriptorsByParticipantId(
+export async function getAuthDescriptorsBySigner(
   connection: Connection,
   accountId: BufferId,
-  participantId: BufferId,
-): Promise<AuthDescriptor[]> {
-  return connection
-    .query(accountAuthDescriptorsByParticipantId(accountId, participantId))
-    .then((authDescriptors) =>
-      authDescriptors ? mapAuthDescriptors(authDescriptors) : [],
-    );
+  signer: BufferId,
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<AnyAuthDescriptor>> {
+  return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
+    connection,
+    accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
+    (authDescriptors) =>
+      authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
+  );
 }

@@ -1,9 +1,9 @@
 import { Operation, formatter } from "postchain-client";
-import { BufferId } from "../../cryptoUtils";
 import { KeyStore } from "../types";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
 import { createEvmKeyHandler } from "./key-handler";
+import { BufferId } from "@ft4/utils/types";
 
 export * from "./key-stores";
 export { createEvmKeyHandler };
