@@ -307,7 +307,7 @@ describe("Transfer history", () => {
     expect(entry!.rowid).toBe(history.data[0].rowid);
   });
 
-  it("returns only received transactions for specific asset", async () => {
+  it("returns only transfers for specific asset", async () => {
     const asset2 = await getNewAsset(client);
 
     const account1 = await AccountBuilder.account(connection)
