@@ -64,7 +64,7 @@ describe("Crosschain transfer", () => {
           operation: Operation;
           opIndex: number;
           tx: RawGtx;
-          createProof: (brid: BufferId) => Promise<Operation>;
+          createProof: (blockchainRid: BufferId) => Promise<Operation>;
         } | null,
         error: Error | null,
       ) => {

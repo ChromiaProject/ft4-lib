@@ -34,7 +34,7 @@ describe("Edge Cases", () => {
       name: "Invalid Asset",
       symbol: "IA",
       decimals: 0,
-      brid: Buffer.from("invalid-brid"),
+      blockchainRid: Buffer.from("invalid-blockchain-rid"),
       supply: BigInt(0),
       iconUrl: "",
       ...overrides,

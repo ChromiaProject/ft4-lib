@@ -114,7 +114,7 @@ export type OnAnchoredHandlerData = {
   operation: Operation;
   opIndex: number;
   tx: RawGtx;
-  createProof: (brid: BufferId) => Promise<Operation>;
+  createProof: (blockchainRid: BufferId) => Promise<Operation>;
 };
 
 type ConfigOptions = {

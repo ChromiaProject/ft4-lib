@@ -95,7 +95,7 @@ operation apply_transfer(
         );
     }
 
-    val my_brid = chain_context.blockchain_rid;
+    val my_blockchain_rid = chain_context.blockchain_rid;
 
     val init_args = init_transfer_details.args;
 
@@ -104,27 +104,27 @@ operation apply_transfer(
         "Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index)
     );
 
-    val current_hop_brid = init_transfer_details.args.hops[hop_index];
+    val current_hop_blockchain_rid = init_transfer_details.args.hops[hop_index];
     require(
-        current_hop_brid == my_brid,
-        "This transaction hop must happen on a chain with brid %s".format(current_hop_brid)
+        current_hop_blockchain_rid == my_blockchain_rid,
+        "This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
     );
 
-    val from_brid = previous_hop_tx.body.blockchain_rid; 
+    val from_blockchain_rid = previous_hop_tx.body.blockchain_rid; 
 
     if (hop_index > 0) {
-        val previous_hop_brid = init_transfer_details.args.hops[hop_index - 1];
+        val previous_hop_blockchain_rid = init_transfer_details.args.hops[hop_index - 1];
         require(
-            from_brid == previous_hop_brid,
+            from_blockchain_rid == previous_hop_blockchain_rid,
             "Argument mismatch: init_args.hops (%s) and tx blockchain_rid (%s) don't correspond"
                 .format(
-                    previous_hop_brid, from_brid
+                    previous_hop_blockchain_rid, from_blockchain_rid
                 )
         );
     }
 
     require(
-        iccf.check_iccf_proof(from_brid, previous_hop_tx.to_gtv().hash()),
+        iccf.check_iccf_proof(from_blockchain_rid, previous_hop_tx.to_gtv().hash()),
         "Missing proof for previous hop"
     );
 
@@ -141,7 +141,7 @@ operation apply_transfer(
     }
 
     crosschain.Unsafe.update_balances_if_needed(
-        crosschain.ensure_blockchain_account(from_brid),
+        crosschain.ensure_blockchain_account(from_blockchain_rid),
         receiver,
         asset,
         init_transfer_details.args.amount

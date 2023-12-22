@@ -9,6 +9,7 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { LoginManger, LoginKeyStore } from "./authentication/login-manager";
+import { TransferDetail } from "./accounts/transfer-history/transfer-history-query-functions";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -45,6 +46,15 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
+  getTransferDetails: (
+    txRid: BufferId,
+    opIndex: number,
+  ) => Promise<TransferDetail[]>;
+  getTransferDetailsByAsset: (
+    txRid: BufferId,
+    opIndex: number,
+    assetId: BufferId,
+  ) => Promise<TransferDetail[]>;
 }
 
 export interface Session extends Connection {

@@ -91,7 +91,7 @@ function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, o
  * It is used when `evm_auth` is used to authenticate a user, 
  * but auth message is not specified in the auth handler of the operation.
  */
-function generate_operation_auth_message(brid: byte_array, op: gtx_operation) {
+function generate_operation_auth_message(blockchain_rid: byte_array, op: gtx_operation) {
     var message = "Please sign the message to call\noperation:\n- %s".format(op.name);
 
     if (op.args.size() > 0) {

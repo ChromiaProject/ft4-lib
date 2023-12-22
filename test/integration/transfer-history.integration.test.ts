@@ -8,13 +8,14 @@ import { createAmount } from "@ft4/asset/amount";
 import { TransferHistoryType } from "@ft4/accounts/transfer-history/types";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { IClient, gtv, newSignatureProvider } from "postchain-client";
+import { IClient, newSignatureProvider } from "postchain-client";
 import { useChromiaNode } from "@ft4/util/chromia-node";
+import { TransferDetail } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
+import { getTransferHistoryFromHeight } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
 
 let asset: Asset;
 let connection: Connection;
 let client: IClient;
-const NULL_ACCOUNT = gtv.encode(null);
 
 describe("Transfer history", () => {
   const getClient = useChromiaNode();
@@ -25,6 +26,7 @@ describe("Transfer history", () => {
     asset = await getNewAsset(client);
     connection = createConnection(client);
   });
+
   describe("Transfer history iterator", () => {
     it("should have one transfer history entry when mint is made", async () => {
       const keyPair = newSignatureProvider();
@@ -43,10 +45,6 @@ describe("Transfer history", () => {
       const entry = history.data[0];
 
       expect(entry.isInput).toEqual(false);
-      expect(entry.transferInputArgs.length).toEqual(1);
-      expect(entry.transferOutputArgs.length).toEqual(1);
-      expect(entry.transferInputArgs[0].accountId).toEqual(NULL_ACCOUNT);
-      expect(entry.transferOutputArgs[0].accountId).toEqual(account1.id);
     });
 
     it("should have two transfer history entry when mint + transfer is made", async () => {
@@ -65,11 +63,13 @@ describe("Transfer history", () => {
         createInMemoryFtKeyStore(keyPair),
       ).getSession(account1.id);
 
-      await session.account.transfer(
-        account2.id,
-        asset.id,
-        createAmount(10, asset.decimals),
-      );
+      const transferTransactionRid = (
+        await session.account.transfer(
+          account2.id,
+          asset.id,
+          createAmount(10, asset.decimals),
+        )
+      ).receipt.transactionRid;
 
       const history = await account1.getTransferHistory();
 
@@ -79,8 +79,30 @@ describe("Transfer history", () => {
       const entry = history.data[0];
 
       expect(entry.isInput).toEqual(true);
-      expect(entry.transferOutputArgs.length).toEqual(1);
-      expect(entry.transferOutputArgs[0].accountId).toEqual(account2.id);
+      const expectedDetails: TransferDetail[] = [
+        {
+          accountId: account1.id,
+          assetId: asset.id,
+          delta: 10n,
+          isInput: true,
+        },
+        {
+          accountId: account2.id,
+          assetId: asset.id,
+          delta: 10n,
+          isInput: false,
+        },
+      ];
+      expect(
+        await connection.getTransferDetails(transferTransactionRid, 1),
+      ).toEqual(expectedDetails);
+      expect(
+        await connection.getTransferDetailsByAsset(
+          transferTransactionRid,
+          1,
+          asset.id,
+        ),
+      ).toEqual(expectedDetails);
     });
 
     it("includes the name of the operation causing the history entry", async () => {
@@ -183,20 +205,6 @@ describe("Transfer history", () => {
 
       const history = await account1.getTransferHistory();
       expect(history.data.length).toStrictEqual(2);
-      expect(history.data[0].transferInputArgs.length).toBe(1);
-      expect(history.data[0].transferInputArgs[0].accountId).toEqual(
-        account1.id,
-      );
-      expect(history.data[0].transferInputArgs[0].amount.value).toEqual(
-        createAmount(10, asset.decimals).value,
-      );
-      expect(history.data[0].transferOutputArgs.length).toBe(1);
-      expect(history.data[0].transferOutputArgs[0].accountId).toEqual(
-        account2.id,
-      );
-      expect(history.data[0].transferOutputArgs[0].amount.value).toEqual(
-        createAmount(10, asset.decimals).value,
-      );
     });
   });
 
@@ -297,5 +305,45 @@ describe("Transfer history", () => {
       history.data[0].rowid,
     );
     expect(entry!.rowid).toBe(history.data[0].rowid);
+  });
+
+  it("returns only transfers for specific asset", async () => {
+    const asset2 = await getNewAsset(client);
+
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(asset, 200)
+      .withBalance(asset2, 100)
+      .withPoints(1)
+      .build();
+
+    const account2 = await AccountBuilder.account(connection).build();
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(20, asset.decimals),
+    );
+
+    await account1.transfer(
+      account2.id,
+      asset2.id,
+      createAmount(15, asset2.decimals),
+    );
+
+    await account2.transfer(
+      account1.id,
+      asset.id,
+      createAmount(10, asset.decimals),
+    );
+
+    const transferHistory = await getTransferHistoryFromHeight(
+      connection,
+      0,
+      asset2.id,
+      10,
+      null,
+    );
+
+    expect(transferHistory.data.length).toEqual(3);
   });
 });

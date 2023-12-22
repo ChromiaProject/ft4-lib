@@ -6,6 +6,8 @@
 - Default values for `lib.ft4.accounts` module_args to simplify `chromia.yml` configuration.
 - Added configuration parameter `max_auth_descriptor_rules` for `lib.ft4.accounts` module_args, with default value 8.
 - Added an option to customize the rate limiter for some accounts.
+- Queries `get_transfer_details`, `get_transfer_details_by_asset` and `get_transfer_history_from_height` to `lib.ft4.assets.external`.
+- Support for transaction priority.
 
 ### Changed
 - Updated signature for `evm_auth_operation_for` to accept a `rell.test.op`.
@@ -22,6 +24,11 @@
 - **create_account_with_auth** function return `account` instead of `byte_array`.
 - **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
 - **Rate limit config** New format for rate limit configuration.
+- **brid -> blockchain_rid** All instances of `brid` were changed to spell out `blockchain_rid`, to avoid confusion over the meaning of the acronym. This is a list of all the rell-side changes:
+    - entity `asset.issuing_brid` -> `asset.issuing_blockchain_rid`
+    - every query that returns asset info now returns `blockchain_rid` instead of `brid`
+    - message templates for authentication use the `{blockchain_rid}` tag instead of `{brid}`
+    - entity `asset_origin.origin_brid` -> `asset_origin.origin_blockchain_rid`
 - **Participants, pubkeys, signers** All instances of these words, when related to auth descriptors, were now renamed to **signers**. This is a list of all the rell-side changes:
     - Externals (operations and queries)
         - query `get_account_auth_descriptors_by_participant_id` -> `get_account_auth_descriptors_by_signer`
@@ -39,3 +46,4 @@
     - Internals
         - function `_add_auth_participant` -> `_add_signer`
         - function `_add_eth_auth_participant` > `_add_eth_signer`
+- **Transfer history** Remove `transfer_args` and `entry_index` from queries `get_transfer_history_entry` and `get_transfer_history`.

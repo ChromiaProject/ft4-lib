@@ -1,6 +1,7 @@
 import { DictPair, QueryObject, RawGtv } from "postchain-client";
-import { Connection, PagedResponse } from "../types";
+import { PagedResponse } from "../types";
 import { PaginatedEntity } from "./types";
+import { Queryable } from "postchain-client";
 
 /**
  *
@@ -16,7 +17,7 @@ export async function retrievePaginatedEntity<
   V extends RawGtv,
   R extends PagedResponse<V> = PagedResponse<V>,
 >(
-  session: Connection,
+  session: Queryable,
   query: QueryObject<R, DictPair>,
   dataMapper: (arg: V[]) => T[],
 ): Promise<PaginatedEntity<T>> {

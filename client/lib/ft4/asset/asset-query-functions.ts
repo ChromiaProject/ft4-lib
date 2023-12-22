@@ -83,7 +83,7 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
       name: balance.asset.name,
       symbol: balance.asset.symbol,
       decimals: balance.asset.decimals,
-      brid: balance.asset.brid,
+      blockchainRid: balance.asset.blockchain_rid,
       supply: balance.asset.supply,
       iconUrl: balance.asset.icon_url,
     },
@@ -97,7 +97,7 @@ export function createAssetObject(asset: AssetResponse): Asset {
     name: asset.name,
     symbol: asset.symbol,
     decimals: asset.decimals,
-    brid: asset.brid,
+    blockchainRid: asset.blockchain_rid,
     supply: asset.supply,
     iconUrl: asset.icon_url,
   });

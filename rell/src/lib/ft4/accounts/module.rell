@@ -131,11 +131,6 @@ function _add_evm_signer(account, auth_descriptor, account_auth_descriptor) {
     }
 }
 
-function _auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
-    rate_limit(account);
-    require_auth(account, auth_descriptor, required_flags);
-}
-
 function auth_descriptor_by_id(account, id: byte_array) = require(
     account_auth_descriptor @? { account, id },
     "Auth descriptor '%s' not found for account '%s'".format(id, account.id)

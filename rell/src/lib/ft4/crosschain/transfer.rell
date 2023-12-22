@@ -38,19 +38,14 @@ namespace Unsafe {
             "Parameter amount"
         );
 
-        val origin_brid = asset_origin @? { asset } .origin_brid;
+        val origin_blockchain_rid = asset_origin @? { asset } .origin_blockchain_rid;
         val is_sender_blockchain = exists(blockchain_account @? { sender });
         val is_receiver_blockchain = exists(blockchain_account @? { receiver });
         
-        val args = [
-            [(amount, sender.id, 0)],
-            [(amount, receiver.id, 0)]
-        ];
-
         if (
-            not exists(origin_brid)
+            not exists(origin_blockchain_rid)
             or not is_sender_blockchain
-            or origin_brid != sender.id
+            or origin_blockchain_rid != sender.id
         ) {
             assets.deduct_balance(
                 sender,
@@ -64,15 +59,13 @@ namespace Unsafe {
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = true,
-            .entry_index = 0,
-            .transfer_args = args.to_gtv().to_bytes()
+            .is_input = true
         );
 
         if (
-            not exists(origin_brid)
+            not exists(origin_blockchain_rid)
             or not is_receiver_blockchain
-            or origin_brid != receiver.id
+            or origin_blockchain_rid != receiver.id
         ) {
             assets.increase_balance(receiver, asset, amount);
         }
@@ -82,9 +75,7 @@ namespace Unsafe {
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,
-            .is_input = false,
-            .entry_index = 0,
-            .transfer_args = args.to_gtv().to_bytes()
+            .is_input = false
         );
     }
 }
