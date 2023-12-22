@@ -15,7 +15,6 @@ val FT_AUTH_OP = "ft4.ft_auth";
 
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_all_operations()[op_context.op_index];
-
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
@@ -25,20 +24,38 @@ function authenticate(is_strict: boolean = true) {
     );
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
-    before_authenticate(account, auth_descriptor);
 
-    val is_validated = when (previous_op.name) {
-        EVM_AUTH_OP -> _validate_evm_signature(previous_op, is_strict, account, auth_descriptor);
-        FT_AUTH_OP -> _validate_ft4_signature(previous_op.args, account, auth_descriptor);
-        else -> false;
-    };
-
-    require(is_validated, "Invalid auth operation: %s".format(previous_op.name));
     accounts.rate_limit(account);
 
-    val auth_desc_after = accounts.account_auth_descriptor @? { $ == auth_descriptor };
-    after_authenticate(account, auth_desc_after);
+    before_authenticate(account, auth_descriptor);
+
+    require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+
+    val flags = get_auth_flags(op.name, is_strict);
+
+    when (previous_op.name) {
+        EVM_AUTH_OP -> _validate_evm_signature(op, previous_op, is_strict, flags, account, auth_descriptor);
+        FT_AUTH_OP -> _validate_ft4_signature(flags, account, auth_descriptor);
+        else -> require(false, "Invalid auth operation: %s".format(previous_op.name));
+    };
+
+    val auth_desc_after = accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    val deleted_descriptors = accounts.delete_expired_auth_descriptors(account);
+
+    after_authenticate(account, if (auth_desc_after in deleted_descriptors) null else auth_desc_after);
+
     return account;
+}
+
+function _ft_auth(required_flags: list<text>, account: accounts.account, auth_descriptor: accounts.account_auth_descriptor) {
+    accounts.rate_limit(account);
+
+    require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+
+    _validate_ft4_signature(required_flags, account, auth_descriptor);
+
+    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    accounts.delete_expired_auth_descriptors(account);
 }
 
 function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.account, accounts.account_auth_descriptor) {
@@ -68,13 +85,13 @@ function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boole
 }
 
 function _validate_evm_signature(
+  op: gtx_operation,
   auth_op: gtx_operation,
   is_strict: boolean,
-  account: accounts.account, 
+  flags: list<text>,
+  account: accounts.account,
   auth_descriptor: accounts.account_auth_descriptor
 ) {
-    val op = op_context.get_all_operations()[op_context.op_index];
-    val flags = get_auth_flags(op.name, is_strict);
     val message_template = get_auth_message_template(op.name, op.args.to_gtv(), is_strict);
     val validated_args = _validate_evm_arguments(auth_op.args, set(flags), account, auth_descriptor);
     val message = create_message_from_template(
@@ -84,13 +101,10 @@ function _validate_evm_signature(
         auth_descriptor.ctr
     );
 
-    var recovered_keys = 
-        if (auth_descriptor.auth_type in [accounts.auth_type.S, accounts.auth_type.ES])
-          [_validate_evm_address(message, validated_args.signatures[0], auth_descriptor)]
-        else _recover_multiple_evm_keys(message, validated_args.signatures, auth_descriptor);
-    
-    accounts.update_auth_descriptor_rule_variables(auth_descriptor);
-    return true;
+    if (auth_descriptor.auth_type in [accounts.auth_type.S, accounts.auth_type.ES])
+        _validate_evm_address(message, validated_args.signatures[0], auth_descriptor);
+    else
+        _validate_multiple_evm_addresses(message, validated_args.signatures, auth_descriptor);
 }
 
 function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
@@ -119,8 +133,7 @@ function _validate_evm_arguments(
     require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
 
     val signatures = list<signature>.from_gtv(auth_args[2]);
-    require(not accounts.have_violating_rules(auth_descriptor));
-    
+
     val has_all_flags = when (auth_descriptor.auth_type) {
         S, ES -> accounts.single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
         M, EM -> accounts.multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
@@ -132,13 +145,18 @@ function _validate_evm_arguments(
 }
 
 function _validate_ft4_signature(
-  auth_args: list<gtv>,
-  account: accounts.account, 
+  flags: list<text>,
+  account: accounts.account,
   auth_descriptor: accounts.account_auth_descriptor
 ) {
-    val flags = get_auth_flags(op_context.get_all_operations()[op_context.op_index].name, is_strict=false);
-    accounts.require_auth(account, auth_descriptor, list(flags));
-    return true;
+   	val result: utils.validation_result = accounts.check_auth_args(
+          		auth_descriptor.auth_type,
+          		auth_descriptor.args,
+                accounts.get_signers(auth_descriptor.auth_type, auth_descriptor.args),
+          		flags
+   	);
+
+    require(result.valid, result.error!!); // Prints a precise error message.
 }
 
 function _recover_evm_address(message: text, signature) {
@@ -169,8 +187,8 @@ function _validate_evm_address(message: text, signature, accounts.account_auth_d
     return recovered_address;
 }
 
-function _recover_multiple_evm_keys(message: text, signatures: list<signature>, accounts.account_auth_descriptor) {
-    var recovered_keys = list<byte_array>();
+function _validate_multiple_evm_addresses(message: text, signatures: list<signature>, accounts.account_auth_descriptor) {
+    val recovered_keys = list<byte_array>();
     for (i in range(signatures.size())) {
         recovered_keys.add(
             _validate_evm_address(
