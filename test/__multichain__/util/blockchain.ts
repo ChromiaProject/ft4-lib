@@ -40,9 +40,7 @@ async function fetchBlockchains(
  * @param name - The name of the blockchain to retrieve.
  * @returns The corresponding blockchain data.
  */
-async function getBlockchainBrid(
-  name: string,
-): Promise<Blockchain | undefined> {
+async function getBlockchainRid(name: string): Promise<Blockchain | undefined> {
   let blockchains = await fetchBlockchains();
   if (!blockchains?.[name]) {
     blockchains = await fetchBlockchains(true);
@@ -50,4 +48,4 @@ async function getBlockchainBrid(
   return blockchains[name];
 }
 
-export { fetchBlockchains, getBlockchainBrid };
+export { fetchBlockchains, getBlockchainRid };

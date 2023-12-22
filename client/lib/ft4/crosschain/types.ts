@@ -33,12 +33,12 @@ export interface OrchestratorBase {
   walkPath: () => Promise<void>;
   getTransactionBuilderForChain: (
     session: Session,
-    brid: Buffer,
+    blockchainRid: Buffer,
   ) => Promise<TransactionBuilder>;
   handleErrors: (fn: () => Promise<void>) => Promise<void>;
   completeTransfer: (tx: RawGtx, transfer?: PendingTransfer) => Promise<void>;
   createIccfProofOperation: (
-    targetChainBrid: Buffer,
+    targetChainRid: Buffer,
     hopIndex: number,
   ) => Promise<Operation>;
   onTransferInit: (listener: Listener<[]>) => void;

@@ -6,7 +6,7 @@ export type Asset = {
   name: string;
   symbol: string;
   decimals: number;
-  brid: Buffer;
+  blockchainRid: Buffer;
   supply: bigint;
   iconUrl: string;
 };
@@ -16,7 +16,7 @@ export type AssetResponse = {
   name: string;
   symbol: string;
   decimals: number;
-  brid: Buffer;
+  blockchain_rid: Buffer;
   supply: bigint;
   icon_url: string;
 };

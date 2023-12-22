@@ -24,6 +24,11 @@
 - **create_account_with_auth** function return `account` instead of `byte_array`.
 - **add_auth_descriptor_to_account** function return `account_auth_descriptor` instead of `byte_array`.
 - **Rate limit config** New format for rate limit configuration.
+- **brid -> blockchain_rid** All instances of `brid` were changed to spell out `blockchain_rid`, to avoid confusion over the meaning of the acronym. This is a list of all the rell-side changes:
+    - entity `asset.issuing_brid` -> `asset.issuing_blockchain_rid`
+    - every query that returns asset info now returns `blockchain_rid` instead of `brid`
+    - message templates for authentication use the `{blockchain_rid}` tag instead of `{brid}`
+    - entity `asset_origin.origin_brid` -> `asset_origin.origin_blockchain_rid`
 - **Participants, pubkeys, signers** All instances of these words, when related to auth descriptors, were now renamed to **signers**. This is a list of all the rell-side changes:
     - Externals (operations and queries)
         - query `get_account_auth_descriptors_by_participant_id` -> `get_account_auth_descriptors_by_signer`

@@ -18,7 +18,7 @@ export function createFakeAuthDataService(
       generator.next().value,
     // eslint-disable-next-line
     getLoginConfig: (configName: string) => Promise.resolve({ flags: [] }),
-    getBrid: () => Buffer.from(""),
+    getBlockchainRid: () => Buffer.from(""),
   };
 }
 
