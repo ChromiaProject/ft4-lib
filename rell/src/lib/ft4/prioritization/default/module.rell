@@ -4,10 +4,12 @@ import ^^.auth;
 import ^^.accounts;
 import ^^.prioritization.*;
 
-@extend(priority_check) function(tx_body: gtx_transaction_body, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
+@extend(priority_check) function(tx_body: gtx_transaction_body, tx_size: integer, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
     val tx_accounts = tx_body.operations @*
         { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] }
         (auth.fetch_account_and_auth_descriptor($.args)[0]);
+
+    // TODO consider tx_size for tx_cost_points
 
     if (tx_accounts.empty()) return no_account_priority_state(0.0);
     val account = tx_accounts[0]; // Use first account if there are multiple
