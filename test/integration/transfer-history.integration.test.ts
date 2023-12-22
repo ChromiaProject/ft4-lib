@@ -11,6 +11,7 @@ import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-m
 import { IClient, newSignatureProvider } from "postchain-client";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { TransferDetail } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
+import { getTransferHistoryFromHeight } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
 
 let asset: Asset;
 let connection: Connection;
@@ -25,6 +26,7 @@ describe("Transfer history", () => {
     asset = await getNewAsset(client);
     connection = createConnection(client);
   });
+
   describe("Transfer history iterator", () => {
     it("should have one transfer history entry when mint is made", async () => {
       const keyPair = newSignatureProvider();
@@ -303,5 +305,45 @@ describe("Transfer history", () => {
       history.data[0].rowid,
     );
     expect(entry!.rowid).toBe(history.data[0].rowid);
+  });
+
+  it("returns only transfers for specific asset", async () => {
+    const asset2 = await getNewAsset(client);
+
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(asset, 200)
+      .withBalance(asset2, 100)
+      .withPoints(1)
+      .build();
+
+    const account2 = await AccountBuilder.account(connection).build();
+
+    await account1.transfer(
+      account2.id,
+      asset.id,
+      createAmount(20, asset.decimals),
+    );
+
+    await account1.transfer(
+      account2.id,
+      asset2.id,
+      createAmount(15, asset2.decimals),
+    );
+
+    await account2.transfer(
+      account1.id,
+      asset.id,
+      createAmount(10, asset.decimals),
+    );
+
+    const transferHistory = await getTransferHistoryFromHeight(
+      connection,
+      0,
+      asset2.id,
+      10,
+      null,
+    );
+
+    expect(transferHistory.data.length).toEqual(3);
   });
 });

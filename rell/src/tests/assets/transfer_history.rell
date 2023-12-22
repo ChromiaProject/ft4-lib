@@ -244,3 +244,32 @@ function test_transfer_details() {
     assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset.id), expected);
     assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset2.id), list<assets.transfer_detail>());
 }
+
+function test_history_by_asset() {
+    val alice = test_utils.register_alice();
+    val bob = test_utils.register_bob();
+
+    val asset = test_utils.create_asset("test", "t", 5);
+    test_utils.mint(alice.account, asset, 1);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1L))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val start_cursor = utils.encode_cursor(utils.page_cursor());
+    val response = ft4.assets_ext.get_transfer_history_from_height(5, asset.id, 10, start_cursor);
+    val expected_data = assets.extract_data_from_transfer_history_list(
+            assets.transfer_history_entry @* {
+                asset
+            } (@sort_desc @omit .rowid, $) limit 2
+        ) @* {} (.data);
+    val expected = utils.paged_result(
+        next_cursor = null,
+        data = expected_data
+    );
+
+    assert_equals(response.data.size(), 2);
+    assert_equals(response, expected);
+}
