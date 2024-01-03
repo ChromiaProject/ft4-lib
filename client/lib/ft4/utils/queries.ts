@@ -8,3 +8,29 @@ export function rellAppStructure(): QueryObject<{
     args: {},
   };
 }
+
+export function getAllAuthHandlersQuery(): QueryObject<
+  {
+    name: string;
+    flags: string[];
+    dynamic: boolean;
+  }[]
+> {
+  return {
+    name: "ft4.get_all_auth_handlers",
+    args: {},
+  };
+}
+
+export function getAllowedAuthDescriptors(
+  opName: string,
+  ids: Buffer[],
+): QueryObject<Buffer[]> {
+  return {
+    name: "ft4.get_allowed_auth_descriptors",
+    args: {
+      op_name: opName,
+      ad_ids: ids,
+    },
+  };
+}

@@ -24,30 +24,39 @@ import {
 import {
   AuthDataService,
   Authenticator,
+  KeyHandler,
   KeyStore,
   createAuthenticator,
 } from "./authentication";
 import { createLoginManager } from "./authentication/login-manager";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import {
-  authFlags,
   authMessageTemplate,
   loginConfig,
   nonce,
 } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
+  AuthHandler,
   Connection,
   KeyStoreInteractor,
   OptionalPageCursor,
   Session,
 } from "./types";
-import { getConfig, getVersion, nop } from "./utils";
-import { fetchExposedOperations } from "./utils/exposed-operations";
-import { transactionBuilder } from "./utils/transaction-builder";
-import { BufferId } from "./utils/types";
-import { getTransferDetails } from "./accounts/transfer-history/transfer-history-query-functions";
-import { getTransferDetailsByAsset } from "./accounts/transfer-history/transfer-history-query-functions";
+import {
+  getConfig,
+  getVersion,
+  nop,
+  fetchExposedOperations,
+  fetchAllAuthHandlers,
+  getAllowedAuthDescriptors,
+  BufferId,
+  transactionBuilder,
+} from "@ft4/utils";
+import {
+  getTransferDetails,
+  getTransferDetailsByAsset,
+} from "./accounts/transfer-history/transfer-history-query-functions";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -141,20 +150,45 @@ export async function callWithoutNop(
 
 export function createAuthDataService(connection: Connection): AuthDataService {
   let exposedOperations: Set<string> | null = null;
-
-  const fetchAndCacheOperations = async () => {
-    exposedOperations = await fetchExposedOperations(connection);
-  };
+  let staticAuthHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
-        await fetchAndCacheOperations();
+        exposedOperations = await fetchExposedOperations(connection);
       }
-      return exposedOperations!.has(operationName);
+      return exposedOperations.has(operationName);
     },
-    getAuthFlags: async (operation: Operation) => {
-      return await connection.query(authFlags(operation));
+    getAllowedKeys: async (
+      operationName: string,
+      keyHandlers: KeyHandler[],
+    ): Promise<KeyHandler[]> => {
+      if (!staticAuthHandlers) {
+        staticAuthHandlers = (await fetchAllAuthHandlers(connection)) || {};
+      }
+      if (staticAuthHandlers[operationName]) {
+        return keyHandlers.filter((kh) =>
+          kh.satisfiesAuthRequirements(
+            staticAuthHandlers![operationName].flags,
+          ),
+        );
+      }
+      if (staticAuthHandlers[`_${operationName}`]) {
+        return keyHandlers.filter((kh) =>
+          kh.satisfiesAuthRequirements(
+            staticAuthHandlers![`_${operationName}`].flags,
+          ),
+        );
+      }
+      const allowedIds = await connection.query(
+        getAllowedAuthDescriptors(
+          operationName,
+          keyHandlers.map((kh) => kh.authDescriptor.id),
+        ),
+      );
+      return allowedIds
+        .map((id) => keyHandlers.find((kh) => kh.authDescriptor.id === id))
+        .filter(Boolean) as KeyHandler[];
     },
     getAuthMessageTemplate: async (operation: Operation) => {
       return await connection.query(authMessageTemplate(operation));

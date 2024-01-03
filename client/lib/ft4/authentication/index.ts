@@ -82,22 +82,14 @@ const noopKeyHandler: KeyHandler = Object.freeze({
   getSigners: (): Buffer[] => [],
 });
 
-async function getAuthFlags(
-  authDataService: AuthDataService,
-  operation: Operation,
-): Promise<string[]> {
-  return await authDataService.getAuthFlags(operation);
-}
-
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   keyHandlers: KeyHandler[],
   operation: Operation,
 ): Promise<KeyHandler | null> {
-  const flags = await getAuthFlags(authDataService, operation);
-
-  const handlers = keyHandlers.filter((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(flags),
+  const handlers = await authDataService.getAllowedKeys(
+    operation.name,
+    keyHandlers,
   );
 
   const nonInteractiveHandlers = handlers.filter(
