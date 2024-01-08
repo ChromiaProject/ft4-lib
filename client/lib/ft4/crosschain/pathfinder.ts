@@ -139,7 +139,9 @@ export async function createConnectionToBlockchainRid(
   return createConnection(
     await createClient({
       // assume same D1. Cross-chain doesn't work otherwise
-      directoryNodeUrlPool: oldClient.config.endpointPool.slice(),
+      directoryNodeUrlPool: oldClient.config.endpointPool
+        .slice()
+        .map((ep) => ep.url),
       blockchainRid:
         typeof newBlockchainRid == "string"
           ? newBlockchainRid
