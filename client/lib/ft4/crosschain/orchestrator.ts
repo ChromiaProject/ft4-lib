@@ -232,7 +232,7 @@ async function createBaseOrcestrator(
   };
 
   const directoryClient = await createClient({
-    nodeUrlPool: session.client.config.endpointPool.slice(),
+    nodeUrlPool: session.client.config.endpointPool.slice().map((ep) => ep.url),
     blockchainIid: 0,
   });
 

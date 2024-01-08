@@ -5,23 +5,21 @@ import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import terser from "@rollup/plugin-terser";
+import pkg from "./package.json" with { type: "json"};
+
+const input = "./dist/index.js";
 
 export default [
   //ESM
   {
-    input: "./dist/index.js",
+    input,
     output: {
-      dir: "./dist/esm",
+      file: pkg.exports.browser,
       format: "es",
       name: "FT4 lib",
       sourcemap: true,
     },
     plugins: [
-      alias({
-        entries: [
-          { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
-        ]
-      }),
       nodeResolve({ browser: true }),
       commonjs({ transformMixedEsModules: true }),
       peerDepsExternal(),
@@ -31,10 +29,10 @@ export default [
   },
   //UMD
   {
-    input: "./dist/index.js",
+    input,
     output: {
-      dir: "./dist/umd",
       format: "umd",
+      file: pkg.exports.script,
       name: "FT4 lib",
       sourcemap: true,
       globals: {
@@ -43,11 +41,6 @@ export default [
       }
     },
     plugins: [
-      alias({
-        entries: [
-          { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
-        ]
-      }),
       peerDepsExternal(),
       nodeResolve({ browser: true }),
       commonjs({ transformMixedEsModules: true }),
@@ -57,23 +50,18 @@ export default [
   },  
   //NODE
   {
-    input: "./dist/index.js",
+    input,
     output: {
-      dir: "./dist/cjs",
+      file: pkg.exports.require,
       format: "cjs",
       name: "FT4 lib",
       sourcemap: true,
     },
     plugins: [
-      alias({
-        entries: [
-          { find: /^@ft4\/(.*)/, replacement: `${cwd()}/dist/$1` }
-        ]
-      }),
       nodeResolve({ preferBuiltins: true }),
       commonjs({ transformMixedEsModules: false }),
       peerDepsExternal(),
-      json()
+      json(),
     ],
   },
 ];
