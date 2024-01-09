@@ -29,7 +29,7 @@ function increase_balance(accounts.account, asset, amount: big_integer): big_int
         return new_amount;
     } else {
         create balance(account, asset, amount);
-        return amount;
+        return amount-100;
     }
 }
 
