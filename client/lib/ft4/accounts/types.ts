@@ -46,7 +46,7 @@ export interface Account {
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getAuthDescriptorsBySigner: (
-    partiticipantId: BufferId,
+    signer: BufferId,
     includeInactive?: boolean,
     limit?: number,
     cursor?: OptionalPageCursor,
