@@ -40,7 +40,7 @@ function test_auth_descriptors_are_returned_in_correct_order() {
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors(account.id, 4, null);
 
-  assert_equals(get_single_sig_args(descriptors.data[0]).signer, rell.test.keypairs.bob.pub);
+  assert_equals(get_single_sig_args(descriptors.data[0]).signer, rell.test.keypairs.alice.pub);
   assert_equals(get_single_sig_args(descriptors.data[1]).signer, rell.test.keypairs.bob.pub);
   assert_equals(get_single_sig_args(descriptors.data[2]).signer, rell.test.keypairs.eve.pub);
   assert_equals(get_single_sig_args(descriptors.data[3]).signer, rell.test.keypairs.trudy.pub);
