@@ -227,7 +227,7 @@ async function retrieveAuthDescriptorsAndFilterOutInactivesIfNeeded(
 ) {
   let currCursor = cursor;
   const retrievePage = async () => {
-    const pg = await retrievePaginatedEntity<
+    const page = await retrievePaginatedEntity<
       AnyAuthDescriptor,
       RawAnyAuthDescriptor
     >(
@@ -236,8 +236,8 @@ async function retrieveAuthDescriptorsAndFilterOutInactivesIfNeeded(
       (authDescriptors) =>
         authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
     );
-    currCursor = pg.nextCursor;
-    return pg.data;
+    currCursor = page.nextCursor;
+    return page.data;
   };
 
   let data = await retrievePage();
