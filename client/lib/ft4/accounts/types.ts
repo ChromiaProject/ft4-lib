@@ -41,11 +41,15 @@ export interface Account {
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance | null>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
   getAuthDescriptors: (
+    includeInactive?: boolean,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getAuthDescriptorsBySigner: (
     partiticipantId: BufferId,
+    includeInactive?: boolean,
+    limit?: number,
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (

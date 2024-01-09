@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { formatter, IClient } from "postchain-client";
+import { formatter, IClient, QueryObject } from "postchain-client";
 import {
   getBalanceByAccountId,
   getBalancesByAccountId,
@@ -24,8 +24,13 @@ import {
   TransferHistoryFilter,
 } from "./transfer-history/types";
 import { Account, RateLimit } from "./types";
-import { AnyAuthDescriptor, gtv } from "@ft4/accounts/auth-descriptor";
-import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor";
+import {
+  AuthDescriptorSimpleRule,
+  RawAnyAuthDescriptor,
+  RuleOperator,
+  RuleVariable,
+} from "./auth-descriptor/types";
 import {
   PendingTransfer,
   PendingTransferResponse,
@@ -77,18 +82,26 @@ export function createAccountObject(
       getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getAuthDescriptors: async (
+    getAuthDescriptors: (
+      includeInactive = true,
       limit = 100,
       cursor: OptionalPageCursor = null,
-    ) => {
-      return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
+    ) =>
+      getAuthDescriptors(connection, accountId, includeInactive, limit, cursor),
+    getAuthDescriptorsBySigner: (
+      signer: BufferId,
+      includeInactive = true,
+      limit = 100,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getAuthDescriptorsBySigner(
         connection,
-        accountAuthDescriptors(accountId, limit, cursor),
-        gtv.mapAuthDescriptorsFromGtv,
-      );
-    },
-    getAuthDescriptorsBySigner: (signer: BufferId) =>
-      getAuthDescriptorsBySigner(connection, accountId, signer),
+        accountId,
+        signer,
+        includeInactive,
+        limit,
+        cursor,
+      ),
     getRateLimit: () => getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit = 100,
@@ -173,13 +186,120 @@ export async function getAuthDescriptorsBySigner(
   connection: Connection,
   accountId: BufferId,
   signer: BufferId,
+  includeInactive = true,
   limit = 100,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AnyAuthDescriptor>> {
-  return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
+  return await retrieveAuthDescriptorsAndFilterOutInactivesIfNeeded(
     connection,
-    accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
-    (authDescriptors) =>
-      authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
+    (l, c) => accountAuthDescriptorsBySigner(accountId, signer, l, c),
+    includeInactive,
+    limit,
+    cursor,
   );
+}
+
+export async function getAuthDescriptors(
+  connection: Connection,
+  accountId: BufferId,
+  includeInactive = true,
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<AnyAuthDescriptor>> {
+  return await retrieveAuthDescriptorsAndFilterOutInactivesIfNeeded(
+    connection,
+    (l, c) => accountAuthDescriptors(accountId, l, c),
+    includeInactive,
+    limit,
+    cursor,
+  );
+}
+
+async function retrieveAuthDescriptorsAndFilterOutInactivesIfNeeded(
+  connection: Connection,
+  query: (
+    limit: number,
+    cursor: OptionalPageCursor,
+  ) => QueryObject<RawAnyAuthDescriptor[], any>,
+  includeInactive = true,
+  limit = 100,
+  cursor: OptionalPageCursor = null,
+) {
+  let currCursor = cursor;
+  const retrievePage = async () => {
+    const pg = await retrievePaginatedEntity<
+      AnyAuthDescriptor,
+      RawAnyAuthDescriptor
+    >(
+      connection,
+      query(includeInactive ? limit : 100, currCursor),
+      (authDescriptors) =>
+        authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
+    );
+    currCursor = pg.nextCursor;
+    return pg.data;
+  };
+
+  let data = await retrievePage();
+  if (!includeInactive) {
+    let currentHeight: number;
+
+    const getBlockHeight = async () => {
+      if (currentHeight === undefined) {
+        const blocks = await connection.client.getBlocksInfo(1);
+        currentHeight = blocks[0].height;
+      }
+      return currentHeight;
+    };
+
+    data = await Promise.all(data.filter((ad) => isActive(ad, getBlockHeight)));
+
+    while (data.length < limit && currCursor !== null) {
+      const newData = (await retrievePage()).filter((ad) =>
+        isActive(ad, getBlockHeight),
+      );
+      data.push(...newData);
+    }
+  }
+  return {
+    data: data.slice(0, limit),
+    nextCursor: currCursor,
+  };
+}
+
+async function isActive(
+  ad: AnyAuthDescriptor,
+  getBlockHeight: () => Promise<number>,
+): Promise<boolean> {
+  if (ad.rules === null) return true;
+
+  const isRuleActive = async (rule: AuthDescriptorSimpleRule) => {
+    let variable;
+    if (rule.variable === RuleVariable.BlockHeight) {
+      variable = await getBlockHeight();
+    } else if (rule.variable === RuleVariable.BlockTime) {
+      variable = Date.now();
+    } else {
+      // maybe add query?
+      return true;
+    }
+
+    if (rule.operator === RuleOperator.Equals) {
+      return variable === rule.value;
+    } else if (rule.operator === RuleOperator.GreaterOrEqual) {
+      return variable >= rule.value;
+    } else if (rule.operator === RuleOperator.GreaterThan) {
+      return variable > rule.value;
+    } else if (rule.operator === RuleOperator.LessOrEqual) {
+      return variable <= rule.value;
+    } else {
+      return variable < rule.value;
+    }
+  };
+
+  if (ad.rules.operator === "and") {
+    return (await Promise.all(ad.rules.rules.map(isRuleActive))).every(Boolean);
+  } else {
+    return await isRuleActive(ad.rules);
+  }
 }

@@ -11,9 +11,11 @@ import {
   AuthDescriptorRegistration,
   FlagsType,
   MultiSig,
+  blockTime,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
+  greaterOrEqual,
   gtv,
 } from "@ft4/accounts/auth-descriptor";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
@@ -320,7 +322,7 @@ describe("Test the account", () => {
     );
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const { data } = await session.account.getAuthDescriptors(1);
+    const { data } = await session.account.getAuthDescriptors(true, 1);
     const authDesc = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyStore.pubKey,
@@ -353,13 +355,58 @@ describe("Test the account", () => {
     );
     await session.account.addAuthDescriptor(ad2, keyPair2);
 
-    const { data, nextCursor } = await session.account.getAuthDescriptors(1);
+    const { data, nextCursor } = await session.account.getAuthDescriptors(
+      true,
+      1,
+    );
     expect(data.length).toBe(1);
     const { data: data2 } = await session.account.getAuthDescriptors(
+      true,
       1,
       nextCursor,
     );
     expect(data2.length).toBe(1);
+  });
+
+  it("can filter out invalid auth descriptors with pagination", async () => {
+    const keyPair = pcl.encryption.makeKeyPair();
+    const keyStore = createInMemoryFtKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Account],
+      keyStore.pubKey,
+      null,
+    );
+
+    await createAccount(_connection.client, ad);
+
+    const session = await createKeyStoreInteractor(
+      _connection.client,
+      keyStore,
+    ).getSession(deriveAuthDescriptorId(ad));
+
+    const keyPair2 = pcl.encryption.makeKeyPair();
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
+      keyPair2.pubKey,
+      greaterOrEqual(blockTime(Date.now() - 1000)),
+    );
+    const ad3 = createSingleSigAuthDescriptorRegistration(
+      [FlagsType.Transfer],
+      keyPair2.pubKey,
+      greaterOrEqual(blockTime(Date.now() + 10000)),
+    );
+    await session.account.addAuthDescriptor(ad2, keyPair2);
+    await session.account.addAuthDescriptor(ad3, keyPair2);
+
+    const { data, nextCursor } = await session.account.getAuthDescriptors(
+      false,
+      1,
+    );
+    expect(data.length).toBe(1);
+    const { data: data2, nextCursor: nextCursor2 } =
+      await session.account.getAuthDescriptors(false, 1, nextCursor);
+    expect(data2.length).toBe(1);
+    expect(nextCursor2).toBeNull();
   });
 
   it("has only one auth descriptor after calling deleteAllExcluding", async () => {
