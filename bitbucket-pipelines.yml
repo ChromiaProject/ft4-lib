@@ -55,7 +55,14 @@ pipelines:
             - apt update
             - apt install -y netcat-openbsd chr default-jre
             - chr install -s configs/rell-test.yml
-            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell || (echo "Rell test failed" ;  exit 1)
+            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell || \
+              (curl -i -X POST https://chromadev.zulipchat.com/api/v1/messages \
+                   -u ${BOT_EMAIL_ADDRESS}:${BOT_API_KEY} \
+                   --data-urlencode type=stream \
+                   --data-urlencode 'to="Protocols - internal"' \
+                   --data-urlencode 'topic=Build status' \
+                   --data-urlencode 'content=Rell tests failed on Bitbucket' ; \
+               exit 1)
             - npm ci
             - export JEST_JUNIT_OUTPUT_NAME=unit.xml
             - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
