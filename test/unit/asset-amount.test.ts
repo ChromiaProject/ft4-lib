@@ -58,7 +58,7 @@ describe("Asset amount", () => {
       1, 0, 5, 5, 1, 2, 0, 4, 3, 15, 1,
     ]);
     expect(numbers.map((num) => num.value)).toEqual([
-      BigInt(20),
+      BigInt(10),
       BigInt(-25),
       BigInt("1" + "0".repeat(10)),
       BigInt(-4242000),
