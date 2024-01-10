@@ -1,7 +1,7 @@
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 import { Buffer } from "buffer";
-import { Operation } from "postchain-client";
+import { Operation, RawGtv } from "postchain-client";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -47,10 +47,12 @@ export interface AuthDataService {
   ): Promise<number | null>;
   getLoginConfig(name: string | undefined): Promise<LoginConfig | null>;
   getBlockchainRid(): Buffer;
-  getAllowedKeys(
+  getAllowedKeyHandler(
     operationName: string,
-    ads: KeyHandler[],
-  ): Promise<KeyHandler[]>;
+    args: RawGtv | undefined,
+    accountId: Buffer,
+    keyHandlers: KeyHandler[],
+  ): Promise<KeyHandler | null>;
 }
 
 export type LoginConfig = {

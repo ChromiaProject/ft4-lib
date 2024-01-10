@@ -14,7 +14,7 @@ struct auth_data {
 struct _auth_handler {
     flags: list<text>;
     message_formatter: ((gtv) -> text)? = null;
-    resolver: ((byte_array) -> boolean)? = null;
+    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null;
 }
 
 /*
@@ -41,7 +41,7 @@ function get_auth_handler(op_name: name, is_strict: boolean) {
     require_valid_scope_name(op_name);
     val auth_handlers = auth_handler();
     if (op_name in auth_handlers) return auth_handlers[op_name];
-    if ("_" + op_name in auth_handlers) return auth_handlers["_" + op_name];
+    if ("__override__" + op_name in auth_handlers) return auth_handlers["__override__" + op_name];
 
     require(not is_strict, "Strict mode is used and no auth handler matches exactly <%s>".format(op_name));
 
@@ -54,11 +54,19 @@ function get_auth_handler(op_name: name, is_strict: boolean) {
     );
 }
 
-function add_auth_handler(scope: text = APP_SCOPE, flags: list<text>, message: ((gtv) -> text)? = null, resolver: ((byte_array) -> boolean)? = null) =
-    [valid_scope_name(scope): _auth_handler(flags, message, resolver)];
+function add_auth_handler(
+    scope: text = APP_SCOPE, 
+    flags: list<text>,
+    message: ((gtv) -> text)? = null,
+    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null
+) = [valid_scope_name(scope): _auth_handler(flags, message, resolver)];
 
-function add_overridable_auth_handler(scope: text = APP_SCOPE, flags: list<text>, message: ((gtv) -> text)? = null, resolver: ((byte_array) -> boolean)? = null) =
-    ["_" + valid_scope_name(scope): _auth_handler(flags, message, resolver)];
+function add_overridable_auth_handler(
+    scope: text = APP_SCOPE,
+    flags: list<text>,
+    message: ((gtv) -> text)? = null,
+    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null
+) = ["__override__" + valid_scope_name(scope): _auth_handler(flags, message, resolver)];
 
 function valid_scope_name(scope: text) {
     val scope_name = scope.trim();

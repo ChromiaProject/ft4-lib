@@ -10,7 +10,7 @@ import {
 import { Config } from "./types";
 import { Buffer } from "buffer";
 import { AuthHandler, Connection } from "@ft4/types";
-import { getAllAuthHandlersQuery } from "./queries";
+import { allAuthHandlers } from "./queries";
 
 export function nop(): Operation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
@@ -68,7 +68,7 @@ type ConfigResponse = {
 export async function fetchAllAuthHandlers(
   connection: Connection,
 ): Promise<{ [key: string]: AuthHandler }> {
-  const authHandlers = await connection.query(getAllAuthHandlersQuery());
+  const authHandlers = await connection.query(allAuthHandlers());
   return authHandlers.reduce(
     (acc, curr) => ({ ...acc, [curr.name]: curr }),
     {},

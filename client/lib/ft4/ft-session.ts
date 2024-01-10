@@ -49,7 +49,7 @@ import {
   nop,
   fetchExposedOperations,
   fetchAllAuthHandlers,
-  getAllowedAuthDescriptors,
+  firstAllowedAuthDescriptor,
   BufferId,
   transactionBuilder,
 } from "@ft4/utils";
@@ -150,7 +150,7 @@ export async function callWithoutNop(
 
 export function createAuthDataService(connection: Connection): AuthDataService {
   let exposedOperations: Set<string> | null = null;
-  let staticAuthHandlers: { [key: string]: AuthHandler } | null = null;
+  let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
     isOperationExposed: async (operationName: string): Promise<boolean> => {
@@ -159,36 +159,40 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       }
       return exposedOperations.has(operationName);
     },
-    getAllowedKeys: async (
+    getAllowedKeyHandler: async (
       operationName: string,
+      args: RawGtv,
+      accountId: Buffer,
       keyHandlers: KeyHandler[],
-    ): Promise<KeyHandler[]> => {
-      if (!staticAuthHandlers) {
-        staticAuthHandlers = (await fetchAllAuthHandlers(connection)) || {};
+    ): Promise<KeyHandler | null> => {
+      if (!authHandlers) {
+        authHandlers = (await fetchAllAuthHandlers(connection)) || {};
       }
-      if (staticAuthHandlers[operationName]) {
-        return keyHandlers.filter((kh) =>
-          kh.satisfiesAuthRequirements(
-            staticAuthHandlers![operationName].flags,
-          ),
-        );
+      const authHandler =
+        authHandlers[operationName] ||
+        authHandlers[`__override__${operationName}`];
+      if (!authHandler) {
+        return keyHandlers[0];
       }
-      if (staticAuthHandlers[`_${operationName}`]) {
-        return keyHandlers.filter((kh) =>
-          kh.satisfiesAuthRequirements(
-            staticAuthHandlers![`_${operationName}`].flags,
-          ),
-        );
-      }
-      const allowedIds = await connection.query(
-        getAllowedAuthDescriptors(
+      const allowedKeyHandlers = keyHandlers.filter((kh) =>
+        kh.satisfiesAuthRequirements(authHandler.flags),
+      );
+      if (!allowedKeyHandlers.length) return null;
+
+      const selectedAdId = await connection.query(
+        firstAllowedAuthDescriptor(
           operationName,
-          keyHandlers.map((kh) => kh.authDescriptor.id),
+          args,
+          accountId,
+          allowedKeyHandlers.map((kh) => kh.authDescriptor.id),
         ),
       );
-      return allowedIds
-        .map((id) => keyHandlers.find((kh) => kh.authDescriptor.id === id))
-        .filter(Boolean) as KeyHandler[];
+      return (
+        keyHandlers.find(
+          (kh) =>
+            kh.authDescriptor.id.compare(selectedAdId ?? Buffer.alloc(0)) === 0,
+        ) ?? null
+      );
     },
     getAuthMessageTemplate: async (operation: Operation) => {
       return await connection.query(authMessageTemplate(operation));

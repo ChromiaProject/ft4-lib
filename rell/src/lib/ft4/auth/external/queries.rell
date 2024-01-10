@@ -8,7 +8,12 @@ query get_auth_flags(op_name: name) = auth.get_auth_handler(op_name, is_strict=f
 
 query get_auth_message_template(op_name: name, op_args: gtv) = auth.get_auth_message_template(op_name, op_args, is_strict=false);
 
-query get_allowed_auth_descriptors(op_name: name, ad_ids: list<byte_array>): list<byte_array> = auth.filter_allowed_auth_descriptors(op_name, ad_ids, is_strict=false);
+query get_first_allowed_auth_descriptor(
+  op_name: name,
+  args: gtv,
+  account_id: byte_array,
+  ad_ids: list<byte_array>
+): byte_array? = auth.get_first_allowed_auth_descriptor(op_name, args, account_id, ad_ids, is_strict=false);
 
 query get_all_auth_handlers() {
   val auth_handlers = auth.auth_handler();

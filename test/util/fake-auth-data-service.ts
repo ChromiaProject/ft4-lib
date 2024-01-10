@@ -1,6 +1,6 @@
 import { AuthDataService, KeyHandler } from "@ft4/authentication/types";
 import { BufferId } from "@ft4/utils";
-import { Operation } from "postchain-client";
+import { Operation, RawGtv } from "postchain-client";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
@@ -17,11 +17,16 @@ export function createFakeAuthDataService(
     // eslint-disable-next-line
     getLoginConfig: (configName: string) => Promise.resolve({ flags: [] }),
     getBlockchainRid: () => Buffer.from(""),
-    getAllowedKeys: (operationName: string, khs: KeyHandler[]) =>
+    getAllowedKeyHandler: (
+      operationName: string,
+      args: RawGtv,
+      accountId: Buffer,
+      khs: KeyHandler[],
+    ) =>
       Promise.resolve(
         khs.filter((kh) =>
           kh.satisfiesAuthRequirements(data[operationName].flags),
-        ),
+        )[0],
       ),
   };
 }

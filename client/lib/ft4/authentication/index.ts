@@ -19,16 +19,22 @@ export {
 } from "./login-manager/stores";
 
 export function createAuthenticator(
-  accountId: BufferId,
+  accountBufferId: BufferId,
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService,
 ): Authenticator {
+  const accountId = formatter.ensureBuffer(accountBufferId);
   return Object.freeze({
-    accountId: formatter.ensureBuffer(accountId),
+    accountId,
     authDataService,
     keyHandlers,
     getKeyHandlerForOperation: (operation: Operation) =>
-      getKeyHandlerForOperation(authDataService, keyHandlers, operation),
+      getKeyHandlerForOperation(
+        authDataService,
+        accountId,
+        keyHandlers,
+        operation,
+      ),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
   });
@@ -84,25 +90,16 @@ const noopKeyHandler: KeyHandler = Object.freeze({
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
+  accountId: Buffer,
   keyHandlers: KeyHandler[],
   operation: Operation,
 ): Promise<KeyHandler | null> {
-  const handlers = await authDataService.getAllowedKeys(
+  return await authDataService.getAllowedKeyHandler(
     operation.name,
-    keyHandlers,
+    operation.args,
+    accountId,
+    keyHandlers.toSorted(
+      (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
+    ),
   );
-
-  const nonInteractiveHandlers = handlers.filter(
-    (keyHandler) => !keyHandler.keyStore.isInteractive,
-  );
-
-  if (nonInteractiveHandlers.length !== 0) {
-    return nonInteractiveHandlers[0];
-  }
-
-  if (handlers.length !== 0) {
-    return handlers[0];
-  }
-
-  return null;
 }
