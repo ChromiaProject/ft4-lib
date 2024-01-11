@@ -15,7 +15,7 @@ struct gtv_auth_descriptor {
 }
 
 function setup_account_with_many_ads() {
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
   test_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
   val account = acc.account @ { alice_ad.hash() };
@@ -64,7 +64,7 @@ function test_paginated_items_have_the_correct_return_format() {
   val descriptors = acc_external.get_account_auth_descriptors(account.id, 1, null);
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
   val alice_gtv_ad = gtv_auth_descriptor(
     id = alice_ad_id,
     auth_type = alice_ad.auth_type,
@@ -100,7 +100,7 @@ function test_get_account_auth_descriptors_by_signer_is_paginated() {
 
 function test_get_accounts_by_signer_is_paginated() {
   val account1 = test_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
-  val account2 = test_utils.create_test_account(rell.test.keypairs.alice, ["2"]);
+  val account2 = test_utils.create_test_account(rell.test.keypairs.alice, ["A", "2"]);
 
   val page1 = acc_external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, null);
   val page2 = acc_external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, page1.next_cursor);
@@ -112,7 +112,7 @@ function test_get_accounts_by_signer_is_paginated() {
 }
 
 function test_accounts_by_ad_id_is_paginated() {
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
   val bob = test_utils.register_bob();
   val eve = test_utils.register_eve();
   val trudy = test_utils.register_trudy();

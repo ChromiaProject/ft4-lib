@@ -59,7 +59,7 @@ function empty_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(test_empty_auth_message).mount_name,
-    flags = ["A"],
+    flags = ["EMPTY"],
     message = empty_message(*)
 );
 operation test_empty_auth_message() {

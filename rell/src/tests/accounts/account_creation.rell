@@ -12,11 +12,20 @@ val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
 
 function test_an_account_can_be_created() {
-  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub);
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   
   test_utils.create_test_account(alice);
   
   assert_not_null(accounts.account @? { auth_descriptor.hash() });
+}
+
+function test_cannot_create_account_with_no_A_flag() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub);
+  
+  admin.register_account(auth_descriptor)
+    .sign(test_utils.admin_priv_key())
+    .sign(bob)
+    .run_must_fail("The auth descriptor used to create an account must always have the 'A' flag");
 }
 
 function test_cannot_create_account_with_expiring_ad() {
@@ -38,7 +47,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
   val auth_descriptor = accounts.auth_descriptor(
     accounts.auth_type.M,
     [
-        ["T"].to_gtv(),
+        ["A", "T"].to_gtv(),
         0x2.to_gtv(),
         [
           alice.pub.to_hex(),
@@ -72,7 +81,7 @@ function test_an_invalid_descriptor_can_not_be_added() {
 }
 
 function test_create_account_with_auth_in_operation_in_genesis_block() {
-  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
   test_op.register_account_test(auth_descriptor)
       .run();
   assert_equals(accounts.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), 0);
@@ -81,7 +90,7 @@ function test_create_account_with_auth_in_operation_in_genesis_block() {
 function test_create_account_with_auth_in_operation_after_genesis_block() {
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
-  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub);
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
   test_op.register_account_test(auth_descriptor)
       .run();
   assert_equals(accounts.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), rell.test.DEFAULT_FIRST_BLOCK_TIME);
