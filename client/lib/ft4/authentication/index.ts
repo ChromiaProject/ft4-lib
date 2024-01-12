@@ -94,12 +94,31 @@ async function getKeyHandlerForOperation(
   keyHandlers: KeyHandler[],
   operation: Operation,
 ): Promise<KeyHandler | null> {
-  return await authDataService.getAllowedKeyHandler(
+  const authHandler = await authDataService.getAuthHandlerForOperation(
     operation.name,
-    operation.args,
+  );
+  if (!authHandler) return keyHandlers[0];
+
+  const allowedKeyHandlers = keyHandlers.filter((kh) =>
+    kh.satisfiesAuthRequirements(authHandler!.flags),
+  );
+  if (!allowedKeyHandlers.length) return null;
+
+  if (!authHandler.dynamic) return allowedKeyHandlers[0];
+
+  const selectedAdId = await authDataService.getAllowedKeyHandler(
+    operation,
     accountId,
-    keyHandlers.toSorted(
-      (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
-    ),
+    allowedKeyHandlers
+      .toSorted(
+        (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
+      )
+      .map((kh) => kh.authDescriptor.id),
+  );
+  if (!selectedAdId) return null;
+  return (
+    keyHandlers.find(
+      (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
+    ) ?? null
   );
 }

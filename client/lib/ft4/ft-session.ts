@@ -1,3 +1,14 @@
+import {
+  BufferId,
+  authHandlerForOperation,
+  fetchExposedOperations,
+  firstAllowedAuthDescriptor,
+  getAllAuthHandlers,
+  getConfig,
+  getVersion,
+  nop,
+  transactionBuilder,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   DictPair,
@@ -16,6 +27,10 @@ import {
   getBySigner,
 } from "./accounts/account-query-functions";
 import {
+  getTransferDetails,
+  getTransferDetailsByAsset,
+} from "./accounts/transfer-history/transfer-history-query-functions";
+import {
   getAllAssets,
   getAssetById,
   getAssetBySymbol,
@@ -24,7 +39,6 @@ import {
 import {
   AuthDataService,
   Authenticator,
-  KeyHandler,
   KeyStore,
   createAuthenticator,
 } from "./authentication";
@@ -43,21 +57,6 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
-import {
-  getConfig,
-  getVersion,
-  nop,
-  fetchExposedOperations,
-  getAllAuthHandlers,
-  firstAllowedAuthDescriptor,
-  BufferId,
-  transactionBuilder,
-  authHandlerForOperation,
-} from "@ft4/utils";
-import {
-  getTransferDetails,
-  getTransferDetailsByAsset,
-} from "./accounts/transfer-history/transfer-history-query-functions";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -160,44 +159,33 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       }
       return exposedOperations.has(operationName);
     },
-    getAllowedKeyHandler: async (
+    getAuthHandlerForOperation: async (
       operationName: string,
-      args: RawGtv,
-      accountId: Buffer,
-      keyHandlers: KeyHandler[],
-    ): Promise<KeyHandler | null> => {
+    ): Promise<AuthHandler | null> => {
       if (!authHandlers) {
         authHandlers = (await getAllAuthHandlers(connection)) || {};
       }
-      let authHandler: AuthHandler | null =
+
+      const authHandler: AuthHandler | null =
         authHandlers[operationName] ||
         authHandlers[`__override__${operationName}`];
-      if (!authHandler) {
-        authHandler = await connection.query(
-          authHandlerForOperation(operationName),
-        );
-        if (!authHandler) return keyHandlers[0];
-      }
-      const allowedKeyHandlers = keyHandlers.filter((kh) =>
-        kh.satisfiesAuthRequirements(authHandler!.flags),
-      );
-      if (!allowedKeyHandlers.length) return null;
 
-      if (!authHandler.dynamic) return allowedKeyHandlers[0];
-
-      const selectedAdId = await connection.query(
+      return authHandler
+        ? authHandler
+        : await connection.query(authHandlerForOperation(operationName));
+    },
+    getAllowedKeyHandler: async (
+      operation: Operation,
+      accountId: Buffer,
+      adIds: Buffer[],
+    ) => {
+      return connection.query(
         firstAllowedAuthDescriptor(
-          operationName,
-          args,
+          operation.name,
+          operation.args || {},
           accountId,
-          allowedKeyHandlers.map((kh) => kh.authDescriptor.id),
+          adIds,
         ),
-      );
-      if (!selectedAdId) return null;
-      return (
-        keyHandlers.find(
-          (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
-        ) ?? null
       );
     },
     getAuthMessageTemplate: async (operation: Operation) => {
