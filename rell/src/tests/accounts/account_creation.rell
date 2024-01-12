@@ -24,7 +24,6 @@ function test_cannot_create_account_with_no_A_flag() {
   
   admin.register_account(auth_descriptor)
     .sign(test_utils.admin_priv_key())
-    .sign(bob)
     .run_must_fail("The auth descriptor used to create an account must always have the 'A' flag");
 }
 
