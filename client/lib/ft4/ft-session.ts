@@ -193,10 +193,10 @@ export function createAuthDataService(connection: Connection): AuthDataService {
           allowedKeyHandlers.map((kh) => kh.authDescriptor.id),
         ),
       );
+      if (!selectedAdId) return null;
       return (
         keyHandlers.find(
-          (kh) =>
-            kh.authDescriptor.id.compare(selectedAdId ?? Buffer.alloc(0)) === 0,
+          (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
         ) ?? null
       );
     },
