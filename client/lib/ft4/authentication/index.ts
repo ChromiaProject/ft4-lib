@@ -7,6 +7,8 @@ import {
   AuthDescriptor,
   AuthType,
   SingleSig,
+  isActive,
+  hasExpired,
 } from "@ft4/accounts";
 
 export * from "./evm";
@@ -28,7 +30,12 @@ export function createAuthenticator(
     authDataService,
     keyHandlers,
     getKeyHandlerForOperation: (operation: Operation) =>
-      getKeyHandlerForOperation(authDataService, keyHandlers, operation),
+      getKeyHandlerForOperation(
+        authDataService,
+        accountId,
+        keyHandlers,
+        operation,
+      ),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
   });
@@ -91,6 +98,7 @@ async function getAuthFlags(
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
+  accountId: BufferId,
   keyHandlers: KeyHandler[],
   operation: Operation,
 ): Promise<KeyHandler | null> {
@@ -100,17 +108,64 @@ async function getKeyHandlerForOperation(
     keyHandler.satisfiesAuthRequirements(flags),
   );
 
-  const nonInteractiveHandlers = handlers.filter(
-    (keyHandler) => !keyHandler.keyStore.isInteractive,
+  const nonInteractiveHandlers: KeyHandler[] = [];
+  const interactiveHandlers: KeyHandler[] = [];
+  handlers.forEach((keyHandler) => {
+    (keyHandler.keyStore.isInteractive
+      ? interactiveHandlers
+      : nonInteractiveHandlers
+    ).push(keyHandler);
+  });
+
+  const validNonInteractiveHandlers = await filterOutInvalidAndExpiredHandlers(
+    authDataService,
+    accountId,
+    nonInteractiveHandlers,
   );
 
-  if (nonInteractiveHandlers.length !== 0) {
-    return nonInteractiveHandlers[0];
+  if (validNonInteractiveHandlers.length !== 0) {
+    return validNonInteractiveHandlers[0];
   }
 
-  if (handlers.length !== 0) {
+  const validInteractiveHandlers = await filterOutInvalidAndExpiredHandlers(
+    authDataService,
+    accountId,
+    interactiveHandlers,
+  );
+
+  if (validInteractiveHandlers.length !== 0) {
     return handlers[0];
   }
 
   return null;
+}
+
+async function filterOutInvalidAndExpiredHandlers(
+  authDataService: AuthDataService,
+  accountId: BufferId,
+  handlers: KeyHandler[],
+): Promise<KeyHandler[]> {
+  let currentHeight = 0;
+  const getBlockHeight = async () => {
+    if (currentHeight === undefined) {
+      const blocks = await authDataService.connection.client.getBlocksInfo(1);
+      currentHeight = blocks[0].height;
+    }
+    return currentHeight;
+  };
+  const getNonce = async (authDescriptorId: BufferId) =>
+    authDataService.getNonce(accountId, authDescriptorId);
+
+  const validHandlers = await Promise.all(
+    handlers.map(async (keyHandler) => {
+      const active = await isActive(keyHandler.authDescriptor, getBlockHeight);
+      const expired = await hasExpired(
+        keyHandler.authDescriptor,
+        getBlockHeight,
+        getNonce,
+      );
+      return active && !expired;
+    }),
+  );
+  return handlers.filter((_, index) => validHandlers[index]);
 }

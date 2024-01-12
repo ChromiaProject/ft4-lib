@@ -69,6 +69,8 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  isActive,
+  hasExpired,
 } from "./accounts";
 
 // Root imports

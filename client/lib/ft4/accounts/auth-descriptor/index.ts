@@ -38,6 +38,8 @@ import {
   lessOrEqual,
   lessThan,
   opCount,
+  isActive,
+  hasExpired,
 } from "./rules";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
@@ -139,6 +141,8 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  isActive,
+  hasExpired,
 };
 
 export const gtv = Object.freeze({

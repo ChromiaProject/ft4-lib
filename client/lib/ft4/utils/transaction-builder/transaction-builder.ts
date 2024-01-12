@@ -162,8 +162,8 @@ export function transactionBuilder(
     const tx: TxBuilderTransaction = await buildUnsigned();
     const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
     tx.signatures = await Promise.all(
-      // For some signers we don't have access to their key stores, therefor we insert zero buffer
-      // as a placeholder for their signatures
+      // For some signers we don't have access to their key stores, therefore we insert
+      // zero buffer as a placeholder for their signatures
       tx.signers.map(
         (signer) =>
           signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),

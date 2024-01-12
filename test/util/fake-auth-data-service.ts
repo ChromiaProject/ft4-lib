@@ -1,6 +1,7 @@
 import { Operation } from "postchain-client";
 import { AuthDataService } from "@ft4/authentication/types";
 import { BufferId } from "@ft4/utils/types";
+import { Connection } from "@ft4/types";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
@@ -8,6 +9,11 @@ export function createFakeAuthDataService(
 ): AuthDataService {
   const generator = numberGenerator();
   return {
+    connection: {
+      client: {
+        getBlocksInfo: (_limit: number) => generator.next().value,
+      },
+    } as unknown as Connection,
     isOperationExposed: isOperationExposedFn || (() => Promise.resolve(true)),
     getAuthFlags: (operation: Operation) =>
       Promise.resolve(data[operation.name].flags),
