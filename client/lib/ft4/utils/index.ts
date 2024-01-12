@@ -65,7 +65,7 @@ type ConfigResponse = {
   };
 };
 
-export async function fetchAllAuthHandlers(
+export async function getAllAuthHandlers(
   connection: Connection,
 ): Promise<{ [key: string]: AuthHandler }> {
   const authHandlers = await connection.query(allAuthHandlers());

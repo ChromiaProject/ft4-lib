@@ -48,10 +48,11 @@ import {
   getVersion,
   nop,
   fetchExposedOperations,
-  fetchAllAuthHandlers,
+  getAllAuthHandlers,
   firstAllowedAuthDescriptor,
   BufferId,
   transactionBuilder,
+  authHandlerForOperation,
 } from "@ft4/utils";
 import {
   getTransferDetails,
@@ -166,18 +167,23 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       keyHandlers: KeyHandler[],
     ): Promise<KeyHandler | null> => {
       if (!authHandlers) {
-        authHandlers = (await fetchAllAuthHandlers(connection)) || {};
+        authHandlers = (await getAllAuthHandlers(connection)) || {};
       }
-      const authHandler =
+      let authHandler: AuthHandler | null =
         authHandlers[operationName] ||
         authHandlers[`__override__${operationName}`];
       if (!authHandler) {
-        return keyHandlers[0];
+        authHandler = await connection.query(
+          authHandlerForOperation(operationName),
+        );
+        if (!authHandler) return keyHandlers[0];
       }
       const allowedKeyHandlers = keyHandlers.filter((kh) =>
-        kh.satisfiesAuthRequirements(authHandler.flags),
+        kh.satisfiesAuthRequirements(authHandler!.flags),
       );
       if (!allowedKeyHandlers.length) return null;
+
+      if (!authHandler.dynamic) return allowedKeyHandlers[0];
 
       const selectedAdId = await connection.query(
         firstAllowedAuthDescriptor(

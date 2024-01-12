@@ -1,3 +1,4 @@
+import { AuthHandler } from "@ft4/types";
 import { DictPair, QueryObject, RawGtv } from "postchain-client";
 
 export function rellAppStructure(): QueryObject<{
@@ -9,16 +10,21 @@ export function rellAppStructure(): QueryObject<{
   };
 }
 
-export function allAuthHandlers(): QueryObject<
-  {
-    name: string;
-    flags: string[];
-    dynamic: boolean;
-  }[]
-> {
+export function allAuthHandlers(): QueryObject<AuthHandler[]> {
   return {
     name: "ft4.get_all_auth_handlers",
     args: {},
+  };
+}
+
+export function authHandlerForOperation(
+  opName: string,
+): QueryObject<AuthHandler | null> {
+  return {
+    name: "ft4.get_auth_handler_for_operation",
+    args: {
+      name: opName,
+    },
   };
 }
 

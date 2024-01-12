@@ -1,4 +1,8 @@
-import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import {
+  createEvmKeyHandler,
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
 import { createFtKeyHandler } from "@ft4/authentication/ft/key-handler";
 import { createAuthDataService, createConnection } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
@@ -134,7 +138,7 @@ describe("AuthDataService", () => {
             {
               name: "foo",
               flags: ["T"],
-              dynamic: false,
+              dynamic: true,
             },
           ])
           .mockReturnValueOnce(keyHandlers[1].authDescriptor.id),
@@ -145,6 +149,110 @@ describe("AuthDataService", () => {
       expect(
         (connection.query as jest.Mock).mock.calls[1][0].args.ad_ids[0],
       ).toStrictEqual(keyHandlers[1].authDescriptor.id);
+    });
+
+    it("does not call backend if auth handler is not dynamic", async () => {
+      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+        "T",
+      ]);
+
+      const keyHandlers1 = [
+        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
+      ];
+
+      connection = {
+        ...connection,
+        query: jest
+          .fn()
+          .mockReturnValueOnce([
+            {
+              name: "foo",
+              flags: ["T"],
+              dynamic: false,
+            },
+          ])
+          .mockReturnValueOnce(keyHandlers1[0].authDescriptor.id),
+      };
+
+      const service = createAuthDataService(connection);
+      await service.getAllowedKeyHandler(
+        "foo",
+        undefined,
+        ad1.id,
+        keyHandlers1,
+      );
+      expect(connection.query).toHaveBeenCalledTimes(1);
+    });
+
+    it("it prefers non interactive keyhandlers", async () => {
+      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+        "T",
+      ]);
+
+      const keyHandlers = [
+        createEvmKeyHandler(ad1, createInMemoryEvmKeyStore(kp1)),
+        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
+      ];
+
+      connection = {
+        ...connection,
+        query: jest
+          .fn()
+          .mockReturnValueOnce([
+            {
+              name: "foo",
+              flags: ["T"],
+              dynamic: true,
+            },
+          ])
+          .mockReturnValueOnce(keyHandlers[1].authDescriptor.id),
+      };
+
+      const service = createAuthDataService(connection);
+      await service.getAllowedKeyHandler("foo", undefined, ad1.id, keyHandlers);
+      expect(
+        (connection.query as jest.Mock).mock.calls[1][0].args.ad_ids[0],
+      ).toStrictEqual(keyHandlers[1].authDescriptor.id);
+    });
+
+    it("it calls backend to resolve scope if no handler is found", async () => {
+      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+        "T",
+      ]);
+
+      const keyHandlers = [
+        createEvmKeyHandler(ad1, createInMemoryEvmKeyStore(kp1)),
+        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
+      ];
+
+      connection = {
+        ...connection,
+        query: jest
+          .fn()
+          .mockReturnValueOnce([
+            {
+              name: "foo",
+              flags: ["T"],
+              dynamic: true,
+            },
+          ])
+          .mockReturnValueOnce({
+            name: "app",
+            flags: ["A", "T"],
+            dynamic: true,
+          }),
+      };
+
+      const service = createAuthDataService(connection);
+      await service.getAllowedKeyHandler(
+        "foo2",
+        undefined,
+        ad1.id,
+        keyHandlers,
+      );
+      expect(
+        (connection.query as jest.Mock).mock.calls[1][0].name,
+      ).toStrictEqual("ft4.get_auth_handler_for_operation");
     });
   });
 });
