@@ -230,7 +230,12 @@ export async function hasExpired(
     } else if (rule.variable === RuleVariable.BlockTime) {
       variable = Date.now();
     } else {
-      variable = (await getNonce(authDescriptor.id)) || 0;
+      try {
+        variable = (await getNonce(authDescriptor.id)) || 0;
+      } catch (e) {
+        // auth descriptor expired and was eliminated on rell side
+        return true;
+      }
     }
 
     if (

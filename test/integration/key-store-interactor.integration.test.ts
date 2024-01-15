@@ -5,6 +5,8 @@ import {
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   greaterThan,
+  lessThan,
+  opCount,
 } from "@ft4/accounts/auth-descriptor";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
@@ -121,7 +123,7 @@ describe("Key store interactor", () => {
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
       .build();
-    /*
+
     const ad2 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyPair2.pubKey,
@@ -133,7 +135,7 @@ describe("Key store interactor", () => {
       connection.client,
       createInMemoryFtKeyStore(keyPair2),
     ).getSession(account.id);
-*/
+
     const ad3 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyPair2.pubKey,
@@ -153,15 +155,15 @@ describe("Key store interactor", () => {
       createInMemoryFtKeyStore(keyPair2),
     ).getSession(account.id);
 
-    //    expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);
+    expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);
     expect(session.account.authenticator.keyHandlers.length).toEqual(3);
 
     // make ad2 expire
-    /*    await ad2Session
+    await ad2Session
       .transactionBuilder()
       .add(emptyAuthenticatedOp)
       .add(nop())
-      .buildAndSend();*/
+      .buildAndSend();
 
     await expect(
       session
@@ -187,7 +189,7 @@ describe("Key store interactor", () => {
       .withPoints(4)
       .build();
 
-    /*    const ad2 = createSingleSigAuthDescriptorRegistration(
+    const ad2 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyPair2.pubKey,
       lessThan(opCount(2)),
@@ -197,7 +199,7 @@ describe("Key store interactor", () => {
     const ad2Session = await createKeyStoreInteractor(
       connection.client,
       createInMemoryFtKeyStore(keyPair2),
-    ).getSession(account.id);*/
+    ).getSession(account.id);
 
     const ad3 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
@@ -211,15 +213,15 @@ describe("Key store interactor", () => {
       createInMemoryFtKeyStore(keyPair2),
     ).getSession(account.id);
 
-    //    expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);
+    expect(ad2Session.account.authenticator.keyHandlers.length).toEqual(1);
     expect(session.account.authenticator.keyHandlers.length).toEqual(2);
 
     // make ad2 expire
-    /*    await ad2Session
+    await ad2Session
       .transactionBuilder()
       .add(emptyAuthenticatedOp)
       .add(nop())
-      .buildAndSend();*/
+      .buildAndSend();
 
     await expect(
       session
