@@ -4,16 +4,16 @@ struct _auth_handler_client {
     dynamic: boolean;
 }
 
-query get_auth_flags(op_name: name) = auth.get_auth_handler(op_name, is_strict=false)[0].flags;
+query get_auth_flags(op_name: name) = auth.get_auth_handler(op_name, is_strict=false).flags;
 
 query get_auth_message_template(op_name: name, op_args: gtv) = auth.get_auth_message_template(op_name, op_args, is_strict=false);
 
 query get_auth_handler_for_operation(op_name: name) {
   val handler = auth.get_auth_handler(op_name, is_strict=false);
   return _auth_handler_client(
-    name=handler[1],
-    flags=handler[0].flags,
-    dynamic=handler[0].resolver != null
+    name=op_name,
+    flags=handler.flags,
+    dynamic=handler.resolver != null
   );
 }
 
