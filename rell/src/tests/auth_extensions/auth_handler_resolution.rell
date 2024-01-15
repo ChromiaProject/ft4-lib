@@ -71,7 +71,7 @@ function test_can_override_overridable_auth_handler() {
     assert_equals(auth_handler_flags, ["H"]);
 }
 
-function test_can_retrieve_correct_handler() {
+function test_correct_mount_scope_handler_can_be_retrieved_from_client() {
     val auth_handler = auth_ext.get_auth_handler_for_operation("x.y.z");
     assert_equals(auth_handler.name, "app");
     assert_equals(auth_handler.flags, ["X"]);

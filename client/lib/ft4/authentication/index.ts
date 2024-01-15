@@ -97,23 +97,23 @@ async function getKeyHandlerForOperation(
   const authHandler = await authDataService.getAuthHandlerForOperation(
     operation.name,
   );
-  if (!authHandler) return keyHandlers[0];
+  if (!authHandler) return null;
 
   const allowedKeyHandlers = keyHandlers.filter((kh) =>
-    kh.satisfiesAuthRequirements(authHandler!.flags),
+    kh.satisfiesAuthRequirements(authHandler.flags),
   );
   if (!allowedKeyHandlers.length) return null;
 
-  if (!authHandler.dynamic) return allowedKeyHandlers[0];
+  const prioritizedKeyHandlers = allowedKeyHandlers.toSorted(
+    (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
+  );
 
-  const selectedAdId = await authDataService.getAllowedKeyHandler(
+  if (!authHandler.dynamic) return prioritizedKeyHandlers[0];
+
+  const selectedAdId = await authDataService.getAllowedAuthDescriptor(
     operation,
     accountId,
-    allowedKeyHandlers
-      .toSorted(
-        (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
-      )
-      .map((kh) => kh.authDescriptor.id),
+    prioritizedKeyHandlers.map((kh) => kh.authDescriptor.id),
   );
   if (!selectedAdId) return null;
   return (

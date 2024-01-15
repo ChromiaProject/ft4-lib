@@ -53,7 +53,7 @@ function authenticate(is_strict: boolean = true) {
 function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>, is_strict: boolean) {
     if (ad_ids.size() == 0) return null;
 
-    val resolver = get_auth_handler(op_name, is_strict=false)[0].resolver;
+    val resolver = get_auth_handler(op_name, is_strict=false).resolver;
     if (resolver == null) return ad_ids[0];
   
     return resolver((args=args, account_id=account_id, auth_descriptor_ids=ad_ids));
@@ -83,10 +83,10 @@ function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.acco
     return (account, auth_descriptor);
 }
 
-function get_auth_flags(op_name: name, is_strict: boolean) = get_auth_handler(op_name, is_strict)[0].flags;
+function get_auth_flags(op_name: name, is_strict: boolean) = get_auth_handler(op_name, is_strict).flags;
 
 function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boolean) {
-    val formatter = get_auth_handler(op_name, is_strict)[0].message_formatter;
+    val formatter = get_auth_handler(op_name, is_strict).message_formatter;
 
     val message = if (formatter??) formatter(op_args) else generate_operation_auth_message(chain_context.blockchain_rid, gtx_operation(
         name = op_name,

@@ -170,11 +170,17 @@ export function createAuthDataService(connection: Connection): AuthDataService {
         authHandlers[operationName] ||
         authHandlers[`__override__${operationName}`];
 
-      return authHandler
-        ? authHandler
-        : await connection.query(authHandlerForOperation(operationName));
+      if (authHandler) return authHandler;
+
+      const downloadedAuthHandler = await connection.query(
+        authHandlerForOperation(operationName),
+      );
+      if (!downloadedAuthHandler) return null;
+
+      authHandlers[operationName] = downloadedAuthHandler;
+      return downloadedAuthHandler;
     },
-    getAllowedKeyHandler: async (
+    getAllowedAuthDescriptor: async (
       operation: Operation,
       accountId: Buffer,
       adIds: Buffer[],
@@ -182,7 +188,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       return connection.query(
         firstAllowedAuthDescriptor(
           operation.name,
-          operation.args || {},
+          operation.args ?? {},
           accountId,
           adIds,
         ),

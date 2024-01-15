@@ -13,13 +13,12 @@ export function rellAppStructure(): QueryObject<{
 export function allAuthHandlers(): QueryObject<AuthHandler[]> {
   return {
     name: "ft4.get_all_auth_handlers",
-    args: {},
   };
 }
 
 export function authHandlerForOperation(
   opName: string,
-): QueryObject<AuthHandler | null> {
+): QueryObject<AuthHandler | null, { name: string }> {
   return {
     name: "ft4.get_auth_handler_for_operation",
     args: {
@@ -33,7 +32,10 @@ export function firstAllowedAuthDescriptor(
   args: RawGtv,
   accountId: Buffer,
   ids: Buffer[],
-): QueryObject<Buffer | null> {
+): QueryObject<
+  Buffer | null,
+  { op_name: string; args: RawGtv; account_id: Buffer; ad_ids: Buffer[] }
+> {
   return {
     name: "ft4.get_first_allowed_auth_descriptor",
     args: {

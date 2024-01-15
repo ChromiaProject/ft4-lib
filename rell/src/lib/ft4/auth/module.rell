@@ -40,9 +40,9 @@ function auth_handler(): map<name, _auth_handler>;
 function get_auth_handler(op_name: name, is_strict: boolean) {
     require_valid_scope_name(op_name);
     val auth_handlers = auth_handler();
-    if (op_name in auth_handlers) return (auth_handlers[op_name], op_name);
+    if (op_name in auth_handlers) return auth_handlers[op_name];
     val override_name = "__override__" + op_name;
-    if (override_name in auth_handlers) return (auth_handlers[override_name], override_name);
+    if (override_name in auth_handlers) return auth_handlers[override_name];
 
     require(not is_strict, "Strict mode is used and no auth handler matches exactly <%s>".format(op_name));
 
@@ -53,7 +53,7 @@ function get_auth_handler(op_name: name, is_strict: boolean) {
         auth_handlers.get_or_null(APP_SCOPE),
         "Cannot find auth handler for operation <%s>".format(op_name)
     );
-    return (auth_handlers[APP_SCOPE], APP_SCOPE);
+    return auth_handlers[APP_SCOPE];
 }
 
 function add_auth_handler(
@@ -90,7 +90,7 @@ function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, o
     
     for (count in range(op_name_components.size()-1, 0, -1)) {
         val mount_point = join_text_list(op_name_components, count);
-        if (mount_point in auth_handlers) return (auth_handlers[mount_point], mount_point);
+        if (mount_point in auth_handlers) return auth_handlers[mount_point];
     }
 
     return null;

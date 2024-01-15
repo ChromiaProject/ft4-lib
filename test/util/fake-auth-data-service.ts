@@ -8,7 +8,7 @@ export function createFakeAuthDataService(
 ): AuthDataService {
   const generator = numberGenerator();
   return {
-    isOperationExposed: isOperationExposedFn || (() => Promise.resolve(true)),
+    isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),
     // eslint-disable-next-line
@@ -23,7 +23,7 @@ export function createFakeAuthDataService(
         flags: data[operationName].flags,
         dynamic: true,
       }),
-    getAllowedKeyHandler: (
+    getAllowedAuthDescriptor: (
       operation: Operation,
       accountId: Buffer,
       adIds: Buffer[],

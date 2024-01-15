@@ -117,7 +117,7 @@ describe("Authenticator", () => {
       expect(connection.query).toHaveBeenCalledTimes(1);
     });
 
-    it("returns the first key handler if no matching auth handler", async () => {
+    it("returns null if no matching auth handler", async () => {
       connection = {
         ...connection,
         query: jest.fn().mockReturnValueOnce([
@@ -150,7 +150,7 @@ describe("Authenticator", () => {
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("does not exist"),
       );
-      expect(selectedHandler).toStrictEqual(keyHandlers[0]);
+      expect(selectedHandler).toStrictEqual(null);
     });
 
     it("returns key handler selected by backend", async () => {

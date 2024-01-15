@@ -51,7 +51,7 @@ export interface AuthDataService {
   getAuthHandlerForOperation(
     operationName: string,
   ): Promise<AuthHandler | null>;
-  getAllowedKeyHandler(
+  getAllowedAuthDescriptor(
     operation: Operation,
     accountId: Buffer,
     adIds: Buffer[],
