@@ -1,7 +1,8 @@
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { AuthHandler } from "@ft4/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 export interface Authenticator {
   accountId: Buffer;
@@ -40,7 +41,6 @@ export interface KeyStore {
 
 export interface AuthDataService {
   isOperationExposed(operationName: string): Promise<boolean>;
-  getAuthFlags(operation: Operation): Promise<string[]>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   getNonce(
     accountId: BufferId,
@@ -48,6 +48,14 @@ export interface AuthDataService {
   ): Promise<number | null>;
   getLoginConfig(name: string | undefined): Promise<LoginConfig | null>;
   getBlockchainRid(): Buffer;
+  getAuthHandlerForOperation(
+    operationName: string,
+  ): Promise<AuthHandler | null>;
+  getAllowedAuthDescriptor(
+    operation: Operation,
+    accountId: Buffer,
+    adIds: Buffer[],
+  ): Promise<Buffer | null>;
 }
 
 export type LoginConfig = {
