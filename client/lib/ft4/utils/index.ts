@@ -9,6 +9,8 @@ import {
 } from "postchain-client";
 import { Config } from "./types";
 import { Buffer } from "buffer";
+import { AuthHandler, Connection } from "@ft4/types";
+import { allAuthHandlers } from "./queries";
 
 export function nop(): Operation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
@@ -63,6 +65,19 @@ type ConfigResponse = {
   };
 };
 
-export { retrievePaginatedEntity } from "./entity-retriever";
+export async function getAllAuthHandlers(
+  connection: Connection,
+): Promise<{ [key: string]: AuthHandler }> {
+  const authHandlers = await connection.query(allAuthHandlers());
+  return authHandlers.reduce(
+    (acc, curr) => ({ ...acc, [curr.name]: curr }),
+    {},
+  );
+}
 
-export { EntityRetriever, PaginatedEntity } from "./types";
+export { retrievePaginatedEntity } from "./entity-retriever";
+export { transactionBuilder } from "./transaction-builder";
+export * from "./exposed-operations";
+export * from "./queries";
+
+export { BufferId, EntityRetriever, PaginatedEntity } from "./types";

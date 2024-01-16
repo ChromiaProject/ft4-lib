@@ -71,10 +71,6 @@ function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
         M -> {
             return multi_sig_args.from_bytes(args).flags;
         }
-        else -> {
-            val f = set<text>();
-            return f;
-        }
     }
 }
 
@@ -85,16 +81,15 @@ function check_auth_args(a_t: auth_type, args: byte_array, signers: list<byte_ar
     return when (a_t) {
         S -> check_single_sig_auth(args, signers, required_flags);
         M -> check_multi_sig_auth(args, signers, required_flags);
-        else -> utils.invalid("Don't recognize authentication type %s, valid options are: S or M.".format(a_t));
     };
 }
 
 function get_signers(a_t: auth_type, args: byte_array): list<byte_array>{
     var signers: list<byte_array>? = null;
-    if (a_t == auth_type.S or a_t == auth_type.ES){
+    if (a_t == auth_type.S){
         signers = [single_sig_args.from_bytes(args).signer];
     }
-    if (a_t == auth_type.M or a_t == auth_type.EM) {
+    if (a_t == auth_type.M) {
         signers = multi_sig_args.from_bytes(args).signers;
     }
     //TODO: add extendable callback for custom types

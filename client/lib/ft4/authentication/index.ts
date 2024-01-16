@@ -21,12 +21,13 @@ export {
 } from "./login-manager/stores";
 
 export function createAuthenticator(
-  accountId: BufferId,
+  accountBufferId: BufferId,
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService,
 ): Authenticator {
+  const accountId = formatter.ensureBuffer(accountBufferId);
   return Object.freeze({
-    accountId: formatter.ensureBuffer(accountId),
+    accountId,
     authDataService,
     keyHandlers,
     getKeyHandlerForOperation: (operation: Operation) =>
@@ -89,55 +90,46 @@ const noopKeyHandler: KeyHandler = Object.freeze({
   getSigners: (): Buffer[] => [],
 });
 
-async function getAuthFlags(
-  authDataService: AuthDataService,
-  operation: Operation,
-): Promise<string[]> {
-  return await authDataService.getAuthFlags(operation);
-}
-
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
   accountId: BufferId,
   keyHandlers: KeyHandler[],
   operation: Operation,
 ): Promise<KeyHandler | null> {
-  const flags = await getAuthFlags(authDataService, operation);
+  const authHandler = await authDataService.getAuthHandlerForOperation(
+    operation.name,
+  );
+  if (!authHandler) return null;
 
-  const handlers = keyHandlers.filter((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(flags),
+  const allowedKeyHandlers = keyHandlers.filter((kh) =>
+    kh.satisfiesAuthRequirements(authHandler.flags),
   );
 
-  const nonInteractiveHandlers: KeyHandler[] = [];
-  const interactiveHandlers: KeyHandler[] = [];
-  handlers.forEach((keyHandler) => {
-    (keyHandler.keyStore.isInteractive
-      ? interactiveHandlers
-      : nonInteractiveHandlers
-    ).push(keyHandler);
-  });
+  if (!allowedKeyHandlers.length) return null;
 
-  const validNonInteractiveHandlers = await filterOutInvalidAndExpiredHandlers(
+  const validHandlers = await filterOutInvalidAndExpiredHandlers(
     authDataService,
     accountId,
-    nonInteractiveHandlers,
+    allowedKeyHandlers,
   );
 
-  if (validNonInteractiveHandlers.length !== 0) {
-    return validNonInteractiveHandlers[0];
-  }
+  const prioritizedKeyHandlers = validHandlers.toSorted(
+    (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
+  );
 
-  const validInteractiveHandlers = await filterOutInvalidAndExpiredHandlers(
-    authDataService,
+  if (!authHandler.dynamic) return prioritizedKeyHandlers[0];
+
+  const selectedAdId = await authDataService.getAllowedAuthDescriptor(
+    operation,
     accountId,
-    interactiveHandlers,
+    prioritizedKeyHandlers.map((kh) => kh.authDescriptor.id),
   );
-
-  if (validInteractiveHandlers.length !== 0) {
-    return handlers[0];
-  }
-
-  return null;
+  if (!selectedAdId) return null;
+  return (
+    keyHandlers.find(
+      (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
+    ) ?? null
+  );
 }
 
 async function filterOutInvalidAndExpiredHandlers(

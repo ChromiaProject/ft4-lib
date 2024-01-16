@@ -24,10 +24,13 @@ function authenticate(is_strict: boolean = true) {
     );
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
+    require(
+        get_first_allowed_auth_descriptor(op.name, op.args.to_gtv(), account.id, [auth_descriptor.id], is_strict),
+        "The provided auth descriptor is not valid for this operation"
+    );
+    before_authenticate(account, auth_descriptor);
 
     accounts.rate_limit(account);
-
-    before_authenticate(account, auth_descriptor);
 
     require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
 
@@ -45,6 +48,15 @@ function authenticate(is_strict: boolean = true) {
     after_authenticate(account, if (auth_desc_after in deleted_descriptors) null else auth_desc_after);
 
     return account;
+}
+
+function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>, is_strict: boolean) {
+    if (ad_ids.size() == 0) return null;
+
+    val resolver = get_auth_handler(op_name, is_strict=false).resolver;
+    if (resolver == null) return ad_ids[0];
+  
+    return resolver((args=args, account_id=account_id, auth_descriptor_ids=ad_ids));
 }
 
 function _ft_auth(required_flags: list<text>, account: accounts.account, auth_descriptor: accounts.account_auth_descriptor) {
@@ -101,7 +113,7 @@ function _validate_evm_signature(
         auth_descriptor.ctr
     );
 
-    if (auth_descriptor.auth_type in [accounts.auth_type.S, accounts.auth_type.ES])
+    if (auth_descriptor.auth_type == accounts.auth_type.S)
         _validate_evm_address(message, validated_args.signatures[0], auth_descriptor);
     else
         _validate_multiple_evm_addresses(message, validated_args.signatures, auth_descriptor);
@@ -135,8 +147,8 @@ function _validate_evm_arguments(
     val signatures = list<signature>.from_gtv(auth_args[2]);
 
     val has_all_flags = when (auth_descriptor.auth_type) {
-        S, ES -> accounts.single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
-        M, EM -> accounts.multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
+        S -> accounts.single_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
+        M -> accounts.multi_sig_args.from_bytes(auth_descriptor.args).flags.contains_all(required_flags);
     };
     
     require(has_all_flags, "The auth descriptor does not have the required permissions");

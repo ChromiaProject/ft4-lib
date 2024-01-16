@@ -20,6 +20,7 @@ function test_no_authenticated_operations() {
             ],
             signers = list<gtv>()
         ),
+        tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
         current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME
     );
@@ -40,6 +41,7 @@ function test_one_authenticated_operation() {
             ],
             signers = list<gtv>()
         ),
+        tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
         current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 1000
     );
@@ -64,6 +66,7 @@ function test_two_authenticated_operations() {
             ],
             signers = list<gtv>()
         ),
+        tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
         current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 1000
     );
@@ -86,6 +89,7 @@ function test_increase_current_points_with_time() {
             ],
             signers = list<gtv>()
         ),
+        tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
         current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 5001
     );
@@ -108,6 +112,7 @@ function test_increase_current_points_with_time_up_to_max() {
             ],
             signers = list<gtv>()
         ),
+        tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
         current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + (10 * 5000)
     );
