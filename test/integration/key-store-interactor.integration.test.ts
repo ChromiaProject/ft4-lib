@@ -122,6 +122,7 @@ describe("Key store interactor", () => {
 
     const account = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
+      .withPoints(5)
       .build();
 
     const ad2 = createSingleSigAuthDescriptorRegistration(
