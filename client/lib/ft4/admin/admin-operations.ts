@@ -50,15 +50,15 @@ export function mint(
 
 export function registerCrosschainAsset(
   asset: Asset,
-  originBrid: BufferId,
+  originBlockchainRid: BufferId,
 ): Operation {
   return op(
     "ft4.admin.register_crosschain_asset",
     asset.name,
     asset.symbol,
     asset.decimals,
-    asset.brid,
+    asset.blockchainRid,
     asset.iconUrl,
-    formatter.ensureBuffer(originBrid),
+    formatter.ensureBuffer(originBlockchainRid),
   );
 }

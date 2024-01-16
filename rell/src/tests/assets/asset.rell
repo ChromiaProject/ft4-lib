@@ -256,7 +256,7 @@ struct gtv_asset {
     name;
     symbol: text;
     decimals: integer;
-    brid: byte_array;
+    blockchain_rid: byte_array;
     supply: big_integer;
     icon_url: text;
 }
@@ -325,7 +325,7 @@ function test_paginated_asset_balances_have_correct_format() {
                     decimals = 0,
                     icon_url = "",
                     supply = 10L,
-                    brid = asset1.issuing_brid
+                    blockchain_rid = asset1.issuing_blockchain_rid
                 ),
                 amount = 10L
             ).to_gtv_pretty()
@@ -346,7 +346,7 @@ function test_assets_by_name_are_paginated() {
         name = asset.name,
         symbol = asset.symbol,
         decimals = asset.decimals,
-        brid = asset.issuing_brid,
+        blockchain_rid = asset.issuing_blockchain_rid,
         icon_url = asset.icon_url,
         supply = asset.total_supply
     );
@@ -356,7 +356,7 @@ function test_assets_by_name_are_paginated() {
         name = asset.name,
         symbol = asset.symbol,
         decimals = asset.decimals,
-        brid = asset.issuing_brid,
+        blockchain_rid = asset.issuing_blockchain_rid,
         icon_url = asset.icon_url,
         supply = asset.total_supply
     );
@@ -400,7 +400,7 @@ function test_paginated_assets_have_correct_format() {
         name = asset1.name,
         symbol = asset1.symbol,
         decimals = asset1.decimals,
-        brid = chain_context.blockchain_rid,
+        blockchain_rid = chain_context.blockchain_rid,
         supply = 0,
         icon_url = asset1.icon_url
     ));
@@ -417,7 +417,7 @@ function test_it_gets_asset_by_symbol() {
             name = "test1",
             symbol = "TST1",
             decimals = 0,
-            brid = asset1.issuing_brid,
+            blockchain_rid = asset1.issuing_blockchain_rid,
             icon_url = "",
             supply = 0L
         )

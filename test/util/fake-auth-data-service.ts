@@ -1,8 +1,8 @@
-import { Operation } from "postchain-client";
 import { AuthDataService } from "@ft4/authentication/types";
 import { LoginConfig } from "@ft4/authentication/login-manager";
 import { Connection } from "@ft4/index";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
+import { Operation } from "postchain-client";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
@@ -11,9 +11,7 @@ export function createFakeAuthDataService(
   const generator = numberGenerator();
   return {
     connection: null as unknown as Connection,
-    isOperationExposed: isOperationExposedFn || (() => Promise.resolve(true)),
-    getAuthFlags: (operation: Operation) =>
-      Promise.resolve(data[operation.name].flags),
+    isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),
     // eslint-disable-next-line
@@ -22,7 +20,18 @@ export function createFakeAuthDataService(
     // eslint-disable-next-line
     getLoginConfig: (configName: string) =>
       Promise.resolve({ flags: [], rules: null } as LoginConfig),
-    getBrid: () => Buffer.from(""),
+    getBlockchainRid: () => Buffer.from(""),
+    getAuthHandlerForOperation: (operationName: string) =>
+      Promise.resolve({
+        name: operationName,
+        flags: data[operationName].flags,
+        dynamic: true,
+      }),
+    getAllowedAuthDescriptor: (
+      operation: Operation,
+      accountId: Buffer,
+      adIds: Buffer[],
+    ) => Promise.resolve(adIds[0]),
   };
 }
 

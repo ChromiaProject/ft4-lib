@@ -78,3 +78,9 @@ export type KeyStoreInteractor = {
   getLoginManager(loginKeyStore?: LoginKeyStore): LoginManager;
   onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
 };
+
+export type AuthHandler = {
+  name: string;
+  flags: string[];
+  dynamic: boolean;
+};

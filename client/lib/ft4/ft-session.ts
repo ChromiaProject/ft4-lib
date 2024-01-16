@@ -1,3 +1,14 @@
+import {
+  BufferId,
+  authHandlerForOperation,
+  fetchExposedOperations,
+  firstAllowedAuthDescriptor,
+  getAllAuthHandlers,
+  getConfig,
+  getVersion,
+  nop,
+  transactionBuilder,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   DictPair,
@@ -16,6 +27,10 @@ import {
   getBySigner,
 } from "./accounts/account-query-functions";
 import {
+  getTransferDetails,
+  getTransferDetailsByAsset,
+} from "./accounts/transfer-history/transfer-history-query-functions";
+import {
   getAllAssets,
   getAssetById,
   getAssetBySymbol,
@@ -30,24 +45,18 @@ import {
 import { createLoginManager } from "./authentication/login-manager";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import {
-  authFlags,
   authMessageTemplate,
   loginConfig,
   nonce,
 } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
+  AuthHandler,
   Connection,
   KeyStoreInteractor,
   OptionalPageCursor,
   Session,
 } from "./types";
-import { getConfig, getVersion, nop } from "./utils";
-import { fetchExposedOperations } from "./utils/exposed-operations";
-import { transactionBuilder } from "./utils/transaction-builder";
-import { BufferId } from "./utils/types";
-import { getTransferDetails } from "./accounts/transfer-history/transfer-history-query-functions";
-import { getTransferDetailsByAsset } from "./accounts/transfer-history/transfer-history-query-functions";
 
 export function createConnection(client: IClient): Connection {
   const connection = Object.freeze({
@@ -141,21 +150,50 @@ export async function callWithoutNop(
 
 export function createAuthDataService(connection: Connection): AuthDataService {
   let exposedOperations: Set<string> | null = null;
-
-  const fetchAndCacheOperations = async () => {
-    exposedOperations = await fetchExposedOperations(connection);
-  };
+  let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
     connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
-        await fetchAndCacheOperations();
+        exposedOperations = await fetchExposedOperations(connection);
       }
-      return exposedOperations!.has(operationName);
+      return exposedOperations.has(operationName);
     },
-    getAuthFlags: async (operation: Operation) => {
-      return await connection.query(authFlags(operation));
+    getAuthHandlerForOperation: async (
+      operationName: string,
+    ): Promise<AuthHandler | null> => {
+      if (!authHandlers) {
+        authHandlers = (await getAllAuthHandlers(connection)) || {};
+      }
+
+      const authHandler: AuthHandler | null =
+        authHandlers[operationName] ||
+        authHandlers[`__override__${operationName}`];
+
+      if (authHandler) return authHandler;
+
+      const downloadedAuthHandler = await connection.query(
+        authHandlerForOperation(operationName),
+      );
+      if (!downloadedAuthHandler) return null;
+
+      authHandlers[operationName] = downloadedAuthHandler;
+      return downloadedAuthHandler;
+    },
+    getAllowedAuthDescriptor: async (
+      operation: Operation,
+      accountId: Buffer,
+      adIds: Buffer[],
+    ) => {
+      return connection.query(
+        firstAllowedAuthDescriptor(
+          operation.name,
+          operation.args ?? {},
+          accountId,
+          adIds,
+        ),
+      );
     },
     getAuthMessageTemplate: async (operation: Operation) => {
       return await connection.query(authMessageTemplate(operation));
@@ -164,7 +202,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
       connection.query(nonce(accountId, authDescriptorId)),
     getLoginConfig: async (configName: string | undefined = undefined) =>
       connection.query(loginConfig(configName)),
-    getBrid: () => Buffer.from(connection.client.config.blockchainRid, "hex"),
+    getBlockchainRid: () =>
+      Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
 }
 

@@ -24,3 +24,15 @@ function () = auth.add_auth_handler(
     scope = "a.b.foo",
     flags = ["F"]
 );
+
+@extend(auth.auth_handler)
+function () = auth.add_overridable_auth_handler(
+    scope = "a.b.baz",
+    flags = ["G"]
+);
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = "a.b.baz",
+    flags = ["H"]
+);

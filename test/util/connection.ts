@@ -6,11 +6,14 @@ async function get(url: string): Promise<string> {
   return await response.text();
 }
 
-export async function getBrid(nodeUrl: string, id: number): Promise<Buffer> {
+export async function getBlockchainRid(
+  nodeUrl: string,
+  id: number,
+): Promise<Buffer> {
   if (!Number.isInteger(id)) throw new Error("Invalid chain iid");
-  if (!nodeUrl) throw new Error("Cannot get BRID. Node url missing.");
+  if (!nodeUrl) throw new Error("Cannot get blockchain RID. Node url missing.");
 
-  const brid = await get(`${nodeUrl}/brid/iid_${id}`);
+  const blockchainRid = await get(`${nodeUrl}/brid/iid_${id}`);
 
-  return Buffer.from(brid, "hex");
+  return Buffer.from(blockchainRid, "hex");
 }

@@ -202,7 +202,7 @@ export function transactionBuilder(
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const directoryClient = await createClient({
-      nodeUrlPool: client.config.endpointPool.slice(),
+      nodeUrlPool: client.config.endpointPool.slice().map((ep) => ep.url),
       blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(
@@ -231,9 +231,11 @@ export function transactionBuilder(
 
       if (isAnchored) {
         const proofCache = new Map<string, Operation>();
-        const createProof = async (brid: BufferId): Promise<Operation> => {
-          if (proofCache.has(brid.toString("hex"))) {
-            return proofCache.get(brid.toString("hex"))!;
+        const createProof = async (
+          blockchainRid: BufferId,
+        ): Promise<Operation> => {
+          if (proofCache.has(blockchainRid.toString("hex"))) {
+            return proofCache.get(blockchainRid.toString("hex"))!;
           }
 
           const proof = await createIccfProofTx(
@@ -242,11 +244,11 @@ export function transactionBuilder(
             tx,
             rawTx[0][2], // signers
             client.config.blockchainRid,
-            brid.toString("hex"),
+            blockchainRid.toString("hex"),
           );
 
           const iccfProofOperation = proof.iccfTx.operations[0];
-          proofCache.set(brid.toString("hex"), iccfProofOperation);
+          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
           return iccfProofOperation;
         };
 

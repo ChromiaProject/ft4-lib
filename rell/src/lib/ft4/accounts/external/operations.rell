@@ -5,7 +5,7 @@ function delete_auth_descriptor_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.add_auth_handler(
+function () = auth.add_overridable_auth_handler(
     scope = rell.meta(delete_auth_descriptor).mount_name,
     flags = ["A"],
     message = delete_auth_descriptor_message(*)
@@ -26,16 +26,16 @@ function delete_all_auth_descriptors_exclude_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.add_auth_handler(
+function () = auth.add_overridable_auth_handler(
     scope = rell.meta(delete_all_auth_descriptors_exclude).mount_name,
     flags = ["A"],
     message = delete_all_auth_descriptors_exclude_message(*)
 );
 
 operation delete_all_auth_descriptors_exclude(account_id: byte_array, auth_descriptor_id: byte_array) {
-    val account =  accounts.account_by_id(account_id);
+    val account = accounts.account_by_id(account_id);
     val auth_descriptor = accounts.auth_descriptor_by_id(account, auth_descriptor_id);
-    accounts._auth(account, auth_descriptor, ["A"]);
+    auth._ft_auth(["A"], account, auth_descriptor);
 
     accounts._delete_all_auth_descriptors_exclude(auth_descriptor);
 }
@@ -48,7 +48,7 @@ function add_auth_descriptor_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.add_auth_handler(
+function () = auth.add_overridable_auth_handler(
     scope = rell.meta(add_auth_descriptor).mount_name,
     flags = ["A"],
     message = add_auth_descriptor_message(*)

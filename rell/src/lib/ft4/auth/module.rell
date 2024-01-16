@@ -14,6 +14,7 @@ struct auth_data {
 struct _auth_handler {
     flags: list<text>;
     message_formatter: ((gtv) -> text)? = null;
+    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null;
 }
 
 /*
@@ -40,22 +41,39 @@ function get_auth_handler(op_name: name, is_strict: boolean) {
     require_valid_scope_name(op_name);
     val auth_handlers = auth_handler();
     if (op_name in auth_handlers) return auth_handlers[op_name];
+    val override_name = "__override__" + op_name;
+    if (override_name in auth_handlers) return auth_handlers[override_name];
 
     require(not is_strict, "Strict mode is used and no auth handler matches exactly <%s>".format(op_name));
 
     val handler = get_mount_scope_auth_handler(auth_handlers, op_name);
     if (handler??) return handler;
 
-    return require(
-        auth_handlers.get_or_null(APP_SCOPE), 
+    require(
+        auth_handlers.get_or_null(APP_SCOPE),
         "Cannot find auth handler for operation <%s>".format(op_name)
     );
+    return auth_handlers[APP_SCOPE];
 }
 
-function add_auth_handler(scope: text = APP_SCOPE, flags: list<text>, message: ((gtv) -> text)? = null) {
+function add_auth_handler(
+    scope: text = APP_SCOPE, 
+    flags: list<text>,
+    message: ((gtv) -> text)? = null,
+    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null
+) = [valid_scope_name(scope): _auth_handler(flags, message, resolver)];
+
+function add_overridable_auth_handler(
+    scope: text = APP_SCOPE,
+    flags: list<text>,
+    message: ((gtv) -> text)? = null,
+    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null
+) = ["__override__" + valid_scope_name(scope): _auth_handler(flags, message, resolver)];
+
+function valid_scope_name(scope: text) {
     val scope_name = scope.trim();
     require_valid_scope_name(scope_name);
-    return [scope_name: _auth_handler(flags, message)];
+    return scope_name;
 }
 
 function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
@@ -83,7 +101,7 @@ function get_mount_scope_auth_handler(auth_handlers: map<name, _auth_handler>, o
  * It is used when `evm_auth` is used to authenticate a user, 
  * but auth message is not specified in the auth handler of the operation.
  */
-function generate_operation_auth_message(brid: byte_array, op: gtx_operation) {
+function generate_operation_auth_message(blockchain_rid: byte_array, op: gtx_operation) {
     var message = "Please sign the message to call\noperation:\n- %s".format(op.name);
 
     if (op.args.size() > 0) {

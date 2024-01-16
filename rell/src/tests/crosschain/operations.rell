@@ -50,8 +50,8 @@ function test_init_transfer_succeeds_under_valid_conditions() {
 function test_apply_transfer_succeeds_under_valid_conditions() {
     val bob = utils.register_bob();
 
-    val source_brid = x"abcdef";
-    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_brid, "", source_brid);
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_args = struct<xchain_ext.init_transfer>(
       receiver_id = bob.account.id,
@@ -63,7 +63,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
         body = gtx_transaction_body(
-            blockchain_rid = source_brid,
+            blockchain_rid = source_blockchain_rid,
             operations = [
                 gtx_operation(
                     name = "ft4.crosschain.init_transfer",
@@ -76,7 +76,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_brid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx, 0, tx, 0, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully

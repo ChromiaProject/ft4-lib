@@ -19,7 +19,7 @@ import ^.version;
 import .external;
 
 enum auth_type {
-    S, M, ES, EM,
+    S, M,
 }
 
 struct auth_descriptor {
@@ -131,11 +131,6 @@ function _add_evm_signer(account, auth_descriptor, account_auth_descriptor) {
     }
 }
 
-function _auth(account: account, auth_descriptor: account_auth_descriptor, required_flags: list<text>) {
-    rate_limit(account);
-    require_auth(account, auth_descriptor, required_flags);
-}
-
 function auth_descriptor_by_id(account, id: byte_array) = require(
     account_auth_descriptor @? { account, id },
     "Auth descriptor '%s' not found for account '%s'".format(id, account.id)
@@ -220,8 +215,8 @@ function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, pag
 
 function validate_auth_descriptor_args(auth_descriptor) {
     when (auth_descriptor.auth_type) {
-        S, ES -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-        M, EM -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        M -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
     }
 }
 
