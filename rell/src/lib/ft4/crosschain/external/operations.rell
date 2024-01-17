@@ -11,10 +11,7 @@ function init_transfer_message(gtv) {
     val params = struct<init_transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
 
-    return "Please sign the message\n"+
-    "to transfer %s %s\n\n"+
-    "from:\n-account {account_id}\n-chain: %s\n\n"+
-    "to:\n-account %s\n-chain: %s\n\nNonce: {nonce}"
+    return "Please sign the message\nto transfer %s %s\n\nfrom:\n-account {account_id}\n-chain: %s\n\nto:\n-account %s\n-chain: %s"
         .format(
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
@@ -25,7 +22,7 @@ function init_transfer_message(gtv) {
 }
 
 @extend(auth.auth_handler)
-function () = auth.add_auth_handler(
+function () = auth.add_overridable_auth_handler(
     scope = rell.meta(init_transfer).mount_name,
     flags = ["T"],
     message = init_transfer_message(*)
