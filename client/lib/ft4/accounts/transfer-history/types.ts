@@ -20,6 +20,7 @@ export type TransferHistoryEntryResponse = {
   tx_rid: Buffer;
   tx_data: string;
   operation_name: string;
+  op_index: number;
 };
 
 export type TransferHistoryEntry = {
@@ -32,6 +33,7 @@ export type TransferHistoryEntry = {
   transactionId: Buffer;
   blockHeight: number;
   operationName: string;
+  opIndex: number;
 };
 
 export enum TransferHistoryType {
