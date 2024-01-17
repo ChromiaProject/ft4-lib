@@ -1,3 +1,3 @@
 ### Changed
 
-- Fix Rollup bundling issues
+- Fixed Rollup bundling issues
