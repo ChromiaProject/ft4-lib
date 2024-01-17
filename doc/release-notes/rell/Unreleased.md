@@ -1,5 +1,6 @@
 ### Changed
 
+- Removed auth descriptor types `ES` and `EM`.
 - Added query `get_all_auth_handlers` to get all auth handlers specified by the dApp
 - Added query `get_first_allowed_auth_descriptor` to let the blockchain select auth descriptors from a set that can be used to authenticate an operation
 - Added possibility to create overridable auth handlers
