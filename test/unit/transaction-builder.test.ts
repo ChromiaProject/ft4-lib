@@ -153,6 +153,16 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: name, args }]);
   });
 
+  it("does not allow buildUnsigned() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .buildUnsigned();
+    await expect(promise).rejects.toThrowError(Error);
+  });
+
   it("does not sign transaction with only a nop on build", async () => {
     const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
@@ -160,6 +170,16 @@ describe("Transaction Builder", () => {
       .build();
     expect(gtx.deserialize(tx).signers).toStrictEqual([]);
     expect(gtx.deserialize(tx).signatures).toStrictEqual([]);
+  });
+
+  it("does not allow build() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .build();
+    await expect(promise).rejects.toThrowError(Error);
   });
 
   it("throws an error if not sufficient permissions", async () => {
