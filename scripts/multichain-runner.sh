@@ -7,16 +7,12 @@ POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
 
-NODE_VERSION='3.14.2'
+CHROMIA_NODE_VERSION='3.14.2'
 DIRECTORY_CHAIN_VERSION='1.28.0'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
 
-# PMC version 3.16.2
-PMC_DOWNLOAD_URL="https://gitlab.com/chromaway/core-tools/management-console/-/package_files/99889189/download"
-PMC_ARCHIVE_PATH="$DEPENDENCIES_PATH/management-console.tar.gz"
-PMC_EXEC_PATH="$DEPENDENCIES_PATH/management-console/bin/pmc"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
@@ -43,23 +39,10 @@ fatal_error() {
     exit 1
 }
 
-# Function to download and unpack the PMC tool
-download_pmc() {
-    log "Downloading PMC..."
-    curl -sSL $PMC_DOWNLOAD_URL -o $PMC_ARCHIVE_PATH
-
-    debug "Extracting PMC..."
-    tar -xzf $PMC_ARCHIVE_PATH -C $DEPENDENCIES_PATH
-}
-
 run_main_logic() {
     debug "Checking for required commands..."
 
     mkdir -p $DEPENDENCIES_PATH
-
-    if ! [ -x "$PMC_EXEC_PATH" ]; then
-        download_pmc
-    fi
 
     if ! command -v chr &> /dev/null; then
         err "chr command must be installed."
@@ -69,15 +52,31 @@ run_main_logic() {
             echo "You are running macOS. If you haven't installed chr, please do so using:"
             echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
             echo "% brew install chromia/core/chr"
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            echo "You are running Linux. If you haven't installed chr, please do so using:"
+            echo '% wget -q -O - https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg'
+            echo '% echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list'
+            echo '% apt update'
+            echo '% apt install -y chr'
         fi
-
-        # TODO: Add some more instructions for Linux
-        # ...
 
         exit 1
     fi
 
-    PMC="$PMC_EXEC_PATH"
+    if ! command -v pmc &> /dev/null; then
+        err "pmc command must be installed."
+
+        # Check if the system is macOS
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            echo "You are running macOS. If you haven't installed pmc, please do so using:"
+            echo "% brew tap chromia/core https://gitlab.com/chromaway/core-tools/homebrew-chromia.git"
+            echo "% brew install chromia/core/pmc"
+        fi
+
+        # TODO: Add some more instructions for Linux (PMC is not available in apt yet).
+
+        exit 1
+    fi
 
     if $postgres; then
       log "Running Postgres container..."
@@ -179,7 +178,7 @@ run_main_logic() {
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
         -p $NODE_PORT:9870/tcp \
         -p 127.0.0.1:$API_PORT:7740/tcp \
-        registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:$NODE_VERSION \
+        registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
         run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
@@ -204,17 +203,17 @@ run_main_logic() {
     log "Got manager chain BRID: $BRID"
 
     debug "Saving manager chain BRID to PMC config"
-    $PMC config --file $PMC_CONFIG --set brid="$BRID"
+    pmc config --file $PMC_CONFIG --set brid="$BRID"
 
     log "Initializing the network..."
-    $PMC network initialize \
+    pmc network initialize \
         --system-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml \
         --cluster-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/cluster_anchoring.xml \
         -cfg $PMC_CONFIG
 
     sleep 1
     debug "Verifying the network"
-    VERIFY_OUTPUT=$($PMC network verify -cfg $PMC_CONFIG)
+    VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
     if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
         err "Verification failed. Exiting."
@@ -224,17 +223,17 @@ run_main_logic() {
     log "Network verified successfully."
 
     debug "Adding container for the multichain test blockchains"
-    $PMC container add \
+    pmc container add \
         --name ft4_multichain_test \
         --cluster system \
-        --pubkeys $($PMC config --get pubkey --file $PMC_CONFIG) \
+        --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
         -cfg $PMC_CONFIG
 
     log "Adding blockchains to the container..."
     for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
         MULTICHAIN_DAPP_BRID=$(
-            $PMC blockchain add \
+            pmc blockchain add \
                 --quiet \
                 --name multichain$chain_num \
                 --container ft4_multichain_test \

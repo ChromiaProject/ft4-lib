@@ -19,16 +19,22 @@ export {
 } from "./login-manager/stores";
 
 export function createAuthenticator(
-  accountId: BufferId,
+  accountBufferId: BufferId,
   keyHandlers: KeyHandler[],
   authDataService: AuthDataService,
 ): Authenticator {
+  const accountId = formatter.ensureBuffer(accountBufferId);
   return Object.freeze({
-    accountId: formatter.ensureBuffer(accountId),
+    accountId,
     authDataService,
     keyHandlers,
     getKeyHandlerForOperation: (operation: Operation) =>
-      getKeyHandlerForOperation(authDataService, keyHandlers, operation),
+      getKeyHandlerForOperation(
+        authDataService,
+        accountId,
+        keyHandlers,
+        operation,
+      ),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
   });
@@ -82,35 +88,37 @@ const noopKeyHandler: KeyHandler = Object.freeze({
   getSigners: (): Buffer[] => [],
 });
 
-async function getAuthFlags(
-  authDataService: AuthDataService,
-  operation: Operation,
-): Promise<string[]> {
-  return await authDataService.getAuthFlags(operation);
-}
-
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
+  accountId: Buffer,
   keyHandlers: KeyHandler[],
   operation: Operation,
 ): Promise<KeyHandler | null> {
-  const flags = await getAuthFlags(authDataService, operation);
+  const authHandler = await authDataService.getAuthHandlerForOperation(
+    operation.name,
+  );
+  if (!authHandler) return null;
 
-  const handlers = keyHandlers.filter((keyHandler) =>
-    keyHandler.satisfiesAuthRequirements(flags),
+  const allowedKeyHandlers = keyHandlers.filter((kh) =>
+    kh.satisfiesAuthRequirements(authHandler.flags),
+  );
+  if (!allowedKeyHandlers.length) return null;
+
+  const prioritizedKeyHandlers = allowedKeyHandlers.toSorted(
+    (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
   );
 
-  const nonInteractiveHandlers = handlers.filter(
-    (keyHandler) => !keyHandler.keyStore.isInteractive,
+  if (!authHandler.dynamic) return prioritizedKeyHandlers[0];
+
+  const selectedAdId = await authDataService.getAllowedAuthDescriptor(
+    operation,
+    accountId,
+    prioritizedKeyHandlers.map((kh) => kh.authDescriptor.id),
   );
-
-  if (nonInteractiveHandlers.length !== 0) {
-    return nonInteractiveHandlers[0];
-  }
-
-  if (handlers.length !== 0) {
-    return handlers[0];
-  }
-
-  return null;
+  if (!selectedAdId) return null;
+  return (
+    keyHandlers.find(
+      (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
+    ) ?? null
+  );
 }

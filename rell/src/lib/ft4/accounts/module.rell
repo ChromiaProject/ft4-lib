@@ -19,7 +19,7 @@ import ^.version;
 import .external;
 
 enum auth_type {
-    S, M, ES, EM,
+    S, M,
 }
 
 struct auth_descriptor {
@@ -215,8 +215,8 @@ function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, pag
 
 function validate_auth_descriptor_args(auth_descriptor) {
     when (auth_descriptor.auth_type) {
-        S, ES -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
-        M, EM -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        M -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
     }
 }
 

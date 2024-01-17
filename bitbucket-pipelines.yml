@@ -1,4 +1,4 @@
-image: node:18
+image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21-chromia-tools:1.0.0
 
 options:
   max-time: 15
@@ -32,7 +32,7 @@ e2e-tests: &e2e-tests-anchor
       - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
       - fluxbox &
       - npm ci
-      - npm run test:e2e
+      - npm run test:e2e || (curl -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=E2E tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
     artifacts:
       - logs/**
       - cypress/screenshots/**
@@ -49,19 +49,14 @@ pipelines:
           caches:
             - node
           script:
-            - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
-            - apt update
-            - apt install -y netcat-openbsd chr default-jre
             - chr install -s configs/rell-test.yml
-            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell
+            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell || (curl -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
             - npm ci
             - export JEST_JUNIT_OUTPUT_NAME=unit.xml
-            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit
+            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
             - export TESTCONTAINERS_RYUK_DISABLED=true
             - export JEST_JUNIT_OUTPUT_NAME=integration.xml
-            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit
+            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
           artifacts:
             - logs/**
           services:
@@ -75,12 +70,6 @@ pipelines:
       - step:
           name: deploy:latest
           script:
-            - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
-            - apt update
-            - apt install default-jre -y
-            - apt install chr
             - chr install -s configs/jest-test.yml
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
@@ -93,12 +82,6 @@ pipelines:
       - step:
           name: deploy:stable
           script:
-            - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
-            - apt update
-            - apt install default-jre -y
-            - apt install chr
             - chr install -s configs/jest-test.yml
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
@@ -108,12 +91,6 @@ pipelines:
       - step:
           name: deploy:latest
           script:
-            - apt update
-            - curl -fsSL https://apt.chromia.com/chromia.gpg >/usr/share/keyrings/chromia.gpg
-            - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
-            - apt update
-            - apt install default-jre -y
-            - apt install chr
             - chr install -s configs/jest-test.yml
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
