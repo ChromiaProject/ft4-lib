@@ -27,6 +27,7 @@ export {
 
 // Asset module
 export {
+  Amount,
   DecimalFormat,
   Asset,
   Balance,

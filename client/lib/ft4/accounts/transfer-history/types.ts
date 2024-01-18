@@ -1,6 +1,5 @@
-import { Amount } from "../../asset/interfaces";
 import { Buffer } from "buffer";
-import { Asset, AssetResponse } from "../../asset/types";
+import { Amount, Asset, AssetResponse } from "@ft4/asset/types";
 
 export class TransferHistoryError extends Error {
   constructor(msg?) {

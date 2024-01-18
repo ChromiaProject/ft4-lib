@@ -1,5 +1,5 @@
 import { Operation, RawGtx } from "postchain-client";
-import { Amount } from "../asset/interfaces";
+import { Amount } from "@ft4/asset";
 import { op } from "@ft4/utils/index";
 import { getInitTransferArgs } from "./op-functions";
 import { BufferId } from "@ft4/utils/types";
