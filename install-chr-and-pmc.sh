@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # install chromia-cli-0.15.1-dist.tar.gz
 mkdir -p /opt/chromaway/chr
