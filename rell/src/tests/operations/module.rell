@@ -24,6 +24,10 @@ operation add_ad_to_account(acc.account, acc.auth_descriptor) {
     acc.add_auth_descriptor_to_account(account, auth_descriptor);
 }
 
+operation delete_auth_descriptor(acc.account_auth_descriptor) {
+  acc._delete_auth_descriptor(account_auth_descriptor);
+}
+
 operation register_asset(name, symbol: text, decimals: integer, issuing_blockchain_rid: byte_array, icon_url: text) {
     assets.Unsafe.register_asset(name, symbol, decimals, issuing_blockchain_rid, icon_url);
 }
