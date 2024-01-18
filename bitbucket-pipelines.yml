@@ -1,4 +1,4 @@
-image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21-chromia-tools:1.1.0
+image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.0.0
 
 options:
   max-time: 15
@@ -20,13 +20,12 @@ e2e-tests: &e2e-tests-anchor
       - wget -O - https://apt.corretto.aws/corretto.key | gpg --dearmor -o /usr/share/keyrings/corretto-keyring.gpg
       - echo "deb [signed-by=/usr/share/keyrings/corretto-keyring.gpg] https://apt.corretto.aws stable main" > /etc/apt/sources.list.d/corretto.list
 
-      - wget -q -O - https://apt.chromia.com/chromia.gpg > /usr/share/keyrings/chromia.gpg
-      - echo "deb [arch=amd64 signed-by=/usr/share/keyrings/chromia.gpg] https://apt.chromia.com stable main" >/etc/apt/sources.list.d/chromia.list
-
       - apt update
 
-      - apt install -y lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk chr
+      - apt install -y lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk
       - java -version
+
+      - ./install-chr-and-pmc.sh
 
       - export DISPLAY=:0.0
       - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
@@ -49,6 +48,7 @@ pipelines:
           caches:
             - node
           script:
+            - ./install-chr-and-pmc.sh
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell || (curl -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
             - npm ci
@@ -70,6 +70,7 @@ pipelines:
       - step:
           name: deploy:latest
           script:
+            - ./install-chr-and-pmc.sh
             - chr install -s configs/jest-test.yml
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
@@ -82,6 +83,7 @@ pipelines:
       - step:
           name: deploy:stable
           script:
+            - ./install-chr-and-pmc.sh
             - chr install -s configs/jest-test.yml
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
@@ -91,6 +93,7 @@ pipelines:
       - step:
           name: deploy:latest
           script:
+            - ./install-chr-and-pmc.sh
             - chr install -s configs/jest-test.yml
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
@@ -98,7 +101,6 @@ pipelines:
             - rm .chromia/config
 definitions:
   caches:
-    node: node_modules
     demo-node: examples/demo/client/node_modules
     cypress: $BITBUCKET_CLONE_DIR/.cache/Cypress
   services: 
