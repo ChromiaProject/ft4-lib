@@ -1,4 +1,4 @@
-image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21-chromia-tools:1.0.0
+image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21-chromia-tools:1.1.0
 
 options:
   max-time: 15

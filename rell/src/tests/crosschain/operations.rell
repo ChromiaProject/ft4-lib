@@ -1,6 +1,7 @@
 @test module;
 
 import ^^.assets.utils;
+import ^^^.lib.ft4.test.utils. { evm_auth_operation_for };
 import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
 import xc: ^^^.lib.ft4.crosschain;
@@ -45,6 +46,22 @@ function test_init_transfer_succeeds_under_valid_conditions() {
         .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
+}
+
+function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
+    val alice = utils.evm_register_alice();
+    val bob = utils.register_bob();
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    utils.mint(alice.account, asset_valid, 10L);
+
+    val op = xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]);
+
+    rell.test.tx()
+        .op(evm_auth_operation_for(alice.keypair.priv, op))
+        .op(op)
+        .sign(rell.test.keypairs.alice)
+        .run();
 }
 
 function test_apply_transfer_succeeds_under_valid_conditions() {
