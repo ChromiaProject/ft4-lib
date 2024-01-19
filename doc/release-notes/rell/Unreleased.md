@@ -1,3 +1,3 @@
-### Changed
+## [Unreleased] - 2024-xx-xx
 
-- Validate register_crosschain_asset parameters
+### Changed
