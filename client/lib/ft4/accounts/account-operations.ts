@@ -1,5 +1,5 @@
 import { formatter, Operation } from "postchain-client";
-import { Amount } from "../asset/interfaces";
+import { Amount } from "@ft4/asset";
 import { op } from "@ft4/utils/index";
 import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";

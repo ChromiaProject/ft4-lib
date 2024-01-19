@@ -1,7 +1,5 @@
 import { IClient, encryption } from "postchain-client";
-import { createAmount } from "@ft4/asset/amount";
-import { Amount } from "@ft4/asset/interfaces";
-import { Asset } from "@ft4/asset/types";
+import { Asset, Amount, createAmount } from "@ft4/asset";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
 import AccountBuilder from "../util/account-builder";

@@ -1,5 +1,4 @@
-import { Amount } from "./interfaces";
-import { DecimalFormat, SupportedNumber } from "./types";
+import { Amount, DecimalFormat, SupportedNumber } from "./types";
 
 export type RawAmount = { value: bigint; decimals: number };
 type AnyAssetAmount = RawAmount | Amount;
