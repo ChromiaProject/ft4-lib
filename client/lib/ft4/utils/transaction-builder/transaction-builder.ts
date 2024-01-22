@@ -185,7 +185,7 @@ export function transactionBuilder(
     tx: SignedTransaction;
     receipt: TransactionReceipt;
   }> {
-    const tx = await build();
+    const tx = await _build();
     const receipt = await client.sendTransaction(tx);
 
     const operationsWithHandlers = _operations.filter(
