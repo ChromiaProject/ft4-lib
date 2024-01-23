@@ -100,7 +100,7 @@ function create_account_with_auth(auth_descriptor): account = _create_account_wi
 function _create_account_with_auth(auth_descriptor, safe: boolean = true): account {
     require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
     
-    var flags = _extract_auth_descriptor_flags(auth_descriptor);
+    var flags = get_flags(auth_descriptor);
     require("A" in flags, "The auth descriptor used to create an account must always have the 'A' flag");
 
     val id = auth_descriptor.hash();
@@ -119,7 +119,7 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
     return acc;
 }
 
-function _extract_auth_descriptor_flags(auth_descriptor) {
+function get_flags(auth_descriptor) {
     when (auth_descriptor.auth_type) {
         S -> return single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;
         M -> return multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;

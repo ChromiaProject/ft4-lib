@@ -20,7 +20,7 @@ function test_an_account_can_be_created() {
 }
 
 function test_cannot_create_account_with_no_A_flag() {
-  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub);
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["T"]);
   
   admin.register_account(auth_descriptor)
     .sign(test_utils.admin_priv_key())

@@ -46,7 +46,7 @@ function test_it_rejects_wrong_evm_signatures() {
 }
 
 function test_perform_evm_auth_transaction() {
-  val external_auth_data = utils.evm_register_alice(["A", "EMPTY"]);
+  val external_auth_data = utils.evm_register_alice(["A"]);
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
     .op(evm_auth_operation_for(external_auth_data.keypair.priv, op))
