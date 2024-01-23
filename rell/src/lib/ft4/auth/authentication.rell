@@ -50,6 +50,15 @@ function authenticate(is_strict: boolean = true) {
     return account;
 }
 
+function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, account_id: byte_array, signers: list<byte_array>, is_strict: boolean) {
+    val ad_ids = accounts.auth_descriptor_signer @* {
+        .account_auth_descriptor.account.id == account_id,
+        .id in signers
+    } (.account_auth_descriptor.id);
+
+    return get_first_allowed_auth_descriptor(op_name, args, account_id, list(ad_ids), is_strict);
+}
+
 function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>, is_strict: boolean) {
     if (ad_ids.size() == 0) return null;
 
