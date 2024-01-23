@@ -14,7 +14,9 @@ val bob = rell.test.keypairs.bob;
 function test_an_account_can_be_created() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   
-  test_utils.create_test_account(alice);
+  admin.register_account(auth_descriptor)
+    .sign(test_utils.admin_priv_key())
+    .run();
   
   assert_not_null(accounts.account @? { auth_descriptor.hash() });
 }
