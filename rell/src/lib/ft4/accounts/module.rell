@@ -120,10 +120,10 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
 }
 
 function get_flags(auth_descriptor) {
-    when (auth_descriptor.auth_type) {
-        S -> return single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;
-        M -> return multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;
-    }
+    return when (auth_descriptor.auth_type) {
+        S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;
+        M -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()).flags;
+    };
 }
 
 function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
