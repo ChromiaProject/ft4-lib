@@ -1,6 +1,5 @@
-import { Amount } from "../../asset/interfaces";
 import { Buffer } from "buffer";
-import { Asset, AssetResponse } from "../../asset/types";
+import { Amount, Asset, AssetResponse } from "@ft4/asset/types";
 
 export class TransferHistoryError extends Error {
   constructor(msg?) {
@@ -20,6 +19,7 @@ export type TransferHistoryEntryResponse = {
   tx_rid: Buffer;
   tx_data: string;
   operation_name: string;
+  op_index: number;
 };
 
 export type TransferHistoryEntry = {
@@ -32,6 +32,7 @@ export type TransferHistoryEntry = {
   transactionId: Buffer;
   blockHeight: number;
   operationName: string;
+  opIndex: number;
 };
 
 export enum TransferHistoryType {

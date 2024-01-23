@@ -7,7 +7,7 @@ import {
   formatter,
   gtv,
 } from "postchain-client";
-import { Amount } from "../asset/interfaces";
+import { Amount } from "@ft4/asset";
 import { createNoopAuthenticator } from "../authentication";
 import { createAuthDataService } from "../ft-session";
 import { Session } from "../types";
