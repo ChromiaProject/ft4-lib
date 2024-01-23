@@ -28,11 +28,11 @@ function register_eve() = create_test_account(rell.test.keypairs.eve);
 
 function register_trudy() = create_test_account(rell.test.keypairs.trudy);
 
-function evm_register_alice(flags: list<text> = ["T"]) = create_evm_auth_test_account(rell.test.keypairs.alice, flags);
+function evm_register_alice(flags: list<text> = ["A", "T"]) = create_evm_auth_test_account(rell.test.keypairs.alice, flags);
 
-function evm_register_bob(flags: list<text> = ["T"]) = create_evm_auth_test_account(rell.test.keypairs.bob, flags);
+function evm_register_bob(flags: list<text> = ["A", "T"]) = create_evm_auth_test_account(rell.test.keypairs.bob, flags);
 
-function create_test_account(rell.test.keypair, permissions: list<text> = ["T"]): account_data {
+function create_test_account(rell.test.keypair, permissions: list<text> = ["A", "T"]): account_data {
     val auth_descriptor = create_auth_descriptor(keypair.pub, permissions);
     val auth_descriptor_id = auth_descriptor.hash();
 

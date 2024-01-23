@@ -1,7 +1,7 @@
 import { generateAssetName, generateAssetSymbol } from "../util/util";
 import { Connection } from "@ft4/types";
 import { getNewAsset } from "../util/blockchain-util";
-import { InvalidUrlError } from "@ft4/asset/interfaces";
+import { InvalidUrlError } from "@ft4/asset";
 import { createConnection } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import { IClient, gtv } from "postchain-client";

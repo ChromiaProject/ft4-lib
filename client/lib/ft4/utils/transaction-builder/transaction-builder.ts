@@ -84,6 +84,15 @@ export function transactionBuilder(
   }
 
   async function buildUnsigned(): Promise<TxBuilderTransaction> {
+    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
+      throw new Error(
+        "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
+      );
+
+    return await _buildUnsigned();
+  }
+
+  async function _buildUnsigned(): Promise<TxBuilderTransaction> {
     const [operations, keyHandlers] = await authenticateOperations(
       _operations,
       _context,
@@ -159,17 +168,12 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx: TxBuilderTransaction = await buildUnsigned();
-    const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
-    tx.signatures = await Promise.all(
-      // For some signers we don't have access to their key stores, therefore we insert
-      // zero buffer as a placeholder for their signatures
-      tx.signers.map(
-        (signer) =>
-          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
-      ),
-    );
-    return gtx.serialize(tx);
+    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
+      throw new Error(
+        "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
+      );
+
+    return await _build();
   }
 
   function addSigners(...signers: FtKeyStore[]): TransactionBuilder {
@@ -181,7 +185,7 @@ export function transactionBuilder(
     tx: SignedTransaction;
     receipt: TransactionReceipt;
   }> {
-    const tx = await build();
+    const tx = await _build();
     const receipt = await client.sendTransaction(tx);
 
     const operationsWithHandlers = _operations.filter(
@@ -198,6 +202,20 @@ export function transactionBuilder(
       tx,
       receipt,
     };
+  }
+
+  async function _build(): Promise<Buffer> {
+    const tx: TxBuilderTransaction = await _buildUnsigned();
+    const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
+    tx.signatures = await Promise.all(
+      // For some signers we don't have access to their key stores, therefor we insert zero buffer
+      // as a placeholder for their signatures
+      tx.signers.map(
+        (signer) =>
+          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
+      ),
+    );
+    return gtx.serialize(tx);
   }
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {

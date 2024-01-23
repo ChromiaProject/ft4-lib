@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1r] - 2024-01-19
+
+### Changed
+
+- Validate `register_crosschain_asset parameters`
+- Added `op_index` to the `get_transfer_history` response
+
+## [0.3.0r] - 2024-01-17
+
+### Changed
+
+- Added query `get_all_auth_handlers` to get all auth handlers specified by the dApp
+- Added query `get_first_allowed_auth_descriptor` to let the blockchain select auth descriptors from a set that can be used to authenticate an operation
+- Added possibility to create overridable auth handlers
+- Added `resolver` field to `AuthHandler` which can be used to add custom auth logic when evaluating an auth descriptor
+- Updated transaction prioritization to work with Postchain 3.14.17 and later.
+- Fix `init_transfer` auth message issue that didn't allow `init_transfer` operation to be used with evm auth
+
+### Breaking
+
+- Removed auth descriptor types `ES` and `EM`.
+
 ## [0.2.0r] - 2023-12-22
 
 **This version is incompatible with older versions. To upgrade, you'll need to perform a database migration.** For more info, check out [this page](https://docs.chromia.com/rell/language-features/modules/entity#changing-existing-entities)

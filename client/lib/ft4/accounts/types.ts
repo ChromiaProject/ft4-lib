@@ -1,7 +1,6 @@
 import { Buffer } from "buffer";
 import { KeyPair, SignatureProvider } from "postchain-client";
-import { Amount } from "../asset/interfaces";
-import { Balance } from "../asset/types";
+import { Amount, Balance } from "@ft4/asset";
 import { Authenticator } from "../authentication/types";
 import { OptionalPageCursor } from "../types";
 import {

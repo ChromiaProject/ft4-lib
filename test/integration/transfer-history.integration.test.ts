@@ -79,6 +79,7 @@ describe("Transfer history", () => {
       const entry = history.data[0];
 
       expect(entry.isInput).toEqual(true);
+      expect(entry.opIndex).toEqual(1);
       const expectedDetails: TransferDetail[] = [
         {
           accountId: account1.id,
@@ -94,12 +95,15 @@ describe("Transfer history", () => {
         },
       ];
       expect(
-        await connection.getTransferDetails(transferTransactionRid, 1),
+        await connection.getTransferDetails(
+          transferTransactionRid,
+          entry.opIndex,
+        ),
       ).toEqual(expectedDetails);
       expect(
         await connection.getTransferDetailsByAsset(
           transferTransactionRid,
-          1,
+          entry.opIndex,
           asset.id,
         ),
       ).toEqual(expectedDetails);

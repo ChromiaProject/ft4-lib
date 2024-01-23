@@ -64,14 +64,10 @@ function check_required_flags(flags: set<text>, required_flags: list<text>): boo
  * Returns the set of flags found in the "args" parameter.
  */
 function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
-    when (a_t) {
-        S -> {
-            return single_sig_args.from_bytes(args).flags;
-        }
-        M -> {
-            return multi_sig_args.from_bytes(args).flags;
-        }
-    }
+    return when (a_t) {
+        S -> single_sig_args.from_bytes(args).flags;
+        M -> multi_sig_args.from_bytes(args).flags;
+    };
 }
 
 /*

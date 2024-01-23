@@ -7,7 +7,7 @@ import {
   initTransfer as initTransferOp,
 } from "./operations";
 import { call } from "../ft-session";
-import { Amount } from "../asset/interfaces";
+import { Amount } from "@ft4/asset";
 import { GtvInitTransferArgs } from "./types";
 import { BufferId } from "@ft4/utils/types";
 
