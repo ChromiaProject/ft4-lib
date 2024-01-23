@@ -19,7 +19,7 @@ function test_operation_without_auth_operation() {
 }
 
 function test_fails_if_insufficient_permissions() {
-  val external_auth_data = utils.evm_register_alice(["X"]);
+  val external_auth_data = utils.evm_register_alice();
   val signature = evm_sign("", external_auth_data.keypair.priv);
 
   rell.test.tx()
