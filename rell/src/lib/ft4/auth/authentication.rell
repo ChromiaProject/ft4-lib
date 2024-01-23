@@ -51,12 +51,21 @@ function authenticate(is_strict: boolean = true) {
 }
 
 function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, account_id: byte_array, signers: list<byte_array>, is_strict: boolean) {
-    val ad_ids = accounts.auth_descriptor_signer @* {
+    val ads = accounts.auth_descriptor_signer @* {
         .account_auth_descriptor.account.id == account_id,
         .id in signers
-    } (.account_auth_descriptor.id);
+    } (.account_auth_descriptor);
 
-    return get_first_allowed_auth_descriptor(op_name, args, account_id, list(ad_ids), is_strict);
+    val flags = get_auth_flags(op_name, is_strict);
+
+    val valid_ad_ids = ads @* { _has_flags($, flags) } (.id);
+
+    return get_first_allowed_auth_descriptor(op_name, args, account_id, valid_ad_ids, is_strict);
+}
+
+function _has_flags(accounts.account_auth_descriptor, required_flags: list<text>): boolean {
+    val ss_args = accounts.single_sig_args.from_bytes(account_auth_descriptor.args);
+    return ss_args.flags.contains_all(required_flags);
 }
 
 function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>, is_strict: boolean) {
