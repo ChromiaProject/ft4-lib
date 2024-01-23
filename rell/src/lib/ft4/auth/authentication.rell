@@ -56,7 +56,7 @@ function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id:
     val resolver = get_auth_handler(op_name, is_strict=false).resolver;
     if (resolver == null) return ad_ids[0];
   
-    return resolver((args=args, account_id=account_id, auth_descriptor_ids=ad_ids));
+    return resolver(args, account_id, ad_ids);
 }
 
 function _ft_auth(required_flags: list<text>, account: accounts.account, auth_descriptor: accounts.account_auth_descriptor) {

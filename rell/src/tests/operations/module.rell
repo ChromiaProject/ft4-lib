@@ -25,7 +25,7 @@ operation add_ad_to_account(acc.account, acc.auth_descriptor) {
 }
 
 operation delete_auth_descriptor(acc.account_auth_descriptor) {
-  acc._delete_auth_descriptor(account_auth_descriptor);
+    acc._delete_auth_descriptor(account_auth_descriptor);
 }
 
 operation register_asset(name, symbol: text, decimals: integer, issuing_blockchain_rid: byte_array, icon_url: text) {

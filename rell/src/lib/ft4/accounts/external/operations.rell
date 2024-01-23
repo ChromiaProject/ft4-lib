@@ -4,11 +4,11 @@ function delete_auth_descriptor_message(gtv) {
     return "Please sign the message\nto delete auth descriptor:\n%s\n\nfrom account\n{account_id}".format(params.auth_descriptor_id);
 }
 
-function delete_auth_descriptor_resolver(input: (args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) {
-    val params = struct<delete_auth_descriptor>.from_gtv(input.args);
-    if (params.auth_descriptor_id in input.auth_descriptor_ids) return params.auth_descriptor_id;
+function delete_auth_descriptor_resolver(args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>) {
+    val params = struct<delete_auth_descriptor>.from_gtv(args);
+    if (params.auth_descriptor_id in auth_descriptor_ids) return params.auth_descriptor_id;
 
-    for (ad in accounts.account_auth_descriptor @* { .id in input.auth_descriptor_ids }) {
+    for (ad in accounts.account_auth_descriptor @* { .account.id == account_id, .id in auth_descriptor_ids }) {
         if (auth.has_flags(ad, ["A"])) return ad.id;
     }
 
@@ -37,14 +37,16 @@ function delete_all_auth_descriptors_exclude_message(gtv) {
     return "Please sign the message\nto delete all auth descriptors excluding:\n%s\n\n from account:\n{account_id}".format(params.auth_descriptor_id);
 }
 
-function delete_all_auth_descriptors_exclude_resolver(input: (args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) {
-    val params = struct<delete_all_auth_descriptors_exclude>.from_gtv(input.args);
-    for (ad in accounts.account_auth_descriptor @* { .account.id == params.account_id }) {
-        if (ad.id == params.auth_descriptor_id and auth.has_flags(ad, ["A"])) {
-            return ad.id;
-        }
-    }
-    return null;
+function delete_all_auth_descriptors_exclude_resolver(args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>) {
+    val params = struct<delete_all_auth_descriptors_exclude>.from_gtv(args);
+    if (not (params.auth_descriptor_id in auth_descriptor_ids)) return null;
+    val auth_descriptor = accounts.account_auth_descriptor @? {
+        .account.id == account_id,
+        .id == params.auth_descriptor_id
+    };
+
+    if (empty(auth_descriptor)) return null;
+    return if (auth.has_flags(auth_descriptor, ["A"])) auth_descriptor.id else null;
 }
 
 @extend(auth.auth_handler)
