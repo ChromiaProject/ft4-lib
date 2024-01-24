@@ -18,7 +18,7 @@ function delete_auth_descriptor_resolver(args: gtv, account_id: byte_array, auth
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(delete_auth_descriptor).mount_name,
-    flags = ["A"],
+    flags = [],
     message = delete_auth_descriptor_message(*),
     resolver = delete_auth_descriptor_resolver(*)
 );
@@ -26,10 +26,14 @@ function () = auth.add_overridable_auth_handler(
 operation delete_auth_descriptor(auth_descriptor_id: byte_array) {
     // val flags = if (auth_descriptor_id == delete_descriptor_id) list<text>() else ["A"];
     val account = auth.authenticate();
+    val authorizing_ad = accounts.account_auth_descriptor @ {
+        .id == byte_array.from_gtv(op_context.get_all_operations()[op_context.op_index - 1].args[1])
+    };
+    require((authorizing_ad.id == auth_descriptor_id) or auth.has_flags(authorizing_ad, ["A"]));
 
     accounts._delete_auth_descriptor(
         accounts.auth_descriptor_by_id(account, auth_descriptor_id)
-    );    
+    );
 }
 
 function delete_all_auth_descriptors_exclude_message(gtv) {
