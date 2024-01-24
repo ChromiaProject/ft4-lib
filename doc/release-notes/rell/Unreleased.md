@@ -1,5 +1,6 @@
 ## [Unreleased] - 2024-xx-xx
 
 ### Changed
-
-- Add get_first_allowed_auth_descriptor_by_signers query
+ 
+- `create_account_with_auth` now requires the `auth_descriptor` to have `A` flag. You can no longer create account with no `A` flag auth descriptor by default.
+- Add `get_first_allowed_auth_descriptor_by_signers` query
