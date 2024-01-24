@@ -16,6 +16,7 @@ export function createTransferHistoryEntryFromResponse(
     tx_rid: txRid,
     tx_data: txData,
     operation_name: operationName,
+    op_index: opIndex,
   } = responseEntry;
 
   return Object.freeze({
@@ -29,5 +30,6 @@ export function createTransferHistoryEntryFromResponse(
     transactionId: formatter.ensureBuffer(txRid),
     blockHeight,
     operationName,
+    opIndex,
   });
 }

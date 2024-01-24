@@ -192,6 +192,7 @@ namespace Unsafe {
         decimals: integer,
         blockchain_rid: byte_array,
         icon_url: text): asset {
+
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
         val trimmed_icon_url = icon_url.trim();
@@ -199,6 +200,8 @@ namespace Unsafe {
             (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
             "Invalid URL for icon"
         );
+
+        require(blockchain_rid.size() > 0, "blockchain_rid cannot be empty");
 
         val id = (name, blockchain_rid).hash();
         return create asset (

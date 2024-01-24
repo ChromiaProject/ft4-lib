@@ -29,7 +29,7 @@ struct account_data {
 }
 
 function setup_account_with_rules(rules: gtv) {
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]);
 
   return add_expiring_auth_descriptor(alice.account, rules);
 }
@@ -37,7 +37,7 @@ function setup_account_with_rules(rules: gtv) {
 function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
   val bob_ad = utils.create_auth_descriptor(
     rell.test.pubkeys.bob,
-    ["A"],
+    ["A", "E"],
     rules
   );
   
@@ -299,7 +299,7 @@ namespace test_deletion_after_expiration {
   }
 
   function test_delete_only_expired_auth_descriptors() {
-    val account = utils.create_test_account(rell.test.keypairs.alice, ["A"]).account;
+    val account = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]).account;
     val acc_data_valid = [
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([

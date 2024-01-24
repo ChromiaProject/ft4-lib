@@ -30,7 +30,7 @@ function test_before_and_after_authenticate_extensions_are_called_with_ft_auth()
 }
 
 function test_before_and_after_authenticate_extensions_are_called_with_evm_auth() {
-    val alice = utils.evm_register_alice(["A"]);
+    val alice = utils.evm_register_alice(["A", "E"]); // "E" flag is required by `test_empty_auth_message`
 
     val signature = evm_sign(
       "Blockchain:\n%s\n\n\n\nNonce: %s".format(
