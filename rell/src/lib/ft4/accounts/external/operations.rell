@@ -9,7 +9,7 @@ function delete_auth_descriptor_resolver(args: gtv, account_id: byte_array, auth
     if (params.auth_descriptor_id in auth_descriptor_ids) return params.auth_descriptor_id;
 
     for (ad in accounts.account_auth_descriptor @* { .account.id == account_id, .id in auth_descriptor_ids }) {
-        if (auth.has_flags(ad, ["A"])) return ad.id;
+        if (accounts.has_flags(ad, ["A"])) return ad.id;
     }
 
     return null;
@@ -44,7 +44,7 @@ function delete_all_auth_descriptors_exclude_resolver(args: gtv, account_id: byt
     };
 
     if (empty(auth_descriptor)) return null;
-    return if (auth.has_flags(auth_descriptor, ["A"])) auth_descriptor.id else null;
+    return if (accounts.has_flags(auth_descriptor, ["A"])) auth_descriptor.id else null;
 }
 
 @extend(auth.auth_handler)
