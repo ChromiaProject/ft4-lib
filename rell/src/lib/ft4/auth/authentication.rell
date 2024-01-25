@@ -58,14 +58,9 @@ function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, 
 
     val flags = get_auth_flags(op_name, is_strict);
 
-    val valid_ad_ids = ads @* { _has_flags($, flags) } (.id);
+    val valid_ad_ids = ads @* { accounts.has_flags($, flags) } (.id);
 
     return get_first_allowed_auth_descriptor(op_name, args, account_id, valid_ad_ids, is_strict);
-}
-
-function _has_flags(accounts.account_auth_descriptor, required_flags: list<text>): boolean {
-    val flags = accounts.get_flags_from_args(account_auth_descriptor.auth_type, account_auth_descriptor.args);
-    return flags.contains_all(required_flags);
 }
 
 function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>, is_strict: boolean) {
