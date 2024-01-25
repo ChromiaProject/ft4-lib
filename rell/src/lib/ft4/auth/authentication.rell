@@ -146,18 +146,11 @@ function _validate_evm_arguments(
 
     val signatures = list<signature>.from_gtv(auth_args[2]);
 
-    val has_all_flags = has_flags(auth_descriptor, list(required_flags));
+    val has_all_flags = accounts.has_flags(auth_descriptor, list(required_flags));
     
     require(has_all_flags, "The auth descriptor does not have the required permissions");
 
     return accounts.evm_auth_args(account, auth_descriptor, signatures);
-}
-
-function has_flags(accounts.account_auth_descriptor, flags: list<text>) {
-    return when (account_auth_descriptor.auth_type) {
-        S -> accounts.single_sig_args.from_bytes(account_auth_descriptor.args).flags.contains_all(flags);
-        M -> accounts.multi_sig_args.from_bytes(account_auth_descriptor.args).flags.contains_all(flags);
-    };
 }
 
 function _validate_ft4_signature(
