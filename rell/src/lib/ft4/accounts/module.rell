@@ -126,6 +126,16 @@ function get_flags(auth_descriptor) {
     };
 }
 
+/**
+* Checks if an `account_auth_descriptor` has all the specified flags
+*/
+function has_flags(account_auth_descriptor, flags: list<text>) {
+    return when (account_auth_descriptor.auth_type) {
+        S -> single_sig_args.from_bytes(account_auth_descriptor.args).flags.contains_all(flags);
+        M -> multi_sig_args.from_bytes(account_auth_descriptor.args).flags.contains_all(flags);
+    };
+}
+
 function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
     val signers = get_signers(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
     require(not safe or op_context.get_signers().size() >= signers.size(), "Too few transaction signers");
