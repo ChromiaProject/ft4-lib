@@ -337,13 +337,13 @@ namespace test_deletion_after_expiration {
 
     rell.test.block().run();
 
-    //valid auth descs exist
+    //valid auth descriptors exist
     for (data in acc_data_valid) {
       assert_true(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
       );
     }
-    //invalid auth descs exist
+    //invalid auth descriptors exist
     for (data in acc_data_invalid) {
       assert_true(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
@@ -353,13 +353,13 @@ namespace test_deletion_after_expiration {
     //authenticate with a different auth descriptor
     authenticate_alice(account.id);
     
-    //valid auth descs exist
+    //valid auth descriptors exist
     for (data in acc_data_valid) {
       assert_true(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
       );
     }
-    //invalid auth descs have been deleted
+    //invalid auth descriptors have been deleted
     for (data in acc_data_invalid) {
       assert_false(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
