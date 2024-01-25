@@ -27,6 +27,26 @@ export function authHandlerForOperation(
   };
 }
 
+export function firstAllowedAuthDescriptorBySigners(
+  opName: string,
+  args: RawGtv,
+  accountId: Buffer,
+  signers: Buffer[],
+): QueryObject<
+  Buffer | null,
+  { op_name: string; args: RawGtv; account_id: Buffer; signers: Buffer[] }
+> {
+  return {
+    name: "ft4.get_first_allowed_auth_descriptor_by_signers",
+    args: {
+      op_name: opName,
+      args,
+      account_id: accountId,
+      signers,
+    },
+  };
+}
+
 export function firstAllowedAuthDescriptor(
   opName: string,
   args: RawGtv,
