@@ -170,7 +170,7 @@ function single_sig_auth_descriptor(pubkey, flags: set<text>) = auth_descriptor(
     GTV_NULL
 );
 
-function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page_cursor: text?) {
+function get_paginated_auth_descriptors(id: byte_array, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return account_auth_descriptor @* {
         .account.id == id,
@@ -183,7 +183,7 @@ function get_paginated_auth_descriptors(id: byte_array, page_size: integer, page
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_paginated_auth_descriptors_by_signer(account_id: byte_array, signer: byte_array, page_size: integer, page_cursor: text?) {
+function get_paginated_auth_descriptors_by_signer(account_id: byte_array, signer: byte_array, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return auth_descriptor_signer @* {
         .account_auth_descriptor.account.id == account_id,
@@ -207,7 +207,7 @@ function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     );
 }
 
-function get_paginated_accounts_by_signer(id: byte_array, page_size: integer, page_cursor: text?) {
+function get_paginated_accounts_by_signer(id: byte_array, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return auth_descriptor_signer @* {
         id,
@@ -220,7 +220,7 @@ function get_paginated_accounts_by_signer(id: byte_array, page_size: integer, pa
     ) limit utils.fetch_data_size(page_size); 
 }
 
-function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer, page_cursor: text?) {
+function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return account_auth_descriptor @* {
         .id == id,
