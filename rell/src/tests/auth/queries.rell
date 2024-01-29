@@ -1,0 +1,27 @@
+@test module;
+
+import auth_pub: ^^^.lib.ft4.auth.external;
+import test_operations: ^^.operations;
+
+function test_it_returns_null_if_no_ads_provided() {
+    val args = struct<test_operations.test_auth.test_auth_with_resolver>(1);
+    val selected_id = auth_pub.get_first_allowed_auth_descriptor("test_auth_with_resolver", args.to_gtv(), x"", []);
+    assert_null(selected_id);
+}
+
+function test_it_returns_first_ad_id_if_no_resolver() {
+    val args = struct<test_operations.test_auth.test_auth_with_resolver>(1);
+    val id1 = "1".to_bytes();
+    val id2 = "2".to_bytes();
+    val selected_id = auth_pub.get_first_allowed_auth_descriptor("test_auth_without_resolver", args.to_gtv(), x"", [id1, id2]);
+    assert_equals(selected_id, id1);
+}
+
+function test_it_returns_ad_id_selected_by_resolver_if_provided() {
+    val args = struct<test_operations.test_auth.test_auth_with_resolver>(2);
+    val id1 = "1".to_bytes();
+    val id2 = "2".to_bytes();
+    val id3 = "3".to_bytes();
+    val selected_id = auth_pub.get_first_allowed_auth_descriptor("test_auth_with_resolver", args.to_gtv(), x"", [id1, id2, id3]);
+    assert_equals(selected_id, id3);
+}
