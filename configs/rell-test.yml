@@ -10,6 +10,9 @@ blockchains:
         - tests.default_prioritization
         - tests.utils
       moduleArgs:
+        lib.ft4:
+          max_page_size: 99
+
         lib.ft4.accounts:
           rate_limit:
             max_points: 5
@@ -18,9 +21,6 @@ blockchains:
 
         lib.ft4.admin:
           admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
-        
-        lib.ft4.utils:
-          max_page_size: 99
 
         tests.assets.utils:
           admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"

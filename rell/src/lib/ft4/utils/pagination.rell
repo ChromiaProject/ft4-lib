@@ -1,3 +1,5 @@
+import ^.{ get_module_args };
+
 struct page_cursor {
     before_rowid: rowid? = null;
 }
@@ -5,10 +7,6 @@ struct page_cursor {
 struct pagination_result {
     data: gtv;
     rowid: rowid;
-}
-
-struct module_args {
-    max_page_size: integer = 100;
 }
 
 function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
@@ -25,8 +23,8 @@ function null_page() = paged_result(
     data = list<gtv>()
 );
 
-function fetch_data_size(page_size: integer? = chain_context.args.max_page_size) = 
-    min(chain_context.args.max_page_size, page_size ?: chain_context.args.max_page_size) + 1;
+function fetch_data_size(page_size: integer? = get_module_args().max_page_size) = 
+    min(get_module_args().max_page_size, page_size ?: get_module_args().max_page_size) + 1;
 
 function before_rowid(page_cursor: text?) {
     var before_rowid: rowid? = null;
