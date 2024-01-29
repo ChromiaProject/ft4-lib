@@ -16,6 +16,10 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
+declare global {
+  interface Window { ethereum: any }
+}
+
 const useSession = (storageType) => {
   const [session, setSession] = useState(null);
   const [accounts, setAccounts] = useState([]);
@@ -85,7 +89,7 @@ function App() {
     getAssets();
   }, [session]);
 
-  const handleCopy = (hexId) => {
+  const handleCopy = (hexId: string) => {
     navigator.clipboard.writeText(hexId);
     setCopied(true);
   };
@@ -101,7 +105,7 @@ function App() {
     }
   };
 
-  const handleClose = (_, reason) => {
+  const handleClose = (_, reason: string) => {
     if (reason === 'clickaway') {
       return;
     }

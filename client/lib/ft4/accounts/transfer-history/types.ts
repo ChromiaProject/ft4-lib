@@ -12,7 +12,7 @@ export class TransferHistoryError extends Error {
 export type TransferHistoryEntryResponse = {
   id: number;
   delta: bigint;
-  asset_data: AssetResponse;
+  asset: AssetResponse;
   is_input: number;
   timestamp: number;
   block_height: number;
@@ -26,7 +26,7 @@ export type TransferHistoryEntry = {
   rowid: number;
   isInput: boolean;
   delta: Amount;
-  assetData: Asset;
+  asset: Asset;
   data: Buffer;
   timestamp: Date;
   transactionId: Buffer;
