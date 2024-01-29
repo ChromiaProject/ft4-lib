@@ -1,3 +1,5 @@
+import ^.{ get_module_args };
+
 struct page_cursor {
     before_rowid: rowid? = null;
 }
@@ -6,8 +8,6 @@ struct pagination_result {
     data: gtv;
     rowid: rowid;
 }
-
-val MAX_PAGE_SIZE: integer = 100;
 
 function encode_cursor(page_cursor) = page_cursor.to_bytes().to_base64();
 
@@ -23,7 +23,8 @@ function null_page() = paged_result(
     data = list<gtv>()
 );
 
-function fetch_data_size(page_size: integer) = min(MAX_PAGE_SIZE, page_size) + 1;
+function fetch_data_size(page_size: integer? = get_module_args().query_max_page_size) = 
+    min(get_module_args().query_max_page_size, page_size ?: get_module_args().query_max_page_size) + 1;
 
 function before_rowid(page_cursor: text?) {
     var before_rowid: rowid? = null;
@@ -35,8 +36,10 @@ function before_rowid(page_cursor: text?) {
 }
 
 
-function make_page(pagination_results: list<pagination_result>, page_size: integer): paged_result {
-    require(page_size > 0, "Must return at least one item");
+function make_page(pagination_results: list<pagination_result>, page_size: integer?): paged_result {
+    if (page_size != null) {
+        require(page_size > 0, "Must return at least one item");
+    }
     if (empty(pagination_results)) {
          return null_page();
     }

@@ -78,6 +78,7 @@ export {
   Connection,
   KeyStoreInteractor,
   OptionalPageCursor,
+  OptionalLimit,
 } from "./types";
 
 export {

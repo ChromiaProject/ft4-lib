@@ -1,8 +1,8 @@
 import { QueryObject, formatter } from "postchain-client";
-import { OptionalPageCursor } from "../types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/types";
 import { Buffer } from "buffer";
 import { AssetResponse, BalanceResponse } from "./types";
-import { BufferId, PaginatedEntity } from "@ft4/utils/types";
+import { BufferId, PaginatedEntity } from "@ft4/utils";
 
 export function assetById(
   assetId: BufferId,
@@ -26,13 +26,13 @@ export function assetBySymbol(
 
 export function assetsByName(
   name: string,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   AssetResponse,
   {
     name: string;
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {
@@ -47,11 +47,11 @@ export function assetsByName(
 }
 
 export function allAssets(
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
   PaginatedEntity<AssetResponse>,
-  { page_size: number; page_cursor: OptionalPageCursor }
+  { page_size: OptionalLimit; page_cursor: OptionalPageCursor }
 > {
   return {
     name: "ft4.get_all_assets",
@@ -77,13 +77,13 @@ export function balanceByAccountId(
 
 export function balancesByAccountId(
   accountId: BufferId,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<BalanceResponse>,
   {
     account_id: Buffer;
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {

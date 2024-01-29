@@ -13,6 +13,7 @@ import { TransferDetail } from "./accounts/transfer-history/transfer-history-que
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
+export type OptionalLimit = number | null;
 export type PagedResponse<T> = {
   data: T[];
   next_cursor: OptionalPageCursor;

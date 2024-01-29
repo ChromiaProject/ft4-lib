@@ -65,7 +65,7 @@ function map_asset(asset: asset) {
     );
 }
 
-function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?): list<utils.pagination_result> {
+function get_paginated_asset_balances(account_id: byte_array, page_size: integer?, page_cursor: text?): list<utils.pagination_result> {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
         .account.id == account_id,
@@ -81,7 +81,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_all_assets(page_size: integer, page_cursor: text?) {
+function get_all_assets(page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {
         .rowid > (before_rowid ?: rowid(0))
@@ -113,7 +113,7 @@ function format_amount_with_decimals(amount: big_integer, decimals: integer): te
     return amt;
 }
 
-function get_paginated_asset_balances_by_name(name, page_size: integer, page_cursor: text?) {
+function get_paginated_asset_balances_by_name(name, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {
         .name == name,
