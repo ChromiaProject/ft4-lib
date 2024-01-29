@@ -23,8 +23,8 @@ function null_page() = paged_result(
     data = list<gtv>()
 );
 
-function fetch_data_size(page_size: integer? = get_module_args().max_page_size) = 
-    min(get_module_args().max_page_size, page_size ?: get_module_args().max_page_size) + 1;
+function fetch_data_size(page_size: integer? = get_module_args().query_max_page_size) = 
+    min(get_module_args().query_max_page_size, page_size ?: get_module_args().query_max_page_size) + 1;
 
 function before_rowid(page_cursor: text?) {
     var before_rowid: rowid? = null;

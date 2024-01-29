@@ -11,7 +11,7 @@ blockchains:
         - tests.utils
       moduleArgs:
         lib.ft4:
-          max_page_size: 99
+          query_max_page_size: 99
 
         lib.ft4.accounts:
           rate_limit:
