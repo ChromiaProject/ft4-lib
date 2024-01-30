@@ -17,7 +17,7 @@ import { createFtKeyHandler } from "@ft4/authentication/ft/key-handler";
 import { op } from "@ft4/utils";
 import { Connection } from "@ft4/types";
 import { createAuthDataService, createConnection } from "@ft4/ft-session";
-import { createStubClient } from "@ft4/util/blockchain-util";
+import { createStubClient } from "postchain-client";
 
 describe("Authenticator", () => {
   let connection: Connection;
