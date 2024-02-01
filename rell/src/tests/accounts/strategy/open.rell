@@ -1,0 +1,80 @@
+@test
+module;
+
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.open;
+
+import lib.ft4.test.utils. { evm_sign };
+
+function test_account_can_be_registered_with_open_strategy() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val account = accounts.account @? { .id == rell.test.keypairs.alice.pub.hash() };
+
+    assert_not_null(account);
+}
+
+function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
+    val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        evm_address,
+        set(["A", "T"])
+    );
+
+    val open = open.ras_open(auth_descriptor);
+
+    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
+    print(message);
+    val signature = evm_sign(message, rell.test.keypairs.alice.priv);
+
+    rell.test.tx()
+        .op(strategies.register_account_evm_signatures([signature]))
+        .op(open)
+        .op(strategies.register_account())
+        .run();
+
+    val account = accounts.account @? { .id == evm_address.hash() };
+
+    assert_not_null(account);
+}
+
+function test_account_registration_fails_with_invalid_evm_signature() {
+    val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        evm_address,
+        set(["A", "T"])
+    );
+
+    val open = open.ras_open(auth_descriptor);
+
+    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
+    print(message);
+    val signature = evm_sign(message, rell.test.keypairs.bob.priv);
+
+    rell.test.tx()
+        .op(strategies.register_account_evm_signatures([signature]))
+        .op(open)
+        .op(strategies.register_account())
+        .run_must_fail("Missing signature for signer <0x1563915e194d8cfba1943570603f7606a3115508>");
+}
+
+function test_register_account_message() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    print(strategies.get_register_account_message("ft4.ras_open", [auth_descriptor, null].to_gtv()));
+}

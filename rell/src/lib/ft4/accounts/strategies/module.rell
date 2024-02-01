@@ -1,0 +1,156 @@
+@mount("ft4")
+module;
+
+import ^^.accounts;
+import ^^.auth;
+
+
+operation register_account() {
+    _register_account();
+}
+
+function get_strategy(strategy_name: name): _strategy {
+    val strategies = strategy();
+    require(strategy_name in strategies, "Strategy <%s> is not loaded or does not exist.".format(strategy_name));
+    return strategies[strategy_name];
+}
+
+function _register_account() {
+    val tx_operations = op_context.get_all_operations();
+    val prev_op = tx_operations[op_context.op_index-1];
+    val strategy_name = prev_op.name;
+    val strategy_params = prev_op.args.to_gtv();
+
+    var evm_signatures = load_evm_signatures();
+
+    val strategy = get_strategy(strategy_name);
+    val account_details = strategy.account_details(strategy_params);
+
+    val signers = get_signers(account_details.initial);
+    val message = get_register_account_message(strategy_name, strategy_params);
+    verify_all_signatures(signers, evm_signatures, message);
+
+    if (account_details.disposable??) {
+        val disposable_auth_descriptor_signers = get_signers(account_details.disposable!!);
+        verify_all_signatures(disposable_auth_descriptor_signers, evm_signatures, message);
+    }
+
+    val account_id = get_account_id_from_signers(signers);
+
+    val account = create accounts.account(account_id);
+    accounts.add_auth_descriptor_to_account(account, account_details.initial, false);
+
+    if (account_details.disposable??) {
+        accounts.add_auth_descriptor_to_account(account, account_details.disposable!!, false);
+    }
+}
+
+function get_account_id_from_signers(signers: list<byte_array>) {
+    // Should we sort signers, so that we get same account 
+    // id even if signers are provided in different order
+
+    require(signers.size() > 0, "Cannot derive account id. Signers list is empty");
+
+    return if (signers.size() == 1) signers[0].hash() else signers.hash();
+}
+
+function verify_all_signatures(signers: list<byte_array>, evm_signatures: list<auth.signature>, message: text) {
+    val recovered_address = evm_signatures @* {} (auth._recover_evm_address(message, $));
+    for (signer in signers) {
+        when (signer.size()) {
+            33 ->
+                require(op_context.is_signer(signer), "Missing signature for signer <%s>".format(signer));
+            20 ->
+                require(signer in recovered_address, "Missing signature for signer <%s>".format(signer));
+            else ->
+                require(false, "Invalid signer <%s> length <%d>".format(signer, signer.size()));
+        }
+    }
+}
+
+
+
+function get_signers(accounts.auth_descriptor)
+    = when (auth_descriptor.auth_type) {
+        S -> [accounts.single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).signer];
+        M -> accounts.multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()).signers;
+    };
+
+function get_mandatory_flags() = ["A"];
+
+function get_default_flags() = get_mandatory_flags();
+
+@extendable 
+function strategy(): map<name, _strategy>;
+
+struct _strategy {
+    op: rell.meta;
+    account_details: (gtv) -> account_details;
+}
+
+struct account_details {
+    account_id: byte_array? = null;
+    initial: accounts.auth_descriptor;
+    disposable: accounts.auth_descriptor? = null;
+}
+
+function add_strategy(op: rell.meta, account_details: (gtv) -> account_details) 
+    = [op.mount_name: _strategy(op, account_details)];
+
+function load_evm_signatures(): list<auth.signature> {
+    val tx_operations = op_context.get_all_operations();
+    
+    return if (op_context.op_index >= 2 and tx_operations[op_context.op_index-2].name == "ft4.register_account_evm_signatures")
+        list<auth.signature>.from_gtv(tx_operations[op_context.op_index-2].args[0])
+    else
+        [];
+}
+
+query get_register_account_message(strategy_name: name, gtv) {
+    val strategy = get_strategy(strategy_name);
+
+    val account_details = strategy.account_details(gtv);
+
+    var account_id: byte_array?;
+
+    if (account_details.account_id??) {
+        account_id = account_details.account_id;
+    } else {
+        val signers = get_signers(account_details.initial);
+        account_id = get_account_id_from_signers(signers);
+    }
+
+    var message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\n"
+        .format(
+            chain_context.blockchain_rid,
+            account_id
+        );
+
+    message = message + "Initial:\n" + auth_descriptor_message(account_details.initial);
+
+    if (account_details.disposable??) {
+        message = message + "\n\nDisposable:\n" + auth_descriptor_message(account_details.disposable!!);
+    }
+
+    return message;
+}
+
+function auth_descriptor_message(accounts.auth_descriptor)
+    = when (auth_descriptor.auth_type) {
+        S -> single_sig_message(accounts.single_sig_args.from_gtv(auth_descriptor.args.to_gtv()));
+        M -> multi_sig_message(accounts.multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()));
+    };
+
+function single_sig_message(args: accounts.single_sig_args)
+    = "Signer:\n%s\n\nFlags:\n%s\n".format(args.signer, args.flags);
+
+function multi_sig_message(args: accounts.multi_sig_args) {
+    var message = "Signers:\n";
+    for (signer in args.signers) {
+        message = message + signer + "\n";
+    }
+    message = message + "\nRequired signatures: %d\n\n".format(args.signatures_required);
+    return message + "Flags:\n%s".format(args.flags);
+}
+
+operation register_account_evm_signatures(signatures: list<auth.signature>) {}
