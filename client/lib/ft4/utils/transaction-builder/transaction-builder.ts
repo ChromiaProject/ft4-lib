@@ -30,7 +30,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { getTransactionRid } from "..";
+import { getNonceIdForTxContext, getTransactionRid } from "..";
 import { FtKeyStore } from "../../authentication";
 
 const defaultConfig: TransactionBuilderConfig = {
@@ -141,8 +141,10 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+        ctx,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -156,6 +158,11 @@ export function transactionBuilder(
         ctx,
         authenticator.authDataService,
       );
+      const nonceId = getNonceIdForTxContext(
+        authenticator.accountId,
+        keyHandler.authDescriptor.id,
+      );
+      ctx[nonceId] = (ctx[nonceId] ?? 0) + 1;
       processedOperations.push(ops);
     }
     let opsToReturn: Operation[] = [];

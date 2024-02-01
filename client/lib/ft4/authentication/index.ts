@@ -7,9 +7,8 @@ import {
   AuthDescriptor,
   AuthType,
   SingleSig,
-  isActive,
-  hasExpired,
 } from "@ft4/accounts";
+import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
 
 export * from "./evm";
 export * from "./ft";
@@ -30,12 +29,13 @@ export function createAuthenticator(
     accountId,
     authDataService,
     keyHandlers,
-    getKeyHandlerForOperation: (operation: Operation) =>
+    getKeyHandlerForOperation: (operation: Operation, txContext: TxContext) =>
       getKeyHandlerForOperation(
         authDataService,
         accountId,
         keyHandlers,
         operation,
+        txContext,
       ),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
@@ -95,6 +95,7 @@ async function getKeyHandlerForOperation(
   accountId: BufferId,
   keyHandlers: KeyHandler[],
   operation: Operation,
+  txContext: TxContext,
 ): Promise<KeyHandler | null> {
   const authHandler = await authDataService.getAuthHandlerForOperation(
     operation.name,
@@ -111,6 +112,7 @@ async function getKeyHandlerForOperation(
     authDataService,
     accountId,
     allowedKeyHandlers,
+    txContext,
   );
 
   const prioritizedKeyHandlers = validHandlers.toSorted(
@@ -136,25 +138,19 @@ async function filterOutInvalidAndExpiredHandlers(
   authDataService: AuthDataService,
   accountId: BufferId,
   handlers: KeyHandler[],
+  txContext: TxContext,
 ): Promise<KeyHandler[]> {
-  let currentHeight = 0;
-  const getBlockHeight = async () => {
-    if (currentHeight === undefined) {
-      const blocks = await authDataService.connection.client.getBlocksInfo(1);
-      currentHeight = blocks[0].height;
-    }
-    return currentHeight;
-  };
-  const getNonce = async (authDescriptorId: BufferId) =>
-    authDataService.getNonce(accountId, authDescriptorId);
+  const validator = createAuthDescriptorValidatorWithTxContext(
+    authDataService,
+    txContext,
+  );
 
   const validHandlers = await Promise.all(
     handlers.map(async (keyHandler) => {
-      const active = await isActive(keyHandler.authDescriptor, getBlockHeight);
-      const expired = await hasExpired(
+      const active = await validator.isActive(keyHandler.authDescriptor);
+      const expired = await validator.hasExpired(
         keyHandler.authDescriptor,
-        getBlockHeight,
-        getNonce,
+        accountId,
       );
       return active && !expired;
     }),

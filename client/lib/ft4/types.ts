@@ -10,6 +10,7 @@ import {
 } from "postchain-client";
 import { LoginManger, LoginKeyStore } from "./authentication/login-manager";
 import { TransferDetail } from "./accounts/transfer-history/transfer-history-query-functions";
+import { AuthDescriptorValidator } from "./accounts/auth-descriptor/types";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -34,6 +35,7 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
+  getAuthDescriptorValidator: (useCache: boolean) => AuthDescriptorValidator;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;

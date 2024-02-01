@@ -57,9 +57,10 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
+import { createAuthDescriptorValidator } from "./accounts/auth-descriptor/validator";
 
 export function createConnection(client: IClient): Connection {
-  const connection = Object.freeze({
+  const connection: Connection = Object.freeze({
     client,
     query: <TReturn extends RawGtv, TArgs extends DictPair | undefined>(
       nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
@@ -80,6 +81,12 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
+    getAuthDescriptorValidator: (useCache: boolean) =>
+      createAuthDescriptorValidator(
+        createAuthDataService(connection),
+        useCache,
+      ),
+
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
     getAssetsByName: (

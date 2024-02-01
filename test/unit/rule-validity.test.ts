@@ -5,12 +5,14 @@ import {
   equals,
   greaterOrEqual,
   greaterThan,
-  hasExpired,
-  isActive,
   lessOrEqual,
   lessThan,
   opCount,
 } from "@ft4/accounts";
+import {
+  isActive,
+  hasExpired,
+} from "@ft4/accounts/auth-descriptor/validator/evaluation";
 
 describe("Rules", () => {
   it("correctly identifies active rules", async () => {

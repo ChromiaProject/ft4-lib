@@ -5,12 +5,22 @@ import { Connection } from "..";
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
 
+export class KeyHandlerError extends Error {
+  constructor(msg?: string) {
+    super(msg);
+    this.name = "KeyHandlerError";
+  }
+}
+
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
-  getKeyHandlerForOperation(operation: Operation): Promise<KeyHandler | null>;
+  getKeyHandlerForOperation(
+    operation: Operation,
+    txContext: TxContext,
+  ): Promise<KeyHandler | null>;
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
 
