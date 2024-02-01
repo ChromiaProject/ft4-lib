@@ -39,6 +39,7 @@ import {
   lessThan,
   opCount,
 } from "./rules";
+import { createAuthDescriptorValidator } from "./validator";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
   return pclGtv.gtvHash(ad);
@@ -139,6 +140,7 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  createAuthDescriptorValidator,
 };
 
 export const gtv = Object.freeze({
