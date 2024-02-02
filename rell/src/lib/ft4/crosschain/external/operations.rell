@@ -178,7 +178,7 @@ operation complete_transfer(
             final_apply_transfer_tx.body.blockchain_rid,
             final_apply_transfer_tx.to_gtv().hash()
         ),
-        "Could not delete pedning transfer as the proof is not anchored yet"
+        "Could not delete pending transfer as the proof is not anchored yet"
     );
 
     require(
@@ -218,7 +218,7 @@ function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     val args = struct<init_transfer>.from_gtv(op.args.to_gtv());
 
     val auth_op = tx.body.operations[op_index - 1];
-    val sender_account_id = byte_array.from_gtv(auth_op.args[0]);
+    val sender_account_id = auth.extract_account_id(auth_op);
 
     return (
         tx_rid = tx_rid,
