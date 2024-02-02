@@ -4,7 +4,7 @@ module;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.ft4_basic_dev.*;
 import create_on_transfer: ^^^.lib.ft4.accounts.strategies.transfer;
-import ^.utils;
+import ^^.assets.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
 
 function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_trasfer_stragegy_is_enabled() {

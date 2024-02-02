@@ -39,6 +39,20 @@ blockchains:
         tests.assets.utils:
           admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
+  ft4_rell_create_account_strategies:  # Runs separate test chain to test create account strategies
+    module: tests.assets.app_module  # Entrypoint to the project
+    test:
+      modules:
+        - tests.create_account_strategies
+      moduleArgs:
+        # Use default values for all rate limit parameters
+
+        lib.ft4.admin:
+          admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
+
+        tests.assets.utils:
+          admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
+
 libs:
   iccf:
     registry: https://gitlab.com/chromaway/core/directory-chain
