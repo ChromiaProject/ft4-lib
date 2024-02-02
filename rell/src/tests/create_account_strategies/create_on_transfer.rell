@@ -16,8 +16,6 @@ function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_tra
     utils.mint_to_account(alice, asset, 10);
     val amount = 3L;
 
-    assert_true(assets.is_create_on_transfer_enabled());
-
     rell.test.tx()
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
@@ -28,7 +26,7 @@ function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_tra
 
     assert_not_null(create_on_transfer.pending_transfer @? {
         .sender_blockchain_rid == chain_context.blockchain_rid,
-        sender,
+        .sender_id == sender.id,
         recipient_id,
         asset,
         amount

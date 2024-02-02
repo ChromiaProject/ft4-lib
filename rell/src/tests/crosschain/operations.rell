@@ -105,6 +105,8 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
 }
 
 function test_apply_transfer_succeeds_under_valid_conditions() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
     val source_blockchain_rid = x"abcdef";
@@ -123,6 +125,10 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
             blockchain_rid = source_blockchain_rid,
             operations = [
                 gtx_operation(
+                    name = "ft4.ft_auth",
+                    args = [ sender_account_id.to_gtv(), sender_auth_descriptor_id.to_gtv() ]
+                ),
+                gtx_operation(
                     name = "ft4.crosschain.init_transfer",
                     args = list<gtv>.from_gtv(init_args.to_gtv())
                 )
@@ -134,7 +140,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash()))
-        .op(xchain_ext.apply_transfer(tx, 0, tx, 0, 0))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
 }
@@ -163,6 +169,10 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
             blockchain_rid = x"deadbeef",
             operations = [
                 gtx_operation(
+                    name = "ft4.ft_auth",
+                    args = [ x"".hash().to_gtv(), x"".hash().to_gtv() ]
+                ),
+                gtx_operation(
                     name = "ft4.crosschain.init_transfer",
                     args = list<gtv>.from_gtv(wrong_init_args.to_gtv())
                 )
@@ -177,6 +187,10 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
             blockchain_rid = x"deadbeef",
             operations = [
                 gtx_operation(
+                    name = "ft4.ft_auth",
+                    args = [ x"".hash().to_gtv(), x"".hash().to_gtv() ]
+                ),
+                gtx_operation(
                     name = "ft4.crosschain.init_transfer",
                     args = list<gtv>.from_gtv(init_args.to_gtv())
                 )
@@ -187,7 +201,7 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.apply_transfer(wrong_tx, 0, tx, 0, 0))
+        .op(xchain_ext.apply_transfer(wrong_tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Invalid parameter. Previous hop tx must be equal to init transfer t");
 }
@@ -209,6 +223,10 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
             blockchain_rid = x"deadbeef",
             operations = [
                 gtx_operation(
+                    name = "ft4.ft_auth",
+                    args = [ x"".hash().to_gtv(), x"".hash().to_gtv() ]
+                ),
+                gtx_operation(
                     name = "ft4.crosschain.init_transfer",
                     args = list<gtv>.from_gtv(init_args.to_gtv())
                 )
@@ -223,7 +241,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
             operations = [
                 gtx_operation(
                     name = "ft4.crosschain.apply_transfer",
-                    args = [init_tx.to_gtv(), (0).to_gtv(), init_tx.to_gtv(), (0).to_gtv(), 0x0.to_gtv()]
+                    args = [init_tx.to_gtv(), (1).to_gtv(), init_tx.to_gtv(), (1).to_gtv(), 0x0.to_gtv()]
                 )
             ],
             signers = []
@@ -234,7 +252,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
     val hop_index = 100; // Invalid hop index
 
     rell.test.tx()
-        .op(xchain_ext.apply_transfer(init_tx, 0, apply_tx, 0, hop_index))
+        .op(xchain_ext.apply_transfer(init_tx, 1, apply_tx, 0, hop_index))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index));
 }

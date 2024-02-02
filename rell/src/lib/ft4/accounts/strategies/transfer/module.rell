@@ -6,7 +6,7 @@ import ^^^.assets;
 
 entity pending_transfer {
    sender_blockchain_rid: byte_array;
-   sender: accounts.account;
+   sender_id: byte_array;
    recipient_id: byte_array;
    assets.asset;
    amount: big_integer;
@@ -22,12 +22,11 @@ function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
    }
 }
 
-@extend(assets.is_create_on_transfer_enabled)
-function() = true;
+@extend(assets.get_pool_account)
+function() = ensure_pool_account(chain_context.blockchain_rid);
 
 @extend(assets.create_on_transfer)
-function(sender_blockchain_rid: byte_array, sender: accounts.account, recipient_id: byte_array, assets.asset, amount: big_integer) {
+function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array, assets.asset, amount: big_integer) {
     // TODO find matching rule, reject if no rule is found
-    assets.Unsafe.transfer(sender, ensure_pool_account(chain_context.blockchain_rid), asset, amount);
-    create pending_transfer(sender_blockchain_rid, sender, recipient_id, asset, amount);
+    create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
 }
