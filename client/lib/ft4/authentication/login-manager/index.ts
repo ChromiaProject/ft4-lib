@@ -79,7 +79,7 @@ export function createLoginManager(
 
       const authDataService = createAuthDataService(connection);
       // Get list of flags that will be added to new auth descriptor
-      const config = await getFlagsAndRules(authDataService, loginOptions);
+      const config = await getConfigFromOptions(authDataService, loginOptions);
 
       const keyPair = await usedLoginKeyStore.getKeyPair(account.id);
 
@@ -140,7 +140,7 @@ export function createLoginManager(
  * or if they are not provided, the function uses config name to load login config from chain.
  * If configName is null or undefined too, then default login config will be loaded from chain.
  */
-async function getFlagsAndRules(
+async function getConfigFromOptions(
   authDataService: AuthDataService,
   options: LoginOptions,
 ): Promise<{ flags: string[]; rules: AuthDescriptorRules }> {
