@@ -6,6 +6,8 @@ import ^^^.lib.ft4.ft4_basic_dev.*;
 import create_on_transfer: ^^^.lib.ft4.accounts.strategies.transfer;
 import ^^.assets.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
+import xchain_ext: ^^^.lib.ft4.crosschain.external;
+import iccf_op: ^^.operations.iccf_op;
 
 function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_trasfer_stragegy_is_enabled() {
     val alice = utils.register_alice();
@@ -27,6 +29,58 @@ function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_tra
     assert_not_null(create_on_transfer.pending_transfer @? {
         .sender_blockchain_rid == chain_context.blockchain_rid,
         .sender_id == sender.id,
+        recipient_id,
+        asset,
+        amount
+    });
+}
+
+function test_cross_chain_transfer_when_receipient_id_does_not_exists_works_if_create_on_trasfer_stragegy_is_enabled() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val recipient_id = "create me".hash();
+
+    val sender_blockchain_rid = "sender_blockchain_rid".hash();
+    val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val amount = 5L;
+
+    val init_args = struct<xchain_ext.init_transfer>(
+      receiver_id = recipient_id,
+      asset_id = asset.id,
+      amount = amount,
+      hops = [chain_context.blockchain_rid]
+    );
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = sender_blockchain_rid,
+            operations = [
+                gtx_operation(
+                    name = "ft4.ft_auth",
+                    args = [ sender_account_id.to_gtv(), sender_auth_descriptor_id.to_gtv() ]
+                ),
+                gtx_operation(
+                    name = "ft4.crosschain.init_transfer",
+                    args = list<gtv>.from_gtv(init_args.to_gtv())
+                )
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+
+    assert_not_null(create_on_transfer.pending_transfer @? {
+        .sender_blockchain_rid == sender_blockchain_rid,
+        .sender_id == sender_account_id,
         recipient_id,
         asset,
         amount
