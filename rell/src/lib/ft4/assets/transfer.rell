@@ -1,3 +1,14 @@
+@extendable
+function is_create_on_transfer_enabled(): boolean = false;
+
+@extendable
+function create_on_transfer(
+   sender_blockchain_rid: byte_array,
+   sender: accounts.account,
+   recipient_id: byte_array,
+   asset,
+   amount: big_integer
+);
 
 namespace Unsafe {
    

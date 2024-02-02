@@ -1,0 +1,34 @@
+@test
+module;
+
+import ^^^.lib.ft4.assets;
+import ^^^.lib.ft4.ft4_basic_dev.*;
+import create_on_transfer: ^^^.lib.ft4.accounts.strategies.transfer;
+import ^.utils;
+import auth_ext: ^^^.lib.ft4.auth.external;
+
+function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_trasfer_stragegy_is_enabled() {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = "create me".hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+    val amount = 3L;
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+
+    assert_not_null(create_on_transfer.pending_transfer @? {
+        .sender_blockchain_rid == chain_context.blockchain_rid,
+        sender,
+        recipient_id,
+        asset,
+        amount
+    });
+}

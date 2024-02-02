@@ -20,8 +20,18 @@ function () = auth.add_overridable_auth_handler(
 );
 
 operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
-    val account = auth.authenticate();
-    assets.Unsafe.transfer(account, accounts.Account(receiver_id), assets.Asset(asset_id), amount);
+    val recipient_id = receiver_id;
+    val sender = auth.authenticate();
+    val asset = assets.Asset(asset_id);
+    val recipient = accounts.account @? { .id == recipient_id };
+    if (recipient != null) {
+        assets.Unsafe.transfer(sender, recipient, asset, amount);
+    } else {
+        require(assets.is_create_on_transfer_enabled(),
+            "Account <%s> does not exist and creating accounts on transfer is not enabled".format(recipient_id));
+        val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
+        assets.create_on_transfer(sender_blockchain_rid, sender, recipient_id, asset, amount);
+    }
 }
 
 @extend(auth.auth_handler)
