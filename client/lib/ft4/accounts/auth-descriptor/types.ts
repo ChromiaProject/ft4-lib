@@ -1,4 +1,3 @@
-import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 
 export enum FlagsType {
@@ -33,14 +32,6 @@ export class AuthDescriptorError extends Error {
     this.name = "AuthDescriptorError";
   }
 }
-
-export type AuthDescriptorValidator = {
-  isActive: (authDescriptor: AnyAuthDescriptor) => Promise<boolean>;
-  hasExpired: (
-    authDescriptor: AnyAuthDescriptor,
-    accountId: BufferId,
-  ) => Promise<boolean>;
-};
 
 // ======== Client side data model ============
 

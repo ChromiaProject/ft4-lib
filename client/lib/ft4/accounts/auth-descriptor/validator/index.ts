@@ -1,8 +1,11 @@
 import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
 import { AuthDataService } from "@ft4/authentication";
 import { isActive, hasExpired } from "./evaluation";
-import { AnyAuthDescriptor, AuthDescriptorValidator } from "../types";
+import { AnyAuthDescriptor } from "../types";
+import { AuthDescriptorValidator } from "./types";
 import { TxContext } from "@ft4/utils/types";
+
+export { AuthDescriptorValidator } from "./types";
 
 export function createAuthDescriptorValidator(
   authDataService: AuthDataService,
