@@ -1,5 +1,5 @@
 import { IClient, SignatureProvider } from "postchain-client";
-import { Amount, InvalidUrlError } from "../asset/interfaces";
+import { Amount, InvalidUrlError } from "@ft4/asset";
 import { Asset } from "../asset/types";
 import * as ops from "./admin-operations";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";

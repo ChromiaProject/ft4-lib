@@ -2,22 +2,21 @@ import { Operation, formatter } from "postchain-client";
 import { KeyStore } from "../types";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
-import { createEvmKeyHandler } from "./key-handler";
 import { BufferId } from "@ft4/utils/types";
 
 export * from "./key-stores";
-export { createEvmKeyHandler };
+export { createEvmKeyHandler } from "./key-handler";
 
 export function evmAuth(
   accountId: BufferId,
-  authDesriptorId: BufferId,
+  authDescriptorId: BufferId,
   signatures: Signature[],
 ): Operation {
   return {
     name: "ft4.evm_auth",
     args: [
       formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(authDesriptorId),
+      formatter.ensureBuffer(authDescriptorId),
       signatures.map(({ r, s, v }) => [r, s, v]),
     ],
   };

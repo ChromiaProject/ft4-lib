@@ -35,6 +35,7 @@ export {
 
 // Asset module
 export {
+  Amount,
   DecimalFormat,
   Asset,
   Balance,
@@ -85,6 +86,7 @@ export {
   Connection,
   KeyStoreInteractor,
   OptionalPageCursor,
+  OptionalLimit,
 } from "./types";
 
 export {

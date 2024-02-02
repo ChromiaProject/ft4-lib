@@ -32,14 +32,14 @@ function test_happy_valid() {
 function test_invalid_required_flags() {
     val alice = utils.register_alice();
 
-    val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
+    val bad_required_flags = ["X"]; // <---- Default test Auth Desc doesn't have "X"!!
 
     rell.test.tx()
         .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
         .sign(rell.test.keypairs.alice)
         .run();
     
-    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [A] are missing on the (single sig) Auth Descriptor.");
+    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [X] are missing on the (single sig) Auth Descriptor.");
 }
 
 function test_invalid_single_signer() {

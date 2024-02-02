@@ -1,7 +1,6 @@
 import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { Amount } from "@ft4/asset/interfaces";
-import { Asset } from "@ft4/asset/types";
+import { Amount, Asset } from "@ft4/asset";
 import { createAmount, registerCrosschainAsset } from "@ft4/index";
 import adminUser from "../../../../util/admin_user";
 import { getNewAsset } from "../../../../util/blockchain-util";

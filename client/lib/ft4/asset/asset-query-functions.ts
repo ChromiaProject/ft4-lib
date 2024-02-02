@@ -7,10 +7,9 @@ import {
   assetsByName,
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
-import { Connection, OptionalPageCursor } from "../types";
-import { BufferId, PaginatedEntity, freeze } from "@ft4/utils/types";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
-import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
 
 export async function getAssetById(
   connection: Connection,
@@ -31,7 +30,7 @@ export async function getAssetBySymbol(
 export function getAssetsByName(
   connection: Connection,
   name: string,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ) {
   return retrievePaginatedEntity<Asset, AssetResponse>(
@@ -43,7 +42,7 @@ export function getAssetsByName(
 
 export async function getAllAssets(
   connection: Connection,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
   return retrievePaginatedEntity<Asset, AssetResponse>(
@@ -66,7 +65,7 @@ export async function getBalanceByAccountId(
 export async function getBalancesByAccountId(
   connection: Connection,
   accountId: BufferId,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Balance>> {
   return retrievePaginatedEntity<Balance, BalanceResponse>(
@@ -77,7 +76,7 @@ export async function getBalancesByAccountId(
 }
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
-  return freeze({
+  return Object.freeze({
     asset: {
       id: balance.asset.id,
       name: balance.asset.name,
@@ -92,7 +91,7 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
 }
 
 export function createAssetObject(asset: AssetResponse): Asset {
-  return freeze({
+  return Object.freeze({
     id: asset.id,
     name: asset.name,
     symbol: asset.symbol,

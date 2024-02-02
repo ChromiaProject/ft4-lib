@@ -29,7 +29,7 @@ struct account_data {
 }
 
 function setup_account_with_rules(rules: gtv) {
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]);
 
   return add_expiring_auth_descriptor(alice.account, rules);
 }
@@ -37,7 +37,7 @@ function setup_account_with_rules(rules: gtv) {
 function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
   val bob_ad = utils.create_auth_descriptor(
     rell.test.pubkeys.bob,
-    ["A"],
+    ["A", "E"],
     rules
   );
   
@@ -299,7 +299,7 @@ namespace test_deletion_after_expiration {
   }
 
   function test_delete_only_expired_auth_descriptors() {
-    val account = utils.create_test_account(rell.test.keypairs.alice, ["A"]).account;
+    val account = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]).account;
     val acc_data_valid = [
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([
@@ -337,13 +337,13 @@ namespace test_deletion_after_expiration {
 
     rell.test.block().run();
 
-    //valid auth descs exist
+    //valid auth descriptors exist
     for (data in acc_data_valid) {
       assert_true(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
       );
     }
-    //invalid auth descs exist
+    //invalid auth descriptors exist
     for (data in acc_data_invalid) {
       assert_true(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
@@ -353,13 +353,13 @@ namespace test_deletion_after_expiration {
     //authenticate with a different auth descriptor
     authenticate_alice(account.id);
     
-    //valid auth descs exist
+    //valid auth descriptors exist
     for (data in acc_data_valid) {
       assert_true(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??
       );
     }
-    //invalid auth descs have been deleted
+    //invalid auth descriptors have been deleted
     for (data in acc_data_invalid) {
       assert_false(
         accounts.account_auth_descriptor @? { .id == data.auth_descriptor_id }??

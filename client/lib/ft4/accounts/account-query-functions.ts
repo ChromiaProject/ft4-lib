@@ -4,10 +4,13 @@ import {
   getBalanceByAccountId,
   getBalancesByAccountId,
 } from "../asset/asset-query-functions";
-import { Connection, OptionalPageCursor } from "../types";
-import { getConfig } from "@ft4/utils/index";
-import { retrievePaginatedEntity } from "@ft4/utils/entity-retriever";
-import { BufferId, PaginatedEntity } from "@ft4/utils/types";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import {
+  BufferId,
+  PaginatedEntity,
+  retrievePaginatedEntity,
+  getConfig,
+} from "@ft4/utils";
 import * as Query from "./account-queries";
 import {
   accountAuthDescriptors,
@@ -24,8 +27,7 @@ import {
   TransferHistoryFilter,
 } from "./transfer-history/types";
 import { Account, RateLimit } from "./types";
-import { AnyAuthDescriptor, gtv } from "@ft4/accounts/auth-descriptor";
-import { RawAnyAuthDescriptor } from "./auth-descriptor/types";
+import { RawAnyAuthDescriptor, AnyAuthDescriptor, gtv } from "@ft4/accounts";
 import {
   PendingTransfer,
   PendingTransferResponse,
@@ -73,12 +75,14 @@ export function createAccountObject(
     blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
-    getBalances: (limit = 100, cursor: OptionalPageCursor = null) =>
-      getBalancesByAccountId(connection, accountId, limit, cursor),
+    getBalances: (
+      limit: OptionalLimit = null,
+      cursor: OptionalPageCursor = null,
+    ) => getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: async (
-      limit = 100,
+      limit: OptionalLimit = null,
       cursor: OptionalPageCursor = null,
     ) => {
       return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
@@ -91,7 +95,7 @@ export function createAccountObject(
       getAuthDescriptorsBySigner(connection, accountId, signer),
     getRateLimit: () => getRateLimit(connection.client, accountId),
     getTransferHistory: async (
-      limit = 100,
+      limit: OptionalLimit = null,
       filter: TransferHistoryFilter = {},
       cursor: OptionalPageCursor = null,
     ) => {
@@ -111,7 +115,7 @@ export function createAccountObject(
       );
     },
     getPendingCrosschainTransfers: async (
-      limit = 100,
+      limit: OptionalLimit = null,
       cursor: OptionalPageCursor = null,
     ) => {
       return retrievePaginatedEntity<PendingTransfer, PendingTransferResponse>(
@@ -135,7 +139,7 @@ export async function getById(
 export async function getBySigner(
   connection: Connection,
   id: BufferId,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
   return retrievePaginatedEntity<Account, { id: Buffer }>(
@@ -149,7 +153,7 @@ export async function getBySigner(
 export async function getByAuthDescriptorId(
   connection: Connection,
   id: BufferId,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Account>> {
   return retrievePaginatedEntity<Account, Buffer>(
@@ -173,7 +177,7 @@ export async function getAuthDescriptorsBySigner(
   connection: Connection,
   accountId: BufferId,
   signer: BufferId,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AnyAuthDescriptor>> {
   return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(

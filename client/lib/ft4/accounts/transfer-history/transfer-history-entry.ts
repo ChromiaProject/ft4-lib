@@ -9,25 +9,26 @@ export function createTransferHistoryEntryFromResponse(
   const {
     id: rowid,
     delta,
-    asset_data: asset,
+    asset,
     is_input: isInput,
     timestamp,
     block_height: blockHeight,
     tx_rid: txRid,
     tx_data: txData,
     operation_name: operationName,
+    op_index: opIndex,
   } = responseEntry;
 
   return Object.freeze({
     rowid,
     isInput: isInput === 1,
     delta: createAmountFromBalance(delta, asset.decimals),
-    asset: { name: asset.name, id: formatter.ensureBuffer(asset.id) },
-    assetData: createAssetObject(asset),
+    asset: createAssetObject(asset),
     data: formatter.ensureBuffer(txData),
     timestamp: new Date(timestamp),
     transactionId: formatter.ensureBuffer(txRid),
     blockHeight,
     operationName,
+    opIndex,
   });
 }

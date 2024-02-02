@@ -59,7 +59,7 @@ function empty_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(test_empty_auth_message).mount_name,
-    flags = ["A"],
+    flags = ["E"],
     message = empty_message(*)
 );
 operation test_empty_auth_message() {
@@ -85,5 +85,20 @@ operation test_perform_large_transfer(
   amount: integer,
   to: text
 ) {
+  auth.authenticate();
+}
+
+function test_auth_with_resolver_resolver(args: gtv, account_id: byte_array, ad_ids: list<byte_array>): byte_array? {
+  val idx = struct<test_auth_with_resolver>.from_gtv(args).ad_to_select;
+  return ad_ids[idx];
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+  scope = rell.meta(test_auth_with_resolver).mount_name,
+  flags = [],
+  resolver = test_auth_with_resolver_resolver(*)
+);
+operation test_auth_with_resolver(ad_to_select: integer) {
   auth.authenticate();
 }

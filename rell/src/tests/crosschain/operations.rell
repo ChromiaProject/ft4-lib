@@ -1,10 +1,51 @@
 @test module;
 
 import ^^.assets.utils;
+import ^^^.lib.ft4.test.utils. { evm_auth_operation_for };
 import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
 import xc: ^^^.lib.ft4.crosschain;
+import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import iccf_op: ^^.operations.iccf_op;
+
+function test_register_crosschain_asset_works() {
+    admin_crosschain.register_crosschain_asset(
+            "name",
+            "SYM",
+            2,
+            x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F",
+            "",
+            x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
+        )
+        .sign(utils.admin_priv_key())
+        .run();
+}
+
+function test_register_crosschain_asset_validates_issuing_blockchain_rid() {
+    admin_crosschain.register_crosschain_asset(
+            "name",
+            "SYM",
+            2,
+            x"",
+            "",
+            x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
+        )
+        .sign(utils.admin_priv_key())
+        .run_must_fail("blockchain_rid cannot be empty");
+}
+
+function test_register_crosschain_asset_validates_origin_blockchain_rid() {
+    admin_crosschain.register_crosschain_asset(
+            "name",
+            "SYM",
+            2,
+            x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F",
+            "",
+            x""
+        )
+        .sign(utils.admin_priv_key())
+        .run_must_fail("origin_blockchain_rid cannot be empty");
+}
 
 function test_init_transfer_fails_when_amount_is_zero() {
     val alice = utils.register_alice();
@@ -45,6 +86,22 @@ function test_init_transfer_succeeds_under_valid_conditions() {
         .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
+}
+
+function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
+    val alice = utils.evm_register_alice();
+    val bob = utils.register_bob();
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    utils.mint(alice.account, asset_valid, 10L);
+
+    val op = xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]);
+
+    rell.test.tx()
+        .op(evm_auth_operation_for(alice.keypair.priv, op))
+        .op(op)
+        .sign(rell.test.keypairs.alice)
+        .run();
 }
 
 function test_apply_transfer_succeeds_under_valid_conditions() {

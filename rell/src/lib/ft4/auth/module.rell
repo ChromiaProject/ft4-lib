@@ -14,7 +14,7 @@ struct auth_data {
 struct _auth_handler {
     flags: list<text>;
     message_formatter: ((gtv) -> text)? = null;
-    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null;
+    resolver: ((gtv, byte_array, list<byte_array>) -> byte_array?)? = null;
 }
 
 /*
@@ -60,14 +60,14 @@ function add_auth_handler(
     scope: text = APP_SCOPE, 
     flags: list<text>,
     message: ((gtv) -> text)? = null,
-    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null
+    resolver: ((gtv, byte_array, list<byte_array>) -> byte_array?)? = null
 ) = [valid_scope_name(scope): _auth_handler(flags, message, resolver)];
 
 function add_overridable_auth_handler(
     scope: text = APP_SCOPE,
     flags: list<text>,
     message: ((gtv) -> text)? = null,
-    resolver: (((args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>)) -> byte_array?)? = null
+    resolver: ((gtv, byte_array, list<byte_array>) -> byte_array?)? = null
 ) = ["__override__" + valid_scope_name(scope): _auth_handler(flags, message, resolver)];
 
 function valid_scope_name(scope: text) {

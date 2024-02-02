@@ -1,8 +1,12 @@
-### Changed
+## [Unreleased] - 2024-xx-xx
 
-- Added query `get_all_auth_handlers` to get all auth handlers specified by the dApp
-- Added query `get_first_allowed_auth_descriptor` to let the blockchain select auth descriptors from a set that can be used to authenticate an operation
-- Added possibility to create overridable auth handlers
-- Added `resolver` field to `AuthHandler` which can be used to add custom auth logic when evaluating an auth descriptor
-- Updated transaction prioritization to work with Postchain 3.14.17 and later.
+### Changed
+ 
+- `create_account_with_auth` now requires the `auth_descriptor` to have `A` flag. You can no longer create account with no `A` flag auth descriptor by default.
+- `page_size` parameter in paginated queries are now optional and the default value can be configured with the `query_max_page_size` field under `lib.ft4` section.
+- Add `get_first_allowed_auth_descriptor_by_signers` query
 - Added support for rules in login config.
+
+### Breaking
+
+- Change `asset_data` to `asset` in queries `get_transfer_history`, `get_transfer_history_from_height` and `get_transfer_history_entry`.

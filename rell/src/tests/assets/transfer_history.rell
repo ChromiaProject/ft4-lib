@@ -163,9 +163,7 @@ function test_transfer_history_entry() {
             id = entry.rowid,
             delta = entry.delta,
             decimals = entry.asset.decimals,
-            asset = entry.asset.name,
-            asset_id = entry.asset.id,
-            asset_data = (
+            asset = (
                 id = entry.asset.id,
                 name = entry.asset.name,
                 symbol = entry.asset.symbol,
@@ -179,7 +177,8 @@ function test_transfer_history_entry() {
             block_height = entry.transaction.block.block_height,
             tx_rid = entry.transaction.tx_rid,
             tx_data = entry.transaction.tx_data,
-            operation_name = "ft4.admin.mint"
+            operation_name = "ft4.admin.mint",
+            op_index = entry.op_index
         )
     );
 }

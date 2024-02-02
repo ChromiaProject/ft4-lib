@@ -1,9 +1,8 @@
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
-import { OptionalPageCursor } from "@ft4/types";
-import { RateLimitResponse } from "./types";
-import { RawAnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
-import { BufferId } from "@ft4//utils/types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import { RawAnyAuthDescriptor, RateLimitResponse } from "@ft4/accounts";
+import { BufferId } from "@ft4/utils";
 import {
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
@@ -34,11 +33,11 @@ export function accountById(
 
 export function accountsBySigner(
   id: BufferId,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
   { id: Buffer }[],
-  { id: Buffer; page_size: number; page_cursor: OptionalPageCursor }
+  { id: Buffer; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
 > {
   return {
     name: "ft4.get_accounts_by_signer",
@@ -52,13 +51,13 @@ export function accountsBySigner(
 
 export function accountsByAuthDescriptorId(
   id: BufferId,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
   Buffer[],
   {
     id: BufferId;
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {
@@ -88,14 +87,14 @@ export function isAuthDescriptorValid(
 export function accountAuthDescriptorsBySigner(
   accountId: BufferId,
   signer: BufferId,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   RawAnyAuthDescriptor[],
   {
     account_id: Buffer;
     signer: Buffer;
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {
@@ -112,13 +111,13 @@ export function accountAuthDescriptorsBySigner(
 
 export function accountAuthDescriptors(
   accountId: BufferId,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   RawAnyAuthDescriptor,
   {
     id: Buffer;
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {
@@ -148,14 +147,14 @@ export function authDescriptorById(
 export function transferHistory(
   accountId: BufferId,
   filter: TransferHistoryFilter | null,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor = null,
 ): QueryObject<
   TransferHistoryEntryResponse[],
   {
     account_id: Buffer;
     filter: [TransferHistoryType | null];
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {

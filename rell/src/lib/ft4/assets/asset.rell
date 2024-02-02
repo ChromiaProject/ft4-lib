@@ -65,7 +65,7 @@ function map_asset(asset: asset) {
     );
 }
 
-function get_paginated_asset_balances(account_id: byte_array, page_size: integer, page_cursor: text?): list<utils.pagination_result> {
+function get_paginated_asset_balances(account_id: byte_array, page_size: integer?, page_cursor: text?): list<utils.pagination_result> {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
         .account.id == account_id,
@@ -81,7 +81,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_all_assets(page_size: integer, page_cursor: text?) {
+function get_all_assets(page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {
         .rowid > (before_rowid ?: rowid(0))
@@ -113,7 +113,7 @@ function format_amount_with_decimals(amount: big_integer, decimals: integer): te
     return amt;
 }
 
-function get_paginated_asset_balances_by_name(name, page_size: integer, page_cursor: text?) {
+function get_paginated_asset_balances_by_name(name, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return assets.asset @* {
         .name == name,
@@ -192,6 +192,7 @@ namespace Unsafe {
         decimals: integer,
         blockchain_rid: byte_array,
         icon_url: text): asset {
+
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
         val trimmed_icon_url = icon_url.trim();
@@ -199,6 +200,8 @@ namespace Unsafe {
             (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
             "Invalid URL for icon"
         );
+
+        require(blockchain_rid.size() > 0, "blockchain_rid cannot be empty");
 
         val id = (name, blockchain_rid).hash();
         return create asset (

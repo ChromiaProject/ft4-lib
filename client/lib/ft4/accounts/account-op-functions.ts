@@ -1,5 +1,4 @@
 import { KeyPair, SignatureProvider, formatter } from "postchain-client";
-import { Amount } from "../asset/interfaces";
 import { createAuthenticator } from "../authentication";
 import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
 import { Authenticator } from "../authentication/types";
@@ -25,6 +24,7 @@ import {
   TransactionCompletion,
   TransactionSessionCompletion,
 } from "@ft4/utils/types";
+import { Amount } from "@ft4/asset";
 
 export function createAuthenticatedAccount(
   connection: Connection,

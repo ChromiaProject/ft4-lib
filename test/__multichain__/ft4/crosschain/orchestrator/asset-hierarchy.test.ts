@@ -5,7 +5,7 @@ import {
   Orchestrator,
   registerCrosschainAsset,
 } from "@ft4/index";
-import { Amount } from "@ft4/asset/interfaces";
+import { Amount } from "@ft4/asset";
 import adminUser from "../../../../util/admin_user";
 
 // This is needed to allow to check whether transaction is anchored

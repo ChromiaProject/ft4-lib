@@ -8,7 +8,11 @@ blockchains:
         - tests.auth
         - tests.crosschain
         - tests.default_prioritization
+        - tests.utils
       moduleArgs:
+        lib.ft4:
+          query_max_page_size: 99
+
         lib.ft4.accounts:
           rate_limit:
             max_points: 5

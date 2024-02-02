@@ -22,6 +22,7 @@ export interface FtKeyStore extends KeyStore {
 }
 
 export { createInMemoryFtKeyStore } from "./key-stores/in-memory";
+export { createFtKeyHandler } from "./key-handler";
 
 export function isFtKeyStore(keyStore: KeyStore): keyStore is FtKeyStore {
   return (keyStore as FtKeyStore).pubKey !== undefined;

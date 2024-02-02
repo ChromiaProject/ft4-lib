@@ -31,6 +31,13 @@ query get_auth_handler_for_operation(op_name: name) {
   );
 }
 
+query get_first_allowed_auth_descriptor_by_signers(
+  op_name: name,
+  args: gtv,
+  account_id: byte_array,
+  signers: list<byte_array>
+): byte_array? = auth.get_first_allowed_auth_descriptor_by_signers(op_name, args, account_id, signers, is_strict=false);
+
 query get_first_allowed_auth_descriptor(
   op_name: name,
   args: gtv,
