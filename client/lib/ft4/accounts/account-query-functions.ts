@@ -3,8 +3,8 @@ import { formatter, IClient } from "postchain-client";
 import {
   getBalanceByAccountId,
   getBalancesByAccountId,
-} from "../asset/asset-query-functions";
-import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/types";
+} from "@ft4/asset/asset-query-functions";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/index";
 import {
   BufferId,
   PaginatedEntity,
@@ -25,16 +25,15 @@ import {
   TransferHistoryEntry,
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
-} from "./transfer-history/types";
+} from "./transfer-history";
 import { Account, RateLimit } from "./types";
-import { RawAnyAuthDescriptor, AnyAuthDescriptor, gtv } from "@ft4/accounts";
+import { RawAnyAuthDescriptor, AnyAuthDescriptor, gtv } from "./";
 import {
   PendingTransfer,
   PendingTransferResponse,
   pendingTransfersForAccount,
-} from "../crosschain";
-import { mapPendingTransfers } from "../crosschain/query-functions";
-import { mapAuthDescriptorsFromGtv } from "./auth-descriptor/gtv";
+} from "@ft4/crosschain";
+import { mapPendingTransfers } from "@ft4/crosschain/query-functions";
 import { createTransferHistoryEntryFromResponse } from "./transfer-history/transfer-history-entry";
 
 //this will be outdated as soon as another tx is sent to the same account:
@@ -184,6 +183,6 @@ export async function getAuthDescriptorsBySigner(
     connection,
     accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
     (authDescriptors) =>
-      authDescriptors ? mapAuthDescriptorsFromGtv(authDescriptors) : [],
+      authDescriptors ? gtv.mapAuthDescriptorsFromGtv(authDescriptors) : [],
   );
 }

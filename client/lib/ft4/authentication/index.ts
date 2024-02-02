@@ -1,12 +1,13 @@
 import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
-import { AuthType } from "@ft4/accounts/auth-descriptor/types";
+import { BufferId } from "@ft4/utils";
+import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   SingleSig,
+  AuthType,
 } from "@ft4/accounts";
 import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
 

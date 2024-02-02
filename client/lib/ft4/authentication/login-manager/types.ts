@@ -1,5 +1,5 @@
-import { Session } from "@ft4/types";
-import { BufferId } from "@ft4/utils/types";
+import { Session } from "@ft4/index";
+import { BufferId } from "@ft4/utils";
 
 export type LoginConfig = {
   flags: string[];

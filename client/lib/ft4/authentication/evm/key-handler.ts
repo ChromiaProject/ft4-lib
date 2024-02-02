@@ -1,10 +1,14 @@
 import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { AuthDataService, KeyHandler, KeyHandlerError } from "../types";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
-import { getNonceIdForTxContext } from "@ft4/utils";
+import {
+  AuthDataService,
+  KeyHandler,
+  KeyHandlerError,
+} from "@ft4/authentication";
+import { AnyAuthDescriptor } from "@ft4/accounts";
+import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
+import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 export function createEvmKeyHandler(
   authDescriptor: AnyAuthDescriptor,

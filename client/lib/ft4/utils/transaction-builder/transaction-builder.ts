@@ -20,8 +20,13 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxContext, TxBuilderTransaction, BufferId } from "../types";
+import {
+  getNonceIdForTxContext,
+  getTransactionRid,
+  BufferId,
+} from "@ft4/utils";
 import { OperationNotExistError } from "../errors";
+import { TxContext, TxBuilderTransaction } from "../types";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -30,8 +35,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { getNonceIdForTxContext, getTransactionRid } from "..";
-import { FtKeyStore } from "../../authentication";
+import { FtKeyStore } from "@ft4/authentication";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,

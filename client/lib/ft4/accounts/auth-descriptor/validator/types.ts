@@ -1,5 +1,5 @@
-import { AnyAuthDescriptor } from "../types";
-import { BufferId } from "@ft4/utils/types";
+import { AnyAuthDescriptor } from "@ft4/accounts";
+import { BufferId } from "@ft4/utils";
 
 export type AuthDescriptorValidator = {
   isActive: (authDescriptor: AnyAuthDescriptor) => Promise<boolean>;

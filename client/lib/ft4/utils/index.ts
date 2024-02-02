@@ -9,7 +9,8 @@ import {
 } from "postchain-client";
 import { BufferId, Config } from "./types";
 import { Buffer } from "buffer";
-import { AuthHandler, Connection } from "@ft4/types";
+import { Connection } from "@ft4/index";
+import { AuthHandler } from "@ft4/types";
 import { allAuthHandlers } from "./queries";
 
 export function nop(): Operation {
@@ -83,7 +84,6 @@ export async function getAllAuthHandlers(
 }
 
 export { retrievePaginatedEntity } from "./entity-retriever";
-export { transactionBuilder } from "./transaction-builder";
 export * from "./exposed-operations";
 export * from "./queries";
 

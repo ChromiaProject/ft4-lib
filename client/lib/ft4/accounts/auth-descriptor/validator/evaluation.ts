@@ -1,10 +1,10 @@
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 import {
   AuthDescriptorSimpleRule,
   RuleOperator,
   RuleVariable,
   AnyAuthDescriptor,
-} from "../types";
+} from "@ft4/accounts";
 
 /**
  * Returns whether the given auth descriptor's rules are active, that is whether they
