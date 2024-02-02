@@ -37,9 +37,7 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
         id = entry.rowid,
         delta = entry.delta,
         decimals = entry.asset.decimals,
-        asset = entry.asset.name,
-        asset_id = entry.asset.id,
-        asset_data = map_asset(entry.asset),
+        asset = map_asset(entry.asset),
         is_input = entry.is_input,
         timestamp = entry.transaction.block.timestamp,
         block_height = entry.transaction.block.block_height,
@@ -50,7 +48,7 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
     );
 }
 
-function get_paginated_transfers(accounts.account?, asset?, filter, height: integer?, page_size: integer, page_cursor: text?) {
+function get_paginated_transfers(accounts.account?, asset?, filter, height: integer?, page_size: integer?, page_cursor: text?) {
     var before_rowid: rowid? = null;
     if (page_cursor??) {
         val cursor = utils.decode_cursor(page_cursor);

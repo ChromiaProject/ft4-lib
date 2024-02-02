@@ -79,6 +79,7 @@ export {
   Connection,
   KeyStoreInteractor,
   OptionalPageCursor,
+  OptionalLimit,
 } from "./types";
 
 export {
@@ -113,4 +114,4 @@ export const ft = Object.freeze({
   setLogLevel: logger.setLogLevel,
 });
 
-ft.setLogLevel(0);
+ft.setLogLevel(logger.LogLevel.Debug);

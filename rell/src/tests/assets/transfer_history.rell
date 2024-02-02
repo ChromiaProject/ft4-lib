@@ -163,9 +163,7 @@ function test_transfer_history_entry() {
             id = entry.rowid,
             delta = entry.delta,
             decimals = entry.asset.decimals,
-            asset = entry.asset.name,
-            asset_id = entry.asset.id,
-            asset_data = (
+            asset = (
                 id = entry.asset.id,
                 name = entry.asset.name,
                 symbol = entry.asset.symbol,

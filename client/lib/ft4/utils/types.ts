@@ -30,10 +30,6 @@ export type ExternalWalletConnection = {
   }) => Promise<string>;
 };
 
-export function freeze<T>(object: T): T {
-  return Object.freeze(object);
-}
-
 export type EntityRetriever<T> = {
   retrieve: (
     limit?: number,

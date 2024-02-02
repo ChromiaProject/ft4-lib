@@ -9,13 +9,20 @@ import {
   opCount,
 } from "@ft4/accounts/auth-descriptor";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
+import {
+  createAuthDataService,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
 import AccountBuilder from "@ft4/util/account-builder";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { nop, op } from "@ft4/utils";
 import { nonce } from "@ft4/authentication/queries";
 import { AuthorizationError } from "@ft4/utils/transaction-builder";
+import { createAuthenticator, createFtKeyHandler } from "@ft4/authentication";
+import { createTestAuthDescriptor } from "@ft4/util/util";
+import { deleteAuthDescriptor } from "@ft4/accounts/account-operations";
 
 let connection: Connection;
 
@@ -85,25 +92,18 @@ describe("Key store interactor", () => {
   });
 
   it("should have authenticator with two key handlers when there are two auth descriptors with corresponding key", async () => {
-    const keyPair1 = newSignatureProvider();
-    const keyPair2 = newSignatureProvider();
+    const { keyPair: keyPair1, authDescriptor: ad1 } = createTestAuthDescriptor(
+      ["M"],
+    );
+    const { keyPair: keyPair2, authDescriptor: ad2 } = createTestAuthDescriptor(
+      [FlagsType.Transfer],
+    );
 
     const account = await AccountBuilder.account(connection)
-      .withSigner(keyPair1)
+      .withSigner(newSignatureProvider(keyPair1))
       .build();
 
-    const ad1 = createSingleSigAuthDescriptorRegistration(
-      ["M"],
-      keyPair1.pubKey,
-      null,
-    );
     await account.addAuthDescriptor(ad1, keyPair1);
-
-    const ad2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
-      keyPair2.pubKey,
-      null,
-    );
     await account.addAuthDescriptor(ad2, keyPair2);
 
     const session = await createKeyStoreInteractor(
@@ -231,5 +231,32 @@ describe("Key store interactor", () => {
         .add(nop())
         .buildAndSend(),
     ).rejects.toThrow(AuthorizationError);
+  });
+
+  it("it picks the backend selected KeyHandler when authenticating", async () => {
+    const { keyPair: keyPair1, authDescriptor: ad1 } =
+      createTestAuthDescriptor();
+    const { keyPair: keyPair2, authDescriptor: ad2 } = createTestAuthDescriptor(
+      [FlagsType.Transfer],
+    );
+
+    const account = await AccountBuilder.account(connection)
+      .withSigner(newSignatureProvider(keyPair1))
+      .build();
+
+    await account.addAuthDescriptor(ad2, keyPair2);
+
+    const kh1 = createFtKeyHandler(ad1, createInMemoryFtKeyStore(keyPair1));
+    const kh2 = createFtKeyHandler(ad2, createInMemoryFtKeyStore(keyPair2));
+    const authenticator = createAuthenticator(
+      account.id,
+      [kh1, kh2],
+      createAuthDataService(connection),
+    );
+    const selectedKeyHandler = await authenticator.getKeyHandlerForOperation(
+      deleteAuthDescriptor(ad2.id),
+      {},
+    );
+    expect(selectedKeyHandler).toStrictEqual(kh2);
   });
 });

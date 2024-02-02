@@ -14,6 +14,7 @@ import { AuthDescriptorValidator } from "./accounts/auth-descriptor/types";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
+export type OptionalLimit = number | null;
 export type PagedResponse<T> = {
   data: T[];
   next_cursor: OptionalPageCursor;
