@@ -1,45 +1,68 @@
 import {
   Connection,
+  EvmKeyStore,
   FtKeyStore,
   Session,
   createAuthenticator,
 } from "@ft4/index";
 import { Strategy } from "./types";
 import { createAuthDataService, createSession } from "@ft4/ft-session";
-import { gtv, gtx } from "postchain-client";
-import { createAccountObject } from "../account-query-functions";
-import { TxBuilderTransaction } from "@ft4/utils/types";
+import { Operation, gtv } from "postchain-client";
+import { registerAccountMessage } from "./queries";
+import {
+  registerAccountEvmSignatures,
+  registerAccount as registerAccountOp,
+} from "./operations";
+import { compactArray, createAndSignTransaction } from "@ft4/utils";
+import { getKeyHandlersForKeyStores, isFtKeyStore } from "@ft4/authentication";
 
 export async function registerAccount(
   connection: Connection,
-  keyStore: FtKeyStore,
+  keyStore: FtKeyStore | EvmKeyStore,
   strategy: Strategy,
+  registerAccountOperation: Operation = registerAccountOp(),
 ): Promise<Session> {
-  const operation = await strategy.getOperation();
+  const { strategyOperation, loginKeyStore } =
+    await strategy.getRegistrationDetails(connection);
 
-  const transaction: TxBuilderTransaction = {
-    blockchainRid: Buffer.from(connection.client.config.blockchainRid, "hex"),
-    operations: [
-      { opName: operation.name, args: operation.args || [] },
-      { opName: "ft4.register_account", args: [] },
-    ],
-    signers: [keyStore.pubKey],
-    signatures: [],
-  };
-
-  transaction.signatures = [await keyStore.sign(transaction)];
-  await connection.client.sendTransaction(gtx.serialize(transaction));
-
+  // TODO: update strategy to return account id and then use the value here
   const accountId = gtv.gtvHash(keyStore.id);
-  const account = createAccountObject(connection, accountId);
-  const authDescriptors = await account.getAuthDescriptorsBySigner(keyStore.id);
 
-  if (!authDescriptors.data.length) {
-    throw new Error("Cannot load auth descriptors for created account");
+  const ftKeyStores: FtKeyStore[] = [];
+  let evmKeyStore: EvmKeyStore | null = null;
+
+  if (isFtKeyStore(keyStore)) {
+    ftKeyStores.push(keyStore);
+  } else {
+    evmKeyStore = keyStore;
   }
 
-  const keyHandlers = authDescriptors.data.map((authDescriptor) =>
-    keyStore.createKeyHandler(authDescriptor),
+  if (loginKeyStore) {
+    ftKeyStores.push(loginKeyStore);
+  }
+
+  const transaction = await createAndSignTransaction(
+    connection,
+    compactArray([
+      // Insert "signatures" operation if EVM key store is used
+      evmKeyStore &&
+        (await evmSignaturesOperation(
+          connection,
+          evmKeyStore,
+          strategyOperation,
+        )),
+      strategyOperation,
+      registerAccountOperation,
+    ]),
+    ftKeyStores,
+  );
+
+  await connection.client.sendTransaction(transaction);
+
+  const keyHandlers = await getKeyHandlersForKeyStores(
+    connection,
+    accountId,
+    compactArray([evmKeyStore, ...ftKeyStores]),
   );
 
   const authenticator = createAuthenticator(
@@ -49,4 +72,16 @@ export async function registerAccount(
   );
 
   return createSession(connection, authenticator);
+}
+
+async function evmSignaturesOperation(
+  connection: Connection,
+  keyStore: EvmKeyStore,
+  strategyOperation: Operation,
+): Promise<Operation> {
+  const message = await connection.query(
+    registerAccountMessage(strategyOperation),
+  );
+  const signature = await keyStore.signMessage(message);
+  return registerAccountEvmSignatures([signature]);
 }

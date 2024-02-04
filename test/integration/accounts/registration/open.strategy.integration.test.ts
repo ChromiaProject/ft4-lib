@@ -3,6 +3,7 @@ import { open } from "@ft4/accounts/registration/strategies/open";
 import {
   Connection,
   createConnection,
+  createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/index";
@@ -39,24 +40,55 @@ describe("Test open strategy", () => {
 
   it("can add disposable key during account registration", async () => {
     const keyPair = encryption.makeKeyPair();
-    const keyPair2 = encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
       ["A", "T"],
       keyStore.id,
     );
-    const disposableAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+
+    const session = await registerAccount(
+      _connection,
+      keyStore,
+      open(authDescriptor, { config: { flags: [] } }),
+    );
+
+    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+  });
+
+  it("can register account with evm key store", async () => {
+    const keyPair = encryption.makeKeyPair();
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
+
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
       ["A", "T"],
-      keyPair2.pubKey,
+      keyStore.id,
     );
 
     const session = await registerAccount(
       _connection,
       keyStore,
-      open(authDescriptor, disposableAuthDescriptor),
+      open(authDescriptor),
     );
 
-    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+    expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
+  });
+
+  it("can register account with evm key store and add disposable key", async () => {
+    const keyPair = encryption.makeKeyPair();
+    const keyStore = createInMemoryEvmKeyStore(keyPair);
+
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const session = await registerAccount(
+      _connection,
+      keyStore,
+      open(authDescriptor, { config: { flags: [] } }),
+    );
+
+    expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
   });
 });

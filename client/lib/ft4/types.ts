@@ -21,6 +21,8 @@ export type PagedResponse<T> = {
 
 export interface Connection extends Queryable {
   client: IClient;
+  blockchainRid: Buffer;
+
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
