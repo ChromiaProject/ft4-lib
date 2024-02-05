@@ -11,7 +11,13 @@ struct rate_limit_config {
 struct module_args {
 	rate_limit: rate_limit_config = rate_limit_config();
     max_auth_descriptor_rules: integer = 8;
+    max_auth_descriptors_per_account: integer = 10;
 }
+
+val AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND = min(
+    200,
+    chain_context.args.max_auth_descriptors_per_account
+);
 
 import ^.auth;
 import ^.utils;
@@ -57,6 +63,11 @@ entity rl_state {
 
 
 function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): account_auth_descriptor {
+    require(
+        (account_auth_descriptor @* { account }).size() < AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND,
+        "This account already has too many auth descriptors. Delete some before adding new ones."
+    );
+    
     val id = auth_descriptor.hash();
 
     validate_auth_descriptor_args(auth_descriptor);
