@@ -1,20 +1,13 @@
-/**
- * Assumes that transfer to pool account has been done already.
- */
 @extendable
-function create_on_transfer(
-   sender_blockchain_rid: byte_array,
-   sender_id: byte_array,
+function is_create_on_internal_transfer_enabled(): boolean = false;
+
+@extendable
+function create_on_internal_transfer(
+   sender: accounts.account,
    recipient_id: byte_array,
    asset,
    amount: big_integer
 );
-
-/**
- * @return pool account if create on transfer is enabled, null if disabled.
- */
-@extendable
-function get_pool_account(): accounts.account? = null;
 
 namespace Unsafe {
 
@@ -23,11 +16,9 @@ namespace Unsafe {
       if (recipient != null) {
           transfer(sender, recipient, asset, amount);
       } else {
-          val pool_account = require(get_pool_account(),
+          require(is_create_on_internal_transfer_enabled(),
               "Account <%s> does not exist and creating accounts on transfer is not enabled".format(recipient_id));
-          transfer(sender, pool_account, asset, amount);
-          val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
-          create_on_transfer(sender_blockchain_rid, sender.id, recipient_id, asset, amount);
+          create_on_internal_transfer(sender, recipient_id, asset, amount);
       }
    }
 

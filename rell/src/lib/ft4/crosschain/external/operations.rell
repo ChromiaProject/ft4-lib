@@ -147,16 +147,10 @@ operation apply_transfer(
                 init_transfer_details.args.amount
             );
         } else {
-            val pool_account = require(assets.get_pool_account(),
+            require(crosschain.is_create_on_crosschain_transfer_enabled(),
                 "Account <%s> does not exist and creating accounts on transfer is not enabled"
                     .format(init_transfer_details.args.receiver_id));
-            crosschain.Unsafe.update_balances_if_needed(
-                crosschain.ensure_blockchain_account(from_blockchain_rid),
-                pool_account,
-                asset,
-                init_transfer_details.args.amount
-            );
-            assets.create_on_transfer(
+            crosschain.create_on_crosschain_transfer(
                 init_transfer_tx.body.blockchain_rid,
                 init_transfer_details.sender_account_id,
                 init_transfer_details.args.receiver_id,

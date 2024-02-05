@@ -259,8 +259,6 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
 }
 
 function test_apply_transfer_fails_when_receipient_id_does_not_exists_and_create_on_transfer_strategy_is_not_enabled() {
-    assert_null(assets.get_pool_account());
-
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bogus_receipient_id = "bogus".hash();
