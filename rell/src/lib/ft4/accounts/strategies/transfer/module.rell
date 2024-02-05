@@ -63,6 +63,9 @@ function create_on_transfer(
       amount: big_integer) {
    // TODO find matching rule, reject if no rule is found
 
+   require(empty(pending_transfer @? { recipient_id }),
+      "Pending transfer for account <%s> already exists".format(recipient_id));
+
    create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = transfer_strategy.open.name);
 }

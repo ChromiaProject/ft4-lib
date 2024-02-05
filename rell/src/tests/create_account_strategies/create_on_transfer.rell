@@ -39,6 +39,32 @@ function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_tra
         create_on_transfer.transfer_strategy.open.name);
 }
 
+function test_transfer_when_receipient_id_does_not_exists_fails_if_pending_transfer_already_exists() {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = "create me".hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+    val amount = 3L;
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(
+        create_on_transfer.get_pending_transfer_strategies(recipient_id),
+        create_on_transfer.transfer_strategy.open.name);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, 2L))
+        .sign(alice.keypair)
+        .run_must_fail("Pending transfer for account <%s> already exists".format(recipient_id));
+}
+
 function test_cross_chain_transfer_when_receipient_id_does_not_exists_works_if_create_on_trasfer_stragegy_is_enabled() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
