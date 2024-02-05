@@ -8,6 +8,8 @@ import {
   AuthType,
   SingleSig,
 } from "@ft4/accounts";
+import { Connection } from "@ft4/types";
+import { createAccountObject } from "@ft4/accounts/account-query-functions";
 
 export * from "./evm";
 export * from "./ft";
@@ -121,4 +123,23 @@ async function getKeyHandlerForOperation(
       (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
     ) ?? null
   );
+}
+
+export async function getKeyHandlersForKeyStores(
+  connection: Connection,
+  accountId: Buffer,
+  keyStores: KeyStore[],
+): Promise<KeyHandler[]> {
+  const account = createAccountObject(connection, accountId);
+
+  let allKeyHandlers: KeyHandler[] = [];
+  for (const keyStore of keyStores) {
+    const response = await account.getAuthDescriptorsBySigner(keyStore.id);
+    const keyHandlers = response.data.map((authDescriptor) =>
+      keyStore.createKeyHandler(authDescriptor),
+    );
+    allKeyHandlers = [...allKeyHandlers, ...keyHandlers];
+  }
+
+  return allKeyHandlers;
 }
