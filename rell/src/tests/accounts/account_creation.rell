@@ -137,5 +137,5 @@ function test_an_account_cannot_have_too_many_auth_descriptors() {
     .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
     .op(accounts_ext.add_auth_descriptor(one_too_many))
     .sign(rell.test.keypairs.alice)
-    .run_must_fail("This account already has too many auth descriptors.");
+    .run_must_fail("Max <10> auth descriptor count reached. Delete some before adding new ones.");
 }

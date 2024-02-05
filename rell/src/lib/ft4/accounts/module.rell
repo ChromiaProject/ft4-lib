@@ -8,15 +8,19 @@ struct rate_limit_config {
     points_at_account_creation: integer = 1;
 }
 
+struct auth_descriptor_config {
+    max_rules: integer = 8;
+    max_number_per_account: integer = 10;
+}
+
 struct module_args {
 	rate_limit: rate_limit_config = rate_limit_config();
-    max_auth_descriptor_rules: integer = 8;
-    max_auth_descriptors_per_account: integer = 10;
+    auth_descriptor: auth_descriptor_config = auth_descriptor_config();
 }
 
 val AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND = min(
     200,
-    chain_context.args.max_auth_descriptors_per_account
+    chain_context.args.auth_descriptor.max_number_per_account
 );
 
 import ^.auth;
@@ -62,10 +66,16 @@ entity rl_state {
 }
 
 
-function add_auth_descriptor_to_account(account, auth_descriptor, safe: boolean = true): account_auth_descriptor {
+function add_auth_descriptor_to_account(
+    account,
+    auth_descriptor,
+    safe: boolean = true
+): account_auth_descriptor {
     require(
-        (account_auth_descriptor @* { account }).size() < AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND,
-        "This account already has too many auth descriptors. Delete some before adding new ones."
+        (account_auth_descriptor @* { account }).size() <
+            AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND,
+        "Max <%d> auth descriptor count reached. Delete some before adding new ones."
+            .format(AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND)
     );
     
     val id = auth_descriptor.hash();
@@ -260,4 +270,4 @@ function latest_time() =
     else
         block @ {} (@max .timestamp) ?: 0;
 
-function get_max_allowed_auth_descriptor_rules() = chain_context.args.max_auth_descriptor_rules;
+function get_max_allowed_auth_descriptor_rules() = chain_context.args.auth_descriptor.max_rules;
