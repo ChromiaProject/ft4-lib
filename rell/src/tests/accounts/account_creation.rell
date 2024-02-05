@@ -13,7 +13,7 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
 
-function test_an_account_can_be_created() {;
+function test_an_account_can_be_created() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   
   admin.register_account(auth_descriptor)
