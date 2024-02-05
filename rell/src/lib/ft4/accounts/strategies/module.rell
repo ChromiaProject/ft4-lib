@@ -54,13 +54,13 @@ function get_account_id_from_signers(signers: list<byte_array>) {
 }
 
 function verify_all_signatures(signers: list<byte_array>, evm_signatures: list<auth.signature>, message: text) {
-    val recovered_address = evm_signatures @* {} (auth._recover_evm_address(message, $));
+    val recovered_addresses = evm_signatures @* {} (auth._recover_evm_address(message, $));
     for (signer in signers) {
         when (signer.size()) {
             33 ->
                 require(op_context.is_signer(signer), "Missing signature for signer <%s>".format(signer));
             20 ->
-                require(signer in recovered_address, "Missing signature for signer <%s>".format(signer));
+                require(signer in recovered_addresses, "Missing signature for signer <%s>".format(signer));
             else ->
                 require(false, "Invalid signer <%s> length <%d>".format(signer, signer.size()));
         }
@@ -109,7 +109,7 @@ query get_register_account_message(strategy_name: name, gtv) {
     val strategy = get_strategy(strategy_name);
 
     val account_details = strategy.account_details(gtv);
-    var account_id = account_details.account_id;
+    val account_id = account_details.account_id;
 
     var message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\n"
         .format(

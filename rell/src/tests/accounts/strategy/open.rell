@@ -76,7 +76,15 @@ function test_register_account_message() {
         set(["A", "T"])
     );
 
-    print(strategies.get_register_account_message("ft4.ras_open", [auth_descriptor, null].to_gtv()));
+    val expected_message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\nInitial:\nSigner:\n%s\n\nFlags:\n%s\n"
+        .format(
+            chain_context.blockchain_rid,
+            rell.test.keypairs.alice.pub.hash(),
+            rell.test.keypairs.alice.pub,
+            set(["A", "T"])
+        );
+
+    assert_equals(strategies.get_register_account_message("ft4.ras_open", [auth_descriptor, null].to_gtv()), expected_message);
 }
 
 function test_account_id_does_not_change_if_signers_provided_in_different_orders() {
