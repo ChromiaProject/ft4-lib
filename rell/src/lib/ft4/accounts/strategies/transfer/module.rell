@@ -1,6 +1,7 @@
 @mount("ft4")
 module;
 
+import ^^.strategies;
 import ^^^.accounts;
 import ^^^.assets;
 import ^^^.crosschain;
@@ -70,7 +71,7 @@ function create_on_transfer(
 function () = strategies.add_strategy(
    op = rell.meta(ras_transfer),
    account_details = account_details(*),
-   action = finalize_acount(*)
+   action = action(*)
 );
 
 operation ras_transfer(
@@ -81,7 +82,6 @@ operation ras_transfer(
 function account_details(gtv) {
    val params = struct<ras_transfer>.from_gtv(gtv);
    val signers = strategies.get_signers(params.initial);
-
    return strategies.account_details(
        account_id = strategies.get_account_id_from_signers(signers),
        initial = params.initial,
@@ -89,7 +89,7 @@ function account_details(gtv) {
    );
 }
 
-function finalize_acount(accounts.account) {
+function action(accounts.account) {
    val pending_transfer = require(pending_transfer @? { .recipient_id == account.id },
       "No pending transfer to account id <%s>".format(account.id));
 

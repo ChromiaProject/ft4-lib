@@ -45,6 +45,8 @@ function _register_account() {
     }
 
     accounts.create_rate_limiter_state_for_account(account);
+
+    strategy.action(account);
 }
 
 function get_account_id_from_signers(signers: list<byte_array>) {
@@ -85,6 +87,7 @@ function strategy(): map<name, _strategy>;
 struct _strategy {
     op: rell.meta;
     account_details: (gtv) -> account_details;
+    action: (accounts.account) -> unit;
 }
 
 struct account_details {
@@ -93,8 +96,10 @@ struct account_details {
     disposable: accounts.auth_descriptor? = null;
 }
 
-function add_strategy(op: rell.meta, account_details: (gtv) -> account_details) 
-    = [op.mount_name: _strategy(op, account_details)];
+function add_strategy(op: rell.meta, account_details: (gtv) -> account_details, action: ((accounts.account) -> unit)? = null)
+    = [op.mount_name: _strategy(op, account_details, action ?: _no_action(*))];
+
+function _no_action(accounts.account) {}
 
 function load_evm_signatures(): list<auth.signature> {
     val tx_operations = op_context.get_all_operations();
