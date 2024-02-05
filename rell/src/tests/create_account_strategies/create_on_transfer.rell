@@ -33,6 +33,10 @@ function test_transfer_when_receipient_id_does_not_exists_works_if_create_on_tra
         asset,
         amount
     });
+
+    assert_equals(
+        create_on_transfer.get_pending_transfer_strategies(recipient_id),
+        create_on_transfer.transfer_strategy.open.name);
 }
 
 function test_cross_chain_transfer_when_receipient_id_does_not_exists_works_if_create_on_trasfer_stragegy_is_enabled() {
@@ -77,4 +81,8 @@ function test_cross_chain_transfer_when_receipient_id_does_not_exists_works_if_c
         asset,
         amount
     });
+
+    assert_equals(
+        create_on_transfer.get_pending_transfer_strategies(recipient_id),
+        create_on_transfer.transfer_strategy.open.name);
 }

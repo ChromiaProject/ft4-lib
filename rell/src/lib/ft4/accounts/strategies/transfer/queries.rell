@@ -1,3 +1,3 @@
 
-query get_pending_transfer(recipient_id: byte_array, assets.asset, amount: big_integer): struct<pending_transfer>? =
-    pending_transfer @? { recipient_id } ($.to_struct());
+query get_pending_transfer_strategies(recipient_id: byte_array): text? =
+    pending_transfer @? { recipient_id } (.strategies);
