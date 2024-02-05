@@ -35,7 +35,7 @@ function _register_account() {
         verify_all_signatures(disposable_auth_descriptor_signers, evm_signatures, message);
     }
 
-    val account_id = get_account_id_from_signers(signers);
+    val account_id = account_details.account_id;
 
     val account = create accounts.account(account_id);
     accounts.add_auth_descriptor_to_account(account, account_details.initial, false);
@@ -43,15 +43,14 @@ function _register_account() {
     if (account_details.disposable??) {
         accounts.add_auth_descriptor_to_account(account, account_details.disposable!!, false);
     }
+
+    accounts.create_rate_limiter_state_for_account(account);
 }
 
 function get_account_id_from_signers(signers: list<byte_array>) {
-    // Should we sort signers, so that we get same account 
-    // id even if signers are provided in different order
-
     require(signers.size() > 0, "Cannot derive account id. Signers list is empty");
 
-    return if (signers.size() == 1) signers[0].hash() else signers.hash();
+    return if (signers.size() == 1) signers[0].hash() else signers @* {} (@sort $).hash();
 }
 
 function verify_all_signatures(signers: list<byte_array>, evm_signatures: list<auth.signature>, message: text) {
@@ -89,7 +88,7 @@ struct _strategy {
 }
 
 struct account_details {
-    account_id: byte_array? = null;
+    account_id: byte_array;
     initial: accounts.auth_descriptor;
     disposable: accounts.auth_descriptor? = null;
 }
@@ -110,15 +109,7 @@ query get_register_account_message(strategy_name: name, gtv) {
     val strategy = get_strategy(strategy_name);
 
     val account_details = strategy.account_details(gtv);
-
-    var account_id: byte_array?;
-
-    if (account_details.account_id??) {
-        account_id = account_details.account_id;
-    } else {
-        val signers = get_signers(account_details.initial);
-        account_id = get_account_id_from_signers(signers);
-    }
+    var account_id = account_details.account_id;
 
     var message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\n"
         .format(

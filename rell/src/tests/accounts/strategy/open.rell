@@ -78,3 +78,33 @@ function test_register_account_message() {
 
     print(strategies.get_register_account_message("ft4.ras_open", [auth_descriptor, null].to_gtv()));
 }
+
+function test_account_id_does_not_change_if_signers_provided_in_different_orders() {
+    val list1 = [
+        rell.test.pubkeys.alice,
+        rell.test.pubkeys.bob,
+        rell.test.pubkeys.eve
+    ];
+
+    val list2 = [
+        rell.test.pubkeys.bob,        
+        rell.test.pubkeys.alice,
+        rell.test.pubkeys.eve
+    ];
+
+    val list3 = [
+        rell.test.pubkeys.eve,  
+        rell.test.pubkeys.bob,        
+        rell.test.pubkeys.alice
+    ];
+
+    assert_equals(
+        strategies.get_account_id_from_signers(list1),
+        strategies.get_account_id_from_signers(list2)
+    );
+
+    assert_equals(
+        strategies.get_account_id_from_signers(list2),
+        strategies.get_account_id_from_signers(list3)
+    );    
+}
