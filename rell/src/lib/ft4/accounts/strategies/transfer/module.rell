@@ -4,12 +4,17 @@ module;
 import ^^^.accounts;
 import ^^^.assets;
 
+enum transfer_strategy {
+   open
+}
+
 entity pending_transfer {
    sender_blockchain_rid: byte_array;
    sender_id: byte_array;
-   recipient_id: byte_array;
+   key recipient_id: byte_array;
    assets.asset;
    amount: big_integer;
+   strategies: text;
 }
 
 function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
@@ -28,5 +33,6 @@ function() = ensure_pool_account(chain_context.blockchain_rid);
 @extend(assets.create_on_transfer)
 function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array, assets.asset, amount: big_integer) {
     // TODO find matching rule, reject if no rule is found
-    create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
+    create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
+       strategies = transfer_strategy.open.name);
 }
