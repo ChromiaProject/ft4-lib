@@ -65,3 +65,41 @@ function create_on_transfer(
    create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = transfer_strategy.open.name);
 }
+
+@extend(strategies.strategy)
+function () = strategies.add_strategy(
+   op = rell.meta(ras_transfer),
+   account_details = account_details(*),
+   action = finalize_acount(*)
+);
+
+operation ras_transfer(
+   strategy: transfer_strategy,
+   initial: accounts.auth_descriptor
+) {}
+
+function account_details(gtv) {
+   val params = struct<ras_transfer>.from_gtv(gtv);
+   val signers = strategies.get_signers(params.initial);
+
+   return strategies.account_details(
+       account_id = strategies.get_account_id_from_signers(signers),
+       initial = params.initial,
+       disposable = null
+   );
+}
+
+function finalize_acount(accounts.account) {
+   val pending_transfer = require(pending_transfer @? { .recipient_id == account.id },
+      "No pending transfer to account id <%s>".format(account.id));
+
+   assets.Unsafe.transfer(
+      ensure_pool_account(chain_context.blockchain_rid),
+      account,
+      pending_transfer.asset,
+      pending_transfer.amount);
+
+   delete pending_transfer;
+
+   // TODO perform transfer strategy action
+}
