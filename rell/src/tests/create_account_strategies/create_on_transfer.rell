@@ -44,26 +44,18 @@ function test_cross_chain_transfer_when_receipient_id_does_not_exists_works_if_c
     val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
     val amount = 5L;
 
-    val init_args = struct<xchain_ext.init_transfer>(
-      receiver_id = recipient_id,
-      asset_id = asset.id,
-      amount = amount,
-      hops = [chain_context.blockchain_rid]
-    );
-
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                gtx_operation(
-                    name = "ft4.ft_auth",
-                    args = [ sender_account_id.to_gtv(), sender_auth_descriptor_id.to_gtv() ]
-                ),
-                gtx_operation(
-                    name = "ft4.crosschain.init_transfer",
-                    args = list<gtv>.from_gtv(init_args.to_gtv())
-                )
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = recipient_id,
+                    asset_id = asset.id,
+                    amount = amount,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
             ],
             signers = []
         ),
