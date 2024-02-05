@@ -3,6 +3,18 @@ module;
 
 import ^.utils;
 
+@extendable
+function is_create_on_crosschain_transfer_enabled(): boolean = false;
+
+@extendable
+function create_on_crosschain_transfer(
+   sender_blockchain_rid: byte_array,
+   sender_id: byte_array,
+   recipient_id: byte_array,
+   assets.asset,
+   amount: big_integer
+);
+
 function get_paginated_pending_transfers(account_id: byte_array, page_size: integer?, page_cursor: text?) {
     val after_rowid = utils.before_rowid(page_cursor);
 

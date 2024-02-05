@@ -20,8 +20,9 @@ function () = auth.add_overridable_auth_handler(
 );
 
 operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_integer) {
-    val account = auth.authenticate();
-    assets.Unsafe.transfer(account, accounts.Account(receiver_id), assets.Asset(asset_id), amount);
+    val sender = auth.authenticate();
+    val asset = assets.Asset(asset_id);
+    assets.Unsafe.transfer_to_receipient_id(sender, receiver_id, asset, amount);
 }
 
 @extend(auth.auth_handler)

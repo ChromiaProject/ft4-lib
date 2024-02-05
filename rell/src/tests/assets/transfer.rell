@@ -228,3 +228,17 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
         .op(ft4.assets_ext.transfer(receiver_id, asset_id, amount))
         .run_must_fail("Invalid signature");
 }
+
+function test_transfer_fails_when_receipient_id_does_not_exists_and_create_on_transfer_strategy_is_not_enabled() {
+    val alice = utils.register_alice();
+    val bogus_receipient_id = "bogus".hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(bogus_receipient_id, asset.id, 1))
+        .sign(alice.keypair)
+        .run_must_fail("Account <%s> does not exist and creating accounts on transfer is not enabled".format(bogus_receipient_id));
+}
