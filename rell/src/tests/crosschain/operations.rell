@@ -113,26 +113,18 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     val source_blockchain_rid = x"abcdef";
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
-    val init_args = struct<xchain_ext.init_transfer>(
-      receiver_id = bob.account.id,
-      asset_id = asset_valid.id,
-      amount = 5L,
-      hops = [chain_context.blockchain_rid]
-    );
-
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                gtx_operation(
-                    name = "ft4.ft_auth",
-                    args = [ sender_account_id.to_gtv(), sender_auth_descriptor_id.to_gtv() ]
-                ),
-                gtx_operation(
-                    name = "ft4.crosschain.init_transfer",
-                    args = list<gtv>.from_gtv(init_args.to_gtv())
-                )
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
             ],
             signers = []
         ),
@@ -146,37 +138,22 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
         .run(); // Should run successfully
 }
 
-function test_apply_transfer_fails_with_mismatched_init_args() {
+function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
     val asset_valid = utils.create_asset("validAsset", "va", 1);
-
-    val init_args = struct<xchain_ext.init_transfer>(
-      receiver_id = bob.account.id,
-      asset_id = asset_valid.id,
-      amount = 5L,
-      hops = [x"abcdef"]
-    );
-
-    val wrong_init_args = struct<xchain_ext.init_transfer>(
-      receiver_id = alice.account.id,
-      asset_id = asset_valid.id,
-      amount = 5L,
-      hops = [x"abcdef"]
-    );
 
     val wrong_tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                gtx_operation(
-                    name = "ft4.ft_auth",
-                    args = [ x"".hash().to_gtv(), x"".hash().to_gtv() ]
-                ),
-                gtx_operation(
-                    name = "ft4.crosschain.init_transfer",
-                    args = list<gtv>.from_gtv(wrong_init_args.to_gtv())
-                )
+                auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = alice.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [x"abcdef"]
+                ).to_gtx_operation()
             ],
             signers = []
         ),
@@ -187,14 +164,13 @@ function test_apply_transfer_fails_with_mismatched_init_args() {
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                gtx_operation(
-                    name = "ft4.ft_auth",
-                    args = [ x"".hash().to_gtv(), x"".hash().to_gtv() ]
-                ),
-                gtx_operation(
-                    name = "ft4.crosschain.init_transfer",
-                    args = list<gtv>.from_gtv(init_args.to_gtv())
-                )
+                auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [x"abcdef"]
+                ).to_gtx_operation()
             ],
             signers = []
         ),
@@ -212,25 +188,18 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
     val bob = utils.register_bob();
     val asset_valid = utils.create_asset("validAsset", "va", 1);
 
-    val init_args = struct<xchain_ext.init_transfer>(
-      receiver_id = bob.account.id,
-      asset_id = asset_valid.id,
-      amount = 5L,
-      hops = [x"abcdef"]
-    );
-
+    val hops = [x"abcdef"];
     val init_tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                gtx_operation(
-                    name = "ft4.ft_auth",
-                    args = [ x"".hash().to_gtv(), x"".hash().to_gtv() ]
-                ),
-                gtx_operation(
-                    name = "ft4.crosschain.init_transfer",
-                    args = list<gtv>.from_gtv(init_args.to_gtv())
-                )
+                auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = hops
+                ).to_gtx_operation()
             ],
             signers = []
         ),
@@ -240,10 +209,13 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                gtx_operation(
-                    name = "ft4.crosschain.apply_transfer",
-                    args = [init_tx.to_gtv(), (1).to_gtv(), init_tx.to_gtv(), (1).to_gtv(), 0x0.to_gtv()]
-                )
+                xchain_ext.apply_transfer(
+                    init_transfer_tx = init_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = init_tx,
+                    op_index = 1,
+                    hop_index = 0
+                ).to_gtx_operation()
             ],
             signers = []
         ),
@@ -255,7 +227,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
     rell.test.tx()
         .op(xchain_ext.apply_transfer(init_tx, 1, apply_tx, 0, hop_index))
         .sign(rell.test.keypairs.alice)
-        .run_must_fail("Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index));
+        .run_must_fail("Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(hops.size(), hop_index));
 }
 
 function test_apply_transfer_fails_when_receipient_id_does_not_exists_and_create_on_transfer_strategy_is_not_enabled() {
@@ -266,26 +238,18 @@ function test_apply_transfer_fails_when_receipient_id_does_not_exists_and_create
     val source_blockchain_rid = x"abcdef";
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
-    val init_args = struct<xchain_ext.init_transfer>(
-      receiver_id = bogus_receipient_id,
-      asset_id = asset_valid.id,
-      amount = 5L,
-      hops = [chain_context.blockchain_rid]
-    );
-
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                gtx_operation(
-                    name = "ft4.ft_auth",
-                    args = [ sender_account_id.to_gtv(), sender_auth_descriptor_id.to_gtv() ]
-                ),
-                gtx_operation(
-                    name = "ft4.crosschain.init_transfer",
-                    args = list<gtv>.from_gtv(init_args.to_gtv())
-                )
+                auth_ext.ft_auth(sender_account_id.hash(), sender_auth_descriptor_id.hash()).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = bogus_receipient_id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
             ],
             signers = []
         ),

@@ -1,0 +1,4 @@
+
+// TODO what if there are more than one, and strategies differ?
+query get_pending_transfer_strategies(recipient_id: byte_array): text? =
+    account_creation_transfer @? { recipient_id, .state == account_creation_state.pending } (.strategies) limit 1;

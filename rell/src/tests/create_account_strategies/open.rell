@@ -49,6 +49,19 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
     assert_not_null(account);
 }
 
+function test_account_registration_fails_with_invalid_ft_signature() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor, null))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("Missing signature for signer <%s>".format(rell.test.pubkeys.alice));
+}
+
 function test_account_registration_fails_with_invalid_evm_signature() {
     val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
 
@@ -115,4 +128,28 @@ function test_account_id_does_not_change_if_signers_provided_in_different_orders
         strategies.get_account_id_from_signers(list2),
         strategies.get_account_id_from_signers(list3)
     );    
+}
+
+function test_account_registration_fails_when_account_already_exists() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor, null))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val account = accounts.account @? { .id == rell.test.keypairs.alice.pub.hash() };
+
+    assert_not_null(account);
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor, null))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.alice)
+        .nop()
+        .run_must_fail("duplicate key value violates unique constraint");
 }
