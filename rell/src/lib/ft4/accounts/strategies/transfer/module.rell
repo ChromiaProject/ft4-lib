@@ -73,7 +73,7 @@ function create_on_transfer(
 function () = strategies.add_strategy(
    op = rell.meta(ras_transfer),
    account_details = account_details(*),
-   action = action(*)
+   action = transfer_action(*)
 );
 
 operation ras_transfer(
@@ -92,7 +92,7 @@ function account_details(gtv) {
    );
 }
 
-function action(accounts.account) {
+function transfer_action(accounts.account, strategy_params: gtv) {
    val account_creation_transfers = account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending };
    require(account_creation_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
 
