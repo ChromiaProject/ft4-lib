@@ -37,11 +37,11 @@ function test_create_account_on_internal_transfer_success() {
     });
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.transfer_strategy.open.name);
+        create_on_transfer.TRANSFER_STRATEGY_OPEN);
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
-                create_on_transfer.transfer_strategy.open,
+                create_on_transfer.TRANSFER_STRATEGY_OPEN,
                 utils.create_auth_descriptor(rell.test.pubkeys.bob)
          ))
         .op(strategies.register_account())
@@ -64,7 +64,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
-                create_on_transfer.transfer_strategy.open,
+                create_on_transfer.TRANSFER_STRATEGY_OPEN,
                 utils.create_auth_descriptor(rell.test.pubkeys.bob)
          ))
         .op(strategies.register_account())
@@ -107,11 +107,11 @@ function test_multiple_internal_transfers_success() {
 
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.transfer_strategy.open.name);
+        create_on_transfer.TRANSFER_STRATEGY_OPEN);
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
-                create_on_transfer.transfer_strategy.open,
+                create_on_transfer.TRANSFER_STRATEGY_OPEN,
                 utils.create_auth_descriptor(rell.test.pubkeys.charlie)
          ))
         .op(strategies.register_account())
@@ -175,11 +175,11 @@ function test_create_account_on_crosschain_transfer_success() {
     });
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.transfer_strategy.open.name);
+        create_on_transfer.TRANSFER_STRATEGY_OPEN);
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
-                create_on_transfer.transfer_strategy.open,
+                create_on_transfer.TRANSFER_STRATEGY_OPEN,
                 utils.create_auth_descriptor(rell.test.pubkeys.bob)
          ))
         .op(strategies.register_account())
@@ -264,11 +264,11 @@ function test_multiple_crosschain_transfers_success() {
     );
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.transfer_strategy.open.name);
+        create_on_transfer.TRANSFER_STRATEGY_OPEN);
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
-                create_on_transfer.transfer_strategy.open,
+                create_on_transfer.TRANSFER_STRATEGY_OPEN,
                 utils.create_auth_descriptor(rell.test.pubkeys.bob)
          ))
         .op(strategies.register_account())

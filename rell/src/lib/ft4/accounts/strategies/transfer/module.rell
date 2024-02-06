@@ -6,9 +6,7 @@ import ^^^.accounts;
 import ^^^.assets;
 import ^^^.crosschain;
 
-enum transfer_strategy {
-   open
-}
+val TRANSFER_STRATEGY_OPEN = "open";
 
 enum account_creation_state {
    pending,
@@ -68,7 +66,7 @@ function create_on_transfer(
    // TODO find matching rule, reject if no rule is found
 
    create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
-        strategies = transfer_strategy.open.name);
+        strategies = TRANSFER_STRATEGY_OPEN);
 }
 
 @extend(strategies.strategy)
@@ -79,7 +77,7 @@ function () = strategies.add_strategy(
 );
 
 operation ras_transfer(
-   strategy: transfer_strategy,
+   strategy: text,
    initial: accounts.auth_descriptor,
    disposable: accounts.auth_descriptor? = null
 ) {}
