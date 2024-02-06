@@ -89,12 +89,26 @@ function action(accounts.account) {
    val pending_transfers = pending_transfer @* { .recipient_id == account.id };
    require(pending_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
 
+   val pool_account = ensure_pool_account(chain_context.blockchain_rid);
+
    for (pending_transfer in pending_transfers) {
-      assets.Unsafe.transfer(
-         ensure_pool_account(chain_context.blockchain_rid),
-         account,
-         pending_transfer.asset,
-         pending_transfer.amount);
+      assets.deduct_balance(pool_account, pending_transfer.asset, pending_transfer.amount);
+      create assets.transfer_history_entry(
+         .account = pool_account,
+         .asset = pending_transfer.asset,
+         .delta = pending_transfer.amount,
+         .op_index = op_context.op_index,
+         .is_input = true
+      );
+
+      assets.increase_balance(account, pending_transfer.asset, pending_transfer.amount);
+      create assets.transfer_history_entry(
+         .account = account,
+         .asset = pending_transfer.asset,
+         .delta = pending_transfer.amount,
+         .op_index = op_context.op_index,
+         .is_input = false
+      );
 
       delete pending_transfer;
    }
