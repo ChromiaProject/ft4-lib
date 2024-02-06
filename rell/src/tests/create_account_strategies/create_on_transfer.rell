@@ -161,7 +161,6 @@ function test_create_account_on_crosschain_transfer_success() {
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
-        .sign(rell.test.keypairs.alice)
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
@@ -230,7 +229,6 @@ function test_multiple_crosschain_transfers_success() {
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx1, 1, tx1, 1, 0))
-        .sign(rell.test.keypairs.alice)
         .run();
 
     val tx2 = gtx_transaction(
@@ -253,7 +251,6 @@ function test_multiple_crosschain_transfers_success() {
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx2, 1, tx2, 1, 0))
-        .sign(rell.test.keypairs.alice)
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset1), amount1);
