@@ -12,17 +12,17 @@
 
 - Update `addAuthDescriptor` signature  
 Old:
-```
+```ts
 addAuthDescriptor(authDescriptor: AnyAuthDescriptorRegistration, newSigner: SignatureProvider | KeyPair)
 ```
 New:
-```
+```ts
 addAuthDescriptor(authDescriptor: AnyAuthDescriptorRegistration, keyStore: FtKeyStore)
 ```
 
 - Update LoginKeyStore interface
 Old:
-```
+```ts
 interface LoginKeyStore {
   clear(accountId: Buffer);
   getKeyPair(accountId: Buffer): Promise<KeyPair | null>;
@@ -30,7 +30,7 @@ interface LoginKeyStore {
 }
 ```
 New:
-```
+```ts
 interface LoginKeyStore {
   clear(accountId: Buffer);
   getKeyStore(accountId: Buffer): Promise<FtKeyStore | null>;
