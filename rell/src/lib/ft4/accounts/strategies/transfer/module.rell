@@ -23,6 +23,8 @@ entity account_creation_transfer {
    amount: big_integer;
    strategies: text;
    mutable state: account_creation_state = account_creation_state.pending;
+   mutable tx_rid: byte_array = x"";
+   mutable op_index: integer = -1;
 }
 
 @extend(assets.is_create_on_internal_transfer_enabled)
@@ -105,6 +107,8 @@ function action(accounts.account) {
          account_creation_transfer.amount);
 
       account_creation_transfer.state = account_creation_state.done;
+      account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
+      account_creation_transfer.op_index = op_context.op_index;
    }
 
    // TODO perform transfer strategy action
