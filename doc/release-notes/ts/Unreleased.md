@@ -9,3 +9,31 @@
 ### Breaking
 
 - Change `assetData` to `asset` in `TransferHistoryEntry`.
+
+- Update `addAuthDescriptor` signature  
+Old:
+```
+addAuthDescriptor(authDescriptor: AnyAuthDescriptorRegistration, newSigner: SignatureProvider | KeyPair)
+```
+New:
+```
+addAuthDescriptor(authDescriptor: AnyAuthDescriptorRegistration, keyStore: FtKeyStore)
+```
+
+- Update LoginKeyStore interface
+Old:
+```
+interface LoginKeyStore {
+  clear(accountId: Buffer);
+  getKeyPair(accountId: Buffer): Promise<KeyPair | null>;
+  createKeyPair(accountId: Buffer): Promise<KeyPair>;
+}
+```
+New:
+```
+interface LoginKeyStore {
+  clear(accountId: Buffer);
+  getKeyStore(accountId: Buffer): Promise<FtKeyStore | null>;
+  generateKey(accountId: Buffer): Promise<FtKeyStore>;
+}
+```
