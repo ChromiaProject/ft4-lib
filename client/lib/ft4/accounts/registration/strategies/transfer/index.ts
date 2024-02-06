@@ -17,7 +17,10 @@ import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/s
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
 import { getAccountIdFromSigners } from "@ft4/accounts/registration/strategies/index";
 
-export function open(
+export const TRANSFER_STRATEGY_OPEN = "open";
+
+export function transfer(
+  transferStrategy: string,
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
@@ -47,8 +50,9 @@ export function open(
       }
 
       const operation = {
-        name: "ft4.ras_open",
+        name: "ft4.ras_transfer",
         args: [
+          transferStrategy,
           authDescriptorRegistrationToGtv(authDescriptor),
           disposableAuthDescriptor,
         ],
