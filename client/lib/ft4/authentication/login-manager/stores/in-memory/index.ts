@@ -8,6 +8,7 @@ export function createInMemoryLoginKeyStore(): LoginKeyStore {
   return Object.freeze({
     clear: (accountId: Buffer) => {
       accountIdKeyPairMap.delete(accountId.toString("hex"));
+      return Promise.resolve();
     },
     getKeyStore: (accountId: Buffer) => {
       const keyPair = accountIdKeyPairMap.get(accountId.toString("hex"));

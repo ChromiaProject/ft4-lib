@@ -27,6 +27,8 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
       const values = loadData();
       delete values[ensureString(accountId)];
       saveData(values);
+
+      return Promise.resolve();
     },
     getKeyStore: (accountId: Buffer) => {
       const privateKey = loadData()[ensureString(accountId)];

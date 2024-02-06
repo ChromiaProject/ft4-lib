@@ -32,7 +32,7 @@ interface LoginKeyStore {
 New:
 ```ts
 interface LoginKeyStore {
-  clear(accountId: Buffer);
+  clear(accountId: Buffer): Promise<void>;
   getKeyStore(accountId: Buffer): Promise<FtKeyStore | null>;
   generateKey(accountId: Buffer): Promise<FtKeyStore>;
 }
