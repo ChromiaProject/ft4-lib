@@ -1,6 +1,4 @@
 
-query get_pending_transfer_strategies(recipient_id: byte_array): text? {
-    // TODO what if there are more than one, and strategies differ?
-    val l = pending_transfer @* { recipient_id } (.strategies) limit 1;
-    return if (l.size() > 0) l[0] else null;
-}
+// TODO what if there are more than one, and strategies differ?
+query get_pending_transfer_strategies(recipient_id: byte_array): text? =
+    pending_transfer @? { recipient_id } (.strategies) limit 1;
