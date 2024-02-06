@@ -80,7 +80,8 @@ function () = strategies.add_strategy(
 
 operation ras_transfer(
    strategy: transfer_strategy,
-   initial: accounts.auth_descriptor
+   initial: accounts.auth_descriptor,
+   disposable: accounts.auth_descriptor? = null
 ) {}
 
 function account_details(gtv) {
@@ -89,7 +90,7 @@ function account_details(gtv) {
    return strategies.account_details(
        account_id = strategies.get_account_id_from_signers(signers),
        initial = params.initial,
-       disposable = null
+       disposable = params.disposable
    );
 }
 
