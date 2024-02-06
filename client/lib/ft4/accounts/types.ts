@@ -1,5 +1,4 @@
 import { Buffer } from "buffer";
-import { KeyPair, SignatureProvider } from "postchain-client";
 import { Amount, Balance } from "@ft4/asset";
 import { Authenticator } from "../authentication/types";
 import { OptionalPageCursor } from "../types";
@@ -18,6 +17,7 @@ import {
   AnyAuthDescriptorRegistration,
 } from "@ft4/accounts/auth-descriptor/types";
 import { PendingTransfer } from "../crosschain/types";
+import { FtKeyStore } from "@ft4/authentication/ft";
 
 export type RateLimit = {
   points: number;
@@ -64,7 +64,7 @@ export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AnyAuthDescriptorRegistration,
-    newSigner: SignatureProvider | KeyPair,
+    keyStore: FtKeyStore,
   ) => Promise<TransactionSessionCompletion>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId,

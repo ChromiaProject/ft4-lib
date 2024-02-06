@@ -101,6 +101,7 @@ export function createTestAuthDescriptor(
 ): {
   keyPair: KeyPair;
   authDescriptor: AuthDescriptor<SingleSig>;
+  keyStore: FtKeyStore;
 } {
   const keyPair = encryption.makeKeyPair();
   const ad = createSingleSigAuthDescriptorRegistration(
@@ -115,6 +116,7 @@ export function createTestAuthDescriptor(
       id: deriveAuthDescriptorId(ad),
       created: new Date(0),
     },
+    keyStore: createInMemoryFtKeyStore(keyPair),
   };
 }
 

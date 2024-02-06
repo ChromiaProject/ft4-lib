@@ -1,6 +1,5 @@
-import { KeyPair, SignatureProvider, formatter } from "postchain-client";
-import { createAuthenticator } from "../authentication";
-import { createInMemoryFtKeyStore } from "../authentication/ft/key-stores/in-memory";
+import { formatter } from "postchain-client";
+import { FtKeyStore, createAuthenticator } from "../authentication";
 import { Authenticator } from "../authentication/types";
 import { call, createSession } from "../ft-session";
 import { Connection } from "../types";
@@ -34,9 +33,8 @@ export function createAuthenticatedAccount(
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AnyAuthDescriptorRegistration,
-      newSigner: SignatureProvider | KeyPair,
-    ) =>
-      addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
+      keyStore: FtKeyStore,
+    ) => addAuthDescriptor(connection, authenticator, authDescriptor, keyStore),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
       deleteAuthDescriptor(connection, authenticator, authDescriptorId),
     // deleteAllAuthDescriptorsExclude: (authDescriptorId: BufferId) =>
@@ -53,15 +51,13 @@ async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorRegistration: AnyAuthDescriptorRegistration,
-  newSigner: SignatureProvider | KeyPair,
+  keyStore: FtKeyStore,
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const newKeyStore = createInMemoryFtKeyStore(newSigner);
-
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptorRegistration))
-    .addSigners(newKeyStore)
+    .addSigners(keyStore)
     .build();
 
   const receipt = await connection.client.sendTransaction(tx);
@@ -75,7 +71,7 @@ async function addAuthDescriptor(
   const newAuth = createAuthenticator(
     authenticator.accountId,
     authenticator.keyHandlers.concat(
-      newKeyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
+      keyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
     ),
     authenticator.authDataService,
   );

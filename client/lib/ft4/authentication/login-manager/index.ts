@@ -1,6 +1,5 @@
 import { createAuthenticator } from "@ft4/authentication";
 import { hasAuthDescriptorFlags } from "@ft4/authentication/ft/key-handler";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import {
   AuthDataService,
   KeyHandler,
@@ -19,7 +18,6 @@ import {
 } from "@ft4/accounts/auth-descriptor";
 import { createAuthDataService, createSession } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
-import { getPubkey } from "@ft4/utils/index";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -60,15 +58,14 @@ export function createLoginManager(
       // Get list of flags that will be added to new auth descriptor
       const flags = await getFlags(authDataService, loginOptions);
 
-      const keyPair = await usedLoginKeyStore.getKeyPair(account.id);
+      const loginKeyStore = await usedLoginKeyStore.getKeyStore(account.id);
 
       // If disposable key pair exists in login key store for provided account id,
       // check if there are already auth descriptors with required flags.
       // If they already exist then it will be used instead of adding a new auth descriptor
-      if (keyPair) {
-        const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
+      if (loginKeyStore) {
         const disposableAuthDescriptors =
-          await account.getAuthDescriptorsBySigner(getPubkey(keyPair));
+          await account.getAuthDescriptorsBySigner(loginKeyStore.id);
         disposableKeyHandlers = disposableAuthDescriptors.data
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
@@ -76,7 +73,7 @@ export function createLoginManager(
             hasAuthDescriptorFlags(authDescriptor, flags),
           )
           .map((authDescriptor) =>
-            disposableKeyStore.createKeyHandler(authDescriptor),
+            loginKeyStore.createKeyHandler(authDescriptor),
           );
       }
 
@@ -147,16 +144,15 @@ async function addDisposableAuthDescriptor(
 
   const session = createSession(connection, authenticator);
 
-  const keyPair = await loginKeyStore.createKeyPair(accountId);
-  const ks = createInMemoryFtKeyStore(keyPair);
+  const ks = await loginKeyStore.generateKey(accountId);
 
   const registration = createSingleSigAuthDescriptorRegistration(
     flags,
-    getPubkey(keyPair),
+    ks.id,
     null,
   );
 
-  await session.account.addAuthDescriptor(registration, keyPair);
+  await session.account.addAuthDescriptor(registration, ks);
   const ad = gtv.authDescriptorFromGtv(
     await connection.query(
       authDescriptorById(accountId, deriveAuthDescriptorId(registration)),

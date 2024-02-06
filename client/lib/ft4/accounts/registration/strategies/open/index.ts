@@ -14,7 +14,7 @@ import { Connection } from "@ft4/types";
 import { createAuthDataService } from "@ft4/ft-session";
 import { RawAnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor/types";
 import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
-import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
+import { FtKeyStore } from "@ft4/authentication";
 import { getAccountIdFromSigners } from "@ft4/accounts/registration/strategies/index";
 
 export function open(
@@ -39,10 +39,12 @@ export function open(
         const authDataService = createAuthDataService(connection);
         const flags = await getFlags(authDataService, loginConfig);
         loginKeyStore = createInMemoryLoginKeyStore();
-        const keyPair = await loginKeyStore.createKeyPair(accountId);
-        disposableKeyStore = createInMemoryFtKeyStore(keyPair);
+        disposableKeyStore = await loginKeyStore.generateKey(accountId);
         disposableAuthDescriptor = authDescriptorRegistrationToGtv(
-          createSingleSigAuthDescriptorRegistration(flags, keyPair.pubKey),
+          createSingleSigAuthDescriptorRegistration(
+            flags,
+            disposableKeyStore.id,
+          ),
         );
       }
 

@@ -85,10 +85,10 @@ describe("Test the account", () => {
       .withAuthFlags(FlagsType.Account)
       .build();
 
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
+    const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["A"]);
 
-    await account.addAuthDescriptor(authDescriptor2, keyPair2);
+    await account.addAuthDescriptor(authDescriptor2, keyStore2);
 
     expect((await account.getAuthDescriptors()).data.length).toBe(2);
   });
@@ -98,12 +98,12 @@ describe("Test the account", () => {
       .withAuthFlags(FlagsType.Account)
       .build();
 
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
+    const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["T"]);
 
     const { session } = await account.addAuthDescriptor(
       authDescriptor2,
-      keyPair2,
+      keyStore2,
     );
 
     expect(session.account.authenticator.keyHandlers.length).toBe(2);
@@ -121,11 +121,11 @@ describe("Test the account", () => {
       .withAuthFlags(FlagsType.Transfer)
       .buildAsNonManager();
 
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
+    const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["A"]);
 
     await expect(
-      account.addAuthDescriptor(authDescriptor2, keyPair2),
+      account.addAuthDescriptor(authDescriptor2, keyStore2),
     ).rejects.toThrow(AuthorizationError);
   });
 
@@ -318,7 +318,10 @@ describe("Test the account", () => {
       keyPair2.pubKey,
       null,
     );
-    await session.account.addAuthDescriptor(ad2, keyPair2);
+    await session.account.addAuthDescriptor(
+      ad2,
+      createInMemoryFtKeyStore(keyPair2),
+    );
 
     const { data } = await session.account.getAuthDescriptors(1);
     const authDesc = createSingleSigAuthDescriptorRegistration(
@@ -351,7 +354,10 @@ describe("Test the account", () => {
       keyPair2.pubKey,
       null,
     );
-    await session.account.addAuthDescriptor(ad2, keyPair2);
+    await session.account.addAuthDescriptor(
+      ad2,
+      createInMemoryFtKeyStore(keyPair2),
+    );
 
     const { data, nextCursor } = await session.account.getAuthDescriptors(1);
     expect(data.length).toBe(1);
@@ -373,10 +379,10 @@ describe("Test the account", () => {
       keyPair,
     );
 
-    const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
+    const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["A"]);
 
-    await session.account.addAuthDescriptor(authDescriptor2, keyPair2);
+    await session.account.addAuthDescriptor(authDescriptor2, keyStore2);
 
     const tx = await session
       .transactionBuilder()
@@ -464,8 +470,8 @@ describe("Test the account", () => {
     );
 
     await Promise.all([
-      acc1.addAuthDescriptor(authDescriptor2, user2.signatureProvider),
-      acc1.addAuthDescriptor(authDescriptor3, user3.signatureProvider),
+      acc1.addAuthDescriptor(authDescriptor2, user2.keyStore),
+      acc1.addAuthDescriptor(authDescriptor3, user3.keyStore),
     ]);
 
     const { account: acc2 } = await getSessionForAccount(
@@ -503,8 +509,8 @@ describe("Test the account", () => {
     );
 
     await Promise.all([
-      acc1.addAuthDescriptor(ad2, user2.signatureProvider),
-      acc1.addAuthDescriptor(ad3, user2.signatureProvider),
+      acc1.addAuthDescriptor(ad2, user2.keyStore),
+      acc1.addAuthDescriptor(ad3, user2.keyStore),
     ]);
 
     const { account: acc2 } = await getSessionForAccount(
