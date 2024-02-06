@@ -47,12 +47,8 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id:
 
 function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
-   val acc = accounts.account @? { .id == pool_account_id };
-   if (acc??) {
-      return acc;
-   } else {
-      return create accounts.account(id = pool_account_id);
-   }
+   return accounts.account @? { .id == pool_account_id }
+      ?: create accounts.account(id = pool_account_id);
 }
 
 function create_on_transfer(
