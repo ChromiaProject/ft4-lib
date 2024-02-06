@@ -27,12 +27,13 @@ function test_create_account_on_internal_transfer_success() {
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
-    assert_not_null(create_on_transfer.pending_transfer @? {
+    assert_not_null(create_on_transfer.account_creation_transfer @? {
         .sender_blockchain_rid == chain_context.blockchain_rid,
         .sender_id == sender.id,
         recipient_id,
         asset,
-        amount
+        amount,
+        .state == create_on_transfer.account_creation_state.pending
     });
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
@@ -48,14 +49,17 @@ function test_create_account_on_internal_transfer_success() {
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
-    assert_null(create_on_transfer.pending_transfer @? { recipient_id });
     assert_null(create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     val bob = accounts.account_by_id(recipient_id);
     assert_equals(assets.get_asset_balance(bob, asset), amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        1
+    );
 }
 
-function test_create_account_on_transfer_fails_if_no_pending_transfer_exists() {
+function test_create_account_on_transfer_fails_if_no_account_creation_transfer_exists() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     rell.test.tx()
@@ -96,7 +100,10 @@ function test_multiple_internal_transfers_success() {
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset1), amount1);
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset2), amount2);
-    assert_equals((create_on_transfer.pending_transfer @* { recipient_id }).size(), 2);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.pending}).size(),
+        2
+    );
 
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
@@ -113,12 +120,16 @@ function test_multiple_internal_transfers_success() {
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset1), 0L);
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset2), 0L);
-    assert_null(create_on_transfer.pending_transfer @? { recipient_id });
     assert_null(create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     val charlie = accounts.account_by_id(recipient_id);
     assert_equals(assets.get_asset_balance(charlie, asset1), amount1);
     assert_equals(assets.get_asset_balance(charlie, asset2), amount2);
+
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        2
+    );
 }
 
 function test_create_account_on_crosschain_transfer_success() {
@@ -154,12 +165,13 @@ function test_create_account_on_crosschain_transfer_success() {
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
-    assert_not_null(create_on_transfer.pending_transfer @? {
+    assert_not_null(create_on_transfer.account_creation_transfer @? {
         .sender_blockchain_rid == sender_blockchain_rid,
         .sender_id == sender_account_id,
         recipient_id,
         asset,
-        amount
+        amount,
+        .state == create_on_transfer.account_creation_state.pending
     });
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
@@ -175,11 +187,14 @@ function test_create_account_on_crosschain_transfer_success() {
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
-    assert_null(create_on_transfer.pending_transfer @? { recipient_id });
     assert_null(create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     val bob = accounts.account_by_id(recipient_id);
     assert_equals(assets.get_asset_balance(bob, asset), amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        1
+    );
 }
 
 function test_multiple_crosschain_transfers_success() {
@@ -243,7 +258,10 @@ function test_multiple_crosschain_transfers_success() {
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset1), amount1);
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset2), amount2);
-    assert_equals((create_on_transfer.pending_transfer @* { recipient_id }).size(), 2);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.pending }).size(),
+        2
+    );
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
         create_on_transfer.transfer_strategy.open.name);
@@ -259,10 +277,13 @@ function test_multiple_crosschain_transfers_success() {
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset1), 0L);
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset2), 0L);
-    assert_null(create_on_transfer.pending_transfer @? { recipient_id });
     assert_null(create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     val bob = accounts.account_by_id(recipient_id);
     assert_equals(assets.get_asset_balance(bob, asset1), amount1);
     assert_equals(assets.get_asset_balance(bob, asset2), amount2);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        2
+    );
 }

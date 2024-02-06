@@ -10,13 +10,19 @@ enum transfer_strategy {
    open
 }
 
-entity pending_transfer {
+enum account_creation_state {
+   pending,
+   done
+}
+
+entity account_creation_transfer {
    sender_blockchain_rid: byte_array;
    sender_id: byte_array;
    index recipient_id: byte_array;
    assets.asset;
    amount: big_integer;
    strategies: text;
+   mutable state: account_creation_state = account_creation_state.pending;
 }
 
 @extend(assets.is_create_on_internal_transfer_enabled)
@@ -59,7 +65,7 @@ function create_on_transfer(
       amount: big_integer) {
    // TODO find matching rule, reject if no rule is found
 
-   create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
+   create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = transfer_strategy.open.name);
 }
 
@@ -86,31 +92,19 @@ function account_details(gtv) {
 }
 
 function action(accounts.account) {
-   val pending_transfers = pending_transfer @* { .recipient_id == account.id };
-   require(pending_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
+   val account_creation_transfers = account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending };
+   require(account_creation_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
 
    val pool_account = ensure_pool_account(chain_context.blockchain_rid);
 
-   for (pending_transfer in pending_transfers) {
-      assets.deduct_balance(pool_account, pending_transfer.asset, pending_transfer.amount);
-      create assets.transfer_history_entry(
-         .account = pool_account,
-         .asset = pending_transfer.asset,
-         .delta = pending_transfer.amount,
-         .op_index = op_context.op_index,
-         .is_input = true
-      );
+   for (account_creation_transfer in account_creation_transfers) {
+      assets.Unsafe.transfer(
+         pool_account,
+         account,
+         account_creation_transfer.asset,
+         account_creation_transfer.amount);
 
-      assets.increase_balance(account, pending_transfer.asset, pending_transfer.amount);
-      create assets.transfer_history_entry(
-         .account = account,
-         .asset = pending_transfer.asset,
-         .delta = pending_transfer.amount,
-         .op_index = op_context.op_index,
-         .is_input = false
-      );
-
-      delete pending_transfer;
+      account_creation_transfer.state = account_creation_state.done;
    }
 
    // TODO perform transfer strategy action
