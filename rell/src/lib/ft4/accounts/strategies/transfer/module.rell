@@ -13,7 +13,7 @@ enum transfer_strategy {
 entity pending_transfer {
    sender_blockchain_rid: byte_array;
    sender_id: byte_array;
-   key recipient_id: byte_array;
+   index recipient_id: byte_array;
    assets.asset;
    amount: big_integer;
    strategies: text;
@@ -59,9 +59,6 @@ function create_on_transfer(
       amount: big_integer) {
    // TODO find matching rule, reject if no rule is found
 
-   require(empty(pending_transfer @? { recipient_id }),
-      "Pending transfer for account <%s> already exists".format(recipient_id));
-
    create pending_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = transfer_strategy.open.name);
 }
@@ -89,16 +86,18 @@ function account_details(gtv) {
 }
 
 function action(accounts.account) {
-   val pending_transfer = require(pending_transfer @? { .recipient_id == account.id },
-      "No pending transfer to account id <%s>".format(account.id));
+   val pending_transfers = pending_transfer @* { .recipient_id == account.id };
+   require(pending_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
 
-   assets.Unsafe.transfer(
-      ensure_pool_account(chain_context.blockchain_rid),
-      account,
-      pending_transfer.asset,
-      pending_transfer.amount);
+   for (pending_transfer in pending_transfers) {
+      assets.Unsafe.transfer(
+         ensure_pool_account(chain_context.blockchain_rid),
+         account,
+         pending_transfer.asset,
+         pending_transfer.amount);
 
-   delete pending_transfer;
+      delete pending_transfer;
+   }
 
    // TODO perform transfer strategy action
 }
