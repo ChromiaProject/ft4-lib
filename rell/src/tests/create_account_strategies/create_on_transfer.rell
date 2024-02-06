@@ -37,7 +37,7 @@ function test_create_account_on_internal_transfer_success() {
     });
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.TRANSFER_STRATEGY_OPEN);
+        set([create_on_transfer.TRANSFER_STRATEGY_OPEN]));
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
@@ -107,7 +107,7 @@ function test_multiple_internal_transfers_success() {
 
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.TRANSFER_STRATEGY_OPEN);
+        set([create_on_transfer.TRANSFER_STRATEGY_OPEN]));
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
@@ -174,7 +174,7 @@ function test_create_account_on_crosschain_transfer_success() {
     });
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.TRANSFER_STRATEGY_OPEN);
+        set([create_on_transfer.TRANSFER_STRATEGY_OPEN]));
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
@@ -261,7 +261,7 @@ function test_multiple_crosschain_transfers_success() {
     );
     assert_equals(
         create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        create_on_transfer.TRANSFER_STRATEGY_OPEN);
+        set([create_on_transfer.TRANSFER_STRATEGY_OPEN]));
 
     rell.test.tx()
         .op(create_on_transfer.ras_transfer(
