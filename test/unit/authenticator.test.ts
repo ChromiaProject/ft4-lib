@@ -1,11 +1,7 @@
 import { encryption } from "postchain-client";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "../util/util";
-import {
-  AnyAuthDescriptor,
-  FlagsType,
-  deriveAuthDescriptorId,
-} from "@ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor, FlagsType } from "@ft4/accounts/auth-descriptor";
 import {
   FtKeyStore,
   createAuthenticator,
@@ -76,8 +72,8 @@ describe("Authenticator", () => {
       op("foo"),
     );
 
-    expect(deriveAuthDescriptorId(authHandler2.authDescriptor)).toEqual(
-      deriveAuthDescriptorId(authHandler!.authDescriptor),
+    expect(authHandler2.authDescriptor.id).toEqual(
+      authHandler!.authDescriptor.id,
     );
   });
 
