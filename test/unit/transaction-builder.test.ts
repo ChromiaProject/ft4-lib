@@ -4,11 +4,7 @@ import { createStubClient } from "../util/blockchain-util";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor, emptyOp } from "../util/util";
 import { transfer } from "@ft4/accounts/account-operations";
-import {
-  FlagsType,
-  aggregateSigners,
-  deriveAuthDescriptorId,
-} from "@ft4/accounts/auth-descriptor";
+import { FlagsType, aggregateSigners } from "@ft4/accounts/auth-descriptor";
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { registerAccount } from "@ft4/admin/admin-operations";
 import { createAmount } from "@ft4/asset/amount";
@@ -127,7 +123,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
-        args: [authenticator.accountId, deriveAuthDescriptorId(authDescriptor)],
+        args: [authenticator.accountId, authDescriptor.id],
       },
       { opName: "ft4.transfer", args },
     ]);
@@ -253,10 +249,7 @@ describe("Transaction Builder", () => {
           operations: [
             {
               name: "ft4.ft_auth",
-              args: [
-                authenticator.accountId,
-                deriveAuthDescriptorId(authDescriptor),
-              ],
+              args: [authenticator.accountId, authDescriptor.id],
             },
             { name: mockOperation.name, args: undefined },
           ],

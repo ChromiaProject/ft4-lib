@@ -114,4 +114,4 @@ export const ft = Object.freeze({
   setLogLevel: logger.setLogLevel,
 });
 
-ft.setLogLevel(logger.LogLevel.Error);
+ft.setLogLevel(logger.LogLevel.Disabled);

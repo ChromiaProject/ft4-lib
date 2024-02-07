@@ -62,6 +62,7 @@ import { createAuthDescriptorValidator } from "./accounts/auth-descriptor/valida
 export function createConnection(client: IClient): Connection {
   const connection: Connection = Object.freeze({
     client,
+    blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
     query: <TReturn extends RawGtv, TArgs extends DictPair | undefined>(
       nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
       args?: TArgs,

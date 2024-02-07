@@ -9,6 +9,8 @@ import {
   SingleSig,
 } from "@ft4/accounts";
 import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
+import { Connection } from "@ft4/types";
+import { createAccountObject } from "@ft4/accounts/account-query-functions";
 
 export * from "./evm";
 export * from "./ft";
@@ -156,4 +158,23 @@ async function filterOutInvalidAndExpiredHandlers(
     }),
   );
   return handlers.filter((_, index) => validHandlers[index]);
+}
+
+export async function getKeyHandlersForKeyStores(
+  connection: Connection,
+  accountId: Buffer,
+  keyStores: KeyStore[],
+): Promise<KeyHandler[]> {
+  const account = createAccountObject(connection, accountId);
+
+  let allKeyHandlers: KeyHandler[] = [];
+  for (const keyStore of keyStores) {
+    const response = await account.getAuthDescriptorsBySigner(keyStore.id);
+    const keyHandlers = response.data.map((authDescriptor) =>
+      keyStore.createKeyHandler(authDescriptor),
+    );
+    allKeyHandlers = [...allKeyHandlers, ...keyHandlers];
+  }
+
+  return allKeyHandlers;
 }

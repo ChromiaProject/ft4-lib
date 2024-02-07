@@ -19,7 +19,7 @@ function authenticate(is_strict: boolean = true) {
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
-        previous_op.name in [EVM_AUTH_OP, FT_AUTH_OP],
+        is_auth_op(previous_op),
         "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
     );
 
@@ -226,3 +226,11 @@ function _validate_multiple_evm_addresses(message: text, signatures: list<signat
     );
     return recovered_keys;
 }
+
+function extract_account_id(auth_op: gtx_operation): byte_array {
+    require(is_auth_op(auth_op), "Operation %s is not an auth operation".format(auth_op.name));
+    require(auth_op.args.size() >= 1, "Invalid auth op, insufficient number of args: %s".format(auth_op.args.size()));
+    return byte_array.from_gtv(auth_op.args[0]);
+}
+
+function is_auth_op(op: gtx_operation) = op.name in [EVM_AUTH_OP, FT_AUTH_OP];

@@ -10,8 +10,8 @@ import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
 import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
-import { aggregateSigners, deriveAuthDescriptorId } from "@ft4/accounts";
 import { getPubkey } from "@ft4/utils";
+import { aggregateSigners } from "@ft4/accounts";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 
@@ -79,10 +79,8 @@ describe("Login manager", () => {
       .build();
 
     const disposableAuthHandler =
-      session.account.authenticator.keyHandlers.filter(
-        (keyHandler) =>
-          deriveAuthDescriptorId(keyHandler.authDescriptor) !==
-          keyStore.address,
+      session.account.authenticator.keyHandlers.filter((keyHandler) =>
+        keyHandler.authDescriptor.id.compare(keyStore.address),
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(
