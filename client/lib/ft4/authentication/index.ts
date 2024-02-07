@@ -9,7 +9,6 @@ import {
   SingleSig,
 } from "@ft4/accounts";
 import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
-import { Connection } from "..";
 
 export * from "./evm";
 export * from "./ft";
@@ -111,7 +110,7 @@ async function getKeyHandlerForOperation(
   if (!allowedKeyHandlers.length) return null;
 
   const validHandlers = await filterOutInvalidAndExpiredHandlers(
-    authDataService.connection,
+    authDataService,
     allowedKeyHandlers,
     txContext,
   );
@@ -136,12 +135,12 @@ async function getKeyHandlerForOperation(
 }
 
 async function filterOutInvalidAndExpiredHandlers(
-  connection: Connection,
+  authDataService: AuthDataService,
   handlers: KeyHandler[],
   txContext: TxContext,
 ): Promise<KeyHandler[]> {
   const validator = createAuthDescriptorValidatorWithTxContext(
-    connection,
+    authDataService,
     txContext,
   );
 

@@ -9,16 +9,19 @@ import {
   lessThan,
   opCount,
 } from "@ft4/accounts";
-import {
-  isActive,
-  hasExpired,
-} from "@ft4/accounts/auth-descriptor/validator/evaluation";
-import { BufferId } from "@ft4/utils";
+import { createBaseAuthDescriptorValidator } from "@ft4/accounts/auth-descriptor/validator/evaluation";
+import { createFakeAuthDescriptorValidationService } from "@ft4/util/fake-auth-descriptor-validator";
 
 describe("Rules", () => {
   it("correctly identifies active rules", async () => {
     const CURR_HEIGHT = 7;
     const CURR_TIME = Date.now();
+
+    const validator = createBaseAuthDescriptorValidator(
+      createFakeAuthDescriptorValidationService({
+        blockHeight: CURR_HEIGHT,
+      }),
+    );
 
     const activeRules = [
       lessThan(opCount(2)),
@@ -44,11 +47,7 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       activeRules.map((r) =>
-        isActive({ rules: r } as unknown as AnyAuthDescriptor, {
-          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
-          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
-            Promise.resolve(0),
-        }),
+        validator.isActive({ rules: r } as unknown as AnyAuthDescriptor),
       ),
     );
 
@@ -58,6 +57,12 @@ describe("Rules", () => {
   it("correctly identifies inactive rules", async () => {
     const CURR_HEIGHT = 7;
     const CURR_TIME = Date.now();
+
+    const validator = createBaseAuthDescriptorValidator(
+      createFakeAuthDescriptorValidationService({
+        blockHeight: CURR_HEIGHT,
+      }),
+    );
 
     const inactiveRules = [
       equals(blockTime(CURR_TIME + 100)),
@@ -71,11 +76,7 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       inactiveRules.map((r) =>
-        isActive({ rules: r } as unknown as AnyAuthDescriptor, {
-          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
-          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
-            Promise.resolve(0),
-        }),
+        validator.isActive({ rules: r } as unknown as AnyAuthDescriptor),
       ),
     );
 
@@ -86,6 +87,13 @@ describe("Rules", () => {
     const CURR_OP_COUNT = 3;
     const CURR_HEIGHT = 7;
     const CURR_TIME = Date.now();
+
+    const validator = createBaseAuthDescriptorValidator(
+      createFakeAuthDescriptorValidationService({
+        blockHeight: CURR_HEIGHT,
+        nonce: CURR_OP_COUNT,
+      }),
+    );
 
     const validRules = [
       lessThan(opCount(CURR_OP_COUNT + 1)),
@@ -107,11 +115,7 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       validRules.map((r) =>
-        hasExpired({ rules: r } as unknown as AnyAuthDescriptor, {
-          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
-          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
-            Promise.resolve(CURR_OP_COUNT),
-        }),
+        validator.hasExpired({ rules: r } as unknown as AnyAuthDescriptor),
       ),
     );
 
@@ -122,6 +126,12 @@ describe("Rules", () => {
     const CURR_OP_COUNT = 3;
     const CURR_HEIGHT = 7;
     const CURR_TIME = Date.now();
+
+    const validator = createBaseAuthDescriptorValidator(
+      createFakeAuthDescriptorValidationService({
+        blockHeight: CURR_HEIGHT,
+      }),
+    );
 
     const expiredRules = [
       lessThan(opCount(CURR_OP_COUNT)),
@@ -137,11 +147,7 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       expiredRules.map((r) =>
-        hasExpired({ rules: r } as unknown as AnyAuthDescriptor, {
-          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
-          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
-            Promise.resolve(CURR_OP_COUNT),
-        }),
+        validator.hasExpired({ rules: r } as unknown as AnyAuthDescriptor),
       ),
     );
 

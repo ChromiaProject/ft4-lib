@@ -1,79 +1,46 @@
+import { createBaseAuthDescriptorValidator } from "./evaluation";
 import {
-  isActive,
-  hasExpired,
   AuthDescriptorValidationService,
-} from "./evaluation";
-import { AnyAuthDescriptor } from "../types";
-import { AuthDescriptorValidator } from "./types";
+  AuthDescriptorValidator,
+} from "./types";
 import { BufferId, TxContext } from "@ft4/utils/types";
-import { Connection } from "@ft4/index";
-import { createAuthDataService } from "@ft4/ft-session";
 import { getNonceIdForTxContext } from "@ft4/utils";
+import { AuthDataService } from "@ft4/authentication";
 
 export { AuthDescriptorValidator } from "./types";
 
 export function createAuthDescriptorValidator(
-  connection: Connection,
+  authDataService: AuthDataService,
   useCache: boolean,
 ): AuthDescriptorValidator {
-  return useCache
-    ? createCachedAuthDescriptorValidator(connection)
-    : createNoCacheAuthDescriptorValidator(connection);
-}
-
-function createNoCacheAuthDescriptorValidator(
-  connection: Connection,
-): AuthDescriptorValidator {
-  const service = authDescriptorValidationService(connection);
-  return {
-    isActive: (authDescriptor: AnyAuthDescriptor) =>
-      isActive(authDescriptor, service),
-    hasExpired: async (authDescriptor: AnyAuthDescriptor) =>
-      hasExpired(authDescriptor, service),
-  };
-}
-
-function createCachedAuthDescriptorValidator(
-  connection: Connection,
-): AuthDescriptorValidator {
-  const service = cachedAuthDescriptorValidationService(connection);
-  return {
-    isActive: (authDescriptor: AnyAuthDescriptor) =>
-      isActive(authDescriptor, service),
-    hasExpired: async (authDescriptor: AnyAuthDescriptor) =>
-      hasExpired(authDescriptor, service),
-  };
+  const service = useCache
+    ? authDescriptorValidationServiceWithCache(authDataService)
+    : authDescriptorValidationService(authDataService);
+  return createBaseAuthDescriptorValidator(service);
 }
 
 export function createAuthDescriptorValidatorWithTxContext(
-  connection: Connection,
+  authDataService: AuthDataService,
   txContext: TxContext,
 ): AuthDescriptorValidator {
-  const service = cachedTxAuthDescriptorValidationService(
-    connection,
+  const service = cachedAndTxContextAuthDescriptorValidationService(
+    authDataService,
     txContext,
   );
-  return {
-    isActive: (authDescriptor: AnyAuthDescriptor) =>
-      isActive(authDescriptor, service),
-    hasExpired: async (authDescriptor: AnyAuthDescriptor) =>
-      hasExpired(authDescriptor, service),
-  };
+  return createBaseAuthDescriptorValidator(service);
 }
 
-function cachedAuthDescriptorValidationService(
-  connection: Connection,
+function authDescriptorValidationServiceWithCache(
+  authDataService: AuthDataService,
 ): AuthDescriptorValidationService {
   let height: number;
   const nonces: {
     [accountId: string]: { [authDescriptorId: string]: number | null };
   } = {};
-  const authDataService = createAuthDataService(connection);
   return Object.freeze({
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) => {
-      const [adId, accId] = [authDescriptorId, accountId].map((x) =>
-        x.toString("hex"),
-      ) as [ad: string, acc: string];
+      const accId = accountId.toString("hex");
+      const adId = authDescriptorId.toString("hex");
       let nonce = nonces[accId]?.[adId];
       if (nonce !== undefined) return nonce;
       nonce = await authDataService.getNonce(accountId, authDescriptorId);
@@ -83,18 +50,17 @@ function cachedAuthDescriptorValidationService(
     },
     getBlockHeight: async () => {
       if (height !== undefined) return height;
-      height = await connection.getBlockHeight();
+      height = await authDataService.connection.getBlockHeight();
       return height;
     },
   });
 }
 
-function cachedTxAuthDescriptorValidationService(
-  connection: Connection,
+function cachedAndTxContextAuthDescriptorValidationService(
+  authDataService: AuthDataService,
   txContext: TxContext,
 ): AuthDescriptorValidationService {
   let height: number;
-  const authDataService = createAuthDataService(connection);
   return Object.freeze({
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) => {
       const nonceId = getNonceIdForTxContext(accountId, authDescriptorId);
@@ -107,18 +73,17 @@ function cachedTxAuthDescriptorValidationService(
     },
     getBlockHeight: async () => {
       if (height !== undefined) return height;
-      height = await connection.getBlockHeight();
+      height = await authDataService.connection.getBlockHeight();
       return height;
     },
   });
 }
 
 function authDescriptorValidationService(
-  connection: Connection,
+  authDataService: AuthDataService,
 ): AuthDescriptorValidationService {
-  const authDataService = createAuthDataService(connection);
   return Object.freeze({
     getNonce: authDataService.getNonce,
-    getBlockHeight: connection.getBlockHeight,
+    getBlockHeight: authDataService.connection.getBlockHeight,
   });
 }

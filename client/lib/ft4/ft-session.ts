@@ -87,7 +87,10 @@ export function createConnection(client: IClient): Connection {
       cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
     getAuthDescriptorValidator: (useCache: boolean) =>
-      createAuthDescriptorValidator(connection, useCache),
+      createAuthDescriptorValidator(
+        createAuthDataService(connection),
+        useCache,
+      ),
 
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),

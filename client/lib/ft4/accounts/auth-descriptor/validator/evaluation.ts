@@ -1,10 +1,24 @@
-import { BufferId } from "@ft4/utils/types";
 import {
   AuthDescriptorSimpleRule,
   RuleOperator,
   RuleVariable,
   AnyAuthDescriptor,
 } from "../types";
+import {
+  AuthDescriptorValidationService,
+  AuthDescriptorValidator,
+} from "./types";
+
+export function createBaseAuthDescriptorValidator(
+  service: AuthDescriptorValidationService,
+): AuthDescriptorValidator {
+  return Object.freeze({
+    isActive: (authDescriptor: AnyAuthDescriptor) =>
+      isActive(authDescriptor, service),
+    hasExpired: (authDescriptor: AnyAuthDescriptor) =>
+      hasExpired(authDescriptor, service),
+  });
+}
 
 /**
  * Returns whether the given auth descriptor's rules are active, that is whether they
@@ -12,10 +26,10 @@ import {
  * An inactive auth descriptor will be active in the future, while an active one might
  * be active or have already expired. Use `hasExpired` to check for this case.
  * @param authDescriptor the auth descriptor to check
- * @param getBlockHeight an async function that returns the current block height.
+ * @param service an object used to fetch dynamic parameters from blockchain
  * This allows caching.
  */
-export async function isActive(
+async function isActive(
   authDescriptor: AnyAuthDescriptor,
   service: AuthDescriptorValidationService,
 ): Promise<boolean> {
@@ -61,12 +75,10 @@ export async function isActive(
  * Returns whether the given auth descriptor's rules have expired, that is whether it will
  * no longer ever be usable. Inactive descriptors never return true.
  * @param authDescriptor the auth descriptor to check
- * @param getBlockHeight an async function that returns the current block height.
- * This allows caching.
- * @param getNonce an async function that returns the current nonce for the given descriptor.
+ * @param service an object used to fetch dynamic parameters from blockchain
  * This allows caching.
  */
-export async function hasExpired(
+async function hasExpired(
   authDescriptor: AnyAuthDescriptor,
   service: AuthDescriptorValidationService,
 ): Promise<boolean> {
@@ -113,12 +125,4 @@ export async function hasExpired(
   } else {
     return await hasRuleExpired(authDescriptor.rules);
   }
-}
-
-export interface AuthDescriptorValidationService {
-  getBlockHeight: () => Promise<number>;
-  getNonce: (
-    accountId: BufferId,
-    authDescriptorId: BufferId,
-  ) => Promise<number | null>;
 }
