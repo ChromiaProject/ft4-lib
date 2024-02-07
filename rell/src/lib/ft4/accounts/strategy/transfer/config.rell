@@ -1,0 +1,223 @@
+
+val _CONFIG_ERROR_TEXT = "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): ";
+
+struct asset_limit_gtv_values {
+    id: byte_array;
+    min_amount: text;
+}
+
+struct allowlist {
+    allow_all: boolean = false;
+    allowed_values: list<byte_array> = [];
+}
+
+object transfer_strategy_config {
+    mutable initialized: boolean = false;
+    mutable timeout: integer = 60;
+    mutable strategies: byte_array = x""; //list<text>
+
+    mutable blockchains: byte_array = x""; //allowlist
+    mutable senders: byte_array = x""; //allowlist
+    mutable recipients: byte_array = x""; //allowlist
+
+    mutable require_same_address: boolean = false;
+    
+    mutable allow_all_assets: boolean = false;
+    mutable asset_limits: byte_array = map<byte_array, big_integer>().to_gtv().to_bytes();
+}
+
+struct config {
+    initialized: boolean;
+    timeout: integer;
+    strategies: list<text>;
+    
+    blockchains: allowlist;
+    senders: allowlist;
+    recipients: allowlist;
+    
+    require_same_address: boolean;
+    
+    allow_all_assets: boolean;
+    asset_limits: map<byte_array, big_integer>;
+}
+
+function get_config(): config {
+    if (not transfer_strategy_config.initialized) {
+        cache_module_args();
+    }
+
+    return config(
+        initialized = transfer_strategy_config.initialized,
+        timeout = transfer_strategy_config.timeout,
+        strategies = list<text>.from_gtv(gtv.from_bytes(transfer_strategy_config.strategies)),
+        
+        blockchains = allowlist.from_gtv(gtv.from_bytes(transfer_strategy_config.blockchains)),
+        senders = allowlist.from_gtv(gtv.from_bytes(transfer_strategy_config.senders)),
+        recipients = allowlist.from_gtv(gtv.from_bytes(transfer_strategy_config.recipients)),
+        
+        require_same_address = transfer_strategy_config.require_same_address,
+        
+        allow_all_assets = transfer_strategy_config.allow_all_assets,
+        asset_limits = map<byte_array, big_integer>.from_gtv(
+            gtv.from_bytes(transfer_strategy_config.asset_limits)
+        )
+    );
+}
+
+function cache_module_args() {
+    val _list = 165;
+    val _text = 162;
+    val _byte_array = 161;
+
+    transfer_strategy_config.initialized = true;
+    
+    transfer_strategy_config.timeout = chain_context.args.timeout;
+
+    val strats = if (chain_context.args.strategy.to_bytes()[0] == _list)
+        list<text>.from_gtv(chain_context.args.strategy)
+        else [text.from_gtv(chain_context.args.strategy)];
+
+    transfer_strategy_config.strategies = strats.to_gtv().to_bytes();
+
+    var require_same_address: (sender: boolean, recipient: boolean);
+
+    { //allowlists
+        transfer_strategy_config.blockchains = parse_allowlist_from_gtv(
+            chain_context.args.sender_blockchain,
+            true
+        ).allowlist.to_gtv().to_bytes();
+
+        val sender_res = parse_allowlist_from_gtv(
+            chain_context.args.sender
+        );
+        transfer_strategy_config.senders = sender_res.allowlist.to_gtv().to_bytes();
+
+        val recipient_res = parse_allowlist_from_gtv(
+            chain_context.args.recipient
+        );
+        transfer_strategy_config.recipients = recipient_res.allowlist.to_gtv().to_bytes();
+
+        require_same_address = (
+            sender = sender_res.require_same,
+            recipient = recipient_res.require_same
+        );
+    }
+
+    { // require same address
+        require(
+            require_same_address.sender == require_same_address.recipient,
+            _CONFIG_ERROR_TEXT + "'X' should appear in both or none of recipient and sender"
+        );
+
+        transfer_strategy_config.require_same_address = require_same_address.sender;
+    }
+
+    // assets
+    if (chain_context.args.asset == null) {
+        transfer_strategy_config.allow_all_assets = true;
+    } else {
+        val res = parse_asset_limits_from_gtv(chain_context.args.asset!!);
+        if (res == null) {
+            transfer_strategy_config.allow_all_assets = true;
+        } else {
+            transfer_strategy_config.asset_limits = res.to_gtv().to_bytes();
+        }
+    }
+}
+
+function parse_allowlist_from_gtv(
+    gtv,
+    is_blockchain: boolean = false
+): (allowlist: allowlist, require_same: boolean) {
+    val _list = 165;
+    val _text = 162;
+    val _byte_array = 161;
+
+    var had_x = false;
+    var res = allowlist();
+
+    when (gtv.to_bytes()[0]) {
+        _list -> {
+            val list_type = list<gtv>.from_gtv(gtv)[0].to_bytes()[0];
+            if (list_type == _text) {
+                val input = list<text>.from_gtv(gtv);
+                if ("*" in input) {
+                    require(
+                        input.size() == 1,
+                        _CONFIG_ERROR_TEXT + "using multiple values alongside 'X' or '*' is not allowed"
+                    );
+                    res = allowlist(true);
+
+                } else if ("X" in input) {
+                    require(
+                        not is_blockchain,
+                        _CONFIG_ERROR_TEXT + "X is not allowed in sender_blockchain."
+                    );
+                    had_x = true;
+                    res = allowlist(true);
+
+                } else {
+                    val allowed_values = list<byte_array>();
+                    for (v in input) {
+                        allowed_values.add(byte_array.from_hex(v));
+                    }
+                    res = allowlist(false, allowed_values);
+
+                }
+            } else {
+                require(
+                    list_type == _byte_array,
+                    _CONFIG_ERROR_TEXT + "blockchain, sender and recipient lists only support strings and byte arrays"
+                );
+                res = allowlist(false, list<byte_array>.from_gtv(gtv));
+
+            }
+        }
+        _text -> { // "*" or "abcdef"
+            val input = text.from_gtv(gtv);
+            if (input == "*") {
+                res = allowlist(true);
+            } else if (input == "X") {
+                require(
+                    not is_blockchain,
+                    _CONFIG_ERROR_TEXT + "X is not allowed in sender_blockchain."
+                );
+                had_x = true;
+                res = allowlist(true);
+            }
+            res = allowlist(false, [byte_array.from_hex(input)]);
+
+        }
+        else -> {
+            require(
+                gtv.to_bytes()[0] == _byte_array,
+                _CONFIG_ERROR_TEXT + "blockchain, sender and recipient field only support strings, byte arrays and lists of these types."
+            );
+            res = allowlist(false, [byte_array.from_gtv(gtv)]);
+        }
+    }
+
+    return (allowlist=res, require_same=had_x);
+}
+
+function parse_asset_limits_from_gtv(gtv): map<byte_array, big_integer>? {
+    val _list = 165;
+
+    when (gtv.to_bytes()[0]) {
+        _list -> {
+            val inputs = list<asset_limit_gtv_values>.from_gtv_pretty(gtv);
+            val output = map<byte_array, big_integer>();
+            for (i in inputs) {
+                output[i.id] = big_integer.from_text(i.min_amount.replace("L", ""));
+            }
+            return output;
+        }
+        else -> {
+            require(
+                gtv=="*".to_gtv(),
+                _CONFIG_ERROR_TEXT + "asset only accepts '*' and a list of ids and minimum amounts."
+            );
+            return null;
+        }
+    }
+}
