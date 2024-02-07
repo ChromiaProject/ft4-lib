@@ -1,0 +1,9 @@
+module;
+
+import ^^^^.accounts;
+import transfer: ^;
+
+@extend(transfer.transfer_strategy)
+function () = transfer.add_transfer_strategy(
+	name = "open"
+);
