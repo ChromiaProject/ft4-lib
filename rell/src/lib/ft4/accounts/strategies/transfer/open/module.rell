@@ -5,8 +5,5 @@ import transfer: ^;
 
 @extend(transfer.transfer_strategy)
 function () = transfer.add_transfer_strategy(
-	name = "open",
-	action = transfer_open(*)
+	name = "open"
 );
-
-function transfer_open(accounts.account) {}

@@ -20,8 +20,10 @@ struct _transfer_strategy {
     action: (accounts.account) -> unit;
 }
 
-function add_transfer_strategy(name: text, action: (accounts.account) -> unit)
-    = [name: _transfer_strategy(name, action)];
+function add_transfer_strategy(name: text, action: ((accounts.account) -> unit)? = null)
+    = [name: _transfer_strategy(name, action ?: _no_action(*))];
+
+function _no_action(accounts.account) {}
 
 enum account_creation_state {
    pending,
