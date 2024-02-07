@@ -4,6 +4,14 @@ module;
 import ^^.accounts;
 import ^^.auth;
 
+struct module_args {
+    sender_blockchain: gtv = chain_context.blockchain_rid.to_gtv();
+    sender: gtv;
+    asset: gtv? = null; // null allows all assets
+    recipient: gtv = "*".to_gtv();
+    timeout: integer;
+    strategy: gtv = "open".to_gtv();
+}
 
 operation register_account() {
     _register_account();

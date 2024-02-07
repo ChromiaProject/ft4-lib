@@ -1,14 +1,3 @@
-import ^^^.accounts;
-
-struct module_args {
-    sender_blockchain: gtv = chain_context.blockchain_rid.to_gtv();
-    sender: gtv;
-    asset: gtv? = null; // null allows all assets
-    recipient: gtv = "*".to_gtv();
-    timeout: integer;
-    strategy: gtv = "open".to_gtv();
-}
-
 function is_value_allowed(value: byte_array, allowlist) {
     return 
         allowlist.allow_all
