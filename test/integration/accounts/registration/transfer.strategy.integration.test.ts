@@ -15,6 +15,7 @@ import { TxRejectedError } from "postchain-client";
 import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
+import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
 
 let connection: Connection;
 let asset: Asset;
@@ -43,6 +44,11 @@ describe("Test transfer strategy", () => {
       createAmount(10, asset.decimals),
     );
 
+    const strategies = await connection.query(
+      pendingTransferStrategies(recipientId),
+    );
+    expect(strategies).toEqual([TRANSFER_STRATEGY_OPEN]);
+
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
@@ -62,6 +68,10 @@ describe("Test transfer strategy", () => {
     expect(assetBalance1!.amount.eq(createAmount(10, asset.decimals))).toBe(
       true,
     );
+
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toBeNull();
   });
 
   it("can not register account without pending transfer", async () => {
