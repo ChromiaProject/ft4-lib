@@ -6,7 +6,6 @@ import TestUser, { User } from "@ft4/util/test-user";
 import { BufferId, Config } from "@ft4/utils/types";
 import { ftAuth } from "@ft4/authentication";
 import { op } from "@ft4/index";
-import { deriveAuthDescriptorId } from "@ft4/accounts";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 
 jest.setTimeout(2000000);
@@ -90,9 +89,9 @@ describe("Rate Limit", () => {
 
       const tx = {
         operations: [
-          ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+          ftAuth(account.id, user.authDescriptor.id),
           op("test_authenticated_operation"),
-          ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+          ftAuth(account.id, user.authDescriptor.id),
           op("test_authenticated_operation"),
         ],
         signers: [user.signatureProvider.pubKey],

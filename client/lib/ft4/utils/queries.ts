@@ -18,11 +18,11 @@ export function allAuthHandlers(): QueryObject<AuthHandler[]> {
 
 export function authHandlerForOperation(
   opName: string,
-): QueryObject<AuthHandler | null, { name: string }> {
+): QueryObject<AuthHandler | null, { op_name: string }> {
   return {
     name: "ft4.get_auth_handler_for_operation",
     args: {
-      name: opName,
+      op_name: opName,
     },
   };
 }
