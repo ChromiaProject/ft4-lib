@@ -13,6 +13,7 @@ import {
   isActive,
   hasExpired,
 } from "@ft4/accounts/auth-descriptor/validator/evaluation";
+import { BufferId } from "@ft4/utils";
 
 describe("Rules", () => {
   it("correctly identifies active rules", async () => {
@@ -43,10 +44,11 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       activeRules.map((r) =>
-        isActive(
-          { rules: r } as unknown as AnyAuthDescriptor,
-          async () => CURR_HEIGHT,
-        ),
+        isActive({ rules: r } as unknown as AnyAuthDescriptor, {
+          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
+          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
+            Promise.resolve(0),
+        }),
       ),
     );
 
@@ -69,10 +71,11 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       inactiveRules.map((r) =>
-        isActive(
-          { rules: r } as unknown as AnyAuthDescriptor,
-          async () => CURR_HEIGHT,
-        ),
+        isActive({ rules: r } as unknown as AnyAuthDescriptor, {
+          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
+          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
+            Promise.resolve(0),
+        }),
       ),
     );
 
@@ -104,11 +107,11 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       validRules.map((r) =>
-        hasExpired(
-          { rules: r } as unknown as AnyAuthDescriptor,
-          async () => CURR_HEIGHT,
-          async (_buf) => CURR_OP_COUNT,
-        ),
+        hasExpired({ rules: r } as unknown as AnyAuthDescriptor, {
+          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
+          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
+            Promise.resolve(CURR_OP_COUNT),
+        }),
       ),
     );
 
@@ -134,11 +137,11 @@ describe("Rules", () => {
 
     const results = await Promise.all(
       expiredRules.map((r) =>
-        hasExpired(
-          { rules: r } as unknown as AnyAuthDescriptor,
-          async () => CURR_HEIGHT,
-          async (_buf) => CURR_OP_COUNT,
-        ),
+        hasExpired({ rules: r } as unknown as AnyAuthDescriptor, {
+          getBlockHeight: () => Promise.resolve(CURR_HEIGHT),
+          getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
+            Promise.resolve(CURR_OP_COUNT),
+        }),
       ),
     );
 

@@ -162,6 +162,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
+    connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
         exposedOperations = await fetchExposedOperations(connection);

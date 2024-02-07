@@ -9,6 +9,7 @@ import {
   SingleSig,
 } from "@ft4/accounts";
 import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
+import { Connection } from "..";
 
 export * from "./evm";
 export * from "./ft";
@@ -66,6 +67,7 @@ const nullKeyStore: KeyStore = Object.freeze({
 
 const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
   id: Buffer.from(""),
+  accountId: Buffer.from(""),
   authType: AuthType.SingleSig,
   args: {
     flags: [] as string[],
@@ -109,8 +111,7 @@ async function getKeyHandlerForOperation(
   if (!allowedKeyHandlers.length) return null;
 
   const validHandlers = await filterOutInvalidAndExpiredHandlers(
-    authDataService,
-    accountId,
+    authDataService.connection,
     allowedKeyHandlers,
     txContext,
   );
@@ -135,23 +136,19 @@ async function getKeyHandlerForOperation(
 }
 
 async function filterOutInvalidAndExpiredHandlers(
-  authDataService: AuthDataService,
-  accountId: BufferId,
+  connection: Connection,
   handlers: KeyHandler[],
   txContext: TxContext,
 ): Promise<KeyHandler[]> {
   const validator = createAuthDescriptorValidatorWithTxContext(
-    authDataService,
+    connection,
     txContext,
   );
 
   const validHandlers = await Promise.all(
     handlers.map(async (keyHandler) => {
       const active = await validator.isActive(keyHandler.authDescriptor);
-      const expired = await validator.hasExpired(
-        keyHandler.authDescriptor,
-        accountId,
-      );
+      const expired = await validator.hasExpired(keyHandler.authDescriptor);
       return active && !expired;
     }),
   );

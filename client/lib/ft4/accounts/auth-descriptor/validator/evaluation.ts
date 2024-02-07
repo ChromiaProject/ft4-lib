@@ -17,7 +17,7 @@ import {
  */
 export async function isActive(
   authDescriptor: AnyAuthDescriptor,
-  getBlockHeight: () => Promise<number>,
+  service: AuthDescriptorValidationService,
 ): Promise<boolean> {
   if (authDescriptor.rules === null) return true;
 
@@ -33,7 +33,7 @@ export async function isActive(
 
     let variable: number;
     if (rule.variable === RuleVariable.BlockHeight) {
-      variable = await getBlockHeight();
+      variable = await service.getBlockHeight();
     } else {
       variable = Date.now();
     }
@@ -68,8 +68,7 @@ export async function isActive(
  */
 export async function hasExpired(
   authDescriptor: AnyAuthDescriptor,
-  getBlockHeight: () => Promise<number>,
-  getNonce: (authDescriptorId: BufferId) => Promise<number | null>,
+  service: AuthDescriptorValidationService,
 ): Promise<boolean> {
   if (authDescriptor.rules === null) return false;
 
@@ -84,11 +83,14 @@ export async function hasExpired(
 
     let variable: number;
     if (rule.variable === RuleVariable.BlockHeight) {
-      variable = await getBlockHeight();
+      variable = await service.getBlockHeight();
     } else if (rule.variable === RuleVariable.BlockTime) {
       variable = Date.now();
     } else {
-      const nonce = await getNonce(authDescriptor.id);
+      const nonce = await service.getNonce(
+        authDescriptor.accountId,
+        authDescriptor.id,
+      );
       // auth descriptor expired and was eliminated on rell side
       if (nonce === null) return true;
       variable = nonce;
@@ -111,4 +113,12 @@ export async function hasExpired(
   } else {
     return await hasRuleExpired(authDescriptor.rules);
   }
+}
+
+export interface AuthDescriptorValidationService {
+  getBlockHeight: () => Promise<number>;
+  getNonce: (
+    accountId: BufferId,
+    authDescriptorId: BufferId,
+  ) => Promise<number | null>;
 }

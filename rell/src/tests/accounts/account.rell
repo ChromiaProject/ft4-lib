@@ -10,6 +10,7 @@ import test_utils: ^^^.lib.ft4.test.utils;
 
 struct gtv_auth_descriptor {
     id: byte_array;
+    account_id: byte_array;
     acc.auth_type;
     args: gtv;
     rules: gtv;
@@ -69,6 +70,7 @@ function test_paginated_items_have_the_correct_return_format() {
   val alice_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
   val alice_gtv_ad = gtv_auth_descriptor(
     id = alice_ad_id,
+    account_id = account.id,
     auth_type = alice_ad.auth_type,
     args = alice_ad.args.to_gtv_pretty(),
     rules = alice_ad.rules.to_gtv_pretty(),

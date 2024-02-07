@@ -28,10 +28,11 @@ import {
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,
 ): AuthDescriptor<SingleSig> {
-  const { id, auth_type, args, rules, created } = ad;
+  const { id, account_id, auth_type, args, rules, created } = ad;
   const [flags, signer] = args;
   return Object.freeze({
     id,
+    accountId: account_id,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
@@ -45,10 +46,11 @@ export function mapSingleSigAuthDescriptor(
 export function mapMultiSigAuthDescriptor(
   ad: RawAuthDescriptor<RawMultiSig>,
 ): AuthDescriptor<MultiSig> {
-  const { id, auth_type, args, rules, created } = ad;
+  const { id, account_id, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
   return Object.freeze({
     id,
+    accountId: account_id,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
