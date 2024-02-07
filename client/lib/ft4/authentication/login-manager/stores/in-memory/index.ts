@@ -5,17 +5,21 @@ import { createInMemoryFtKeyStore } from "@ft4/authentication/ft";
 
 export function createInMemoryLoginKeyStore(): LoginKeyStore {
   const accountIdKeyPairMap = new Map<string, KeyPair>();
+
+  function clear(accountId: Buffer): Promise<void> {
+    accountIdKeyPairMap.delete(accountId.toString("hex"));
+    return Promise.resolve();
+  }
+
   return Object.freeze({
-    clear: (accountId: Buffer) => {
-      accountIdKeyPairMap.delete(accountId.toString("hex"));
-      return Promise.resolve();
-    },
+    clear,
     getKeyStore: (accountId: Buffer) => {
       const keyPair = accountIdKeyPairMap.get(accountId.toString("hex"));
       if (!keyPair) return Promise.resolve(null);
       return Promise.resolve(createInMemoryFtKeyStore(keyPair));
     },
-    generateKey: (accountId: Buffer) => {
+    generateKey: async (accountId: Buffer) => {
+      await clear(accountId);
       if (accountIdKeyPairMap.get(accountId.toString("hex"))) {
         throw new Error(
           `KeyPair already exists for account <${accountId.toString("hex")}>`,

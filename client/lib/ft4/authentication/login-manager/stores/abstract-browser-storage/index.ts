@@ -22,14 +22,16 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  return Object.freeze({
-    clear: (accountId: Buffer) => {
-      const values = loadData();
-      delete values[ensureString(accountId)];
-      saveData(values);
+  function clear(accountId: Buffer): Promise<void> {
+    const values = loadData();
+    delete values[ensureString(accountId)];
+    saveData(values);
 
-      return Promise.resolve();
-    },
+    return Promise.resolve();
+  }
+
+  return Object.freeze({
+    clear,
     getKeyStore: (accountId: Buffer) => {
       const privateKey = loadData()[ensureString(accountId)];
       if (!privateKey) return Promise.resolve(null);
@@ -37,7 +39,8 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
         createInMemoryFtKeyStore(encryption.makeKeyPair(privateKey)),
       );
     },
-    generateKey: (accountId: Buffer) => {
+    generateKey: async (accountId: Buffer) => {
+      await clear(accountId);
       const values = loadData();
       const accountIdString = ensureString(accountId);
       if (accountIdString in values) {
