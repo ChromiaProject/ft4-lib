@@ -15,7 +15,7 @@ import { TxRejectedError } from "postchain-client";
 import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
-import { getPendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
 
 let connection: Connection;
 let asset: Asset;
@@ -45,7 +45,7 @@ describe("Test transfer strategy", () => {
     );
 
     const strategies = await connection.query(
-      getPendingTransferStrategies(recipientId),
+      pendingTransferStrategies(recipientId),
     );
     expect(strategies).toEqual([TRANSFER_STRATEGY_OPEN]);
 
@@ -70,7 +70,7 @@ describe("Test transfer strategy", () => {
     );
 
     expect(
-      await connection.query(getPendingTransferStrategies(recipientId)),
+      await connection.query(pendingTransferStrategies(recipientId)),
     ).toBeNull();
   });
 

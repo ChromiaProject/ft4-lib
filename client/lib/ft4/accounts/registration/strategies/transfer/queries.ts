@@ -1,6 +1,6 @@
 import { QueryObject } from "postchain-client";
 
-export function getPendingTransferStrategies(
+export function pendingTransferStrategies(
   recipientId: Buffer,
 ): QueryObject<string[] | null, { recipient_id: Buffer }> {
   return {
