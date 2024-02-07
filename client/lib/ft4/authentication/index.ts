@@ -93,7 +93,7 @@ const noopKeyHandler: KeyHandler = Object.freeze({
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
-  accountId: BufferId,
+  accountId: Buffer,
   keyHandlers: KeyHandler[],
   operation: Operation,
   txContext: TxContext,
