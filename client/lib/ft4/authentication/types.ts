@@ -1,7 +1,6 @@
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { AuthHandler } from "@ft4/types";
 import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
-import { Connection } from "..";
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
 
@@ -51,7 +50,6 @@ export interface KeyStore {
 }
 
 export interface AuthDataService {
-  connection: Connection;
   isOperationExposed(operationName: string): Promise<boolean>;
   getAuthMessageTemplate(operation: Operation): Promise<string>;
   getNonce(

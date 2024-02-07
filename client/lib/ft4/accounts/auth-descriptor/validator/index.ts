@@ -1,26 +1,28 @@
 import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
-import { AuthDataService } from "@ft4/authentication";
 import { isActive, hasExpired } from "./evaluation";
 import { AnyAuthDescriptor } from "../types";
 import { AuthDescriptorValidator } from "./types";
 import { TxContext } from "@ft4/utils/types";
+import { Connection } from "@ft4/index";
+import { createAuthDataService } from "@ft4/ft-session";
 
 export { AuthDescriptorValidator } from "./types";
 
 export function createAuthDescriptorValidator(
-  authDataService: AuthDataService,
+  connection: Connection,
   useCache: boolean,
 ): AuthDescriptorValidator {
   return useCache
-    ? createCachedAuthDescriptorValidator(authDataService)
-    : createNoCacheAuthDescriptorValidator(authDataService);
+    ? createCachedAuthDescriptorValidator(connection)
+    : createNoCacheAuthDescriptorValidator(connection);
 }
 
 function createNoCacheAuthDescriptorValidator(
-  authDataService: AuthDataService,
+  connection: Connection,
 ): AuthDescriptorValidator {
+  const authDataService = createAuthDataService(connection);
   const getBlockHeight = async () => {
-    const info = await authDataService.connection.client.getBlocksInfo(1);
+    const info = await connection.client.getBlocksInfo(1);
     return info[0].height;
   };
   return {
@@ -38,17 +40,17 @@ function createNoCacheAuthDescriptorValidator(
 }
 
 function createCachedAuthDescriptorValidator(
-  authDataService: AuthDataService,
+  connection: Connection,
 ): AuthDescriptorValidator {
+  const authDataService = createAuthDataService(connection);
   let height: number;
   const nonces: {
     [accountId: string]: { [authDescriptorId: string]: number | null };
   } = {};
   const getBlockHeight = async () => {
     if (height !== undefined) return height;
-    const info = await authDataService.connection.client.getBlocksInfo(1);
-    height = info[0].height;
-    return info[0].height;
+    height = await connection.getBlockHeight();
+    return height;
   };
   return {
     isActive: (authDescriptor: AnyAuthDescriptor) =>
@@ -74,15 +76,15 @@ function createCachedAuthDescriptorValidator(
 }
 
 export function createAuthDescriptorValidatorWithTxContext(
-  authDataService: AuthDataService,
+  connection: Connection,
   txContext: TxContext,
 ): AuthDescriptorValidator {
+  const authDataService = createAuthDataService(connection);
   let height: number;
   const getBlockHeight = async () => {
     if (height !== undefined) return height;
-    const info = await authDataService.connection.client.getBlocksInfo(1);
-    height = info[0].height;
-    return info[0].height;
+    height = await connection.getBlockHeight();
+    return height;
   };
   return {
     isActive: (authDescriptor: AnyAuthDescriptor) =>

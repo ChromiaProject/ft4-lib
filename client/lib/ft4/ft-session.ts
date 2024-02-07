@@ -70,6 +70,11 @@ export function createConnection(client: IClient): Connection {
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
 
+    getBlockHeight: async () => {
+      const [block] = await client.getBlocksInfo(1);
+      return block.height;
+    },
+
     getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsBySigner: (
       id: BufferId,
@@ -82,10 +87,7 @@ export function createConnection(client: IClient): Connection {
       cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
     getAuthDescriptorValidator: (useCache: boolean) =>
-      createAuthDescriptorValidator(
-        createAuthDataService(connection),
-        useCache,
-      ),
+      createAuthDescriptorValidator(connection, useCache),
 
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
@@ -160,7 +162,6 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
-    connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
         exposedOperations = await fetchExposedOperations(connection);

@@ -25,6 +25,8 @@ export interface Connection extends Queryable {
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
+  getBlockHeight: () => Promise<number>;
+
   getAccountById: (accountId: BufferId) => Promise<Account | null>;
   getAccountsBySigner: (
     signer: BufferId,
