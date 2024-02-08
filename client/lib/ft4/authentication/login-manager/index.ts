@@ -8,7 +8,7 @@ import {
 } from "@ft4/authentication";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
-import { LoginManger, LoginOptions } from "./types";
+import { LoginConfigOptions, LoginManger, LoginOptions } from "./types";
 import { authDescriptorById } from "@ft4/accounts/account-queries";
 import { createAccountObject } from "@ft4/accounts/account-query-functions";
 import {
@@ -118,9 +118,9 @@ export function createLoginManager(
  * or if they are not provided, the function uses config name to load login config from chain.
  * If configName is null or undefined too, then default login config will be loaded from chain.
  */
-async function getFlags(
+export async function getFlags(
   authDataService: AuthDataService,
-  options: LoginOptions,
+  options: LoginConfigOptions,
 ): Promise<string[]> {
   if (options.config) {
     return options.config.flags;

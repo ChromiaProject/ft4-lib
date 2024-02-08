@@ -5,19 +5,13 @@ import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   aggregateSigners,
-  deriveAuthDescriptorId,
-  gtv,
 } from "@ft4/accounts";
-import { BufferId } from "@ft4/utils";
-import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
   keyStore: FtKeyStore,
 ): KeyHandler {
-  const adId = deriveAuthDescriptorId(
-    gtv.authDescriptorRegistrationToGtv(authDescriptor),
-  );
   return Object.freeze({
     authDescriptor,
     keyStore,
@@ -28,7 +22,7 @@ export function createFtKeyHandler(
       operation: Operation,
       _context: TxContext,
       _authDataService: AuthDataService,
-    ) => authorize(accountId, adId, operation),
+    ) => authorize(accountId, authDescriptor.id, operation),
     sign: (transaction: TxBuilderTransaction) => keyStore.sign(transaction),
     getSigners: () => aggregateSigners(authDescriptor),
   });
