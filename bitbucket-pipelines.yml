@@ -15,7 +15,9 @@ e2e-tests: &e2e-tests-anchor
       - cypress
     script:
       - apt update
-      - apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd openjdk-17-jre-headless
+      - apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd java-common
+      - wget -nv https://corretto.aws/downloads/resources/21.0.2.13.1/java-21-amazon-corretto-jdk_21.0.2.13-1_amd64.deb
+      - dpkg --install java-21-amazon-corretto-jdk_21.0.2.13-1_amd64.deb
       - java -version
 
       - ./install-chr-and-pmc.sh
