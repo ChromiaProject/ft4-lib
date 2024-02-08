@@ -14,6 +14,7 @@ import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { transfer_fee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
+import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 
 let connection: Connection;
 let asset: Asset;
@@ -39,7 +40,7 @@ describe("Test transfer with fee", () => {
     // const _allowedAssets = await connection.query(allowedAssets());
     // TODO use allowedAssets
 
-    // const _feeAssets = await connection.query(feeAssets());
+    const _feeAssets = await connection.query(feeAssets());
     // TODO use feeAssets
 
     const amount = createAmount(10, asset.decimals);
