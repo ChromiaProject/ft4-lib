@@ -214,6 +214,7 @@ function get_module_args_with_defaults(config_gtv: gtv) {
         "sender_blockchain": chain_context.blockchain_rid.to_gtv(),
         "asset": null.to_gtv(),
         "recipient": "*".to_gtv(),
+        "sender": "*".to_gtv(),
         "strategy": "open".to_gtv()
     ];
     
