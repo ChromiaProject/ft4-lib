@@ -13,6 +13,7 @@ import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 import { transfer_fee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
 
@@ -37,20 +38,22 @@ describe("Test transfer with fee", () => {
       .withPoints(1)
       .build();
 
-    await account1.transfer(
-      recipientId,
-      asset.id,
-      createAmount(10, asset.decimals),
-    );
+    const _allowedAssets = await connection.query(allowedAssets());
+    expect(_allowedAssets.length).toBe(1);
+    // TODO validate allowedAssets
+
+    const _feeAssets = await connection.query(feeAssets());
+    expect(_feeAssets.length).toBe(1);
+    // TODO validate feeAssets
+
+    const amount = createAmount(10, asset.decimals);
+
+    await account1.transfer(recipientId, asset.id, amount);
 
     const strategies = await connection.query(
       pendingTransferStrategies(recipientId),
     );
     expect(strategies).toContain("fee");
-
-    const _feeAssets = await connection.query(feeAssets());
-    expect(_feeAssets.length).toBe(1);
-    // TODO validate feeAssets
 
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
@@ -69,7 +72,7 @@ describe("Test transfer with fee", () => {
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
     expect(assetBalance1!.amount.value).toBe(
-      createAmount(10, asset.decimals).value - _feeAssets[0].amount,
+      amount.value - _feeAssets[0].amount,
     );
 
     expect(

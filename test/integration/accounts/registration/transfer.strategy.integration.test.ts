@@ -15,6 +15,7 @@ import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 
 let connection: Connection;
 let asset: Asset;
@@ -37,11 +38,13 @@ describe("Test transfer strategy", () => {
       .withPoints(1)
       .build();
 
-    await account1.transfer(
-      recipientId,
-      asset.id,
-      createAmount(10, asset.decimals),
-    );
+    const _allowedAssets = await connection.query(allowedAssets());
+    expect(_allowedAssets.length).toBe(1);
+    // TODO validate allowedAssets
+
+    const amount = createAmount(10, asset.decimals);
+
+    await account1.transfer(recipientId, asset.id, amount);
 
     const strategies = await connection.query(
       pendingTransferStrategies(recipientId),
@@ -64,9 +67,7 @@ describe("Test transfer strategy", () => {
     expect(session.account.id).toEqual(recipientId);
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
-    expect(assetBalance1!.amount.value).toBe(
-      createAmount(10, asset.decimals).value,
-    );
+    expect(assetBalance1!.amount.value).toBe(amount.value);
 
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),

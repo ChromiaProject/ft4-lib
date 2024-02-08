@@ -19,6 +19,15 @@ function test_create_account_on_internal_transfer_with_fee_success() {
 
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
+
+    val allowed_assets = create_on_transfer.get_allowed_assets();
+    assert_equals(allowed_assets.size(), 1);
+    // TODO validate allowed_assets
+
+    val fee_assets = fee.get_fee_assets();
+    assert_equals(fee_assets.size(), 1);
+    // TODO validate fee_assets
+
     val amount = 5L;
 
     rell.test.tx()
@@ -37,9 +46,6 @@ function test_create_account_on_internal_transfer_with_fee_success() {
         .state == create_on_transfer.account_creation_state.pending
     });
     assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
-    val fee_assets = fee.get_fee_assets();
-    assert_equals(fee_assets.size(), 1);
-    // TODO validate fee_assets
 
     rell.test.tx()
         .op(fee.ras_transfer_fee(asset.id, utils.create_auth_descriptor(rell.test.pubkeys.bob)))
