@@ -23,7 +23,7 @@ export function createAuthDescriptorValidatorWithTxContext(
   authDataService: AuthDataService,
   txContext: TxContext,
 ): AuthDescriptorValidator {
-  const service = cachedAndTxContextAuthDescriptorValidationService(
+  const service = authDescriptorValidationServiceWithCacheAndTxContext(
     authDataService,
     txContext,
   );
@@ -56,7 +56,7 @@ function authDescriptorValidationServiceWithCache(
   });
 }
 
-function cachedAndTxContextAuthDescriptorValidationService(
+function authDescriptorValidationServiceWithCacheAndTxContext(
   authDataService: AuthDataService,
   txContext: TxContext,
 ): AuthDescriptorValidationService {
