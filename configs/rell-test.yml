@@ -58,14 +58,10 @@ blockchains:
             - sender_blockchain: x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
               sender: X
               recipient: X
-              asset:
-                - id: x"012345"
-                  min_amount: 100L
               timeout: 10
               strategy: "open"
 
-            - sender_blockchain: $
-              sender: "*"
+            - sender: "*"
               recipient: "*"
               asset:
                 - id: x"abcdef"

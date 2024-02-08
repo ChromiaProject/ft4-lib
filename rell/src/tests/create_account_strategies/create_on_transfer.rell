@@ -34,8 +34,8 @@ function test_get_config_reads_yml_correctly() {
 
                 require_same_address = true,
 
-                allow_all_assets = false,
-                asset_limits = map<byte_array, big_integer>([(x"012345", 100L)])
+                allow_all_assets = true,
+                asset_limits = map<byte_array, big_integer>()
             ),
             create_on_transfer.rule(
                 timeout = 60,

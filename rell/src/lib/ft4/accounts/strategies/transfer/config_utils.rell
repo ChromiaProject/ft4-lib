@@ -31,7 +31,8 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
     val _byte_array = 161;
 
     val config = list<rule>();
-    val inputs = list<module_args_list_element>.from_gtv_pretty(config_gtv);
+
+    val inputs = get_module_args_with_defaults(config_gtv);
 
     for (input in inputs) {
         val strats = if (input.strategy.to_bytes()[0] == _list)
@@ -176,9 +177,20 @@ function parse_allowlist_from_gtv(
 }
 
 function parse_asset_limits_from_gtv(gtv): map<byte_array, big_integer>? {
+    val _dict = 164;
     val _list = 165;
     
     when (gtv.to_bytes()[0]) {
+        _dict -> {
+            val input = asset_limit_gtv_values.from_gtv_pretty(gtv);
+            val output = map<byte_array, big_integer>(
+                [(
+                    input.id,
+                    big_integer.from_text(input.min_amount.replace("L", ""))
+                )]
+            );
+            return output;
+        }
         _list -> {
             val inputs = list<asset_limit_gtv_values>.from_gtv_pretty(gtv);
             val output = map<byte_array, big_integer>();
@@ -195,4 +207,24 @@ function parse_asset_limits_from_gtv(gtv): map<byte_array, big_integer>? {
             return null;
         }
     }
+}
+
+function get_module_args_with_defaults(config_gtv: gtv) {
+    val default_parameters = [
+        "sender_blockchain": chain_context.blockchain_rid.to_gtv(),
+        "asset": null.to_gtv(),
+        "recipient": "*".to_gtv(),
+        "strategy": "open".to_gtv()
+    ];
+    
+    val parameters = list<map<name, gtv>>.from_gtv_pretty(config_gtv);
+    val defaults = map(default_parameters);
+
+    for (cfg in parameters) {
+        for ((k, v) in defaults) {
+            if (not cfg.contains(k)) cfg[k] = v;
+        }
+    }
+
+    return list<module_args_list_element>.from_gtv_pretty(parameters.to_gtv());
 }
