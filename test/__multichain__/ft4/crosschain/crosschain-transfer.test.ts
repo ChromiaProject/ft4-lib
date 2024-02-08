@@ -1,23 +1,22 @@
-import { Operation, RawGtx } from "postchain-client";
 import {
-  createChromiaClientToMultichain,
-  getNewAsset,
-} from "../../../util/blockchain-util";
+  applyTransfer as applyTransferOp,
+  initTransfer as initTransferOp,
+} from "@ft4/crosschain/operations";
 import {
   FlagsType,
   createAmount,
   createConnection,
   registerCrosschainAsset,
 } from "@ft4/index";
-import adminUser from "../../../util/admin_user";
+import { BufferId, transactionBuilder, TransactionBuilder } from "@ft4/utils";
+import { Operation, RawGtx } from "postchain-client";
 import AccountBuilder from "../../../util/account-builder";
+import adminUser from "../../../util/admin_user";
 import {
-  applyTransfer as applyTransferOp,
-  initTransfer as initTransferOp,
-} from "@ft4/crosschain/operations";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+  createChromiaClientToMultichain,
+  getNewAsset,
+} from "../../../util/blockchain-util";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "@ft4/utils/types";
 
 jest.unmock("postchain-client");
 
@@ -64,7 +63,10 @@ describe("Crosschain transfer", () => {
           operation: Operation;
           opIndex: number;
           tx: RawGtx;
-          createProof: (blockchainRid: BufferId) => Promise<Operation>;
+          createProof: (
+            blockchainRid: BufferId,
+            tb: TransactionBuilder,
+          ) => Promise<Operation>;
         } | null,
         error: Error | null,
       ) => {
@@ -74,15 +76,14 @@ describe("Crosschain transfer", () => {
         if (!data) {
           throw new Error("No data provided");
         }
-        const iccfProofOperation = await data.createProof(multichain01.rid);
-
-        await connection01.client.sendTransaction({
-          operations: [
-            iccfProofOperation,
-            applyTransferOp(data.tx, data.tx, 0),
-          ],
-          signers: [],
-        });
+        const iccfProofOperation = await data.createProof(
+          multichain01.rid,
+          transactionBuilder(account00.authenticator, connection01.client),
+        );
+        await transactionBuilder(account00.authenticator, connection01.client)
+          .add(iccfProofOperation)
+          .add(applyTransferOp(data.tx, data.tx, 0))
+          .buildAndSend();
         resolve();
       };
 

@@ -1,22 +1,22 @@
+import { AuthHandler, Connection } from "@ft4/types";
+import { Buffer } from "buffer";
 import {
-  Operation,
-  encryption,
-  RawGtv,
   IClient,
   KeyPair,
-  gtv,
+  Operation,
+  RawGtv,
   RawGtx,
+  encryption,
+  gtv,
   gtx,
 } from "postchain-client";
 import { BufferId, Config, TxBuilderTransaction } from "./types";
-import { Buffer } from "buffer";
-import { Connection } from "@ft4/index";
-import { AuthHandler } from "@ft4/types";
 import { allAuthHandlers } from "./queries";
 import { FtKeyStore } from "@ft4/authentication";
 
 export {
   BufferId,
+  Config,
   EntityRetriever,
   PaginatedEntity,
   TxBuilderTransaction,
@@ -96,6 +96,7 @@ export async function getAllAuthHandlers(
 export { retrievePaginatedEntity } from "./entity-retriever";
 export * from "./exposed-operations";
 export * from "./queries";
+export { transactionBuilder, TransactionBuilder } from "./transaction-builder";
 
 export function compactArray<T>(elements: (T | null)[]): T[] {
   return elements.filter((element): element is T => element !== null);

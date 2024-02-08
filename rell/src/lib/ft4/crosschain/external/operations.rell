@@ -120,9 +120,10 @@ operation apply_transfer(
         );
     }
 
-    require(
-        iccf.check_iccf_proof(from_blockchain_rid, previous_hop_tx.to_gtv().hash()),
-        "Missing proof for previous hop"
+    iccf.require_valid_proof(
+        previous_hop_tx,
+        require_anchored_proof=true,
+        verify_signers=true
     );
 
     val asset = assets.Asset(init_args.asset_id);

@@ -4,6 +4,7 @@ import {
   KeyStore,
   createNoopAuthenticator,
   isFtKeyStore,
+  FtKeyStore,
 } from "@ft4/authentication";
 import { Buffer } from "buffer";
 import {
@@ -35,7 +36,6 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { FtKeyStore } from "@ft4/authentication";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -152,7 +152,7 @@ export function transactionBuilder(
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          `No keyhandler registered to handle operation <${operation.name}>`,
+          `No key handler registered to handle operation <${operation.name}>`,
         );
       }
       keyHandlers.push(keyHandler);
@@ -262,6 +262,7 @@ export function transactionBuilder(
         const proofCache = new Map<string, Operation>();
         const createProof = async (
           blockchainRid: BufferId,
+          tb: TransactionBuilder,
         ): Promise<Operation> => {
           if (proofCache.has(blockchainRid.toString("hex"))) {
             return proofCache.get(blockchainRid.toString("hex"))!;
@@ -274,11 +275,31 @@ export function transactionBuilder(
             rawTx[0][2], // signers
             client.config.blockchainRid,
             blockchainRid.toString("hex"),
+            undefined,
+            true,
           );
 
-          const iccfProofOperation = proof.iccfTx.operations[0];
-          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
-          return iccfProofOperation;
+          const proofOp = proof.iccfTx.operations[0];
+
+          let didSubmit = false;
+          for (let i = 0; i < config.retryCount; ++i) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, config.waitTimeMs),
+            );
+            try {
+              await tb.add(proofOp).buildAndSend();
+              didSubmit = true;
+              break;
+            } catch {
+              // We expect an error here, do nothing
+            }
+          }
+
+          if (!didSubmit) {
+            throw new Error("Unable to anchor proof");
+          }
+
+          return proofOp;
         };
 
         operations.forEach((op: OperationContext, idx: number) => {
