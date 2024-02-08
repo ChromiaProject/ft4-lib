@@ -15,7 +15,7 @@ e2e-tests: &e2e-tests-anchor
       - cypress
     script:
       - apt update
-      - apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd java-17-amazon-corretto-jdk
+      - apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd
       - java -version
 
       - ./install-chr-and-pmc.sh
