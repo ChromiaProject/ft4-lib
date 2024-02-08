@@ -8,7 +8,6 @@ import {
   gtv,
 } from "postchain-client";
 import { Amount } from "@ft4/asset";
-import { createNoopAuthenticator } from "@ft4/authentication";
 import { createAuthDataService } from "@ft4/ft-session";
 import { Session } from "@ft4/index";
 import { getTransactionRid, nop, BufferId } from "@ft4/utils";
@@ -42,6 +41,7 @@ import {
   ResumeOrchestrator,
 } from "./types";
 import { OnAnchoredHandlerData } from "@ft4/utils/transaction-builder/types";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
