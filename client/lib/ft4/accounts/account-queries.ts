@@ -1,13 +1,13 @@
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/index";
 import { RawAnyAuthDescriptor, RateLimitResponse } from "@ft4/accounts";
 import { BufferId } from "@ft4/utils";
 import {
   TransferHistoryEntryResponse,
   TransferHistoryFilter,
   TransferHistoryType,
-} from "./transfer-history/types";
+} from "./transfer-history";
 
 export function RateLimitQuery(
   accountId: BufferId,

@@ -4,12 +4,11 @@ import {
   createClient,
   formatter,
 } from "postchain-client";
-import { createConnection } from "../ft-session";
-import { Connection } from "../types";
+import { createConnection, Connection } from "@ft4/index";
 import { Buffer } from "buffer";
-import { Asset } from "../asset/types";
+import { Asset } from "@ft4/asset";
 import { getAssetOriginById } from "./query-functions";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 
 export class PathfinderError extends Error {
   constructor(msg?) {

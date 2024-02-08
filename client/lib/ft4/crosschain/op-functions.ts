@@ -1,15 +1,15 @@
 import { RawGtx, TransactionReceipt, formatter } from "postchain-client";
-import { Connection } from "../types";
-import { Authenticator } from "../authentication/types";
+import { Connection } from "@ft4/index";
+import { Authenticator } from "@ft4/authentication";
 import {
   OP_INDEX_INIT_TRANSFER,
   applyTransfer as applyTransferOp,
   initTransfer as initTransferOp,
 } from "./operations";
-import { call } from "../ft-session";
+import { call } from "@ft4/ft-session";
 import { Amount } from "@ft4/asset";
 import { GtvInitTransferArgs } from "./types";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 
 export async function initTransfer(
   connection: Connection,

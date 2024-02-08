@@ -127,22 +127,37 @@ operation apply_transfer(
 
     val asset = assets.Asset(init_args.asset_id);
 
-    val receiver: accounts.account;
     if (init_transfer_details.args.hops.size() > hop_index + 1) {
         // this hop is not last
         val next_hop = init_transfer_details.args.hops[hop_index + 1];
-        receiver = crosschain.ensure_blockchain_account(next_hop);
+        crosschain.Unsafe.update_balances_if_needed(
+            crosschain.ensure_blockchain_account(from_blockchain_rid),
+            crosschain.ensure_blockchain_account(next_hop),
+            asset,
+            init_transfer_details.args.amount
+        );
     } else {
         // final hop -- send money to recipient account
-        receiver = accounts.account @ { init_transfer_details.args.receiver_id };
+        val recipient = accounts.account @? { .id == init_transfer_details.args.receiver_id };
+        if (recipient != null) {
+            crosschain.Unsafe.update_balances_if_needed(
+                crosschain.ensure_blockchain_account(from_blockchain_rid),
+                recipient,
+                asset,
+                init_transfer_details.args.amount
+            );
+        } else {
+            require(crosschain.is_create_on_crosschain_transfer_enabled(),
+                "Account <%s> does not exist and creating accounts on transfer is not enabled"
+                    .format(init_transfer_details.args.receiver_id));
+            crosschain.create_on_crosschain_transfer(
+                init_transfer_tx.body.blockchain_rid,
+                init_transfer_details.sender_account_id,
+                init_transfer_details.args.receiver_id,
+                asset,
+                init_transfer_details.args.amount);
+        }
     }
-
-    crosschain.Unsafe.update_balances_if_needed(
-        crosschain.ensure_blockchain_account(from_blockchain_rid),
-        receiver,
-        asset,
-        init_transfer_details.args.amount
-    );
 
     // Add transfer to applied transfers table so that it cannot be applied more than once
     create crosschain.applied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
@@ -157,7 +172,7 @@ operation complete_transfer(
             final_apply_transfer_tx.body.blockchain_rid,
             final_apply_transfer_tx.to_gtv().hash()
         ),
-        "Could not delete pedning transfer as the proof is not anchored yet"
+        "Could not delete pending transfer as the proof is not anchored yet"
     );
 
     require(
@@ -196,9 +211,13 @@ function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     val tx_rid = tx.hash();
     val args = struct<init_transfer>.from_gtv(op.args.to_gtv());
 
+    val auth_op = tx.body.operations[op_index - 1];
+    val sender_account_id = auth.extract_account_id(auth_op);
+
     return (
         tx_rid = tx_rid,
-        args = args
+        args = args,
+        sender_account_id = sender_account_id
     );
 }
 

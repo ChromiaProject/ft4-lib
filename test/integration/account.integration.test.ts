@@ -108,10 +108,7 @@ describe("Test the account", () => {
 
     expect(session.account.authenticator.keyHandlers.length).toBe(2);
     const keyHandler = session.account.authenticator.keyHandlers.find(
-      (kh) =>
-        !deriveAuthDescriptorId(kh.authDescriptor).compare(
-          deriveAuthDescriptorId(authDescriptor2),
-        ),
+      (kh) => !kh.authDescriptor.id.compare(authDescriptor2.id),
     );
     expect(keyHandler?.authDescriptor.args.flags).toEqual(["T"]);
   });
@@ -256,11 +253,8 @@ describe("Test the account", () => {
     ]);
 
     expect(
-      (
-        await _connection.getAccountsByAuthDescriptorId(
-          deriveAuthDescriptorId(authDescriptor1),
-        )
-      ).data.length,
+      (await _connection.getAccountsByAuthDescriptorId(authDescriptor1.id)).data
+        .length,
     ).toBe(2);
   });
 
@@ -282,7 +276,7 @@ describe("Test the account", () => {
 
     const { data: accounts1, nextCursor } =
       await _connection.getAccountsByAuthDescriptorId(
-        deriveAuthDescriptorId(authDescriptor1),
+        authDescriptor1.id,
         2,
         null,
       );
@@ -290,7 +284,7 @@ describe("Test the account", () => {
     expect(nextCursor).not.toBeNull();
 
     const { data: accounts2 } = await _connection.getAccountsByAuthDescriptorId(
-      deriveAuthDescriptorId(authDescriptor1),
+      authDescriptor1.id,
       2,
       nextCursor,
     );
@@ -370,7 +364,7 @@ describe("Test the account", () => {
 
     const session = await getSessionForAccount(
       _connection,
-      deriveAuthDescriptorId(authDescriptor),
+      authDescriptor.id,
       keyPair,
     );
 
@@ -382,10 +376,7 @@ describe("Test the account", () => {
     const tx = await session
       .transactionBuilder()
       .add(
-        deleteAllAuthDescriptorsExclude(
-          session.account.id,
-          deriveAuthDescriptorId(authDescriptor),
-        ),
+        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
       )
       .build();
     await _connection.client.sendTransaction(tx);
@@ -418,9 +409,7 @@ describe("Test the account", () => {
     );
     await _connection.client.sendTransaction(signed);
 
-    const account = await _connection.getAccountById(
-      deriveAuthDescriptorId(user.authDescriptor),
-    );
+    const account = await _connection.getAccountById(user.authDescriptor.id);
 
     expect(account).not.toBeNull();
   });

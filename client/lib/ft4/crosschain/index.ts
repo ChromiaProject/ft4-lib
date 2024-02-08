@@ -1,5 +1,3 @@
-// export the needed stuff
-
 export {
   isTransferApplied,
   getPendingTransfersForAccount,

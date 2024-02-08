@@ -43,3 +43,10 @@ export enum TransferHistoryType {
 export type TransferHistoryFilter = {
   transferHistoryType?: TransferHistoryType;
 };
+
+export type TransferDetail = {
+  accountId: Buffer;
+  assetId: Buffer;
+  delta: bigint;
+  isInput: boolean;
+};
