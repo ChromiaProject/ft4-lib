@@ -73,7 +73,11 @@ function do_transfer(accounts.account) {
 
    val pool_account = ensure_pool_account(chain_context.blockchain_rid);
 
+   val total_transferred = map<byte_array, big_integer>();
    for (account_creation_transfer in account_creation_transfers) {
+      total_transferred[account_creation_transfer.asset.id] =
+         total_transferred.get_or_default(account_creation_transfer.asset.id, 0L) + account_creation_transfer.amount;
+
       assets.Unsafe.transfer(
          pool_account,
          account,
@@ -84,4 +88,33 @@ function do_transfer(accounts.account) {
       account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
       account_creation_transfer.op_index = op_context.op_index;
    }
+
+   val allowed_assets = map(allowed_assets());
+   var enough_transferred = false;
+   for ((asset_id, amount) in total_transferred) {
+      if (asset_id in allowed_assets and amount >= allowed_assets[asset_id]) enough_transferred = true;
+   }
+   require(enough_transferred, "Insufficient amount of asset transferred");
+}
+
+function allowed_assets(): list<(asset_id: byte_array, min_amount: big_integer)> {
+	// TODO get allowed_assets from config
+    return [
+        (
+            asset_id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa",
+            min_amount = 5L
+        ),
+        (
+            asset_id = x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac",
+            min_amount = 3L
+        ),
+        (
+            asset_id = x"ad60efda802fec15e22a8c4691d1eb13e144dee4984772c05ab9163cf2cf2996",
+            min_amount = 5L
+        ),
+        (
+            asset_id = x"39b34b11bf6c1c301327d5824f977c9360895446a529bb980ebefd2183ca4831",
+            min_amount = 5L
+        )
+    ];
 }

@@ -20,15 +20,12 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
-    val allowed_assets = create_on_transfer.get_allowed_assets();
-    assert_equals(allowed_assets.size(), 1);
-    // TODO validate allowed_assets
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
 
-    val fee_assets = fee.get_fee_assets();
-    assert_equals(fee_assets.size(), 1);
-    // TODO validate fee_assets
-
-    val amount = 5L;
+    val fee_assets = map(fee.get_fee_assets());
+    val fee_amount = fee_assets[asset.id];
 
     rell.test.tx()
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -57,8 +54,8 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     assert_null(create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     val bob = accounts.account_by_id(recipient_id);
-    assert_equals(assets.get_asset_balance(bob, asset), amount - fee_assets[0].amount);
-    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), fee_assets[0].amount);
+    assert_equals(assets.get_asset_balance(bob, asset), amount - fee_amount);
+    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), fee_amount);
     assert_equals(
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1

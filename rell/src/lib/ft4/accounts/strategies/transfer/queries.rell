@@ -1,10 +1,5 @@
 
-query get_allowed_assets(): list<(asset_id: byte_array, min_amount: big_integer)> {
-	return [(
-		asset_id = x"ABCD1234", // TODO transfer asset_id
-		min_amount = 5L // TODO transfer minimum amount
-	)];
-}
+query get_allowed_assets(): list<(asset_id: byte_array, min_amount: big_integer)> = allowed_assets();
 
 // TODO what if there are more than one, and strategies differ?
 query get_pending_transfer_strategies(recipient_id: byte_array): set<text>? =
