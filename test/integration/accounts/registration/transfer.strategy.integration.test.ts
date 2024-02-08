@@ -1,6 +1,5 @@
 import { registerAccount } from "@ft4/accounts/registration";
-import { transfer } from "@ft4/accounts/registration/strategies/transfer";
-import { TRANSFER_STRATEGY_OPEN } from "@ft4/accounts/registration/strategies/transfer";
+import { transfer_open } from "@ft4/accounts/registration/strategies/transfer/open/index";
 import {
   Connection,
   createConnection,
@@ -47,7 +46,7 @@ describe("Test transfer strategy", () => {
     const strategies = await connection.query(
       pendingTransferStrategies(recipientId),
     );
-    expect(strategies).toEqual([TRANSFER_STRATEGY_OPEN]);
+    expect(strategies).toContain("open");
 
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
@@ -59,7 +58,7 @@ describe("Test transfer strategy", () => {
     const session = await registerAccount(
       connection,
       keyStore,
-      transfer(TRANSFER_STRATEGY_OPEN, authDescriptor),
+      transfer_open(authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -84,11 +83,7 @@ describe("Test transfer strategy", () => {
     );
 
     await expect(
-      registerAccount(
-        connection,
-        keyStore,
-        transfer(TRANSFER_STRATEGY_OPEN, authDescriptor),
-      ),
+      registerAccount(connection, keyStore, transfer_open(authDescriptor)),
     ).rejects.toThrow(TxRejectedError);
   });
 });

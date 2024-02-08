@@ -6,25 +6,6 @@ import ^^^.accounts;
 import ^^^.assets;
 import ^^^.crosschain;
 
-function get_transfer_strategy(strategy_name: name): _transfer_strategy {
-    val strategies = transfer_strategy();
-    require(strategy_name in strategies, "Transfer strategy <%s> is not loaded or does not exist.".format(strategy_name));
-    return strategies[strategy_name];
-}
-
-@extendable
-function transfer_strategy(): map<name, _transfer_strategy>;
-
-struct _transfer_strategy {
-    name: text;
-    action: (accounts.account) -> unit;
-}
-
-function add_transfer_strategy(name: text, action: ((accounts.account) -> unit)? = null)
-    = [name: _transfer_strategy(name, action ?: _no_action(*))];
-
-function _no_action(accounts.account) {}
-
 enum account_creation_state {
    pending,
    done
@@ -80,36 +61,13 @@ function create_on_transfer(
       recipient_id: byte_array,
       assets.asset,
       amount: big_integer) {
-   val strategies = "open"; // TODO find matching rule, reject if no rule is found, find applicable strategies
+   val strategies = "open,fee"; // TODO find matching rule, reject if no rule is found, find applicable strategies
 
    create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = strategies);
 }
 
-@extend(strategies.strategy)
-function () = strategies.add_strategy(
-   op = rell.meta(ras_transfer),
-   account_details = account_details(*),
-   action = transfer_action(*)
-);
-
-operation ras_transfer(
-   strategy: text,
-   initial: accounts.auth_descriptor,
-   disposable: accounts.auth_descriptor? = null
-) {}
-
-function account_details(gtv) {
-   val params = struct<ras_transfer>.from_gtv(gtv);
-   val signers = strategies.get_signers(params.initial);
-   return strategies.account_details(
-       account_id = strategies.get_account_id_from_signers(signers),
-       initial = params.initial,
-       disposable = params.disposable
-   );
-}
-
-function transfer_action(accounts.account, strategy_params_gtv: gtv) {
+function do_transfer(accounts.account) {
    val account_creation_transfers = account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending };
    require(account_creation_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
 
@@ -126,8 +84,4 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
       account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
       account_creation_transfer.op_index = op_context.op_index;
    }
-
-   val strategy_params = struct<ras_transfer>.from_gtv(strategy_params_gtv);
-   val strategy = get_transfer_strategy(strategy_params.strategy);
-   strategy.action(account);
 }

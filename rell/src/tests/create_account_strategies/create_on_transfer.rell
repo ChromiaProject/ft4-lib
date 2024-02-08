@@ -36,15 +36,10 @@ function test_create_account_on_internal_transfer_success() {
         amount,
         .state == create_on_transfer.account_creation_state.pending
     });
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -64,10 +59,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
@@ -106,15 +98,10 @@ function test_multiple_internal_transfers_success() {
         2
     );
 
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.charlie)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.charlie)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
@@ -173,15 +160,10 @@ function test_create_account_on_crosschain_transfer_success() {
         amount,
         .state == create_on_transfer.account_creation_state.pending
     });
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -260,15 +242,10 @@ function test_multiple_crosschain_transfers_success() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.pending }).size(),
         2
     );
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
