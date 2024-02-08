@@ -1,0 +1,12 @@
+
+struct fee_asset {
+	asset_id: byte_array;
+	amount: big_integer;
+}
+
+query get_fee_assets(): list<fee_asset> {
+	return [fee_asset(
+		asset_id = x"ABCD1234", // TODO fee asset_id
+		amount = 2L // TODO fee amount
+	)];
+}

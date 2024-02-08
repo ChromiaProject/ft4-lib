@@ -1,0 +1,50 @@
+@mount("ft4")
+module;
+
+import ^^^^.accounts;
+import ^^^^.assets;
+import ^^^.strategies;
+import transfer: ^;
+
+operation ras_transfer_fee(
+   asset_id: byte_array,
+   initial: accounts.auth_descriptor,
+   disposable: accounts.auth_descriptor? = null
+) {}
+
+function account_details(gtv) {
+    val params = struct<ras_transfer_fee>.from_gtv(gtv);
+    val signers = strategies.get_signers(params.initial);
+    return strategies.account_details(
+        account_id = strategies.get_account_id_from_signers(signers),
+        initial = params.initial,
+        disposable = params.disposable
+    );
+}
+
+function transfer_action(accounts.account, strategy_params_gtv: gtv) {
+	transfer.do_transfer(account);
+
+	val strategy_params = struct<ras_transfer_fee>.from_gtv(strategy_params_gtv);
+	val asset = assets.Asset(strategy_params.asset_id);
+	val fee_amount = 2L; // TODO get fee amount from config based on asset, or fail if asset is not allowed
+	assets.Unsafe.transfer(
+		account,
+		ensure_fee_account(chain_context.blockchain_rid),
+		asset,
+		fee_amount);
+}
+
+function ensure_fee_account(blockchain_rid: byte_array): accounts.account {
+   val fee_account_id = ("FEE" + chain_context.blockchain_rid).hash();
+   return accounts.account @? { .id == fee_account_id }
+      ?: create accounts.account(id = fee_account_id);
+}
+
+@extend(strategies.strategy)
+function () = strategies.add_strategy(
+    op = rell.meta(ras_transfer_fee),
+    account_details = account_details(*),
+    action = transfer_action(*)
+);
+
