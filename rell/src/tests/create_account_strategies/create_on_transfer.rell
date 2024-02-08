@@ -12,6 +12,55 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
 import iccf_op: ^^.operations.iccf_op;
 
+function test_get_config_reads_yml_correctly() {
+    val cfg = create_on_transfer.get_config();
+    assert_equals(
+        cfg,
+        [
+            create_on_transfer.rule(
+                timeout = 10,
+                strategies = ["open"],
+
+                blockchains = create_on_transfer.allowlist(
+                    allow_all = false,
+                    allowed_values = [x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"]
+                ),
+                senders = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+                recipients = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+
+                require_same_address = true,
+
+                allow_all_assets = false,
+                asset_limits = map<byte_array, big_integer>([(x"012345", 100L)])
+            ),
+            create_on_transfer.rule(
+                timeout = 60,
+                strategies = ["fee", "stake"],
+
+                blockchains = create_on_transfer.allowlist(
+                    allow_all = false,
+                    allowed_values = [chain_context.blockchain_rid]
+                ),
+                senders = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+                recipients = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+
+                require_same_address = false,
+
+                allow_all_assets = false,
+                asset_limits = map<byte_array, big_integer>([(x"abcdef", 100000L)])
+            )
+        ]
+    );
+}
+
 function test_create_account_on_internal_transfer_success() {
     val alice = utils.register_alice();
     val sender = alice.account;

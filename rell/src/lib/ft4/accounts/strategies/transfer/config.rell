@@ -37,7 +37,32 @@ function has_tx_expired(rule, tx_start_timestamp: timestamp) {
     return tx_start_timestamp + timeout >= accounts.latest_time();
 }
 
-function is_startegy_active(rule, strategy: text) {
+function is_strategy_active(rule, strategy: text) {
     val strats = rule.strategies;
     return strategy in strats;
+}
+
+function find_allowed_strategies(
+    from_chain: byte_array,
+    from_id: byte_array,
+    to_id: byte_array,
+    asset_id: byte_array,
+    amount: big_integer,
+    transfer_start: timestamp
+) {
+    val cfg = get_config();
+    val allowed_strats = cfg @* {
+        is_blockchain_allowed($, from_chain),
+        is_sender_allowed($, from_id),
+        is_recipient_allowed($, to_id, from_id),
+        is_asset_amount_allowed($, asset_id, amount),
+        has_tx_expired($, transfer_start)
+    } ( .strategies ); // list<list<text>>
+
+    val strategies = set<text>();
+    for (strat in allowed_strats) {
+        strategies.add_all(strat);
+    }
+
+    return strategies;
 }
