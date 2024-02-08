@@ -14,7 +14,6 @@ import {
   FtKeyStore,
   KeyHandler,
   createAuthenticator,
-  createNoopAuthenticator,
 } from "@ft4/authentication";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { nop } from "@ft4/utils";
@@ -22,6 +21,7 @@ import {
   AuthorizationError,
   transactionBuilder,
 } from "@ft4/utils/transaction-builder";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
