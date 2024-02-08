@@ -1,13 +1,15 @@
 import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
+import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
-  AuthType,
   SingleSig,
+  AuthType,
 } from "@ft4/accounts";
+import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
 import { Connection } from "@ft4/types";
 import { createAccountObject } from "@ft4/accounts/account-query-functions";
 
@@ -30,12 +32,13 @@ export function createAuthenticator(
     accountId,
     authDataService,
     keyHandlers,
-    getKeyHandlerForOperation: (operation: Operation) =>
+    getKeyHandlerForOperation: (operation: Operation, txContext: TxContext) =>
       getKeyHandlerForOperation(
         authDataService,
         accountId,
         keyHandlers,
         operation,
+        txContext,
       ),
     getNonce: (authDescriptorId: BufferId) =>
       authDataService.getNonce(accountId, authDescriptorId),
@@ -92,9 +95,10 @@ const noopKeyHandler: KeyHandler = Object.freeze({
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
-  accountId: Buffer,
+  accountId: BufferId,
   keyHandlers: KeyHandler[],
   operation: Operation,
+  txContext: TxContext,
 ): Promise<KeyHandler | null> {
   const authHandler = await authDataService.getAuthHandlerForOperation(
     operation.name,
@@ -104,9 +108,17 @@ async function getKeyHandlerForOperation(
   const allowedKeyHandlers = keyHandlers.filter((kh) =>
     kh.satisfiesAuthRequirements(authHandler.flags),
   );
+
   if (!allowedKeyHandlers.length) return null;
 
-  const prioritizedKeyHandlers = allowedKeyHandlers.toSorted(
+  const validHandlers = await filterOutInvalidAndExpiredHandlers(
+    authDataService,
+    accountId,
+    allowedKeyHandlers,
+    txContext,
+  );
+
+  const prioritizedKeyHandlers = validHandlers.toSorted(
     (kh1, kh2) => +kh1.keyStore.isInteractive - +kh2.keyStore.isInteractive,
   );
 
@@ -123,6 +135,30 @@ async function getKeyHandlerForOperation(
       (kh) => kh.authDescriptor.id.compare(selectedAdId) === 0,
     ) ?? null
   );
+}
+
+async function filterOutInvalidAndExpiredHandlers(
+  authDataService: AuthDataService,
+  accountId: BufferId,
+  handlers: KeyHandler[],
+  txContext: TxContext,
+): Promise<KeyHandler[]> {
+  const validator = createAuthDescriptorValidatorWithTxContext(
+    authDataService,
+    txContext,
+  );
+
+  const validHandlers = await Promise.all(
+    handlers.map(async (keyHandler) => {
+      const active = await validator.isActive(keyHandler.authDescriptor);
+      const expired = await validator.hasExpired(
+        keyHandler.authDescriptor,
+        accountId,
+      );
+      return active && !expired;
+    }),
+  );
+  return handlers.filter((_, index) => validHandlers[index]);
 }
 
 export async function getKeyHandlersForKeyStores(

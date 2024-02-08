@@ -1,23 +1,22 @@
 import { Buffer } from "buffer";
 import { KeyPair, SignatureProvider } from "postchain-client";
 import { Amount, Balance } from "@ft4/asset";
-import { Authenticator } from "../authentication/types";
-import { OptionalPageCursor } from "../types";
+import { Authenticator } from "@ft4/authentication";
+import { OptionalPageCursor } from "@ft4/index";
+import { BufferId, PaginatedEntity } from "@ft4/utils";
 import {
-  BufferId,
-  PaginatedEntity,
   TransactionCompletion,
   TransactionSessionCompletion,
 } from "@ft4/utils/types";
 import {
   TransferHistoryEntry,
   TransferHistoryFilter,
-} from "./transfer-history/types";
+} from "./transfer-history";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
-} from "@ft4/accounts/auth-descriptor/types";
-import { PendingTransfer } from "../crosschain/types";
+} from "@ft4/accounts/auth-descriptor";
+import { PendingTransfer } from "@ft4/crosschain";
 
 export type RateLimit = {
   points: number;
@@ -44,7 +43,9 @@ export interface Account {
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getAuthDescriptorsBySigner: (
-    partiticipantId: BufferId,
+    signer: BufferId,
+    limit?: number,
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (

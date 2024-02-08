@@ -1,12 +1,12 @@
 import { Operation } from "postchain-client";
 import { FtKeyStore, ftAuth } from ".";
-import { AuthDataService, KeyHandler } from "../types";
+import { AuthDataService, KeyHandler } from "..";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   aggregateSigners,
-} from "@ft4/accounts/auth-descriptor";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+} from "@ft4/accounts";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
