@@ -16,8 +16,9 @@ e2e-tests: &e2e-tests-anchor
     script:
       - apt update
       - apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd java-common
-      - wget -nv https://corretto.aws/downloads/resources/21.0.2.13.1/java-21-amazon-corretto-jdk_21.0.2.13-1_amd64.deb
-      - dpkg --install java-21-amazon-corretto-jdk_21.0.2.13-1_amd64.deb
+      - wget -nv -O - https://corretto.aws/downloads/resources/21.0.2.13.1/amazon-corretto-21.0.2.13.1-linux-x64.tar.gz | tar -C /opt -xz
+      - ls /opt
+      - ln  -s /opt/amazon-corretto-21.0.2.13.1-linux-x64/bin/java /usr/bin/java
       - java -version
 
       - ./install-chr-and-pmc.sh
