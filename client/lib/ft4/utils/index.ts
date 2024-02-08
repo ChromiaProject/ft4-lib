@@ -8,7 +8,7 @@ import {
   RawGtx,
   gtx,
 } from "postchain-client";
-import { Config, TxBuilderTransaction } from "./types";
+import { BufferId, Config, TxBuilderTransaction } from "./types";
 import { Buffer } from "buffer";
 import { AuthHandler, Connection } from "@ft4/types";
 import { allAuthHandlers } from "./queries";
@@ -36,6 +36,13 @@ export async function getConfig(session: IClient): Promise<Config> {
 
 export function getTransactionRid(tx: RawGtx): Buffer {
   return gtv.gtvHash(tx[0]); //tx body
+}
+
+export function getNonceIdForTxContext(
+  accountId: BufferId,
+  authDescriptorId: BufferId,
+) {
+  return accountId.toString("hex") + authDescriptorId.toString("hex");
 }
 
 export async function getVersion(session: IClient): Promise<string> {

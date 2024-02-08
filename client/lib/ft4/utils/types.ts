@@ -49,7 +49,7 @@ export type TxBuilderTransaction = {
   signatures: Buffer[];
 };
 
-export type TxContext = { [key: string]: { [key: string]: any } };
+export type TxContext = { [nonceId: string]: number | null };
 
 export interface RellAppStructure {
   [modules: string]: Record<string, RellModuleStructure>;

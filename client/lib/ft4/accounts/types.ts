@@ -44,7 +44,9 @@ export interface Account {
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getAuthDescriptorsBySigner: (
-    partiticipantId: BufferId,
+    signer: BufferId,
+    limit?: number,
+    cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
