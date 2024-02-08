@@ -11,118 +11,78 @@ struct allowlist {
     allowed_values: list<byte_array> = [];
 }
 
-object transfer_strategy_config {
-    mutable initialized: boolean = false;
-    mutable timeout: integer = 60;
-    mutable strategies: byte_array = x""; //list<text>
-
-    mutable blockchains: byte_array = x""; //allowlist
-    mutable senders: byte_array = x""; //allowlist
-    mutable recipients: byte_array = x""; //allowlist
-
-    mutable require_same_address: boolean = false;
+struct rule {
+    timeout: integer = 0;
+    strategies: list<text> = [];
     
-    mutable allow_all_assets: boolean = false;
-    mutable asset_limits: byte_array = map<byte_array, big_integer>().to_gtv().to_bytes();
+    blockchains: allowlist = allowlist();
+    senders: allowlist = allowlist();
+    recipients: allowlist = allowlist();
+    
+    require_same_address: boolean = false;
+    
+    allow_all_assets: boolean = false;
+    asset_limits: map<byte_array, big_integer> = map<byte_array, big_integer>();
 }
 
-struct config {
-    initialized: boolean;
-    timeout: integer;
-    strategies: list<text>;
-    
-    blockchains: allowlist;
-    senders: allowlist;
-    recipients: allowlist;
-    
-    require_same_address: boolean;
-    
-    allow_all_assets: boolean;
-    asset_limits: map<byte_array, big_integer>;
-}
-
-function get_config(): config {
-    if (not transfer_strategy_config.initialized) {
-        cache_module_args();
-    }
-
-    return config(
-        initialized = transfer_strategy_config.initialized,
-        timeout = transfer_strategy_config.timeout,
-        strategies = list<text>.from_gtv(gtv.from_bytes(transfer_strategy_config.strategies)),
-        
-        blockchains = allowlist.from_gtv(gtv.from_bytes(transfer_strategy_config.blockchains)),
-        senders = allowlist.from_gtv(gtv.from_bytes(transfer_strategy_config.senders)),
-        recipients = allowlist.from_gtv(gtv.from_bytes(transfer_strategy_config.recipients)),
-        
-        require_same_address = transfer_strategy_config.require_same_address,
-        
-        allow_all_assets = transfer_strategy_config.allow_all_assets,
-        asset_limits = map<byte_array, big_integer>.from_gtv(
-            gtv.from_bytes(transfer_strategy_config.asset_limits)
-        )
-    );
-}
-
-function cache_module_args() {
+function get_config(): list<rule> {
     val _list = 165;
     val _text = 162;
     val _byte_array = 161;
 
-    transfer_strategy_config.initialized = true;
-    
-    transfer_strategy_config.timeout = chain_context.args.timeout;
+    val config = list<rule>();
+    val inputs = list<module_args_list_element>.from_gtv(chain_context.args.rules);
 
-    val strats = if (chain_context.args.strategy.to_bytes()[0] == _list)
-        list<text>.from_gtv(chain_context.args.strategy)
-        else [text.from_gtv(chain_context.args.strategy)];
-
-    transfer_strategy_config.strategies = strats.to_gtv().to_bytes();
-
-    var require_same_address: (sender: boolean, recipient: boolean);
-
-    { //allowlists
-        transfer_strategy_config.blockchains = parse_allowlist_from_gtv(
-            chain_context.args.sender_blockchain,
-            true
-        ).allowlist.to_gtv().to_bytes();
+    for (input in inputs) {
+        val strats = if (input.strategy.to_bytes()[0] == _list)
+            list<text>.from_gtv(input.strategy)
+            else [text.from_gtv(input.strategy)];
 
         val sender_res = parse_allowlist_from_gtv(
-            chain_context.args.sender
+            input.sender
         );
-        transfer_strategy_config.senders = sender_res.allowlist.to_gtv().to_bytes();
 
         val recipient_res = parse_allowlist_from_gtv(
-            chain_context.args.recipient
+            input.recipient
         );
-        transfer_strategy_config.recipients = recipient_res.allowlist.to_gtv().to_bytes();
 
-        require_same_address = (
-            sender = sender_res.require_same,
-            recipient = recipient_res.require_same
-        );
-    }
-
-    { // require same address
         require(
-            require_same_address.sender == require_same_address.recipient,
+            sender_res.require_same == recipient_res.require_same,
             _CONFIG_ERROR_TEXT + "'X' should appear in both or none of recipient and sender"
         );
 
-        transfer_strategy_config.require_same_address = require_same_address.sender;
-    }
-
-    // assets
-    if (chain_context.args.asset == null) {
-        transfer_strategy_config.allow_all_assets = true;
-    } else {
-        val res = parse_asset_limits_from_gtv(chain_context.args.asset!!);
-        if (res == null) {
-            transfer_strategy_config.allow_all_assets = true;
+        var allow_all_assets = false;
+        var asset_limits = map<byte_array, big_integer>();
+        
+        if (input.asset == null) {
+            allow_all_assets = true;
         } else {
-            transfer_strategy_config.asset_limits = res.to_gtv().to_bytes();
+            val res = parse_asset_limits_from_gtv(input.asset!!);
+            if (res == null) {
+                allow_all_assets = true;
+            } else {
+                asset_limits = res;
+            }
         }
+        
+        config.add(rule(
+            timeout = input.timeout,
+            strategies = strats,
+
+            blockchains = parse_allowlist_from_gtv(
+                input.sender_blockchain,
+                true
+            ).allowlist,
+            senders = sender_res.allowlist,
+            recipients = recipient_res.allowlist,
+            
+            require_same_address = sender_res.require_same,
+
+            allow_all_assets,
+            asset_limits
+        ));
     }
+    return config;
 }
 
 function parse_allowlist_from_gtv(

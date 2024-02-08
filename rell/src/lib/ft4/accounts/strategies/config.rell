@@ -5,41 +5,39 @@ function is_value_allowed(value: byte_array, allowlist) {
         value in allowlist.allowed_values;
 }
 
-function is_blockchain_allowed(blockchain_rid: byte_array) {
-    val bc = get_config().blockchains;
+function is_blockchain_allowed(rule, blockchain_rid: byte_array) {
+    val bc = rule.blockchains;
     return is_value_allowed(blockchain_rid, bc);
 }
 
-function is_sender_allowed(sender_id: byte_array) {
-    val sender = get_config().senders;
+function is_sender_allowed(rule, sender_id: byte_array) {
+    val sender = rule.senders;
     return is_value_allowed(sender_id, sender);
 }
 
-function is_recipient_allowed(recipient_id: byte_array, sender_id: byte_array) {
-    val tsc = get_config();
-    if (tsc.require_same_address) {
+function is_recipient_allowed(rule, recipient_id: byte_array, sender_id: byte_array) {
+    if (rule.require_same_address) {
         return recipient_id == sender_id;
     }
-    return is_value_allowed(recipient_id, tsc.recipients);
+    return is_value_allowed(recipient_id, rule.recipients);
 }
 
-function is_asset_amount_allowed(asset_id: byte_array, amount: big_integer) {
-    val tsc = get_config();
-    if (tsc.allow_all_assets) return true;
-    val is_allowed = tsc.asset_limits.contains(asset_id);
+function is_asset_amount_allowed(rule, asset_id: byte_array, amount: big_integer) {
+    if (rule.allow_all_assets) return true;
+    val is_allowed = rule.asset_limits.contains(asset_id);
     if (is_allowed) {
-        return amount >= tsc.asset_limits[asset_id];
+        return amount >= rule.asset_limits[asset_id];
     } else {
         return false;
     }
 }
 
-function has_tx_expired(tx_start_timestamp: timestamp) {
-    val timeout = get_config().timeout;
+function has_tx_expired(rule, tx_start_timestamp: timestamp) {
+    val timeout = rule.timeout;
     return tx_start_timestamp + timeout >= accounts.latest_time();
 }
 
-function is_startegy_active(strategy: text) {
-    val strats = get_config().strategies;
+function is_startegy_active(rule, strategy: text) {
+    val strats = rule.strategies;
     return strategy in strats;
 }
