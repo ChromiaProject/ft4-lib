@@ -8,12 +8,12 @@ import {
   gtv,
 } from "postchain-client";
 import { Amount } from "@ft4/asset";
-import { createNoopAuthenticator } from "../authentication";
-import { createAuthDataService } from "../ft-session";
-import { Session } from "../types";
-import { getTransactionRid, nop } from "@ft4/utils/index";
+import { createNoopAuthenticator } from "@ft4/authentication";
+import { createAuthDataService } from "@ft4/ft-session";
+import { Session } from "@ft4/index";
+import { getTransactionRid, nop, BufferId } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
-import { Listener, EventEmitter } from "../events";
+import { Listener, EventEmitter } from "@ft4/events";
 import {
   ApplyTransferError,
   ErrorMessages,
@@ -42,7 +42,6 @@ import {
   ResumeOrchestrator,
 } from "./types";
 import { OnAnchoredHandlerData } from "@ft4/utils/transaction-builder/types";
-import { BufferId } from "@ft4/utils/types";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.

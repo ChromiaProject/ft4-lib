@@ -6,7 +6,8 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import { BufferId, RequireTogether, TxBuilderTransaction } from "../types";
+import { BufferId } from "@ft4/utils";
+import { RequireTogether, TxBuilderTransaction } from "../types";
 
 export type TransactionBuilder = {
   /**

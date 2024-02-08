@@ -1,5 +1,5 @@
 import { RellOperation, TransactionReceipt } from "postchain-client";
-import { OptionalPageCursor, Session } from "../types";
+import { OptionalPageCursor, Session } from "@ft4/types";
 import { Buffer } from "buffer";
 
 export type BufferId = string | Buffer;

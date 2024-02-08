@@ -1,10 +1,10 @@
 import { Buffer } from "buffer";
 import { Operation, RawGtx } from "postchain-client";
-import { EventEmitter, Listener } from "../events";
+import { EventEmitter, Listener } from "@ft4/events";
 import { OrchestratorError } from "./errors";
 import { TransactionBuilder } from "@ft4/utils/transaction-builder";
-import { Session } from "../types";
-import { BufferId } from "@ft4/utils/types";
+import { Session } from "@ft4/index";
+import { BufferId } from "@ft4/utils";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,

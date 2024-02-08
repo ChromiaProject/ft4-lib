@@ -1,6 +1,6 @@
 import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { LoginConfig } from "./types";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 
 export function nonce(
   accountId: BufferId,

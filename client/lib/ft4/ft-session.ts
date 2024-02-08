@@ -7,8 +7,8 @@ import {
   getConfig,
   getVersion,
   nop,
-  transactionBuilder,
 } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { Buffer } from "buffer";
 import {
   DictPair,
@@ -57,7 +57,7 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
-import { createAuthDescriptorValidator } from "./accounts/auth-descriptor/validator";
+import { createAuthDescriptorValidator } from "./accounts";
 
 export function createConnection(client: IClient): Connection {
   const connection: Connection = Object.freeze({
