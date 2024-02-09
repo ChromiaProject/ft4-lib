@@ -1,10 +1,10 @@
-import { createAuthenticator } from "@ft4/authentication";
-import { hasAuthDescriptorFlags } from "@ft4/authentication/ft/key-handler";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import {
+  createAuthenticator,
   AuthDataService,
   KeyHandler,
   KeyStore,
-} from "@ft4/authentication/types";
+} from "@ft4/authentication";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import { LoginConfigOptions, LoginManger, LoginOptions } from "./types";
@@ -15,9 +15,9 @@ import {
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
-} from "@ft4/accounts/auth-descriptor";
-import { createAuthDataService, createSession } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
+} from "@ft4/accounts";
+import { Connection, createSession } from "@ft4/index";
+import { createAuthDataService } from "@ft4/ft-session";
 
 export * from "./types";
 export { LoginKeyStore };

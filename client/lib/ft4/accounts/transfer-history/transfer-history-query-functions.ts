@@ -1,25 +1,18 @@
-import { BufferId } from "@ft4/utils/types";
 import {
   transferDetails,
   transferDetailsByAsset,
   RawTransferDetail,
   transferHistoryFromHeight,
-} from "@ft4/accounts/transfer-history/transfer-history-queries";
+} from "./transfer-history-queries";
 import { Queryable } from "postchain-client";
 import { OptionalPageCursor } from "@ft4/types";
-import { retrievePaginatedEntity } from "@ft4/utils";
+import { retrievePaginatedEntity, BufferId } from "@ft4/utils";
 import {
+  TransferDetail,
   TransferHistoryEntry,
   TransferHistoryEntryResponse,
 } from "@ft4/accounts";
-import { createTransferHistoryEntryFromResponse } from "@ft4/accounts/transfer-history/transfer-history-entry";
-
-export type TransferDetail = {
-  accountId: Buffer;
-  assetId: Buffer;
-  delta: bigint;
-  isInput: boolean;
-};
+import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 
 export function getTransferDetails(
   connection: Queryable,

@@ -70,6 +70,7 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  createAuthDescriptorValidator,
 } from "./accounts";
 
 // Root imports

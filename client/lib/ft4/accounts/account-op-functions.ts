@@ -1,8 +1,9 @@
 import { formatter } from "postchain-client";
-import { FtKeyStore, createAuthenticator } from "../authentication";
-import { Authenticator } from "../authentication/types";
-import { call, createSession } from "../ft-session";
-import { Connection } from "../types";
+import { FtKeyStore, createAuthenticator } from "@ft4/authentication";
+import { Authenticator } from "@ft4/authentication";
+import { call, createSession } from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
+import { BufferId } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import {
   addAuthDescriptor as addAuthDescriptorOp,
@@ -19,7 +20,6 @@ import {
 } from "./auth-descriptor";
 import { AuthenticatedAccount } from "./types";
 import {
-  BufferId,
   TransactionCompletion,
   TransactionSessionCompletion,
 } from "@ft4/utils/types";

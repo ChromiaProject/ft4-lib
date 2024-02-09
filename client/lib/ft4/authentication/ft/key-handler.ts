@@ -1,22 +1,17 @@
 import { Operation } from "postchain-client";
 import { FtKeyStore, ftAuth } from ".";
-import { AuthDataService, KeyHandler } from "../types";
+import { AuthDataService, KeyHandler } from "..";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   aggregateSigners,
-  deriveAuthDescriptorId,
-  gtv,
-} from "@ft4/accounts/auth-descriptor";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+} from "@ft4/accounts";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
   keyStore: FtKeyStore,
 ): KeyHandler {
-  const adId = deriveAuthDescriptorId(
-    gtv.authDescriptorRegistrationToGtv(authDescriptor),
-  );
   return Object.freeze({
     authDescriptor,
     keyStore,
@@ -27,7 +22,7 @@ export function createFtKeyHandler(
       operation: Operation,
       _context: TxContext,
       _authDataService: AuthDataService,
-    ) => authorize(accountId, adId, operation),
+    ) => authorize(accountId, authDescriptor.id, operation),
     sign: (transaction: TxBuilderTransaction) => keyStore.sign(transaction),
     getSigners: () => aggregateSigners(authDescriptor),
   });

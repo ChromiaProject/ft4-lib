@@ -8,7 +8,7 @@ import { IClient, isBlockAnchored } from "postchain-client";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { emptyOp } from "../util/util";
-import { createNoopAuthenticator } from "@ft4/authentication";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 describe("Transaction Builder", () => {
   let client: IClient;

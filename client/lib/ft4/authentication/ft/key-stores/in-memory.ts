@@ -3,9 +3,8 @@ import {
   SignatureProvider,
   newSignatureProvider,
 } from "postchain-client";
-import { FtKeyStore } from "..";
-import { createFtKeyHandler } from "../key-handler";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { FtKeyStore, createFtKeyHandler } from "..";
+import { AnyAuthDescriptor } from "@ft4/accounts";
 import { TxBuilderTransaction } from "@ft4/utils/types";
 import { txDigest } from "@ft4/utils/transaction-builder";
 

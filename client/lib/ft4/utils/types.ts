@@ -1,5 +1,5 @@
 import { RellOperation, TransactionReceipt } from "postchain-client";
-import { OptionalPageCursor, Session } from "../types";
+import { OptionalPageCursor, Session } from "@ft4/types";
 import { Buffer } from "buffer";
 
 export type BufferId = string | Buffer;
@@ -49,7 +49,7 @@ export type TxBuilderTransaction = {
   signatures: Buffer[];
 };
 
-export type TxContext = { [key: string]: { [key: string]: any } };
+export type TxContext = { [nonceId: string]: number | null };
 
 export interface RellAppStructure {
   [modules: string]: Record<string, RellModuleStructure>;

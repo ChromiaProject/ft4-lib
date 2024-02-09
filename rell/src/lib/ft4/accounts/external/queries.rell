@@ -69,7 +69,7 @@ query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer?, pa
 query get_auth_descriptor_nonce(
     account_id: byte_array, 
     auth_descriptor_id: byte_array
-) = accounts.account_auth_descriptor @ { 
+) = accounts.account_auth_descriptor @? { 
         .account.id == account_id, 
         .id == auth_descriptor_id 
     } ( .ctr );

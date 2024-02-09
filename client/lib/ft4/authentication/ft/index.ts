@@ -1,5 +1,5 @@
 import { Operation, formatter } from "postchain-client";
-import { KeyStore } from "../types";
+import { KeyStore } from "..";
 import { Buffer } from "buffer";
 import { BufferId, TxBuilderTransaction } from "@ft4/utils/types";
 

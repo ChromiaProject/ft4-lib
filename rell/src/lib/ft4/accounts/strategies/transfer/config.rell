@@ -1,0 +1,68 @@
+function is_value_allowed(value: byte_array, allowlist) {
+    return 
+        allowlist.allow_all
+        or
+        value in allowlist.allowed_values;
+}
+
+function is_blockchain_allowed(rule, blockchain_rid: byte_array) {
+    val bc = rule.blockchains;
+    return is_value_allowed(blockchain_rid, bc);
+}
+
+function is_sender_allowed(rule, sender_id: byte_array) {
+    val sender = rule.senders;
+    return is_value_allowed(sender_id, sender);
+}
+
+function is_recipient_allowed(rule, recipient_id: byte_array, sender_id: byte_array) {
+    if (rule.require_same_address) {
+        return recipient_id == sender_id;
+    }
+    return is_value_allowed(recipient_id, rule.recipients);
+}
+
+function is_asset_amount_allowed(rule, asset_id: byte_array, amount: big_integer) {
+    if (rule.allow_all_assets) return true;
+    val is_allowed = rule.asset_limits.contains(asset_id);
+    if (is_allowed) {
+        return amount >= rule.asset_limits[asset_id];
+    } else {
+        return false;
+    }
+}
+
+function has_tx_expired(rule, tx_start_timestamp: timestamp) {
+    val timeout_days = rule.timeout_days;
+    return tx_start_timestamp + timeout_days >= accounts.latest_time();
+}
+
+function is_strategy_active(rule, strategy: text) {
+    val strats = rule.strategies;
+    return strategy in strats;
+}
+
+function find_allowed_strategies(
+    from_chain: byte_array,
+    from_id: byte_array,
+    to_id: byte_array,
+    asset_id: byte_array,
+    amount: big_integer,
+    transfer_start: timestamp
+) {
+    val cfg = get_config();
+    val allowed_strats = cfg @* {
+        is_blockchain_allowed($, from_chain),
+        is_sender_allowed($, from_id),
+        is_recipient_allowed($, to_id, from_id),
+        is_asset_amount_allowed($, asset_id, amount),
+        has_tx_expired($, transfer_start)
+    } ( .strategies ); // list<list<text>>
+
+    val strategies = set<text>();
+    for (strat in allowed_strats) {
+        strategies.add_all(strat);
+    }
+
+    return strategies;
+}

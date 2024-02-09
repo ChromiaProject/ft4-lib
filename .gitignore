@@ -8,6 +8,7 @@
 .vscode/*
 .pmc
 .chromia
+node-url.txt
 
 # Node.js specific
 node_modules/

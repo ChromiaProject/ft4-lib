@@ -4,7 +4,6 @@ module;
 import ^^.accounts;
 import ^^.auth;
 
-
 operation register_account() {
     _register_account();
 }
