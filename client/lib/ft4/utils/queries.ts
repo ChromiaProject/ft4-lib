@@ -1,5 +1,6 @@
 import { AuthHandler } from "@ft4/types";
-import { DictPair, QueryObject, RawGtv } from "postchain-client";
+import { DictPair, QueryObject, RawGtv, formatter } from "postchain-client";
+import { BufferId } from "./types";
 
 export function rellAppStructure(): QueryObject<{
   modules: Record<string, DictPair>;
@@ -18,11 +19,11 @@ export function allAuthHandlers(): QueryObject<AuthHandler[]> {
 
 export function authHandlerForOperation(
   opName: string,
-): QueryObject<AuthHandler | null, { name: string }> {
+): QueryObject<AuthHandler | null, { op_name: string }> {
   return {
     name: "ft4.get_auth_handler_for_operation",
     args: {
-      name: opName,
+      op_name: opName,
     },
   };
 }
@@ -50,8 +51,8 @@ export function firstAllowedAuthDescriptorBySigners(
 export function firstAllowedAuthDescriptor(
   opName: string,
   args: RawGtv,
-  accountId: Buffer,
-  ids: Buffer[],
+  accountId: BufferId,
+  ids: BufferId[],
 ): QueryObject<
   Buffer | null,
   { op_name: string; args: RawGtv; account_id: Buffer; ad_ids: Buffer[] }
@@ -61,8 +62,8 @@ export function firstAllowedAuthDescriptor(
     args: {
       op_name: opName,
       args,
-      account_id: accountId,
-      ad_ids: ids,
+      account_id: formatter.ensureBuffer(accountId),
+      ad_ids: ids.map(formatter.ensureBuffer),
     },
   };
 }

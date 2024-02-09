@@ -1,11 +1,7 @@
 import { encryption } from "postchain-client";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "../util/util";
-import {
-  AnyAuthDescriptor,
-  FlagsType,
-  deriveAuthDescriptorId,
-} from "@ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor, FlagsType } from "@ft4/accounts/auth-descriptor";
 import {
   FtKeyStore,
   createAuthenticator,
@@ -74,10 +70,11 @@ describe("Authenticator", () => {
 
     const authHandler = await authenticator.getKeyHandlerForOperation(
       op("foo"),
+      {},
     );
 
-    expect(deriveAuthDescriptorId(authHandler2.authDescriptor)).toEqual(
-      deriveAuthDescriptorId(authHandler!.authDescriptor),
+    expect(authHandler2.authDescriptor.id).toEqual(
+      authHandler!.authDescriptor.id,
     );
   });
 
@@ -113,7 +110,7 @@ describe("Authenticator", () => {
         service,
       );
 
-      authenticator.getKeyHandlerForOperation(op("foo"));
+      authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(connection.query).toHaveBeenCalledTimes(1);
     });
 
@@ -149,6 +146,7 @@ describe("Authenticator", () => {
       );
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("does not exist"),
+        {},
       );
       expect(selectedHandler).toStrictEqual(null);
     });
@@ -188,6 +186,7 @@ describe("Authenticator", () => {
       );
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("foo"),
+        {},
       );
       expect(selectedHandler).toStrictEqual(keyHandlers[1]);
     });
@@ -225,7 +224,7 @@ describe("Authenticator", () => {
         keyHandlers,
         service,
       );
-      await authenticator.getKeyHandlerForOperation(op("foo"));
+      await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(
         (connection.query as jest.Mock).mock.calls[1][0].args.ad_ids[0],
       ).toStrictEqual(keyHandlers[1].authDescriptor.id);
@@ -260,7 +259,7 @@ describe("Authenticator", () => {
         keyHandlers,
         service,
       );
-      await authenticator.getKeyHandlerForOperation(op("foo"));
+      await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(connection.query).toHaveBeenCalledTimes(1);
     });
 
@@ -294,7 +293,7 @@ describe("Authenticator", () => {
         keyHandlers,
         service,
       );
-      await authenticator.getKeyHandlerForOperation(op("foo"));
+      await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(
         (connection.query as jest.Mock).mock.calls[1][0].args.ad_ids[0],
       ).toStrictEqual(keyHandlers[1].authDescriptor.id);
@@ -334,7 +333,7 @@ describe("Authenticator", () => {
         keyHandlers,
         service,
       );
-      await authenticator.getKeyHandlerForOperation(op("foo2"));
+      await authenticator.getKeyHandlerForOperation(op("foo2"), {});
       expect(
         (connection.query as jest.Mock).mock.calls[1][0].name,
       ).toStrictEqual("ft4.get_auth_handler_for_operation");

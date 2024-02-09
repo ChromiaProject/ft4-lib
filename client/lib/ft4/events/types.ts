@@ -1,4 +1,4 @@
-import { KeyStore } from "../authentication";
+import { KeyStore } from "@ft4/authentication";
 
 export type Listener<T extends any[]> = (...args: T) => void;
 

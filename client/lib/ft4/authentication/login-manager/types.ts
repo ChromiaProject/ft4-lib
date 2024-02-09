@@ -1,5 +1,5 @@
-import { Session } from "@ft4/types";
-import { BufferId } from "@ft4/utils/types";
+import { Session } from "@ft4/index";
+import { BufferId } from "@ft4/utils";
 
 export type LoginConfig = {
   flags: string[];
@@ -7,7 +7,9 @@ export type LoginConfig = {
 
 export type LoginOptions = {
   accountId: BufferId;
-} & (
+} & LoginConfigOptions;
+
+export type LoginConfigOptions =
   | {
       configName: string;
       config?: never;
@@ -19,8 +21,7 @@ export type LoginOptions = {
   | {
       configName?: never;
       config?: never;
-    }
-);
+    };
 
 export type LoginManger = {
   login: (loginOptions: LoginOptions) => Promise<Session>;

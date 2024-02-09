@@ -3,7 +3,6 @@ import {
   AuthDescriptorComplexRule,
   RuleOperator,
   RuleVariable,
-  AuthDescriptorRules,
 } from "./types";
 
 type RuleVariableValue = [RuleVariable, number];
@@ -120,7 +119,7 @@ export const greaterOrEqual = (
  * @returns a set of rules which will be evaluated together using the 'and' operator
  */
 export const and = (
-  ...rules: AuthDescriptorRules[]
+  ...rules: AuthDescriptorSimpleRule[]
 ): AuthDescriptorComplexRule => {
   return {
     operator: "and",

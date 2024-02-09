@@ -1,6 +1,7 @@
-import { Account, AuthenticatedAccount } from "./accounts/types";
-import { Asset } from "./asset/types";
-import { BufferId, Config, PaginatedEntity } from "@ft4/utils/types";
+import { Account, AuthenticatedAccount } from "./accounts";
+import { Asset } from "./asset";
+import { BufferId, PaginatedEntity } from "@ft4/utils";
+import { Config } from "@ft4/utils/types";
 import { TransactionBuilder } from "@ft4/utils/transaction-builder";
 import {
   IClient,
@@ -9,7 +10,7 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { LoginManger, LoginKeyStore } from "./authentication/login-manager";
-import { TransferDetail } from "./accounts/transfer-history/transfer-history-query-functions";
+import { TransferDetail, AuthDescriptorValidator } from "./accounts";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -21,6 +22,8 @@ export type PagedResponse<T> = {
 
 export interface Connection extends Queryable {
   client: IClient;
+  blockchainRid: Buffer;
+
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
 
@@ -35,6 +38,7 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
+  getAuthDescriptorValidator: (useCache: boolean) => AuthDescriptorValidator;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
