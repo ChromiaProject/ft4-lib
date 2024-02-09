@@ -7,7 +7,7 @@ function test_get_config_reads_yml_correctly() {
         cfg,
         [
             create_on_transfer.rule(
-                timeout = 10,
+                timeout_days = 10,
                 strategies = ["open"],
 
                 blockchains = create_on_transfer.allowlist(
@@ -30,7 +30,7 @@ function test_get_config_reads_yml_correctly() {
                 asset_limits = map<byte_array, big_integer>()
             ),
             create_on_transfer.rule(
-                timeout = 60,
+                timeout_days = 60,
                 strategies = ["fee", "stake"],
 
                 blockchains = create_on_transfer.allowlist(
@@ -54,7 +54,7 @@ function test_get_config_reads_yml_correctly() {
 }
 
 function test_get_config_uses_defaults() {
-    val json = '[{timeout: 10}]';
+    val json = '[{timeout_days: 10}]';
 
     val cfg = create_on_transfer.get_config(gtv.from_json(json));
 
@@ -62,7 +62,7 @@ function test_get_config_uses_defaults() {
         cfg,
         [
             create_on_transfer.rule(
-                timeout = 10,
+                timeout_days = 10,
                 strategies = ["open"],
 
                 blockchains = create_on_transfer.allowlist(
@@ -86,7 +86,7 @@ function test_get_config_uses_defaults() {
 }
 
 function test_get_config_reads_dollar_sign_in_blockchain() {
-    val json = '[{timeout: 10, sender_blockchain: ["012345", "$"]}]';
+    val json = '[{timeout_days: 10, sender_blockchain: ["012345", "$"]}]';
 
     val cfg = create_on_transfer.get_config(gtv.from_json(json));
 
@@ -94,7 +94,7 @@ function test_get_config_reads_dollar_sign_in_blockchain() {
         cfg,
         [
             create_on_transfer.rule(
-                timeout = 10,
+                timeout_days = 10,
                 strategies = ["open"],
 
                 blockchains = create_on_transfer.allowlist(
@@ -118,7 +118,7 @@ function test_get_config_reads_dollar_sign_in_blockchain() {
 }
 
 function test_get_config_fails_when_only_one_X() {
-    val json = '[{timeout: 10, sender: "X"}]';
+    val json = '[{timeout_days: 10, sender: "X"}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): 'X' should appear in both or none of recipient and sender.",
@@ -127,7 +127,7 @@ function test_get_config_fails_when_only_one_X() {
 }
 
 function test_get_config_fails_when_asterisk_alongside_others() {
-    val json = '[{timeout: 10, sender: ["*", "abcdef"]}]';
+    val json = '[{timeout_days: 10, sender: ["*", "abcdef"]}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' is not allowed.",
@@ -136,7 +136,7 @@ function test_get_config_fails_when_asterisk_alongside_others() {
 }
 
 function test_get_config_fails_when_X_alongside_others() {
-    val json = '[{timeout: 10, sender: ["X", "abcdef"], recipient: "X"}]';
+    val json = '[{timeout_days: 10, sender: ["X", "abcdef"], recipient: "X"}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside 'X' is not allowed.",
@@ -145,7 +145,7 @@ function test_get_config_fails_when_X_alongside_others() {
 }
 
 function test_get_config_fails_when_value_not_buffer_string_or_list() {
-    val json = '[{timeout: 10, sender: {id: "abcdef"}}]';
+    val json = '[{timeout_days: 10, sender: {id: "abcdef"}}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): blockchain, sender and recipient field only support strings, byte arrays and lists of these types.",
@@ -154,7 +154,7 @@ function test_get_config_fails_when_value_not_buffer_string_or_list() {
 }
 
 function test_get_config_fails_when_list_has_wwrong_element_types() {
-    val json = '[{timeout: 10, sender: ["012345", {id: "abcdef"}]}]';
+    val json = '[{timeout_days: 10, sender: ["012345", {id: "abcdef"}]}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): blockchain, sender and recipient lists only support strings and byte arrays.",
@@ -163,13 +163,13 @@ function test_get_config_fails_when_list_has_wwrong_element_types() {
 }
 
 function test_get_config_fails_when_dollar_not_in_blockchains() {
-    val json = '[{timeout: 10, sender: "$"}]';
+    val json = '[{timeout_days: 10, sender: "$"}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): $ is only allowed in sender_blockchain.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
-    val json_2 = '[{timeout: 10, sender: ["$"]}]';
+    val json_2 = '[{timeout_days: 10, sender: ["$"]}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): $ is only allowed in sender_blockchain.",
@@ -178,13 +178,13 @@ function test_get_config_fails_when_dollar_not_in_blockchains() {
 }
 
 function test_get_config_fails_when_X_in_blockchains() {
-    val json = '[{timeout: 10, sender_blockchain: "X"}]';
+    val json = '[{timeout_days: 10, sender_blockchain: "X"}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): X is not allowed in sender_blockchain.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
-    val json_2 = '[{timeout: 10, sender_blockchain: ["X"]}]';
+    val json_2 = '[{timeout_days: 10, sender_blockchain: ["X"]}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): X is not allowed in sender_blockchain.",
@@ -193,7 +193,7 @@ function test_get_config_fails_when_X_in_blockchains() {
 }
 
 function test_get_config_fails_when_assets_wrong_format() {
-    val json = '[{timeout: 10, asset: "X"}]';
+    val json = '[{timeout_days: 10, asset: "X"}]';
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): asset only accepts '*' and a list of ids and minimum amounts.",

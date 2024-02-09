@@ -7,7 +7,7 @@ blockchains:
 
       lib.ft4.accounts.strategies.transfer: # placeholder
         rules: 
-          timeout: 10
+          timeout_days: 10
 
 compile:
   source: ../rell/src

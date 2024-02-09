@@ -60,7 +60,7 @@ blockchains:
               - "$"
               sender: X
               recipient: X
-              timeout: 10
+              timeout_days: 10
               strategy: "open"
 
             - sender: "*"
@@ -68,7 +68,7 @@ blockchains:
               asset:
                 - id: x"abcdef"
                   min_amount: 100000L
-              timeout: 60
+              timeout_days: 60
               strategy:
               - "fee"
               - "stake"

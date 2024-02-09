@@ -33,8 +33,8 @@ function is_asset_amount_allowed(rule, asset_id: byte_array, amount: big_integer
 }
 
 function has_tx_expired(rule, tx_start_timestamp: timestamp) {
-    val timeout = rule.timeout;
-    return tx_start_timestamp + timeout >= accounts.latest_time();
+    val timeout_days = rule.timeout_days;
+    return tx_start_timestamp + timeout_days >= accounts.latest_time();
 }
 
 function is_strategy_active(rule, strategy: text) {
