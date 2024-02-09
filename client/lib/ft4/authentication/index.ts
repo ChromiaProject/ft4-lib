@@ -2,13 +2,7 @@ import { Buffer } from "buffer";
 import { Operation, formatter } from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
 import { BufferId } from "@ft4/utils";
-import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
-import {
-  AnyAuthDescriptorRegistration,
-  AuthDescriptor,
-  SingleSig,
-  AuthType,
-} from "@ft4/accounts";
+import { TxContext } from "@ft4/utils/types";
 import { createAuthDescriptorValidatorWithTxContext } from "@ft4/accounts/auth-descriptor/validator";
 import { Connection } from "@ft4/types";
 import { createAccountObject } from "@ft4/accounts/account-query-functions";
@@ -44,54 +38,6 @@ export function createAuthenticator(
       authDataService.getNonce(accountId, authDescriptorId),
   });
 }
-
-export function createNoopAuthenticator(
-  authDataService: AuthDataService,
-): Authenticator {
-  return Object.freeze({
-    accountId: Buffer.alloc(32),
-    keyHandlers: [noopKeyHandler],
-    authDataService,
-    getKeyHandlerForOperation: (_operation: Operation) =>
-      Promise.resolve(noopKeyHandler),
-    getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
-  });
-}
-
-const nullKeyStore: KeyStore = Object.freeze({
-  id: Buffer.alloc(32),
-  isInteractive: false,
-  sign: (tx: Buffer) => Promise.resolve(tx),
-  createKeyHandler: (
-    _authDescriptor: AnyAuthDescriptorRegistration | undefined,
-  ) => noopKeyHandler,
-});
-
-const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
-  id: Buffer.from(""),
-  authType: AuthType.SingleSig,
-  args: {
-    flags: [] as string[],
-    signer: Buffer.alloc(32, 0),
-  },
-  rules: null,
-  created: new Date(0),
-});
-
-const noopKeyHandler: KeyHandler = Object.freeze({
-  authDescriptor: nullAuthDescriptor,
-  keyStore: nullKeyStore,
-  satisfiesAuthRequirements: (_flags: string[]) => true,
-  authorize: (
-    _accountId: BufferId,
-    operation: Operation,
-    _context: TxContext,
-    _authDataService: AuthDataService,
-  ) => Promise.resolve([operation]),
-  sign: (_transaction: TxBuilderTransaction) =>
-    Promise.resolve(Buffer.alloc(64)),
-  getSigners: (): Buffer[] => [],
-});
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,

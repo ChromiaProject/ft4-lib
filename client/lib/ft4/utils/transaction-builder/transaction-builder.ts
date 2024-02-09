@@ -2,7 +2,6 @@ import {
   Authenticator,
   KeyHandler,
   KeyStore,
-  createNoopAuthenticator,
   isFtKeyStore,
   FtKeyStore,
 } from "@ft4/authentication";
@@ -37,6 +36,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
