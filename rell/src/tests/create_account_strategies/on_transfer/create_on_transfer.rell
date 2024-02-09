@@ -77,8 +77,7 @@ function test_internal_transfer_fails_if_wrong_asset_is_transfereed() {
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(recipient_id, asset.id, 10L))
         .sign(alice.keypair)
-        .run_must_fail("Recipient account <%s> does not exist, and asset <%s> is not supported for account creation"
-            .format(recipient_id, asset.id));
+        .run_must_fail("No suitable transfer strategy found");
 }
 
 function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
@@ -123,7 +122,7 @@ function test_internal_transfer_fails_if_insufficient_amount_is_transfereed() {
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
-        .run_must_fail("Insufficient amount of asset transferred, at least %s is needed".format(min_amount));
+        .run_must_fail("No suitable transfer strategy found");
 }
 
 function test_create_account_on_transfer_fails_if_no_account_creation_transfer_exists() {
@@ -282,8 +281,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
-        .run_must_fail("Recipient account <%s> does not exist, and asset <%s> is not supported for account creation"
-            .format(recipient_id, asset.id));
+        .run_must_fail("No suitable transfer strategy found");
 }
 
 function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
@@ -360,7 +358,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transfereed() 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
-        .run_must_fail("Insufficient amount of asset transferred, at least %s is needed".format(min_amount));
+        .run_must_fail("No suitable transfer strategy found");
 }
 
 function test_multiple_crosschain_transfers_success() {

@@ -74,14 +74,6 @@ function create_on_transfer(
         recipient_id: byte_array,
         assets.asset,
         amount: big_integer) {
-    val allowed_assets = map(allowed_assets());
-    require(asset.id in allowed_assets,
-        "Recipient account <%s> does not exist, and asset <%s> is not supported for account creation".format(recipient_id, asset.id));
-    val min_amount = allowed_assets[asset.id];
-    require(amount >= min_amount, "Insufficient amount of asset transferred, at least %s is needed".format(min_amount));
-    require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
-        "This asset is already transferred");
-
     val strategies = find_allowed_strategies(
         from_chain = sender_blockchain_rid,
         from_id = sender_id,
@@ -90,6 +82,10 @@ function create_on_transfer(
         amount = amount,
         transfer_start = integer.MAX_VALUE - 1000 // TODO transfer_start
     );
+    require(not strategies.empty(), "No suitable transfer strategy found");
+
+    require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
+        "This asset is already transferred");
 
     create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = join_to_string(list(strategies), ','));
