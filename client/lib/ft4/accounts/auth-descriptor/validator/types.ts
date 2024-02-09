@@ -1,4 +1,4 @@
-import { AnyAuthDescriptor } from "../types";
+import { AnyAuthDescriptor } from "../index";
 import { BufferId } from "@ft4/utils";
 
 export type AuthDescriptorValidator = {

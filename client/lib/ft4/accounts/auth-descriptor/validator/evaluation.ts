@@ -3,7 +3,7 @@ import {
   RuleOperator,
   RuleVariable,
   AnyAuthDescriptor,
-} from "../types";
+} from "../../index";
 import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,

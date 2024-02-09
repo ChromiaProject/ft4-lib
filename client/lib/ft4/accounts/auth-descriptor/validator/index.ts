@@ -3,7 +3,6 @@ import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,
 } from "./types";
-import {} from "@ft4/utils/types";
 import { getNonceIdForTxContext, BufferId, TxContext } from "@ft4/utils";
 import { AuthDataService } from "@ft4/authentication";
 
