@@ -108,6 +108,8 @@ function do_transfer(accounts.account) {
 
     val pool_account = ensure_pool_account(chain_context.blockchain_rid);
 
+    // TODO get allowed_assets from config
+    // TODO check timeout
     val allowed_assets = map(allowed_assets());
     var enough_transferred = false;
     for (account_creation_transfer in account_creation_transfers) {
