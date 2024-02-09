@@ -15,6 +15,6 @@ export const noopKeyHandler: KeyHandler = Object.freeze({
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
   sign: (_transaction: TxBuilderTransaction) =>
-    Promise.resolve(Buffer.alloc(64)),
+    Promise.resolve(Buffer.alloc(64, 0)),
   getSigners: (): Buffer[] => [],
 });
