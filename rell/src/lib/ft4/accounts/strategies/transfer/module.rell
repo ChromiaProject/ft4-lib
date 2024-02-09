@@ -6,6 +6,19 @@ import ^^^.accounts;
 import ^^^.assets;
 import ^^^.crosschain;
 
+struct module_args_list_element {
+    sender_blockchain: gtv = chain_context.blockchain_rid.to_gtv();
+    sender: gtv;
+    asset: gtv? = null; // null allows all assets
+    recipient: gtv = "*".to_gtv();
+    timeout_days: integer;
+    strategy: gtv = "open".to_gtv();
+}
+
+struct module_args {
+    rules: gtv; //list<module_args_list_element>
+}
+
 enum account_creation_state {
    pending,
    done
