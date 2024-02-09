@@ -108,13 +108,7 @@ function _create_account_with_auth(auth_descriptor, safe: boolean = true): accou
 
     add_auth_descriptor_to_account(acc, auth_descriptor, safe);
 
-    val rl_config = get_rate_limit_config_for_account(acc);
-
-    val max_points = rl_config.max_points;
-    val recovery_time = rl_config.recovery_time;
-    val points_at_start = rl_config.points_at_account_creation;
-    
-    create rl_state(acc, .points = points_at_start, .last_update = latest_time(), recovery_time);
+    create_rate_limiter_state_for_account(acc);
     
     return acc;
 }
@@ -198,6 +192,7 @@ function get_paginated_auth_descriptors_by_signer(account_id: byte_array, signer
 function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     return (
         id = ad.id,
+        account_id = ad.account.id,
         auth_type = ad.auth_type,
         args = gtv.from_bytes(ad.args),
         rules = gtv.from_bytes(ad.rules),

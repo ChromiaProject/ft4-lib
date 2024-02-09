@@ -1,4 +1,4 @@
-import { AuthDataService } from "@ft4/authentication/types";
+import { AuthDataService } from "@ft4/authentication";
 import { LoginConfig } from "@ft4/authentication/login-manager";
 import { Connection } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
@@ -10,7 +10,11 @@ export function createFakeAuthDataService(
 ): AuthDataService {
   const generator = numberGenerator();
   return {
-    connection: null as unknown as Connection,
+    connection: {
+      client: {
+        getBlocksInfo: (_limit: number) => generator.next().value,
+      },
+    } as unknown as Connection,
     isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),

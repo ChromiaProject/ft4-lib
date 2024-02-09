@@ -1,17 +1,26 @@
 import { LoginConfig } from "./login-manager/types";
-import { Connection } from "../types";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor";
 import { AuthHandler } from "@ft4/types";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+import { Connection } from "@ft4/index";
+import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
+export class KeyHandlerError extends Error {
+  constructor(msg?: string) {
+    super(msg);
+    this.name = "KeyHandlerError";
+  }
+}
 
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
   // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
-  getKeyHandlerForOperation(operation: Operation): Promise<KeyHandler | null>;
+  getKeyHandlerForOperation(
+    operation: Operation,
+    txContext: TxContext,
+  ): Promise<KeyHandler | null>;
   getNonce(authDescriptorId: BufferId): Promise<number | null>;
 }
 
@@ -56,7 +65,7 @@ export interface AuthDataService {
   ): Promise<AuthHandler | null>;
   getAllowedAuthDescriptor(
     operation: Operation,
-    accountId: Buffer,
-    adIds: Buffer[],
+    accountId: BufferId,
+    adIds: BufferId[],
   ): Promise<Buffer | null>;
 }

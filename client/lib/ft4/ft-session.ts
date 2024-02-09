@@ -7,8 +7,8 @@ import {
   getConfig,
   getVersion,
   nop,
-  transactionBuilder,
 } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { Buffer } from "buffer";
 import {
   DictPair,
@@ -57,10 +57,12 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
+import { createAuthDescriptorValidator } from "./accounts";
 
 export function createConnection(client: IClient): Connection {
-  const connection = Object.freeze({
+  const connection: Connection = Object.freeze({
     client,
+    blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
     query: <TReturn extends RawGtv, TArgs extends DictPair | undefined>(
       nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
       args?: TArgs,
@@ -68,6 +70,11 @@ export function createConnection(client: IClient): Connection {
     ) => query<TReturn, TArgs>(connection, nameOrQueryObject, args, callback),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
+
+    getBlockHeight: async () => {
+      const [block] = await client.getBlocksInfo(1);
+      return block.height;
+    },
 
     getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsBySigner: (
@@ -80,6 +87,12 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
+    getAuthDescriptorValidator: (useCache: boolean) =>
+      createAuthDescriptorValidator(
+        createAuthDataService(connection),
+        useCache,
+      ),
+
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
     getAssetsByName: (
@@ -183,8 +196,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getAllowedAuthDescriptor: async (
       operation: Operation,
-      accountId: Buffer,
-      adIds: Buffer[],
+      accountId: BufferId,
+      adIds: BufferId[],
     ) => {
       return connection.query(
         firstAllowedAuthDescriptor(

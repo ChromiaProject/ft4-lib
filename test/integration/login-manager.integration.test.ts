@@ -23,8 +23,8 @@ import {
   lessThan,
   opCount,
 } from "@ft4/accounts/auth-descriptor";
-import { aggregateSigners, deriveAuthDescriptorId } from "@ft4/accounts";
 import { getPubkey } from "@ft4/utils";
+import { aggregateSigners } from "@ft4/accounts";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 
@@ -194,10 +194,8 @@ describe("Login manager", () => {
       .build();
 
     const disposableAuthHandler =
-      session.account.authenticator.keyHandlers.filter(
-        (keyHandler) =>
-          deriveAuthDescriptorId(keyHandler.authDescriptor) !==
-          keyStore.address,
+      session.account.authenticator.keyHandlers.filter((keyHandler) =>
+        keyHandler.authDescriptor.id.compare(keyStore.address),
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(

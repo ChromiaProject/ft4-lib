@@ -2,7 +2,6 @@ import {
   Authenticator,
   KeyHandler,
   KeyStore,
-  createNoopAuthenticator,
   isFtKeyStore,
 } from "@ft4/authentication";
 import { Buffer } from "buffer";
@@ -20,8 +19,13 @@ import {
   gtv,
   RawGtx,
 } from "postchain-client";
-import { TxContext, TxBuilderTransaction, BufferId } from "../types";
+import {
+  getNonceIdForTxContext,
+  getTransactionRid,
+  BufferId,
+} from "@ft4/utils";
 import { OperationNotExistError } from "../errors";
+import { TxContext, TxBuilderTransaction } from "../types";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -30,8 +34,8 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { getTransactionRid } from "..";
-import { FtKeyStore } from "../../authentication";
+import { FtKeyStore } from "@ft4/authentication";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -141,8 +145,10 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+        ctx,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
@@ -156,6 +162,11 @@ export function transactionBuilder(
         ctx,
         authenticator.authDataService,
       );
+      const nonceId = getNonceIdForTxContext(
+        authenticator.accountId,
+        keyHandler.authDescriptor.id,
+      );
+      ctx[nonceId] = (ctx[nonceId] ?? 0) + 1;
       processedOperations.push(ops);
     }
     let opsToReturn: Operation[] = [];

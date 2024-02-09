@@ -52,6 +52,7 @@ export type AuthDescriptorRules =
 
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
+  accountId: Buffer;
   authType: AuthType;
   rules: AuthDescriptorRules | null;
   created: Date;
@@ -96,20 +97,16 @@ export type RawAuthDescriptorComplexRule = readonly [
   "and",
   ...RawAuthDescriptorSimpleRule[],
 ];
+
 export type RawAuthDescriptorRules =
   | RawAuthDescriptorSimpleRule
-  | RawAuthDescriptorComplexRule
-  | null;
+  | RawAuthDescriptorComplexRule;
 
 // ======== Server side request model =========
 
 type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
 export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
-  readonly [
-    auth_type: number,
-    args: T,
-    rules: RawAuthDescriptorSimpleRule | RawAuthDescriptorComplexRule | null,
-  ];
+  readonly [auth_type: number, args: T, rules: RawAuthDescriptorRules | null];
 
 export type RawAnyAuthDescriptorRegistration =
   | RawAuthDescriptorRegistration<RawSingleSig>
@@ -123,8 +120,9 @@ export type RawAnyAuthDescriptor =
 
 export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   args: T;
+  account_id: Buffer;
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: RawAuthDescriptorSimpleRule | RawAuthDescriptorComplexRule | null;
+  rules: RawAuthDescriptorRules | null;
 };

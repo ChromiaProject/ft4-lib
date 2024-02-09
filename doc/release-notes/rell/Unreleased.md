@@ -3,6 +3,7 @@
 ### Changed
  
 - `create_account_with_auth` now requires the `auth_descriptor` to have `A` flag. You can no longer create account with no `A` flag auth descriptor by default.
+- `get_auth_descriptor_nonce` now returns null if the auth descriptor is not found instead of rejecting.
 - `page_size` parameter in paginated queries are now optional and the default value can be configured with the `query_max_page_size` field under `lib.ft4` section.
 - Add `get_first_allowed_auth_descriptor_by_signers` query
 - Added support for rules in login config.

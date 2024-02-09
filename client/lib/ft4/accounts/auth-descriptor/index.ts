@@ -14,6 +14,7 @@ import {
   AuthType,
   FlagsType,
   RawAnyAuthDescriptor,
+  RawAuthDescriptorSimpleRule,
   RawAuthDescriptorRegistration,
   MultiSig,
   RuleOperator,
@@ -39,6 +40,10 @@ import {
   lessThan,
   opCount,
 } from "./rules";
+import {
+  createAuthDescriptorValidator,
+  AuthDescriptorValidator,
+} from "./validator";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
   return pclGtv.gtvHash(ad);
@@ -116,6 +121,7 @@ export function aggregateSigners(
 export {
   AnyAuthDescriptor,
   RawAnyAuthDescriptor,
+  RawAuthDescriptorSimpleRule,
   RawAuthDescriptorRegistration,
   FlagsType,
   SingleSig,
@@ -139,6 +145,8 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  createAuthDescriptorValidator,
+  AuthDescriptorValidator,
 };
 
 export const gtv = Object.freeze({

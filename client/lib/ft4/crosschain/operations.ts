@@ -1,8 +1,7 @@
 import { Operation, RawGtx } from "postchain-client";
 import { Amount } from "@ft4/asset";
-import { op } from "@ft4/utils/index";
+import { op, BufferId } from "@ft4/utils";
 import { getInitTransferArgs } from "./op-functions";
-import { BufferId } from "@ft4/utils/types";
 
 // Constant index for init_transfer operation, applicable when not using TransactionBuilder.
 export const OP_INDEX_INIT_TRANSFER = 1;

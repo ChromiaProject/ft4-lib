@@ -113,6 +113,7 @@ export function createTestAuthDescriptor(
     authDescriptor: {
       ...ad,
       id: deriveAuthDescriptorId(ad),
+      accountId: deriveAuthDescriptorId(ad),
       created: new Date(0),
     },
   };
@@ -144,6 +145,7 @@ export function testAdFromRegistration<T extends SingleSig | MultiSig>(
   return {
     ...reg,
     id: deriveAuthDescriptorId(reg as any),
+    accountId: deriveAuthDescriptorId(reg as any),
     created: new Date(),
   };
 }

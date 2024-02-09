@@ -1,0 +1,2 @@
+
+query get_fee_assets(): list<(asset_id: byte_array, amount: big_integer)> = fee_assets();

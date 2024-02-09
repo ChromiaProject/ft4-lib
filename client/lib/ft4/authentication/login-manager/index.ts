@@ -1,11 +1,11 @@
-import { createAuthenticator } from "@ft4/authentication";
-import { hasAuthDescriptorFlags } from "@ft4/authentication/ft/key-handler";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import {
+  createAuthenticator,
+  createInMemoryFtKeyStore,
   AuthDataService,
   KeyHandler,
   KeyStore,
-} from "@ft4/authentication/types";
+} from "@ft4/authentication";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
 import {
@@ -17,9 +17,8 @@ import {
   Rules,
   AnySimpleRule,
   RawAnySimpleRule,
+  LoginConfigOptions,
 } from "./types";
-import { createAuthDataService, createSession } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
 import {
   isRawRule,
   isNullRule,
@@ -38,9 +37,11 @@ import {
   deriveAuthDescriptorId,
   gtv,
 } from "@ft4/accounts/auth-descriptor";
-import { getPubkey } from "@ft4/utils/index";
 import { rulesFromGtv } from "@ft4/accounts/auth-descriptor/gtv";
 import { enumValueFromString } from "@ft4/accounts/auth-descriptor/enum-parsers";
+import { Connection, createSession } from "@ft4/index";
+import { createAuthDataService } from "@ft4/ft-session";
+import { getPubkey } from "@ft4/utils";
 
 export * from "./types";
 export { LoginKeyStore };
@@ -140,9 +141,9 @@ export function createLoginManager(
  * or if they are not provided, the function uses config name to load login config from chain.
  * If configName is null or undefined too, then default login config will be loaded from chain.
  */
-async function getConfigFromOptions(
+export async function getConfigFromOptions(
   authDataService: AuthDataService,
-  options: LoginOptions,
+  options: LoginConfigOptions,
 ): Promise<{ flags: string[]; rules: AuthDescriptorRules }> {
   let flags: string[];
   let rules: AuthDescriptorRules;

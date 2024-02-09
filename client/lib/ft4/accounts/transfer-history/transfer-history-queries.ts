@@ -1,5 +1,5 @@
 import { QueryObject } from "postchain-client";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 import { formatter } from "postchain-client";
 import { OptionalPageCursor } from "@ft4/types";
 import { TransferHistoryEntryResponse } from "@ft4/accounts";

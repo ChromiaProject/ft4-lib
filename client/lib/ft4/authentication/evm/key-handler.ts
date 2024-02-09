@@ -1,12 +1,14 @@
 import { Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
-import { AuthDataService, KeyHandler } from "../types";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils/types";
-
-const getNonceId = (accountId: BufferId, authDescriptorId: BufferId) =>
-  accountId.toString("hex") + authDescriptorId.toString("hex");
+import {
+  AuthDataService,
+  KeyHandler,
+  KeyHandlerError,
+} from "@ft4/authentication";
+import { AnyAuthDescriptor } from "@ft4/accounts";
+import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
+import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
 
 export function createEvmKeyHandler(
   authDescriptor: AnyAuthDescriptor,
@@ -47,12 +49,25 @@ async function authorize(
 ): Promise<Operation[]> {
   const messageTemplate =
     await authDataService.getAuthMessageTemplate(operation);
+
   const nonce = await getNonce(
     authDataService,
     accountId,
     authDescriptorId,
     context,
   );
+  /*
+   * it's going to be null only if it has no `opCount` rule, AND:
+   * - it has expired between the call to `hasExpired` and `authorize`, OR
+   * - it's not registered on the chain
+   * The second case shouldn't be reachable unless we allow the tx builder
+   * to create an auth descriptor and use it in the same transaction.
+   */
+  if (nonce === null) {
+    throw new KeyHandlerError(
+      "Invalid nonce. Was the auth descriptor too close to expiration?",
+    );
+  }
 
   const blockchainRid = authDataService.getBlockchainRid();
   const message = messageTemplate
@@ -74,25 +89,13 @@ async function getNonce(
   authDescriptorId: BufferId,
   context: TxContext,
 ) {
-  let evmContext = context["evm"];
-  if (!evmContext) {
-    evmContext = {
-      nonce: {},
-    };
-
-    context["evm"] = evmContext;
-  } else if (!evmContext.nonce) {
-    evmContext["nonce"] = {};
+  const nonceId = getNonceIdForTxContext(accountId, authDescriptorId);
+  if (context[nonceId] === undefined) {
+    context[nonceId] = await authDataService.getNonce(
+      accountId,
+      authDescriptorId,
+    );
   }
 
-  const nonceId = getNonceId(accountId, authDescriptorId);
-  const cachedNonce = evmContext.nonce[nonceId];
-  if (cachedNonce !== 0 && !cachedNonce) {
-    const nonce = await authDataService.getNonce(accountId, authDescriptorId);
-    evmContext.nonce[nonceId] = nonce;
-  } else {
-    evmContext.nonce[nonceId] += 1;
-  }
-
-  return evmContext.nonce[nonceId];
+  return context[nonceId];
 }
