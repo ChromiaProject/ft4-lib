@@ -1,9 +1,8 @@
 import { formatter, Operation } from "postchain-client";
 import { Amount } from "@ft4/asset";
-import { op } from "@ft4/utils/index";
+import { op, BufferId } from "@ft4/utils";
 import { authDescriptorRegistrationToGtv } from "./auth-descriptor/gtv";
-import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
-import { BufferId } from "@ft4/utils/types";
+import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 
 export function burn(assetId: BufferId, amount: Amount): Operation {
   return op("ft4.burn", formatter.ensureBuffer(assetId), amount.value);

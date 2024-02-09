@@ -19,7 +19,10 @@ function test_create_account_on_internal_transfer_success() {
 
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
-    val amount = 3L;
+
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
 
     rell.test.tx()
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -36,15 +39,10 @@ function test_create_account_on_internal_transfer_success() {
         amount,
         .state == create_on_transfer.account_creation_state.pending
     });
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -60,14 +58,47 @@ function test_create_account_on_internal_transfer_success() {
     );
 }
 
+function test_create_account_on_internal_transfer_fails_if_insufficient_amount_is_transfereed() {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount - 1L;
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+    assert_not_null(create_on_transfer.account_creation_transfer @? {
+        .sender_blockchain_rid == chain_context.blockchain_rid,
+        .sender_id == sender.id,
+        recipient_id,
+        asset,
+        amount,
+        .state == create_on_transfer.account_creation_state.pending
+    });
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
+
+    rell.test.tx()
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("Insufficient amount of asset transferred");
+}
+
 function test_create_account_on_transfer_fails_if_no_account_creation_transfer_exists() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
@@ -81,7 +112,9 @@ function test_multiple_internal_transfers_success() {
     val recipient_id = rell.test.pubkeys.charlie.hash();
 
     val asset1 = utils.create_asset("test1", "TEST1", 1);
-    val amount1 = 3L;
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val amount1 = allowed_assets[asset1.id];
+
     val asset2 = utils.create_asset("test2", "TEST2", 1);
     val amount2 = 4L;
     utils.mint_to_account(alice, asset1, 10);
@@ -106,15 +139,10 @@ function test_multiple_internal_transfers_success() {
         2
     );
 
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.charlie)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.charlie)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
@@ -140,7 +168,10 @@ function test_create_account_on_crosschain_transfer_success() {
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
     val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
-    val amount = 5L;
+
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
 
     val tx = gtx_transaction(
         body = gtx_transaction_body(
@@ -173,15 +204,10 @@ function test_create_account_on_crosschain_transfer_success() {
         amount,
         .state == create_on_transfer.account_creation_state.pending
     });
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -206,7 +232,8 @@ function test_multiple_crosschain_transfers_success() {
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
     val asset1 = utils.create_crosschain_asset("firstAsset", "a1", 1, sender_blockchain_rid, "", sender_blockchain_rid);
-    val amount1 = 5L;
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val amount1 = allowed_assets[asset1.id];
     val asset2 = utils.create_crosschain_asset("secondAsset", "a2", 1, sender_blockchain_rid, "", sender_blockchain_rid);
     val amount2 = 7L;
 
@@ -260,15 +287,10 @@ function test_multiple_crosschain_transfers_success() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.pending }).size(),
         2
     );
-    assert_equals(
-        create_on_transfer.get_pending_transfer_strategies(recipient_id),
-        set(["open"]));
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
 
     rell.test.tx()
-        .op(create_on_transfer.ras_transfer(
-                "open",
-                utils.create_auth_descriptor(rell.test.pubkeys.bob)
-         ))
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();

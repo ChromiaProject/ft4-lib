@@ -12,8 +12,8 @@ import {
   RawAnyAuthDescriptor,
   RawAnyAuthDescriptorRegistration,
   RawAuthDescriptor,
-  RawAuthDescriptorRule,
-  RawComplexAuthDescriptorRule,
+  RawAuthDescriptorSimpleRule,
+  RawAuthDescriptorComplexRule,
   RawSingleSig,
   SingleSig,
 } from "./types";
@@ -57,7 +57,7 @@ export function isSingleSig(
 }
 
 export function isGtvSimpleRule(
-  rule: RawAuthDescriptorRule | RawComplexAuthDescriptorRule,
-): rule is RawAuthDescriptorRule {
+  rule: RawAuthDescriptorSimpleRule | RawAuthDescriptorComplexRule,
+): rule is RawAuthDescriptorSimpleRule {
   return rule[0] !== "and";
 }
