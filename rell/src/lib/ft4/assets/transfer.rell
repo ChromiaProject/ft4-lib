@@ -11,7 +11,7 @@ function create_on_internal_transfer(
 
 namespace Unsafe {
 
-   function transfer_to_receipient_id(sender: accounts.account, recipient_id: byte_array, assets.asset, amount: big_integer) {
+   function transfer_to_recipient_id(sender: accounts.account, recipient_id: byte_array, assets.asset, amount: big_integer) {
       val recipient = accounts.account @? { .id == recipient_id };
       if (recipient != null) {
           transfer(sender, recipient, asset, amount);

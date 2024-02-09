@@ -1,4 +1,4 @@
-import { RegistrationDetails, Strategy } from "../../types";
+import { RegistrationDetails, Strategy } from "../../../types";
 import {
   AnyAuthDescriptorRegistration,
   aggregateSigners,
@@ -17,10 +17,7 @@ import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/s
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
 import { getAccountIdFromSigners } from "@ft4/accounts/registration/strategies/index";
 
-export const TRANSFER_STRATEGY_OPEN = "open";
-
-export function transfer(
-  transferStrategy: string,
+export function transfer_open(
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
@@ -50,9 +47,8 @@ export function transfer(
       }
 
       const operation = {
-        name: "ft4.ras_transfer",
+        name: "ft4.ras_transfer_open",
         args: [
-          transferStrategy,
           authDescriptorRegistrationToGtv(authDescriptor),
           disposableAuthDescriptor,
         ],
