@@ -13,7 +13,7 @@ import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { transfer_fee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
+import { transferFee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 
 let connection: Connection;
@@ -62,7 +62,7 @@ describe("Test transfer with fee", () => {
     const session = await registerAccount(
       connection,
       keyStore,
-      transfer_fee(asset, authDescriptor),
+      transferFee(asset, authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);

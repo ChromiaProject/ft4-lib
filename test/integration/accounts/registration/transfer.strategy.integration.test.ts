@@ -1,5 +1,5 @@
 import { registerAccount } from "@ft4/accounts/registration";
-import { transfer_open } from "@ft4/accounts/registration/strategies/transfer/open/index";
+import { transferOpen } from "@ft4/accounts/registration/strategies/transfer/open/index";
 import {
   Connection,
   createConnection,
@@ -59,7 +59,7 @@ describe("Test transfer strategy", () => {
     const session = await registerAccount(
       connection,
       keyStore,
-      transfer_open(authDescriptor),
+      transferOpen(authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -82,7 +82,7 @@ describe("Test transfer strategy", () => {
     );
 
     await expect(
-      registerAccount(connection, keyStore, transfer_open(authDescriptor)),
+      registerAccount(connection, keyStore, transferOpen(authDescriptor)),
     ).rejects.toThrow(TxRejectedError);
   });
 });

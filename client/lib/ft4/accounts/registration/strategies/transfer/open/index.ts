@@ -17,7 +17,7 @@ import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/s
 import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
 import { getAccountIdFromSigners } from "@ft4/accounts/registration/strategies/index";
 
-export function transfer_open(
+export function transferOpen(
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
