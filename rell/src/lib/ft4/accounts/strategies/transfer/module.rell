@@ -90,7 +90,6 @@ function create_on_transfer(
         amount = amount,
         transfer_start = integer.MAX_VALUE - 1000 // TODO transfer_start
     );
-    log("strategies: " + strategies);
 
     create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         strategies = join_to_string(list(strategies), ','));
