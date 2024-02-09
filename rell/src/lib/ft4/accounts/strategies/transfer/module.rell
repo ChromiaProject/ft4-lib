@@ -62,7 +62,8 @@ function create_on_transfer(
         assets.asset,
         amount: big_integer) {
     val allowed_assets = map(allowed_assets());
-    require(asset.id in allowed_assets, "This asset is not supported for account creation");
+    require(asset.id in allowed_assets,
+        "Recipient account <%s> does not exist, and asset <%s> is not supported for account creation".format(recipient_id, asset.id));
     val min_amount = allowed_assets[asset.id];
     require(amount >= min_amount, "Insufficient amount of asset transferred, at least %s is needed".format(min_amount));
     require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
