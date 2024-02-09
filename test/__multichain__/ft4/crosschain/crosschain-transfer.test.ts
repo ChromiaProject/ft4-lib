@@ -8,7 +8,7 @@ import {
   createConnection,
   registerCrosschainAsset,
 } from "@ft4/index";
-import { BufferId, transactionBuilder, TransactionBuilder } from "@ft4/utils";
+import { BufferId, transactionBuilder } from "@ft4/utils";
 import { Operation, RawGtx } from "postchain-client";
 import AccountBuilder from "../../../util/account-builder";
 import adminUser from "../../../util/admin_user";
@@ -63,10 +63,7 @@ describe("Crosschain transfer", () => {
           operation: Operation;
           opIndex: number;
           tx: RawGtx;
-          createProof: (
-            blockchainRid: BufferId,
-            tb: TransactionBuilder,
-          ) => Promise<Operation>;
+          createProof: (blockchainRid: BufferId) => Promise<Operation>;
         } | null,
         error: Error | null,
       ) => {
@@ -76,10 +73,7 @@ describe("Crosschain transfer", () => {
         if (!data) {
           throw new Error("No data provided");
         }
-        const iccfProofOperation = await data.createProof(
-          multichain01.rid,
-          transactionBuilder(account00.authenticator, connection01.client),
-        );
+        const iccfProofOperation = await data.createProof(multichain01.rid);
         await transactionBuilder(account00.authenticator, connection01.client)
           .add(iccfProofOperation)
           .add(applyTransferOp(data.tx, data.tx, 0))
