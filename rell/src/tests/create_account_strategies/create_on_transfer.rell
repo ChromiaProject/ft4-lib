@@ -73,6 +73,32 @@ function test_internal_transfer_fails_if_wrong_asset_is_transfereed() {
         .run_must_fail("This asset is not supported for account creation");
 }
 
+function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 20);
+
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .nop()
+        .sign(alice.keypair)
+        .run();
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .nop()
+        .sign(alice.keypair)
+        .run_must_fail("This asset is already transferred");
+}
+
 function test_internal_transfer_fails_if_insufficient_amount_is_transfereed() {
     val alice = utils.register_alice();
     val sender = alice.account;
@@ -249,6 +275,48 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail("This asset is not supported for account creation");
+}
+
+function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val sender_blockchain_rid = "sender_blockchain_rid".hash();
+    val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+
+    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = sender_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = recipient_id,
+                    asset_id = asset.id,
+                    amount = amount,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run();
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run_must_fail("This asset is already transferred");
 }
 
 function test_crosschain_transfer_fails_if_insufficient_amount_is_transfereed() {
