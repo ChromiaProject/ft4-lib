@@ -49,7 +49,7 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
 
         require(
             sender_res.require_same == recipient_res.require_same,
-            _CONFIG_ERROR_TEXT + "'X' should appear in both or none of recipient and sender"
+            _CONFIG_ERROR_TEXT + "'X' should appear in both or none of recipient and sender."
         );
 
         var allow_all_assets = false;
@@ -96,52 +96,52 @@ function parse_allowlist_from_gtv(
 
     var had_x = false;
     var res = allowlist();
+    val allowed_values = list<byte_array>();
 
     when (gtv.to_bytes()[0]) {
         _list -> {
-            val list_type = list<gtv>.from_gtv(gtv)[0].to_bytes()[0];
-            if (list_type == _text) {
-                val input = list<text>.from_gtv(gtv);
-                if ("*" in input) {
-                    require(
-                        input.size() == 1,
-                        _CONFIG_ERROR_TEXT + "using multiple values alongside '*' is not allowed"
-                    );
-                    res = allowlist(true);
+            val gtv_list = list<gtv>.from_gtv(gtv);
+            for (element in gtv_list) {
+                val element_type = element.to_bytes()[0];
+                if (element_type == _text) {
+                    if (element == "*".to_gtv()) {
+                        require(
+                            gtv_list.size() == 1,
+                            _CONFIG_ERROR_TEXT + "using multiple values alongside '*' is not allowed."
+                        );
+                        res = allowlist(true);
 
-                } else if ("X" in input) {
-                    require(
-                        not is_blockchain,
-                        _CONFIG_ERROR_TEXT + "X is not allowed in sender_blockchain."
-                    );
-                    require(
-                        input.size() == 1,
-                        _CONFIG_ERROR_TEXT + "using multiple values alongside 'X' is not allowed"
-                    );
-                    had_x = true;
-                    res = allowlist(true);
+                    } else if (element == "X".to_gtv()) {
+                        require(
+                            not is_blockchain,
+                            _CONFIG_ERROR_TEXT + "X is not allowed in sender_blockchain."
+                        );
+                        require(
+                            gtv_list.size() == 1,
+                            _CONFIG_ERROR_TEXT + "using multiple values alongside 'X' is not allowed."
+                        );
+                        had_x = true;
+                        res = allowlist(true);
 
-                } else {
-                    val allowed_values = list<byte_array>();
-                    for (v in input) {
-                        if (v == "$") {
+                    } else {
+                        if (element == "$".to_gtv()) {
                             require(
                                 is_blockchain,
                                 _CONFIG_ERROR_TEXT + "$ is only allowed in sender_blockchain."
                             );
                             allowed_values.add(chain_context.blockchain_rid);
-                        } else allowed_values.add(byte_array.from_hex(v));
+                        } else allowed_values.add(byte_array.from_hex(text.from_gtv(element)));
                     }
-                    res = allowlist(false, allowed_values);
-
+                } else {
+                    require(
+                        element_type == _byte_array,
+                        _CONFIG_ERROR_TEXT + "blockchain, sender and recipient lists only support strings and byte arrays."
+                    );
+                    allowed_values.add(byte_array.from_gtv(element));
                 }
-            } else {
-                require(
-                    list_type == _byte_array,
-                    _CONFIG_ERROR_TEXT + "blockchain, sender and recipient lists only support strings and byte arrays"
-                );
-                res = allowlist(false, list<byte_array>.from_gtv(gtv));
-
+            }
+            if (res.allow_all == false) {
+                res = allowlist(allowed_values);
             }
         }
         _text -> { // "*" or "abcdef"

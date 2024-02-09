@@ -55,7 +55,9 @@ blockchains:
 
         lib.ft4.accounts.strategies.transfer:
           rules: 
-            - sender_blockchain: x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
+            - sender_blockchain: 
+              - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
+              - "$"
               sender: X
               recipient: X
               timeout: 10
