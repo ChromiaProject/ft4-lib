@@ -282,9 +282,9 @@ export function transactionBuilder(
             true,
           );
 
-          const proofOp = proof.iccfTx.operations[0];
-
-          return proofOp;
+          const iccfProofOperation = proof.iccfTx.operations[0];
+          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
+          return iccfProofOperation;
         };
 
         operations.forEach((op: OperationContext, idx: number) => {

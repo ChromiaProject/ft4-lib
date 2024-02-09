@@ -115,10 +115,7 @@ export type OnAnchoredHandlerData = {
   operation: Operation;
   opIndex: number;
   tx: RawGtx;
-  createProof: (
-    blockchainRid: BufferId,
-    tb: TransactionBuilder,
-  ) => Promise<Operation>;
+  createProof: (blockchainRid: BufferId) => Promise<Operation>;
 };
 
 type ConfigOptions = {
