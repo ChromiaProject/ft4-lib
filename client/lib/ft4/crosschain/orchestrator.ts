@@ -263,7 +263,6 @@ async function createBaseOrcestrator(
 
     return new Promise<void>(async (resolve, reject) => {
       let completed = false;
-      const opIndex = path.indexOf(targetChainRid) === 0 ? 1 : 3;
       for (let i = 0; i < 20; ++i) {
         if (completed) break;
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -278,7 +277,7 @@ async function createBaseOrcestrator(
                 state.tx!,
                 path.indexOf(targetChainRid),
                 1,
-                opIndex,
+                path.indexOf(targetChainRid) === 0 ? 1 : 3,
               ),
               (data: OnAnchoredHandlerData | null, error: Error | null) => {
                 if (error) {
