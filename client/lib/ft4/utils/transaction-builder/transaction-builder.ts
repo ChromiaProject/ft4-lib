@@ -20,6 +20,7 @@ import {
   createIccfProofTx,
   gtv,
   RawGtx,
+  SystemChainException,
 } from "postchain-client";
 import {
   getNonceIdForTxContext,
@@ -251,7 +252,10 @@ export function transactionBuilder(
         // TODO: Uncomment to pollute logs with errors
         // console.error("Error while checking block anchoring status", error);
 
-        if (error instanceof BlockAnchoringException) {
+        if (
+          error instanceof BlockAnchoringException ||
+          error instanceof SystemChainException
+        ) {
           isAnchored = false;
         } else {
           throw error;
@@ -262,7 +266,6 @@ export function transactionBuilder(
         const proofCache = new Map<string, Operation>();
         const createProof = async (
           blockchainRid: BufferId,
-          tb: TransactionBuilder,
         ): Promise<Operation> => {
           if (proofCache.has(blockchainRid.toString("hex"))) {
             return proofCache.get(blockchainRid.toString("hex"))!;
@@ -280,24 +283,6 @@ export function transactionBuilder(
           );
 
           const proofOp = proof.iccfTx.operations[0];
-
-          let didSubmit = false;
-          for (let i = 0; i < config.retryCount; ++i) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, config.waitTimeMs),
-            );
-            try {
-              await tb.add(proofOp).buildAndSend();
-              didSubmit = true;
-              break;
-            } catch {
-              // We expect an error here, do nothing
-            }
-          }
-
-          if (!didSubmit) {
-            throw new Error("Unable to anchor proof");
-          }
 
           return proofOp;
         };
