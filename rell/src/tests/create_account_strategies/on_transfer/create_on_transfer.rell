@@ -12,6 +12,13 @@ import auth_ext: ^^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^^.lib.ft4.crosschain.external;
 import iccf_op: ^^^.operations.iccf_op;
 
+function test_join_to_string() {
+    assert_equals(create_on_transfer.join_to_string(list<text>(), ','), "");
+    assert_equals(create_on_transfer.join_to_string(["foo"], ','), "foo");
+    assert_equals(create_on_transfer.join_to_string(["foo", "bar"], ','), "foo,bar");
+    assert_equals(create_on_transfer.join_to_string(["foo", "bar", "baz"], ','), "foo,bar,baz");
+}
+
 function test_create_account_on_internal_transfer_success() {
     val alice = utils.register_alice();
     val sender = alice.account;

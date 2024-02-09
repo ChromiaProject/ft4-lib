@@ -56,7 +56,7 @@ blockchains:
         lib.ft4.accounts.strategies.transfer:
           rules: 
             - sender_blockchain: 
-              - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
+              - x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
               - "$"
               sender: X
               recipient: X
@@ -70,8 +70,26 @@ blockchains:
                   min_amount: 100000L
               timeout_days: 60
               strategy:
-              - "fee"
-              - "stake"
+               - "fee"
+               - "stake"
+
+            - sender: "*"
+              recipient: "*"
+              asset:
+                - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+                  min_amount: 5L
+                - id: x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac"
+                  min_amount: 3L
+                - id: x"ad60efda802fec15e22a8c4691d1eb13e144dee4984772c05ab9163cf2cf2996"
+                  min_amount: 5L
+                - id: x"39b34b11bf6c1c301327d5824f977c9360895446a529bb980ebefd2183ca4831"
+                  min_amount: 5L
+                - id: x"cf45a2cf3033543c2664886c7d39f9f31087bd5949120fe2e69affc0f926a71f"
+                  min_amount: 7L
+              timeout_days: 60
+              strategy:
+                - "open"
+                - "fee"
 
 libs:
   iccf:
