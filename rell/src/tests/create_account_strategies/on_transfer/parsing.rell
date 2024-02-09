@@ -130,7 +130,7 @@ function test_get_config_fails_when_asterisk_alongside_others() {
     val json = '[{timeout_days: 10, sender: ["*", "abcdef"]}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' is not allowed.",
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
 }
@@ -139,56 +139,69 @@ function test_get_config_fails_when_X_alongside_others() {
     val json = '[{timeout_days: 10, sender: ["X", "abcdef"], recipient: "X"}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside 'X' is not allowed.",
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
 }
 
 function test_get_config_fails_when_value_not_buffer_string_or_list() {
-    val json = '[{timeout_days: 10, sender: {id: "abcdef"}}]';
+    var json = '[{timeout_days: 10, sender: {id: "abcdef"}}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): blockchain, sender and recipient field only support strings, byte arrays and lists of these types.",
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
+        create_on_transfer.get_config(gtv.from_json(json), *)
+    );
+
+    json = '[{timeout_days: 10, sender_blockchain: {id: "abcdef"}}]';
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
 }
 
-function test_get_config_fails_when_list_has_wwrong_element_types() {
-    val json = '[{timeout_days: 10, sender: ["012345", {id: "abcdef"}]}]';
+function test_get_config_fails_when_list_has_wrong_element_types() {
+    var json = '[{timeout_days: 10, sender: ["012345", {id: "abcdef"}]}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): blockchain, sender and recipient lists only support strings and byte arrays.",
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
+        create_on_transfer.get_config(gtv.from_json(json), *)
+    );
+    json = '[{timeout_days: 10, sender_blockchain: ["012345", {id: "abcdef"}]}]';
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
 }
 
 function test_get_config_fails_when_dollar_not_in_blockchains() {
-    val json = '[{timeout_days: 10, sender: "$"}]';
+    var json = '[{timeout_days: 10, sender: "$"}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): $ is only allowed in sender_blockchain.",
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
-    val json_2 = '[{timeout_days: 10, sender: ["$"]}]';
+    json = '[{timeout_days: 10, sender: ["$"]}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): $ is only allowed in sender_blockchain.",
-        create_on_transfer.get_config(gtv.from_json(json_2), *)
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
+        create_on_transfer.get_config(gtv.from_json(json), *)
     );
 }
 
 function test_get_config_fails_when_X_in_blockchains() {
-    val json = '[{timeout_days: 10, sender_blockchain: "X"}]';
+    var json = '[{timeout_days: 10, sender_blockchain: "X"}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): X is not allowed in sender_blockchain.",
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
         create_on_transfer.get_config(gtv.from_json(json), *)
     );
-    val json_2 = '[{timeout_days: 10, sender_blockchain: ["X"]}]';
+    json = '[{timeout_days: 10, sender_blockchain: ["X"]}]';
 
     assert_fails(
-        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): X is not allowed in sender_blockchain.",
-        create_on_transfer.get_config(gtv.from_json(json_2), *)
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
+        create_on_transfer.get_config(gtv.from_json(json), *)
     );
 }
 
