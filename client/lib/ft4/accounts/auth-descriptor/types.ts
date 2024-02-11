@@ -51,6 +51,7 @@ export type AuthDescriptorRules =
 
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
+  accountId: Buffer;
   authType: AuthType;
   rules: AuthDescriptorRules | null;
   created: Date;
@@ -118,6 +119,7 @@ export type RawAnyAuthDescriptor =
 
 export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   args: T;
+  account_id: Buffer;
   auth_type: string;
   created: number;
   id: Buffer;

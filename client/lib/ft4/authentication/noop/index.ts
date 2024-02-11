@@ -7,7 +7,7 @@ export function createNoopAuthenticator(
   authDataService: AuthDataService,
 ): Authenticator {
   return Object.freeze({
-    accountId: Buffer.alloc(32),
+    accountId: Buffer.alloc(32, 0),
     keyHandlers: [noopKeyHandler],
     authDataService,
     getKeyHandlerForOperation: (_operation: Operation) =>

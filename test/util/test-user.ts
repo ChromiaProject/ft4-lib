@@ -51,6 +51,7 @@ export function newSingleSigUser(
     authDescriptor: {
       ...singleSigAuthDescriptor,
       id: deriveAuthDescriptorId(singleSigAuthDescriptor),
+      accountId: deriveAuthDescriptorId(singleSigAuthDescriptor),
       created: new Date(),
     },
   };

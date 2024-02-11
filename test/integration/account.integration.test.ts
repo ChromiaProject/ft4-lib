@@ -164,6 +164,7 @@ describe("Test the account", () => {
       authDescriptor: {
         ...registration,
         id: deriveAuthDescriptorId(registration),
+        accountId: deriveAuthDescriptorId(registration),
         created: new Date(),
       },
       signatureProvider: user1.signatureProvider,
