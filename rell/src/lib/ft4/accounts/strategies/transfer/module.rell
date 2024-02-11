@@ -99,6 +99,7 @@ function do_transfer(accounts.account, strategy: text) {
     val pool_account = ensure_pool_account(chain_context.blockchain_rid);
 
     var enough_transferred = false;
+    var has_expired_days = 0;
     for (account_creation_transfer in account_creation_transfers) {
         assets.Unsafe.transfer(
             pool_account,
@@ -114,11 +115,12 @@ function do_transfer(accounts.account, strategy: text) {
         val rule = rules.get_or_null(strategy);
         if (rule != null) {
             if (account_creation_transfer.asset.id in rule.asset_limits
-                    and account_creation_transfer.amount >= rule.asset_limits[account_creation_transfer.asset.id]
-                    and not has_tx_expired(rule, account_creation_transfer.timestamp)) {
+                    and account_creation_transfer.amount >= rule.asset_limits[account_creation_transfer.asset.id]) {
                 enough_transferred = true;
+                if (has_tx_expired(rule, account_creation_transfer.timestamp)) has_expired_days = rule.timeout_days;
             }
         }
     }
     require(enough_transferred, "Insufficient amount of asset transferred");
+    require(has_expired_days == 0, "Transfer has expired after %s days".format(has_expired_days));
 }

@@ -41,6 +41,9 @@ function test_create_account_on_internal_transfer_success() {
     });
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
+    rell.test.set_next_block_time_delta(59 * 24 * 60 * 60 * 1000);
+    rell.test.block().run();
+
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
@@ -56,6 +59,45 @@ function test_create_account_on_internal_transfer_success() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1
     );
+}
+
+function test_create_account_on_internal_transfer_fails_if_timeout() {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    val allowed_assets = map(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+    assert_not_null(create_on_transfer.account_creation_transfer @? {
+        .sender_blockchain_rid == chain_context.blockchain_rid,
+        .sender_id == sender.id,
+        recipient_id,
+        asset,
+        amount,
+        .state == create_on_transfer.account_creation_state.pending
+    });
+    assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+
+    rell.test.set_next_block_time_delta(61 * 24 * 60 * 60 * 1000);
+    rell.test.block().run();
+
+    rell.test.tx()
+        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("Transfer has expired after 60 days");
 }
 
 function test_internal_transfer_fails_if_wrong_asset_is_transfereed() {
