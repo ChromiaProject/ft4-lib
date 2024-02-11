@@ -72,8 +72,8 @@ describe("Test transfer with fee", () => {
       amount.value - _feeAssets[0].amount,
     );
 
-    expect(
-      await connection.query(pendingTransferStrategies(recipientId)),
-    ).toBeNull();
+    expect(await connection.query(pendingTransferStrategies(recipientId))).toBe(
+      [],
+    );
   });
 });

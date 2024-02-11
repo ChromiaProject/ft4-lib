@@ -67,9 +67,9 @@ describe("Test transfer strategy", () => {
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
     expect(assetBalance1!.amount.value).toBe(amount.value);
 
-    expect(
-      await connection.query(pendingTransferStrategies(recipientId)),
-    ).toBeNull();
+    expect(await connection.query(pendingTransferStrategies(recipientId))).toBe(
+      [],
+    );
   });
 
   it("can not register account without pending transfer", async () => {

@@ -1,8 +1,6 @@
 import { QueryObject } from "postchain-client";
 
-export function allowedAssets(): QueryObject<
-  { asset_id: Buffer; min_amount: bigint }[]
-> {
+export function allowedAssets(): QueryObject<{ [key: string]: bigint }> { // TODO key is actually byte_array in Rell/GTV, how will that end up here?
   return {
     name: "ft4.get_allowed_assets",
     args: {},
@@ -11,7 +9,7 @@ export function allowedAssets(): QueryObject<
 
 export function pendingTransferStrategies(
   recipientId: Buffer,
-): QueryObject<string[] | null, { recipient_id: Buffer }> {
+): QueryObject<string[], { recipient_id: Buffer }> {
   return {
     name: "ft4.get_pending_transfer_strategies",
     args: {
