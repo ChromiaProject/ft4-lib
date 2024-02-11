@@ -1,6 +1,12 @@
 
-query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array): map<byte_array, big_integer> =
-    find_allowed_assets(sender_blockchain_rid, sender_id, recipient_id);
+query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array):
+        list<(asset_id: byte_array, min_amount: big_integer)> {
+    val allowed_assets = list<(asset_id: byte_array, min_amount: big_integer)>();
+    for ((asset_id, min_amount) in find_allowed_assets(sender_blockchain_rid, sender_id, recipient_id)) {
+        allowed_assets.add((asset_id = asset_id, min_amount = min_amount));
+    }
+    return allowed_assets;
+}
 
 query get_pending_transfer_strategies(recipient_id: byte_array): set<text> {
     val strategies2 = account_creation_transfer @* { recipient_id, .state == account_creation_state.pending }

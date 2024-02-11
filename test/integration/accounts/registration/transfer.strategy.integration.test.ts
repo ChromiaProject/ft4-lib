@@ -7,7 +7,6 @@ import {
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/index";
 import { Asset } from "@ft4/index";
-import { createAmount } from "@ft4/index";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { encryption } from "postchain-client";
 import { TxRejectedError } from "postchain-client";
@@ -15,6 +14,8 @@ import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { createAmountFromBalance } from "@ft4/index";
 
 let connection: Connection;
 let asset: Asset;
@@ -37,10 +38,14 @@ describe("Test transfer strategy", () => {
       .withPoints(1)
       .build();
 
-    // const _allowedAssets = await connection.query(allowedAssets());
-    // TODO use allowedAssets
-
-    const amount = createAmount(10, asset.decimals);
+    const _allowedAssets = await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    );
+    const rawAmount = _allowedAssets.find((v) => v.asset_id === asset.id)
+      ?.min_amount;
+    expect(rawAmount).toBeTruthy();
+    if (!rawAmount) throw Error("undefined");
+    const amount = createAmountFromBalance(rawAmount, asset.decimals);
 
     await account1.transfer(recipientId, asset.id, amount);
 
