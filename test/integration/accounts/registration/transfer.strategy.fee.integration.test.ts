@@ -41,10 +41,10 @@ describe("Test transfer with fee", () => {
     const _allowedAssets = await connection.query(
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
     );
-    const rawAmount = _allowedAssets.find((v) => v.asset_id === asset.id)
-      ?.min_amount;
+    const rawAmount = _allowedAssets.find(
+      (v) => v.asset_id === asset.id,
+    )!.min_amount;
     expect(rawAmount).toBeTruthy();
-    if (!rawAmount) throw Error("undefined");
     const amount = createAmountFromBalance(rawAmount, asset.decimals);
 
     const _feeAssets = await connection.query(feeAssets());
