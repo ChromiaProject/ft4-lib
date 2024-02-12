@@ -15,6 +15,7 @@ import {
 } from "@ft4/accounts/auth-descriptor";
 import { AuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { KeyManager } from "@ft4/accounts/auth/types";
+import { createInMemoryFtKeyStore, FtKeyStore } from "@ft4/authentication";
 
 export default function singleSigUser(
   rule: AuthDescriptorRules | null = null,
@@ -54,6 +55,7 @@ export function newSingleSigUser(
       accountId: deriveAuthDescriptorId(singleSigAuthDescriptor),
       created: new Date(),
     },
+    keyStore: createInMemoryFtKeyStore(keyPair),
   };
 }
 
@@ -61,4 +63,5 @@ export type User = {
   signatureProvider: SignatureProvider;
   keyManagers: KeyManager[];
   authDescriptor: AuthDescriptor<SingleSig>;
+  keyStore: FtKeyStore;
 };
