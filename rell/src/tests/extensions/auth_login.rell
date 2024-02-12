@@ -25,14 +25,8 @@ function () = auth.add_login_config(
 function () = auth.add_login_config(
     name = "custom_config_with_simple_rule",
     flags = ["W"],
-    rules = auth.create_login_rule(
-        accounts.serialize_rules([
-            accounts.rule_expression(
-                accounts.rule_operator.lt,
-                accounts.rule_variable.block_height,
-                5
-            )
-        ])
+    rules = auth.login_simple_rule(
+        auth.less_than(auth.relative_block_height(5))
     )
 );
 
@@ -40,19 +34,9 @@ function () = auth.add_login_config(
 function () = auth.add_login_config(
     name = "custom_config_with_complex_rule",
     flags = ["A", "Z"],
-    rules = auth.create_login_rule(
-        accounts.serialize_rules([
-            accounts.rule_expression(
-                accounts.rule_operator.lt,
-                accounts.rule_variable.block_height,
-                5
-            ),
-            accounts.rule_expression(
-                accounts.rule_operator.le,
-                accounts.rule_variable.op_count,
-                7
-            )
-        ])
-    )
+    rules = auth.login_rules([
+        auth.less_than(auth.relative_block_height(5)),
+        auth.less_or_equal(auth.op_count(7))
+    ])
 );
 

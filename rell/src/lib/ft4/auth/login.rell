@@ -1,15 +1,9 @@
 
 val DEFAULT_LOGIN_CONFIG_NAME = "default";
 
-struct login_rule_expression {
-	operator: accounts.rule_operator;
-	variable: accounts.rule_variable;
-	value: text;
-}
-
 struct _login_config {
     flags: list<text>;
-    rules: gtv = accounts.GTV_NULL;
+    rules: gtv? = null;
 }
 
 @extendable
@@ -18,51 +12,119 @@ function login_config(): map<name, _login_config>;
 function add_login_config(
     name = DEFAULT_LOGIN_CONFIG_NAME,
     flags: list<text>,
-    rules: gtv = accounts.GTV_NULL
+    rules: gtv? = null
 ) {
     return [name: _login_config(flags, rules)];
 }
 
-function create_login_rule(gtv_rules_to_translate: gtv): gtv{
-    val rules = list<gtv>.from_gtv(gtv_rules_to_translate);
+function login_simple_rule(rule: rule_expression) = rule.to_gtv_pretty();
 
-    if (rules[0] == "and".to_gtv()) {
-        var login_rules: list<gtv>;
-        login_rules = [rules[0]];
+function login_rules(rules_list: list<rule_expression>): gtv {
+    require(rules_list.size() > 0, "Empty login rules list");
 
-        val rules_without_and = rules.sub(1);
-        for (rule in rules_without_and) {
-            val rule_exp = accounts.rule_expression_from_gtv(rule);
-            login_rules.add(convert_rule_to_login_rule(rule_exp).to_gtv());
-        }
-        
-        return login_rules.to_gtv();
-    } else {
-        val rule_exp = accounts.rule_expression_from_gtv(gtv_rules_to_translate);
-        return convert_rule_to_login_rule(rule_exp).to_gtv();
+    if (rules_list.size() == 1) return rules_list[0].to_gtv_pretty();
+    
+    val rules = ["and".to_gtv()];
+    for (rule in rules_list) {
+        rules.add(rule.to_gtv_pretty());
     }
+    return rules.to_gtv();
 }
 
-function convert_rule_to_login_rule(accounts.rule_expression) {
-    if (rule_expression.variable == accounts.rule_variable.op_count) {
-        return login_rule_expression(
-            rule_expression.operator,
-            rule_expression.variable,
-            "%d".format(rule_expression.value)
-        );
-    } else {
-        return login_rule_expression(
-            rule_expression.operator,
-            rule_expression.variable,
-            "{%d}".format(rule_expression.value)
-        );
-    }
+function ttl(millis: integer) = rule_expression(
+    rule_operator.lt,
+    rule_variable.relative_block_time,
+    millis
+).to_gtv_pretty();
+
+enum rule_variable {
+    block_height,
+    block_time,
+    op_count,
+    relative_block_height,
+    relative_block_time
 }
 
-function ttl(millis: integer) {
-    return login_rule_expression(
-        accounts.rule_operator.lt,
-        accounts.rule_variable.block_time,
-        "{%d}".format(millis)
-    ).to_gtv();
+enum rule_operator {
+    lt,
+    le,
+    eq,
+    ge,
+    gt
 }
+
+struct rule_expression {
+	operator: rule_operator;
+	variable: rule_variable;
+	value: integer;
+}
+
+struct rule_parameters {
+	variable: rule_variable;
+	value: integer;
+}
+
+/*
+ * Operator functions
+ */
+
+function greater_than(rule_parameters) = rule_expression(
+    rule_parameters.variable,
+    rule_operator.gt,
+    rule_parameters.value
+);
+
+function greater_or_equal(rule_parameters) = rule_expression(
+    rule_parameters.variable,
+    rule_operator.ge,
+    rule_parameters.value
+);
+
+function equals(rule_parameters): rule_expression {
+    return rule_expression(
+        rule_parameters.variable,
+        rule_operator.eq,
+        rule_parameters.value
+    );
+}
+
+function less_than(rule_parameters) = rule_expression(
+    rule_parameters.variable,
+    rule_operator.lt,
+    rule_parameters.value
+);
+
+function less_or_equal(rule_parameters) = rule_expression(
+    rule_parameters.variable,
+    rule_operator.le,
+    rule_parameters.value
+);
+
+/*
+ * Rule variable functions
+ */
+
+function block_height(integer) = rule_parameters(
+    rule_variable.block_height,
+    integer
+);
+
+function block_time(integer) = rule_parameters(
+    rule_variable.block_time,
+    integer
+);
+
+function op_count(integer) = rule_parameters(
+    rule_variable.op_count,
+    integer
+);
+
+function relative_block_height(integer) = rule_parameters(
+    rule_variable.relative_block_height,
+    integer
+);
+
+function relative_block_time(integer) = rule_parameters(
+    rule_variable.relative_block_time,
+    integer
+);

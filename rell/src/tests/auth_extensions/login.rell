@@ -33,11 +33,9 @@ function test_custom_login_config_can_have_ttl() {
         config,
         auth._login_config(
             flags = ["Z"],
-            rules = auth.login_rule_expression(
-                accounts.rule_operator.lt,
-                accounts.rule_variable.block_time,
-                "{10}"
-            ).to_gtv()
+            rules = auth.login_simple_rule(
+                auth.less_than(auth.relative_block_time(10))
+            )
         )
     );
 }
@@ -49,11 +47,9 @@ function test_custom_login_config_can_have_simple_rule() {
         config,
         auth._login_config(
             flags = ["W"],
-            rules = auth.login_rule_expression(
-                accounts.rule_operator.lt,
-                accounts.rule_variable.block_height,
-                "{5}"
-            ).to_gtv()
+            rules = auth.login_simple_rule(
+                auth.less_than(auth.relative_block_height(5))
+            )
         )
     );
 }
@@ -65,19 +61,10 @@ function test_custom_login_config_can_have_complex_rule() {
         config,
         auth._login_config(
             flags = ["A", "Z"],
-            rules = [
-                "and".to_gtv(),
-                auth.login_rule_expression(
-                    accounts.rule_operator.lt,
-                    accounts.rule_variable.block_height,
-                    "{5}"
-                ).to_gtv(),
-                auth.login_rule_expression(
-                    accounts.rule_operator.le,
-                    accounts.rule_variable.op_count,
-                    "7"
-                ).to_gtv()
-            ].to_gtv()
+            rules = auth.login_rules([
+                auth.less_than(auth.relative_block_height(5)),
+                auth.less_or_equal(auth.op_count(7))
+            ])
         )
     );
 }
