@@ -261,6 +261,7 @@ async function createBaseOrcestrator(
       path.indexOf(targetChainRid),
     );
 
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise<void>(async (resolve, reject) => {
       let completed = false;
       for (let i = 0; i < 20; ++i) {
@@ -398,6 +399,7 @@ async function createBaseOrcestrator(
 
     const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
 
+    // eslint-disable-next-line no-async-promise-executor
     await new Promise<void>(async (resolve, reject) => {
       let completed = false;
       for (let i = 0; i < 20; ++i) {
