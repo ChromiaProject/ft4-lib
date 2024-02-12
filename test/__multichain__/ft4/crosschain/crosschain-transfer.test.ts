@@ -50,7 +50,7 @@ describe("Crosschain transfer", () => {
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       const initOperation = initTransferOp(
         account01.id,
         asset00.id,
@@ -68,17 +68,31 @@ describe("Crosschain transfer", () => {
         error: Error | null,
       ) => {
         if (error) {
-          throw error;
+          reject(error);
+          return;
         }
         if (!data) {
-          throw new Error("No data provided");
+          reject(new Error("No data provided"));
+          return;
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
-        await transactionBuilder(account00.authenticator, connection01.client)
-          .add(iccfProofOperation)
-          .add(applyTransferOp(data.tx, data.tx, 0))
-          .buildAndSend();
-        resolve();
+        for (let i = 0; i < 10; ++i) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          try {
+            await transactionBuilder(
+              account00.authenticator,
+              connection01.client,
+            )
+              .add(iccfProofOperation)
+              .add(applyTransferOp(data.tx, data.tx, 0))
+              .buildAndSend();
+            resolve();
+            return;
+          } catch (err) {
+            /* Errors are expected during reties */
+          }
+        }
+        reject();
       };
 
       tb.add(initOperation, onAnchoringHandler).buildAndSend();
