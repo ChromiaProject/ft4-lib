@@ -1,8 +1,11 @@
-import { KeyPair, SignatureProvider, formatter } from "postchain-client";
-import { createAuthenticator } from "@ft4/authentication";
-import { Authenticator, createInMemoryFtKeyStore } from "@ft4/authentication";
+import { formatter } from "postchain-client";
+import {
+  FtKeyStore,
+  createAuthenticator,
+  Authenticator,
+} from "@ft4/authentication";
 import { call, createSession } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
+import { Connection } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import {
@@ -33,9 +36,8 @@ export function createAuthenticatedAccount(
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AnyAuthDescriptorRegistration,
-      newSigner: SignatureProvider | KeyPair,
-    ) =>
-      addAuthDescriptor(connection, authenticator, authDescriptor, newSigner),
+      keyStore: FtKeyStore,
+    ) => addAuthDescriptor(connection, authenticator, authDescriptor, keyStore),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
       deleteAuthDescriptor(connection, authenticator, authDescriptorId),
     // deleteAllAuthDescriptorsExclude: (authDescriptorId: BufferId) =>
@@ -52,15 +54,13 @@ async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorRegistration: AnyAuthDescriptorRegistration,
-  newSigner: SignatureProvider | KeyPair,
+  keyStore: FtKeyStore,
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
-  const newKeyStore = createInMemoryFtKeyStore(newSigner);
-
   const tx = await tb
     .add(addAuthDescriptorOp(authDescriptorRegistration))
-    .addSigners(newKeyStore)
+    .addSigners(keyStore)
     .build();
 
   const receipt = await connection.client.sendTransaction(tx);
@@ -74,7 +74,7 @@ async function addAuthDescriptor(
   const newAuth = createAuthenticator(
     authenticator.accountId,
     authenticator.keyHandlers.concat(
-      newKeyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
+      keyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
     ),
     authenticator.authDataService,
   );

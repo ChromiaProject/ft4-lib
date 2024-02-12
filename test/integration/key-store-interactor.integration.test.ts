@@ -52,6 +52,7 @@ describe("Key store interactor", () => {
   it("should return two accounts if corresponding key is used in two accounts", async () => {
     const keyPair1 = newSignatureProvider();
     const keyPair2 = newSignatureProvider();
+    const keyStore2 = createInMemoryFtKeyStore(keyPair2);
 
     const account1 = await AccountBuilder.account(connection)
       .withSigner(keyPair1)
@@ -62,12 +63,12 @@ describe("Key store interactor", () => {
 
     await account1.addAuthDescriptor(
       (await account2.getAuthDescriptors()).data[0],
-      keyPair2,
+      keyStore2,
     );
 
     const accounts = await createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2),
+      keyStore2,
     ).getAccounts();
 
     expect(accounts.length).toEqual(2);
@@ -92,19 +93,20 @@ describe("Key store interactor", () => {
   });
 
   it("should have authenticator with two key handlers when there are two auth descriptors with corresponding key", async () => {
-    const { keyPair: keyPair1, authDescriptor: ad1 } = createTestAuthDescriptor(
-      ["M"],
-    );
-    const { keyPair: keyPair2, authDescriptor: ad2 } = createTestAuthDescriptor(
-      [FlagsType.Transfer],
-    );
+    const {
+      keyStore: keyStore1,
+      keyPair: keyPair1,
+      authDescriptor: ad1,
+    } = createTestAuthDescriptor(["M"]);
+    const { keyStore: keyStore2, authDescriptor: ad2 } =
+      createTestAuthDescriptor([FlagsType.Transfer]);
 
     const account = await AccountBuilder.account(connection)
       .withSigner(newSignatureProvider(keyPair1))
       .build();
 
-    await account.addAuthDescriptor(ad1, keyPair1);
-    await account.addAuthDescriptor(ad2, keyPair2);
+    await account.addAuthDescriptor(ad1, keyStore1);
+    await account.addAuthDescriptor(ad2, keyStore2);
 
     const session = await createKeyStoreInteractor(
       connection.client,
@@ -130,7 +132,7 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       lessThan(opCount(2)),
     );
-    await account.addAuthDescriptor(ad2, keyPair2);
+    await account.addAuthDescriptor(ad2, createInMemoryFtKeyStore(keyPair2));
 
     const ad2Session = await createKeyStoreInteractor(
       connection.client,
@@ -142,14 +144,14 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now() + 10000)),
     );
-    await account.addAuthDescriptor(ad3, keyPair2);
+    await account.addAuthDescriptor(ad3, createInMemoryFtKeyStore(keyPair2));
 
     const ad4 = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now())),
     );
-    await account.addAuthDescriptor(ad4, keyPair2);
+    await account.addAuthDescriptor(ad4, createInMemoryFtKeyStore(keyPair2));
 
     const session = await createKeyStoreInteractor(
       connection.client,
@@ -195,7 +197,7 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       lessThan(opCount(2)),
     );
-    await account.addAuthDescriptor(ad2, keyPair2);
+    await account.addAuthDescriptor(ad2, createInMemoryFtKeyStore(keyPair2));
 
     const ad2Session = await createKeyStoreInteractor(
       connection.client,
@@ -207,7 +209,7 @@ describe("Key store interactor", () => {
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now() + 10000)),
     );
-    await account.addAuthDescriptor(ad3, keyPair2);
+    await account.addAuthDescriptor(ad3, createInMemoryFtKeyStore(keyPair2));
 
     const session = await createKeyStoreInteractor(
       connection.client,
@@ -234,20 +236,22 @@ describe("Key store interactor", () => {
   });
 
   it("it picks the backend selected KeyHandler when authenticating", async () => {
-    const { keyPair: keyPair1, authDescriptor: ad1 } =
-      createTestAuthDescriptor();
-    const { keyPair: keyPair2, authDescriptor: ad2 } = createTestAuthDescriptor(
-      [FlagsType.Transfer],
-    );
+    const {
+      keyStore: keyStore1,
+      keyPair: keyPair1,
+      authDescriptor: ad1,
+    } = createTestAuthDescriptor();
+    const { keyStore: keyStore2, authDescriptor: ad2 } =
+      createTestAuthDescriptor([FlagsType.Transfer]);
 
     const account = await AccountBuilder.account(connection)
       .withSigner(newSignatureProvider(keyPair1))
       .build();
 
-    await account.addAuthDescriptor(ad2, keyPair2);
+    await account.addAuthDescriptor(ad2, keyStore2);
 
-    const kh1 = createFtKeyHandler(ad1, createInMemoryFtKeyStore(keyPair1));
-    const kh2 = createFtKeyHandler(ad2, createInMemoryFtKeyStore(keyPair2));
+    const kh1 = createFtKeyHandler(ad1, keyStore1);
+    const kh2 = createFtKeyHandler(ad2, keyStore2);
     const authenticator = createAuthenticator(
       account.id,
       [kh1, kh2],

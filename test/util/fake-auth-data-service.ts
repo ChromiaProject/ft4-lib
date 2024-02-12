@@ -18,11 +18,9 @@ export function createFakeAuthDataService(
     isOperationExposed: isOperationExposedFn ?? (() => Promise.resolve(true)),
     getAuthMessageTemplate: (operation: Operation) =>
       Promise.resolve(data[operation.name].message),
-    // eslint-disable-next-line
-    getNonce: (accountId: BufferId, authDescriptorId: BufferId) =>
+    getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
       generator.next().value,
-    // eslint-disable-next-line
-    getLoginConfig: (configName: string) =>
+    getLoginConfig: (_configName: string) =>
       Promise.resolve({ flags: [], rules: null } as LoginConfig),
     getBlockchainRid: () => Buffer.from(""),
     getAuthHandlerForOperation: (operationName: string) =>

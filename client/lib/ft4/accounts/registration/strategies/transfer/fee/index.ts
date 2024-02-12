@@ -2,20 +2,14 @@ import { RegistrationDetails, Strategy } from "../../../types";
 import {
   AnyAuthDescriptorRegistration,
   aggregateSigners,
-  createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts/auth-descriptor";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
-import {
-  LoginConfigOptions,
-  LoginKeyStore,
-  getConfigFromOptions,
-} from "@ft4/authentication/login-manager";
+import { LoginConfigOptions } from "@ft4/authentication/login-manager";
 import { Connection } from "@ft4/types";
-import { createAuthDataService } from "@ft4/ft-session";
-import { RawAnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor/types";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
-import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
-import { getAccountIdFromSigners } from "@ft4/accounts/registration/strategies/index";
+import {
+  getAccountIdFromSigners,
+  getLoginDetails,
+} from "@ft4/accounts/registration/strategies";
 import { Asset } from "@ft4/asset/index";
 
 export function transfer_fee(
@@ -27,43 +21,27 @@ export function transfer_fee(
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {
-      let disposableAuthDescriptor: RawAnyAuthDescriptorRegistration | null =
-        null;
-
-      let loginKeyStore: LoginKeyStore | null = null;
-      let disposableKeyStore: FtKeyStore | null = null;
-
       const accountId = getAccountIdFromSigners(
         aggregateSigners(authDescriptor),
       );
 
-      if (loginConfig) {
-        const authDataService = createAuthDataService(connection);
-        const config = await getConfigFromOptions(authDataService, loginConfig);
-        loginKeyStore = createInMemoryLoginKeyStore();
-        const keyPair = await loginKeyStore.createKeyPair(accountId);
-        disposableKeyStore = createInMemoryFtKeyStore(keyPair);
-        disposableAuthDescriptor = authDescriptorRegistrationToGtv(
-          createSingleSigAuthDescriptorRegistration(
-            config.flags,
-            keyPair.pubKey,
-            config.rules,
-          ),
-        );
-      }
+      const loginDetails =
+        loginConfig &&
+        (await getLoginDetails(connection, accountId, loginConfig));
 
       const operation = {
         name: "ft4.ras_transfer_fee",
         args: [
           feeAsset.id,
           authDescriptorRegistrationToGtv(authDescriptor),
-          disposableAuthDescriptor,
+          loginDetails &&
+            authDescriptorRegistrationToGtv(loginDetails.authDescriptor),
         ],
       };
 
       return {
         strategyOperation: operation,
-        loginKeyStore: disposableKeyStore,
+        loginKeyStore: loginDetails?.keyStore || null,
       };
     },
   });
