@@ -26,10 +26,6 @@ export function isSimpleRule(
   );
 }
 
-export function isNullRule(rule: Rules | RawRules): rule is null {
-  return rule === null;
-}
-
 export function isRawRule(
   rule: Rules | RawRules,
 ): rule is Exclude<RawRules, null> {

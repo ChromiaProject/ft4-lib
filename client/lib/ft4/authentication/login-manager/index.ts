@@ -20,7 +20,6 @@ import {
 } from "./types";
 import {
   isRawRule,
-  isNullRule,
   isSimpleRule,
   isLoginConfigSimpleRule,
 } from "./type-predicates";
@@ -141,9 +140,9 @@ export function createLoginManager(
 export async function getConfigFromOptions(
   authDataService: AuthDataService,
   options: LoginConfigOptions,
-): Promise<{ flags: string[]; rules: AuthDescriptorRules }> {
+): Promise<{ flags: string[]; rules: AuthDescriptorRules | null }> {
   let flags: string[];
-  let rules: AuthDescriptorRules;
+  let rules: AuthDescriptorRules | null;
 
   let currentHeight: number;
   const getBlockHeight = async () => {
@@ -156,13 +155,17 @@ export async function getConfigFromOptions(
 
   if (options.config) {
     flags = options.config.flags;
-    rules = await getRulesFromLoginConfig(options.config.rules, getBlockHeight);
+    rules =
+      options.config.rules &&
+      (await getRulesFromLoginConfig(options.config.rules, getBlockHeight));
   } else {
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
     );
     flags = loginConfig.flags;
-    rules = await getRulesFromLoginConfig(loginConfig.rules, getBlockHeight);
+    rules =
+      loginConfig.rules &&
+      (await getRulesFromLoginConfig(loginConfig.rules, getBlockHeight));
   }
   return {
     flags,
@@ -190,9 +193,7 @@ async function getRulesFromLoginConfig(
   rules: Rules,
   getBlockHeight: () => Promise<number>,
 ): Promise<AuthDescriptorRules> {
-  if (isNullRule(rules)) {
-    return null;
-  } else if (isSimpleRule(rules)) {
+  if (isSimpleRule(rules)) {
     return ensureAuthDescriptorRule(rules, getBlockHeight);
   } else {
     const rulesWithoutAnd: (AnySimpleRule | RawAnySimpleRule)[] = isRawRule(
@@ -269,7 +270,7 @@ async function addDisposableAuthDescriptor(
   accountId: Buffer,
   adminAuthHandler: KeyHandler,
   flags: string[],
-  rules: AuthDescriptorRules,
+  rules: AuthDescriptorRules | null,
 ): Promise<KeyHandler> {
   const authenticator = createAuthenticator(
     accountId,
@@ -322,7 +323,7 @@ export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
 export function authDescriptorRuleToLoginConfigAndRule(
   relativeRules: AuthDescriptorSimpleRule[],
   absoluteRules: AuthDescriptorSimpleRule[],
-): LoginConfigRules {
+): LoginConfigRules | null {
   const convertedRules: LoginConfigSimpleRule[] = [];
 
   const simpleRuleConversion = (

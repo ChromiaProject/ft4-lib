@@ -8,7 +8,7 @@ import { BufferId } from "@ft4/utils";
 
 export type LoginConfig = {
   flags: string[];
-  rules: Rules;
+  rules: Rules | null;
 };
 
 export type LoginOptions = {
@@ -51,10 +51,7 @@ export type LoginConfigComplexRule = {
   operator: "and";
   rules: LoginConfigSimpleRule[];
 };
-export type LoginConfigRules =
-  | LoginConfigComplexRule
-  | LoginConfigSimpleRule
-  | null;
+export type LoginConfigRules = LoginConfigComplexRule | LoginConfigSimpleRule;
 
 export type Rules = LoginConfigRules | AuthDescriptorRules;
 

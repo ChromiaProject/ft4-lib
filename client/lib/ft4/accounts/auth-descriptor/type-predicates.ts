@@ -59,9 +59,5 @@ export function isSingleSig(
 export function isGtvSimpleRule(
   rule: RawAuthDescriptorRules,
 ): rule is RawAuthDescriptorSimpleRule {
-  return rule !== null && rule[0] !== "and";
-}
-
-export function isNullRule(rule: AuthDescriptorRules): rule is null {
-  return rule === null;
+  return rule[0] !== "and";
 }

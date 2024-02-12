@@ -47,8 +47,7 @@ export type AuthDescriptorComplexRule = {
 };
 export type AuthDescriptorRules =
   | AuthDescriptorSimpleRule
-  | AuthDescriptorComplexRule
-  | null;
+  | AuthDescriptorComplexRule;
 
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
