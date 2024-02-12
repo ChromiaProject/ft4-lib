@@ -4,6 +4,7 @@
 
 - `authenticator.getKeyHandlerForOperation` will not return auth descriptors whose rules don't allow them to be used.
 - `AuthDataService.getAllowedAuthDescriptors` now accepts `Buffer | string` instead of `Buffer` only
+- Auth descriptor queries updated to include `account_id` in response.
 
 ### Added
 

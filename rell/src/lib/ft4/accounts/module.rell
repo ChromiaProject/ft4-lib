@@ -192,6 +192,7 @@ function get_paginated_auth_descriptors_by_signer(account_id: byte_array, signer
 function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
     return (
         id = ad.id,
+        account_id = ad.account.id,
         auth_type = ad.auth_type,
         args = gtv.from_bytes(ad.args),
         rules = gtv.from_bytes(ad.rules),

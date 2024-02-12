@@ -1,4 +1,6 @@
 
+query get_allowed_assets(): list<(asset_id: byte_array, min_amount: big_integer)> = allowed_assets();
+
 // TODO what if there are more than one, and strategies differ?
 query get_pending_transfer_strategies(recipient_id: byte_array): set<text>? =
     account_creation_transfer @? { recipient_id, .state == account_creation_state.pending } (set(.strategies.split(","))) limit 1;

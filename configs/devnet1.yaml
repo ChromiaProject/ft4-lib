@@ -5,6 +5,10 @@ blockchains:
       lib.ft4.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
+      lib.ft4.accounts.strategies.transfer: # placeholder
+        rules: 
+          timeout_days: 10
+
 compile:
   source: ../rell/src
   target: ../rell/out
