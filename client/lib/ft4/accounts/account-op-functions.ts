@@ -1,8 +1,11 @@
 import { formatter } from "postchain-client";
-import { FtKeyStore, createAuthenticator } from "@ft4/authentication";
-import { Authenticator } from "@ft4/authentication";
+import {
+  FtKeyStore,
+  createAuthenticator,
+  Authenticator,
+} from "@ft4/authentication";
 import { call, createSession } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
+import { Connection } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import {

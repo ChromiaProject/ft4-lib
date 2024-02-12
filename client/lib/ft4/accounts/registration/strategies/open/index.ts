@@ -9,7 +9,7 @@ import { Connection } from "@ft4/types";
 import {
   getAccountIdFromSigners,
   getLoginDetails,
-} from "@ft4/accounts/registration/strategies/index";
+} from "@ft4/accounts/registration/strategies";
 
 export function open(
   authDescriptor: AnyAuthDescriptorRegistration,
