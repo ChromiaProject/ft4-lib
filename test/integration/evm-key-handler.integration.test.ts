@@ -7,6 +7,7 @@ import {
   deriveAuthDescriptorId,
 } from "@ft4/accounts/auth-descriptor";
 import { useChromiaNode } from "@ft4/util/chromia-node";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
 
 describe("EVM key handler", () => {
   let client: IClient;
@@ -37,7 +38,10 @@ describe("EVM key handler", () => {
       keyPair2.pubKey,
       null,
     );
-    await session.account.addAuthDescriptor(ad2, keyPair2);
+    await session.account.addAuthDescriptor(
+      ad2,
+      createInMemoryFtKeyStore(keyPair2),
+    );
 
     const authDescriptors = await session.account.getAuthDescriptors();
     expect(authDescriptors.data.length).toEqual(2);
