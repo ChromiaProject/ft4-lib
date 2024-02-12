@@ -42,7 +42,7 @@ export function createLoginManager(
 
       // We need need an auth descriptor with admin flag in order to add a
       // disposable key
-      const adminAuthDescriptor = authDescriptors.data.find((authDescriptor) =>
+      const adminAuthDescriptor = authDescriptors.find((authDescriptor) =>
         authDescriptor.args.flags.includes(FlagsType.Account),
       );
 
@@ -69,7 +69,7 @@ export function createLoginManager(
         const disposableKeyStore = createInMemoryFtKeyStore(keyPair);
         const disposableAuthDescriptors =
           await account.getAuthDescriptorsBySigner(getPubkey(keyPair));
-        disposableKeyHandlers = disposableAuthDescriptors.data
+        disposableKeyHandlers = disposableAuthDescriptors
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
             // If
@@ -95,7 +95,7 @@ export function createLoginManager(
       }
 
       // Initialize key handlers that correspond to master key store
-      const masterKeyHandlers = authDescriptors.data.map((authDescriptor) =>
+      const masterKeyHandlers = authDescriptors.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor),
       );
 

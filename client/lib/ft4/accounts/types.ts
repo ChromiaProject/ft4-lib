@@ -38,15 +38,10 @@ export interface Account {
   ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance | null>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
-  getAuthDescriptors: (
-    limit?: number,
-    cursor?: OptionalPageCursor,
-  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  getAuthDescriptors: () => Promise<AnyAuthDescriptor[]>;
   getAuthDescriptorsBySigner: (
     signer: BufferId,
-    limit?: number,
-    cursor?: OptionalPageCursor,
-  ) => Promise<PaginatedEntity<AnyAuthDescriptor>>;
+  ) => Promise<AnyAuthDescriptor[]>;
   getRateLimit: () => Promise<RateLimit>;
   getTransferHistory: (
     limit?: number,

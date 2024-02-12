@@ -27,7 +27,7 @@ import {
   TransferHistoryFilter,
 } from "./transfer-history";
 import { Account, RateLimit } from "./types";
-import { RawAnyAuthDescriptor, AnyAuthDescriptor, gtv } from "./";
+import { gtv } from "./";
 import {
   PendingTransfer,
   PendingTransferResponse,
@@ -80,18 +80,22 @@ export function createAccountObject(
     ) => getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getAuthDescriptors: async (
-      limit: OptionalLimit = null,
-      cursor: OptionalPageCursor = null,
-    ) => {
-      return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
-        connection,
-        accountAuthDescriptors(accountId, limit, cursor),
-        gtv.mapAuthDescriptorsFromGtv,
+    getAuthDescriptors: async () => {
+      const authDescriptors = await connection.query(
+        accountAuthDescriptors(accountId),
       );
+      return authDescriptors
+        ? gtv.mapAuthDescriptorsFromGtv(authDescriptors)
+        : [];
     },
-    getAuthDescriptorsBySigner: (signer: BufferId) =>
-      getAuthDescriptorsBySigner(connection, accountId, signer),
+    getAuthDescriptorsBySigner: async (signer: BufferId) => {
+      const authDescriptors = await connection.query(
+        accountAuthDescriptorsBySigner(accountId, signer),
+      );
+      return authDescriptors
+        ? gtv.mapAuthDescriptorsFromGtv(authDescriptors)
+        : [];
+    },
     getRateLimit: () => getRateLimit(connection.client, accountId),
     getTransferHistory: async (
       limit: OptionalLimit = null,
@@ -170,19 +174,4 @@ export async function isAuthDescriptorValid(
   return (await connection.query(
     Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
-}
-
-export async function getAuthDescriptorsBySigner(
-  connection: Connection,
-  accountId: BufferId,
-  signer: BufferId,
-  limit: OptionalLimit = null,
-  cursor: OptionalPageCursor = null,
-): Promise<PaginatedEntity<AnyAuthDescriptor>> {
-  return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
-    connection,
-    accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
-    (authDescriptors) =>
-      authDescriptors ? gtv.mapAuthDescriptorsFromGtv(authDescriptors) : [],
-  );
 }
