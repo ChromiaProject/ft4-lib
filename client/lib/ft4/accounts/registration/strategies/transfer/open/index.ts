@@ -11,7 +11,7 @@ import {
   getLoginDetails,
 } from "@ft4/accounts/registration/strategies";
 
-export function transfer_open(
+export function transferOpen(
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {

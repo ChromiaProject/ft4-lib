@@ -1,16 +1,16 @@
 @test
 module;
 
-import ^^^.lib.ft4.accounts;
-import ^^^.lib.ft4.assets;
-import ^^^.lib.ft4.ft4_basic_dev.*;
-import strategies: ^^^.lib.ft4.accounts.strategies;
-import create_on_transfer: ^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^.lib.ft4.accounts.strategies.transfer.fee;
-import ^^.assets.utils;
-import auth_ext: ^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^.lib.ft4.crosschain.external;
-import iccf_op: ^^.operations.iccf_op;
+import ^^^^.lib.ft4.accounts;
+import ^^^^.lib.ft4.assets;
+import ^^^^.lib.ft4.ft4_basic_dev.*;
+import strategies: ^^^^.lib.ft4.accounts.strategies;
+import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
+import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
+import ^^^.assets.utils;
+import auth_ext: ^^^^.lib.ft4.auth.external;
+import xchain_ext: ^^^^.lib.ft4.crosschain.external;
+import iccf_op: ^^^.operations.iccf_op;
 
 function test_create_account_on_internal_transfer_with_fee_success() {
     val alice = utils.register_alice();
@@ -20,7 +20,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
-    val allowed_assets = map(create_on_transfer.get_allowed_assets());
+    val allowed_assets = map(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id));
     val min_amount = allowed_assets[asset.id];
     val amount = min_amount;
 
@@ -42,7 +42,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
         amount,
         .state == create_on_transfer.account_creation_state.pending
     });
-    assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id)!!);
+    assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
         .op(fee.ras_transfer_fee(asset.id, utils.create_auth_descriptor(rell.test.pubkeys.bob)))
@@ -51,7 +51,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
-    assert_null(create_on_transfer.get_pending_transfer_strategies(recipient_id));
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
 
     val bob = accounts.account_by_id(recipient_id);
     assert_equals(assets.get_asset_balance(bob, asset), amount - fee_amount);

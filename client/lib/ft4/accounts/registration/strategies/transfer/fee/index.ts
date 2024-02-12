@@ -12,7 +12,7 @@ import {
 } from "@ft4/accounts/registration/strategies";
 import { Asset } from "@ft4/asset/index";
 
-export function transfer_fee(
+export function transferFee(
   feeAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
