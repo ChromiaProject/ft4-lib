@@ -30,7 +30,8 @@ entity account_creation_transfer {
     index recipient_id: byte_array;
     assets.asset;
     amount: big_integer;
-    strategies: text;
+    rules: byte_array;
+    timestamp;
     mutable state: account_creation_state = account_creation_state.pending;
     mutable tx_rid: byte_array = x"";
     mutable op_index: integer = -1;
@@ -74,27 +75,29 @@ function create_on_transfer(
         recipient_id: byte_array,
         assets.asset,
         amount: big_integer) {
-    val allowed_assets = map(allowed_assets());
-    require(asset.id in allowed_assets,
-        "Recipient account <%s> does not exist, and asset <%s> is not supported for account creation".format(recipient_id, asset.id));
-    val min_amount = allowed_assets[asset.id];
-    require(amount >= min_amount, "Insufficient amount of asset transferred, at least %s is needed".format(min_amount));
+    val rules = find_allowed_rules(
+        from_chain = sender_blockchain_rid,
+        from_id = sender_id,
+        to_id = recipient_id,
+        asset_id = asset.id,
+        amount = amount
+    );
+    require(not rules.empty(), "No suitable transfer strategy found");
+
     require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
         "This asset is already transferred");
 
-    val strategies = "open,fee"; // TODO find matching rule, reject if no rule is found, find applicable strategies
-
     create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
-        strategies = strategies);
+        rules = rules.to_gtv().to_bytes(),
+        timestamp = accounts.latest_time());
 }
 
-function do_transfer(accounts.account) {
+function do_transfer(accounts.account, strategy: text) {
     val account_creation_transfers = account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending };
     require(account_creation_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
 
     val pool_account = ensure_pool_account(chain_context.blockchain_rid);
 
-    val allowed_assets = map(allowed_assets());
     var enough_transferred = false;
     for (account_creation_transfer in account_creation_transfers) {
         assets.Unsafe.transfer(
@@ -107,35 +110,14 @@ function do_transfer(accounts.account) {
         account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
         account_creation_transfer.op_index = op_context.op_index;
 
-        if (account_creation_transfer.asset.id in allowed_assets
-            and account_creation_transfer.amount >= allowed_assets[account_creation_transfer.asset.id]) enough_transferred = true;
+        val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
+        val rule = rules.get_or_null(strategy);
+        if (rule != null) {
+            if (account_creation_transfer.asset.id in rule.asset_limits
+                    and account_creation_transfer.amount >= rule.asset_limits[account_creation_transfer.asset.id]) {
+                enough_transferred = true;
+            }
+        }
     }
-
     require(enough_transferred, "Insufficient amount of asset transferred");
-}
-
-function allowed_assets(): list<(asset_id: byte_array, min_amount: big_integer)> {
-	// TODO get allowed_assets from config
-    return [
-        (
-            asset_id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa",
-            min_amount = 5L
-        ),
-        (
-            asset_id = x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac",
-            min_amount = 3L
-        ),
-        (
-            asset_id = x"ad60efda802fec15e22a8c4691d1eb13e144dee4984772c05ab9163cf2cf2996",
-            min_amount = 5L
-        ),
-        (
-            asset_id = x"39b34b11bf6c1c301327d5824f977c9360895446a529bb980ebefd2183ca4831",
-            min_amount = 5L
-        ),
-        (
-            asset_id = x"cf45a2cf3033543c2664886c7d39f9f31087bd5949120fe2e69affc0f926a71f",
-            min_amount = 7L
-        )
-    ];
 }

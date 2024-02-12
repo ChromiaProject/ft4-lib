@@ -1,6 +1,19 @@
 
-query get_allowed_assets(): list<(asset_id: byte_array, min_amount: big_integer)> = allowed_assets();
+query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array):
+        list<(asset_id: byte_array, min_amount: big_integer)> {
+    val allowed_assets = list<(asset_id: byte_array, min_amount: big_integer)>();
+    for ((asset_id, min_amount) in find_allowed_assets(sender_blockchain_rid, sender_id, recipient_id)) {
+        allowed_assets.add((asset_id = asset_id, min_amount = min_amount));
+    }
+    return allowed_assets;
+}
 
-// TODO what if there are more than one, and strategies differ?
-query get_pending_transfer_strategies(recipient_id: byte_array): set<text>? =
-    account_creation_transfer @? { recipient_id, .state == account_creation_state.pending } (set(.strategies.split(","))) limit 1;
+query get_pending_transfer_strategies(recipient_id: byte_array): set<text> {
+    val strategies2 = account_creation_transfer @* { recipient_id, .state == account_creation_state.pending }
+        (map<text,rule>.from_gtv(gtv.from_bytes(.rules)).keys());
+    val strategies = set<text>();
+    for (s in strategies2) {
+        strategies.add_all(s);
+    }
+    return strategies;
+}

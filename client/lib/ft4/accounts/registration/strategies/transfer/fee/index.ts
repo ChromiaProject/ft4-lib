@@ -18,7 +18,7 @@ import { FtKeyStore } from "@ft4/authentication";
 import { getAccountIdFromSigners } from "@ft4/accounts/registration/strategies/index";
 import { Asset } from "@ft4/asset/index";
 
-export function transfer_fee(
+export function transferFee(
   feeAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
