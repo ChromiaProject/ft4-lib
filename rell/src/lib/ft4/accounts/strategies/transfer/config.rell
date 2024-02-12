@@ -1,3 +1,5 @@
+val MILLISECONDS_PER_DAY = 86400000;
+
 function is_value_allowed(value: byte_array, allowlist) {
     return 
         allowlist.allow_all
@@ -33,8 +35,8 @@ function is_asset_amount_allowed(rule, asset_id: byte_array, amount: big_integer
 }
 
 function has_tx_expired(rule, tx_start_timestamp: timestamp) {
-    val timeout_days = rule.timeout_days * 86400000;
-    return tx_start_timestamp + timeout_days < accounts.latest_time();
+    val timeout_millis = rule.timeout_days * MILLISECONDS_PER_DAY;
+    return tx_start_timestamp + timeout_millis < accounts.latest_time();
 }
 
 function is_strategy_active(rule, strategy: text) {
@@ -42,25 +44,47 @@ function is_strategy_active(rule, strategy: text) {
     return strategy in strats;
 }
 
-function find_allowed_strategies(
+function find_allowed_rules(
     from_chain: byte_array,
     from_id: byte_array,
     to_id: byte_array,
     asset_id: byte_array,
     amount: big_integer
-) {
+): map<text,rule> {
     val cfg = get_config();
-    val allowed_strats = cfg @* {
+    val allowed_rules = cfg @* {
         is_blockchain_allowed($, from_chain),
         is_sender_allowed($, from_id),
         is_recipient_allowed($, to_id, from_id),
         is_asset_amount_allowed($, asset_id, amount)
-    } ( .strategies ); // list<list<text>>
+    };
 
-    val strategies = set<text>();
-    for (strat in allowed_strats) {
-        strategies.add_all(strat);
+    val rule_map = map<text,rule>();
+    for (rule in allowed_rules) {
+        for (strat in rule.strategies) {
+            rule_map[strat] = rule;
+        }
     }
+    return rule_map;
+}
 
-    return strategies;
+function find_allowed_assets(
+    from_chain: byte_array,
+    from_id: byte_array,
+    to_id: byte_array
+): map<byte_array, big_integer> {
+    val cfg = get_config();
+    val allowed_rules = cfg @* {
+        is_blockchain_allowed($, from_chain),
+        is_sender_allowed($, from_id),
+        is_recipient_allowed($, to_id, from_id)
+    } (.asset_limits);
+
+    val allowed_assets = map<byte_array, big_integer>();
+    for (rule in allowed_rules) {
+        for ((asset_id, min_amount) in rule) {
+            allowed_assets[asset_id] = min_amount;
+        }
+    }
+    return allowed_assets;
 }

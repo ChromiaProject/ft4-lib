@@ -119,11 +119,10 @@ class AccountBuilder {
     const accountManager =
       await this.registerAndBuildManagerAuthenticated(manager);
     const ad = this.getAuthDescriptorRegistration();
-    await accountManager.addAuthDescriptor(ad, this.signer);
+    const keyStore = createInMemoryFtKeyStore(this.signer);
+    await accountManager.addAuthDescriptor(ad, keyStore);
 
-    const keyHandler = createInMemoryFtKeyStore(this.signer).createKeyHandler(
-      testAdFromRegistration(ad),
-    );
+    const keyHandler = keyStore.createKeyHandler(testAdFromRegistration(ad));
     const authenticator = createAuthenticator(
       accountManager.id,
       [keyHandler],

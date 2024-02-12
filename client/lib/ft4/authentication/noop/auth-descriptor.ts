@@ -1,7 +1,8 @@
 import { AuthDescriptor, AuthType, SingleSig } from "@ft4/accounts";
 
 export const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
-  id: Buffer.from(""),
+  id: Buffer.alloc(32, 0),
+  accountId: Buffer.alloc(32, 0),
   authType: AuthType.SingleSig,
   args: {
     flags: [] as string[],

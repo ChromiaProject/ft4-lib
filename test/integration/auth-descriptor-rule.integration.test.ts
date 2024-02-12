@@ -44,10 +44,7 @@ async function getAuthedAccountsFromAuthDescriptorRule(
   const user2 = testUser(rule);
   const accountAdmin = await sourceAccount();
 
-  await accountAdmin.addAuthDescriptor(
-    user2.authDescriptor,
-    user2.signatureProvider,
-  );
+  await accountAdmin.addAuthDescriptor(user2.authDescriptor, user2.keyStore);
 
   const accounts = await _connection.getAccountsByAuthDescriptorId(
     user2.authDescriptor.id,
@@ -83,10 +80,7 @@ describe("Auth Descriptor Rule", () => {
       lessOrEqual(opCount(1)),
     );
 
-    await accountAdmin.addAuthDescriptor(
-      user3.authDescriptor,
-      user3.signatureProvider,
-    );
+    await accountAdmin.addAuthDescriptor(user3.authDescriptor, user3.keyStore);
 
     expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(3);
   });

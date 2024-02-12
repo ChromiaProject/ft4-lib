@@ -17,10 +17,10 @@ import { FtKeyStore } from "@ft4/authentication";
 
 export {
   BufferId,
+  TxContext,
   EntityRetriever,
   PaginatedEntity,
   TxBuilderTransaction,
-  TxContext,
 } from "./types";
 
 export function nop(): Operation {

@@ -12,7 +12,6 @@ import {
   RawAnyAuthDescriptor,
   RawAuthDescriptor,
   RawAuthDescriptorSimpleRule,
-  RawAuthDescriptorComplexRule,
   MultiSig,
   SingleSig,
   AuthType,
@@ -23,15 +22,17 @@ import {
   RawMultiSig,
   AuthDescriptorRules,
   AuthDescriptorSimpleRule,
+  RawAuthDescriptorRules,
 } from "./types";
 
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,
 ): AuthDescriptor<SingleSig> {
-  const { id, auth_type, args, rules, created } = ad;
+  const { id, account_id, auth_type, args, rules, created } = ad;
   const [flags, signer] = args;
   return Object.freeze({
     id,
+    accountId: account_id,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
@@ -45,10 +46,11 @@ export function mapSingleSigAuthDescriptor(
 export function mapMultiSigAuthDescriptor(
   ad: RawAuthDescriptor<RawMultiSig>,
 ): AuthDescriptor<MultiSig> {
-  const { id, auth_type, args, rules, created } = ad;
+  const { id, account_id, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
   return Object.freeze({
     id,
+    accountId: account_id,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
@@ -100,7 +102,7 @@ export function authDescriptorRegistrationToGtv(
 }
 
 export function rulesFromGtv(
-  gtvRules: RawAuthDescriptorSimpleRule | RawAuthDescriptorComplexRule,
+  gtvRules: RawAuthDescriptorRules,
 ): AuthDescriptorRules {
   const mapRule = (gtv: RawAuthDescriptorSimpleRule) => ({
     operator: enumValueFromString(gtv[0], RuleOperator),
@@ -119,9 +121,7 @@ export function rulesFromGtv(
   }
 }
 
-export function rulesToGtv(
-  rule: AuthDescriptorRules,
-): RawAuthDescriptorSimpleRule | RawAuthDescriptorComplexRule {
+export function rulesToGtv(rule: AuthDescriptorRules): RawAuthDescriptorRules {
   const toGtv = (
     rule: AuthDescriptorSimpleRule,
   ): RawAuthDescriptorSimpleRule => [rule.operator, rule.variable, rule.value];
