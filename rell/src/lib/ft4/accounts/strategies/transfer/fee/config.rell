@@ -15,17 +15,10 @@ function fee_assets(): list<(asset_id: byte_array, amount: big_integer)> {
         return [(
                 asset_id = input.id,
                 amount = big_integer.from_text(input.amount.replace("L", ""))
-                )];
+               )];
     } else if (transfer.is_list(gtv)) {
         val inputs = list<fee_asset_gtv_value>.from_gtv_pretty(gtv);
-        val output = list<(asset_id: byte_array, amount: big_integer)>();
-        for (i in inputs) {
-            output.add((
-                asset_id = i.id,
-                amount = big_integer.from_text(i.amount.replace("L", ""))
-            ));
-        }
-        return output;
+        return inputs @* {} ((asset_id = .id, amount = big_integer.from_text(.amount.replace("L", ""))));
     }
     else {
         require(
