@@ -5,7 +5,7 @@ export function allowedAssets(
   senderId: Buffer,
   recipientId: Buffer,
 ): QueryObject<
-  { asset_id: Buffer; min_amount: bigint }[],
+  { asset_id: Buffer; min_amount: bigint }[] | null,
   {
     sender_blockchain_rid: Buffer;
     sender_id: Buffer;
