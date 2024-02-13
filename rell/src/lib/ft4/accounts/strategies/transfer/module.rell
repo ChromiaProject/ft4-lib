@@ -113,8 +113,8 @@ function do_transfer(accounts.account, strategy: text) {
         val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
         val rule = rules.get_or_null(strategy);
         if (rule != null) {
-            if (account_creation_transfer.asset.id in rule.asset_limits
-                    and account_creation_transfer.amount >= rule.asset_limits[account_creation_transfer.asset.id]) {
+            if (rule.allow_all_assets or (account_creation_transfer.asset.id in rule.asset_limits
+                    and account_creation_transfer.amount >= rule.asset_limits[account_creation_transfer.asset.id])) {
                 enough_transferred = true;
             }
         }

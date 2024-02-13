@@ -38,9 +38,10 @@ describe("Test transfer strategy", () => {
       .withPoints(1)
       .build();
 
-    const _allowedAssets = await connection.query(
+    const _allowedAssets = (await connection.query(
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
-    );
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
     const rawAmount = _allowedAssets.find(
       (v) => v.asset_id === asset.id,
     )!.min_amount;

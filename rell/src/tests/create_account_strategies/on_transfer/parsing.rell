@@ -41,7 +41,10 @@ function test_get_config_reads_yml_correctly() {
                     allow_all = true
                 ),
                 recipients = create_on_transfer.allowlist(
-                    allow_all = true
+                    allow_all = false,
+                    allowed_values = [
+                        x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5"
+                    ]
                 ),
 
                 require_same_address = false,
@@ -64,7 +67,10 @@ function test_get_config_reads_yml_correctly() {
                     allow_all = true
                 ),
                 recipients = create_on_transfer.allowlist(
-                    allow_all = true
+                    allow_all = false,
+                    allowed_values = [
+                        x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8"
+                    ]
                 ),
 
                 require_same_address = false,
@@ -77,6 +83,30 @@ function test_get_config_reads_yml_correctly() {
                     (x"39b34b11bf6c1c301327d5824f977c9360895446a529bb980ebefd2183ca4831", 5L),
                     (x"cf45a2cf3033543c2664886c7d39f9f31087bd5949120fe2e69affc0f926a71f", 7L)
                 ])
+            ),
+            create_on_transfer.rule(
+                timeout_days = 60,
+                strategies = ["open"],
+
+                blockchains = create_on_transfer.allowlist(
+                    allow_all = false,
+                    allowed_values = [
+                        chain_context.blockchain_rid
+                    ]
+                ),
+                senders = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+                recipients = create_on_transfer.allowlist(
+                    allow_all = false,
+                    allowed_values = [
+                        x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe"
+                    ]
+                ),
+
+                require_same_address = false,
+
+                allow_all_assets = true
             )
         ]
     );
