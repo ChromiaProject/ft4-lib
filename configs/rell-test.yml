@@ -60,14 +60,15 @@ blockchains:
               - "$"
               sender: X
               recipient: X
+              asset: "*"
               timeout_days: 10
               strategy: "open"
 
             - sender: "*"
               recipient: x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5" # Alice
               asset:
-                - id: x"abcdef"
-                  min_amount: 100000L
+                id: x"abcdef"
+                min_amount: 100000L
               timeout_days: 60
               strategy:
                - "fee"

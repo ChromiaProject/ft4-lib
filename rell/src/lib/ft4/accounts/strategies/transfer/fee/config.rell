@@ -10,7 +10,7 @@ struct fee_asset_gtv_value {
 
 function fee_assets(): list<(asset_id: byte_array, amount: big_integer)> {
     val gtv = chain_context.args.asset;
-    if (transfer.is_byte_array(gtv)) {
+    if (transfer.is_dict(gtv)) {
         val input = fee_asset_gtv_value.from_gtv_pretty(gtv);
         return [(
                 asset_id = input.id,

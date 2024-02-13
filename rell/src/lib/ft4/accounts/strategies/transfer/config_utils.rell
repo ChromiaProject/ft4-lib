@@ -217,7 +217,7 @@ function parse_blockchain_single_value_from_gtv(gtv): (
 }
 
 function parse_asset_limits_from_gtv(gtv): map<byte_array, big_integer>? {
-    if (is_byte_array(gtv)) {
+    if (is_dict(gtv)) {
         val input = asset_limit_gtv_values.from_gtv_pretty(gtv);
         val output = map<byte_array, big_integer>([(
             input.id,
