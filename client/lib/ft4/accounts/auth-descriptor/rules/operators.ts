@@ -1,44 +1,18 @@
 import {
-  AuthDescriptorSimpleRule,
   AuthDescriptorComplexRule,
-  RuleOperator,
-  RuleVariable,
+  AuthDescriptorSimpleRule,
+  SimpleRule,
 } from "./types";
 
-type RuleVariableValue = [RuleVariable, number];
+export type RuleVariableValue<T extends string> = [T, number];
 
-/**
- * Creates a block height rule variable object that can be passed
- * into a function that produces a rule
- * @param value the block height to use
- * @returns rule variable value
- */
-export const blockHeight = (value: number): RuleVariableValue => [
-  RuleVariable.BlockHeight,
-  value,
-];
-
-/**
- * Creates a block time rule variable object that can be passed
- * into a function that produces a rule
- * @param value the block time to use
- * @returns rule variable value
- */
-export const blockTime = (value: number): RuleVariableValue => [
-  RuleVariable.BlockTime,
-  value,
-];
-
-/**
- * Creates an operation count rule variable object that can be passed
- * into a function that produces a rule
- * @param value the operation count to use
- * @returns rule variable value
- */
-export const opCount = (value: number): RuleVariableValue => [
-  RuleVariable.OpCount,
-  value,
-];
+export enum RuleOperator {
+  LessThan = "lt",
+  LessOrEqual = "le",
+  Equals = "eq",
+  GreaterThan = "gt",
+  GreaterOrEqual = "ge",
+}
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -47,10 +21,9 @@ export const opCount = (value: number): RuleVariableValue => [
  * @param variableValue the variable value to use
  * @returns a rule variable
  */
-export const lessThan = (
-  ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorSimpleRule =>
-  produceRule(RuleOperator.LessThan, ...variableValue);
+export const lessThan = <T extends string>(
+  ...variableValue: RuleVariableValue<T> | [RuleVariableValue<T>]
+): SimpleRule<T> => produceRule(RuleOperator.LessThan, ...variableValue);
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -59,10 +32,9 @@ export const lessThan = (
  * @param variableValue the variable value to use
  * @returns a rule variable
  */
-export const lessOrEqual = (
-  ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorSimpleRule =>
-  produceRule(RuleOperator.LessOrEqual, ...variableValue);
+export const lessOrEqual = <T extends string>(
+  ...variableValue: RuleVariableValue<T> | [RuleVariableValue<T>]
+): SimpleRule<T> => produceRule(RuleOperator.LessOrEqual, ...variableValue);
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -71,10 +43,9 @@ export const lessOrEqual = (
  * @param variableValue the variable value to use
  * @returns a rule variable
  */
-export const equals = (
-  ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorSimpleRule =>
-  produceRule(RuleOperator.Equals, ...variableValue);
+export const equals = <T extends string>(
+  ...variableValue: RuleVariableValue<T> | [RuleVariableValue<T>]
+): SimpleRule<T> => produceRule(RuleOperator.Equals, ...variableValue);
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -83,10 +54,9 @@ export const equals = (
  * @param variableValue the variable value to use
  * @returns a rule variable
  */
-export const greaterThan = (
-  ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorSimpleRule =>
-  produceRule(RuleOperator.GreaterThan, ...variableValue);
+export const greaterThan = <T extends string>(
+  ...variableValue: RuleVariableValue<T> | [RuleVariableValue<T>]
+): SimpleRule<T> => produceRule(RuleOperator.GreaterThan, ...variableValue);
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
@@ -95,10 +65,9 @@ export const greaterThan = (
  * @param variableValue the variable value to use
  * @returns a rule variable
  */
-export const greaterOrEqual = (
-  ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorSimpleRule =>
-  produceRule(RuleOperator.GreaterOrEqual, ...variableValue);
+export const greaterOrEqual = <T extends string>(
+  ...variableValue: RuleVariableValue<T> | [RuleVariableValue<T>]
+): SimpleRule<T> => produceRule(RuleOperator.GreaterOrEqual, ...variableValue);
 
 /**
  * Creates a combination of rules that will be evaluated using the equivalent of a boolean 'and' operator.
@@ -127,20 +96,25 @@ export const and = (
   };
 };
 
-const produceRule = (
+function produceRule<T extends string>(
   operator: RuleOperator,
-  ...variableValue: RuleVariableValue | [RuleVariableValue]
-): AuthDescriptorSimpleRule => {
+  ...variableValue: RuleVariableValue<T> | [RuleVariableValue<T>]
+): SimpleRule<T> {
   const isNested = (
-    variableValue: RuleVariableValue | [RuleVariableValue],
-  ): variableValue is [RuleVariableValue] => Array.isArray(variableValue[0]);
+    variableValue: RuleVariableValue<T> | [RuleVariableValue<T>],
+  ): variableValue is [RuleVariableValue<T>] => Array.isArray(variableValue[0]);
+
   if (isNested(variableValue)) {
     return {
       operator,
-      variable: variableValue[0][0],
+      variable: variableValue[0][0] as T,
       value: variableValue[0][1],
     };
   } else {
-    return { operator, variable: variableValue[0], value: variableValue[1] };
+    return {
+      operator,
+      variable: variableValue[0] as T,
+      value: variableValue[1],
+    };
   }
-};
+}

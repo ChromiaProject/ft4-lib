@@ -1,14 +1,16 @@
-import { AuthDescriptorRules, RuleOperator, RuleVariable } from "@ft4/accounts";
-import {
-  AuthDescriptorSimpleRule,
-  RawAuthDescriptorSimpleRule,
-} from "@ft4/accounts/auth-descriptor/types";
 import { Session } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
+import { LoginConfigRules } from "./rules";
+import { RawRules } from "@ft4/accounts/auth-descriptor/rules";
 
 export type LoginConfig = {
   flags: string[];
-  rules: Rules | null;
+  rules: LoginConfigRules | null;
+};
+
+export type RawLoginConfig = {
+  flags: string[];
+  rules: RawRules;
 };
 
 export type LoginOptions = {
@@ -41,34 +43,3 @@ export class LoginConfigError extends Error {
     this.name = "LoginConfigError";
   }
 }
-
-export type LoginConfigSimpleRule = {
-  variable: RuleVariable;
-  operator: RuleOperator;
-  value: `${number}` | `{${number}}`;
-};
-export type LoginConfigComplexRule = {
-  operator: "and";
-  rules: LoginConfigSimpleRule[];
-};
-export type LoginConfigRules = LoginConfigComplexRule | LoginConfigSimpleRule;
-
-export type Rules = LoginConfigRules | AuthDescriptorRules;
-
-export type RawLoginConfigSimpleRule = readonly [
-  string,
-  string,
-  `${number}` | `{${number}}`,
-];
-export type RawLoginConfigComplexRule = readonly ["and", ...RawRules[]];
-export type RawLoginConfigRules =
-  | RawLoginConfigComplexRule
-  | RawLoginConfigSimpleRule
-  | null;
-
-export type RawRules = RawLoginConfigRules | RawAuthDescriptorSimpleRule;
-
-export type AnySimpleRule = LoginConfigSimpleRule | AuthDescriptorSimpleRule;
-export type RawAnySimpleRule =
-  | RawLoginConfigSimpleRule
-  | RawAuthDescriptorSimpleRule;

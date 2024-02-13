@@ -1,65 +1,69 @@
-import { authDescriptorRuleToLoginConfigAndRule } from "@ft4/index";
-import {
-  blockHeight,
-  blockTime,
-  greaterOrEqual,
-  greaterThan,
-  lessThan,
-  opCount,
-} from "@ft4/accounts/auth-descriptor";
+import * as ad from "@ft4/accounts/auth-descriptor";
+import * as lc from "@ft4/authentication/login-manager/rules";
 
 describe("Login manager", () => {
-  it("converts ad rule to login config relative rules", async () => {
-    const loginRule = authDescriptorRuleToLoginConfigAndRule(
-      [
-        lessThan(opCount(5)),
-        greaterThan(blockHeight(100)),
-        greaterOrEqual(blockTime(12)),
-      ],
-      [],
-    );
-
-    expect(loginRule).toEqual({
-      operator: "and",
-      rules: [
-        { operator: "lt", variable: "op_count", value: "{5}" },
-        { operator: "gt", variable: "block_height", value: "{100}" },
-        { operator: "ge", variable: "block_time", value: "{12}" },
-      ],
-    });
+  beforeAll(() => {
+    jest.useFakeTimers().setSystemTime(1000);
   });
-  it("converts ad rule to login config absolute rules", async () => {
-    const loginRule = authDescriptorRuleToLoginConfigAndRule(
-      [],
-      [
-        lessThan(opCount(5)),
-        greaterThan(blockHeight(100)),
-        greaterOrEqual(blockTime(12)),
-      ],
-    );
 
-    expect(loginRule).toEqual({
-      operator: "and",
-      rules: [
-        { operator: "lt", variable: "op_count", value: "5" },
-        { operator: "gt", variable: "block_height", value: "100" },
-        { operator: "ge", variable: "block_time", value: "12" },
-      ],
-    });
+  afterAll(() => {
+    jest.useRealTimers();
   });
-  it("converts ad rule to login config mixed rules", async () => {
-    const loginRule = authDescriptorRuleToLoginConfigAndRule(
-      [greaterThan(blockHeight(100)), greaterOrEqual(blockTime(12))],
-      [lessThan(opCount(5))],
+
+  it("converts login relative config rules to auth descriptor rules", async () => {
+    const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
+      lc.and(
+        ad.greaterThan(lc.relativeBlockHeight(100)),
+        ad.greaterOrEqual(lc.relativeBlockTime(12)),
+      ),
+      getFakeBlockHeight(100),
     );
 
-    expect(loginRule).toEqual({
-      operator: "and",
-      rules: [
-        { operator: "gt", variable: "block_height", value: "{100}" },
-        { operator: "ge", variable: "block_time", value: "{12}" },
-        { operator: "lt", variable: "op_count", value: "5" },
-      ],
-    });
+    expect(loginRule).toEqual(
+      ad.and(
+        ad.greaterThan(ad.blockHeight(200)),
+        ad.greaterOrEqual(ad.blockTime(1012)),
+      ),
+    );
+  });
+  it("converts absolute login config to auth descriptor rules", async () => {
+    const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
+      lc.and(
+        ad.greaterThan(lc.blockHeight(100)),
+        ad.greaterOrEqual(lc.blockTime(12)),
+      ),
+      getFakeBlockHeight(),
+    );
+
+    expect(loginRule).toEqual(
+      ad.and(
+        ad.greaterThan(ad.blockHeight(100)),
+        ad.greaterOrEqual(ad.blockTime(12)),
+      ),
+    );
+  });
+  it("converts mixed login config to auth descriptor rules", async () => {
+    const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
+      lc.and(
+        ad.lessThan(lc.opCount(5)),
+        ad.greaterThan(lc.relativeBlockHeight(100)),
+        ad.greaterOrEqual(lc.blockTime(12)),
+      ),
+      getFakeBlockHeight(200),
+    );
+
+    expect(loginRule).toEqual(
+      await ad.and(
+        ad.lessThan(ad.opCount(5)),
+        ad.greaterThan(ad.blockHeight(300)),
+        ad.greaterOrEqual(ad.blockTime(12)),
+      ),
+    );
   });
 });
+
+function getFakeBlockHeight(height: number = 0): () => Promise<number> {
+  return () => {
+    return Promise.resolve(height);
+  };
+}

@@ -15,17 +15,20 @@ import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
 import {
-  and,
-  blockHeight,
-  blockTime,
   createSingleSigAuthDescriptorRegistration,
   lessOrEqual,
   lessThan,
-  opCount,
 } from "@ft4/accounts/auth-descriptor";
 import { aggregateSigners } from "@ft4/accounts";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import { useChromiaNode } from "@ft4/util/chromia-node";
+import {
+  and,
+  blockTime,
+  mapLoginConfigRulesToAuthDescriptorRules,
+  opCount,
+  relativeBlockHeight,
+} from "@ft4/authentication/login-manager/rules";
 
 describe("Login manager", () => {
   const getClient = useChromiaNode();
@@ -89,7 +92,7 @@ describe("Login manager", () => {
     expect(authDescriptorAfterLogin.data[1].rules).toEqual(null);
   });
 
-  it.only("added disposable auth descriptor expires in 30 minutes", async () => {
+  it("added disposable auth descriptor expires in 30 minutes", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
@@ -131,13 +134,29 @@ describe("Login manager", () => {
       keyStore,
     ).getLoginManager();
 
-    const rules = and(lessThan(blockHeight(2)), lessOrEqual(opCount(3)));
+    const rules = and(
+      lessThan(relativeBlockHeight(2)),
+      lessOrEqual(opCount(3)),
+    );
+    let blockHeight: number;
+    const getBlockHeight = async () => {
+      if (!blockHeight) {
+        blockHeight = await connection.getBlockHeight();
+      }
+      return blockHeight;
+    };
+
+    const expectedRules = await mapLoginConfigRulesToAuthDescriptorRules(
+      rules,
+      getBlockHeight,
+    );
+
     await loginManager.login({
       accountId: account.id,
       config: { flags: ["T"], rules },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rules).toEqual(rules);
+    expect(authDescriptorAfterLogin.data[1].rules).toEqual(expectedRules);
   });
 
   it("added disposable auth descriptor can have no rules", async () => {
@@ -264,7 +283,10 @@ describe("Login manager", () => {
     await session.account.addAuthDescriptor(ad2, keyStore2);
 
     const loginManager = keyStoreInteractor.getLoginManager(loginKeyStore);
-    const session2 = await loginManager.login({ accountId });
+    const session2 = await loginManager.login({
+      accountId,
+      config: { flags: ["X"], rules: null },
+    });
 
     const keyStoreIds = session2.account.authenticator.keyHandlers.map(
       (keyHandler) => keyHandler.keyStore.id,

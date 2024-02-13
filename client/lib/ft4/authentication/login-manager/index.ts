@@ -7,40 +7,23 @@ import {
 } from "@ft4/authentication";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
-import {
-  LoginConfigError,
-  LoginConfigRules,
-  LoginConfigSimpleRule,
-  LoginManager,
-  LoginOptions,
-  Rules,
-  AnySimpleRule,
-  RawAnySimpleRule,
-  LoginConfigOptions,
-} from "./types";
-import {
-  isRawRule,
-  isSimpleRule,
-  isLoginConfigSimpleRule,
-} from "./type-predicates";
+import { LoginManager, LoginOptions, LoginConfigOptions } from "./types";
 import { authDescriptorById } from "@ft4/accounts/account-queries";
 import { createAccountObject } from "@ft4/accounts/account-query-functions";
 import {
   AuthDescriptorRules,
-  AuthDescriptorSimpleRule,
   FlagsType,
-  RuleOperator,
-  RuleVariable,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
 } from "@ft4/accounts/auth-descriptor";
-import { rulesFromGtv } from "@ft4/accounts/auth-descriptor/gtv";
-import { enumValueFromString } from "@ft4/accounts/auth-descriptor/enum-parsers";
 import { Connection, createSession } from "@ft4/index";
 import { createAuthDataService } from "@ft4/ft-session";
+import { mapLoginConfigRulesToAuthDescriptorRules } from "./rules";
 
 export * from "./types";
+export * from "./queries";
+export * from "./query-functions";
 export { LoginKeyStore };
 
 export function createLoginManager(
@@ -147,8 +130,7 @@ export async function getConfigFromOptions(
   let currentHeight: number;
   const getBlockHeight = async () => {
     if (currentHeight === undefined) {
-      const blocks = await authDataService.connection.client.getBlocksInfo(1);
-      currentHeight = blocks[0].height;
+      currentHeight = await authDataService.connection.getBlockHeight();
     }
     return currentHeight;
   };
@@ -157,7 +139,10 @@ export async function getConfigFromOptions(
     flags = options.config.flags;
     rules =
       options.config.rules &&
-      (await getRulesFromLoginConfig(options.config.rules, getBlockHeight));
+      (await mapLoginConfigRulesToAuthDescriptorRules(
+        options.config.rules,
+        getBlockHeight,
+      ));
   } else {
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
@@ -165,102 +150,14 @@ export async function getConfigFromOptions(
     flags = loginConfig.flags;
     rules =
       loginConfig.rules &&
-      (await getRulesFromLoginConfig(loginConfig.rules, getBlockHeight));
+      (await mapLoginConfigRulesToAuthDescriptorRules(
+        loginConfig.rules,
+        getBlockHeight,
+      ));
   }
   return {
     flags,
     rules,
-  };
-}
-
-/**
- * Takes as input some rules which could be formatted as login config rules or as auth
- * descriptor rules, and ensures they can be used in an auth descriptor.
- *
- * For example,
- *  null => null
- *  ["lt", "block_time", "{1000}"] => ["lt", "block_time", Date.now()+1000]
- *  ["lt", "op_count", "10"] => ["lt", "op_count", 10]
- *  ["lt", "block_time", 10] => ["lt", "block_time", 10]
- *  ["and", loginRule1, authDescRule2] => ["and", authDescRule1, authDescRule2]
- *
- * @param rules Rules we need to ensure are Auth Descriptor rules
- * @param getBlockHeight a function which returns the current block height of the chain.
- * It allows caching
- * @returns The rules that will be used by the auth descriptor
- */
-async function getRulesFromLoginConfig(
-  rules: Rules,
-  getBlockHeight: () => Promise<number>,
-): Promise<AuthDescriptorRules> {
-  if (isSimpleRule(rules)) {
-    return ensureAuthDescriptorRule(rules, getBlockHeight);
-  } else {
-    const rulesWithoutAnd: (AnySimpleRule | RawAnySimpleRule)[] = isRawRule(
-      rules,
-    )
-      ? <(AnySimpleRule | RawAnySimpleRule)[]>rules.slice(1)
-      : rules.rules;
-    const simpleRules = rulesWithoutAnd.map((rule) =>
-      ensureAuthDescriptorRule(rule, getBlockHeight),
-    );
-
-    const result: AuthDescriptorRules = {
-      operator: "and",
-      rules: await Promise.all(simpleRules),
-    };
-
-    return result;
-  }
-}
-
-/**
- * Takes a login config simple rule and transforms it into an auth descriptor rule.
- * for example, ["lt", "block_time", "{1000}"] becomes ["lt", "block_time", Date.now()+1000]
- *
- * Only works with simple rules, so nothing that starts with ["and", ...] is supported
- *
- * @param rule the simple rule which we want to ensure is an auth descriptor rule
- * @param getBlockHeight a function that returns the current block height (with caching)
- * @returns the auth descriptor rule that corresponds to the rule passed in as argument
- */
-async function ensureAuthDescriptorRule(
-  rule: AnySimpleRule | RawAnySimpleRule,
-  getBlockHeight: () => Promise<number>,
-): Promise<AuthDescriptorSimpleRule> {
-  if (!isLoginConfigSimpleRule(rule)) {
-    return isRawRule(rule)
-      ? <AuthDescriptorSimpleRule>rulesFromGtv(rule)
-      : rule;
-  }
-
-  const { operator, variable, value } = isRawRule(rule)
-    ? {
-        operator: enumValueFromString(rule[0], RuleOperator),
-        variable: enumValueFromString(rule[1], RuleVariable),
-        value: rule[2],
-      }
-    : rule;
-
-  const parsedVal = parseLoginConfigValue(value);
-
-  let valueToAdd: number;
-  if (parsedVal.relative && variable !== RuleVariable.OpCount) {
-    if (variable === RuleVariable.BlockHeight) {
-      valueToAdd = await getBlockHeight();
-    } else if (variable === RuleVariable.BlockTime) {
-      valueToAdd = Date.now();
-    } else {
-      throw new LoginConfigError("unexpected variable: " + variable);
-    }
-  } else {
-    valueToAdd = 0;
-  }
-
-  return {
-    operator,
-    variable,
-    value: parsedVal.value + valueToAdd,
   };
 }
 
@@ -296,73 +193,4 @@ async function addDisposableAuthDescriptor(
   );
 
   return ks.createKeyHandler(ad);
-}
-
-/*
- * Allows the user to specify a ttl value like this:
- * weeks(1)+days(3)
- * None of these functions care in any way about leap seconds and any other time adjustments
- * This means that when you define an auth descriptor with a rule that makes it expire after
- * 1 day, it will expire after exactly 24h, even if there has been a leap second during that
- * day, which means it will be off by a second (e.g. starts at 14:00:00 and expires the next
- * day at 13:59:59).
- */
-export const minutes = (m: number) => m * 60000;
-export const hours = (h: number) => h * minutes(60);
-export const days = (d: number) => d * hours(24);
-export const weeks = (w: number) => w * days(7);
-
-export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
-  return {
-    operator: RuleOperator.LessThan,
-    variable: RuleVariable.BlockTime,
-    value: `{${ttl}}`,
-  };
-}
-
-export function authDescriptorRuleToLoginConfigAndRule(
-  relativeRules: AuthDescriptorSimpleRule[],
-  absoluteRules: AuthDescriptorSimpleRule[],
-): LoginConfigRules | null {
-  const convertedRules: LoginConfigSimpleRule[] = [];
-
-  const simpleRuleConversion = (
-    rule: AuthDescriptorSimpleRule,
-    relative: boolean,
-  ): LoginConfigSimpleRule => {
-    return {
-      ...rule,
-      value: relative ? `{${rule.value}}` : `${rule.value}`,
-    };
-  };
-
-  relativeRules.forEach((r) =>
-    convertedRules.push(simpleRuleConversion(r, true)),
-  );
-  absoluteRules.forEach((r) =>
-    convertedRules.push(simpleRuleConversion(r, false)),
-  );
-
-  return convertedRules.length === 0
-    ? null
-    : {
-        operator: "and",
-        rules: convertedRules,
-      };
-}
-
-function parseLoginConfigValue(val: string): {
-  value: number;
-  relative: boolean;
-} {
-  // val must be in one of these formats: "15", "{15}"
-  if (!val.match(/(^\{\d+\}$)|(^\d+$)/)) {
-    throw new LoginConfigError(
-      `Login config rule value improperly formatted: ${val}`,
-    );
-  }
-  return {
-    value: parseInt(val.replace(/[{}]/g, "")),
-    relative: val.startsWith("{"),
-  };
 }

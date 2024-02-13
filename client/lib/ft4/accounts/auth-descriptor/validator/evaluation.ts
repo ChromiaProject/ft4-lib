@@ -1,9 +1,6 @@
-import {
-  AuthDescriptorSimpleRule,
-  RuleOperator,
-  RuleVariable,
-  AnyAuthDescriptor,
-} from "../../index";
+import { AnyAuthDescriptor } from "../../index";
+import { AuthDescriptorSimpleRule, RuleOperator } from "../rules";
+import { AuthDescriptorRuleVariable } from "../rules/variables";
 import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,
@@ -39,14 +36,14 @@ async function isActive(
     if (
       rule.operator === RuleOperator.LessOrEqual ||
       rule.operator === RuleOperator.LessThan ||
-      rule.variable === RuleVariable.OpCount
+      rule.variable === AuthDescriptorRuleVariable.OpCount
     ) {
       // these rules are always valid
       return true;
     }
 
     let variable: number;
-    if (rule.variable === RuleVariable.BlockHeight) {
+    if (rule.variable === AuthDescriptorRuleVariable.BlockHeight) {
       variable = await service.getBlockHeight();
     } else {
       variable = Date.now();
@@ -94,9 +91,9 @@ async function hasExpired(
     }
 
     let variable: number;
-    if (rule.variable === RuleVariable.BlockHeight) {
+    if (rule.variable === AuthDescriptorRuleVariable.BlockHeight) {
       variable = await service.getBlockHeight();
-    } else if (rule.variable === RuleVariable.BlockTime) {
+    } else if (rule.variable === AuthDescriptorRuleVariable.BlockTime) {
       variable = Date.now();
     } else {
       const nonce = await service.getNonce(

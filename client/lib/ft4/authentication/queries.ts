@@ -1,5 +1,4 @@
 import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
-import { LoginConfig } from "./login-manager/";
 import { BufferId } from "@ft4/utils";
 
 export function nonce(
@@ -14,17 +13,6 @@ export function nonce(
     args: {
       account_id: formatter.ensureBuffer(accountId),
       auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),
-    },
-  };
-}
-
-export function loginConfig(
-  configName?: string,
-): QueryObject<LoginConfig, { name?: string }> {
-  return {
-    name: "ft4.get_login_config",
-    args: {
-      name: configName,
     },
   };
 }

@@ -15,11 +15,8 @@ export {
   hours,
   days,
   weeks,
-  LoginConfigSimpleRule,
-  LoginConfigRules,
   ttlLoginRule,
-  authDescriptorRuleToLoginConfigAndRule,
-} from "./login-manager";
+} from "./login-manager/rules";
 
 export {
   createSessionStorageLoginKeyStore,

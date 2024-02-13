@@ -7,11 +7,10 @@ import {
   createAccount,
   createTestAuthDescriptor,
 } from "../util/util";
-import { addRateLimitPoints } from "@ft4/index";
+import { AuthDescriptorRules, addRateLimitPoints } from "@ft4/index";
 import { lessOrEqual, opCount } from "@ft4/accounts";
 import { createAuthenticatedAccount } from "@ft4/accounts/account-op-functions";
 import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
-import { AuthDescriptorRules } from "@ft4/accounts/auth-descriptor/types";
 import { AuthenticatedAccount } from "@ft4/accounts/types";
 import { Asset } from "@ft4/asset/types";
 import { createAuthenticator } from "@ft4/authentication";

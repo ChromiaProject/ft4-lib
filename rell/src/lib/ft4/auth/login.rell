@@ -17,7 +17,15 @@ function add_login_config(
     return [name: _login_config(flags, rules)];
 }
 
-function login_simple_rule(rule: rule_expression) = rule.to_gtv_pretty();
+function map_rule(rule: rule_expression): gtv {
+    return [
+        rule.operator.name.to_gtv(),
+        rule.variable.name.to_gtv(),
+        rule.value.to_gtv()
+    ].to_gtv();
+}
+
+function login_simple_rule(rule: rule_expression) = map_rule(rule);
 
 function login_rules(rules_list: list<rule_expression>): gtv {
     require(rules_list.size() > 0, "Empty login rules list");
@@ -26,16 +34,20 @@ function login_rules(rules_list: list<rule_expression>): gtv {
     
     val rules = ["and".to_gtv()];
     for (rule in rules_list) {
-        rules.add(rule.to_gtv_pretty());
+        rules.add(map_rule(rule));
     }
     return rules.to_gtv();
 }
 
-function ttl(millis: integer) = rule_expression(
-    rule_operator.lt,
-    rule_variable.relative_block_time,
-    millis
-).to_gtv_pretty();
+function ttl(millis: integer): gtv {
+    return map_rule(
+        rule_expression(
+            rule_operator.lt,
+            rule_variable.relative_block_time,
+            millis
+        )
+    );
+}
 
 enum rule_variable {
     block_height,

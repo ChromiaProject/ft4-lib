@@ -18,10 +18,7 @@ export {
   hours,
   days,
   weeks,
-  LoginConfigSimpleRule,
-  LoginConfigRules,
   ttlLoginRule,
-  authDescriptorRuleToLoginConfigAndRule,
 } from "./authentication";
 
 // Admin module
@@ -53,15 +50,11 @@ export {
   AuthDescriptorError,
   AuthDescriptorRegistration,
   AuthDescriptorRules,
-  AuthDescriptorSimpleRule,
-  AuthDescriptorComplexRule,
   AuthType,
   FlagsType,
   Account,
   MultiSig,
   RateLimit,
-  RuleOperator,
-  RuleVariable,
   SingleSig,
   TransferHistoryEntry,
   TransferHistoryType,
