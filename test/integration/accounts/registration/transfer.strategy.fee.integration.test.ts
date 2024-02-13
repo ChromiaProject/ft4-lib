@@ -6,15 +6,16 @@ import {
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/index";
 import { Asset } from "@ft4/index";
-import { createAmount } from "@ft4/index";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { encryption } from "postchain-client";
 import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { transfer_fee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
+import { transferFee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
+import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { createAmountFromBalance } from "@ft4/index";
 
 let connection: Connection;
 let asset: Asset;
@@ -37,13 +38,18 @@ describe("Test transfer with fee", () => {
       .withPoints(1)
       .build();
 
-    // const _allowedAssets = await connection.query(allowedAssets());
-    // TODO use allowedAssets
+    const _allowedAssets = (await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find(
+      (v) => v.asset_id === asset.id,
+    )!.min_amount;
+    expect(rawAmount).toBeTruthy();
+    const amount = createAmountFromBalance(rawAmount, asset.decimals);
 
     const _feeAssets = await connection.query(feeAssets());
     // TODO use feeAssets
-
-    const amount = createAmount(10, asset.decimals);
 
     await account1.transfer(recipientId, asset.id, amount);
 
@@ -62,7 +68,7 @@ describe("Test transfer with fee", () => {
     const session = await registerAccount(
       connection,
       keyStore,
-      transfer_fee(asset, authDescriptor),
+      transferFee(asset, authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -72,8 +78,8 @@ describe("Test transfer with fee", () => {
       amount.value - _feeAssets[0].amount,
     );
 
-    expect(
-      await connection.query(pendingTransferStrategies(recipientId)),
-    ).toBeNull();
+    expect(await connection.query(pendingTransferStrategies(recipientId))).toBe(
+      [],
+    );
   });
 });

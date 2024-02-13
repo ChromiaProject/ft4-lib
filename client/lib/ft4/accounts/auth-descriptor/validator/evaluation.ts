@@ -1,10 +1,24 @@
-import { BufferId } from "@ft4/utils";
 import {
   AuthDescriptorSimpleRule,
   RuleOperator,
   RuleVariable,
   AnyAuthDescriptor,
-} from "@ft4/accounts";
+} from "../../index";
+import {
+  AuthDescriptorValidationService,
+  AuthDescriptorValidator,
+} from "./types";
+
+export function createBaseAuthDescriptorValidator(
+  service: AuthDescriptorValidationService,
+): AuthDescriptorValidator {
+  return Object.freeze({
+    isActive: (authDescriptor: AnyAuthDescriptor) =>
+      isActive(authDescriptor, service),
+    hasExpired: (authDescriptor: AnyAuthDescriptor) =>
+      hasExpired(authDescriptor, service),
+  });
+}
 
 /**
  * Returns whether the given auth descriptor's rules are active, that is whether they
@@ -12,12 +26,12 @@ import {
  * An inactive auth descriptor will be active in the future, while an active one might
  * be active or have already expired. Use `hasExpired` to check for this case.
  * @param authDescriptor the auth descriptor to check
- * @param getBlockHeight an async function that returns the current block height.
+ * @param service an object used to fetch dynamic parameters from blockchain
  * This allows caching.
  */
-export async function isActive(
+async function isActive(
   authDescriptor: AnyAuthDescriptor,
-  getBlockHeight: () => Promise<number>,
+  service: AuthDescriptorValidationService,
 ): Promise<boolean> {
   if (authDescriptor.rules === null) return true;
 
@@ -33,7 +47,7 @@ export async function isActive(
 
     let variable: number;
     if (rule.variable === RuleVariable.BlockHeight) {
-      variable = await getBlockHeight();
+      variable = await service.getBlockHeight();
     } else {
       variable = Date.now();
     }
@@ -61,15 +75,12 @@ export async function isActive(
  * Returns whether the given auth descriptor's rules have expired, that is whether it will
  * no longer ever be usable. Inactive descriptors never return true.
  * @param authDescriptor the auth descriptor to check
- * @param getBlockHeight an async function that returns the current block height.
- * This allows caching.
- * @param getNonce an async function that returns the current nonce for the given descriptor.
+ * @param service an object used to fetch dynamic parameters from blockchain
  * This allows caching.
  */
-export async function hasExpired(
+async function hasExpired(
   authDescriptor: AnyAuthDescriptor,
-  getBlockHeight: () => Promise<number>,
-  getNonce: (authDescriptorId: BufferId) => Promise<number | null>,
+  service: AuthDescriptorValidationService,
 ): Promise<boolean> {
   if (authDescriptor.rules === null) return false;
 
@@ -84,11 +95,14 @@ export async function hasExpired(
 
     let variable: number;
     if (rule.variable === RuleVariable.BlockHeight) {
-      variable = await getBlockHeight();
+      variable = await service.getBlockHeight();
     } else if (rule.variable === RuleVariable.BlockTime) {
       variable = Date.now();
     } else {
-      const nonce = await getNonce(authDescriptor.id);
+      const nonce = await service.getNonce(
+        authDescriptor.accountId,
+        authDescriptor.id,
+      );
       // auth descriptor expired and was eliminated on rell side
       if (nonce === null) return true;
       variable = nonce;

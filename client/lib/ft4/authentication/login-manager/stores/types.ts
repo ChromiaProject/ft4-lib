@@ -1,7 +1,7 @@
-import { KeyPair } from "postchain-client";
+import { FtKeyStore } from "@ft4/authentication/ft";
 
 export interface LoginKeyStore {
-  clear(accountId: Buffer);
-  getKeyPair(accountId: Buffer): Promise<KeyPair | null>;
-  createKeyPair(accountId: Buffer): Promise<KeyPair>;
+  clear(accountId: Buffer): Promise<void>;
+  getKeyStore(accountId: Buffer): Promise<FtKeyStore | null>;
+  generateKey(accountId: Buffer): Promise<FtKeyStore>;
 }

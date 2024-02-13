@@ -10,7 +10,6 @@ import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
 import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
-import { getPubkey } from "@ft4/utils";
 import { aggregateSigners } from "@ft4/accounts";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import { useChromiaNode } from "@ft4/util/chromia-node";
@@ -104,16 +103,17 @@ describe("Login manager", () => {
     ).getSession(accountId);
 
     const keyPair2 = encryption.makeKeyPair();
+    const keyStore2 = createInMemoryFtKeyStore(keyPair2);
     const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
       keyPair2.pubKey,
       null,
     );
-    await session.account.addAuthDescriptor(ad2, keyPair2);
+    await session.account.addAuthDescriptor(ad2, keyStore2);
 
     const keyStoreInteractor = createKeyStoreInteractor(
       connection.client,
-      createInMemoryFtKeyStore(keyPair2),
+      keyStore2,
     );
     const loginManger = keyStoreInteractor.getLoginManager();
 
@@ -140,13 +140,13 @@ describe("Login manager", () => {
     const session = await keyStoreInteractor.getSession(accountId);
 
     const loginKeyStore = createInMemoryLoginKeyStore();
-    const keyPair2 = await loginKeyStore.createKeyPair(accountId);
+    const keyStore2 = await loginKeyStore.generateKey(accountId);
     const ad2 = createSingleSigAuthDescriptorRegistration(
       ["X"],
-      getPubkey(keyPair2),
+      keyStore2.id,
       null,
     );
-    await session.account.addAuthDescriptor(ad2, keyPair2);
+    await session.account.addAuthDescriptor(ad2, keyStore2);
 
     const loginManger = keyStoreInteractor.getLoginManager(loginKeyStore);
     const session2 = await loginManger.login({ accountId });
@@ -154,6 +154,6 @@ describe("Login manager", () => {
     const keyStoreIds = session2.account.authenticator.keyHandlers.map(
       (keyHandler) => keyHandler.keyStore.id,
     );
-    expect(keyStoreIds).toMatchObject([keyPair2.pubKey, keyStore.id]);
+    expect(keyStoreIds).toMatchObject([keyStore2.id, keyStore.id]);
   });
 });

@@ -11,9 +11,26 @@ blockchains:
       lib.ft4.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      lib.ft4.accounts.strategies.transfer: # placeholder
+      lib.ft4.accounts.strategies.transfer:
         rules: 
-          timeout_days: 10
+          - sender_blockchain:
+            - "$"
+            sender: "*"
+            recipient: "*"
+            asset:
+              - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+                min_amount: 5L
+            timeout_days: 1
+            strategy:
+              - "open"
+              - "fee"
+
+      lib.ft4.accounts.strategies.transfer.fee:
+        asset:
+          - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+            amount: 2L
+          - id: x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac"
+            amount: 1L
 
 libs:
   iccf:

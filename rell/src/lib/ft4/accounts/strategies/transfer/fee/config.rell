@@ -1,0 +1,30 @@
+
+struct module_args {
+    asset: gtv;
+}
+
+struct fee_asset_gtv_value {
+    id: byte_array;
+    amount: text;
+}
+
+function fee_assets(): list<(asset_id: byte_array, amount: big_integer)> {
+    val gtv = chain_context.args.asset;
+    if (transfer.is_byte_array(gtv)) {
+        val input = fee_asset_gtv_value.from_gtv_pretty(gtv);
+        return [(
+                asset_id = input.id,
+                amount = big_integer.from_text(input.amount.replace("L", ""))
+               )];
+    } else if (transfer.is_list(gtv)) {
+        val inputs = list<fee_asset_gtv_value>.from_gtv_pretty(gtv);
+        return inputs @* {} ((asset_id = .id, amount = big_integer.from_text(.amount.replace("L", ""))));
+    }
+    else {
+        require(
+            false,
+            "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer.fee): asset only accepts a list of ids and amounts."
+        );
+        return []; // will never happen
+    }
+}

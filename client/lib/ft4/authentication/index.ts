@@ -41,7 +41,7 @@ export function createAuthenticator(
 
 async function getKeyHandlerForOperation(
   authDataService: AuthDataService,
-  accountId: BufferId,
+  accountId: Buffer,
   keyHandlers: KeyHandler[],
   operation: Operation,
   txContext: TxContext,
@@ -59,7 +59,6 @@ async function getKeyHandlerForOperation(
 
   const validHandlers = await filterOutInvalidAndExpiredHandlers(
     authDataService,
-    accountId,
     allowedKeyHandlers,
     txContext,
   );
@@ -85,7 +84,6 @@ async function getKeyHandlerForOperation(
 
 async function filterOutInvalidAndExpiredHandlers(
   authDataService: AuthDataService,
-  accountId: BufferId,
   handlers: KeyHandler[],
   txContext: TxContext,
 ): Promise<KeyHandler[]> {
@@ -97,10 +95,7 @@ async function filterOutInvalidAndExpiredHandlers(
   const validHandlers = await Promise.all(
     handlers.map(async (keyHandler) => {
       const active = await validator.isActive(keyHandler.authDescriptor);
-      const expired = await validator.hasExpired(
-        keyHandler.authDescriptor,
-        accountId,
-      );
+      const expired = await validator.hasExpired(keyHandler.authDescriptor);
       return active && !expired;
     }),
   );

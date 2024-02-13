@@ -1,5 +1,5 @@
 import { registerAccount } from "@ft4/accounts/registration";
-import { transfer_open } from "@ft4/accounts/registration/strategies/transfer/open/index";
+import { transferOpen } from "@ft4/accounts/registration/strategies/transfer/open/index";
 import {
   Connection,
   createConnection,
@@ -7,7 +7,6 @@ import {
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/index";
 import { Asset } from "@ft4/index";
-import { createAmount } from "@ft4/index";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { encryption } from "postchain-client";
 import { TxRejectedError } from "postchain-client";
@@ -15,6 +14,8 @@ import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { createAmountFromBalance } from "@ft4/index";
 
 let connection: Connection;
 let asset: Asset;
@@ -37,10 +38,15 @@ describe("Test transfer strategy", () => {
       .withPoints(1)
       .build();
 
-    // const _allowedAssets = await connection.query(allowedAssets());
-    // TODO use allowedAssets
-
-    const amount = createAmount(10, asset.decimals);
+    const _allowedAssets = (await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find(
+      (v) => v.asset_id === asset.id,
+    )!.min_amount;
+    expect(rawAmount).toBeTruthy();
+    const amount = createAmountFromBalance(rawAmount, asset.decimals);
 
     await account1.transfer(recipientId, asset.id, amount);
 
@@ -59,7 +65,7 @@ describe("Test transfer strategy", () => {
     const session = await registerAccount(
       connection,
       keyStore,
-      transfer_open(authDescriptor),
+      transferOpen(authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -67,9 +73,9 @@ describe("Test transfer strategy", () => {
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
     expect(assetBalance1!.amount.value).toBe(amount.value);
 
-    expect(
-      await connection.query(pendingTransferStrategies(recipientId)),
-    ).toBeNull();
+    expect(await connection.query(pendingTransferStrategies(recipientId))).toBe(
+      [],
+    );
   });
 
   it("can not register account without pending transfer", async () => {
@@ -82,7 +88,7 @@ describe("Test transfer strategy", () => {
     );
 
     await expect(
-      registerAccount(connection, keyStore, transfer_open(authDescriptor)),
+      registerAccount(connection, keyStore, transferOpen(authDescriptor)),
     ).rejects.toThrow(TxRejectedError);
   });
 });

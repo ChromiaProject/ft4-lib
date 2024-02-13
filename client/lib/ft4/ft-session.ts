@@ -71,6 +71,11 @@ export function createConnection(client: IClient): Connection {
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
 
+    getBlockHeight: async () => {
+      const [block] = await client.getBlocksInfo(1);
+      return block.height;
+    },
+
     getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsBySigner: (
       id: BufferId,
