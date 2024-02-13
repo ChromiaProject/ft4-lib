@@ -83,9 +83,9 @@ function test_get_config_reads_yml_correctly() {
 }
 
 function test_get_config_uses_defaults() {
-    val json = '[{timeout_days: 10}]';
+    val rule_gtv_pretty = [(timeout_days = 10)].to_gtv_pretty();
 
-    val cfg = create_on_transfer.get_config(gtv.from_json(json));
+    val cfg = create_on_transfer.get_config(rule_gtv_pretty);
 
     assert_equals(
         cfg,
@@ -115,9 +115,9 @@ function test_get_config_uses_defaults() {
 }
 
 function test_get_config_reads_dollar_sign_in_blockchain() {
-    val json = '[{timeout_days: 10, sender_blockchain: ["012345", "$"]}]';
+    val rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = ["012345", "$"])].to_gtv_pretty();
 
-    val cfg = create_on_transfer.get_config(gtv.from_json(json));
+    val cfg = create_on_transfer.get_config(rule_gtv_pretty);
 
     assert_equals(
         cfg,
@@ -147,98 +147,104 @@ function test_get_config_reads_dollar_sign_in_blockchain() {
 }
 
 function test_get_config_fails_when_only_one_X() {
-    val json = '[{timeout_days: 10, sender: "X"}]';
+    val rule_gtv_pretty = [(timeout_days = 10, sender = "X")].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): 'X' should appear in both or none of recipient and sender.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_asterisk_alongside_others() {
-    val json = '[{timeout_days: 10, sender: ["*", "abcdef"]}]';
+    val rule_gtv_pretty = [(timeout_days = 10, sender = ["*", "abcdef"])].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_X_alongside_others() {
-    val json = '[{timeout_days: 10, sender: ["X", "abcdef"], recipient: "X"}]';
+    val rule_gtv_pretty = [(timeout_days = 10, sender = ["X", "abcdef"], recipient = "X")].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_value_not_buffer_string_or_list() {
-    var json = '[{timeout_days: 10, sender: {id: "abcdef"}}]';
+    var rule_gtv_pretty = [(timeout_days = 10, sender = (id = "abcdef"))].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 
-    json = '[{timeout_days: 10, sender_blockchain: {id: "abcdef"}}]';
+    rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = (id = "abcdef"))].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_list_has_wrong_element_types() {
-    var json = '[{timeout_days: 10, sender: ["012345", {id: "abcdef"}]}]';
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
-    json = '[{timeout_days: 10, sender_blockchain: ["012345", {id: "abcdef"}]}]';
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_dollar_not_in_blockchains() {
-    var json = '[{timeout_days: 10, sender: "$"}]';
+    var rule_gtv_pretty = [(timeout_days = 10, sender = "$")].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
-    json = '[{timeout_days: 10, sender: ["$"]}]';
+    rule_gtv_pretty = [(timeout_days = 10, sender = ["$"])].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_X_in_blockchains() {
-    var json = '[{timeout_days: 10, sender_blockchain: "X"}]';
+    var rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = "X")].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
-    json = '[{timeout_days: 10, sender_blockchain: ["X"]}]';
+    rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = ["X"])].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
 
 function test_get_config_fails_when_assets_wrong_format() {
-    val json = '[{timeout_days: 10, asset: "X"}]';
+    val rule_gtv_pretty = [(timeout_days = 10, asset = "X")].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): asset only accepts '*' and a list of ids and minimum amounts.",
-        create_on_transfer.get_config(gtv.from_json(json), *)
+        create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
