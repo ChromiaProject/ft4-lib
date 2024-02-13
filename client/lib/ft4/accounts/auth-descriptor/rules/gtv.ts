@@ -9,7 +9,7 @@ import {
   SimpleRule,
 } from "./types";
 import { AuthDescriptorRuleVariable } from "./variables";
-import { isGtvSimpleRule, isSimpleRule } from ".";
+import { isGtvSimpleRule, isSimpleRule } from "./type-predicates";
 
 export function authDescriptorRuleMapper(
   rule: RawSimpleRule,
@@ -35,9 +35,7 @@ export function rulesFromGtv<T extends string>(
   }
 }
 
-export function rulesToGtv(rule: AuthDescriptorRules): RawRules | null {
-  if (!rule) return null;
-
+export function rulesToGtv(rule: AuthDescriptorRules): RawRules {
   const toGtv = (rule: AuthDescriptorSimpleRule): RawSimpleRule => [
     rule.operator,
     rule.variable,

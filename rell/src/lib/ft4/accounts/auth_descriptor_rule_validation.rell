@@ -198,7 +198,7 @@ function validate_auth_descriptor_rules(rules: gtv) {
 			validate_rule(rule_expression_from_gtv(gtv_rule));
 		}
 	}
-	print(rules, are_rules_active(rules), are_rules_violating(rules, load_variables(op_count = 0)));
+
 	require((not are_rules_active(rules)) or (not are_rules_violating(rules, load_variables(op_count = 0))),
 		"Active and invalid rules detected");
 }

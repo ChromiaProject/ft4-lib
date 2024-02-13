@@ -18,7 +18,7 @@ export * from "./variables";
 
 /**
  * Takes a login config simple rule and transforms it into an auth descriptor rule.
- * for example, ["lt", "block_time", "{1000}"] becomes ["lt", "block_time", Date.now()+1000]
+ * for example, ["lt", "relative_block_time", 1000] becomes ["lt", "block_time", Date.now()+1000]
  *
  * Only works with simple rules, so nothing that starts with ["and", ...] is supported
  *
@@ -61,20 +61,19 @@ export async function ensureAuthDescriptorRule(
 }
 
 /**
- * Takes as input some rules which could be formatted as login config rules or as auth
- * descriptor rules, and ensures they can be used in an auth descriptor.
+ * Maps list of login config rules to auth descriptor rules.
  *
  * For example,
  *  null => null
- *  ["lt", "block_time", "{1000}"] => ["lt", "block_time", Date.now()+1000]
- *  ["lt", "op_count", "10"] => ["lt", "op_count", 10]
+ *  ["lt", "relative_block_time", 1000] => ["lt", "block_time", Date.now()+1000]
+ *  ["lt", "op_count", 10] => ["lt", "op_count", 10]
  *  ["lt", "block_time", 10] => ["lt", "block_time", 10]
  *  ["and", loginRule1, authDescRule2] => ["and", authDescRule1, authDescRule2]
  *
- * @param rules Rules we need to ensure are Auth Descriptor rules
+ * @param rules a list of login config rules
  * @param getBlockHeight a function which returns the current block height of the chain.
  * It allows caching
- * @returns The rules that will be used by the auth descriptor
+ * @returns a list of auth descriptor rules
  */
 export async function mapLoginConfigRulesToAuthDescriptorRules(
   rules: LoginConfigRules,

@@ -33,9 +33,7 @@ function test_custom_login_config_can_have_ttl() {
         config,
         auth._login_config(
             flags = ["Z"],
-            rules = auth.login_simple_rule(
-                auth.less_than(auth.relative_block_time(10))
-            )
+            rules = auth.ttl(10)
         )
     );
 }

@@ -24,7 +24,7 @@ describe("Test auth data service", () => {
     expect(authHandler!.name).toEqual("test_empty_auth_message");
   });
 
-  it("gets login config rules", async () => {
+  it("gets login config with ttl rule", async () => {
     const config = await _authDataService.getLoginConfig(
       "custom_config_with_ttl",
     );

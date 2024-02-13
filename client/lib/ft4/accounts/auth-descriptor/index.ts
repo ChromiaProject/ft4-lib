@@ -24,7 +24,10 @@ import {
   isSingleSigArgs,
 } from "./type-predicates";
 import {
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
   AuthDescriptorRules,
+  RuleOperator,
   and,
   blockHeight,
   blockTime,
@@ -121,9 +124,12 @@ export {
   SingleSig,
   MultiSig,
   AuthType,
+  RuleOperator,
   AuthDescriptor,
   AuthDescriptorError,
   AuthDescriptorRules,
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
   AuthDescriptorRegistration,
   AnyAuthDescriptorRegistration,
   blockHeight,

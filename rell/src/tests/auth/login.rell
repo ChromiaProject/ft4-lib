@@ -23,3 +23,64 @@ function test_querying_unknown_login_config_throws_error() {
     );
 }
 
+function test_login_simple_rule_correctly_maps_to_gtv() {
+    assert_equals(
+        auth.login_simple_rule(auth.less_than(auth.relative_block_height(10))),
+        ["lt".to_gtv(), "relative_block_height".to_gtv(), (10).to_gtv()].to_gtv()
+    );
+}
+
+function test_login_rules_fails_when_rule_list_is_empty() {
+    assert_fails("Empty login rules list", auth.login_rules([], *));
+}
+
+function test_login_rules_correctly_maps_single_rule_to_gtv() {
+    assert_equals(
+        auth.login_rules([auth.less_than(auth.block_height(1234))]),
+        ["lt".to_gtv(), "block_height".to_gtv(), (1234).to_gtv()].to_gtv()
+    );    
+}
+
+function test_login_rules_correctly_maps_many_rules_to_gtv() {
+    val rules = auth.login_rules([
+        auth.less_than(auth.relative_block_height(50)),
+        auth.greater_than(auth.block_height(10))
+
+    ]);
+
+    assert_equals(
+        rules,
+        [
+            "and".to_gtv(),
+            ["lt".to_gtv(), "relative_block_height".to_gtv(), (50).to_gtv()].to_gtv(),
+            ["gt".to_gtv(), "block_height".to_gtv(), (10).to_gtv()].to_gtv()
+        ].to_gtv()
+    );    
+}
+
+function test_map_rule_correctly_maps_all_operators_and_variables() {
+    assert_equals(
+        auth.map_rule(auth.less_than(auth.op_count(50))),
+        ["lt".to_gtv(), "op_count".to_gtv(), (50).to_gtv()].to_gtv()
+    );
+
+    assert_equals(
+        auth.map_rule(auth.less_or_equal(auth.block_height(60))),
+        ["le".to_gtv(), "block_height".to_gtv(), (60).to_gtv()].to_gtv()
+    );
+
+    assert_equals(
+        auth.map_rule(auth.equals(auth.relative_block_height(70))),
+        ["eq".to_gtv(), "relative_block_height".to_gtv(), (70).to_gtv()].to_gtv()
+    );
+
+    assert_equals(
+        auth.map_rule(auth.greater_than(auth.block_time(80))),
+        ["gt".to_gtv(), "block_time".to_gtv(), (80).to_gtv()].to_gtv()
+    );
+
+    assert_equals(
+        auth.map_rule(auth.greater_or_equal(auth.relative_block_time(90))),
+        ["ge".to_gtv(), "relative_block_time".to_gtv(), (90).to_gtv()].to_gtv()
+    );    
+}
