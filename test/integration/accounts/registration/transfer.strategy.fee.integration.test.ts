@@ -16,6 +16,7 @@ import { transferFee } from "@ft4/accounts/registration/strategies/transfer/fee/
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { createAmountFromBalance } from "@ft4/index";
+import { formatter } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -26,10 +27,10 @@ describe("Test transfer with fee", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(connection.client, undefined, undefined, 5);
+    asset = await getNewAsset(connection.client, "test", "TEST", 5);
   });
 
-  it.skip("can register account which receives transferred assets, minus fee", async () => {
+  it("can register account which receives transferred assets, minus fee", async () => {
     const keyPair = encryption.makeKeyPair();
     const recipientId = gtv.gtvHash(keyPair.pubKey);
 
@@ -43,13 +44,16 @@ describe("Test transfer with fee", () => {
     ))!;
     expect(_allowedAssets).toBeTruthy();
     const rawAmount = _allowedAssets.find(
-      (v) => v.asset_id === asset.id,
-    )!.min_amount;
+      (v) => formatter.toString(v.asset_id) === formatter.toString(asset.id),
+    )?.min_amount;
     expect(rawAmount).toBeTruthy();
-    const amount = createAmountFromBalance(rawAmount, asset.decimals);
+    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
     const _feeAssets = await connection.query(feeAssets());
-    // TODO use feeAssets
+    const rawFee = _feeAssets.find(
+      (v) => formatter.toString(v.asset_id) === formatter.toString(asset.id),
+    )?.amount;
+    expect(rawFee).toBeTruthy();
 
     await account1.transfer(recipientId, asset.id, amount);
 
@@ -74,12 +78,10 @@ describe("Test transfer with fee", () => {
     expect(session.account.id).toEqual(recipientId);
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
-    expect(assetBalance1!.amount.value).toBe(
-      amount.value - _feeAssets[0].amount,
-    );
+    expect(assetBalance1!.amount.value).toBe(amount.value - rawFee!);
 
-    expect(await connection.query(pendingTransferStrategies(recipientId))).toBe(
-      [],
-    );
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toStrictEqual([]);
   });
 });
