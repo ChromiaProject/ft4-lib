@@ -5,6 +5,7 @@
 - `authenticator.getKeyHandlerForOperation` will not return auth descriptors whose rules don't allow them to be used.
 - `AuthDataService.getAllowedAuthDescriptors` now accepts `Buffer | string` instead of `Buffer` only
 - Auth descriptor queries updated to include `account_id` in response.
+- Limit how many auth descriptors can be added to an account. Default value is 10 and maximum is 200. 
 
 ### Added
 
@@ -16,6 +17,7 @@
 
 ### Breaking
 
+- Removed pagination from 
 - Change `assetData` to `asset` in `TransferHistoryEntry`.
 
 - Update `addAuthDescriptor` signature  

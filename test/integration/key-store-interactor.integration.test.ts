@@ -62,7 +62,7 @@ describe("Key store interactor", () => {
       .build();
 
     await account1.addAuthDescriptor(
-      (await account2.getAuthDescriptors()).data[0],
+      (await account2.getAuthDescriptors())[0],
       keyStore2,
     );
 

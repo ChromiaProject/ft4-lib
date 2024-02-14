@@ -1,10 +1,15 @@
 import { Buffer } from "buffer";
-import { formatter, IClient } from "postchain-client";
+import { formatter, IClient, Queryable } from "postchain-client";
 import {
   getBalanceByAccountId,
   getBalancesByAccountId,
 } from "@ft4/asset/asset-query-functions";
-import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/index";
+import {
+  AnyAuthDescriptor,
+  Connection,
+  OptionalLimit,
+  OptionalPageCursor,
+} from "@ft4/index";
 import {
   BufferId,
   PaginatedEntity,
@@ -27,7 +32,7 @@ import {
   TransferHistoryFilter,
 } from "./transfer-history";
 import { Account, RateLimit } from "./types";
-import { RawAnyAuthDescriptor, AnyAuthDescriptor, gtv } from "./";
+import { gtv } from "./";
 import {
   PendingTransfer,
   PendingTransferResponse,
@@ -80,16 +85,7 @@ export function createAccountObject(
     ) => getBalancesByAccountId(connection, accountId, limit, cursor),
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
-    getAuthDescriptors: async (
-      limit: OptionalLimit = null,
-      cursor: OptionalPageCursor = null,
-    ) => {
-      return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
-        connection,
-        accountAuthDescriptors(accountId, limit, cursor),
-        gtv.mapAuthDescriptorsFromGtv,
-      );
-    },
+    getAuthDescriptors: () => getAuthDescriptors(connection, accountId),
     getAuthDescriptorsBySigner: (signer: BufferId) =>
       getAuthDescriptorsBySigner(connection, accountId, signer),
     getRateLimit: () => getRateLimit(connection.client, accountId),
@@ -173,16 +169,24 @@ export async function isAuthDescriptorValid(
 }
 
 export async function getAuthDescriptorsBySigner(
-  connection: Connection,
+  queryable: Queryable,
   accountId: BufferId,
   signer: BufferId,
-  limit: OptionalLimit = null,
-  cursor: OptionalPageCursor = null,
-): Promise<PaginatedEntity<AnyAuthDescriptor>> {
-  return retrievePaginatedEntity<AnyAuthDescriptor, RawAnyAuthDescriptor>(
-    connection,
-    accountAuthDescriptorsBySigner(accountId, signer, limit, cursor),
-    (authDescriptors) =>
-      authDescriptors ? gtv.mapAuthDescriptorsFromGtv(authDescriptors) : [],
+): Promise<AnyAuthDescriptor[]> {
+  const authDescriptors = await queryable.query(
+    accountAuthDescriptorsBySigner(accountId, signer),
   );
+
+  return authDescriptors ? gtv.mapAuthDescriptorsFromGtv(authDescriptors) : [];
+}
+
+export async function getAuthDescriptors(
+  queryable: Queryable,
+  accountId: BufferId,
+): Promise<AnyAuthDescriptor[]> {
+  const authDescriptors = await queryable.query(
+    accountAuthDescriptors(accountId),
+  );
+
+  return authDescriptors ? gtv.mapAuthDescriptorsFromGtv(authDescriptors) : [];
 }
