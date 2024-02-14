@@ -4,7 +4,9 @@ import test_utils: ^^.assets.utils;
 import test_op: ^^.operations;
 import ^.helpers;
 import ^^^.lib.ft4.accounts;
+import accounts_ext: ^^^.lib.ft4.accounts.external;
 import ^^^.lib.ft4.admin;
+import ft_utils: ^^^.lib.ft4.test.utils;
 import auth: ^^.operations.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 
@@ -100,4 +102,40 @@ function test_create_account_with_auth_in_operation_after_genesis_block() {
 function test_create_account_auth_in_without_operation_in_genesis_block() {
   val account_id = helpers.init_object.account_id;
   assert_equals(accounts.rl_state @ { .account.id == account_id } (.last_update), 0);
+}
+
+function test_an_account_cannot_have_too_many_auth_descriptors() {
+  val acc_data = test_utils.register_alice();
+
+  val auth_descriptors = [
+    test_utils.create_auth_descriptor(alice.pub, ["2"]),
+    test_utils.create_auth_descriptor(alice.pub, ["3"]),
+    test_utils.create_auth_descriptor(alice.pub, ["4"]),
+    test_utils.create_auth_descriptor(alice.pub, ["5"]),
+    test_utils.create_auth_descriptor(alice.pub, ["6"]),
+    test_utils.create_auth_descriptor(alice.pub, ["7"]),
+    test_utils.create_auth_descriptor(alice.pub, ["8"]),
+    test_utils.create_auth_descriptor(alice.pub, ["9"]),
+    test_utils.create_auth_descriptor(alice.pub, ["10"])
+  ];
+
+  val one_too_many = test_utils.create_auth_descriptor(alice.pub, ["Z"]);
+  
+  var tx = rell.test.tx();
+  for (ad in auth_descriptors) {
+    tx = tx
+      .op(admin.add_rate_limit_points(acc_data.account.id, 1))
+      .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
+      .op(accounts_ext.add_auth_descriptor(ad));
+  }
+  tx
+    .sign(test_utils.admin_priv_key())
+    .sign(rell.test.keypairs.alice)
+    .run();
+
+  rell.test.tx()
+    .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
+    .op(accounts_ext.add_auth_descriptor(one_too_many))
+    .sign(rell.test.keypairs.alice)
+    .run_must_fail("Max <10> auth descriptor count reached. Delete some before adding new ones.");
 }

@@ -17,7 +17,8 @@ blockchains:
           rate_limit:
             max_points: 5
             # Use default values for the other rate limit parameters
-          max_auth_descriptor_rules: 4
+          auth_descriptor:
+            max_rules: 4
 
         lib.ft4.admin:
           admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
@@ -64,7 +65,7 @@ blockchains:
               strategy: "open"
 
             - sender: "*"
-              recipient: "*"
+              recipient: x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5" # Alice
               asset:
                 - id: x"abcdef"
                   min_amount: 100000L
@@ -77,7 +78,8 @@ blockchains:
               - x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
               - "$"
               sender: "*"
-              recipient: "*"
+              recipient:
+                - x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8" # Bob
               asset:
                 - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
                   min_amount: 5L
@@ -93,6 +95,21 @@ blockchains:
               strategy:
                 - "open"
                 - "fee"
+
+            - sender_blockchain:
+              - "$"
+              sender: "*"
+              recipient: x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe" # Charlie
+              timeout_days: 60
+              strategy:
+                - "open"
+
+        lib.ft4.accounts.strategies.transfer.fee:
+          asset:
+            - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+              amount: 2L
+            - id: x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac"
+              amount: 1L
 
 libs:
   iccf:
