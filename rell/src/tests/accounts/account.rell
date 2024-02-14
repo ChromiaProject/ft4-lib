@@ -33,8 +33,8 @@ function setup_account_with_many_ads() {
   return account;
 }
 
-function get_single_sig_args(gtv): acc.single_sig_args {
-  return acc.single_sig_args.from_gtv(gtv_auth_descriptor.from_gtv_pretty(gtv).args.to_gtv());
+function get_single_sig_args(args: gtv): acc.single_sig_args {
+  return acc.single_sig_args.from_gtv(args);
 }
 
 function test_auth_descriptors_are_returned_in_correct_order() {
@@ -43,10 +43,10 @@ function test_auth_descriptors_are_returned_in_correct_order() {
   val account = setup_account_with_many_ads();
   val descriptors = acc_external.get_account_auth_descriptors(account.id);
 
-  assert_equals(get_single_sig_args(descriptors[0]).signer, rell.test.keypairs.alice.pub);
-  assert_equals(get_single_sig_args(descriptors[1]).signer, rell.test.keypairs.bob.pub);
-  assert_equals(get_single_sig_args(descriptors[2]).signer, rell.test.keypairs.eve.pub);
-  assert_equals(get_single_sig_args(descriptors[3]).signer, rell.test.keypairs.trudy.pub);
+  assert_equals(get_single_sig_args(descriptors[0].args).signer, rell.test.keypairs.alice.pub);
+  assert_equals(get_single_sig_args(descriptors[1].args).signer, rell.test.keypairs.bob.pub);
+  assert_equals(get_single_sig_args(descriptors[2].args).signer, rell.test.keypairs.eve.pub);
+  assert_equals(get_single_sig_args(descriptors[3].args).signer, rell.test.keypairs.trudy.pub);
 }
 
 function test_items_have_the_correct_return_format() {
@@ -55,15 +55,15 @@ function test_items_have_the_correct_return_format() {
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
   val alice_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
-  val alice_gtv_ad = gtv_auth_descriptor(
+
+  assert_equals(descriptors[0], (
     id = alice_ad_id,
     account_id = account.id,
     auth_type = alice_ad.auth_type,
-    args = alice_ad.args.to_gtv_pretty(),
-    rules = alice_ad.rules.to_gtv_pretty(),
+    args = alice_ad.args.to_gtv(),
+    rules = alice_ad.rules.to_gtv(),
     created = acc.account_auth_descriptor @ { .id == alice_ad_id }( .created )
-  );
-  assert_equals(descriptors[0], alice_gtv_ad.to_gtv_pretty());
+  ));
 }
 
 function test_get_accounts_by_signer_is_paginated() {
