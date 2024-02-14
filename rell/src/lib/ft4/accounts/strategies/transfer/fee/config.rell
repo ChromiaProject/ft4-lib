@@ -1,3 +1,4 @@
+val _CONFIG_ERROR_TEXT = "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer.fee): ";
 
 struct module_args {
     asset: gtv;
@@ -22,15 +23,15 @@ function fee_assets(): list<fee_asset> {
     else {
         require(
             false,
-            "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer.fee): asset only accepts a list of ids and amounts."
+            _CONFIG_ERROR_TEXT + "asset only accepts a list of ids and amounts."
         );
         return []; // will never happen
     }
 }
 
 function parse_fee_asset(input: map<name, gtv>): fee_asset {
-    require("id" in input or "name" in input, "Fee asset needs to have either 'id' or 'name'");
-    require(not ("id" in input and "name" in input), "Fee asset cannot have both 'id' and 'name'");
+    require("id" in input or "name" in input, _CONFIG_ERROR_TEXT + "fee asset needs to have either 'id' or 'name'");
+    require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT + "fee asset cannot have both 'id' and 'name'");
     return fee_asset(
         id = if ("id" in input) byte_array.from_gtv(input["id"]) else null,
         issuing_blockchain_rid = if ("name" in input)

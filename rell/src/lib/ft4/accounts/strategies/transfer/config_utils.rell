@@ -235,8 +235,8 @@ function parse_asset_limits_from_gtv(gtv): list<asset_limit>? {
 }
 
 function parse_asset_limit(input: map<name, gtv>): asset_limit {
-    require("id" in input or "name" in input, "Asset limit needs to have either 'id' or 'name'");
-    require(not ("id" in input and "name" in input), "Asset limit cannot have both 'id' and 'name'");
+    require("id" in input or "name" in input, _CONFIG_ERROR_TEXT + "asset limit needs to have either 'id' or 'name'");
+    require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT + "asset limit cannot have both 'id' and 'name'");
     return asset_limit(
         id = if ("id" in input) byte_array.from_gtv(input["id"]) else null,
         issuing_blockchain_rid = if ("name" in input)
