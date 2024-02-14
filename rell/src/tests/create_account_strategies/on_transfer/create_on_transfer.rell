@@ -234,7 +234,7 @@ function test_create_account_on_crosschain_transfer_success() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -296,7 +296,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("invalidAsset", "iva", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = utils.create_crosschain_asset("bogus", "BOGUS", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val tx = gtx_transaction(
         body = gtx_transaction_body(
@@ -327,7 +327,7 @@ function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -369,7 +369,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transfereed() 
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -404,8 +404,8 @@ function test_multiple_crosschain_transfers_success() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset1 = utils.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
-    val asset2 = utils.create_crosschain_asset("secondAsset", "a2", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset1 = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset2 = utils.create_crosschain_asset("test1", "TEST1", 1, sender_blockchain_rid, "", sender_blockchain_rid);
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val amount1 = allowed_assets[asset1.id];
     val amount2 = allowed_assets[asset2.id];
