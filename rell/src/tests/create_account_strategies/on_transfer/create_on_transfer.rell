@@ -258,7 +258,7 @@ function test_create_account_on_crosschain_transfer_success() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .run();
 
@@ -316,7 +316,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail("No suitable transfer strategy found");
 }
@@ -351,13 +351,13 @@ function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail("This asset is already transferred");
@@ -393,7 +393,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transfereed() 
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail("No suitable transfer strategy found");
 }
@@ -428,7 +428,7 @@ function test_multiple_crosschain_transfers_success() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx1, 1, tx1, 1, 0))
         .run();
 
@@ -450,7 +450,7 @@ function test_multiple_crosschain_transfers_success() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx2, 1, tx2, 1, 0))
         .run();
 
