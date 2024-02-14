@@ -1,13 +1,15 @@
 val _CONFIG_ERROR_TEXT = "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): ";
 
-struct asset_limit_gtv_values {
-    id: byte_array;
-    min_amount: text;
-}
-
 struct allowlist {
     allow_all: boolean = false;
     allowed_values: list<byte_array> = [];
+}
+
+struct asset_limit {
+    id: byte_array? = null;
+    issuing_blockchain_rid: byte_array? = null;
+    name: text? = null;
+    min_amount: big_integer;
 }
 
 struct rule {
@@ -21,7 +23,7 @@ struct rule {
     require_same_address: boolean = false;
 
     allow_all_assets: boolean = false;
-    asset_limits: map<byte_array, big_integer> = map<byte_array, big_integer>();
+    asset_limits: list<asset_limit> = list<asset_limit>();
 }
 
 function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
@@ -48,7 +50,7 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
         );
 
         var allow_all_assets = false;
-        var asset_limits = map<byte_array, big_integer>();
+        var asset_limits = list<asset_limit>();
 
         if (input.asset == null) {
             allow_all_assets = true;
@@ -216,21 +218,13 @@ function parse_blockchain_single_value_from_gtv(gtv): (
     );
 }
 
-function parse_asset_limits_from_gtv(gtv): map<byte_array, big_integer>? {
-    if (is_byte_array(gtv)) {
-        val input = asset_limit_gtv_values.from_gtv_pretty(gtv);
-        val output = map<byte_array, big_integer>([(
-            input.id,
-            big_integer.from_text(input.min_amount.replace("L", ""))
-        )]);
-        return output;
+function parse_asset_limits_from_gtv(gtv): list<asset_limit>? {
+    if (is_dict(gtv)) {
+        val input = map<name, gtv>.from_gtv_pretty(gtv);
+        return [parse_asset_limit(input)];
     } else if (is_list(gtv)) {
-        val inputs = list<asset_limit_gtv_values>.from_gtv_pretty(gtv);
-        val output = map<byte_array, big_integer>();
-        for (i in inputs) {
-            output[i.id] = big_integer.from_text(i.min_amount.replace("L", ""));
-        }
-        return output;
+        val inputs = list<map<name, gtv>>.from_gtv_pretty(gtv);
+        return inputs @* {} (parse_asset_limit($));
     } else {
         require(
             gtv == "*".to_gtv(),
@@ -238,6 +232,19 @@ function parse_asset_limits_from_gtv(gtv): map<byte_array, big_integer>? {
         );
         return null;
     }
+}
+
+function parse_asset_limit(input: map<name, gtv>): asset_limit {
+    require("id" in input or "name" in input, _CONFIG_ERROR_TEXT + "asset limit needs to have either 'id' or 'name'");
+    require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT + "asset limit cannot have both 'id' and 'name'");
+    return asset_limit(
+        id = if ("id" in input) byte_array.from_gtv(input["id"]) else null,
+        issuing_blockchain_rid = if ("name" in input)
+            (if ("issuing_blockchain_rid" in input) byte_array.from_gtv(input["issuing_blockchain_rid"]) else chain_context.blockchain_rid)
+            else null,
+        name = if ("name" in input) text.from_gtv(input["name"]) else null,
+        min_amount = big_integer.from_text(text.from_gtv(input["min_amount"]).replace("L", ""))
+    );
 }
 
 function get_module_args_with_defaults(config_gtv: gtv) {

@@ -61,14 +61,15 @@ blockchains:
               - "$"
               sender: X
               recipient: X
+              asset: "*"
               timeout_days: 10
               strategy: "open"
 
             - sender: "*"
               recipient: x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5" # Alice
               asset:
-                - id: x"abcdef"
-                  min_amount: 100000L
+                id: x"abcdef"
+                min_amount: 100000L
               timeout_days: 60
               strategy:
                - "fee"
@@ -81,15 +82,14 @@ blockchains:
               recipient:
                 - x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8" # Bob
               asset:
-                - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+                - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
                   min_amount: 5L
-                - id: x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac"
+                - name: test1 # issued by current blockchain
                   min_amount: 3L
-                - id: x"ad60efda802fec15e22a8c4691d1eb13e144dee4984772c05ab9163cf2cf2996"
+                - id: x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce" # "test" issued by other blockchain
                   min_amount: 5L
-                - id: x"39b34b11bf6c1c301327d5824f977c9360895446a529bb980ebefd2183ca4831"
-                  min_amount: 5L
-                - id: x"cf45a2cf3033543c2664886c7d39f9f31087bd5949120fe2e69affc0f926a71f"
+                - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+                  name: test1
                   min_amount: 7L
               timeout_days: 60
               strategy:
@@ -106,10 +106,13 @@ blockchains:
 
         lib.ft4.accounts.strategies.transfer.fee:
           asset:
-            - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+            - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
               amount: 2L
-            - id: x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac"
+            - name: test1 # issued by current blockchain
               amount: 1L
+            - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+              name: test1
+              amount: 3L
 
 libs:
   iccf:
