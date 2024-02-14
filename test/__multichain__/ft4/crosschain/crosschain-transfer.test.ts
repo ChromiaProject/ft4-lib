@@ -76,23 +76,12 @@ describe("Crosschain transfer", () => {
           return;
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
-        for (let i = 0; i < 10; ++i) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          try {
-            await transactionBuilder(
-              account00.authenticator,
-              connection01.client,
-            )
-              .add(iccfProofOperation)
-              .add(applyTransferOp(data.tx, data.tx, 0))
-              .buildAndSend();
-            resolve();
-            return;
-          } catch (err) {
-            /* Errors are expected during reties */
-          }
-        }
-        reject();
+        await transactionBuilder(account00.authenticator, connection01.client)
+          .add(iccfProofOperation)
+          .add(applyTransferOp(data.tx, data.tx, 0))
+          .buildAndSend();
+        resolve();
+        return;
       };
 
       tb.add(initOperation, onAnchoringHandler).buildAndSend();

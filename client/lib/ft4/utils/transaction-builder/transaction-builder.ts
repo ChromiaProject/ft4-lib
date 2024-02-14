@@ -271,20 +271,31 @@ export function transactionBuilder(
             return proofCache.get(blockchainRid.toString("hex"))!;
           }
 
-          const proof = await createIccfProofTx(
-            directoryClient,
-            txRid,
-            tx,
-            rawTx[0][2], // signers
-            client.config.blockchainRid,
-            blockchainRid.toString("hex"),
-            undefined,
-            true,
-          );
+          for (let i = 0; i < config.retryCount; ++i) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, config.waitTimeMs),
+            );
+            try {
+              const proof = await createIccfProofTx(
+                directoryClient,
+                txRid,
+                tx,
+                rawTx[0][2], // signers
+                client.config.blockchainRid,
+                blockchainRid.toString("hex"),
+                undefined,
+                true,
+              );
 
-          const iccfProofOperation = proof.iccfTx.operations[0];
-          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
-          return iccfProofOperation;
+              const iccfProofOperation = proof.iccfTx.operations[0];
+              proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
+              return iccfProofOperation;
+            } catch (err) {
+              console.log(err);
+              throw err;
+            }
+          }
+          throw new Error("Block was not properly anchored");
         };
 
         operations.forEach((op: OperationContext, idx: number) => {

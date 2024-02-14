@@ -398,34 +398,14 @@ async function createBaseOrcestrator(
     const targetChainRid = path.slice(-1)[0];
 
     const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
-
-    // eslint-disable-next-line no-async-promise-executor
-    await new Promise<void>(async (resolve, reject) => {
-      let completed = false;
-      for (let i = 0; i < 20; ++i) {
-        if (completed) break;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        try {
-          await (
-            await getTransactionBuilderForChain(
-              session,
-              Buffer.from(session.client.config.blockchainRid, "hex"),
-            )
-          )
-            .add(iccfOp)
-            .add(completeTransferOp(tx, transfer?.opIndex ?? 3), () => {
-              completed = true;
-              resolve();
-            })
-            .buildAndSend();
-        } catch {
-          /* Error is sometimes expected here */
-        }
-      }
-      reject(
-        "Unable to submit complete transfer transaction within the specified timeout",
-      );
-    });
+    const tb = await getTransactionBuilderForChain(
+      session,
+      Buffer.from(session.client.config.blockchainRid, "hex"),
+    );
+    await tb
+      .add(iccfOp)
+      .add(completeTransferOp(tx, transfer?.opIndex ?? 3))
+      .buildAndSend();
 
     localEmitter.emit("TransferComplete");
   }
