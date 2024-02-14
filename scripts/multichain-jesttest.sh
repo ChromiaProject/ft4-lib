@@ -49,4 +49,5 @@ NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" n
     --config=jest.config.multichain.js \
     --maxWorkers=1 \
     --testPathPattern=__multichain__ \
+    --verbose \
     $opt

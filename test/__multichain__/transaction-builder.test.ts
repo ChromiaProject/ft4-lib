@@ -22,7 +22,7 @@ function getMocks() {
       .fn()
       .mockImplementation((_, operation) => Promise.resolve([operation])),
     sign: jest.fn(),
-    getSigners: jest.fn(),
+    getSigners: jest.fn().mockReturnValue([keyPair.pubKey]),
   };
   const authenticatorMock: Authenticator = {
     accountId: Buffer.alloc(32),

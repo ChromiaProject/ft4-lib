@@ -6,6 +6,7 @@ export {
   AnchoringTimeoutError,
   TransactionBuilderConfig,
   OnAnchoredHandler,
+  OnAnchoredHandlerData,
   TransactionBuilder,
 } from "./types";
 
