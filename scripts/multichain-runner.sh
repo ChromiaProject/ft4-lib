@@ -53,8 +53,8 @@ prepare_dapp_folder() {
     # remove pieces of yml not to be included here
     for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
-        if [ $chain_num -ne $current_num ]; then
-            sed -i "s/^.*#${other_chain_num}\s*^//" $yml_filename
+        if [ "$chain_num" != "$other_chain_num" ]; then
+            sed -i "s/^.*#${other_chain_num}\s*$//" $yml_filename
         fi
     done
 
@@ -77,24 +77,25 @@ prepare_dapp_folder() {
 }
 
 include_brids() {
-    current_num="$1"
+    chain_num="$1"
 
     yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
 
-    for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for loop_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
-        grep -l "{chain${chain_num}_rid}" $yml_filename
+        grep -l "{chain${loop_chain_num}_rid}" $yml_filename > /dev/null
         contains_rid=$?
 
-        if [ $chain_num -lt $current_num ]; then
-            # if it needs the brid of an already-launched chain, use it
-            chain_rid=eval "echo \${MULTICHAIN${x}_BRID}"
-            sed -i "s/{chain${chain_num}_rid}/${chain_rid}/" $yml_filename
-        else
-            # if the chain has not yet been lauched, throw an error
-            fatal_error "Chain ${current_num} requires the brid of chain ${chain_num},\
-            which has not yet been launched. Please ensure that chains only depend on\
-            brids of chains with a lower number"
+        if [ "$contains_rid" -eq 0 ]; then
+            if [ "$loop_chain_num" -lt "$chain_num" ]; then
+                # if it needs the brid of an already-launched chain, use it
+                chain_rid=$(eval "echo \${MULTICHAIN${loop_chain_num}_BRID}")
+                echo "$chain_rid"
+                sed -i "s/{chain${loop_chain_num}_rid}/${chain_rid}/" $yml_filename
+            else
+                # if the chain has not yet been lauched, throw an error
+                fatal_error "Chain ${chain_num} requires the brid of chain ${loop_chain_num}, which has not yet been launched. Please ensure that chains only depend on brids of chains with a lower number"
+            fi
         fi
     done
 
@@ -201,7 +202,7 @@ run_main_logic() {
     log "Preparing Multichain dApp Chains..."
     for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
-        prepare_dapp_folder $chain_num
+        prepare_dapp_folder "$chain_num"
     done
 
     log "Running node container..."
