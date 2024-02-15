@@ -31,7 +31,11 @@ describe("Crosschain transfer", () => {
       await createChromiaClientToMultichain(multichain01.rid),
     );
 
-    const asset00 = await getNewAsset(connection00.client);
+    const asset00 = await getNewAsset(
+      connection00.client,
+      "crosschain",
+      "CROSSCHAIN",
+    );
     await registerCrosschainAsset(
       connection01.client,
       adminUser().signatureProvider,

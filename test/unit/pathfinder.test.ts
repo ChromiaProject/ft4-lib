@@ -134,7 +134,7 @@ describe("Pathfinder", () => {
 
   it("rethrows errors when it can't handle them", async () => {
     const asset = getMockAsset();
-    assetOriginQueryMock.mockReturnValueOnce(generateId());
+    assetOriginQueryMock.mockReturnValueOnce(generateId(2));
     createClientMock.mockImplementationOnce(
       jest.requireActual("postchain-client").createClient,
     );
@@ -261,7 +261,7 @@ function setOriginAssetsQueryResponsesByLength(
 
 function getMockAsset() {
   return {
-    id: generateId(),
+    id: generateId(3),
     blockchainRid: rootChainRid,
   } as unknown as Asset;
 }

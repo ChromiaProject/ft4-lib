@@ -27,12 +27,16 @@ describe("Pathfinder", () => {
   });
 
   it("throws PathfinderError when a chain doesn't exist", async () => {
-    const asset00 = await getNewAsset(connections[0].client);
+    const asset00 = await getNewAsset(
+      connections[0].client,
+      "pathfinder",
+      "PATHFINDER",
+    );
     await registerCrosschainAsset(
       connections[1].client,
       adminUser().signatureProvider,
       asset00,
-      generateId(),
+      generateId(1),
     );
 
     const promise = findPathToChainForAsset(
