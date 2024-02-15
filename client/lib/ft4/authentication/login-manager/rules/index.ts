@@ -65,9 +65,9 @@ export async function ensureAuthDescriptorRule(
  *
  * For example,
  *  null => null
- *  ["lt", "relative_block_time", 1000] => ["lt", "block_time", Date.now()+1000]
- *  ["lt", "op_count", 10] => ["lt", "op_count", 10]
- *  ["lt", "block_time", 10] => ["lt", "block_time", 10]
+ *  lessThan(relativeBlockTime(10)) => lessThan(blockTime(Date.now()+10))
+ *  lessThan(opCount(10)) => lessThan(opCount(10))
+ *  lessThan(relativeBlockHeight(10)) => lessThan(blockHeight(currentBlockHeight+10))
  *  ["and", loginRule1, authDescRule2] => ["and", authDescRule1, authDescRule2]
  *
  * @param rules a list of login config rules

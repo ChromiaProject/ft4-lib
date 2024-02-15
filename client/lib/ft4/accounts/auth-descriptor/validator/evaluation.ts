@@ -1,6 +1,9 @@
 import { AnyAuthDescriptor } from "../../index";
-import { AuthDescriptorSimpleRule, RuleOperator } from "../rules";
-import { AuthDescriptorRuleVariable } from "../rules/variables";
+import {
+  AuthDescriptorSimpleRule,
+  RuleOperator,
+  AuthDescriptorRuleVariable,
+} from "../rules";
 import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,
