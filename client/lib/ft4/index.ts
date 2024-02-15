@@ -120,14 +120,14 @@ export {
   initTransfer,
 } from "./crosschain";
 
-import * as registration from "@ft4/accounts/registration";
+import * as accountRegistration from "@ft4/accounts/registration";
 import * as openStrategy from "@ft4/accounts/registration/strategies/open";
 import * as transferStrategy from "@ft4/accounts/registration/strategies/transfer";
 import * as transferOpenStrategy from "@ft4/accounts/registration/strategies/transfer/open";
 import * as transferFeeStrategy from "@ft4/accounts/registration/strategies/transfer/fee";
 
-export const accounts = Object.freeze({
-  registerAccount: registration.registerAccount,
+export const registration = Object.freeze({
+  registerAccount: accountRegistration.registerAccount,
   strategy: Object.freeze({
     open: openStrategy.open,
     transferOpen: transferOpenStrategy.transferOpen,
