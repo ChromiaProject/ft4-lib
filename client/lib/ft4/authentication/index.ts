@@ -10,6 +10,22 @@ import { createAccountObject } from "@ft4/accounts/account-query-functions";
 export * from "./evm";
 export * from "./ft";
 export * from "./types";
+export {
+  LoginConfigRules,
+  LoginConfigSimpleRule,
+  LoginConfigComplexRule,
+  mapLoginConfigRulesToAuthDescriptorRules,
+  blockHeight,
+  blockTime,
+  relativeBlockHeight,
+  relativeBlockTime,
+  opCount,
+  minutes,
+  hours,
+  days,
+  weeks,
+  ttlLoginRule,
+} from "./login-manager/rules";
 
 export {
   createSessionStorageLoginKeyStore,

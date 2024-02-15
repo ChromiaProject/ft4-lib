@@ -1,6 +1,7 @@
 module;
 
 import ^^^.lib.ft4.auth;
+import ^^^.lib.ft4.accounts;
 
 @extend(auth.login_config)
 function () = auth.add_login_config(
@@ -11,5 +12,31 @@ function () = auth.add_login_config(
 function () = auth.add_login_config(
     name = "custom_config",
     flags = ["X", "Y"]
+);
+
+@extend(auth.login_config)
+function () = auth.add_login_config(
+    name = "custom_config_with_ttl",
+    flags = ["Z"],
+    rules = auth.ttl(10)
+);
+
+@extend(auth.login_config)
+function () = auth.add_login_config(
+    name = "custom_config_with_simple_rule",
+    flags = ["W"],
+    rules = auth.login_simple_rule(
+        auth.less_than(auth.relative_block_height(5))
+    )
+);
+
+@extend(auth.login_config)
+function () = auth.add_login_config(
+    name = "custom_config_with_complex_rule",
+    flags = ["A", "Z"],
+    rules = auth.login_rules([
+        auth.less_than(auth.relative_block_height(5)),
+        auth.less_or_equal(auth.op_count(7))
+    ])
 );
 

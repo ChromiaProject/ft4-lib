@@ -7,7 +7,7 @@ import { Buffer } from "buffer";
 import { FtKeyStore } from "@ft4/authentication";
 import {
   LoginConfigOptions,
-  getFlags,
+  getConfigFromOptions,
 } from "@ft4/authentication/login-manager";
 import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
 import { createAuthDataService } from "@ft4/ft-session";
@@ -30,12 +30,13 @@ export async function getLoginDetails(
   keyStore: FtKeyStore;
 }> {
   const authDataService = createAuthDataService(connection);
-  const flags = await getFlags(authDataService, loginConfig);
+  const config = await getConfigFromOptions(authDataService, loginConfig);
   const loginKeyStore = createInMemoryLoginKeyStore();
   const keyStore = await loginKeyStore.generateKey(accountId);
   const authDescriptor = createSingleSigAuthDescriptorRegistration(
-    flags,
+    config.flags,
     keyStore.id,
+    config.rules,
   );
 
   return {

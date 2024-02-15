@@ -13,12 +13,13 @@ blockchains:
 
       lib.ft4.accounts.strategies.transfer:
         rules: 
-          - sender_blockchain:
-            - "$"
+          - sender_blockchain: "$"
             sender: "*"
             recipient: "*"
             asset:
-              - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
+              - name: transfer_strategy_asset
+                min_amount: 5L
+              - name: transfer_fee_strategy_asset
                 min_amount: 5L
             timeout_days: 1
             strategy:
@@ -27,10 +28,8 @@ blockchains:
 
       lib.ft4.accounts.strategies.transfer.fee:
         asset:
-          - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa"
-            amount: 2L
-          - id: x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac"
-            amount: 1L
+          name: transfer_fee_strategy_asset
+          amount: 2L
 
 libs:
   iccf:

@@ -2,6 +2,7 @@ module;
 
 import ^^.main;
 import ^.extensions;
+import ^.extensions.auth_login;
 import ^.operations;
 import ^^.lib.ft4.crosschain.external;
 import ^^.lib.ft4.prioritization.default;

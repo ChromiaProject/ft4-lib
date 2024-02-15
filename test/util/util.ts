@@ -9,7 +9,7 @@ import {
   gtv as pclGtv,
 } from "postchain-client";
 import adminUser from "./admin_user";
-import { Connection } from "@ft4/index";
+import { AuthDescriptorRules, Connection } from "@ft4/index";
 import { addAuthDescriptor } from "@ft4/accounts/account-operations";
 import {
   createMultiSigAuthDescriptorRegistration,
@@ -22,7 +22,6 @@ import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthDescriptorRegistration,
-  AuthDescriptorRules,
   MultiSig,
   SingleSig,
 } from "@ft4/accounts/auth-descriptor/types";
