@@ -22,6 +22,9 @@
     - open
     - fee
 
+### Bugs 🐛
+- Orchestrator and transaction builder waits until transaction is anchored in SAC before moving to next step
+
 ### Breaking
 
 - Removed pagination from 

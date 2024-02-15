@@ -18,6 +18,9 @@
 - Add `get_first_allowed_auth_descriptor_by_signers` query
 - Added support for rules in login config.
 
+### Bugs 🐛
+- Crosschain transfer related operations now validates that transaction is anchored on SAC before continuing
+
 ### Breaking
 
 - Change `asset_data` to `asset` in queries `get_transfer_history`, `get_transfer_history_from_height` and `get_transfer_history_entry`.
