@@ -46,29 +46,27 @@ prepare_dapp_folder() {
     yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
     module_name="app_module$chain_num"
 
+    # Create the RELL filename
+    rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
+    mkdir -p $(dirname $rell_filepath)
+
     # Write the YML content to the file
     sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
         configs/multichain-jesttest.yml.template > ${yml_filename}
+
+    # Create the corresponding RELL file with unique content
+    cp configs/multichain-module.rell.template ${rell_filepath}
+    echo "" >> $rell_filepath
+    echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
     
-    # remove pieces of yml not to be included here
+    # remove pieces of yml and rell not to be included here
     for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
         if [ "$chain_num" != "$other_chain_num" ]; then
             sed -i "s/^.*#${other_chain_num}\s*$//" $yml_filename
+            sed -i "s|^.*//${other_chain_num}\s*$||" $rell_filepath
         fi
     done
-
-    # Create the corresponding RELL file with unique content
-    rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
-
-    mkdir -p $(dirname $rell_filepath)
-
-    echo "module;" > $rell_filepath
-    echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
-    echo "import admin_crosschain: lib.ft4.admin.crosschain;" >> $rell_filepath
-    echo "import crosschain_ext: lib.ft4.crosschain.external;" >> $rell_filepath
-    echo "import tests.operations;" >> $rell_filepath
-    echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
 
     debug "Generated $yml_filename and $rell_filepath"
 
@@ -90,7 +88,6 @@ include_brids() {
             if [ "$loop_chain_num" -lt "$chain_num" ]; then
                 # if it needs the brid of an already-launched chain, use it
                 chain_rid=$(eval "echo \${MULTICHAIN${loop_chain_num}_BRID}")
-                echo "$chain_rid"
                 sed -i "s/{chain${loop_chain_num}_rid}/${chain_rid}/" $yml_filename
             else
                 # if the chain has not yet been lauched, throw an error

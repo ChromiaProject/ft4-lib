@@ -24,7 +24,7 @@ blockchains:
           strategy: "open" #00
 
       lib.ft4.accounts.strategies.transfer.fee: #01 
-        rules: #01
+        asset: #01
           name: fee_strategy_test_asset_00 #01
           issuing_blockchain_rid: {chain00_rid} #01
           amount: 1000000L #01

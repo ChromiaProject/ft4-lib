@@ -1,53 +1,60 @@
 import { registerAccount } from "@ft4/accounts/registration";
 import {
+  Connection,
   FtKeyStore,
+  createAmount,
+  createConnection,
   createInMemoryFtKeyStore,
   createSingleSigAuthDescriptorRegistration,
+  mint,
   registerCrosschainAsset,
 } from "@ft4/index";
 import { Asset } from "@ft4/index";
 import { gtv, newSignatureProvider } from "postchain-client";
-import { getNewAsset } from "@ft4/util/blockchain-util";
+import {
+  createChromiaClientToMultichain,
+  getNewAsset,
+} from "@ft4/util/blockchain-util";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { fee } from "@ft4/accounts/registration/strategies/fee";
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { createAmountFromBalance } from "@ft4/index";
-import {
-  TestContext,
-  setupTestEnvironment,
-} from "../orchestrator/common-setup";
 import adminUser from "@ft4/util/admin_user";
 import { open } from "@ft4/accounts/registration/strategies/open";
+import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
 
 let asset: Asset;
+let senderConnection: Connection;
+let recipientConnection: Connection;
 
 // This is needed to allow to check whether transaction is anchored
 jest.unmock("postchain-client");
 
 describe("Fee account creation single step", () => {
-  let testContext: TestContext;
+  beforeAll(async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+    senderConnection = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+    recipientConnection = createConnection(
+      await createChromiaClientToMultichain(multichain01.rid),
+    );
 
-  beforeEach(async () => {
-    testContext = await setupTestEnvironment();
     asset = await getNewAsset(
-      testContext.connection0.client,
+      senderConnection.client,
       "fee_strategy_test_asset_00",
       "FEE_STRATEGY_TEST_ASSET_00",
       5,
     );
     await registerCrosschainAsset(
-      testContext.connection1.client,
+      recipientConnection.client,
       adminUser().signatureProvider,
       asset,
-      testContext.multichain0.rid,
+      multichain00.rid,
     );
   });
 
   it("can register account which receives transferred assets, minus fee", async () => {
-    const { connection0: senderConnection, connection1: recipientConnection } =
-      testContext;
-
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
     const authDescriptor = createSingleSigAuthDescriptorRegistration(
@@ -59,6 +66,15 @@ describe("Fee account creation single step", () => {
       senderConnection,
       keyStore,
       open(authDescriptor),
+    );
+
+    const startingAmount = createAmount(20, 5);
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      account.id,
+      asset.id,
+      createAmount(20, 5),
     );
 
     const recipientId = gtv.gtvHash((await account.getAuthDescriptors())[0].id);
@@ -80,8 +96,6 @@ describe("Fee account creation single step", () => {
 
     expect(feeRawAmount).toEqual(1000000n);
 
-    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
-
     const session = await registerAccount(
       recipientConnection,
       keyStore as FtKeyStore,
@@ -90,9 +104,16 @@ describe("Fee account creation single step", () => {
 
     expect(session.account.id).toEqual(recipientId);
 
-    const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
-    expect(assetBalance1!.amount.value).toBe(
-      amount.value - _feeAssets[0].amount,
+    const assetBalanceRecipient = await session.account.getBalanceByAssetId(
+      asset.id,
+    );
+    expect(assetBalanceRecipient!.amount.value).toBe(0n);
+
+    const assetBalanceSender = await session.account.getBalanceByAssetId(
+      asset.id,
+    );
+    expect(assetBalanceSender!.amount.value).toBe(
+      startingAmount.value - feeRawAmount!,
     );
 
     expect(
