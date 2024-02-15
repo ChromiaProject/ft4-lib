@@ -234,7 +234,7 @@ export function createKeyStoreInteractor(
       const authDescriptors = await account.getAuthDescriptorsBySigner(
         keyStore.id,
       );
-      const keyHandlers = authDescriptors.data.map((authDescriptor) =>
+      const keyHandlers = authDescriptors.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor),
       );
       const authenticator = createAuthenticator(

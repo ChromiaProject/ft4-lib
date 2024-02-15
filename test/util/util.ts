@@ -36,21 +36,8 @@ import { op } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { BufferId } from "@ft4/utils/types";
 
-function generateNumber(): number {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2); // sleep for 2 milliseconds
-  return Date.now();
-}
-
-function generateAssetName(prefix = "CHROMA"): string {
-  return prefix + "_" + generateNumber();
-}
-
-function generateAssetSymbol(): string {
-  return `C${generateNumber()}`;
-}
-
-function generateId(): Buffer {
-  return encryption.hash256(Buffer.from(`${generateNumber()}`));
+function generateId(n: number): Buffer {
+  return encryption.hash256(Buffer.from(`${n}`));
 }
 
 function blockchainAccountId(blockchainRid: Buffer) {
@@ -86,13 +73,7 @@ class LocalStorageMock implements Storage {
   }
 }
 
-export {
-  LocalStorageMock,
-  blockchainAccountId,
-  generateAssetName,
-  generateAssetSymbol,
-  generateId,
-};
+export { LocalStorageMock, blockchainAccountId, generateId };
 
 export function createTestAuthDescriptor(
   flags: string[] = [],

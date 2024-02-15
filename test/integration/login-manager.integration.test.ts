@@ -64,11 +64,11 @@ describe("Login manager", () => {
     ).getLoginManager();
 
     const authDescriptorsBeforeLogin = await account.getAuthDescriptors();
-    expect(authDescriptorsBeforeLogin.data.length).toBe(1);
+    expect(authDescriptorsBeforeLogin.length).toBe(1);
 
     await loginManager.login({ accountId: account.id });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data.length).toBe(2);
+    expect(authDescriptorAfterLogin.length).toBe(2);
   });
 
   it("added disposable auth descriptor has no rules by default", async () => {
@@ -89,7 +89,7 @@ describe("Login manager", () => {
     await loginManager.login({ accountId: account.id });
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rules).toEqual(null);
+    expect(authDescriptorAfterLogin[1].rules).toEqual(null);
   });
 
   it("added disposable auth descriptor expires in 30 minutes", async () => {
@@ -114,7 +114,7 @@ describe("Login manager", () => {
     const expectedExpiration = Date.now() + 1800000; // 30 min from now
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rules).toEqual(
+    expect(authDescriptorAfterLogin[1].rules).toEqual(
       lessThan(blockTime(expectedExpiration)),
     );
   });
@@ -156,7 +156,7 @@ describe("Login manager", () => {
       config: { flags: ["T"], rules },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rules).toEqual(expectedRules);
+    expect(authDescriptorAfterLogin[1].rules).toEqual(expectedRules);
   });
 
   it("added disposable auth descriptor can have no rules", async () => {
@@ -179,12 +179,17 @@ describe("Login manager", () => {
       config: { flags: ["T"], rules: null },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
-    expect(authDescriptorAfterLogin.data[1].rules).toEqual(null);
+    expect(authDescriptorAfterLogin[1].rules).toEqual(null);
   });
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = encryption.makeKeyPair();
-    const asset = await getNewAsset(client, undefined, undefined, 5);
+    const asset = await getNewAsset(
+      client,
+      "login_manager",
+      "LOGIN_MANAGER",
+      5,
+    );
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],

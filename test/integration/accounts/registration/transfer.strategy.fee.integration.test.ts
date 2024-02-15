@@ -26,10 +26,15 @@ describe("Test transfer with fee", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(connection.client, undefined, undefined, 5);
+    asset = await getNewAsset(
+      connection.client,
+      "transfer_fee_strategy_asset",
+      "TRANSFER_FEE_STRATEGY_ASSET",
+      5,
+    );
   });
 
-  it.skip("can register account which receives transferred assets, minus fee", async () => {
+  it("can register account which receives transferred assets, minus fee", async () => {
     const keyPair = encryption.makeKeyPair();
     const recipientId = gtv.gtvHash(keyPair.pubKey);
 
@@ -38,17 +43,18 @@ describe("Test transfer with fee", () => {
       .withPoints(1)
       .build();
 
-    const _allowedAssets = await connection.query(
+    const _allowedAssets = (await connection.query(
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
-    );
-    const rawAmount = _allowedAssets.find(
-      (v) => v.asset_id === asset.id,
-    )!.min_amount;
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find((v) => v.asset_id.equals(asset.id))
+      ?.min_amount;
     expect(rawAmount).toBeTruthy();
-    const amount = createAmountFromBalance(rawAmount, asset.decimals);
+    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
     const _feeAssets = await connection.query(feeAssets());
-    // TODO use feeAssets
+    const rawFee = _feeAssets.find((v) => v.asset_id.equals(asset.id))?.amount;
+    expect(rawFee).toBeTruthy();
 
     await account1.transfer(recipientId, asset.id, amount);
 
@@ -73,12 +79,10 @@ describe("Test transfer with fee", () => {
     expect(session.account.id).toEqual(recipientId);
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
-    expect(assetBalance1!.amount.value).toBe(
-      amount.value - _feeAssets[0].amount,
-    );
+    expect(assetBalance1!.amount.value).toBe(amount.value - rawFee!);
 
-    expect(await connection.query(pendingTransferStrategies(recipientId))).toBe(
-      [],
-    );
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toStrictEqual([]);
   });
 });

@@ -79,7 +79,7 @@ function create_on_transfer(
         from_chain = sender_blockchain_rid,
         from_id = sender_id,
         to_id = recipient_id,
-        asset_id = asset.id,
+        asset = asset,
         amount = amount
     );
     require(not rules.empty(), "No suitable transfer strategy found");
@@ -113,8 +113,9 @@ function do_transfer(accounts.account, strategy: text) {
         val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
         val rule = rules.get_or_null(strategy);
         if (rule != null) {
-            if (account_creation_transfer.asset.id in rule.asset_limits
-                    and account_creation_transfer.amount >= rule.asset_limits[account_creation_transfer.asset.id]) {
+            val resolved_assets = resolve_allowed_assets(rule);
+            if (resolved_assets == null or (account_creation_transfer.asset.id in resolved_assets
+                    and account_creation_transfer.amount >= resolved_assets[account_creation_transfer.asset.id])) {
                 enough_transferred = true;
             }
         }

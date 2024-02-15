@@ -119,7 +119,7 @@ export async function getKeyHandlersForKeyStores(
   let allKeyHandlers: KeyHandler[] = [];
   for (const keyStore of keyStores) {
     const response = await account.getAuthDescriptorsBySigner(keyStore.id);
-    const keyHandlers = response.data.map((authDescriptor) =>
+    const keyHandlers = response.map((authDescriptor) =>
       keyStore.createKeyHandler(authDescriptor),
     );
     allKeyHandlers = [...allKeyHandlers, ...keyHandlers];

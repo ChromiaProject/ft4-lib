@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { RellOperation, encryption, gtx } from "postchain-client";
 import { aggregateSigners } from "@ft4/accounts";
 import { ftAuth } from "@ft4/authentication/ft";

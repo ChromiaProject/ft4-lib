@@ -1,4 +1,5 @@
 import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
+import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 
 export function nonce(

@@ -3,6 +3,7 @@ import {
   KeyHandler,
   KeyStore,
   isFtKeyStore,
+  FtKeyStore,
 } from "@ft4/authentication";
 import { Buffer } from "buffer";
 import {
@@ -18,6 +19,7 @@ import {
   createIccfProofTx,
   gtv,
   RawGtx,
+  SystemChainException,
 } from "postchain-client";
 import {
   getNonceIdForTxContext,
@@ -34,7 +36,6 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { FtKeyStore } from "@ft4/authentication";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 const defaultConfig: TransactionBuilderConfig = {
@@ -152,7 +153,7 @@ export function transactionBuilder(
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          `No keyhandler registered to handle operation <${operation.name}>`,
+          `No key handler registered to handle operation <${operation.name}>`,
         );
       }
       keyHandlers.push(keyHandler);
@@ -251,7 +252,10 @@ export function transactionBuilder(
         // TODO: Uncomment to pollute logs with errors
         // console.error("Error while checking block anchoring status", error);
 
-        if (error instanceof BlockAnchoringException) {
+        if (
+          error instanceof BlockAnchoringException ||
+          error instanceof SystemChainException
+        ) {
           isAnchored = false;
         } else {
           throw error;
@@ -267,18 +271,31 @@ export function transactionBuilder(
             return proofCache.get(blockchainRid.toString("hex"))!;
           }
 
-          const proof = await createIccfProofTx(
-            directoryClient,
-            txRid,
-            tx,
-            rawTx[0][2], // signers
-            client.config.blockchainRid,
-            blockchainRid.toString("hex"),
-          );
+          for (let i = 0; i < config.retryCount; ++i) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, config.waitTimeMs),
+            );
+            try {
+              const proof = await createIccfProofTx(
+                directoryClient,
+                txRid,
+                tx,
+                rawTx[0][2], // signers
+                client.config.blockchainRid,
+                blockchainRid.toString("hex"),
+                undefined,
+                true,
+              );
 
-          const iccfProofOperation = proof.iccfTx.operations[0];
-          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
-          return iccfProofOperation;
+              const iccfProofOperation = proof.iccfTx.operations[0];
+              proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
+              return iccfProofOperation;
+            } catch (err) {
+              console.log(err);
+              throw err;
+            }
+          }
+          throw new Error("Block was not properly anchored");
         };
 
         operations.forEach((op: OperationContext, idx: number) => {

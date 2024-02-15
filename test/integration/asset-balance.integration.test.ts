@@ -28,8 +28,13 @@ describe("Asset balance", () => {
   beforeAll(async () => {
     client = getClient();
     connection = createConnection(client);
-    asset1 = await getNewAsset(client);
-    asset2 = await getNewAsset(client, undefined, undefined, 5);
+    asset1 = await getNewAsset(client, "asset_balance_1", "ASSET_BALANACE_1");
+    asset2 = await getNewAsset(
+      client,
+      "asset_balance_2",
+      "ASSET_BALANACE_2",
+      5,
+    );
   });
 
   it("should be returned when queried by account id", async () => {
@@ -104,9 +109,21 @@ describe("Asset balance", () => {
   });
 
   it("paginates asset balances", async () => {
-    const asset1 = await getNewAsset(client);
-    const asset2 = await getNewAsset(client);
-    const asset3 = await getNewAsset(client);
+    const asset1 = await getNewAsset(
+      client,
+      "asset_balance_3",
+      "ASSET_BALANACE_3",
+    );
+    const asset2 = await getNewAsset(
+      client,
+      "asset_balance_4",
+      "ASSET_BALANACE_4",
+    );
+    const asset3 = await getNewAsset(
+      client,
+      "asset_balance_5",
+      "ASSET_BALANACE_5",
+    );
 
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);

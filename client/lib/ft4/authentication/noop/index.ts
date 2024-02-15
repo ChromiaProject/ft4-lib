@@ -1,6 +1,7 @@
 import { Operation } from "postchain-client";
 import { AuthDataService, Authenticator } from "../types";
 import { noopKeyHandler } from "./key-handler";
+import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 
 export function createNoopAuthenticator(

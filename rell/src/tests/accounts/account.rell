@@ -33,73 +33,37 @@ function setup_account_with_many_ads() {
   return account;
 }
 
-function get_single_sig_args(gtv): acc.single_sig_args {
-  return acc.single_sig_args.from_gtv(gtv_auth_descriptor.from_gtv_pretty(gtv).args.to_gtv());
+function get_single_sig_args(args: gtv): acc.single_sig_args {
+  return acc.single_sig_args.from_gtv(args);
 }
 
 function test_auth_descriptors_are_returned_in_correct_order() {
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
   val account = setup_account_with_many_ads();
-  val descriptors = acc_external.get_account_auth_descriptors(account.id, 4, null);
+  val descriptors = acc_external.get_account_auth_descriptors(account.id);
 
-  assert_equals(get_single_sig_args(descriptors.data[0]).signer, rell.test.keypairs.alice.pub);
-  assert_equals(get_single_sig_args(descriptors.data[1]).signer, rell.test.keypairs.bob.pub);
-  assert_equals(get_single_sig_args(descriptors.data[2]).signer, rell.test.keypairs.eve.pub);
-  assert_equals(get_single_sig_args(descriptors.data[3]).signer, rell.test.keypairs.trudy.pub);
+  assert_equals(get_single_sig_args(descriptors[0].args).signer, rell.test.keypairs.alice.pub);
+  assert_equals(get_single_sig_args(descriptors[1].args).signer, rell.test.keypairs.bob.pub);
+  assert_equals(get_single_sig_args(descriptors[2].args).signer, rell.test.keypairs.eve.pub);
+  assert_equals(get_single_sig_args(descriptors[3].args).signer, rell.test.keypairs.trudy.pub);
 }
 
-function test_auth_descriptors_are_paginated() {
+function test_items_have_the_correct_return_format() {
   val account = setup_account_with_many_ads();
-  
-  val descriptors_p1 = acc_external.get_account_auth_descriptors(account.id, 3, null);
-
-  assert_equals(get_single_sig_args(descriptors_p1.data[0]).signer, rell.test.keypairs.alice.pub);
-  assert_equals(get_single_sig_args(descriptors_p1.data[1]).signer, rell.test.keypairs.bob.pub);
-  assert_equals(get_single_sig_args(descriptors_p1.data[2]).signer, rell.test.keypairs.eve.pub);
-
-  val descriptors_p2 = acc_external.get_account_auth_descriptors(account.id, 3, descriptors_p1.next_cursor);
-  assert_equals(get_single_sig_args(descriptors_p2.data[0]).signer, rell.test.keypairs.trudy.pub);
-}
-
-function test_paginated_items_have_the_correct_return_format() {
-  val account = setup_account_with_many_ads();
-  val descriptors = acc_external.get_account_auth_descriptors(account.id, 1, null);
+  val descriptors = acc_external.get_account_auth_descriptors(account.id);
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
   val alice_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
-  val alice_gtv_ad = gtv_auth_descriptor(
+
+  assert_equals(descriptors[0], (
     id = alice_ad_id,
     account_id = account.id,
     auth_type = alice_ad.auth_type,
-    args = alice_ad.args.to_gtv_pretty(),
-    rules = alice_ad.rules.to_gtv_pretty(),
+    args = alice_ad.args.to_gtv(),
+    rules = alice_ad.rules.to_gtv(),
     created = acc.account_auth_descriptor @ { .id == alice_ad_id }( .created )
-  );
-  assert_equals(descriptors.data[0], alice_gtv_ad.to_gtv_pretty());
-}
-
-function test_get_account_auth_descriptors_by_signer_is_paginated() {
-  val account = asset_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
-  val ad1 = asset_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["A"]);
-  val ad2 = asset_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["T"]);
-  
-  rell.test.tx(test_op.add_ad_to_account(account.account, ad1)).sign(rell.test.keypairs.bob).run();
-  rell.test.tx(test_op.add_ad_to_account(account.account, ad2)).sign(rell.test.keypairs.bob).run();
-  
-  val page1 = acc_external.get_account_auth_descriptors_by_signer(account.account.id, rell.test.keypairs.bob.pub, 1, null);
-  val page2 = acc_external.get_account_auth_descriptors_by_signer(account.account.id, rell.test.keypairs.bob.pub, 1, page1.next_cursor);
-
-  val descriptors = acc.auth_descriptor_signer @* {
-    .id == rell.test.keypairs.bob.pub
-  }( 
-    acc.get_auth_descriptor_data($.account_auth_descriptor.to_struct()).to_gtv_pretty()
-  );
-
-  assert_equals(page1.data.size(), 1);
-  assert_equals(page1.data[0], descriptors[0]);
-  assert_equals(page2.data.size(), 1);
-  assert_equals(page2.data[0], descriptors[1]);
+  ));
 }
 
 function test_get_accounts_by_signer_is_paginated() {

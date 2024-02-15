@@ -132,7 +132,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
@@ -257,7 +257,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash()))
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Account <%s> does not exist and creating accounts on transfer is not enabled".format(bogus_recipient_id));
