@@ -11,6 +11,15 @@ export * from "./evm";
 export * from "./ft";
 export * from "./types";
 export {
+  LoginConfigRules,
+  LoginConfigSimpleRule,
+  LoginConfigComplexRule,
+  mapLoginConfigRulesToAuthDescriptorRules,
+  blockHeight,
+  blockTime,
+  relativeBlockHeight,
+  relativeBlockTime,
+  opCount,
   minutes,
   hours,
   days,
