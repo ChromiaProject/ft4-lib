@@ -116,39 +116,15 @@ function test_get_config_reads_yml_correctly() {
     assert_equals(config, expected);
 }
 
-function test_get_config_uses_defaults() {
-    val rule_gtv_pretty = [(timeout_days = 10)].to_gtv_pretty();
-
-    val cfg = create_on_transfer.get_config(rule_gtv_pretty);
-
-    assert_equals(
-        cfg,
-        [
-            create_on_transfer.rule(
-                timeout_days = 10,
-                strategies = ["open"],
-
-                blockchains = create_on_transfer.allowlist(
-                    allow_all = false,
-                    allowed_values = [chain_context.blockchain_rid]
-                ),
-                senders = create_on_transfer.allowlist(
-                    allow_all = true
-                ),
-                recipients = create_on_transfer.allowlist(
-                    allow_all = true
-                ),
-
-                require_same_address = false,
-
-                allow_all_assets = true
-            )
-        ]
-    );
-}
-
 function test_get_config_reads_dollar_sign_in_blockchain() {
-    val rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = ["012345", "$"])].to_gtv_pretty();
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = ["012345", "$"],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     val cfg = create_on_transfer.get_config(rule_gtv_pretty);
 
@@ -179,7 +155,14 @@ function test_get_config_reads_dollar_sign_in_blockchain() {
 }
 
 function test_get_config_fails_when_only_one_X() {
-    val rule_gtv_pretty = [(timeout_days = 10, sender = "X")].to_gtv_pretty();
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "X",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): 'X' should appear in both or none of recipient and sender.",
@@ -188,7 +171,14 @@ function test_get_config_fails_when_only_one_X() {
 }
 
 function test_get_config_fails_when_asterisk_alongside_others() {
-    val rule_gtv_pretty = [(timeout_days = 10, sender = ["*", "abcdef"])].to_gtv_pretty();
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["*", "abcdef"],
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
@@ -197,7 +187,14 @@ function test_get_config_fails_when_asterisk_alongside_others() {
 }
 
 function test_get_config_fails_when_X_alongside_others() {
-    val rule_gtv_pretty = [(timeout_days = 10, sender = ["X", "abcdef"], recipient = "X")].to_gtv_pretty();
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["X", "abcdef"],
+        recipient = "X",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
@@ -206,14 +203,28 @@ function test_get_config_fails_when_X_alongside_others() {
 }
 
 function test_get_config_fails_when_value_not_buffer_string_or_list() {
-    var rule_gtv_pretty = [(timeout_days = 10, sender = (id = "abcdef"))].to_gtv_pretty();
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = (id = "abcdef"),
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
         create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 
-    rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = (id = "abcdef"))].to_gtv_pretty();
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = (id = "abcdef"),
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
@@ -224,7 +235,11 @@ function test_get_config_fails_when_value_not_buffer_string_or_list() {
 function test_get_config_fails_when_list_has_wrong_element_types() {
     var rule_gtv_pretty = [(
         timeout_days = 10,
-        sender = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()]
+        sender_blockchain = "$",
+        sender = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()],
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
     )].to_gtv_pretty();
 
     assert_fails(
@@ -233,7 +248,11 @@ function test_get_config_fails_when_list_has_wrong_element_types() {
     );
     rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()]
+        sender_blockchain = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
     )].to_gtv_pretty();
 
     assert_fails(
@@ -243,13 +262,27 @@ function test_get_config_fails_when_list_has_wrong_element_types() {
 }
 
 function test_get_config_fails_when_dollar_not_in_blockchains() {
-    var rule_gtv_pretty = [(timeout_days = 10, sender = "$")].to_gtv_pretty();
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "$",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
         create_on_transfer.get_config(rule_gtv_pretty, *)
     );
-    rule_gtv_pretty = [(timeout_days = 10, sender = ["$"])].to_gtv_pretty();
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["$"],
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
@@ -258,13 +291,27 @@ function test_get_config_fails_when_dollar_not_in_blockchains() {
 }
 
 function test_get_config_fails_when_X_in_blockchains() {
-    var rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = "X")].to_gtv_pretty();
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "X",
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
         create_on_transfer.get_config(rule_gtv_pretty, *)
     );
-    rule_gtv_pretty = [(timeout_days = 10, sender_blockchain = ["X"])].to_gtv_pretty();
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = ["X"],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
@@ -273,7 +320,14 @@ function test_get_config_fails_when_X_in_blockchains() {
 }
 
 function test_get_config_fails_when_assets_wrong_format() {
-    val rule_gtv_pretty = [(timeout_days = 10, asset = "X")].to_gtv_pretty();
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "*",
+        recipient = "*",
+        asset = "X",
+        strategy = ["open"]
+    )].to_gtv_pretty();
 
     assert_fails(
         "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): asset only accepts '*' and a list of ids and minimum amounts.",

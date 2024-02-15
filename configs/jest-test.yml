@@ -13,8 +13,7 @@ blockchains:
 
       lib.ft4.accounts.strategies.transfer:
         rules: 
-          - sender_blockchain:
-            - "$"
+          - sender_blockchain: "$"
             sender: "*"
             recipient: "*"
             asset:

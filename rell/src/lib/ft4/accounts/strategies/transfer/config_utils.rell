@@ -14,7 +14,7 @@ struct asset_limit {
 
 struct rule {
     timeout_days: integer = 0;
-    strategies: list<text> = ["open"];
+    strategies: list<text> = [];
 
     blockchains: allowlist = allowlist();
     senders: allowlist = allowlist();
@@ -29,7 +29,7 @@ struct rule {
 function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
     val config = list<rule>();
 
-    val inputs = get_module_args_with_defaults(config_gtv);
+    val inputs = list<module_args_list_element>.from_gtv_pretty(config_gtv);
 
     for (input in inputs) {
         val strats = if (is_list(input.strategy))
@@ -49,18 +49,15 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
             _CONFIG_ERROR_TEXT + "'X' should appear in both or none of recipient and sender."
         );
 
-        var allow_all_assets = false;
-        var asset_limits = list<asset_limit>();
-
-        if (input.asset == null) {
+        var allow_all_assets: boolean;
+        var asset_limits: list<asset_limit>;
+        val res = parse_asset_limits_from_gtv(input.asset);
+        if (res == null) {
             allow_all_assets = true;
+            asset_limits = list<asset_limit>();
         } else {
-            val res = parse_asset_limits_from_gtv(input.asset!!);
-            if (res == null) {
-                allow_all_assets = true;
-            } else {
-                asset_limits = res;
-            }
+            allow_all_assets = false;
+            asset_limits = res;
         }
 
         config.add(
@@ -245,27 +242,6 @@ function parse_asset_limit(input: map<name, gtv>): asset_limit {
         name = if ("name" in input) text.from_gtv(input["name"]) else null,
         min_amount = big_integer.from_text(text.from_gtv(input["min_amount"]).replace("L", ""))
     );
-}
-
-function get_module_args_with_defaults(config_gtv: gtv) {
-    val default_parameters = [
-        "sender_blockchain": chain_context.blockchain_rid.to_gtv(),
-        "asset": null.to_gtv(),
-        "recipient": "*".to_gtv(),
-        "sender": "*".to_gtv(),
-        "strategy": "open".to_gtv()
-    ];
-
-    val parameters = list<map<name, gtv>>.from_gtv_pretty(config_gtv);
-    val defaults = map(default_parameters);
-
-    for (cfg in parameters) {
-        for ((k, v) in defaults) {
-            if (not cfg.contains(k)) cfg[k] = v;
-        }
-    }
-
-    return list<module_args_list_element>.from_gtv_pretty(parameters.to_gtv());
 }
 
 function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
