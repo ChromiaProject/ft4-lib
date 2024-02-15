@@ -12,6 +12,8 @@ import {
 } from "@ft4/accounts/registration/strategies";
 import { Asset } from "@ft4/asset/index";
 
+export * from "./queries";
+
 export function transferFee(
   feeAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
