@@ -1,5 +1,6 @@
 import { AuthDataService } from "@ft4/authentication/types";
 import { Connection } from "@ft4/types";
+import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 import { Operation } from "postchain-client";
 

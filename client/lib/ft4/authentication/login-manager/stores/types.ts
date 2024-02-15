@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { FtKeyStore } from "@ft4/authentication/ft";
 
 export interface LoginKeyStore {

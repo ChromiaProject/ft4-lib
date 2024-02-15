@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
 import { AuthDataService, KeyHandler } from "../types";
 import { nullKeyStore } from "./key-store";

@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 export type Blockchain = {
   name: string;
   rid: Buffer;
