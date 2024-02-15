@@ -24,11 +24,18 @@ function is_recipient_allowed(rule, recipient_id: byte_array, sender_id: byte_ar
     return is_value_allowed(recipient_id, rule.recipients);
 }
 
-function is_asset_amount_allowed(rule, asset_id: byte_array, amount: big_integer) {
+function is_asset_amount_allowed(rule, asset: assets.asset, amount: big_integer) {
     if (rule.allow_all_assets) return true;
-    val is_allowed = rule.asset_limits.contains(asset_id);
-    if (is_allowed) {
-        return amount >= rule.asset_limits[asset_id];
+    var min_amount = 0L;
+    for (asset_limit in rule.asset_limits) {
+        if ((asset_limit.id != null and asset_limit.id!! == asset.id) or
+            (asset_limit.name != null and asset_limit.name!! == asset.name and
+                asset_limit.issuing_blockchain_rid != null and asset_limit.issuing_blockchain_rid!! == asset.issuing_blockchain_rid)) {
+            min_amount = asset_limit.min_amount;
+        }
+    }
+    if (min_amount > 0L) {
+        return amount >= min_amount;
     } else {
         return false;
     }
@@ -48,7 +55,7 @@ function find_allowed_rules(
     from_chain: byte_array,
     from_id: byte_array,
     to_id: byte_array,
-    asset_id: byte_array,
+    asset: assets.asset,
     amount: big_integer
 ): map<text,rule> {
     val cfg = get_config();
@@ -56,7 +63,7 @@ function find_allowed_rules(
         is_blockchain_allowed($, from_chain),
         is_sender_allowed($, from_id),
         is_recipient_allowed($, to_id, from_id),
-        is_asset_amount_allowed($, asset_id, amount)
+        is_asset_amount_allowed($, asset, amount)
     };
 
     val rule_map = map<text,rule>();
@@ -68,23 +75,31 @@ function find_allowed_rules(
     return rule_map;
 }
 
-function find_allowed_assets(
-    from_chain: byte_array,
-    from_id: byte_array,
-    to_id: byte_array
-): map<byte_array, big_integer> {
+function find_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array):
+        map<byte_array, big_integer>? {
     val cfg = get_config();
     val allowed_rules = cfg @* {
-        is_blockchain_allowed($, from_chain),
-        is_sender_allowed($, from_id),
-        is_recipient_allowed($, to_id, from_id)
-    } (.asset_limits);
+        is_blockchain_allowed($, sender_blockchain_rid),
+        is_sender_allowed($, sender_id),
+        is_recipient_allowed($, recipient_id, sender_id)
+    };
 
     val allowed_assets = map<byte_array, big_integer>();
     for (rule in allowed_rules) {
-        for ((asset_id, min_amount) in rule) {
-            allowed_assets[asset_id] = min_amount;
-        }
+        val resolved_assets = resolve_allowed_assets(rule);
+        if (resolved_assets == null) return null;
+        allowed_assets.put_all(resolved_assets);
+    }
+    return allowed_assets;
+}
+
+function resolve_allowed_assets(rule): map<byte_array, big_integer>? {
+    val allowed_assets = map<byte_array, big_integer>();
+    if (rule.allow_all_assets) return null;
+    for (asset_limit in rule.asset_limits) {
+        val asset_id = asset_limit.id ?:
+            assets.asset @? { .name == asset_limit.name!!, .issuing_blockchain_rid == asset_limit.issuing_blockchain_rid!! } (.id);
+        if (asset_id != null) allowed_assets[asset_id] = asset_limit.min_amount;
     }
     return allowed_assets;
 }

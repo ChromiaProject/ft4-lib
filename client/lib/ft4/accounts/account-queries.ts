@@ -87,15 +87,11 @@ export function isAuthDescriptorValid(
 export function accountAuthDescriptorsBySigner(
   accountId: BufferId,
   signer: BufferId,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor = null,
 ): QueryObject<
   RawAnyAuthDescriptor[],
   {
     account_id: Buffer;
     signer: Buffer;
-    page_size: OptionalLimit;
-    page_cursor: OptionalPageCursor;
   }
 > {
   return {
@@ -103,30 +99,20 @@ export function accountAuthDescriptorsBySigner(
     args: {
       account_id: formatter.ensureBuffer(accountId),
       signer: formatter.ensureBuffer(signer),
-      page_size: limit,
-      page_cursor: cursor,
     },
   };
 }
 
-export function accountAuthDescriptors(
-  accountId: BufferId,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor = null,
-): QueryObject<
-  RawAnyAuthDescriptor,
+export function accountAuthDescriptors(accountId: BufferId): QueryObject<
+  RawAnyAuthDescriptor[],
   {
     id: Buffer;
-    page_size: OptionalLimit;
-    page_cursor: OptionalPageCursor;
   }
 > {
   return {
     name: "ft4.get_account_auth_descriptors",
     args: {
       id: formatter.ensureBuffer(accountId),
-      page_size: limit,
-      page_cursor: cursor,
     },
   };
 }

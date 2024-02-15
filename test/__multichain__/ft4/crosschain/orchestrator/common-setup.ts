@@ -47,7 +47,11 @@ export async function setupTestEnvironment(mintAmount?: Amount) {
     await createChromiaClientToMultichain(multichain02.rid),
   );
 
-  const asset = await getNewAsset(connection0.client);
+  const asset = await getNewAsset(
+    connection0.client,
+    "orchestrator",
+    "ORCHESTRATOR",
+  );
   await registerCrosschainAsset(
     connection2.client,
     adminUser().signatureProvider,

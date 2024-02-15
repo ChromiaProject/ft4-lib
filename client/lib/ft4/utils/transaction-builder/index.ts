@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { gtx } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 
@@ -6,6 +7,7 @@ export {
   AnchoringTimeoutError,
   TransactionBuilderConfig,
   OnAnchoredHandler,
+  OnAnchoredHandlerData,
   TransactionBuilder,
 } from "./types";
 

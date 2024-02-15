@@ -20,7 +20,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
-    val allowed_assets = map(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id));
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
     val amount = min_amount;
 

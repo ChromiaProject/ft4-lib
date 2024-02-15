@@ -3,6 +3,7 @@ import {
   SingleSig,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts/auth-descriptor";
+import { Buffer } from "buffer";
 import { FtKeyStore } from "@ft4/authentication";
 import {
   LoginConfigOptions,

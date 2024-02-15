@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { QueryObject } from "postchain-client";
 
 export function feeAssets(): QueryObject<

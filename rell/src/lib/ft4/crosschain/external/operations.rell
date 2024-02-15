@@ -120,9 +120,10 @@ operation apply_transfer(
         );
     }
 
-    require(
-        iccf.check_iccf_proof(from_blockchain_rid, previous_hop_tx.to_gtv().hash()),
-        "Missing proof for previous hop"
+    iccf.require_valid_proof(
+        previous_hop_tx,
+        require_anchored_proof=true,
+        verify_signers=true
     );
 
     val asset = assets.Asset(init_args.asset_id);
@@ -167,12 +168,10 @@ operation complete_transfer(
     final_apply_transfer_tx: gtx_transaction,
     op_index: integer
 ) {
-    require(
-        iccf.check_iccf_proof(
-            final_apply_transfer_tx.body.blockchain_rid,
-            final_apply_transfer_tx.to_gtv().hash()
-        ),
-        "Could not delete pending transfer as the proof is not anchored yet"
+    iccf.require_valid_proof(
+        final_apply_transfer_tx,
+        require_anchored_proof=true,
+        verify_signers=true
     );
 
     require(

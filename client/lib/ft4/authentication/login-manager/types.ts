@@ -1,4 +1,5 @@
 import { Session } from "@ft4/index";
+import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 
 export type LoginConfig = {

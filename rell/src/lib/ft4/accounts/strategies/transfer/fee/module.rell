@@ -26,7 +26,7 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 	transfer.do_transfer(account, "fee");
 
 	val strategy_params = struct<ras_transfer_fee>.from_gtv(strategy_params_gtv);
-    val fee_assets = map(fee_assets());
+    val fee_assets = resolve_fee_assets(fee_assets());
 	val fee_amount = require(fee_assets.get_or_null(strategy_params.asset_id),
         "Asset <%s> is not allowed to pay fee with".format(strategy_params.asset_id));
     val asset = assets.Asset(strategy_params.asset_id);
@@ -49,17 +49,3 @@ function () = strategies.add_strategy(
     account_details = account_details(*),
     action = transfer_action(*)
 );
-
-function fee_assets(): list<(asset_id: byte_array, amount: big_integer)> {
-    // TODO get fee_assets from config
-	return [
-        (
-            asset_id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa",
-            amount = 2L
-        ),
-        (
-            asset_id = x"0bdb46231fb6b6fde8efd06dbab99dff23de1ec3dcab2cc43d3acc7fe62da7ac",
-            amount = 1L
-        )
-    ];
-}

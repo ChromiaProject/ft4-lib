@@ -70,7 +70,11 @@ describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     client = getClient();
     _connection = createConnection(client);
-    asset = await getNewAsset(_connection.client);
+    asset = await getNewAsset(
+      _connection.client,
+      "auth_descriptor_rules",
+      "AUTH_DESCRIPTOR_RULES",
+    );
   });
 
   it("should add auth descriptors", async () => {
@@ -82,7 +86,7 @@ describe("Auth Descriptor Rule", () => {
 
     await accountAdmin.addAuthDescriptor(user3.authDescriptor, user3.keyStore);
 
-    expect((await accountAdmin.getAuthDescriptors()).data.length).toEqual(3);
+    expect((await accountAdmin.getAuthDescriptors()).length).toEqual(3);
   });
 
   it("should delete all auth descriptors", async () => {
@@ -126,7 +130,7 @@ describe("Auth Descriptor Rule", () => {
       createAuthenticator(ad1.id, [keyHandler], authDataService),
     );
 
-    expect((await session.account.getAuthDescriptors()).data.length).toEqual(3);
+    expect((await session.account.getAuthDescriptors()).length).toEqual(3);
 
     const tx = await session
       .transactionBuilder()
@@ -134,7 +138,7 @@ describe("Auth Descriptor Rule", () => {
       .build();
     await _connection.client.sendTransaction(tx);
 
-    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
+    expect((await session.account.getAuthDescriptors()).length).toEqual(1);
   });
 
   it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
@@ -188,6 +192,6 @@ describe("Auth Descriptor Rule", () => {
     );
     await session.account.deleteAuthDescriptor(ad2.id);
 
-    expect((await session.account.getAuthDescriptors()).data.length).toEqual(1);
+    expect((await session.account.getAuthDescriptors()).length).toEqual(1);
   });
 });

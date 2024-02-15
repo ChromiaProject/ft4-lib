@@ -1,4 +1,3 @@
-import { generateAssetName, generateAssetSymbol } from "../util/util";
 import { Connection } from "@ft4/types";
 import { getNewAsset } from "../util/blockchain-util";
 import { InvalidUrlError } from "@ft4/asset";
@@ -10,6 +9,7 @@ import { op } from "@ft4/index";
 import adminUser, { adminKeyPair } from "../util/admin_user";
 import { registerAsset } from "@ft4/admin/admin-op-functions";
 import { useChromiaNode } from "@ft4/util/chromia-node";
+import { formatter } from "postchain-client";
 
 let connection: Connection;
 let client: IClient;
@@ -26,7 +26,7 @@ async function registerAssetWithCustomBlockchainRid(
       op(
         "register_asset",
         assetName,
-        generateAssetSymbol(),
+        assetName + "_" + formatter.toString(blockchainRid),
         decimals,
         blockchainRid,
         "",
@@ -46,13 +46,13 @@ describe("Asset", () => {
   });
 
   it("should be successfully registered", async () => {
-    const asset = await getNewAsset(client);
+    const asset = await getNewAsset(client, "asset_1", "ASSET_1");
     expect(asset).not.toBeNull();
   });
 
   it("should be returned when queried by name", async () => {
-    const assetName = generateAssetName();
-    const asset = await getNewAsset(client, assetName);
+    const assetName = "asset_query";
+    const asset = await getNewAsset(client, assetName, assetName.toUpperCase());
 
     const expectedAssets = await connection.getAssetsByName(assetName);
 
@@ -61,7 +61,7 @@ describe("Asset", () => {
   });
 
   it("can fetch paginated assets by name", async () => {
-    const assetName = generateAssetName();
+    const assetName = "asset_name";
     await registerAssetWithCustomBlockchainRid(client, assetName);
     await registerAssetWithCustomBlockchainRid(client, assetName);
     await registerAssetWithCustomBlockchainRid(client, assetName);
@@ -82,8 +82,8 @@ describe("Asset", () => {
   });
 
   it("should be returned when queried by id", async () => {
-    const assetName = generateAssetName();
-    const assetSymbol = generateAssetSymbol();
+    const assetName = "asset_id";
+    const assetSymbol = "ASSET_ID";
     const blockchainRid = Buffer.from(
       connection.client.config.blockchainRid,
       "hex",
@@ -100,8 +100,8 @@ describe("Asset", () => {
   });
 
   it("is returned when queried by symbol", async () => {
-    const assetName = generateAssetName();
-    const assetSymbol = generateAssetSymbol();
+    const assetName = "asset_symbol";
+    const assetSymbol = "ASSET_SYMBOL";
     const blockchainRid = Buffer.from(
       connection.client.config.blockchainRid,
       "hex",
@@ -122,9 +122,9 @@ describe("Asset", () => {
   });
 
   it("should return all the assets registered", async () => {
-    const asset1 = await getNewAsset(client);
-    const asset2 = await getNewAsset(client);
-    const asset3 = await getNewAsset(client);
+    const asset1 = await getNewAsset(client, "asset_2", "ASSET_2");
+    const asset2 = await getNewAsset(client, "asset_3", "ASSET_3");
+    const asset3 = await getNewAsset(client, "asset_4", "ASSET_4");
 
     const expectedAssets = await connection.getAllAssets();
 
@@ -135,9 +135,9 @@ describe("Asset", () => {
 
   it("returns the assets paginated", async () => {
     // Assure that there will always be at least three assets to not make it dependent on execution order
-    await getNewAsset(client);
-    await getNewAsset(client);
-    await getNewAsset(client);
+    await getNewAsset(client, "asset_5", "ASSET_5");
+    await getNewAsset(client, "asset_6", "ASSET_6");
+    await getNewAsset(client, "asset_7", "ASSET_7");
 
     const { data: page1, nextCursor } = await connection.getAllAssets(2);
 

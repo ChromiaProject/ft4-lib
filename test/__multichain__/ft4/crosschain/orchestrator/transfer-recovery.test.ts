@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { fetchBlockchains } from "../../../util/blockchain";
 import {
   FlagsType,
@@ -46,7 +47,11 @@ describe("Orchestrator", () => {
       await createChromiaClientToMultichain(multichain02.rid),
     );
 
-    asset = await getNewAsset(connection0.client);
+    asset = await getNewAsset(
+      connection0.client,
+      "transfer_recovery",
+      "TRANSFER_RECOVERY",
+    );
     await registerCrosschainAsset(
       connection2.client,
       adminUser().signatureProvider,

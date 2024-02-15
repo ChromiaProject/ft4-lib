@@ -44,6 +44,6 @@ describe("EVM key handler", () => {
     );
 
     const authDescriptors = await session.account.getAuthDescriptors();
-    expect(authDescriptors.data.length).toEqual(2);
+    expect(authDescriptors.length).toEqual(2);
   });
 });

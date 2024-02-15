@@ -28,7 +28,7 @@ describe("Transfer", () => {
   beforeAll(async () => {
     client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(connection.client, undefined, undefined, 5);
+    asset = await getNewAsset(connection.client, "transfer", "TRANSFER", 5);
   });
 
   it("should succeed when balance is higher than amount to transfer", async () => {

@@ -26,7 +26,12 @@ describe("Test transfer strategy", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(connection.client, undefined, undefined, 5);
+    asset = await getNewAsset(
+      connection.client,
+      "transfer_strategy",
+      "TRANSFER_STRATEGY",
+      5,
+    );
   });
 
   it.skip("can register account which receives transferred assets", async () => {
@@ -38,9 +43,10 @@ describe("Test transfer strategy", () => {
       .withPoints(1)
       .build();
 
-    const _allowedAssets = await connection.query(
+    const _allowedAssets = (await connection.query(
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
-    );
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
     const rawAmount = _allowedAssets.find(
       (v) => v.asset_id === asset.id,
     )!.min_amount;
