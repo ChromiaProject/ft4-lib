@@ -28,8 +28,8 @@ describe("Test transfer with fee", () => {
     connection = createConnection(client);
     asset = await getNewAsset(
       connection.client,
-      "transfer_fee_strategy",
-      "TRANSFER_FEE_STRATEGY",
+      "transfer_fee_strategy_asset",
+      "TRANSFER_FEE_STRATEGY_ASSET",
       5,
     );
   });
@@ -47,8 +47,9 @@ describe("Test transfer with fee", () => {
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
     ))!;
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find((v) => v.asset_id.equals(asset.id))
-      ?.min_amount;
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(asset.id),
+    )?.min_amount;
     expect(rawAmount).toBeTruthy();
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
