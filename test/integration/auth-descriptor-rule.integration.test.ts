@@ -70,7 +70,11 @@ describe("Auth Descriptor Rule", () => {
   beforeAll(async () => {
     client = getClient();
     _connection = createConnection(client);
-    asset = await getNewAsset(_connection.client);
+    asset = await getNewAsset(
+      _connection.client,
+      "auth_descriptor_rules",
+      "AUTH_DESCRIPTOR_RULES",
+    );
   });
 
   it("should add auth descriptors", async () => {
