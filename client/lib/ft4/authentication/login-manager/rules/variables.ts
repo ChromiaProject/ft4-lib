@@ -1,5 +1,4 @@
 import { RuleVariableValue } from "@ft4/accounts/auth-descriptor/rules";
-import { LoginConfigComplexRule, LoginConfigSimpleRule } from "./types";
 
 export enum LoginConfigRuleVariable {
   BlockHeight = "block_height",
@@ -61,12 +60,3 @@ export const opCount = (
   LoginConfigRuleVariable.OpCount,
   value,
 ];
-
-export const and = (
-  ...rules: LoginConfigSimpleRule[]
-): LoginConfigComplexRule => {
-  return {
-    operator: "and",
-    rules,
-  };
-};

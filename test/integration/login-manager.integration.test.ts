@@ -1,5 +1,6 @@
 import {
   FlagsType,
+  and,
   createKeyStoreInteractor,
   minutes,
   ttlLoginRule,
@@ -23,7 +24,6 @@ import { aggregateSigners } from "@ft4/accounts";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import {
-  and,
   blockTime,
   mapLoginConfigRulesToAuthDescriptorRules,
   opCount,

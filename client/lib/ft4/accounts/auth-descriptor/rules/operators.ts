@@ -1,8 +1,4 @@
-import {
-  AuthDescriptorComplexRule,
-  AuthDescriptorSimpleRule,
-  SimpleRule,
-} from "./types";
+import { ComplexRule, SimpleRule } from "./types";
 
 export type RuleVariableValue<T extends string> = [T, number];
 
@@ -87,9 +83,9 @@ export const greaterOrEqual = <T extends string>(
  * @param rules the rules to combine
  * @returns a set of rules which will be evaluated together using the 'and' operator
  */
-export const and = (
-  ...rules: AuthDescriptorSimpleRule[]
-): AuthDescriptorComplexRule => {
+export const and = <T extends string>(
+  ...rules: SimpleRule<T>[]
+): ComplexRule<T> => {
   return {
     operator: "and",
     rules,

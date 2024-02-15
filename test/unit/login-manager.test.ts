@@ -1,4 +1,12 @@
-import * as ad from "@ft4/accounts/auth-descriptor";
+import {
+  and,
+  blockHeight,
+  blockTime,
+  greaterOrEqual,
+  greaterThan,
+  lessThan,
+  opCount,
+} from "@ft4/accounts/auth-descriptor/rules";
 import * as lc from "@ft4/authentication/login-manager/rules";
 
 describe("Login manager", () => {
@@ -12,51 +20,42 @@ describe("Login manager", () => {
 
   it("converts login relative config rules to auth descriptor rules", async () => {
     const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
-      lc.and(
-        ad.greaterThan(lc.relativeBlockHeight(100)),
-        ad.greaterOrEqual(lc.relativeBlockTime(12)),
+      and(
+        greaterThan(lc.relativeBlockHeight(100)),
+        greaterOrEqual(lc.relativeBlockTime(12)),
       ),
       getFakeBlockHeight(100),
     );
 
     expect(loginRule).toEqual(
-      ad.and(
-        ad.greaterThan(ad.blockHeight(200)),
-        ad.greaterOrEqual(ad.blockTime(1012)),
-      ),
+      and(greaterThan(blockHeight(200)), greaterOrEqual(blockTime(1012))),
     );
   });
   it("converts absolute login config to auth descriptor rules", async () => {
     const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
-      lc.and(
-        ad.greaterThan(lc.blockHeight(100)),
-        ad.greaterOrEqual(lc.blockTime(12)),
-      ),
+      and(greaterThan(lc.blockHeight(100)), greaterOrEqual(lc.blockTime(12))),
       getFakeBlockHeight(),
     );
 
     expect(loginRule).toEqual(
-      ad.and(
-        ad.greaterThan(ad.blockHeight(100)),
-        ad.greaterOrEqual(ad.blockTime(12)),
-      ),
+      and(greaterThan(blockHeight(100)), greaterOrEqual(blockTime(12))),
     );
   });
   it("converts mixed login config to auth descriptor rules", async () => {
     const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
-      lc.and(
-        ad.lessThan(lc.opCount(5)),
-        ad.greaterThan(lc.relativeBlockHeight(100)),
-        ad.greaterOrEqual(lc.blockTime(12)),
+      and(
+        lessThan(lc.opCount(5)),
+        greaterThan(lc.relativeBlockHeight(100)),
+        greaterOrEqual(lc.blockTime(12)),
       ),
       getFakeBlockHeight(200),
     );
 
     expect(loginRule).toEqual(
-      await ad.and(
-        ad.lessThan(ad.opCount(5)),
-        ad.greaterThan(ad.blockHeight(300)),
-        ad.greaterOrEqual(ad.blockTime(12)),
+      await and(
+        lessThan(opCount(5)),
+        greaterThan(blockHeight(300)),
+        greaterOrEqual(blockTime(12)),
       ),
     );
   });

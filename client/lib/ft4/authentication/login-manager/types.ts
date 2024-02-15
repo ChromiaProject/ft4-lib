@@ -10,7 +10,7 @@ export type LoginConfig = {
 
 export type RawLoginConfig = {
   flags: string[];
-  rules: RawRules;
+  rules: RawRules | null;
 };
 
 export type LoginOptions = {
