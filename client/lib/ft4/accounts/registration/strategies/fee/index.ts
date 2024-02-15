@@ -22,11 +22,10 @@ import { createClient } from "postchain-client";
 import { feeAssets } from "../transfer/fee/queries";
 
 export function fee(
+  targetBlockchainRid: BufferId,
   feeAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
-  senderAccountId: BufferId,
-  targetBlockchainRid: BufferId,
 ): Strategy {
   return Object.freeze({
     getRegistrationDetails: async (
@@ -58,7 +57,7 @@ export function fee(
       const senderSession = await createKeyStoreInteractor(
         connection.client,
         keyStore,
-      ).getSession(senderAccountId);
+      ).getSession(recipientAccountId);
 
       const orchestrator = await createOrchestrator(
         targetBlockchainRid,
@@ -72,7 +71,11 @@ export function fee(
 
       const loginDetails =
         loginConfig &&
-        (await getLoginDetails(connection, recipientAccountId, loginConfig));
+        (await getLoginDetails(
+          targetChainConnection,
+          recipientAccountId,
+          loginConfig,
+        ));
 
       const operation = {
         name: "ft4.ras_transfer_fee",
