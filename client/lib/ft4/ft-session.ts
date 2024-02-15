@@ -7,8 +7,8 @@ import {
   getConfig,
   getVersion,
   nop,
-  transactionBuilder,
 } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { Buffer } from "buffer";
 import {
   DictPair,
@@ -44,11 +44,7 @@ import {
 } from "./authentication";
 import { createLoginManager } from "./authentication/login-manager";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
-import {
-  authMessageTemplate,
-  loginConfig,
-  nonce,
-} from "./authentication/queries";
+import { authMessageTemplate, nonce } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
   AuthHandler,
@@ -57,10 +53,13 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
+import { createAuthDescriptorValidator } from "./accounts";
+import { getLoginConfig } from "./authentication/login-manager";
 
 export function createConnection(client: IClient): Connection {
-  const connection = Object.freeze({
+  const connection: Connection = Object.freeze({
     client,
+    blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
     query: <TReturn extends RawGtv, TArgs extends DictPair | undefined>(
       nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
       args?: TArgs,
@@ -68,6 +67,11 @@ export function createConnection(client: IClient): Connection {
     ) => query<TReturn, TArgs>(connection, nameOrQueryObject, args, callback),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
+
+    getBlockHeight: async () => {
+      const [block] = await client.getBlocksInfo(1);
+      return block.height;
+    },
 
     getAccountById: (id: BufferId) => getById(connection, id),
     getAccountsBySigner: (
@@ -80,6 +84,12 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
+    getAuthDescriptorValidator: (useCache: boolean) =>
+      createAuthDescriptorValidator(
+        createAuthDataService(connection),
+        useCache,
+      ),
+
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
     getAssetsByName: (
@@ -153,6 +163,7 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   let authHandlers: { [key: string]: AuthHandler } | null = null;
 
   return Object.freeze({
+    connection,
     isOperationExposed: async (operationName: string): Promise<boolean> => {
       if (!exposedOperations) {
         exposedOperations = await fetchExposedOperations(connection);
@@ -182,8 +193,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getAllowedAuthDescriptor: async (
       operation: Operation,
-      accountId: Buffer,
-      adIds: Buffer[],
+      accountId: BufferId,
+      adIds: BufferId[],
     ) => {
       return connection.query(
         firstAllowedAuthDescriptor(
@@ -199,8 +210,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
       connection.query(nonce(accountId, authDescriptorId)),
-    getLoginConfig: async (configName: string | undefined = undefined) =>
-      connection.query(loginConfig(configName)),
+    getLoginConfig: (configName?: string) =>
+      getLoginConfig(connection, configName),
     getBlockchainRid: () =>
       Buffer.from(connection.client.config.blockchainRid, "hex"),
   });
@@ -223,7 +234,7 @@ export function createKeyStoreInteractor(
       const authDescriptors = await account.getAuthDescriptorsBySigner(
         keyStore.id,
       );
-      const keyHandlers = authDescriptors.data.map((authDescriptor) =>
+      const keyHandlers = authDescriptors.map((authDescriptor) =>
         keyStore.createKeyHandler(authDescriptor),
       );
       const authenticator = createAuthenticator(

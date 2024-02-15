@@ -8,7 +8,7 @@ import { IClient, isBlockAnchored } from "postchain-client";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { emptyOp } from "../util/util";
-import { createNoopAuthenticator } from "@ft4/authentication";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 describe("Transaction Builder", () => {
   let client: IClient;
@@ -42,7 +42,7 @@ describe("Transaction Builder", () => {
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
         null,
       );
-    });
+    }, 10000);
 
     it("calls all registered handler when block is anchored", async () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
@@ -83,7 +83,7 @@ describe("Transaction Builder", () => {
         ),
         null,
       );
-    });
+    }, 10000);
 
     it("calls callbacks even if block is not anchored immediately", async () => {
       (isBlockAnchored as any)
@@ -110,7 +110,7 @@ describe("Transaction Builder", () => {
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
         null,
       );
-    });
+    }, 10000);
 
     it("calls callback with an error if polling times out", async () => {
       (isBlockAnchored as any)
@@ -140,7 +140,7 @@ describe("Transaction Builder", () => {
         null,
         expect.any(AnchoringTimeoutError),
       );
-    });
+    }, 10000);
 
     it("returns receipt without waiting for block to be anchored", async () => {
       //eslint-disable-next-line no-async-promise-executor
@@ -162,6 +162,6 @@ describe("Transaction Builder", () => {
         expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
       });
       await promise;
-    });
+    }, 10000);
   });
 });

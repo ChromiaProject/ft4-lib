@@ -10,7 +10,7 @@ import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { IClient, newSignatureProvider } from "postchain-client";
 import { useChromiaNode } from "@ft4/util/chromia-node";
-import { TransferDetail } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
+import { TransferDetail } from "@ft4/accounts";
 import { getTransferHistoryFromHeight } from "@ft4/accounts/transfer-history/transfer-history-query-functions";
 
 let asset: Asset;
@@ -23,7 +23,11 @@ describe("Transfer history", () => {
   beforeAll(async () => {
     global.localStorage = new LocalStorageMock();
     client = getClient();
-    asset = await getNewAsset(client);
+    asset = await getNewAsset(
+      client,
+      "transfer_history_1",
+      "TRANSFER_HISTORY_1",
+    );
     connection = createConnection(client);
   });
 
@@ -312,7 +316,11 @@ describe("Transfer history", () => {
   });
 
   it("returns only transfers for specific asset", async () => {
-    const asset2 = await getNewAsset(client);
+    const asset2 = await getNewAsset(
+      client,
+      "transfer_history_2",
+      "TRANSFER_HISTORY_2",
+    );
 
     const account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)

@@ -16,19 +16,18 @@ import {
   RawAnyAuthDescriptor,
   RawAuthDescriptorRegistration,
   MultiSig,
-  RuleOperator,
-  RuleVariable,
   SingleSig,
   RawAnyAuthDescriptorRegistration,
-  AuthDescriptorRules,
-  AuthDescriptorComplexRule,
-  AuthDescriptorSimpleRule,
 } from "./types";
 import {
   isRawAnyAuthDescriptorRegistration,
   isSingleSigArgs,
 } from "./type-predicates";
 import {
+  AuthDescriptorSimpleRule,
+  AuthDescriptorComplexRule,
+  AuthDescriptorRules,
+  RuleOperator,
   and,
   blockHeight,
   blockTime,
@@ -39,6 +38,10 @@ import {
   lessThan,
   opCount,
 } from "./rules";
+import {
+  createAuthDescriptorValidator,
+  AuthDescriptorValidator,
+} from "./validator";
 
 function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
   return pclGtv.gtvHash(ad);
@@ -121,9 +124,8 @@ export {
   SingleSig,
   MultiSig,
   AuthType,
-  AuthDescriptor,
-  RuleVariable,
   RuleOperator,
+  AuthDescriptor,
   AuthDescriptorError,
   AuthDescriptorRules,
   AuthDescriptorSimpleRule,
@@ -139,6 +141,8 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  createAuthDescriptorValidator,
+  AuthDescriptorValidator,
 };
 
 export const gtv = Object.freeze({

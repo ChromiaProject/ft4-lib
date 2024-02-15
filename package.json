@@ -48,7 +48,7 @@
   "license": "Apache-2.0",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
-    "ethers": "^6.4.1"
+    "ethers": "^6.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
@@ -91,7 +91,7 @@
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
     "events": "^3.3.0",
-    "postchain-client": "^1.9.0"
+    "postchain-client": "^1.13.0"
   },
   "jest-junit": {
     "suiteName": "jest tests",

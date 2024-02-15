@@ -1,3 +1,13 @@
+import { Amount } from "@ft4/asset";
+import { EventEmitter, Listener } from "@ft4/events";
+import { Session } from "@ft4/index";
+import {
+  BufferId,
+  OnAnchoredHandlerData,
+  getTransactionRid,
+  nop,
+} from "@ft4/utils";
+import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { Buffer } from "buffer";
 import {
   Operation,
@@ -7,13 +17,6 @@ import {
   formatter,
   gtv,
 } from "postchain-client";
-import { Amount } from "@ft4/asset";
-import { createNoopAuthenticator } from "../authentication";
-import { createAuthDataService } from "../ft-session";
-import { Session } from "../types";
-import { getTransactionRid, nop } from "@ft4/utils/index";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
-import { Listener, EventEmitter } from "../events";
 import {
   ApplyTransferError,
   ErrorMessages,
@@ -41,8 +44,6 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { OnAnchoredHandlerData } from "@ft4/utils/transaction-builder/types";
-import { BufferId } from "@ft4/utils/types";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -254,45 +255,55 @@ async function createBaseOrcestrator(
         "Unable to apply transfer for non existing transaction",
       );
     }
-    const tb = await getTransactionBuilderForChain(session, targetChainRid);
 
     const iccfOp = await createIccfProofOperation(
       targetChainRid,
       path.indexOf(targetChainRid),
     );
 
-    return new Promise<void>((resolve, reject) => {
-      tb.add(iccfOp)
-        .add(
-          applyTransferOp(
-            initTransferTx,
-            state.tx!,
-            path.indexOf(targetChainRid),
-          ),
-          (data: OnAnchoredHandlerData | null, error: Error | null) => {
-            if (error) {
-              reject(
-                new ApplyTransferError(
-                  ErrorMessages.UNABLE_TO_FETCH_PROOF,
-                  error,
-                ),
-              );
-              return;
-            }
-            state.tx = data?.tx;
-            resolve();
-          },
-        )
-        .add(nop())
-        .buildAndSend()
-        .catch((error) =>
-          reject(
-            new ApplyTransferError(
-              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
-              error,
-            ),
-          ),
-        );
+    // eslint-disable-next-line no-async-promise-executor
+    return new Promise<void>(async (resolve, reject) => {
+      let completed = false;
+      for (let i = 0; i < 20; ++i) {
+        if (completed) break;
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+          await (
+            await getTransactionBuilderForChain(session, targetChainRid)
+          )
+            .add(iccfOp)
+            .add(
+              applyTransferOp(
+                initTransferTx,
+                state.tx!,
+                path.indexOf(targetChainRid),
+                1,
+                path.indexOf(targetChainRid) === 0 ? 1 : 3,
+              ),
+              (data: OnAnchoredHandlerData | null, error: Error | null) => {
+                if (error) {
+                  reject(
+                    new ApplyTransferError(
+                      ErrorMessages.UNABLE_TO_FETCH_PROOF,
+                      error,
+                    ),
+                  );
+                  return;
+                }
+                state.tx = data?.tx;
+                completed = true;
+              },
+            )
+            .buildAndSend();
+        } catch {
+          /* Error is sometimes expected here */
+        }
+      }
+      if (completed) {
+        resolve();
+      } else {
+        reject("Unable to apply transfer within the specified timeout");
+      }
     }).then(() => {
       localEmitter.emit("TransferHop", targetChainRid);
     });
@@ -324,9 +335,7 @@ async function createBaseOrcestrator(
       session.client,
       blockchainRid,
     );
-    const authDataService = createAuthDataService(connection);
-    const noopAuthenticator = createNoopAuthenticator(authDataService);
-    return transactionBuilder(noopAuthenticator, connection.client);
+    return transactionBuilder(session.account.authenticator, connection.client);
   }
 
   /**
@@ -356,6 +365,8 @@ async function createBaseOrcestrator(
       state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
       targetChainRid.toString("hex"),
+      state.tx[0][2], // signers,
+      true,
     );
 
     return proofTx.iccfTx.operations[0];
@@ -385,21 +396,16 @@ async function createBaseOrcestrator(
 
   async function completeTransfer(tx: RawGtx, transfer?: PendingTransfer) {
     const targetChainRid = path.slice(-1)[0];
+
+    const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
     const tb = await getTransactionBuilderForChain(
       session,
       Buffer.from(session.client.config.blockchainRid, "hex"),
     );
-
-    const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
-
-    await new Promise<void>((resolve) => {
-      tb.add(iccfOp)
-        .add(completeTransferOp(tx, transfer?.opIndex ?? 1), () => {
-          resolve();
-        })
-        .add(nop())
-        .buildAndSend();
-    });
+    await tb
+      .add(iccfOp)
+      .add(completeTransferOp(tx, transfer?.opIndex ?? 3))
+      .buildAndSend();
 
     localEmitter.emit("TransferComplete");
   }

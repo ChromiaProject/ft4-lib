@@ -1,8 +1,8 @@
 import { QueryObject, formatter } from "postchain-client";
 import { Buffer } from "buffer";
-import { OptionalPageCursor } from "../types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/index";
 import { PendingTransferResponse } from "./types";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 
 export function assetOriginById(
   assetId: BufferId,
@@ -17,13 +17,13 @@ export function assetOriginById(
 
 export function pendingTransfersForAccount(
   accountId: BufferId,
-  limit: number,
+  limit: OptionalLimit,
   cursor: OptionalPageCursor,
 ): QueryObject<
   PendingTransferResponse[],
   {
     account_id: Buffer;
-    page_size: number;
+    page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
 > {

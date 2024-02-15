@@ -9,7 +9,7 @@ import {
   gtv as pclGtv,
 } from "postchain-client";
 import adminUser from "./admin_user";
-import { Connection } from "@ft4/index";
+import { AuthDescriptorRules, Connection } from "@ft4/index";
 import { addAuthDescriptor } from "@ft4/accounts/account-operations";
 import {
   createMultiSigAuthDescriptorRegistration,
@@ -22,7 +22,6 @@ import {
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   AuthDescriptorRegistration,
-  AuthDescriptorRules,
   MultiSig,
   SingleSig,
 } from "@ft4/accounts/auth-descriptor/types";
@@ -37,21 +36,8 @@ import { op } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { BufferId } from "@ft4/utils/types";
 
-function generateNumber(): number {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2); // sleep for 2 milliseconds
-  return Date.now();
-}
-
-function generateAssetName(prefix = "CHROMA"): string {
-  return prefix + "_" + generateNumber();
-}
-
-function generateAssetSymbol(): string {
-  return `C${generateNumber()}`;
-}
-
-function generateId(): Buffer {
-  return encryption.hash256(Buffer.from(`${generateNumber()}`));
+function generateId(n: number): Buffer {
+  return encryption.hash256(Buffer.from(`${n}`));
 }
 
 function blockchainAccountId(blockchainRid: Buffer) {
@@ -87,13 +73,7 @@ class LocalStorageMock implements Storage {
   }
 }
 
-export {
-  LocalStorageMock,
-  blockchainAccountId,
-  generateAssetName,
-  generateAssetSymbol,
-  generateId,
-};
+export { LocalStorageMock, blockchainAccountId, generateId };
 
 export function createTestAuthDescriptor(
   flags: string[] = [],
@@ -101,6 +81,7 @@ export function createTestAuthDescriptor(
 ): {
   keyPair: KeyPair;
   authDescriptor: AuthDescriptor<SingleSig>;
+  keyStore: FtKeyStore;
 } {
   const keyPair = encryption.makeKeyPair();
   const ad = createSingleSigAuthDescriptorRegistration(
@@ -113,8 +94,10 @@ export function createTestAuthDescriptor(
     authDescriptor: {
       ...ad,
       id: deriveAuthDescriptorId(ad),
+      accountId: deriveAuthDescriptorId(ad),
       created: new Date(0),
     },
+    keyStore: createInMemoryFtKeyStore(keyPair),
   };
 }
 
@@ -144,6 +127,7 @@ export function testAdFromRegistration<T extends SingleSig | MultiSig>(
   return {
     ...reg,
     id: deriveAuthDescriptorId(reg as any),
+    accountId: deriveAuthDescriptorId(reg as any),
     created: new Date(),
   };
 }

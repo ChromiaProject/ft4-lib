@@ -1,23 +1,22 @@
-import { Operation, RawGtx } from "postchain-client";
 import {
-  createChromiaClientToMultichain,
-  getNewAsset,
-} from "../../../util/blockchain-util";
+  applyTransfer as applyTransferOp,
+  initTransfer as initTransferOp,
+} from "@ft4/crosschain/operations";
 import {
   FlagsType,
   createAmount,
   createConnection,
   registerCrosschainAsset,
 } from "@ft4/index";
-import adminUser from "../../../util/admin_user";
+import { BufferId, transactionBuilder } from "@ft4/utils";
+import { Operation, RawGtx } from "postchain-client";
 import AccountBuilder from "../../../util/account-builder";
+import adminUser from "../../../util/admin_user";
 import {
-  applyTransfer as applyTransferOp,
-  initTransfer as initTransferOp,
-} from "@ft4/crosschain/operations";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+  createChromiaClientToMultichain,
+  getNewAsset,
+} from "../../../util/blockchain-util";
 import { fetchBlockchains } from "../../util/blockchain";
-import { BufferId } from "@ft4/utils/types";
 
 jest.unmock("postchain-client");
 
@@ -32,7 +31,11 @@ describe("Crosschain transfer", () => {
       await createChromiaClientToMultichain(multichain01.rid),
     );
 
-    const asset00 = await getNewAsset(connection00.client);
+    const asset00 = await getNewAsset(
+      connection00.client,
+      "crosschain",
+      "CROSSCHAIN",
+    );
     await registerCrosschainAsset(
       connection01.client,
       adminUser().signatureProvider,
@@ -51,7 +54,7 @@ describe("Crosschain transfer", () => {
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       const initOperation = initTransferOp(
         account01.id,
         asset00.id,
@@ -69,21 +72,20 @@ describe("Crosschain transfer", () => {
         error: Error | null,
       ) => {
         if (error) {
-          throw error;
+          reject(error);
+          return;
         }
         if (!data) {
-          throw new Error("No data provided");
+          reject(new Error("No data provided"));
+          return;
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
-
-        await connection01.client.sendTransaction({
-          operations: [
-            iccfProofOperation,
-            applyTransferOp(data.tx, data.tx, 0),
-          ],
-          signers: [],
-        });
+        await transactionBuilder(account00.authenticator, connection01.client)
+          .add(iccfProofOperation)
+          .add(applyTransferOp(data.tx, data.tx, 0))
+          .buildAndSend();
         resolve();
+        return;
       };
 
       tb.add(initOperation, onAnchoringHandler).buildAndSend();

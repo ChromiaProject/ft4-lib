@@ -3,7 +3,6 @@ import { Connection } from "@ft4/types";
 import AccountBuilder from "@ft4/util/account-builder";
 import TestUser from "@ft4/util/test-user";
 import { ftAuth } from "@ft4/authentication";
-import { deriveAuthDescriptorId } from "@ft4/accounts";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { Config } from "@ft4/utils/types";
 import { UnexpectedStatusError } from "postchain-client";
@@ -51,27 +50,27 @@ describe("Transaction priority", () => {
         _connection.client.signAndSendUniqueTransaction(
           {
             operations: [
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
-              ftAuth(account.id, deriveAuthDescriptorId(user.authDescriptor)),
+              ftAuth(account.id, user.authDescriptor.id),
               op("test_authenticated_operation"),
             ],
             signers: [user.signatureProvider.pubKey],

@@ -4,11 +4,7 @@ import { createStubClient } from "../util/blockchain-util";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor, emptyOp } from "../util/util";
 import { transfer } from "@ft4/accounts/account-operations";
-import {
-  FlagsType,
-  aggregateSigners,
-  deriveAuthDescriptorId,
-} from "@ft4/accounts/auth-descriptor";
+import { FlagsType, aggregateSigners } from "@ft4/accounts/auth-descriptor";
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { registerAccount } from "@ft4/admin/admin-operations";
 import { createAmount } from "@ft4/asset/amount";
@@ -18,7 +14,6 @@ import {
   FtKeyStore,
   KeyHandler,
   createAuthenticator,
-  createNoopAuthenticator,
 } from "@ft4/authentication";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { nop } from "@ft4/utils";
@@ -26,6 +21,7 @@ import {
   AuthorizationError,
   transactionBuilder,
 } from "@ft4/utils/transaction-builder";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -127,7 +123,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
-        args: [authenticator.accountId, deriveAuthDescriptorId(authDescriptor)],
+        args: [authenticator.accountId, authDescriptor.id],
       },
       { opName: "ft4.transfer", args },
     ]);
@@ -153,6 +149,16 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: name, args }]);
   });
 
+  it("does not allow buildUnsigned() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .buildUnsigned();
+    await expect(promise).rejects.toThrowError(Error);
+  });
+
   it("does not sign transaction with only a nop on build", async () => {
     const operation = nop();
     const tx = await transactionBuilder(authenticator, client)
@@ -160,6 +166,16 @@ describe("Transaction Builder", () => {
       .build();
     expect(gtx.deserialize(tx).signers).toStrictEqual([]);
     expect(gtx.deserialize(tx).signatures).toStrictEqual([]);
+  });
+
+  it("does not allow build() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .build();
+    await expect(promise).rejects.toThrowError(Error);
   });
 
   it("throws an error if not sufficient permissions", async () => {
@@ -233,10 +249,7 @@ describe("Transaction Builder", () => {
           operations: [
             {
               name: "ft4.ft_auth",
-              args: [
-                authenticator.accountId,
-                deriveAuthDescriptorId(authDescriptor),
-              ],
+              args: [authenticator.accountId, authDescriptor.id],
             },
             { name: mockOperation.name, args: undefined },
           ],

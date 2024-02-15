@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0r] - 2024-02-15
+
+### Changed 🪙
+ 
+- `create_account_with_auth` now requires the `auth_descriptor` to have `A` flag. You can no longer create account with no `A` flag auth descriptor by default.
+- `get_auth_descriptor_nonce` now returns null if the auth descriptor is not found instead of rejecting.
+- `page_size` parameter in paginated queries are now optional and the default value can be configured with the `query_max_page_size` field under `lib.ft4` section.
+- updated `transfer` function to enabled support for account creation on transfers
+- updated how account id is calculated
+
+### Added ✅
+- framework for account creation
+- account creation strategies
+    - create on transfer
+        - open
+        - fee
+    - open
+
+- Add `get_first_allowed_auth_descriptor_by_signers` query
+- Added support for rules in login config.
+
+### Bugfixes 🐛
+- Crosschain transfer related operations now validates that transaction is anchored on SAC before continuing
+
+### Breaking 💔
+
+- Change `asset_data` to `asset` in queries `get_transfer_history`, `get_transfer_history_from_height` and `get_transfer_history_entry`.
+
 ## [0.3.1r] - 2024-01-19
 
 ### Changed

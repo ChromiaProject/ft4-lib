@@ -94,7 +94,7 @@ function test_multi_sig_wrong_required_flags() {
         good_ad_2_of_2()
     );
 
-    val bad_required_flags = ["A"]; // <---- Default test Auth Desc doesn't have "A"!!
+    val bad_required_flags = ["X"]; // <---- Default test Auth Desc doesn't have "X"!!
 
     rell.test.tx()
         .op(test_operations.test_auth.test_auth(
@@ -106,7 +106,7 @@ function test_multi_sig_wrong_required_flags() {
         .sign(rell.test.keypairs.bob)
         .run();
 
-    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [A] are missing on the (multi sig) Auth Descriptor.");
+    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [X] are missing on the (multi sig) Auth Descriptor.");
 }
 
 // ----- util -----
@@ -143,7 +143,7 @@ function create_auth_descriptor_M_1_pub(byte_array): acc.auth_descriptor {
     return acc.auth_descriptor(
         acc.auth_type.M,
         [
-            ["T"].to_gtv(),
+            ["A", "T"].to_gtv(),
             number_of_sigs.to_gtv(), 
             [ byte_array.to_hex().to_gtv() ].to_gtv()
         ],
@@ -157,7 +157,7 @@ function create_auth_descriptor_M_2_pub(signer1: byte_array, signer2: byte_array
     return acc.auth_descriptor(
         acc.auth_type.M,
         [
-            ["T"].to_gtv(),
+            ["A", "T"].to_gtv(),
             required_signs.to_gtv(), 
             [ signer1.to_hex().to_gtv(), signer2.to_hex().to_gtv()].to_gtv()
         ],
@@ -171,7 +171,7 @@ function create_auth_descriptor_M_3_pub(signer1: byte_array, signer2: byte_array
     return acc.auth_descriptor(
         acc.auth_type.M,
         [
-            ["T"].to_gtv(),
+            ["A", "T"].to_gtv(),
             required_signs.to_gtv(), 
             [ signer1.to_hex().to_gtv(), signer2.to_hex().to_gtv(), signer3.to_hex().to_gtv()].to_gtv()
         ],

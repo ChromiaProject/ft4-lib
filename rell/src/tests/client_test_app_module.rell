@@ -1,0 +1,12 @@
+module;
+
+import ^^.main;
+import ^.extensions;
+import ^.extensions.auth_login;
+import ^.operations;
+import ^^.lib.ft4.crosschain.external;
+import ^^.lib.ft4.prioritization.default;
+import ^^.lib.ft4.accounts.strategies.open;
+import ^^.lib.ft4.accounts.strategies.transfer;
+import transfer_open: ^^.lib.ft4.accounts.strategies.transfer.open;
+import transfer_fee: ^^.lib.ft4.accounts.strategies.transfer.fee;

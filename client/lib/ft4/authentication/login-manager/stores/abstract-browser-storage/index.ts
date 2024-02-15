@@ -1,6 +1,8 @@
 import { encryption } from "postchain-client";
 import { LoginKeyStore } from "../types";
-import { BufferId } from "@ft4/utils/types";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Buffer } from "buffer";
+import { BufferId } from "@ft4/utils";
 
 const STORAGE_KEY = "FT_LOGIN_KEY_STORE";
 
@@ -21,18 +23,25 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
+  function clear(accountId: Buffer): Promise<void> {
+    const values = loadData();
+    delete values[ensureString(accountId)];
+    saveData(values);
+
+    return Promise.resolve();
+  }
+
   return Object.freeze({
-    clear: (accountId: Buffer) => {
-      const values = loadData();
-      delete values[ensureString(accountId)];
-      saveData(values);
-    },
-    getKeyPair: (accountId: Buffer) => {
+    clear,
+    getKeyStore: (accountId: Buffer) => {
       const privateKey = loadData()[ensureString(accountId)];
       if (!privateKey) return Promise.resolve(null);
-      return Promise.resolve(encryption.makeKeyPair(privateKey));
+      return Promise.resolve(
+        createInMemoryFtKeyStore(encryption.makeKeyPair(privateKey)),
+      );
     },
-    createKeyPair: (accountId: Buffer) => {
+    generateKey: async (accountId: Buffer) => {
+      await clear(accountId);
       const values = loadData();
       const accountIdString = ensureString(accountId);
       if (accountIdString in values) {
@@ -44,7 +53,7 @@ export function createBrowserLoginKeyStore(storage: Storage): LoginKeyStore {
       const keyPair = encryption.makeKeyPair();
       values[accountIdString] = ensureString(keyPair.privKey);
       saveData(values);
-      return Promise.resolve(keyPair);
+      return Promise.resolve(createInMemoryFtKeyStore(keyPair));
     },
   });
 }

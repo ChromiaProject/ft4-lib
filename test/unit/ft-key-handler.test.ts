@@ -1,5 +1,6 @@
+import { Buffer } from "buffer";
 import { RellOperation, encryption, gtx } from "postchain-client";
-import { aggregateSigners, deriveAuthDescriptorId } from "@ft4/accounts";
+import { aggregateSigners } from "@ft4/accounts";
 import { ftAuth } from "@ft4/authentication/ft";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { op } from "@ft4/utils";
@@ -21,7 +22,7 @@ describe("FT key handler", () => {
     );
 
     expect(operations).toEqual([
-      ftAuth(accountId, deriveAuthDescriptorId(authDescriptor)),
+      ftAuth(accountId, authDescriptor.id),
       op("foo"),
     ]);
   });

@@ -2,8 +2,8 @@ import {
   Authenticator,
   KeyHandler,
   KeyStore,
-  createNoopAuthenticator,
   isFtKeyStore,
+  FtKeyStore,
 } from "@ft4/authentication";
 import { Buffer } from "buffer";
 import {
@@ -19,9 +19,15 @@ import {
   createIccfProofTx,
   gtv,
   RawGtx,
+  SystemChainException,
 } from "postchain-client";
-import { TxContext, TxBuilderTransaction, BufferId } from "../types";
+import {
+  getNonceIdForTxContext,
+  getTransactionRid,
+  BufferId,
+} from "@ft4/utils";
 import { OperationNotExistError } from "../errors";
+import { TxContext, TxBuilderTransaction } from "../types";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -30,8 +36,7 @@ import {
   TransactionBuilder,
   TransactionBuilderConfig,
 } from "./types";
-import { getTransactionRid } from "..";
-import { FtKeyStore } from "../../authentication";
+import { createNoopAuthenticator } from "@ft4/authentication/noop";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -84,6 +89,15 @@ export function transactionBuilder(
   }
 
   async function buildUnsigned(): Promise<TxBuilderTransaction> {
+    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
+      throw new Error(
+        "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
+      );
+
+    return await _buildUnsigned();
+  }
+
+  async function _buildUnsigned(): Promise<TxBuilderTransaction> {
     const [operations, keyHandlers] = await authenticateOperations(
       _operations,
       _context,
@@ -132,12 +146,14 @@ export function transactionBuilder(
         continue;
       }
 
-      const keyHandler =
-        await authenticator.getKeyHandlerForOperation(operation);
+      const keyHandler = await authenticator.getKeyHandlerForOperation(
+        operation,
+        ctx,
+      );
 
       if (!keyHandler) {
         throw new AuthorizationError(
-          `No keyhandler registered to handle operation <${operation.name}>`,
+          `No key handler registered to handle operation <${operation.name}>`,
         );
       }
       keyHandlers.push(keyHandler);
@@ -147,6 +163,11 @@ export function transactionBuilder(
         ctx,
         authenticator.authDataService,
       );
+      const nonceId = getNonceIdForTxContext(
+        authenticator.accountId,
+        keyHandler.authDescriptor.id,
+      );
+      ctx[nonceId] = (ctx[nonceId] ?? 0) + 1;
       processedOperations.push(ops);
     }
     let opsToReturn: Operation[] = [];
@@ -159,17 +180,12 @@ export function transactionBuilder(
   }
 
   async function build(): Promise<Buffer> {
-    const tx: TxBuilderTransaction = await buildUnsigned();
-    const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
-    tx.signatures = await Promise.all(
-      // For some signers we don't have access to their key stores, therefor we insert zero buffer
-      // as a placeholder for their signatures
-      tx.signers.map(
-        (signer) =>
-          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
-      ),
-    );
-    return gtx.serialize(tx);
+    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
+      throw new Error(
+        "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
+      );
+
+    return await _build();
   }
 
   function addSigners(...signers: FtKeyStore[]): TransactionBuilder {
@@ -181,7 +197,7 @@ export function transactionBuilder(
     tx: SignedTransaction;
     receipt: TransactionReceipt;
   }> {
-    const tx = await build();
+    const tx = await _build();
     const receipt = await client.sendTransaction(tx);
 
     const operationsWithHandlers = _operations.filter(
@@ -198,6 +214,20 @@ export function transactionBuilder(
       tx,
       receipt,
     };
+  }
+
+  async function _build(): Promise<Buffer> {
+    const tx: TxBuilderTransaction = await _buildUnsigned();
+    const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
+    tx.signatures = await Promise.all(
+      // For some signers we don't have access to their key stores, therefor we insert zero buffer
+      // as a placeholder for their signatures
+      tx.signers.map(
+        (signer) =>
+          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
+      ),
+    );
+    return gtx.serialize(tx);
   }
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
@@ -222,7 +252,10 @@ export function transactionBuilder(
         // TODO: Uncomment to pollute logs with errors
         // console.error("Error while checking block anchoring status", error);
 
-        if (error instanceof BlockAnchoringException) {
+        if (
+          error instanceof BlockAnchoringException ||
+          error instanceof SystemChainException
+        ) {
           isAnchored = false;
         } else {
           throw error;
@@ -238,18 +271,31 @@ export function transactionBuilder(
             return proofCache.get(blockchainRid.toString("hex"))!;
           }
 
-          const proof = await createIccfProofTx(
-            directoryClient,
-            txRid,
-            tx,
-            rawTx[0][2], // signers
-            client.config.blockchainRid,
-            blockchainRid.toString("hex"),
-          );
+          for (let i = 0; i < config.retryCount; ++i) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, config.waitTimeMs),
+            );
+            try {
+              const proof = await createIccfProofTx(
+                directoryClient,
+                txRid,
+                tx,
+                rawTx[0][2], // signers
+                client.config.blockchainRid,
+                blockchainRid.toString("hex"),
+                undefined,
+                true,
+              );
 
-          const iccfProofOperation = proof.iccfTx.operations[0];
-          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
-          return iccfProofOperation;
+              const iccfProofOperation = proof.iccfTx.operations[0];
+              proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
+              return iccfProofOperation;
+            } catch (err) {
+              console.log(err);
+              throw err;
+            }
+          }
+          throw new Error("Block was not properly anchored");
         };
 
         operations.forEach((op: OperationContext, idx: number) => {

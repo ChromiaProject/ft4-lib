@@ -1,16 +1,27 @@
+import { AuthHandler, Connection } from "@ft4/types";
+import { Buffer } from "buffer";
 import {
-  Operation,
-  encryption,
-  RawGtv,
   IClient,
   KeyPair,
-  gtv,
+  Operation,
+  RawGtv,
   RawGtx,
+  encryption,
+  gtv,
+  gtx,
 } from "postchain-client";
-import { Config } from "./types";
-import { Buffer } from "buffer";
-import { AuthHandler, Connection } from "@ft4/types";
+import { BufferId, Config, TxBuilderTransaction } from "./types";
 import { allAuthHandlers } from "./queries";
+import { FtKeyStore } from "@ft4/authentication";
+
+export {
+  BufferId,
+  Config,
+  TxContext,
+  EntityRetriever,
+  PaginatedEntity,
+  TxBuilderTransaction,
+} from "./types";
 
 export function nop(): Operation {
   return { name: "nop", args: [encryption.randomBytes(32)] };
@@ -34,6 +45,13 @@ export async function getConfig(session: IClient): Promise<Config> {
 
 export function getTransactionRid(tx: RawGtx): Buffer {
   return gtv.gtvHash(tx[0]); //tx body
+}
+
+export function getNonceIdForTxContext(
+  accountId: BufferId,
+  authDescriptorId: BufferId,
+) {
+  return accountId.toString("hex") + authDescriptorId.toString("hex");
 }
 
 export async function getVersion(session: IClient): Promise<string> {
@@ -76,8 +94,38 @@ export async function getAllAuthHandlers(
 }
 
 export { retrievePaginatedEntity } from "./entity-retriever";
-export { transactionBuilder } from "./transaction-builder";
 export * from "./exposed-operations";
 export * from "./queries";
+export {
+  transactionBuilder,
+  TransactionBuilder,
+  OnAnchoredHandlerData,
+} from "./transaction-builder";
 
-export { BufferId, EntityRetriever, PaginatedEntity } from "./types";
+export function compactArray<T>(elements: (T | null)[]): T[] {
+  return elements.filter((element): element is T => element !== null);
+}
+
+export async function createAndSignTransaction(
+  connection: Connection,
+  operations: Operation[],
+  keyStores: FtKeyStore[],
+): Promise<Buffer> {
+  const ops = operations.map(({ name, args }) => ({
+    opName: name,
+    args: args || [],
+  }));
+
+  const transaction: TxBuilderTransaction = {
+    blockchainRid: connection.blockchainRid,
+    operations: ops,
+    signers: keyStores.map((keyStore) => keyStore.pubKey),
+    signatures: [],
+  };
+
+  transaction.signatures = await Promise.all(
+    keyStores.map((keyStore) => keyStore.sign(transaction)),
+  );
+
+  return gtx.serialize(transaction);
+}

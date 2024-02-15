@@ -14,6 +14,20 @@ export {
   createSessionStorageLoginKeyStore,
   createWeb3ProviderEvmKeyStore,
   createEvmKeyHandler,
+  LoginConfigComplexRule,
+  LoginConfigSimpleRule,
+  LoginConfigRules,
+  mapLoginConfigRulesToAuthDescriptorRules,
+  blockHeight,
+  relativeBlockHeight,
+  blockTime,
+  relativeBlockTime,
+  opCount,
+  minutes,
+  hours,
+  days,
+  weeks,
+  ttlLoginRule,
 } from "./authentication";
 
 // Admin module
@@ -53,7 +67,6 @@ export {
   MultiSig,
   RateLimit,
   RuleOperator,
-  RuleVariable,
   SingleSig,
   TransferHistoryEntry,
   TransferHistoryType,
@@ -61,15 +74,13 @@ export {
   createSingleSigAuthDescriptorRegistration,
   createMultiSigAuthDescriptorRegistration,
   aggregateSigners,
-  blockHeight,
-  blockTime,
-  opCount,
   lessThan,
   lessOrEqual,
   equals,
   greaterThan,
   greaterOrEqual,
   and,
+  createAuthDescriptorValidator,
 } from "./accounts";
 
 // Root imports
@@ -78,6 +89,7 @@ export {
   Connection,
   KeyStoreInteractor,
   OptionalPageCursor,
+  OptionalLimit,
 } from "./types";
 
 export {
@@ -108,8 +120,28 @@ export {
   initTransfer,
 } from "./crosschain";
 
+import * as accountRegistration from "@ft4/accounts/registration";
+import * as openStrategy from "@ft4/accounts/registration/strategies/open";
+import * as transferStrategy from "@ft4/accounts/registration/strategies/transfer";
+import * as transferOpenStrategy from "@ft4/accounts/registration/strategies/transfer/open";
+import * as transferFeeStrategy from "@ft4/accounts/registration/strategies/transfer/fee";
+
+export const registration = Object.freeze({
+  registerAccount: accountRegistration.registerAccount,
+  strategy: Object.freeze({
+    open: openStrategy.open,
+    transferOpen: transferOpenStrategy.transferOpen,
+    transferFee: transferFeeStrategy.transferFee,
+  }),
+  query: Object.freeze({
+    allowedAssets: transferStrategy.allowedAssets,
+    pendingTransferStrategies: transferStrategy.pendingTransferStrategies,
+    feeAssets: transferFeeStrategy.feeAssets,
+  }),
+});
+
 export const ft = Object.freeze({
   setLogLevel: logger.setLogLevel,
 });
 
-ft.setLogLevel(0);
+ft.setLogLevel(logger.LogLevel.Disabled);

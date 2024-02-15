@@ -1,5 +1,6 @@
 jest.unmock("postchain-client");
 
+import { Buffer } from "buffer";
 import { IClient, createClient } from "postchain-client";
 import { nop } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
@@ -22,7 +23,7 @@ function getMocks() {
       .fn()
       .mockImplementation((_, operation) => Promise.resolve([operation])),
     sign: jest.fn(),
-    getSigners: jest.fn(),
+    getSigners: jest.fn().mockReturnValue([keyPair.pubKey]),
   };
   const authenticatorMock: Authenticator = {
     accountId: Buffer.alloc(32),

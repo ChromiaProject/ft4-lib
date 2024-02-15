@@ -1,0 +1,351 @@
+@test module;
+import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
+
+function test_get_config_reads_yml_correctly() {
+    val config = create_on_transfer.get_config();
+    val expected = [
+        create_on_transfer.rule(
+            timeout_days = 10,
+            strategies = ["open"],
+
+            blockchains = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [
+                    x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28",
+                    chain_context.blockchain_rid
+                ]
+            ),
+            senders = create_on_transfer.allowlist(
+                allow_all = true
+            ),
+            recipients = create_on_transfer.allowlist(
+                allow_all = true
+            ),
+
+            require_same_address = true,
+
+            allow_all_assets = true
+        ),
+        create_on_transfer.rule(
+            timeout_days = 60,
+            strategies = ["fee", "stake"],
+
+            blockchains = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [chain_context.blockchain_rid]
+            ),
+            senders = create_on_transfer.allowlist(
+                allow_all = true
+            ),
+            recipients = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [
+                    x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5"
+                ]
+            ),
+
+            require_same_address = false,
+
+            allow_all_assets = false,
+            asset_limits = [create_on_transfer.asset_limit(id = x"abcdef", min_amount = 100000L)]
+        ),
+        create_on_transfer.rule(
+            timeout_days = 60,
+            strategies = ["open", "fee"],
+
+            blockchains = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [
+                    x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb",
+                    chain_context.blockchain_rid
+                ]
+            ),
+            senders = create_on_transfer.allowlist(
+                allow_all = true
+            ),
+            recipients = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [
+                    x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8"
+                ]
+            ),
+
+            require_same_address = false,
+
+            allow_all_assets = false,
+            asset_limits = [
+                create_on_transfer.asset_limit(id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa", min_amount = 5L),
+                create_on_transfer.asset_limit(
+                    issuing_blockchain_rid = x"0000000000000000000000000000000000000000000000000000000000000000", // current blockchain_rid in Rell tests
+                    name = "test1",
+                    min_amount = 3L
+                ),
+                create_on_transfer.asset_limit(id = x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce", min_amount = 5L),
+                create_on_transfer.asset_limit(
+                    issuing_blockchain_rid = x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb",
+                    name = "test1",
+                    min_amount = 7L
+                )
+            ]
+        ),
+        create_on_transfer.rule(
+            timeout_days = 60,
+            strategies = ["open"],
+
+            blockchains = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [
+                    chain_context.blockchain_rid
+                ]
+            ),
+            senders = create_on_transfer.allowlist(
+                allow_all = true
+            ),
+            recipients = create_on_transfer.allowlist(
+                allow_all = false,
+                allowed_values = [
+                    x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe"
+                ]
+            ),
+
+            require_same_address = false,
+
+            allow_all_assets = true
+        )
+    ];
+    assert_equals(config, expected);
+}
+
+function test_get_config_reads_dollar_sign_in_blockchain() {
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = ["012345", "$"],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    val cfg = create_on_transfer.get_config(rule_gtv_pretty);
+
+    assert_equals(
+        cfg,
+        [
+            create_on_transfer.rule(
+                timeout_days = 10,
+                strategies = ["open"],
+
+                blockchains = create_on_transfer.allowlist(
+                    allow_all = false,
+                    allowed_values = [byte_array("012345"), chain_context.blockchain_rid]
+                ),
+                senders = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+                recipients = create_on_transfer.allowlist(
+                    allow_all = true
+                ),
+
+                require_same_address = false,
+
+                allow_all_assets = true
+            )
+        ]
+    );
+}
+
+function test_get_config_fails_when_only_one_X() {
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "X",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): 'X' should appear in both or none of recipient and sender.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_asterisk_alongside_others() {
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["*", "abcdef"],
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_X_alongside_others() {
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["X", "abcdef"],
+        recipient = "X",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): using multiple values alongside '*' and 'X' is not allowed.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_value_not_buffer_string_or_list() {
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = (id = "abcdef"),
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = (id = "abcdef"),
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_list_has_wrong_element_types() {
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()],
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient fields only support strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only supports strings, byte arrays and lists of these types. Received <{\"id\":\"abcdef\"}>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_dollar_not_in_blockchains() {
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "$",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = ["$"],
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender and recipient only allow blockchain RIDs, 'X' and '*'. Received <$>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_X_in_blockchains() {
+    var rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "X",
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+    rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = ["X"],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): sender_blockchain only allows blockchain RIDs, '$' and '*'. Received <X>.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_assets_wrong_format() {
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "*",
+        recipient = "*",
+        asset = "X",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): asset only accepts '*' and a list of ids and minimum amounts.",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_mandatory_values_are_missing() {
+    val rule_gtv_pretty = [(
+        timeout_days = 10,
+        sender_blockchain = "$",
+        sender = "*",
+        recipient = "*",
+        asset = "X"
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "Key missing in Gtv dictionary: field 'lib.ft4.accounts.strategies.transfer:module_args_list_element.strategy'",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}

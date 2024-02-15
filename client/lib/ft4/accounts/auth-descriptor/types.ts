@@ -1,4 +1,5 @@
 import { Buffer } from "buffer";
+import { AuthDescriptorRules, RawRules } from "./rules";
 
 export enum FlagsType {
   Account = "A", // Change Account settings
@@ -10,22 +11,6 @@ export enum AuthType {
   MultiSig = "M",
 }
 
-export enum RuleVariable {
-  BlockHeight = "block_height",
-  BlockTime = "block_time",
-  OpCount = "op_count",
-}
-
-export enum RuleOperator {
-  LessThan = "lt",
-  LessOrEqual = "le",
-  Equals = "eq",
-  GreaterThan = "gt",
-  GreaterOrEqual = "ge",
-}
-
-export type EnumLike = Record<string, string | number>;
-
 export class AuthDescriptorError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -33,24 +18,9 @@ export class AuthDescriptorError extends Error {
   }
 }
 
-// ======== Client side data model ============
-
-export type AuthDescriptorSimpleRule = {
-  variable: RuleVariable;
-  operator: RuleOperator;
-  value: number;
-};
-
-export type AuthDescriptorComplexRule = {
-  operator: "and";
-  rules: AuthDescriptorRules[];
-};
-export type AuthDescriptorRules =
-  | AuthDescriptorSimpleRule
-  | AuthDescriptorComplexRule;
-
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
+  accountId: Buffer;
   authType: AuthType;
   rules: AuthDescriptorRules | null;
   created: Date;
@@ -66,6 +36,7 @@ export type AuthDescriptorRegistration<T extends SingleSig | MultiSig> = {
 export type AnyAuthDescriptor =
   | AuthDescriptor<SingleSig>
   | AuthDescriptor<MultiSig>;
+
 export type AnyAuthDescriptorRegistration =
   | AuthDescriptorRegistration<SingleSig>
   | AuthDescriptorRegistration<MultiSig>;
@@ -90,21 +61,11 @@ export type RawMultiSig = readonly [
 
 export type RawSingleSig = readonly [flags: string[], signer: Buffer];
 
-export type RawAuthDescriptorRule = readonly [string, string, number];
-export type RawComplexAuthDescriptorRule = readonly [
-  "and",
-  ...RawAuthDescriptorRule[],
-];
-
 // ======== Server side request model =========
 
 type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
 export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
-  readonly [
-    auth_type: number,
-    args: T,
-    rules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule | null,
-  ];
+  readonly [auth_type: number, args: T, rules: RawRules | null];
 
 export type RawAnyAuthDescriptorRegistration =
   | RawAuthDescriptorRegistration<RawSingleSig>
@@ -118,8 +79,9 @@ export type RawAnyAuthDescriptor =
 
 export type RawAuthDescriptor<T extends RawAuthDescriptorArgs> = {
   args: T;
+  account_id: Buffer;
   auth_type: string;
   created: number;
   id: Buffer;
-  rules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule | null;
+  rules: RawRules | null;
 };

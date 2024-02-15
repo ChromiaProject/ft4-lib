@@ -1,9 +1,9 @@
 import { Buffer } from "buffer";
-import { Connection, OptionalPageCursor } from "../types";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/index";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
 import { RawGtx, gtx } from "postchain-client";
-import { BufferId } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils";
 
 export async function getAssetOriginById(
   connection: Connection,
@@ -15,7 +15,7 @@ export async function getAssetOriginById(
 export async function getPendingTransfersForAccount(
   connection: Connection,
   accountId: Buffer,
-  limit = 100,
+  limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PendingTransfer[]> {
   return await connection

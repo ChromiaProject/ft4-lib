@@ -1,0 +1,15 @@
+@test module;
+
+import ^^^.lib.ft4.utils.{ fetch_data_size };
+
+function test_uses_module_args_as_max_page_size_if_none_provided() {
+    assert_equals(fetch_data_size(), 100);
+}
+
+function test_uses_module_args_as_max_page_size_if_input_too_big() {
+    assert_equals(fetch_data_size(200), 100);
+}
+
+function test_uses_provided_page_size_if_in_range() {
+    assert_equals(fetch_data_size(9), 10);
+}

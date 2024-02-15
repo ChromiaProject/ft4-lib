@@ -1,4 +1,4 @@
-import { generateAssetName, generateAssetSymbol } from "./util";
+import { Buffer } from "buffer";
 import {
   createClient as chromiaClient,
   gtv,
@@ -42,8 +42,8 @@ export async function createStubClient() {
 
 export async function getNewAsset(
   client: IClient,
-  name = generateAssetName(),
-  symbol = generateAssetSymbol(),
+  name: string,
+  symbol: string,
   decimals = 0,
   iconUrl = "",
 ): Promise<Asset> {

@@ -1,6 +1,8 @@
-import { Account, AuthenticatedAccount } from "./accounts/types";
-import { Asset } from "./asset/types";
-import { BufferId, Config, PaginatedEntity } from "@ft4/utils/types";
+import { Account, AuthenticatedAccount } from "./accounts";
+import { Asset } from "./asset";
+import { Buffer } from "buffer";
+import { BufferId, PaginatedEntity } from "@ft4/utils";
+import { Config } from "@ft4/utils/types";
 import { TransactionBuilder } from "@ft4/utils/transaction-builder";
 import {
   IClient,
@@ -8,11 +10,12 @@ import {
   Operation,
   TransactionReceipt,
 } from "postchain-client";
-import { LoginManger, LoginKeyStore } from "./authentication/login-manager";
-import { TransferDetail } from "./accounts/transfer-history/transfer-history-query-functions";
+import { LoginKeyStore, LoginManager } from "./authentication/login-manager";
+import { TransferDetail, AuthDescriptorValidator } from "./accounts";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
+export type OptionalLimit = number | null;
 export type PagedResponse<T> = {
   data: T[];
   next_cursor: OptionalPageCursor;
@@ -20,8 +23,12 @@ export type PagedResponse<T> = {
 
 export interface Connection extends Queryable {
   client: IClient;
+  blockchainRid: Buffer;
+
   getConfig: () => Promise<Config>;
   getVersion: () => Promise<string>;
+
+  getBlockHeight: () => Promise<number>;
 
   getAccountById: (accountId: BufferId) => Promise<Account | null>;
   getAccountsBySigner: (
@@ -34,6 +41,7 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
+  getAuthDescriptorValidator: (useCache: boolean) => AuthDescriptorValidator;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
@@ -75,7 +83,7 @@ export type KeyStoreInteractor = {
     cursor: OptionalPageCursor,
   ): Promise<PaginatedEntity<Account>>;
   getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManger;
+  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManager;
   onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
 };
 

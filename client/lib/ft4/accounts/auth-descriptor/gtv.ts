@@ -1,43 +1,39 @@
-import { enumValueFromString, serializeAuthType } from "./enum-parsers";
-import {
-  isGtvSimpleRule,
-  isSimpleRule,
-  isRawSingleSig,
-  isSingleSigRegistration,
-} from "./type-predicates";
+import { enumValueFromString } from "@ft4/utils/enum-parser";
+import { serializeAuthType } from "./enum-parsers";
+import { isRawSingleSig, isSingleSigRegistration } from "./type-predicates";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
   AuthDescriptor,
   RawAnyAuthDescriptor,
   RawAuthDescriptor,
-  RawAuthDescriptorRule,
-  RawComplexAuthDescriptorRule,
   MultiSig,
   SingleSig,
   AuthType,
-  RuleOperator,
-  RuleVariable,
   RawAnyAuthDescriptorRegistration,
   RawSingleSig,
   RawMultiSig,
-  AuthDescriptorRules,
-  AuthDescriptorSimpleRule,
 } from "./types";
+import {
+  authDescriptorRuleMapper,
+  rulesFromGtv,
+  rulesToGtv,
+} from "./rules/gtv";
 
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,
 ): AuthDescriptor<SingleSig> {
-  const { id, auth_type, args, rules, created } = ad;
+  const { id, account_id, auth_type, args, rules, created } = ad;
   const [flags, signer] = args;
   return Object.freeze({
     id,
+    accountId: account_id,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
       signer,
     },
-    rules: rules ? rulesFromGtv(rules) : rules,
+    rules: rules && rulesFromGtv(rules, authDescriptorRuleMapper),
     created: new Date(created),
   });
 }
@@ -45,17 +41,18 @@ export function mapSingleSigAuthDescriptor(
 export function mapMultiSigAuthDescriptor(
   ad: RawAuthDescriptor<RawMultiSig>,
 ): AuthDescriptor<MultiSig> {
-  const { id, auth_type, args, rules, created } = ad;
+  const { id, account_id, auth_type, args, rules, created } = ad;
   const [flags, signaturesRequired, signers] = args;
   return Object.freeze({
     id,
+    accountId: account_id,
     authType: enumValueFromString(auth_type, AuthType),
     args: {
       flags,
       signaturesRequired,
       signers,
     },
-    rules: rules ? rulesFromGtv(rules) : rules,
+    rules: rules && rulesFromGtv(rules, authDescriptorRuleMapper),
     created: new Date(created),
   });
 }
@@ -97,37 +94,4 @@ export function authDescriptorRegistrationToGtv(
         multiSigToGtv(registration.args),
         rules ? rulesToGtv(rules) : rules,
       ];
-}
-
-export function rulesFromGtv(
-  gtvRules: RawAuthDescriptorRule | RawComplexAuthDescriptorRule,
-): AuthDescriptorRules {
-  const mapRule = (gtv: RawAuthDescriptorRule) => ({
-    operator: enumValueFromString(gtv[0], RuleOperator),
-    variable: enumValueFromString(gtv[1], RuleVariable),
-    value: gtv[2],
-  });
-  if (isGtvSimpleRule(gtvRules)) {
-    return mapRule(gtvRules);
-  } else {
-    return {
-      operator: "and",
-      rules: gtvRules.slice(1).map((v) => mapRule(v as RawAuthDescriptorRule)),
-    };
-  }
-}
-
-export function rulesToGtv(
-  rule: AuthDescriptorRules,
-): RawAuthDescriptorRule | RawComplexAuthDescriptorRule {
-  const toGtv = (rule: AuthDescriptorSimpleRule): RawAuthDescriptorRule => [
-    rule.operator,
-    rule.variable,
-    rule.value,
-  ];
-  if (isSimpleRule(rule)) {
-    return toGtv(rule);
-  }
-
-  return ["and", ...rule.rules.map(toGtv)];
 }

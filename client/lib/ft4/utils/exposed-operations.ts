@@ -1,4 +1,4 @@
-import { Connection } from "../types";
+import { Connection } from "@ft4/types";
 import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
 

@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Amount, Asset } from "@ft4/asset";
@@ -85,7 +86,11 @@ describe("Edge Cases", () => {
     ).rejects.toThrowError("The specified asset could not be found");
 
     // Test for incompatible asset
-    const incompatibleAsset = await getNewAsset(testContext.connection0.client);
+    const incompatibleAsset = await getNewAsset(
+      testContext.connection0.client,
+      "incompatible",
+      "INCOMPATIBLE",
+    );
 
     // We created the asset but didn't register it, thus it is incompatible
     await expect(
@@ -94,7 +99,11 @@ describe("Edge Cases", () => {
   });
 
   it("handles missing or invalid parent details", async () => {
-    const asset = await getNewAsset(testContext.connection0.client);
+    const asset = await getNewAsset(
+      testContext.connection0.client,
+      "missing_parent",
+      "MISSING_PARENT",
+    );
 
     await registerCrosschainAsset(
       testContext.connection2.client,
