@@ -38,8 +38,9 @@ export function fee(
 
       const senderConnection = createConnection(
         await createClient({
-          directoryNodeUrlPool:
-            "" + targetConnection.client.config.endpointPool,
+          directoryNodeUrlPool: targetConnection.client.config.endpointPool.map(
+            (e) => e.url,
+          ),
           blockchainRid: senderBlockchainRid.toString("hex"),
         }),
       );
@@ -67,6 +68,7 @@ export function fee(
         createAmountFromBalance(amount, feeAsset.decimals),
         senderSession,
       );
+      orchestrator.onTransferError((err) => console.error(err));
 
       await orchestrator.transfer();
 

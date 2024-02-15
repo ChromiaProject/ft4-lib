@@ -77,23 +77,25 @@ describe("Fee account creation single step", () => {
       createAmount(20, 5),
     );
 
-    const recipientId = gtv.gtvHash((await account.getAuthDescriptors())[0].id);
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    expect(account.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
       allowedAssets(senderConnection.blockchainRid, account.id, recipientId),
     ))!;
 
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find((v) => v.asset_id === asset.id)
-      ?.min_amount;
-
-    expect(rawAmount).toEqual(1000000n);
+    const rawAmount = _allowedAssets.find(
+      (v) => v.asset_id.compare(asset.id) === 0,
+    )?.min_amount;
 
     const _feeAssets = await recipientConnection.query(feeAssets());
     expect(_feeAssets).toBeTruthy();
-    const feeRawAmount = _feeAssets.find((v) => v.asset_id === asset.id)
-      ?.amount;
+    const feeRawAmount = _feeAssets.find(
+      (v) => v.asset_id.compare(asset.id) === 0,
+    )?.amount;
 
+    expect(rawAmount).toEqual(1000000n);
     expect(feeRawAmount).toEqual(1000000n);
 
     const session = await registerAccount(
