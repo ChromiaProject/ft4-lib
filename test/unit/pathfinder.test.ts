@@ -1,3 +1,5 @@
+import { Buffer } from "buffer";
+
 // Not Blockchain RIDs, but allows for easier testing
 const startingChainRid = Buffer.from("00", "hex");
 const endingChainRid = Buffer.from("ff", "hex");

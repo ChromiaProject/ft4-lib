@@ -1,5 +1,6 @@
 jest.unmock("postchain-client");
 
+import { Buffer } from "buffer";
 import { IClient, createClient } from "postchain-client";
 import { nop } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";

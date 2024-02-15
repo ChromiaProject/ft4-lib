@@ -1,4 +1,5 @@
 import * as pcl from "postchain-client";
+import { Buffer } from "buffer";
 import { Connection } from "@ft4/types";
 import { ftAuth } from "@ft4/authentication";
 import { registerAccount } from "@ft4/admin/admin-op-functions";
