@@ -27,7 +27,12 @@ describe("Test transfer with fee", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(connection.client, "test", "TEST", 5);
+    asset = await getNewAsset(
+      connection.client,
+      "transfer_fee",
+      "TRANSFER_FEE",
+      5,
+    );
   });
 
   it("can register account which receives transferred assets, minus fee", async () => {
