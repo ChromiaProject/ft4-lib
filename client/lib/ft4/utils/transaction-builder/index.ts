@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { gtx } from "postchain-client";
 import { TxBuilderTransaction } from "../types";
 

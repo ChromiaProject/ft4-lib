@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Amount, Asset } from "@ft4/asset";

@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { KeyStore } from "@ft4/index";
 import { noopKeyHandler } from "./key-handler";

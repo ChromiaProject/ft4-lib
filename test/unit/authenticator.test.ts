@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { encryption } from "postchain-client";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "../util/util";

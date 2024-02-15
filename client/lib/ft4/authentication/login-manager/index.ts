@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import {
   createAuthenticator,

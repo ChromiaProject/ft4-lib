@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { AuthHandler } from "@ft4/types";
 import { DictPair, QueryObject, RawGtv, formatter } from "postchain-client";
 import { BufferId } from "./types";
