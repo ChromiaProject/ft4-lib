@@ -51,7 +51,12 @@ describe("Login manager", () => {
 
   it("signs transaction with disposable key when disposable auth descriptor has required flags", async () => {
     const keyPair = encryption.makeKeyPair();
-    const asset = await getNewAsset(client, undefined, undefined, 5);
+    const asset = await getNewAsset(
+      client,
+      "login_manager",
+      "LOGIN_MANAGER",
+      5,
+    );
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
       [FlagsType.Account],
