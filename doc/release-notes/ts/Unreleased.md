@@ -16,6 +16,12 @@
 - Upgrade postchain-client to 1.9.0
 - Added support for rules or TTL in login manager.
 
+- account registration with following strategies
+  - open
+  - create on transfer
+    - open
+    - fee
+
 ### Breaking
 
 - Removed pagination from 
