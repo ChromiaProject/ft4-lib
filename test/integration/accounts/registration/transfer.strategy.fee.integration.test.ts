@@ -16,7 +16,6 @@ import { transferFee } from "@ft4/accounts/registration/strategies/transfer/fee/
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { createAmountFromBalance } from "@ft4/index";
-import { formatter } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -48,16 +47,13 @@ describe("Test transfer with fee", () => {
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
     ))!;
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find(
-      (v) => formatter.toString(v.asset_id) === formatter.toString(asset.id),
-    )?.min_amount;
+    const rawAmount = _allowedAssets.find((v) => v.asset_id.equals(asset.id))
+      ?.min_amount;
     expect(rawAmount).toBeTruthy();
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
     const _feeAssets = await connection.query(feeAssets());
-    const rawFee = _feeAssets.find(
-      (v) => formatter.toString(v.asset_id) === formatter.toString(asset.id),
-    )?.amount;
+    const rawFee = _feeAssets.find((v) => v.asset_id.equals(asset.id))?.amount;
     expect(rawFee).toBeTruthy();
 
     await account1.transfer(recipientId, asset.id, amount);

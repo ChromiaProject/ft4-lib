@@ -16,7 +16,6 @@ import AccountBuilder from "@ft4/util/account-builder";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { createAmountFromBalance } from "@ft4/index";
-import { formatter } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -43,9 +42,8 @@ describe("Test transfer strategy", () => {
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
     ))!;
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find(
-      (v) => formatter.toString(v.asset_id) === formatter.toString(asset.id),
-    )?.min_amount;
+    const rawAmount = _allowedAssets.find((v) => v.asset_id.equals(asset.id))
+      ?.min_amount;
     expect(rawAmount).toBeTruthy();
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
