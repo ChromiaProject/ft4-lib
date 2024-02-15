@@ -14,6 +14,17 @@ blockchains:
       lib.ft4.accounts.strategies.transfer: # placeholder
         rules: 
           timeout_days: 10
+          asset: #01
+            - name: fee_strategy_test_asset_00 #01
+              issuing_blockchain_rid: {chain00_rid} #01
+              min_amount: 1000000L #01
+
+      lib.ft4.accounts.strategies.transfer.fee:
+        rules: #01
+          name: fee_strategy_test_asset_00 #01
+          issuing_blockchain_rid: {chain00_rid} #01
+          amount: 1000000L #01
+
     config:
       gtx:
         modules:

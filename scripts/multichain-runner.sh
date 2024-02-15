@@ -39,6 +39,68 @@ fatal_error() {
     exit 1
 }
 
+prepare_dapp_folder() {
+    chain_num="$1"
+
+    # Generate the YML filename and module name
+    yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
+    module_name="app_module$chain_num"
+
+    # Write the YML content to the file
+    sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
+        configs/multichain-jesttest.yml.template > ${yml_filename}
+    
+    # remove pieces of yml not to be included here
+    for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    do
+        if [ $chain_num -ne $current_num ]; then
+            sed -i "s/^.*#${other_chain_num}\s*^//" $yml_filename
+        fi
+    done
+
+    # Create the corresponding RELL file with unique content
+    rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
+
+    mkdir -p $(dirname $rell_filepath)
+
+    echo "module;" > $rell_filepath
+    echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
+    echo "import admin_crosschain: lib.ft4.admin.crosschain;" >> $rell_filepath
+    echo "import crosschain_ext: lib.ft4.crosschain.external;" >> $rell_filepath
+    echo "import tests.operations;" >> $rell_filepath
+    echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
+
+    debug "Generated $yml_filename and $rell_filepath"
+
+    # Build the Multichain dApp Chain for each blockchain
+    chr install -s $yml_filename > /dev/null
+}
+
+include_brids() {
+    current_num="$1"
+
+    yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
+
+    for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    do
+        grep -l "{chain${chain_num}_rid}" $yml_filename
+        contains_rid=$?
+
+        if [ $chain_num -lt $current_num ]; then
+            # if it needs the brid of an already-launched chain, use it
+            chain_rid=eval "echo \${MULTICHAIN${x}_BRID}"
+            sed -i "s/{chain${chain_num}_rid}/${chain_rid}/" $yml_filename
+        else
+            # if the chain has not yet been lauched, throw an error
+            fatal_error "Chain ${current_num} requires the brid of chain ${chain_num},\
+            which has not yet been launched. Please ensure that chains only depend on\
+            brids of chains with a lower number"
+        fi
+    done
+
+    chr build -s $yml_filename > /dev/null
+}
+
 run_main_logic() {
     debug "Checking for required commands..."
 
@@ -136,34 +198,10 @@ run_main_logic() {
     cp -R "rell/src/lib" "$DEPENDENCIES_PATH/multichain/"
     cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
 
-    log "Building Multichain dApp Chains..."
+    log "Preparing Multichain dApp Chains..."
     for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
-        # Generate the YML filename and module name
-        yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
-        module_name="app_module$chain_num"
-
-        # Write the YML content to the file
-        sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
-            configs/multichain-jesttest.yml.template > ${yml_filename}
-
-        # Create the corresponding RELL file with unique content
-        rell_filepath="$DEPENDENCIES_PATH/multichain/$module_name.rell"
-
-        mkdir -p $(dirname $rell_filepath)
-
-        echo "module;" > $rell_filepath
-        echo "import lib.ft4.ft4_basic_dev.*;" >> $rell_filepath
-        echo "import admin_crosschain: lib.ft4.admin.crosschain;" >> $rell_filepath
-        echo "import crosschain_ext: lib.ft4.crosschain.external;" >> $rell_filepath
-        echo "import tests.operations;" >> $rell_filepath
-        echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
-
-        debug "Generated $yml_filename and $rell_filepath"
-
-        # Build the Multichain dApp Chain for each blockchain
-        chr install -s $yml_filename > /dev/null
-        chr build -s $yml_filename > /dev/null
+        prepare_dapp_folder $chain_num
     done
 
     log "Running node container..."
@@ -229,9 +267,11 @@ run_main_logic() {
         --pubkeys $(pmc config --get pubkey --file $PMC_CONFIG) \
         -cfg $PMC_CONFIG
 
-    log "Adding blockchains to the container..."
+    log "Building and adding blockchains to the container..."
     for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
+        include_brids $chain_num
+
         MULTICHAIN_DAPP_BRID=$(
             pmc blockchain add \
                 --quiet \

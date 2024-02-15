@@ -22,27 +22,28 @@ import { createClient } from "postchain-client";
 import { feeAssets } from "../transfer/fee/queries";
 
 export function fee(
-  targetBlockchainRid: BufferId,
+  senderBlockchainRid: BufferId,
   feeAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
   return Object.freeze({
     getRegistrationDetails: async (
-      connection: Connection,
+      targetConnection: Connection,
       keyStore: KeyStore,
     ): Promise<RegistrationDetails> => {
       const recipientAccountId = getAccountIdFromSigners(
         aggregateSigners(authDescriptor),
       );
 
-      const targetChainConnection = createConnection(
+      const senderConnection = createConnection(
         await createClient({
-          directoryNodeUrlPool: "" + connection.client.config.endpointPool,
-          blockchainRid: targetBlockchainRid.toString("hex"),
+          directoryNodeUrlPool:
+            "" + targetConnection.client.config.endpointPool,
+          blockchainRid: senderBlockchainRid.toString("hex"),
         }),
       );
-      const feeAmounts = await targetChainConnection.query(feeAssets());
+      const feeAmounts = await targetConnection.query(feeAssets());
 
       const amount = feeAmounts.find(
         (amt) => amt.asset_id.compare(feeAsset.id) === 0,
@@ -55,12 +56,12 @@ export function fee(
       }
 
       const senderSession = await createKeyStoreInteractor(
-        connection.client,
+        senderConnection.client,
         keyStore,
       ).getSession(recipientAccountId);
 
       const orchestrator = await createOrchestrator(
-        targetBlockchainRid,
+        targetConnection.blockchainRid,
         recipientAccountId,
         feeAsset.id,
         createAmountFromBalance(amount, feeAsset.decimals),
@@ -72,7 +73,7 @@ export function fee(
       const loginDetails =
         loginConfig &&
         (await getLoginDetails(
-          targetChainConnection,
+          targetConnection,
           recipientAccountId,
           loginConfig,
         ));
