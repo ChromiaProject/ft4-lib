@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking 💔
 
-- Removed pagination from 
+- Removed pagination from auth descriptor queries 
 - Change `assetData` to `asset` in `TransferHistoryEntry`.
 
 - Update `addAuthDescriptor` signature  
