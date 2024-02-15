@@ -6,6 +6,7 @@
 - `get_auth_descriptor_nonce` now returns null if the auth descriptor is not found instead of rejecting.
 - `page_size` parameter in paginated queries are now optional and the default value can be configured with the `query_max_page_size` field under `lib.ft4` section.
 - updated `transfer` function to enabled support for account creation on transfers
+- updated how account id is calculated
 
 ### Added ✅
 - framework for account creation
