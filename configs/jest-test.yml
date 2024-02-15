@@ -18,9 +18,9 @@ blockchains:
             sender: "*"
             recipient: "*"
             asset:
-              - name: transfer
+              - name: transfer_strategy
                 min_amount: 5L
-              - name: transfer_fee
+              - name: transfer_fee_strategy
                 min_amount: 5L
             timeout_days: 1
             strategy:
@@ -29,7 +29,7 @@ blockchains:
 
       lib.ft4.accounts.strategies.transfer.fee:
         asset:
-          name: transfer_fee
+          name: transfer_fee_strategy
           amount: 2L
 
 libs:

@@ -28,8 +28,8 @@ describe("Test transfer with fee", () => {
     connection = createConnection(client);
     asset = await getNewAsset(
       connection.client,
-      "transfer_fee",
-      "TRANSFER_FEE",
+      "transfer_fee_strategy",
+      "TRANSFER_FEE_STRATEGY",
       5,
     );
   });

@@ -26,7 +26,12 @@ describe("Test transfer strategy", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(connection.client, "transfer", "TRANSFER", 5);
+    asset = await getNewAsset(
+      connection.client,
+      "transfer_strategy",
+      "TRANSFER_STRATEGY",
+      5,
+    );
   });
 
   it("can register account which receives transferred assets", async () => {
