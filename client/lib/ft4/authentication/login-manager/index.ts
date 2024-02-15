@@ -8,26 +8,30 @@ import {
 } from "@ft4/authentication";
 import { createInMemoryLoginKeyStore } from "./stores/in-memory";
 import { LoginKeyStore } from "./stores/types";
-import { LoginConfigOptions, LoginManger, LoginOptions } from "./types";
+import { LoginManager, LoginOptions, LoginConfigOptions } from "./types";
 import { authDescriptorById } from "@ft4/accounts/account-queries";
 import { createAccountObject } from "@ft4/accounts/account-query-functions";
 import {
+  AuthDescriptorRules,
   FlagsType,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
-} from "@ft4/accounts";
+} from "@ft4/accounts/auth-descriptor";
 import { Connection, createSession } from "@ft4/index";
 import { createAuthDataService } from "@ft4/ft-session";
+import { mapLoginConfigRulesToAuthDescriptorRules } from "./rules";
 
 export * from "./types";
+export * from "./queries";
+export * from "./query-functions";
 export { LoginKeyStore };
 
 export function createLoginManager(
   connection: Connection,
   keyStore: KeyStore,
   loginKeyStore: LoginKeyStore | null = null,
-): LoginManger {
+): LoginManager {
   const usedLoginKeyStore = loginKeyStore || createInMemoryLoginKeyStore();
 
   return Object.freeze({
@@ -57,7 +61,7 @@ export function createLoginManager(
 
       const authDataService = createAuthDataService(connection);
       // Get list of flags that will be added to new auth descriptor
-      const flags = await getFlags(authDataService, loginOptions);
+      const config = await getConfigFromOptions(authDataService, loginOptions);
 
       const loginKeyStore = await usedLoginKeyStore.getKeyStore(account.id);
 
@@ -71,7 +75,7 @@ export function createLoginManager(
           // TODO: filter out expired auth descriptors
           .filter((authDescriptor) =>
             // If
-            hasAuthDescriptorFlags(authDescriptor, flags),
+            hasAuthDescriptorFlags(authDescriptor, config.flags),
           )
           .map((authDescriptor) =>
             loginKeyStore.createKeyHandler(authDescriptor),
@@ -87,7 +91,8 @@ export function createLoginManager(
           usedLoginKeyStore,
           account.id,
           keyStore.createKeyHandler(adminAuthDescriptor),
-          flags,
+          config.flags,
+          config.rules,
         );
         disposableKeyHandlers = [disposableKeyHandler];
       }
@@ -112,22 +117,49 @@ export function createLoginManager(
 }
 
 /*
- * Returns auth flags provided as option to login manager's `login` function,
+ * Returns auth flags and rules provided as option to login manager's `login` function,
  * or if they are not provided, the function uses config name to load login config from chain.
  * If configName is null or undefined too, then default login config will be loaded from chain.
  */
-export async function getFlags(
+export async function getConfigFromOptions(
   authDataService: AuthDataService,
   options: LoginConfigOptions,
-): Promise<string[]> {
+): Promise<{ flags: string[]; rules: AuthDescriptorRules | null }> {
+  let flags: string[];
+  let rules: AuthDescriptorRules | null;
+
+  let currentHeight: number;
+  const getBlockHeight = async () => {
+    if (currentHeight === undefined) {
+      currentHeight = await authDataService.connection.getBlockHeight();
+    }
+    return currentHeight;
+  };
+
   if (options.config) {
-    return options.config.flags;
+    flags = options.config.flags;
+    rules =
+      options.config.rules &&
+      (await mapLoginConfigRulesToAuthDescriptorRules(
+        options.config.rules,
+        getBlockHeight,
+      ));
   } else {
     const loginConfig = await authDataService.getLoginConfig(
       options.configName,
     );
-    return loginConfig?.flags ?? [];
+    flags = loginConfig.flags;
+    rules =
+      loginConfig.rules &&
+      (await mapLoginConfigRulesToAuthDescriptorRules(
+        loginConfig.rules,
+        getBlockHeight,
+      ));
   }
+  return {
+    flags,
+    rules,
+  };
 }
 
 async function addDisposableAuthDescriptor(
@@ -136,6 +168,7 @@ async function addDisposableAuthDescriptor(
   accountId: Buffer,
   adminAuthHandler: KeyHandler,
   flags: string[],
+  rules: AuthDescriptorRules | null,
 ): Promise<KeyHandler> {
   const authenticator = createAuthenticator(
     accountId,
@@ -150,7 +183,7 @@ async function addDisposableAuthDescriptor(
   const registration = createSingleSigAuthDescriptorRegistration(
     flags,
     ks.id,
-    null,
+    rules,
   );
 
   await session.account.addAuthDescriptor(registration, ks);

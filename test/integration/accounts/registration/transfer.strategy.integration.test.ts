@@ -47,9 +47,8 @@ describe("Test transfer strategy", () => {
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
     ))!;
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find((v) =>
-      v.asset_id.equals(asset.id),
-    )?.min_amount;
+    const rawAmount = _allowedAssets.find((v) => v.asset_id.equals(asset.id))
+      ?.min_amount;
     expect(rawAmount).toBeTruthy();
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 

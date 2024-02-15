@@ -44,11 +44,7 @@ import {
 } from "./authentication";
 import { createLoginManager } from "./authentication/login-manager";
 import { LoginKeyStore } from "./authentication/login-manager/stores/types";
-import {
-  authMessageTemplate,
-  loginConfig,
-  nonce,
-} from "./authentication/queries";
+import { authMessageTemplate, nonce } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
   AuthHandler,
@@ -58,6 +54,7 @@ import {
   Session,
 } from "./types";
 import { createAuthDescriptorValidator } from "./accounts";
+import { getLoginConfig } from "./authentication/login-manager";
 
 export function createConnection(client: IClient): Connection {
   const connection: Connection = Object.freeze({
@@ -213,8 +210,8 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     },
     getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
       connection.query(nonce(accountId, authDescriptorId)),
-    getLoginConfig: async (configName: string | undefined = undefined) =>
-      connection.query(loginConfig(configName)),
+    getLoginConfig: (configName?: string) =>
+      getLoginConfig(connection, configName),
     getBlockchainRid: () =>
       Buffer.from(connection.client.config.blockchainRid, "hex"),
   });

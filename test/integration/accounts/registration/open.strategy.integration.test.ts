@@ -50,7 +50,7 @@ describe("Test open strategy", () => {
     const session = await registerAccount(
       _connection,
       keyStore,
-      open(authDescriptor, { config: { flags: [] } }),
+      open(authDescriptor, { config: { flags: [], rules: null } }),
     );
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
@@ -86,7 +86,7 @@ describe("Test open strategy", () => {
     const session = await registerAccount(
       _connection,
       keyStore,
-      open(authDescriptor, { config: { flags: [] } }),
+      open(authDescriptor, { config: { flags: [], rules: null } }),
     );
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));

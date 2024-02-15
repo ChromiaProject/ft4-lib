@@ -1,9 +1,10 @@
-import { AuthHandler, Connection } from "@ft4/types";
+import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor";
+import { AuthHandler } from "@ft4/types";
+import { Connection } from "@ft4/index";
 import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
-import { AnyAuthDescriptor } from "@ft4/accounts";
 import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
-
+import { LoginConfig } from "./login-manager";
 export class KeyHandlerError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -57,7 +58,7 @@ export interface AuthDataService {
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;
-  getLoginConfig(name: string | undefined): Promise<LoginConfig | null>;
+  getLoginConfig(name?: string): Promise<LoginConfig>;
   getBlockchainRid(): Buffer;
   getAuthHandlerForOperation(
     operationName: string,
@@ -68,7 +69,3 @@ export interface AuthDataService {
     adIds: BufferId[],
   ): Promise<Buffer | null>;
 }
-
-export type LoginConfig = {
-  flags: string[];
-};
