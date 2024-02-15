@@ -7,12 +7,12 @@ import ^^^.assets;
 import ^^^.crosschain;
 
 struct module_args_list_element {
-    sender_blockchain: gtv = chain_context.blockchain_rid.to_gtv();
+    sender_blockchain: gtv;
     sender: gtv;
-    asset: gtv? = null; // null allows all assets
-    recipient: gtv = "*".to_gtv();
+    recipient: gtv;
+    asset: gtv;
     timeout_days: integer;
-    strategy: gtv = "open".to_gtv();
+    strategy: gtv;
 }
 
 struct module_args {

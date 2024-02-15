@@ -57,15 +57,16 @@ blockchains:
         lib.ft4.accounts.strategies.transfer:
           rules: 
             - sender_blockchain: 
-              - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
-              - "$"
+                - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
+                - "$"
               sender: X
               recipient: X
               asset: "*"
               timeout_days: 10
               strategy: "open"
 
-            - sender: "*"
+            - sender_blockchain: "$"
+              sender: "*"
               recipient: x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5" # Alice
               asset:
                 id: x"abcdef"
@@ -76,8 +77,8 @@ blockchains:
                - "stake"
 
             - sender_blockchain:
-              - x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
-              - "$"
+                - x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+                - "$"
               sender: "*"
               recipient:
                 - x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8" # Bob
@@ -97,9 +98,10 @@ blockchains:
                 - "fee"
 
             - sender_blockchain:
-              - "$"
+                - "$"
               sender: "*"
               recipient: x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe" # Charlie
+              asset: "*"
               timeout_days: 60
               strategy:
                 - "open"
