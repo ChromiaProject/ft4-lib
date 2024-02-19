@@ -40,6 +40,14 @@ operation init_transfer(
         "Asset not found '%s'".format(asset_id)
     );
 
+    crosschain.before_init_transfer(
+        account,
+        receiver_id,
+        asset,
+        amount,
+        hops
+    );
+
     crosschain.Unsafe.update_balances_if_needed(
         account,
         crosschain.ensure_blockchain_account(hops[0]),
@@ -47,10 +55,19 @@ operation init_transfer(
         amount
     );
 
-    create crosschain.pending_transfer(
+    val pending_transfer = create crosschain.pending_transfer(
         account = account,
         transaction = op_context.transaction,
         op_index = op_context.op_index
+    );
+
+    crosschain.after_init_transfer(
+        account,
+        receiver_id,
+        asset,
+        amount,
+        hops,
+        pending_transfer
     );
 }
 
@@ -128,7 +145,19 @@ operation apply_transfer(
 
     val asset = assets.Asset(init_args.asset_id);
 
-    if (init_transfer_details.args.hops.size() > hop_index + 1) {
+    val is_intermediate = init_transfer_details.args.hops.size() > hop_index + 1;
+
+    crosschain.before_apply_transfer(
+        sender_blockchain_rid = init_transfer_tx.body.blockchain_rid,
+        sender_account_id = init_transfer_details.sender_account_id,
+        recipient_id = init_transfer_details.args.receiver_id,
+        asset = asset,
+        amount = init_transfer_details.args.amount,
+        hop_index = hop_index,
+        is_final = not is_intermediate
+    );
+
+    if (is_intermediate) {
         // this hop is not last
         val next_hop = init_transfer_details.args.hops[hop_index + 1];
         crosschain.Unsafe.update_balances_if_needed(
@@ -161,7 +190,18 @@ operation apply_transfer(
     }
 
     // Add transfer to applied transfers table so that it cannot be applied more than once
-    create crosschain.applied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+    val applied_transfer = create crosschain.applied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+
+    crosschain.after_apply_transfer(
+        sender_blockchain_rid = init_transfer_tx.body.blockchain_rid,
+        sender_account_id = init_transfer_details.sender_account_id,
+        recipient_id = init_transfer_details.args.receiver_id,
+        asset = asset,
+        amount = init_transfer_details.args.amount,
+        hop_index = hop_index,
+        is_final = not is_intermediate,
+        applied_transfers = applied_transfer
+    );
 }
 
 operation complete_transfer(
