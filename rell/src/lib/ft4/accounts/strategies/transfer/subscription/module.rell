@@ -1,0 +1,64 @@
+@mount("ft4")
+module;
+
+import ^^^^.accounts;
+import ^^^^.assets;
+import ^^^.strategies;
+import transfer: ^;
+import ^.fee;
+
+entity subscription {
+    key accounts.account;
+    assets.asset;
+    amount: big_integer;
+    period_days: integer;
+    mutable last_payment: timestamp;
+}
+
+operation ras_transfer_subscription(
+   asset_id: byte_array,
+   initial: accounts.auth_descriptor,
+   disposable: accounts.auth_descriptor? = null
+) {}
+
+function account_details(gtv) {
+    val params = struct<ras_transfer_subscription>.from_gtv(gtv);
+    val signers = strategies.get_signers(params.initial);
+    return strategies.account_details(
+        account_id = strategies.get_account_id_from_signers(signers),
+        initial = params.initial,
+        disposable = params.disposable
+    );
+}
+
+function transfer_action(accounts.account, strategy_params_gtv: gtv) {
+	transfer.do_transfer(account, "subscription");
+
+	val strategy_params = struct<ras_transfer_subscription>.from_gtv(strategy_params_gtv);
+    val subscription_assets = fee.resolve_fee_assets(subscription_assets());
+	val subscription_amount = require(subscription_assets.get_or_null(strategy_params.asset_id),
+        "Asset <%s> is not allowed to pay subscription with".format(strategy_params.asset_id));
+    val asset = assets.Asset(strategy_params.asset_id);
+	assets.Unsafe.transfer(
+		account,
+		fee.ensure_fee_account(chain_context.blockchain_rid),
+		asset,
+		subscription_amount);
+
+    create subscription(
+        account,
+        asset,
+        subscription_amount,
+        period_days = subscription_period_days(),
+        last_payment = accounts.latest_time()
+    );
+}
+
+@extend(strategies.strategy)
+function () = strategies.add_strategy(
+    op = rell.meta(ras_transfer_subscription),
+    account_details = account_details(*),
+    action = transfer_action(*)
+);
+
+// TODO recurring payment

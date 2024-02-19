@@ -1,0 +1,14 @@
+val MODULE_NAME = "lib.ft4.core.accounts.strategy.transfer.subscription";
+
+struct module_args {
+    asset: gtv;
+    subscription_period_days: integer;
+    free_operations: gtv;
+}
+
+function subscription_assets(): list<fee.fee_asset> =
+        fee.parse_fee_assets(chain_context.args.asset, MODULE_NAME);
+
+function subscription_period_days(): integer = chain_context.args.subscription_period_days;
+
+function free_operations(): list<text> = list<text>.from_gtv(chain_context.args.free_operations);

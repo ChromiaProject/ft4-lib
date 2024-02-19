@@ -1,4 +1,6 @@
-val _CONFIG_ERROR_TEXT = "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer.fee): ";
+val _CONFIG_ERROR_TEXT_TEMPLATE = "Error in moduleArgs (%s): %s";
+
+val MODULE_NAME = "lib.ft4.core.accounts.strategy.transfer.fee";
 
 struct module_args {
     asset: gtv;
@@ -11,27 +13,28 @@ struct fee_asset {
     amount: big_integer;
 }
 
-function fee_assets(): list<fee_asset> {
-    val gtv = chain_context.args.asset;
+function fee_assets(): list<fee_asset> = parse_fee_assets(chain_context.args.asset, MODULE_NAME);
+
+function parse_fee_assets(gtv, module_name: text): list<fee_asset> {
     if (transfer.is_dict(gtv)) {
         val input = map<name, gtv>.from_gtv_pretty(gtv);
-        return [parse_fee_asset(input)];
+        return [parse_fee_asset(input, module_name)];
     } else if (transfer.is_list(gtv)) {
         val inputs = list<map<name, gtv>>.from_gtv_pretty(gtv);
-        return inputs @* {} (parse_fee_asset($));
+        return inputs @* {} (parse_fee_asset($, module_name));
     }
     else {
         require(
             false,
-            _CONFIG_ERROR_TEXT + "asset only accepts a list of ids and amounts."
+            _CONFIG_ERROR_TEXT_TEMPLATE.format(module_name, "asset only accepts a list of ids and amounts.")
         );
         return []; // will never happen
     }
 }
 
-function parse_fee_asset(input: map<name, gtv>): fee_asset {
-    require("id" in input or "name" in input, _CONFIG_ERROR_TEXT + "fee asset needs to have either 'id' or 'name'");
-    require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT + "fee asset cannot have both 'id' and 'name'");
+function parse_fee_asset(input: map<name, gtv>, module_name: text): fee_asset {
+    require("id" in input or "name" in input, _CONFIG_ERROR_TEXT_TEMPLATE.format(module_name, "fee asset needs to have either 'id' or 'name'"));
+    require(not ("id" in input and "name" in input), _CONFIG_ERROR_TEXT_TEMPLATE.format(module_name, "fee asset cannot have both 'id' and 'name'"));
     return fee_asset(
         id = if ("id" in input) byte_array.from_gtv(input["id"]) else null,
         issuing_blockchain_rid = if ("name" in input)
