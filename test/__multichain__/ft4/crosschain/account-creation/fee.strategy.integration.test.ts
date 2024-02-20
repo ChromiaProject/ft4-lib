@@ -62,7 +62,7 @@ describe("Fee account creation single step", () => {
       keyStore.id,
     );
 
-    const { account } = await registerAccount(
+    const { account: senderAccount } = await registerAccount(
       senderConnection,
       keyStore,
       open(authDescriptor),
@@ -72,16 +72,20 @@ describe("Fee account creation single step", () => {
     mint(
       senderConnection.client,
       adminUser().signatureProvider,
-      account.id,
+      senderAccount.id,
       asset.id,
       createAmount(20, 5),
     );
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
-    expect(account.id).toEqual(recipientId);
+    expect(senderAccount.id).toEqual(recipientId);
 
     const _allowedAssets = (await recipientConnection.query(
-      allowedAssets(senderConnection.blockchainRid, account.id, recipientId),
+      allowedAssets(
+        senderConnection.blockchainRid,
+        senderAccount.id,
+        recipientId,
+      ),
     ))!;
 
     expect(_allowedAssets).toBeTruthy();
@@ -98,20 +102,19 @@ describe("Fee account creation single step", () => {
     expect(rawAmount).toEqual(1000000n);
     expect(feeRawAmount).toEqual(1000000n);
 
-    const session = await registerAccount(
+    const recipientSession = await registerAccount(
       recipientConnection,
       keyStore as FtKeyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
 
-    expect(session.account.id).toEqual(recipientId);
+    expect(recipientSession.account.id).toEqual(recipientId);
 
-    const assetBalanceRecipient = await session.account.getBalanceByAssetId(
-      asset.id,
-    );
-    expect(assetBalanceRecipient!.amount.value).toBe(0n);
+    const assetBalanceRecipient =
+      await recipientSession.account.getBalanceByAssetId(asset.id);
+    expect(assetBalanceRecipient).toBe(null);
 
-    const assetBalanceSender = await session.account.getBalanceByAssetId(
+    const assetBalanceSender = await senderAccount.getBalanceByAssetId(
       asset.id,
     );
     expect(assetBalanceSender!.amount.value).toBe(
@@ -119,7 +122,8 @@ describe("Fee account creation single step", () => {
     );
 
     expect(
-      await recipientConnection.query(pendingTransferStrategies(recipientId)),
-    ).toBe([]);
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
   });
 });
