@@ -11,4 +11,4 @@ function subscription_assets(): list<fee.fee_asset> =
 
 function subscription_period_days(): integer = chain_context.args.subscription_period_days;
 
-function free_operations(): list<text> = list<text>.from_gtv(chain_context.args.free_operations);
+function free_operations(): set<text> = set<text>.from_gtv(chain_context.args.free_operations);

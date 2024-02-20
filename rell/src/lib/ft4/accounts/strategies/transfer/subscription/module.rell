@@ -90,3 +90,16 @@ operation renew_subscription() {
 function renew_subscription_message(gtv) {
     return "Please sign the message\nto renew subscription for account: {account_id}";
 }
+
+@extend(auth.before_authenticate) function(accounts.account, accounts.account_auth_descriptor) {
+    val subscription = subscription @? { account };
+    if (subscription != null) {
+        val op = op_context.get_all_operations()[op_context.op_index];
+        val free_operations = free_operations();
+        free_operations.add(rell.meta(renew_subscription).mount_name);
+        if (op.name not in free_operations) {
+            require(accounts.latest_time() <= (subscription.last_payment + subscription.period_millis),
+                "Subscription has expired");
+        }
+    }
+}

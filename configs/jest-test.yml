@@ -40,8 +40,7 @@ blockchains:
           amount: 2L
         subscription_period_days: 30
         free_operations:
-          - foo
-          - bar
+          - free_operation
 
 libs:
   iccf:

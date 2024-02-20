@@ -1,0 +1,29 @@
+module;
+
+import ^^^^.lib.ft4.auth;
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(regular_operation).mount_name,
+    flags = [],
+    message = empty_message(*)
+);
+
+operation regular_operation() {
+  auth.authenticate();
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(free_operation).mount_name,
+    flags = [],
+    message = empty_message(*)
+);
+
+operation free_operation() {
+  auth.authenticate();
+}
+
+function empty_message(gtv) {
+  return "";
+}

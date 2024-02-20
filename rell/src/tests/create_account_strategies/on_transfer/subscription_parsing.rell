@@ -22,5 +22,5 @@ function test_get_subscription_config_reads_yml_correctly() {
 
     assert_equals(subscription.subscription_period_days(), 30);
 
-    assert_equals(subscription.free_operations(), ["foo", "bar"]);
+    assert_equals(subscription.free_operations(), set(["foo", "bar"]));
 }
