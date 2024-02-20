@@ -51,7 +51,7 @@ function test_get_config_reads_yml_correctly() {
         ),
         create_on_transfer.rule(
             timeout_days = 60,
-            strategies = ["open", "fee"],
+            strategies = ["open", "fee", "subscription"],
 
             blockchains = create_on_transfer.allowlist(
                 allow_all = false,
