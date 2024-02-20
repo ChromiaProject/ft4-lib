@@ -13,6 +13,7 @@ import {
 import { Asset } from "@ft4/asset/index";
 
 export * from "./queries";
+export * from "./operations";
 
 export function transferSubscription(
   subscriptionAsset: Asset,
