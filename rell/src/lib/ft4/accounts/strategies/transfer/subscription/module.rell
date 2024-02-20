@@ -3,15 +3,18 @@ module;
 
 import ^^^^.accounts;
 import ^^^^.assets;
+import ^^^^.auth;
 import ^^^.strategies;
 import transfer: ^;
 import ^.fee;
+
+val MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
 
 entity subscription {
     key accounts.account;
     assets.asset;
     amount: big_integer;
-    period_days: integer;
+    mutable period_millis: integer;
     mutable last_payment: timestamp;
 }
 
@@ -49,7 +52,7 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
         account,
         asset,
         subscription_amount,
-        period_days = subscription_period_days(),
+        period_millis = subscription_period_days() * MILLIS_PER_DAY,
         last_payment = accounts.latest_time()
     );
 }
@@ -61,4 +64,19 @@ function () = strategies.add_strategy(
     action = transfer_action(*)
 );
 
-// TODO recurring payment
+// TODO test this
+operation renew_subscription() {
+    val account = auth.authenticate();
+
+    val subscription = require(subscription @? { account },
+        "No subscription for account <%s>".format(account.id));
+
+    assets.Unsafe.transfer(
+   		account,
+   		fee.ensure_fee_account(chain_context.blockchain_rid),
+   		subscription.asset,
+   		subscription.amount);
+
+    subscription.period_millis = subscription_period_days() * MILLIS_PER_DAY;
+    subscription.last_payment = accounts.latest_time();
+}
