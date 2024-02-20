@@ -64,7 +64,13 @@ function () = strategies.add_strategy(
     action = transfer_action(*)
 );
 
-// TODO test this
+@extend(auth.auth_handler)
+function () = auth.add_overridable_auth_handler(
+    scope = rell.meta(renew_subscription).mount_name,
+    flags = ["T"],
+    message = renew_subscription_message(*)
+);
+
 operation renew_subscription() {
     val account = auth.authenticate();
 
@@ -79,4 +85,8 @@ operation renew_subscription() {
 
     subscription.period_millis = subscription_period_days() * MILLIS_PER_DAY;
     subscription.last_payment = accounts.latest_time();
+}
+
+function renew_subscription_message(gtv) {
+    return "Please sign the message\nto renew subscription for account: {account_id}";
 }

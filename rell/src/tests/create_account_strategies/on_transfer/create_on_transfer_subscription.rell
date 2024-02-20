@@ -4,6 +4,7 @@ module;
 import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.assets;
 import ^^^^.lib.ft4.ft4_basic_dev.*;
+import test_utils: ^^^^.lib.ft4.test.utils;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
@@ -45,8 +46,7 @@ function test_create_account_on_internal_transfer_with_subscription_success() {
     });
     assert_true("subscription" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
-    val last_block_time = rell.test.last_block_time;
-
+    var last_block_time = rell.test.last_block_time;
     rell.test.tx()
         .op(subscription.ras_transfer_subscription(asset.id, utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
@@ -57,12 +57,22 @@ function test_create_account_on_internal_transfer_with_subscription_success() {
     assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
 
     val bob = accounts.account_by_id(recipient_id);
+
     assert_equals(assets.get_asset_balance(bob, asset), amount - subscription_amount);
     assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), subscription_amount);
     assert_equals(
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1
     );
+    assert_equals(subscription.get_subscription_last_payment(bob.id), last_block_time);
 
+    last_block_time = rell.test.last_block_time;
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(subscription.renew_subscription())
+        .sign(rell.test.keypairs.bob)
+        .run();
+    assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
+    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), 2 * subscription_amount);
     assert_equals(subscription.get_subscription_last_payment(bob.id), last_block_time);
 }
