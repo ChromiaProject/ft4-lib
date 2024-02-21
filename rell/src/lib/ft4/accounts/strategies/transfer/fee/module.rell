@@ -38,9 +38,13 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 }
 
 function ensure_fee_account(blockchain_rid: byte_array): accounts.account {
-   val fee_account_id = ("FEE" + chain_context.blockchain_rid).hash();
-   return accounts.account @? { .id == fee_account_id }
-      ?: create accounts.account(id = fee_account_id);
+    if (fee_account_id() != null) {
+        return accounts.Account(fee_account_id()!!);
+    } else {
+        val fee_account_id = ("FEE" + chain_context.blockchain_rid).hash();
+        return accounts.account @? { .id == fee_account_id }
+            ?: create accounts.account(id = fee_account_id);
+    }
 }
 
 @extend(strategies.strategy)

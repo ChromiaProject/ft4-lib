@@ -4,6 +4,7 @@ struct module_args {
     asset: gtv;
     subscription_period_days: integer;
     free_operations: gtv;
+    subscription_account: byte_array? = null;
 }
 
 function subscription_assets(): list<fee.fee_asset> =
@@ -12,3 +13,5 @@ function subscription_assets(): list<fee.fee_asset> =
 function subscription_period_days(): integer = chain_context.args.subscription_period_days;
 
 function free_operations(): set<text> = set<text>.from_gtv(chain_context.args.free_operations);
+
+function subscription_account_id(): byte_array? = chain_context.args.subscription_account;

@@ -15,3 +15,4 @@
 - account creation strategies
     - create on transfer
         - subscription
+    - configurable fee account

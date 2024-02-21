@@ -4,6 +4,7 @@ val MODULE_NAME = "lib.ft4.core.accounts.strategy.transfer.fee";
 
 struct module_args {
     asset: gtv;
+    fee_account: byte_array? = null;
 }
 
 struct fee_asset {
@@ -14,6 +15,8 @@ struct fee_asset {
 }
 
 function fee_assets(): list<fee_asset> = parse_fee_assets(chain_context.args.asset, MODULE_NAME);
+
+function fee_account_id(): byte_array? = chain_context.args.fee_account;
 
 function parse_fee_assets(gtv, module_name: text): list<fee_asset> {
     if (transfer.is_dict(gtv)) {

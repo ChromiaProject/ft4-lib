@@ -18,4 +18,6 @@ function test_get_fee_config_reads_yml_correctly() {
         )
     ];
     assert_equals(config, expected);
+
+    assert_equals(fee.fee_account_id(), rell.test.pubkeys.trudy);
 }
