@@ -62,6 +62,11 @@ operation apply_transfer(
     hop_index: integer
 ) {
     val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
+    require(
+        crosschain.applied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        "Transfer <%s> at index <%s> has already been applied on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
 
     if (hop_index == 0) {
         /* 
@@ -76,7 +81,7 @@ operation apply_transfer(
 
         require(
             op_index == init_tx_op_index,
-            "Invalid parameter. init_transfer indexes should be same"
+            "Invalid parameter. init_transfer indices should be same"
         );
     } else {
         val previous_hop_details = get_apply_transfer_details(previous_hop_tx, op_index);
@@ -123,7 +128,7 @@ operation apply_transfer(
     iccf.require_valid_proof(
         previous_hop_tx,
         require_anchored_proof=true,
-        verify_signers=true
+        verify_signers=false
     );
 
     val asset = assets.Asset(init_args.asset_id);
@@ -171,7 +176,7 @@ operation complete_transfer(
     iccf.require_valid_proof(
         final_apply_transfer_tx,
         require_anchored_proof=true,
-        verify_signers=true
+        verify_signers=false
     );
 
     require(

@@ -277,14 +277,12 @@ async function createBaseOrchestrator(
           await (
             await getTransactionBuilderForChain(session, targetChainRid)
           )
-            .add(iccfOp)
-            .add(
+            .addWithoutAuthenticator(iccfOp)
+            .addWithoutAuthenticator(
               applyTransferOp(
                 initTransferTx,
                 state.tx!,
                 path.indexOf(targetChainRid),
-                1,
-                path.indexOf(targetChainRid) === 0 ? 1 : 3,
               ),
               (data: OnAnchoredHandlerData | null, error: Error | null) => {
                 if (error) {
@@ -409,8 +407,8 @@ async function createBaseOrchestrator(
       Buffer.from(session.client.config.blockchainRid, "hex"),
     );
     await tb
-      .add(iccfOp)
-      .add(completeTransferOp(tx, transfer?.opIndex ?? 3))
+      .addWithoutAuthenticator(iccfOp)
+      .addWithoutAuthenticator(completeTransferOp(tx, transfer?.opIndex ?? 1))
       .buildAndSend();
 
     localEmitter.emit("TransferComplete");

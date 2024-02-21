@@ -138,6 +138,51 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
         .run(); // Should run successfully
 }
 
+function test_apply_transfer_fails_when_applied_twice() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run(); // Should run successfully
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail(
+            "Transfer <%s> at index <1> has already been applied on this chain.".format(
+                tx.to_gtv().hash()
+            )
+        ); // Should fail
+}
+
 function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
     val alice = utils.register_alice();
     val bob = utils.register_bob();
