@@ -32,7 +32,7 @@ export function fee(
       targetConnection: Connection,
       keyStore: KeyStore,
     ): Promise<RegistrationDetails> => {
-      const recipientAccountId = getAccountIdFromSigners(
+      const accountId = getAccountIdFromSigners(
         aggregateSigners(authDescriptor),
       );
 
@@ -59,11 +59,11 @@ export function fee(
       const senderSession = await createKeyStoreInteractor(
         senderConnection.client,
         keyStore,
-      ).getSession(recipientAccountId);
+      ).getSession(accountId);
 
       const orchestrator = await createOrchestrator(
         targetConnection.blockchainRid,
-        recipientAccountId,
+        accountId,
         feeAsset.id,
         createAmountFromBalance(amount, feeAsset.decimals),
         senderSession,
@@ -74,11 +74,7 @@ export function fee(
 
       const loginDetails =
         loginConfig &&
-        (await getLoginDetails(
-          targetConnection,
-          recipientAccountId,
-          loginConfig,
-        ));
+        (await getLoginDetails(targetConnection, accountId, loginConfig));
 
       const operation = {
         name: "ft4.ras_transfer_fee",
