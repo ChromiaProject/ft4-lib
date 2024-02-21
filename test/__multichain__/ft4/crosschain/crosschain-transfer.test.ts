@@ -33,8 +33,8 @@ describe("Crosschain transfer", () => {
 
     const asset00 = await getNewAsset(
       connection00.client,
-      "crosschain",
-      "CROSSCHAIN",
+      "crosschain-transfer-test-asset",
+      "CROSSCHAIN-transfer-test-asset",
     );
     await registerCrosschainAsset(
       connection01.client,

@@ -34,7 +34,19 @@ export type TestContext = {
   sampleAsset: Asset;
 };
 
-export async function setupTestEnvironment(mintAmount?: Amount) {
+function* numberGenerator(): Generator<number> {
+  let count = 0;
+  while (true) {
+    yield count++;
+  }
+}
+
+const gen = numberGenerator();
+
+export async function setupTestEnvironment(
+  testName: string,
+  mintAmount?: Amount,
+) {
   const { multichain00, multichain01, multichain02 } = await fetchBlockchains();
 
   const connection0 = createConnection(
@@ -47,10 +59,12 @@ export async function setupTestEnvironment(mintAmount?: Amount) {
     await createChromiaClientToMultichain(multichain02.rid),
   );
 
+  const num = gen.next().value;
+
   const asset = await getNewAsset(
     connection0.client,
-    "orchestrator",
-    "ORCHESTRATOR",
+    "orchestrator-test-" + testName + "-asset" + num,
+    "ORCHESTRATOR-test-" + testName + "-asset" + num,
   );
   await registerCrosschainAsset(
     connection2.client,

@@ -1,8 +1,21 @@
 #!/bin/bash
 
 postgres=true
+deployment_script="rell/dep/deployments.yml"
+NUM_BLOCKCHAINS=3
 
 source ./scripts/multichain-runner.sh
+
+generate_config() {
+  debug "Generating config"
+  sed "s/{manager_brid}/${MULTICHAIN_D1_BRID}/;" \
+    configs/multichain-demo.yml.template > $deployment_script
+  for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+  do
+    chain_rid=$(eval "echo \${MULTICHAIN${chain_num}_BRID}")
+    echo "      deploy$chain_num: x\"${chain_rid}\"" >> $deployment_script
+  done
+}
 
 generate_keypairs() {
   if [ ! -f "$USER_KEYPAIR_FILE" ]; then
@@ -15,46 +28,41 @@ generate_keypairs() {
 }
 
 register_account_on_chain() {
-  local blockchain_rid=$1
+  local num=$1
 
-  chr tx \
-    --blockchain-rid $blockchain_rid \
+  chr tx -d local -bc "deploy$num" -s $deployment_script \
     ft4.admin.register_account '[0, [["A","T"], x"'$USER_PUBKEY'"], null]' \
     --await \
     --secret $ADMIN_KEYPAIR_FILE
 }
 
 retrieve_account_id() {
+  local num=$1
+
   USER_ACCOUNT_ID_RAW_OUTPUT=$(
     chr query \
-      --blockchain-rid $1 \
+      -d local -bc "deploy$num" -s $deployment_script \
       ft4.get_accounts_by_signer \
-      -- "{id=$USER_PUBKEY}" \
-      2>/dev/null
+      -- "[\"id\":\"$USER_PUBKEY\", \"page_size\": 1, \"page_cursor\": null]" 
   )
 
   # Extract the account ID
-  USER_ACCOUNT_ID=$(grep -o 'x"[A-Fa-f0-9]*"' <<< "$USER_ACCOUNT_ID_RAW_OUTPUT")
-
-  # Remove the x" " wrapper using tr
-  USER_ACCOUNT_ID=$(tr -d 'x"' <<< "$USER_ACCOUNT_ID")
+  USER_ACCOUNT_ID=$(grep -Eo '[A-Fa-f0-9]{64}' <<< "$USER_ACCOUNT_ID_RAW_OUTPUT")
 }
 
 fetch_test_asset_brid() {
   ASSET_RAW_OUTPUT=$( 
     chr query \
-      --blockchain-rid $MULTICHAIN00_BRID \
+      -d local -bc "deploy00" -s $deployment_script \
       ft4.get_all_assets \
-      -- '{page_size=1, page_cursor=null}' \
-      2> /dev/null
+      -- '["page_size":1, "page_cursor":null]'
   )
-  
+
   # Extract the asset ID
   TEST_ASSET_BRID=$(
     echo "$ASSET_RAW_OUTPUT" \
-      | grep -o '\bid=x"[A-Fa-f0-9]*"' \
-      | awk -F'x"' '{print $2}' \
-      | tr -d '"'
+      | grep -o '"id": x"[A-Fa-f0-9]*"' \
+      | grep -Eo "[A-Fa-f0-9]{64}"
   )
   
   # Check if TEST_ASSET_BRID is empty, then exit with an error
@@ -73,6 +81,7 @@ print_summary() {
 }
 
 main() {
+  generate_config
   generate_keypairs
 
   log "Registering user account..."
@@ -82,15 +91,15 @@ main() {
   USER_PRIVKEY=$(awk '/privkey:/ {print $2}' "$USER_KEYPAIR_FILE")
 
   # Call the function for multichain00 and multichain02
-  register_account_on_chain $MULTICHAIN00_BRID
-  register_account_on_chain $MULTICHAIN02_BRID
+  register_account_on_chain 00
+  register_account_on_chain 02
 
-  retrieve_account_id $MULTICHAIN00_BRID
+  retrieve_account_id 00
 
   log "Registering test asset..."
 
   chr tx \
-      --blockchain-rid $MULTICHAIN00_BRID \
+      -d local -bc "deploy00" -s $deployment_script \
       ft4.admin.register_asset TestAsset TST 6 https://url-to-asset-icon \
       --await \
       --secret $ADMIN_KEYPAIR_FILE
@@ -100,15 +109,18 @@ main() {
   # Proceed with the rest of your script
   log "Initiating cross-chain asset registration..."
 
-  chr tx --blockchain-rid $MULTICHAIN02_BRID \
-      ft4.admin.register_crosschain_asset TestAsset TST 6 $MULTICHAIN00_BRID https://url-to-asset-icon \
+  chr tx \
+      -d local -bc "deploy02" -s $deployment_script \
+      ft4.admin.register_crosschain_asset TestAsset TST 6 $MULTICHAIN00_BRID \
+      https://url-to-asset-icon \
       $MULTICHAIN00_BRID \
       --await \
       --secret $ADMIN_KEYPAIR_FILE
 
   log "Asset registered. Proceeding to mint assets on source chain..."
 
-  chr tx --blockchain-rid $MULTICHAIN00_BRID \
+  chr tx \
+      -d local -bc "deploy00" -s $deployment_script \
       ft4.admin.mint $USER_ACCOUNT_ID $TEST_ASSET_BRID 1000000000L \
       --await \
       --secret $ADMIN_KEYPAIR_FILE

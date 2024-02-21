@@ -16,7 +16,7 @@ describe("Asset Hierarchy", () => {
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment(mintAmount);
+    testContext = await setupTestEnvironment("asset-hierarchy", mintAmount);
   });
 
   async function verifyEndTransferAndBalances(
@@ -25,9 +25,12 @@ describe("Asset Hierarchy", () => {
   ) {
     const completedListener = jest.fn();
     orchestrator.onTransferComplete(completedListener);
+    const errorListener = jest.fn();
+    orchestrator.onTransferError(errorListener);
 
     await orchestrator.transfer();
 
+    expect(errorListener).not.toHaveBeenCalled();
     expect(completedListener).toHaveBeenCalled();
 
     for (const [accountNum, expectedBalance] of Object.entries(

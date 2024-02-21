@@ -6,7 +6,7 @@ describe("Error Handling and Recovery", () => {
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment();
+    testContext = await setupTestEnvironment("error-handling");
   });
 
   it("emits error event on transfer failure", async () => {

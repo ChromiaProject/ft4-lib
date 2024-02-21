@@ -11,7 +11,7 @@ describe("Basic Functionality", () => {
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment(mintAmount);
+    testContext = await setupTestEnvironment("basic-functionality", mintAmount);
   });
 
   async function createTestOrchestrator() {
