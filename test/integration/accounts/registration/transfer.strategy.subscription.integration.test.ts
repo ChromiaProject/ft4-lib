@@ -17,6 +17,7 @@ import { subscriptionAssets } from "@ft4/accounts/registration/strategies/transf
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { createAmountFromBalance } from "@ft4/index";
 import { subscriptionLastPayment } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
+import { renewSubscription } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
 
 let connection: Connection;
 let asset: Asset;
@@ -55,10 +56,10 @@ describe("Test transfer with subscription", () => {
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
     const _subscriptionAssets = await connection.query(subscriptionAssets());
-    const rawSubscription = _subscriptionAssets.find((v) =>
+    const rawSubscriptionAmount = _subscriptionAssets.find((v) =>
       v.asset_id.equals(asset.id),
     )?.amount;
-    expect(rawSubscription).toBeTruthy();
+    expect(rawSubscriptionAmount).toBeTruthy();
 
     await account1.transfer(recipientId, asset.id, amount);
 
@@ -83,14 +84,29 @@ describe("Test transfer with subscription", () => {
     expect(session.account.id).toEqual(recipientId);
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
-    expect(assetBalance1!.amount.value).toBe(amount.value - rawSubscription!);
+    expect(assetBalance1!.amount.value).toBe(
+      amount.value - rawSubscriptionAmount!,
+    );
 
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
 
-    expect(
-      await connection.query(subscriptionLastPayment(recipientId)),
-    ).toBeGreaterThan(0);
+    const lastPayment1 = await connection.query(
+      subscriptionLastPayment(recipientId),
+    );
+    expect(lastPayment1).toBeGreaterThan(0);
+
+    await session.call(renewSubscription());
+
+    const assetBalance2 = await session.account.getBalanceByAssetId(asset.id);
+    expect(assetBalance2!.amount.value).toBe(
+      amount.value - 2n * rawSubscriptionAmount!,
+    );
+
+    const lastPayment2 = await connection.query(
+      subscriptionLastPayment(recipientId),
+    );
+    expect(lastPayment2).toBeGreaterThan(lastPayment1);
   });
 });
