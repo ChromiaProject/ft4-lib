@@ -38,7 +38,8 @@ export function transferOpen(
 
       return {
         strategyOperation: operation,
-        loginKeyStore: loginDetails?.keyStore || null,
+        loginKeyStore: loginDetails?.loginKeyStore || null,
+        disposableKeyStore: loginDetails?.disposableKeyStore || null,
       };
     },
   });
