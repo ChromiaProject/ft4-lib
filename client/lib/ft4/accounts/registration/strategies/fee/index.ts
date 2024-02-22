@@ -68,7 +68,9 @@ export function fee(
         createAmountFromBalance(amount, feeAsset.decimals),
         senderSession,
       );
-      orchestrator.onTransferError((err) => console.error(err));
+      orchestrator.onTransferError((err) => {
+        throw err;
+      });
 
       await orchestrator.transfer();
 

@@ -1,7 +1,6 @@
 import { registerAccount } from "@ft4/accounts/registration";
 import {
   Connection,
-  FtKeyStore,
   createAmount,
   createConnection,
   createInMemoryFtKeyStore,
@@ -116,7 +115,7 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = await registerAccount(
       recipientConnection,
-      keyStore as FtKeyStore,
+      keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
 
@@ -198,7 +197,7 @@ describe("Fee account creation single step", () => {
 
     const recipientSessionPromise = registerAccount(
       recipientConnection,
-      keyStore as FtKeyStore,
+      keyStore,
       fee(unrelatedConnection.blockchainRid, asset, authDescriptor),
     );
 
@@ -230,9 +229,18 @@ describe("Fee account creation single step", () => {
       senderConnection.client.config.blockchainRid + "",
     ]);
 
+    const _allowedAssets = (await recipientConnection.query(
+      allowedAssets(senderConnection.blockchainRid, recipientId, recipientId),
+    ))!;
+    const _feeAssets = await recipientConnection.query(feeAssets());
+
+    console.log("Allowed: ", _allowedAssets);
+    console.log("Fee: ", _feeAssets);
+    console.log("asset id: ", missingAssetId);
+
     const recipientSessionPromise = await registerAccount(
       recipientConnection,
-      keyStore as FtKeyStore,
+      keyStore,
       fee(
         senderConnection.blockchainRid,
         {
@@ -264,10 +272,11 @@ describe("Fee account creation single step", () => {
 
     const recipientSessionPromise = await registerAccount(
       recipientConnection,
-      keyStore as FtKeyStore,
+      keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
 
+    // originalError:  No key handler registered to handle operation <ft4.crosschain.init_transfer>
     await expect(recipientSessionPromise).rejects.toThrow();
 
     expect(
@@ -304,10 +313,11 @@ describe("Fee account creation single step", () => {
 
     const recipientSessionPromise = await registerAccount(
       recipientConnection,
-      keyStore as FtKeyStore,
+      keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
 
+    // originalError: balance is too low
     await expect(recipientSessionPromise).rejects.toThrow();
 
     expect(
