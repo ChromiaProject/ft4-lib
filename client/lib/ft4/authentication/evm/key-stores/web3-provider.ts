@@ -17,7 +17,8 @@ export async function createWeb3ProviderEvmKeyStore(
   const evmAddress = await signer.getAddress();
   const address = Buffer.from(evmAddress.slice(2), "hex");
 
-  externalProvider.once("accountsChanged", () => {
+  externalProvider.once("accountsChanged", (firstAccount) => {
+    if (!firstAccount) return;
     createWeb3ProviderEvmKeyStore(externalProvider).then((keyStore) =>
       ftEventEmitter.emit("KeyStoreChange", keyStore),
     );
