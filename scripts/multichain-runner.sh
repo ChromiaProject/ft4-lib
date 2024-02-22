@@ -70,15 +70,6 @@ prepare_dapp_folder() {
     echo "" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
     
-    # remove pieces of yml and rell not to be included here
-    for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
-    do
-        if [ "$chain_num" != "$other_chain_num" ]; then
-            sed -i.bak "s/^.*#${other_chain_num}\s*$//" $yml_filename
-            sed -i.bak "s|^.*//${other_chain_num}\s*$||" $rell_filepath
-        fi
-    done
-
     debug "Generated $yml_filename and $rell_filepath"
 
     # Build the Multichain dApp Chain for each blockchain
