@@ -52,7 +52,18 @@ prepare_dapp_folder() {
 
     # Write the YML content to the file
     sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
-        configs/multichain-jesttest.yml.template > ${yml_filename}
+        configs/multichain-jesttest.yml.template > "${yml_filename}_"
+    
+    # Insert module args
+    # sed or awk might be more efficient, but this is more readable
+    line=$(grep -n '{module_args}' "${yml_filename}_" | cut -d ":" -f 1)
+    { 
+        head -n $(($line-1)) "${yml_filename}_";
+        cat "configs/multichain-module-args/module-args$chain_num.yml.template";
+        tail -n +$(($line+1)) "${yml_filename}_";
+    } > "${yml_filename}"
+
+    rm "${yml_filename}_"
 
     # Create the corresponding RELL file with unique content
     cp configs/multichain-module.rell.template ${rell_filepath}
