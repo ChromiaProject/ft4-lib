@@ -63,8 +63,8 @@ prepare_dapp_folder() {
     for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
         if [ "$chain_num" != "$other_chain_num" ]; then
-            sed -i'' "s/^.*#${other_chain_num}\s*$//" $yml_filename
-            sed -i'' "s|^.*//${other_chain_num}\s*$||" $rell_filepath
+            sed -i '' "s/^.*#${other_chain_num}\s*$//" $yml_filename
+            sed -i '' "s|^.*//${other_chain_num}\s*$||" $rell_filepath
         fi
     done
 
@@ -88,7 +88,7 @@ include_brids() {
             if [ "$loop_chain_num" -lt "$chain_num" ]; then
                 # if it needs the brid of an already-launched chain, use it
                 chain_rid=$(eval "echo \${MULTICHAIN${loop_chain_num}_BRID}")
-                sed -i'' "s/{chain${loop_chain_num}_rid}/${chain_rid}/" $yml_filename
+                sed -i '' "s/{chain${loop_chain_num}_rid}/${chain_rid}/" $yml_filename
             else
                 # if the chain has not yet been lauched, throw an error
                 fatal_error "Chain ${chain_num} requires the brid of chain ${loop_chain_num}, which has not yet been launched. Please ensure that chains only depend on brids of chains with a lower number"
