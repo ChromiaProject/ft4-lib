@@ -70,7 +70,7 @@ prepare_dapp_folder() {
     echo "" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
     
-    # remove pieces of yml and rell not to be included here
+    # remove pieces of rell not to be included here
     for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
     do
         if [ "$chain_num" != "$other_chain_num" ]; then

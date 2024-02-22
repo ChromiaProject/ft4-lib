@@ -64,7 +64,7 @@ operation apply_transfer(
     val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
     require(
         crosschain.applied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
-        "Transfer <%s> at index <%s> has already been applied on this chain."
+        "Transaction <%s> transfer at index <%s> has already been applied on this chain."
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 

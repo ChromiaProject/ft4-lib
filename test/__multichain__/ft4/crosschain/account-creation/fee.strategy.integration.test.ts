@@ -24,6 +24,7 @@ import { open } from "@ft4/accounts/registration/strategies/open";
 import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
 
 let asset: Asset;
+let missingAsset: Asset;
 let senderConnection: Connection;
 let recipientConnection: Connection;
 let unrelatedConnection: Connection;
@@ -51,10 +52,33 @@ describe("Fee account creation single step", () => {
       "FEE_STRATEGY_TEST_ASSET_00",
       5,
     );
+
+    // based on the assumption that asset ID is:
+    // (name, blockchain_rid).hash()
+    const missingAssetId = gtv.gtvHash([
+      "fee_strategy_missing_test_asset_00",
+      multichain00.rid,
+    ]);
+
+    missingAsset = {
+      id: missingAssetId,
+      name: "fee_strategy_missing_test_asset_00",
+      symbol: "fee_strategy_missing_test_asset_00",
+      decimals: 5,
+      blockchainRid: multichain00.rid,
+      supply: 10000n,
+      iconUrl: "https://missing.asset",
+    };
     await registerCrosschainAsset(
       recipientConnection.client,
       adminUser().signatureProvider,
       asset,
+      multichain00.rid,
+    );
+    await registerCrosschainAsset(
+      recipientConnection.client,
+      adminUser().signatureProvider,
+      missingAsset,
       multichain00.rid,
     );
     await registerCrosschainAsset(
@@ -222,36 +246,15 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
-    // based on the assumption that asset ID is:
-    // (name, blockchain_rid).hash()
-    const missingAssetId = gtv.gtvHash([
-      "fee_strategy_missing_test_asset_00",
-      senderConnection.client.config.blockchainRid + "",
-    ]);
-
-    const _allowedAssets = (await recipientConnection.query(
-      allowedAssets(senderConnection.blockchainRid, recipientId, recipientId),
-    ))!;
-    const _feeAssets = await recipientConnection.query(feeAssets());
-
-    console.log("Allowed: ", _allowedAssets);
-    console.log("Fee: ", _feeAssets);
-    console.log("asset id: ", missingAssetId);
-
-    const recipientSessionPromise = await registerAccount(
+    const recipientSessionPromise = registerAccount(
       recipientConnection,
       keyStore,
-      fee(
-        senderConnection.blockchainRid,
-        {
-          id: missingAssetId,
-          blockchainRid: senderConnection.blockchainRid,
-        } as Asset,
-        authDescriptor,
-      ),
+      fee(senderConnection.blockchainRid, missingAsset, authDescriptor),
     );
 
-    await expect(recipientSessionPromise).rejects.toThrow();
+    await expect(recipientSessionPromise).rejects.toThrow(
+      "The specified asset could not be found",
+    );
 
     expect(
       (await recipientConnection.query(pendingTransferStrategies(recipientId)))
@@ -270,7 +273,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
-    const recipientSessionPromise = await registerAccount(
+    const recipientSessionPromise = registerAccount(
       recipientConnection,
       keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
@@ -311,7 +314,7 @@ describe("Fee account creation single step", () => {
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
-    const recipientSessionPromise = await registerAccount(
+    const recipientSessionPromise = registerAccount(
       recipientConnection,
       keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
