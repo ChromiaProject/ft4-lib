@@ -82,7 +82,7 @@ describe("Crosschain transfer", () => {
         const iccfProofOperation = await data.createProof(multichain01.rid);
         await transactionBuilder(account00.authenticator, connection01.client)
           .addWithoutAuthenticator(iccfProofOperation)
-          .add(applyTransferOp(data.tx, data.tx, 0))
+          .addWithoutAuthenticator(applyTransferOp(data.tx, data.tx, 0))
           .buildAndSend();
         resolve();
         return;
