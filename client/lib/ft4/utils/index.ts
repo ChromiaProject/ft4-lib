@@ -1,6 +1,7 @@
 import { AuthHandler, Connection } from "@ft4/types";
 import { Buffer } from "buffer";
 import {
+  GTX,
   IClient,
   KeyPair,
   Operation,
@@ -10,7 +11,7 @@ import {
   gtv,
   gtx,
 } from "postchain-client";
-import { BufferId, Config, TxBuilderTransaction } from "./types";
+import { BufferId, Config } from "./types";
 import { allAuthHandlers } from "./queries";
 import { FtKeyStore } from "@ft4/authentication";
 
@@ -20,7 +21,6 @@ export {
   TxContext,
   EntityRetriever,
   PaginatedEntity,
-  TxBuilderTransaction,
 } from "./types";
 
 export function nop(): Operation {
@@ -116,7 +116,7 @@ export async function createAndSignTransaction(
     args: args || [],
   }));
 
-  const transaction: TxBuilderTransaction = {
+  const transaction: GTX = {
     blockchainRid: connection.blockchainRid,
     operations: ops,
     signers: keyStores.map((keyStore) => keyStore.pubKey),

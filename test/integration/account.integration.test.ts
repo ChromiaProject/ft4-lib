@@ -169,7 +169,6 @@ describe("Test the account", () => {
         created: new Date(),
       },
       signatureProvider: user1.signatureProvider,
-      keyManagers: user1.keyManagers,
     };
 
     const ad = createMultiSigAuthDescriptorRegistration(

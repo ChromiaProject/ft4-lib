@@ -1,8 +1,8 @@
 import { Buffer } from "buffer";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
+import { BufferId, TxContext } from "@ft4/utils";
 import { AuthDataService, KeyHandler } from "../types";
 import { nullKeyStore } from "./key-store";
-import { Operation } from "postchain-client";
+import { GTX, Operation } from "postchain-client";
 import { nullAuthDescriptor } from "./auth-descriptor";
 
 export const noopKeyHandler: KeyHandler = Object.freeze({
@@ -15,7 +15,6 @@ export const noopKeyHandler: KeyHandler = Object.freeze({
     _context: TxContext,
     _authDataService: AuthDataService,
   ) => Promise.resolve([operation]),
-  sign: (_transaction: TxBuilderTransaction) =>
-    Promise.resolve(Buffer.alloc(64, 0)),
+  sign: (_transaction: GTX) => Promise.resolve(Buffer.alloc(64, 0)),
   getSigners: (): Buffer[] => [],
 });

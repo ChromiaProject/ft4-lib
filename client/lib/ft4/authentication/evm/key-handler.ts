@@ -1,4 +1,4 @@
-import { Operation, formatter } from "postchain-client";
+import { GTX, Operation, formatter } from "postchain-client";
 import { EvmKeyStore, evmAuth } from ".";
 import { hasAuthDescriptorFlags } from "../ft/key-handler";
 import {
@@ -8,7 +8,7 @@ import {
 } from "@ft4/authentication";
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
-import { TxBuilderTransaction, TxContext } from "@ft4/utils/types";
+import { TxContext } from "@ft4/utils/types";
 
 export function createEvmKeyHandler(
   authDescriptor: AnyAuthDescriptor,
@@ -33,7 +33,7 @@ export function createEvmKeyHandler(
         context,
         keyStore,
       ),
-    sign: (_transaction: TxBuilderTransaction) =>
+    sign: (_transaction: GTX) =>
       Promise.reject("Cannot sign the transaction with an EVM key store"),
     getSigners: () => [],
   });
