@@ -17,6 +17,7 @@ import { Connection, Session } from "@ft4/types";
 import { AuthenticatedAccount } from "@ft4/accounts";
 import { Blockchain } from "../../../util/types";
 import { Amount, Asset } from "@ft4/asset";
+import { numberGenerator } from "@ft4/util/util";
 
 export type TestContext = {
   connection0: Connection;
@@ -33,13 +34,6 @@ export type TestContext = {
   multichain2: Blockchain;
   sampleAsset: Asset;
 };
-
-function* numberGenerator(): Generator<number> {
-  let count = 0;
-  while (true) {
-    yield count++;
-  }
-}
 
 const gen = numberGenerator();
 

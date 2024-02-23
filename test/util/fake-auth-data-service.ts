@@ -4,12 +4,13 @@ import { Connection } from "@ft4/index";
 import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 import { Operation } from "postchain-client";
+import { asyncNumberGenerator } from "./util";
 
 export function createFakeAuthDataService(
   data: { [operation: string]: AuthData },
   isOperationExposedFn?: (operationName: string) => Promise<boolean>,
 ): AuthDataService {
-  const generator = numberGenerator();
+  const generator = asyncNumberGenerator();
   return {
     connection: {
       client: {
@@ -36,13 +37,6 @@ export function createFakeAuthDataService(
       adIds: Buffer[],
     ) => Promise.resolve(adIds[0]),
   };
-}
-
-function* numberGenerator(): Generator<Promise<number>> {
-  let count = 0;
-  while (true) {
-    yield Promise.resolve(count++);
-  }
 }
 
 export type AuthData = {
