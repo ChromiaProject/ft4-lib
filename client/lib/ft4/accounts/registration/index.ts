@@ -23,7 +23,7 @@ export async function registerAccount(
   registerAccountOperation: Operation = registerAccountOp(),
 ): Promise<SessionWithLogout> {
   const { strategyOperation, loginKeyStore, disposableKeyStore } =
-    await strategy.getRegistrationDetails(connection);
+    await strategy.getRegistrationDetails(connection, masterKeyStore);
 
   // TODO: update strategy to return account id and then use the value here
   const accountId = gtv.gtvHash(masterKeyStore.id);
@@ -93,3 +93,5 @@ async function evmSignaturesOperation(
   const signature = await keyStore.signMessage(message);
   return registerAccountEvmSignatures([signature]);
 }
+
+export { StrategyError } from "./types";

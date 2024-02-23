@@ -1,10 +1,10 @@
 @test module;
 
 import ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
+import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
 
-function test_get_fee_config_reads_yml_correctly() {
-    val config = fee.fee_assets();
+function test_get_subscription_config_reads_yml_correctly() {
+    val config = subscription.subscription_assets();
     val expected = [
         transfer.fee_asset(id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa", amount = 2L),
         transfer.fee_asset(
@@ -20,5 +20,9 @@ function test_get_fee_config_reads_yml_correctly() {
     ];
     assert_equals(config, expected);
 
-    assert_equals(fee.fee_account_id(), rell.test.pubkeys.trudy);
+    assert_equals(subscription.subscription_period_days(), 30);
+
+    assert_equals(subscription.free_operations(), set(["free_operation"]));
+
+    assert_equals(subscription.subscription_account_id(), rell.test.pubkeys.charlie);
 }

@@ -122,3 +122,13 @@ function do_transfer(accounts.account, strategy: text) {
     }
     require(enough_transferred, "Insufficient amount of asset transferred");
 }
+
+function ensure_fee_account(custom_account_id: byte_array?, blockchain_rid: byte_array): accounts.account {
+    if (custom_account_id != null) {
+        return accounts.Account(custom_account_id);
+    } else {
+        val fee_account_id = ("FEE" + chain_context.blockchain_rid).hash();
+        return accounts.account @? { .id == fee_account_id }
+            ?: create accounts.account(id = fee_account_id);
+    }
+}
