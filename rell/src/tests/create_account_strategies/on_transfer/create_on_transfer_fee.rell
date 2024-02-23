@@ -14,9 +14,7 @@ import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_fee_success() {
-    rell.test.tx()
-        .op(helpers.create_system_account(rell.test.pubkeys.trudy))
-        .run();
+    helpers.create_system_account(rell.test.pubkeys.trudy).run();
     val fee_account = accounts.Account(rell.test.pubkeys.trudy);
 
     val alice = utils.register_alice();
