@@ -1,0 +1,165 @@
+@test
+module;
+
+import ^^^^.lib.ft4.accounts;
+import ^^^^.lib.ft4.assets;
+import ^^^^.lib.ft4.ft4_basic_dev.*;
+import test_utils: ^^^^.lib.ft4.test.utils;
+import strategies: ^^^^.lib.ft4.accounts.strategies;
+import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
+import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
+import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
+import ^^^.assets.utils;
+import auth_ext: ^^^^.lib.ft4.auth.external;
+import xchain_ext: ^^^^.lib.ft4.crosschain.external;
+import iccf_op: ^^^.operations.iccf_op;
+import ^.helpers;
+
+function test_create_account_on_internal_transfer_with_subscription() {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 20);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = 10L;
+
+    val subscription_assets = map(subscription.get_subscription_assets());
+    val subscription_amount = subscription_assets[asset.id];
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+    assert_not_null(create_on_transfer.account_creation_transfer @? {
+        .sender_blockchain_rid == chain_context.blockchain_rid,
+        .sender_id == sender.id,
+        recipient_id,
+        asset,
+        amount,
+        .state == create_on_transfer.account_creation_state.pending
+    });
+    assert_true("subscription" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+
+    var last_block_time = rell.test.last_block_time;
+    rell.test.tx()
+        .op(subscription.ras_transfer_subscription(asset.id, utils.create_auth_descriptor(rell.test.pubkeys.bob)))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    val bob = accounts.account_by_id(recipient_id);
+
+    assert_equals(assets.get_asset_balance(bob, asset), amount - subscription_amount);
+    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), subscription_amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        1
+    );
+    assert_equals(subscription.get_subscription_details(bob.id), (
+        asset_id = asset.id,
+        period_millis = 30 * subscription.MILLIS_PER_DAY,
+        last_payment = last_block_time
+    ));
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.free_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    // Subscription has now expired
+    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 31);
+    rell.test.block().run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("Subscription has expired");
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.free_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    assert_equals(subscription.get_subscription_period_millis(), 30 * subscription.MILLIS_PER_DAY);
+
+    last_block_time = rell.test.last_block_time;
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(subscription.renew_subscription(null))
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+    assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
+    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), 2 * subscription_amount);
+    assert_equals(subscription.get_subscription_details(bob.id), (
+        asset_id = asset.id,
+        period_millis = 30 * subscription.MILLIS_PER_DAY,
+        last_payment = last_block_time
+    ));
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.free_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    // Renew subscription before it has expired...
+    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 2);
+    rell.test.block().run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(subscription.renew_subscription(asset.id))
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    // ...should extend next period
+    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 31);
+    rell.test.block().run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+}

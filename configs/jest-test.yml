@@ -21,15 +21,26 @@ blockchains:
                 min_amount: 5L
               - name: transfer_fee_strategy_asset
                 min_amount: 5L
+              - name: transfer_subscription_strategy_asset
+                min_amount: 5L
             timeout_days: 1
             strategy:
               - "open"
               - "fee"
+              - "subscription"
 
       lib.ft4.accounts.strategies.transfer.fee:
         asset:
           name: transfer_fee_strategy_asset
           amount: 2L
+
+      lib.ft4.accounts.strategies.transfer.subscription:
+        asset:
+          name: transfer_subscription_strategy_asset
+          amount: 2L
+        subscription_period_days: 30
+        free_operations:
+          - free_operation
 
 libs:
   iccf:
