@@ -13,14 +13,6 @@ operation register_crosschain_asset(
     icon_url: text,
     origin_blockchain_rid: byte_array
 ) {
-    require(origin_blockchain_rid.size() > 0, "origin_blockchain_rid cannot be empty");
     admin.require_admin();
-    val asset = assets.Unsafe.register_asset(
-        name,
-        symbol,
-        decimals,
-        issuing_blockchain_rid,
-        icon_url
-    );
-    create crosschain.asset_origin(asset, origin_blockchain_rid);
+    crosschain.Unsafe.register_crosschain_asset(name, symbol, decimals, issuing_blockchain_rid, icon_url, origin_blockchain_rid);
 }
