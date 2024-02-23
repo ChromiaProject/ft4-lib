@@ -102,7 +102,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     last_block_time = rell.test.last_block_time;
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
-        .op(subscription.renew_subscription())
+        .op(subscription.renew_subscription(null))
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();
@@ -137,7 +137,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
-        .op(subscription.renew_subscription())
+        .op(subscription.renew_subscription(asset.id))
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();

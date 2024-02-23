@@ -97,7 +97,7 @@ describe("Test transfer with subscription", () => {
     );
     expect(lastPayment1).toBeGreaterThan(0);
 
-    await session.call(renewSubscription());
+    await session.call(renewSubscription(null));
 
     const assetBalance2 = await session.account.getBalanceByAssetId(asset.id);
     expect(assetBalance2!.amount.value).toBe(
