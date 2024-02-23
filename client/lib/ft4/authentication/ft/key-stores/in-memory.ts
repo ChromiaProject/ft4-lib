@@ -2,11 +2,11 @@ import {
   KeyPair,
   SignatureProvider,
   newSignatureProvider,
+  RawGtxBody,
 } from "postchain-client";
 import { FtKeyStore, createFtKeyHandler } from "..";
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { TxBuilderTransaction } from "@ft4/utils/types";
-import { txDigest } from "@ft4/utils/transaction-builder";
 
 export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider,
@@ -19,10 +19,20 @@ export function createInMemoryFtKeyStore(
     pubKey: signatureProvider.pubKey,
     isInteractive: false,
     sign: (transaction: TxBuilderTransaction) =>
-      signatureProvider.sign(txDigest(transaction)),
+      signatureProvider.sign(txBuilderTransactionToRawGtxBody(transaction)),
     createKeyHandler: (ad: AnyAuthDescriptor) =>
       createFtKeyHandler(ad, keyStore),
   });
 
   return keyStore;
+}
+
+function txBuilderTransactionToRawGtxBody(
+  tx: TxBuilderTransaction,
+): RawGtxBody {
+  return [
+    tx.blockchainRid,
+    tx.operations.map((op) => [op.opName, op.args]),
+    tx.signers,
+  ];
 }

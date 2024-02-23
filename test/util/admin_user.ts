@@ -1,4 +1,10 @@
-import { Operation, encryption, gtx } from "postchain-client";
+import {
+  Operation,
+  encryption,
+  gtx,
+  RawGtxBody,
+  getDigestToSignFromRawGtxBody,
+} from "postchain-client";
 import { KeyManager } from "@ft4/accounts/auth/types";
 import { Buffer } from "buffer";
 import { User } from "./test-user";
@@ -31,7 +37,8 @@ export default function adminUser(): User {
       "036CED8CC605AD61F95A79CCCB5A5C8CCB734A106FD67D54809A69C4BEB5103F28",
       "hex",
     ),
-    sign: (gtx: Buffer) => Promise.resolve(gtx),
+    sign: (txBody: RawGtxBody) =>
+      Promise.resolve(getDigestToSignFromRawGtxBody(txBody)),
   };
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [FlagsType.Account, FlagsType.Transfer],

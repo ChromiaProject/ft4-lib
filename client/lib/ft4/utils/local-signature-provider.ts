@@ -3,6 +3,8 @@ import {
   KeyPair,
   encryption,
   formatter,
+  RawGtxBody,
+  getDigestToSignFromRawGtxBody,
 } from "postchain-client";
 import { Buffer } from "buffer";
 import { getPubkey } from ".";
@@ -41,8 +43,11 @@ export const createLocalStorageSignatureProvider = (
 
   return Object.freeze({
     pubKey: getPubkey(kp),
-    sign: async (gtx: Buffer) =>
-      encryption.signDigest(gtx, formatter.ensureBuffer(kp.privKey)),
+    sign: async (tx: RawGtxBody) =>
+      encryption.signDigest(
+        getDigestToSignFromRawGtxBody(tx),
+        formatter.ensureBuffer(kp.privKey),
+      ),
   });
 };
 

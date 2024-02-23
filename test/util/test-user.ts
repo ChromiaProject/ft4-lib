@@ -1,9 +1,11 @@
 import { Buffer } from "buffer";
 import {
   encryption,
+  getDigestToSignFromRawGtxBody,
   gtx,
   KeyPair,
   Operation,
+  RawGtxBody,
   SignatureProvider,
 } from "postchain-client";
 import {
@@ -39,7 +41,8 @@ export function newSingleSigUser(
       "036CED8CC605AD61F95A79CCCB5A5C8CCB734A106FD67D54809A69C4BEB5103F28",
       "hex",
     ),
-    sign: (gtx: Buffer) => Promise.resolve(gtx),
+    sign: (gtx: RawGtxBody) =>
+      Promise.resolve(getDigestToSignFromRawGtxBody(gtx)),
   };
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
     [FlagsType.Account, FlagsType.Transfer],
