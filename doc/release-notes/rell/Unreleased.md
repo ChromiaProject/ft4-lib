@@ -1,6 +1,6 @@
 ## [Unreleased] - 2024-xx-xx
 
-### Changed
+### Changed 🪙
 
 - Return created account from _register_account() function
 
@@ -9,3 +9,7 @@
     - after_init_transfer
     - before_apply_transfer
     - after_apply_transfer
+
+### Added ✅
+
+- `register_crosschain_asset` function
