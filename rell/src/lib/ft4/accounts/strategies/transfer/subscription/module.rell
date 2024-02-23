@@ -13,7 +13,7 @@ val MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
 entity subscription {
     key accounts.account;
     assets.asset;
-    amount: big_integer;
+    mutable amount: big_integer;
     mutable period_millis: integer;
     mutable last_payment: timestamp;
 }
@@ -83,6 +83,12 @@ operation renew_subscription() {
    		subscription.asset,
    		subscription.amount);
 
+    val subscription_assets = fee.resolve_fee_assets(subscription_assets());
+    // TODO what do to in this case?
+    val subscription_amount = require(subscription_assets.get_or_null(subscription.asset.id),
+        "Asset <%s> is no longer allowed to pay subscription with".format(subscription.asset.id));
+
+    subscription.amount = subscription_amount;
     subscription.period_millis = subscription_period_days() * MILLIS_PER_DAY;
     subscription.last_payment = accounts.latest_time();
 }
