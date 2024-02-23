@@ -1,5 +1,13 @@
 ## [Unreleased] - 2024-xx-xx
 
+### Breaking 💔
+
+- Change mount name of `lib.ft4.accounts` module from `ft` to `ft4`, affecting these entities:
+    - account
+    - account_auth_descriptor
+    - auth_descriptor_signer
+    - rl_state
+
 ### Changed 🪙
 
 - Return created account from _register_account() function
