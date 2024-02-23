@@ -12,6 +12,8 @@
     - before_apply_transfer
     - after_apply_transfer
 
+- `register_crosschain_asset` function
+
 - account creation strategies
     - create on transfer
         - subscription
