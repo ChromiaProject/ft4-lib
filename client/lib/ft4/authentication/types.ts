@@ -1,9 +1,9 @@
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor";
 import { AuthHandler } from "@ft4/types";
 import { Connection } from "@ft4/index";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
+import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { Operation } from "postchain-client";
+import { GTX, Operation } from "postchain-client";
 import { LoginConfig } from "./login-manager";
 export class KeyHandlerError extends Error {
   constructor(msg?: string) {
@@ -37,7 +37,7 @@ export interface KeyHandler {
     authDataService: AuthDataService,
   ): Promise<Operation[]>;
 
-  sign(transaction: TxBuilderTransaction): Promise<Buffer>;
+  sign(transaction: GTX): Promise<Buffer>;
 
   // FIXME
   getSigners(): Buffer[];

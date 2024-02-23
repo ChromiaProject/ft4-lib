@@ -1,5 +1,6 @@
 import { Authenticator, FtKeyStore } from "@ft4/authentication";
 import {
+  GTX,
   IClient,
   Operation,
   RawGtx,
@@ -7,7 +8,7 @@ import {
   TransactionReceipt,
 } from "postchain-client";
 import { BufferId } from "@ft4/utils";
-import { RequireTogether, TxBuilderTransaction } from "../types";
+import { RequireTogether } from "../types";
 
 export type TransactionBuilder = {
   /**
@@ -64,7 +65,7 @@ export type TransactionBuilder = {
    * @param signers array of signers that should sign this transaction
    * @returns A promise containing the signed transaction
    */
-  buildUnsigned: () => Promise<TxBuilderTransaction>;
+  buildUnsigned: () => Promise<GTX>;
 
   /**
    * Build the transaction and submits it to the blockchain. Will return
