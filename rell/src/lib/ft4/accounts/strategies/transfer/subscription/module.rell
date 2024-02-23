@@ -6,7 +6,6 @@ import ^^^^.assets;
 import ^^^^.auth;
 import ^^^.strategies;
 import transfer: ^;
-import ^.fee;
 
 val MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -38,13 +37,13 @@ function transfer_action(accounts.account, strategy_params_gtv: gtv) {
 	transfer.do_transfer(account, "subscription");
 
 	val strategy_params = struct<ras_transfer_subscription>.from_gtv(strategy_params_gtv);
-    val subscription_assets = fee.resolve_fee_assets(subscription_assets());
+    val subscription_assets = transfer.resolve_fee_assets(subscription_assets());
 	val subscription_amount = require(subscription_assets.get_or_null(strategy_params.asset_id),
         "Asset <%s> is not allowed to pay subscription with".format(strategy_params.asset_id));
     val asset = assets.Asset(strategy_params.asset_id);
 	assets.Unsafe.transfer(
 		account,
-		fee.ensure_fee_account(chain_context.blockchain_rid),
+		transfer.ensure_fee_account(subscription_account_id(), chain_context.blockchain_rid),
 		asset,
 		subscription_amount);
 
@@ -79,11 +78,11 @@ operation renew_subscription() {
 
     assets.Unsafe.transfer(
    		account,
-   		fee.ensure_fee_account(chain_context.blockchain_rid),
+   		transfer.ensure_fee_account(subscription_account_id(), chain_context.blockchain_rid),
    		subscription.asset,
    		subscription.amount);
 
-    val subscription_assets = fee.resolve_fee_assets(subscription_assets());
+    val subscription_assets = transfer.resolve_fee_assets(subscription_assets());
     // TODO what do to in this case?
     val subscription_amount = require(subscription_assets.get_or_null(subscription.asset.id),
         "Asset <%s> is no longer allowed to pay subscription with".format(subscription.asset.id));

@@ -1,4 +1,5 @@
 @test module;
+
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 
 function test_get_config_reads_yml_correctly() {
