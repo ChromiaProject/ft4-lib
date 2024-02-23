@@ -1,7 +1,7 @@
-import { Operation, formatter } from "postchain-client";
+import { GTX, Operation, formatter } from "postchain-client";
 import { KeyStore } from "..";
 import { Buffer } from "buffer";
-import { BufferId, TxBuilderTransaction } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils/types";
 
 export function ftAuth(
   accountId: BufferId,
@@ -18,7 +18,7 @@ export function ftAuth(
 
 export interface FtKeyStore extends KeyStore {
   pubKey: Buffer;
-  sign(transaction: TxBuilderTransaction): Promise<Buffer>;
+  sign(transaction: GTX): Promise<Buffer>;
 }
 
 export { createInMemoryFtKeyStore } from "./key-stores/in-memory";

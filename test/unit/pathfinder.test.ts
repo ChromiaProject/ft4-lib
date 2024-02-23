@@ -29,7 +29,7 @@ jest.mock("postchain-client", () => {
 });
 
 import { generateId } from "../util/util";
-import { IClient, formatter } from "postchain-client";
+import { IClient, MissingNodeUrlError, formatter } from "postchain-client";
 import { Connection } from "@ft4/types";
 import { createStubClient } from "../util/blockchain-util";
 import { createConnection } from "@ft4/index";
@@ -142,7 +142,7 @@ describe("Pathfinder", () => {
     );
     const promise = findPathToChainForAsset(connection, asset, endingChainRid);
 
-    await expect(promise).rejects.toThrow(TypeError("Invalid URL"));
+    await expect(promise).rejects.toThrow(MissingNodeUrlError);
   });
 
   it("finds a path if both are on the same branch", async () => {
