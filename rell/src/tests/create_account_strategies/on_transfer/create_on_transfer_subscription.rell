@@ -26,11 +26,11 @@ function test_create_account_on_internal_transfer_with_subscription() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    utils.mint_to_account(alice, asset, 20);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
-    val amount = min_amount;
+    val amount = 10L;
 
     val subscription_assets = map(subscription.get_subscription_assets());
     val subscription_amount = subscription_assets[asset.id];
@@ -108,6 +108,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(subscription.renew_subscription())
+        .nop()
         .sign(rell.test.keypairs.bob)
         .run();
     assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
@@ -124,6 +125,35 @@ function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.free_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    // Renew subscription before it has expired...
+    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 2);
+    rell.test.block().run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(subscription.renew_subscription())
+        .nop()
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    // ...should extend next period
+    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 31);
+    rell.test.block().run();
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(helpers.regular_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();

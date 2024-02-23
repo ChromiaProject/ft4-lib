@@ -10,8 +10,7 @@ operation create_system_account(id: byte_array) {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(regular_operation).mount_name,
-    flags = [],
-    message = empty_message(*)
+    flags = []
 );
 
 operation regular_operation() {
@@ -21,14 +20,9 @@ operation regular_operation() {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(free_operation).mount_name,
-    flags = [],
-    message = empty_message(*)
+    flags = []
 );
 
 operation free_operation() {
   auth.authenticate();
-}
-
-function empty_message(gtv) {
-  return "";
 }
