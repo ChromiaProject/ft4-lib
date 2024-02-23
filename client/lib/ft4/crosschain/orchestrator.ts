@@ -75,7 +75,10 @@ export async function createOrchestrator(
     throw new FactoryError(ErrorMessages.FAILED_TO_FIND_PATH, error);
   }
 
-  const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
+  const { state, ...orchestrator } = await createBaseOrchestrator(
+    session,
+    path,
+  );
 
   /**
    * Initialize the transfer by creating the initial transaction.
@@ -125,7 +128,7 @@ export async function createOrchestrator(
 
       if (!state.tx || !state.initialTx) {
         throw new OrchestratorError(
-          "Unable to perform transfer as tx was not applied propperly",
+          "Unable to perform transfer as tx was not applied properly",
         );
       }
       await orchestrator.walkPath();
@@ -154,7 +157,10 @@ export async function createResumeOrchestrator(
   const initTransferOpArgs = operations[pendingTransfer.opIndex][1];
   const path = initTransferOpArgs[3] as Buffer[];
 
-  const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
+  const { state, ...orchestrator } = await createBaseOrchestrator(
+    session,
+    path,
+  );
 
   /**
    * Accepts a cross chain transfer that was not completed
@@ -221,7 +227,7 @@ export async function createResumeOrchestrator(
   });
 }
 
-async function createBaseOrcestrator(
+async function createBaseOrchestrator(
   session: Session,
   path: Buffer[],
 ): Promise<OrchestratorBase> {

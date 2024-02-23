@@ -58,7 +58,7 @@ function test_create_account_on_internal_transfer_success() {
     );
 }
 
-function test_internal_transfer_fails_if_wrong_asset_is_transfereed() {
+function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
     val alice = utils.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -99,7 +99,7 @@ function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
         .run_must_fail("This asset is already transferred");
 }
 
-function test_internal_transfer_fails_if_insufficient_amount_is_transfereed() {
+function test_internal_transfer_fails_if_insufficient_amount_is_transferred() {
     val alice = utils.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -290,7 +290,7 @@ function test_create_account_on_crosschain_transfer_success() {
     );
 }
 
-function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
+function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -321,7 +321,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
         .run_must_fail("No suitable transfer strategy found");
 }
 
-function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
+function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -363,7 +363,7 @@ function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
         .run_must_fail("This asset is already transferred");
 }
 
-function test_crosschain_transfer_fails_if_insufficient_amount_is_transfereed() {
+function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val recipient_id = rell.test.pubkeys.bob.hash();
