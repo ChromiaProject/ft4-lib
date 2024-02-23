@@ -1,21 +1,24 @@
 @test module;
 
+import ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
 
 function test_get_fee_config_reads_yml_correctly() {
     val config = fee.fee_assets();
     val expected = [
-        fee.fee_asset(id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa", amount = 2L),
-        fee.fee_asset(
+        transfer.fee_asset(id = x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa", amount = 2L),
+        transfer.fee_asset(
             issuing_blockchain_rid = x"0000000000000000000000000000000000000000000000000000000000000000", // current blockchain_rid in Rell tests
             name = "test1",
             amount = 1L
         ),
-        fee.fee_asset(
+        transfer.fee_asset(
             issuing_blockchain_rid = x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb",
             name = "test1",
             amount = 3L
         )
     ];
     assert_equals(config, expected);
+
+    assert_equals(fee.fee_account_id(), rell.test.pubkeys.trudy);
 }

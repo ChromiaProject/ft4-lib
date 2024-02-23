@@ -7,7 +7,6 @@ import ^^^^.lib.ft4.ft4_basic_dev.*;
 import test_utils: ^^^^.lib.ft4.test.utils;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
 import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
 import ^^^.assets.utils;
 import auth_ext: ^^^^.lib.ft4.auth.external;
@@ -16,6 +15,11 @@ import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_subscription() {
+    rell.test.tx()
+        .op(helpers.create_system_account(rell.test.pubkeys.charlie))
+        .run();
+    val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
+
     val alice = utils.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -60,7 +64,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     val bob = accounts.account_by_id(recipient_id);
 
     assert_equals(assets.get_asset_balance(bob, asset), amount - subscription_amount);
-    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), subscription_amount);
+    assert_equals(assets.get_asset_balance(subscription_account, asset), subscription_amount);
     assert_equals(
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1
@@ -113,7 +117,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .sign(rell.test.keypairs.bob)
         .run();
     assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
-    assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), 2 * subscription_amount);
+    assert_equals(assets.get_asset_balance(subscription_account, asset), 2 * subscription_amount);
     assert_equals(subscription.get_subscription_details(bob.id), (
         asset_id = asset.id,
         period_millis = 30 * subscription.MILLIS_PER_DAY,

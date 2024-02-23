@@ -1,6 +1,11 @@
 module;
 
+import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.auth;
+
+operation create_system_account(id: byte_array) {
+    create accounts.account(id);
+}
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
