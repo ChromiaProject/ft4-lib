@@ -65,7 +65,11 @@ function test_create_account_on_internal_transfer_with_subscription() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1
     );
-    assert_equals(subscription.get_subscription_last_payment(bob.id), last_block_time);
+    assert_equals(subscription.get_subscription_details(bob.id), (
+        asset_id = asset.id,
+        period_millis = 30 * subscription.MILLIS_PER_DAY,
+        last_payment = last_block_time
+    ));
 
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
@@ -108,7 +112,11 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
     assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
     assert_equals(assets.get_asset_balance(fee.ensure_fee_account(chain_context.blockchain_rid), asset), 2 * subscription_amount);
-    assert_equals(subscription.get_subscription_last_payment(bob.id), last_block_time);
+    assert_equals(subscription.get_subscription_details(bob.id), (
+        asset_id = asset.id,
+        period_millis = 30 * subscription.MILLIS_PER_DAY,
+        last_payment = last_block_time
+    ));
 
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))

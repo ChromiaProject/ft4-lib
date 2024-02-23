@@ -12,11 +12,14 @@ export function subscriptionAssets(): QueryObject<
   };
 }
 
-export function subscriptionLastPayment(
+export function subscriptionDetails(
   accountId: BufferId,
-): QueryObject<number, { account_id: Buffer }> {
+): QueryObject<
+  { asset_id: Buffer; period_millis: number; last_payment: number },
+  { account_id: Buffer }
+> {
   return {
-    name: "ft4.get_subscription_last_payment",
+    name: "ft4.get_subscription_details",
     args: {
       account_id: formatter.ensureBuffer(accountId),
     },

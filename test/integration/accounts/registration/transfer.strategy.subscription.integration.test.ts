@@ -16,7 +16,7 @@ import { transferSubscription } from "@ft4/accounts/registration/strategies/tran
 import { subscriptionAssets } from "@ft4/accounts/registration/strategies/transfer/subscription/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { createAmountFromBalance } from "@ft4/index";
-import { subscriptionLastPayment } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
+import { subscriptionDetails } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
 import { renewSubscription } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
 
 let connection: Connection;
@@ -92,8 +92,8 @@ describe("Test transfer with subscription", () => {
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
 
-    const lastPayment1 = await connection.query(
-      subscriptionLastPayment(recipientId),
+    const { last_payment: lastPayment1 } = await connection.query(
+      subscriptionDetails(recipientId),
     );
     expect(lastPayment1).toBeGreaterThan(0);
 
@@ -104,8 +104,8 @@ describe("Test transfer with subscription", () => {
       amount.value - 2n * rawSubscriptionAmount!,
     );
 
-    const lastPayment2 = await connection.query(
-      subscriptionLastPayment(recipientId),
+    const { last_payment: lastPayment2 } = await connection.query(
+      subscriptionDetails(recipientId),
     );
     expect(lastPayment2).toBeGreaterThan(lastPayment1);
   });
