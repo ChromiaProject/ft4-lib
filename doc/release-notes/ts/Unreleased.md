@@ -1,6 +1,6 @@
 ## [Unreleased] - 2024-xx-xx
 
-### Changed 🪙
+### Breaking 💔
 
 - updated `postchain-client` version to 1.15
 
