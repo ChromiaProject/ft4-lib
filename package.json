@@ -30,6 +30,7 @@
     "multichain:demo": "./scripts/multichain-rundemo.sh",
     "deploy:latest": "./scripts/deploy.sh",
     "deploy:stable": "./scripts/deploy.sh --stable",
+    "compile": "rimraf dist && tsc --project tsconfig.dist.json",
     "build": "rimraf dist && tsc --project tsconfig.dist.json && tsc-alias -p tsconfig.dist.json && rollup -c rollup.config.mjs",
     "prepublishOnly": "npm run build",
     "prepare": "husky install"
