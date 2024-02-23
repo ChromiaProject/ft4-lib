@@ -24,5 +24,5 @@ function test_get_subscription_config_reads_yml_correctly() {
 
     assert_equals(subscription.free_operations(), set(["free_operation"]));
 
-    assert_equals(subscription.subscription_account_id(), rell.test.pubkeys.trudy);
+    assert_equals(subscription.subscription_account_id(), rell.test.pubkeys.charlie);
 }

@@ -16,9 +16,9 @@ import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.tx()
-        .op(helpers.create_system_account(rell.test.pubkeys.trudy))
+        .op(helpers.create_system_account(rell.test.pubkeys.charlie))
         .run();
-    val subscription_account = accounts.Account(rell.test.pubkeys.trudy);
+    val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
 
     val alice = utils.register_alice();
     val sender = alice.account;
