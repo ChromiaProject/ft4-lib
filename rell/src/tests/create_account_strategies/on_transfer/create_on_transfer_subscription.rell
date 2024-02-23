@@ -103,6 +103,8 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .sign(rell.test.keypairs.bob)
         .run();
 
+    assert_equals(subscription.get_subscription_period_millis(), 30 * subscription.MILLIS_PER_DAY);
+
     last_block_time = rell.test.last_block_time;
     rell.test.tx()
         .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))

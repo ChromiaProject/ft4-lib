@@ -18,6 +18,7 @@ import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/qu
 import { createAmountFromBalance } from "@ft4/index";
 import { subscriptionDetails } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
 import { renewSubscription } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
+import { subscriptionPeriodMillis } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
 
 let connection: Connection;
 let asset: Asset;
@@ -96,6 +97,10 @@ describe("Test transfer with subscription", () => {
       subscriptionDetails(recipientId),
     );
     expect(lastPayment1).toBeGreaterThan(0);
+
+    expect(await connection.query(subscriptionPeriodMillis())).toBeGreaterThan(
+      0,
+    );
 
     await session.call(renewSubscription(null));
 

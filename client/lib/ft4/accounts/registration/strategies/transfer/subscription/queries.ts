@@ -25,3 +25,10 @@ export function subscriptionDetails(
     },
   };
 }
+
+export function subscriptionPeriodMillis(): QueryObject<number> {
+  return {
+    name: "ft4.get_subscription_period_millis",
+    args: {},
+  };
+}

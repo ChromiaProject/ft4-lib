@@ -7,3 +7,5 @@ query get_subscription_details(account_id: byte_array): (asset_id: byte_array, p
     return require(subscription @? { account } (asset_id = .asset.id, period_millis = .period_millis, last_payment = .last_payment),
         "No subscription for account <%s>".format(account.id));
 }
+
+query get_subscription_period_millis(): integer = subscription_period_days() * MILLIS_PER_DAY;
