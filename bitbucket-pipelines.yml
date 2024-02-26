@@ -107,7 +107,7 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
-    Multichain e2e-tests:
+    Multichain tests:
       - step:
           caches:
             - node
@@ -118,7 +118,6 @@ pipelines:
             - chr install -s configs/rell-test.yml
             - npm ci
             - ./scripts/multichain-jesttest.sh
-          trigger: manual
 definitions:
   caches:
     demo-node: examples/demo/client/node_modules
