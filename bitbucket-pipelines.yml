@@ -113,11 +113,11 @@ pipelines:
             - node
           services:
             - postgres
+            - docker
           script:
             - apt update
             - apt install -y bash
             - ./install-chr-and-pmc.sh
-            - chr install -s configs/rell-test.yml
             - npm ci
             - /bin/bash scripts/multichain-jesttest.sh
 definitions:
