@@ -67,6 +67,7 @@ pipelines:
               - node
             services:
               - postgres
+              - docker
             script:
               - ./install-chr-and-pmc.sh
               - chr install -s configs/rell-test.yml
@@ -113,8 +114,10 @@ pipelines:
             - node
           services:
             - postgres
+            - docker
           script:
             - ./install-chr-and-pmc.sh
+            - ls
             - chr install -s configs/rell-test.yml
             - npm ci
             - ./scripts/multichain-jesttest.sh
