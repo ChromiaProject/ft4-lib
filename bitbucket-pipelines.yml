@@ -111,9 +111,6 @@ pipelines:
       - step:
           caches:
             - node
-          services:
-            - postgres
-            - docker
           script:
             - apt update
             - apt install -y bash
