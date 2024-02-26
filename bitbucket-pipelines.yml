@@ -117,7 +117,7 @@ pipelines:
             - ./install-chr-and-pmc.sh
             - chr install -s configs/rell-test.yml
             - npm ci
-            - ls -l scripts
+            - sudo apt install -y bash
             - /bin/bash scripts/multichain-jesttest.sh
 definitions:
   caches:
