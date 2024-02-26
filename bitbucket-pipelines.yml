@@ -114,10 +114,11 @@ pipelines:
           services:
             - postgres
           script:
+            - apt update
+            - apt install -y bash
             - ./install-chr-and-pmc.sh
             - chr install -s configs/rell-test.yml
             - npm ci
-            - apt-get install -y bash
             - /bin/bash scripts/multichain-jesttest.sh
 definitions:
   caches:
