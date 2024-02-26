@@ -24,7 +24,7 @@ import { open } from "@ft4/accounts/registration/strategies/open";
 import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
 
 let asset: Asset;
-let missingAsset: Asset;
+let nonExistentChain00Asset: Asset;
 let senderConnection: Connection;
 let recipientConnection: Connection;
 let unrelatedConnection: Connection;
@@ -60,7 +60,7 @@ describe("Fee account creation single step", () => {
       multichain00.rid,
     ]);
 
-    missingAsset = {
+    nonExistentChain00Asset = {
       id: missingAssetId,
       name: "fee_strategy_missing_test_asset_00",
       symbol: "fee_strategy_missing_test_asset_00",
@@ -78,7 +78,7 @@ describe("Fee account creation single step", () => {
     await registerCrosschainAsset(
       recipientConnection.client,
       adminUser().signatureProvider,
-      missingAsset,
+      nonExistentChain00Asset,
       multichain00.rid,
     );
     await registerCrosschainAsset(
@@ -249,7 +249,11 @@ describe("Fee account creation single step", () => {
     const recipientSessionPromise = registerAccount(
       recipientConnection,
       keyStore,
-      fee(senderConnection.blockchainRid, missingAsset, authDescriptor),
+      fee(
+        senderConnection.blockchainRid,
+        nonExistentChain00Asset,
+        authDescriptor,
+      ),
     );
 
     await expect(recipientSessionPromise).rejects.toThrow(
