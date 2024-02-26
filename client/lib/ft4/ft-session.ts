@@ -43,7 +43,6 @@ import {
   createAuthenticator,
 } from "./authentication";
 import { createLoginManager } from "./authentication/login-manager";
-import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import { authMessageTemplate, nonce } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
@@ -245,8 +244,7 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
-    getLoginManager: (loginKeyStore?: LoginKeyStore) =>
-      createLoginManager(connection, keyStore, loginKeyStore),
+    getLoginManager: () => createLoginManager(connection, keyStore),
     onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
       ftEventEmitter.on("KeyStoreChange", (newKeyStore: KeyStore) =>
         handler(createKeyStoreInteractor(client, newKeyStore)),

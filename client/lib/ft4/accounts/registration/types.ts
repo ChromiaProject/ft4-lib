@@ -1,5 +1,6 @@
 import { Operation } from "postchain-client";
 import { Connection, FtKeyStore, KeyStore } from "@ft4/index";
+import { LoginKeyStore } from "@ft4/authentication/login-manager/index";
 
 export interface Strategy {
   getRegistrationDetails(
@@ -10,7 +11,8 @@ export interface Strategy {
 
 export type RegistrationDetails = {
   strategyOperation: Operation;
-  loginKeyStore: FtKeyStore | null;
+  loginKeyStore: LoginKeyStore | null;
+  disposableKeyStore: FtKeyStore | null;
 };
 
 export class StrategyError extends Error {
