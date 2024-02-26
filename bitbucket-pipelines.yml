@@ -117,7 +117,7 @@ pipelines:
             - docker
           script:
             - ./install-chr-and-pmc.sh
-            - ls
+            - ls scripts
             - chr install -s configs/rell-test.yml
             - npm ci
             - ./scripts/multichain-jesttest.sh
