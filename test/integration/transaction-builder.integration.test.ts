@@ -4,13 +4,24 @@ import {
   AnchoringTimeoutError,
   transactionBuilder,
 } from "@ft4/utils/transaction-builder";
-import { IClient, isBlockAnchored } from "postchain-client";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import { emptyOp } from "../util/util";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { createAuthDataService } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
 import { createConnection } from "@ft4/ft-session";
+
+jest.mock("postchain-client", () => {
+  const originalModule = jest.requireActual("postchain-client");
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    isBlockAnchored: jest.fn().mockResolvedValue(false),
+    getAnchoringClient: jest.fn(),
+  };
+});
+import { IClient, isBlockAnchored } from "postchain-client";
 
 describe("Transaction Builder", () => {
   let client: IClient;
