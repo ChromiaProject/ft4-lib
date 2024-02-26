@@ -117,7 +117,11 @@ pipelines:
             - ./install-chr-and-pmc.sh
             - chr install -s configs/rell-test.yml
             - npm ci
-            - ./scripts/multichain-jesttest.sh
+            - pwd
+            - ls
+            - ls scripts
+            - cat scripts/multichain-jesttest.sh
+            - bash scripts/multichain-jesttest.sh
 definitions:
   caches:
     demo-node: examples/demo/client/node_modules
