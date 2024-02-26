@@ -6,17 +6,21 @@ import {
 } from "@ft4/utils/transaction-builder";
 import { IClient, isBlockAnchored } from "postchain-client";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { emptyOp } from "../util/util";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
+import { createAuthDataService } from "@ft4/ft-session";
+import { Connection } from "@ft4/types";
+import { createConnection } from "@ft4/ft-session";
 
 describe("Transaction Builder", () => {
   let client: IClient;
+  let connection: Connection;
 
   const getClient = useChromiaNode();
 
   beforeEach(async () => {
     client = getClient();
+    connection = createConnection(client);
   });
 
   describe("block anchored handling", () => {
@@ -26,7 +30,7 @@ describe("Transaction Builder", () => {
       let callback: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
+          createNoopAuthenticator(createAuthDataService(connection)),
           client,
         )
           .add(
@@ -51,7 +55,7 @@ describe("Transaction Builder", () => {
       let callback2: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
+          createNoopAuthenticator(createAuthDataService(connection)),
           client,
         )
           .add(
@@ -94,7 +98,7 @@ describe("Transaction Builder", () => {
       let callback: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
+          createNoopAuthenticator(createAuthDataService(connection)),
           client,
         )
           .add(
@@ -120,7 +124,7 @@ describe("Transaction Builder", () => {
       let callback: jest.Mock<any, any, any> = jest.fn();
       const promise = new Promise((resolve) => {
         transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
+          createNoopAuthenticator(createAuthDataService(connection)),
           client,
           {
             retryCount: 2,
@@ -146,7 +150,7 @@ describe("Transaction Builder", () => {
       //eslint-disable-next-line no-async-promise-executor
       const promise = new Promise(async (resolve) => {
         const txInfo = await transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
+          createNoopAuthenticator(createAuthDataService(connection)),
           client,
           {
             retryCount: 2,
