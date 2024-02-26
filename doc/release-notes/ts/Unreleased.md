@@ -2,12 +2,9 @@
 
 ### Breaking 💔
 
+- updated `postchain-client` version to 1.15
 - Moved `logout` function from `LoginManager` to object returned from `LoginManager.login()` and `registerAccount()`.
 - Moved `loginKeyStore` parameter from `KeyStoreInteractor.getLoginManager()` to `LoginManager.login(LoginOptions)`.
-
-### Changed 🪙
-
-- updated `postchain-client` version to 1.15
 
 ### Added ✅
 
