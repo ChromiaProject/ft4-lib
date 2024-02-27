@@ -68,7 +68,7 @@ pipelines:
             services:
               - postgres
             script:
-              - apk add -y bash
+              - apk add bash
               - ./install-chr-and-pmc.sh
               - npm ci
               - bash scripts/multichain-jesttest.sh
@@ -112,7 +112,7 @@ pipelines:
           caches:
             - node
           script:
-            - apk add -y bash
+            - apk add bash
             - ./install-chr-and-pmc.sh
             - npm ci
             - bash scripts/multichain-jesttest.sh
