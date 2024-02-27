@@ -33,8 +33,8 @@ describe("Crosschain transfer", () => {
 
     const asset00 = await getNewAsset(
       connection00.client,
-      "crosschain",
-      "CROSSCHAIN",
+      "crosschain-transfer-test-asset",
+      "CROSSCHAIN-transfer-test-asset",
     );
     await registerCrosschainAsset(
       connection01.client,
@@ -80,12 +80,16 @@ describe("Crosschain transfer", () => {
           return;
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
-        await transactionBuilder(account00.authenticator, connection01.client)
-          .add(iccfProofOperation)
-          .add(applyTransferOp(data.tx, data.tx, 0))
-          .buildAndSend();
+        try {
+          await transactionBuilder(account00.authenticator, connection01.client)
+            .addWithoutAuthenticator(iccfProofOperation)
+            .addWithoutAuthenticator(applyTransferOp(data.tx, data.tx, 0))
+            .buildAndSend();
+        } catch (error) {
+          reject(error);
+        }
+
         resolve();
-        return;
       };
 
       tb.add(initOperation, onAnchoringHandler).buildAndSend();

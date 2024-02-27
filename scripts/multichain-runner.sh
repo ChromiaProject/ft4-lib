@@ -7,7 +7,7 @@ POSTGRES_PORT=5432
 NODE_PORT=9870
 API_PORT=7740
 
-CHROMIA_NODE_VERSION='3.14.2'
+CHROMIA_NODE_VERSION='3.15.0'
 DIRECTORY_CHAIN_VERSION='1.28.0'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
@@ -52,19 +52,29 @@ prepare_dapp_folder() {
 
     # Write the YML content to the file
     sed "s/{module_name}/${module_name}/;s/{chain_number}/${chain_num}/" \
-        configs/multichain-jesttest.yml.template > ${yml_filename}
+        configs/multichain-jesttest.yml.template > "${yml_filename}_"
+    
+    # Insert module args
+    # sed or awk might be more efficient, but this is more readable
+    line=$(grep -n '{module_args}' "${yml_filename}_" | cut -d ":" -f 1)
+    { 
+        head -n $(($line-1)) "${yml_filename}_";
+        cat "configs/multichain-module-args/module-args$chain_num.yml.template";
+        tail -n +$(($line+1)) "${yml_filename}_";
+    } > "${yml_filename}"
+
+    rm "${yml_filename}_"
 
     # Create the corresponding RELL file with unique content
     cp configs/multichain-module.rell.template ${rell_filepath}
     echo "" >> $rell_filepath
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
     
-    # remove pieces of yml and rell not to be included here
-    for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    # remove pieces of rell not to be included here
+    for other_chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         if [ "$chain_num" != "$other_chain_num" ]; then
-            sed -i "s/^.*#${other_chain_num}\s*$//" $yml_filename
-            sed -i "s|^.*//${other_chain_num}\s*$||" $rell_filepath
+            sed -i.bak "s|^.*//${other_chain_num}\s*$||" $rell_filepath
         fi
     done
 
@@ -79,7 +89,7 @@ include_brids() {
 
     yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
 
-    for loop_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for loop_chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         grep -l "{chain${loop_chain_num}_rid}" $yml_filename > /dev/null
         contains_rid=$?
@@ -88,7 +98,7 @@ include_brids() {
             if [ "$loop_chain_num" -lt "$chain_num" ]; then
                 # if it needs the brid of an already-launched chain, use it
                 chain_rid=$(eval "echo \${MULTICHAIN${loop_chain_num}_BRID}")
-                sed -i "s/{chain${loop_chain_num}_rid}/${chain_rid}/" $yml_filename
+                sed -i.bak "s/{chain${loop_chain_num}_rid}/${chain_rid}/" $yml_filename
             else
                 # if the chain has not yet been lauched, throw an error
                 fatal_error "Chain ${chain_num} requires the brid of chain ${loop_chain_num}, which has not yet been launched. Please ensure that chains only depend on brids of chains with a lower number"
@@ -197,7 +207,7 @@ run_main_logic() {
     cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
 
     log "Preparing Multichain dApp Chains..."
-    for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         prepare_dapp_folder "$chain_num"
     done
@@ -206,8 +216,8 @@ run_main_logic() {
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
-        --mount type=bind,source="$(pwd)/$BASE_CONFIG_DIR",target=/config,readonly \
-        --mount type=bind,source="$(pwd)/$DEPENDENCIES_PATH/directory-chain/build",target=/build,readonly \
+        -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
+        -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
         -e JAVA_TOOL_OPTIONS="-Xmx16g" \
         -e POSTCHAIN_DEBUG=true \
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
@@ -237,6 +247,7 @@ run_main_logic() {
     done
 
     log "Got manager chain BRID: $BRID"
+    export MULTICHAIN_D1_BRID=$BRID
 
     debug "Saving manager chain BRID to PMC config"
     pmc config --file $PMC_CONFIG --set brid="$BRID"
@@ -266,7 +277,7 @@ run_main_logic() {
         -cfg $PMC_CONFIG
 
     log "Building and adding blockchains to the container..."
-    for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         include_brids $chain_num
 

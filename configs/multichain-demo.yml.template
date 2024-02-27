@@ -1,0 +1,9 @@
+blockchains:
+  ft4_multichain_test_any:
+    module: no_module
+
+deployments:
+  local:
+    url: http://localhost:7740
+    brid: x"{manager_brid}"
+    chains:

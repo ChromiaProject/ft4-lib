@@ -58,9 +58,22 @@ pipelines:
           services:
             - postgres
             - docker
-      - step:
-          <<: *e2e-tests-anchor
-          trigger: manual
+      - parallel:
+        - step:
+            <<: *e2e-tests-anchor
+            trigger: manual
+        - step:
+            name: Multichain tests
+            caches:
+              - node
+            services:
+              - docker
+            script:
+              - apk add bash git
+              - ./install-chr-and-pmc.sh
+              - npm ci
+              - bash scripts/multichain-jesttest.sh
+            trigger: manual
   branches:
     ft4:
       - step:
@@ -95,6 +108,17 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
+    Multichain tests:
+      - step:
+          caches:
+            - node
+          services:
+            - docker
+          script:
+            - apk add bash git
+            - ./install-chr-and-pmc.sh
+            - npm ci
+            - bash scripts/multichain-jesttest.sh
 definitions:
   caches:
     demo-node: examples/demo/client/node_modules
