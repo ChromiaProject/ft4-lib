@@ -1,10 +1,10 @@
 import { registerAccount } from "@ft4/accounts/registration";
 import {
   Connection,
-  FtKeyStore,
   createAmount,
   createConnection,
   createInMemoryFtKeyStore,
+  createOrchestrator,
   createSingleSigAuthDescriptorRegistration,
   mint,
   registerCrosschainAsset,
@@ -24,20 +24,26 @@ import { open } from "@ft4/accounts/registration/strategies/open";
 import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
 
 let asset: Asset;
+let nonExistentChain00Asset: Asset;
 let senderConnection: Connection;
 let recipientConnection: Connection;
+let unrelatedConnection: Connection;
 
 // This is needed to allow to check whether transaction is anchored
 jest.unmock("postchain-client");
 
 describe("Fee account creation single step", () => {
   beforeAll(async () => {
-    const { multichain00, multichain01 } = await fetchBlockchains();
+    const { multichain00, multichain01, multichain02 } =
+      await fetchBlockchains();
     senderConnection = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
     recipientConnection = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
+    );
+    unrelatedConnection = createConnection(
+      await createChromiaClientToMultichain(multichain02.rid),
     );
 
     asset = await getNewAsset(
@@ -46,11 +52,40 @@ describe("Fee account creation single step", () => {
       "FEE_STRATEGY_TEST_ASSET_00",
       5,
     );
+
+    // based on the assumption that asset ID is:
+    // (name, blockchain_rid).hash()
+    const missingAssetId = gtv.gtvHash([
+      "fee_strategy_missing_test_asset_00",
+      multichain00.rid,
+    ]);
+
+    nonExistentChain00Asset = {
+      id: missingAssetId,
+      name: "fee_strategy_missing_test_asset_00",
+      symbol: "fee_strategy_missing_test_asset_00",
+      decimals: 5,
+      blockchainRid: multichain00.rid,
+      supply: 10000n,
+      iconUrl: "https://missing.asset",
+    };
     await registerCrosschainAsset(
       recipientConnection.client,
       adminUser().signatureProvider,
       asset,
       multichain00.rid,
+    );
+    await registerCrosschainAsset(
+      recipientConnection.client,
+      adminUser().signatureProvider,
+      nonExistentChain00Asset,
+      multichain00.rid,
+    );
+    await registerCrosschainAsset(
+      unrelatedConnection.client,
+      adminUser().signatureProvider,
+      asset,
+      multichain01.rid,
     );
   });
 
@@ -62,11 +97,9 @@ describe("Fee account creation single step", () => {
       keyStore.id,
     );
 
-    const { account: senderAccount } = await registerAccount(
-      senderConnection,
-      keyStore,
-      open(authDescriptor),
-    );
+    const { account: senderAccount } = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
 
     const startingAmount = createAmount(20, 5);
     mint(
@@ -74,7 +107,7 @@ describe("Fee account creation single step", () => {
       adminUser().signatureProvider,
       senderAccount.id,
       asset.id,
-      createAmount(20, 5),
+      startingAmount,
     );
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
@@ -102,11 +135,13 @@ describe("Fee account creation single step", () => {
     expect(rawAmount).toEqual(1000000n);
     expect(feeRawAmount).toEqual(1000000n);
 
-    const recipientSession = await registerAccount(
-      recipientConnection,
-      keyStore as FtKeyStore,
-      fee(senderConnection.blockchainRid, asset, authDescriptor),
-    );
+    const recipientSession = (
+      await registerAccount(
+        recipientConnection,
+        keyStore,
+        fee(senderConnection.blockchainRid, asset, authDescriptor),
+      )
+    ).session;
 
     expect(recipientSession.account.id).toEqual(recipientId);
 
@@ -125,5 +160,171 @@ describe("Fee account creation single step", () => {
       (await recipientConnection.query(pendingTransferStrategies(recipientId)))
         .length,
     ).toBe(0);
+  });
+
+  it("handles asset coming from wrong chain properly", async () => {
+    const sigProv = newSignatureProvider();
+    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const { account: unrelatedAccount } = (
+      await registerAccount(unrelatedConnection, keyStore, open(authDescriptor))
+    ).session;
+
+    const senderSession = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
+
+    const startingAmount = createAmount(20, 5);
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderSession.account.id,
+      asset.id,
+      startingAmount,
+    );
+
+    const orchestrator = await createOrchestrator(
+      unrelatedConnection.client.config.blockchainRid + "",
+      unrelatedAccount.id,
+      asset.id,
+      startingAmount,
+      senderSession,
+    );
+    orchestrator.onTransferError((e) => {
+      throw e;
+    });
+    await orchestrator.transfer();
+
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    expect(unrelatedAccount.id).toEqual(recipientId);
+
+    const _allowedAssets = (await recipientConnection.query(
+      allowedAssets(
+        unrelatedConnection.blockchainRid,
+        unrelatedAccount.id,
+        recipientId,
+      ),
+    ))!;
+
+    expect(_allowedAssets.length).toBe(0);
+
+    const _feeAssets = await recipientConnection.query(feeAssets());
+    expect(_feeAssets).toBeTruthy();
+
+    const recipientSessionPromise = registerAccount(
+      recipientConnection,
+      keyStore,
+      fee(unrelatedConnection.blockchainRid, asset, authDescriptor),
+    );
+
+    await expect(recipientSessionPromise).rejects.toThrow();
+
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
+    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+  });
+
+  it("handles asset missing on source chain properly", async () => {
+    const sigProv = newSignatureProvider();
+    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    await registerAccount(senderConnection, keyStore, open(authDescriptor));
+
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+
+    const recipientSessionPromise = registerAccount(
+      recipientConnection,
+      keyStore,
+      fee(
+        senderConnection.blockchainRid,
+        nonExistentChain00Asset,
+        authDescriptor,
+      ),
+    );
+
+    await expect(recipientSessionPromise).rejects.toThrow(
+      "The specified asset could not be found",
+    );
+
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
+    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+  });
+
+  it("handles missing account on source chain properly", async () => {
+    const sigProv = newSignatureProvider();
+    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+
+    const recipientSessionPromise = registerAccount(
+      recipientConnection,
+      keyStore,
+      fee(senderConnection.blockchainRid, asset, authDescriptor),
+    );
+
+    // originalError:  No key handler registered to handle operation <ft4.crosschain.init_transfer>
+    await expect(recipientSessionPromise).rejects.toThrow();
+
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
+    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+  });
+
+  it("handles insufficient balance on source chain properly", async () => {
+    const sigProv = newSignatureProvider();
+    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const { account: senderAccount } = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
+
+    const startingAmount = createAmount(0.01, 5);
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderAccount.id,
+      asset.id,
+      startingAmount,
+    );
+
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+
+    const recipientSessionPromise = registerAccount(
+      recipientConnection,
+      keyStore,
+      fee(senderConnection.blockchainRid, asset, authDescriptor),
+    );
+
+    // originalError: balance is too low
+    await expect(recipientSessionPromise).rejects.toThrow();
+
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
+    expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
   });
 });

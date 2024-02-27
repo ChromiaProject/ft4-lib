@@ -68,9 +68,12 @@ export function fee(
         createAmountFromBalance(amount, feeAsset.decimals),
         senderSession,
       );
-      orchestrator.onTransferError((err) => console.error(err));
 
-      await orchestrator.transfer();
+      await new Promise((resolve, reject) => {
+        orchestrator.onTransferError(reject);
+
+        orchestrator.transfer().then(resolve).catch(reject);
+      });
 
       const loginDetails =
         loginConfig &&

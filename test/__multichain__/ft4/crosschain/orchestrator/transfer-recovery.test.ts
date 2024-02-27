@@ -36,6 +36,7 @@ describe("Orchestrator", () => {
   let multichain2Rid: Buffer;
 
   const amount = createAmount(10, 1);
+  let counter = 0;
 
   beforeEach(async () => {
     const { multichain00, multichain02 } = await fetchBlockchains();
@@ -49,9 +50,10 @@ describe("Orchestrator", () => {
 
     asset = await getNewAsset(
       connection0.client,
-      "transfer_recovery",
-      "TRANSFER_RECOVERY",
+      "transfer_recovery" + counter,
+      "TRANSFER_RECOVERY" + counter,
     );
+    counter++;
     await registerCrosschainAsset(
       connection2.client,
       adminUser().signatureProvider,
