@@ -216,8 +216,8 @@ run_main_logic() {
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
-        --mount type=bind,source="$(pwd)/$BASE_CONFIG_DIR",target=/config,readonly \
-        --mount type=bind,source="$(pwd)/$DEPENDENCIES_PATH/directory-chain/build",target=/build,readonly \
+        -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
+        -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
         -e JAVA_TOOL_OPTIONS="-Xmx16g" \
         -e POSTCHAIN_DEBUG=true \
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
