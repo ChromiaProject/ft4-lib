@@ -245,10 +245,16 @@ export function createKeyStoreInteractor(
       return createSession(connection, authenticator);
     },
     getLoginManager: () => createLoginManager(connection, keyStore),
-    onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
-      ftEventEmitter.on("KeyStoreChange", (newKeyStore: KeyStore) =>
-        handler(createKeyStoreInteractor(client, newKeyStore)),
-      );
+    onKeyStoreChanged: async (
+      handler: (arg0: KeyStoreInteractor | null) => void,
+    ) => {
+      ftEventEmitter.on("KeyStoreChange", (newKeyStore: KeyStore | null) => {
+        if (!newKeyStore) {
+          handler(null);
+          return;
+        }
+        handler(createKeyStoreInteractor(client, newKeyStore));
+      });
     },
   });
 }

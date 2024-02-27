@@ -84,7 +84,9 @@ export type KeyStoreInteractor = {
   ): Promise<PaginatedEntity<Account>>;
   getSession(accountId: BufferId): Promise<Session>;
   getLoginManager(): LoginManager;
-  onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
+  onKeyStoreChanged(
+    callback: (newKeyStore: KeyStoreInteractor | null) => void,
+  ): void;
 };
 
 export type AuthHandler = {
