@@ -65,8 +65,6 @@ pipelines:
             name: Multichain tests
             caches:
               - node
-            services:
-              - postgres
             script:
               - apk add bash docker git
               - ./install-chr-and-pmc.sh
@@ -114,7 +112,7 @@ pipelines:
           services:
             - docker
           script:
-            - apk add bash docker git
+            - apk add bash git
             - ./install-chr-and-pmc.sh
             - npm ci
             - bash scripts/multichain-jesttest.sh
