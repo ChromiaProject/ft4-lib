@@ -111,6 +111,8 @@ pipelines:
       - step:
           caches:
             - node
+          services:
+            - docker
           script:
             - apk add bash docker git
             - ./install-chr-and-pmc.sh
