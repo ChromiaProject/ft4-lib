@@ -10,7 +10,7 @@ generate_config() {
   debug "Generating config"
   sed "s/{manager_brid}/${MULTICHAIN_D1_BRID}/;" \
     configs/multichain-demo.yml.template > $deployment_script
-  for chain_num in $(./scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
+  for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
   do
     chain_rid=$(eval "echo \${MULTICHAIN${chain_num}_BRID}")
     echo "      deploy$chain_num: x\"${chain_rid}\"" >> $deployment_script
