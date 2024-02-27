@@ -355,7 +355,7 @@ describe("Transaction Builder", () => {
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
-    }, 10000);
+    });
 
     it("calls all registered handler when block is anchored", async () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
@@ -398,7 +398,7 @@ describe("Transaction Builder", () => {
         ),
         null,
       );
-    }, 10000);
+    });
 
     it("calls callbacks even if block is not anchored immediately", async () => {
       (isBlockAnchored as any)
@@ -425,7 +425,7 @@ describe("Transaction Builder", () => {
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
-    }, 10000);
+    });
 
     it("calls callback with an error if polling times out", async () => {
       (isBlockAnchored as any)
@@ -455,7 +455,7 @@ describe("Transaction Builder", () => {
         null,
         expect.any(AnchoringTimeoutError),
       );
-    }, 10000);
+    });
 
     it("returns receipt without waiting for block to be anchored", async () => {
       (client.sendTransaction as jest.Mock).mockReturnValueOnce(
@@ -485,6 +485,6 @@ describe("Transaction Builder", () => {
         expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
       });
       await promise;
-    }, 10000);
+    });
   });
 });
