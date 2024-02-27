@@ -11,3 +11,6 @@
 - account registration strategies
   - create on transfer
     - subscription
+
+### Fixed 🔧
+- uncaught exception triggered after creating evm keystore and when all accounts disconnected from wallet GUI
