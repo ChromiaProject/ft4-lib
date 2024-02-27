@@ -203,7 +203,7 @@ describe("Login manager", () => {
       keyStore,
     ).getLoginManager();
 
-    const session = await loginManager.login({
+    const { session } = await loginManager.login({
       accountId: accountId,
       config: {
         flags: [FlagsType.Transfer],
@@ -263,7 +263,7 @@ describe("Login manager", () => {
     );
   });
 
-  it("uses key pair stored in login key store", async () => {
+  it("uses key pair stored in login key store, which is removed upon logout", async () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = createSingleSigAuthDescriptorRegistration(
@@ -276,7 +276,7 @@ describe("Login manager", () => {
       connection.client,
       keyStore,
     );
-    const session = await keyStoreInteractor.getSession(accountId);
+    const session1 = await keyStoreInteractor.getSession(accountId);
 
     const loginKeyStore = createInMemoryLoginKeyStore();
     const keyStore2 = await loginKeyStore.generateKey(accountId);
@@ -285,17 +285,24 @@ describe("Login manager", () => {
       keyStore2.id,
       null,
     );
-    await session.account.addAuthDescriptor(ad2, keyStore2);
+    await session1.account.addAuthDescriptor(ad2, keyStore2);
 
-    const loginManager = keyStoreInteractor.getLoginManager(loginKeyStore);
-    const session2 = await loginManager.login({
+    const loginManager = keyStoreInteractor.getLoginManager();
+    const { session, logout } = await loginManager.login({
       accountId,
       config: { flags: ["X"], rules: null },
+      loginKeyStore,
     });
 
-    const keyStoreIds = session2.account.authenticator.keyHandlers.map(
+    const keyStoreIds = session.account.authenticator.keyHandlers.map(
       (keyHandler) => keyHandler.keyStore.id,
     );
     expect(keyStoreIds).toMatchObject([keyStore2.id, keyStore.id]);
+    expect(
+      (await loginKeyStore.getKeyStore(session.account.id))!.pubKey,
+    ).toMatchObject(keyStore2.pubKey);
+
+    await logout();
+    expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
   });
 });

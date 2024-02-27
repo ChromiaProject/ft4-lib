@@ -30,10 +30,7 @@ export { LoginKeyStore };
 export function createLoginManager(
   connection: Connection,
   keyStore: KeyStore,
-  loginKeyStore: LoginKeyStore | null = null,
 ): LoginManager {
-  const usedLoginKeyStore = loginKeyStore || createInMemoryLoginKeyStore();
-
   return Object.freeze({
     login: async (loginOptions: LoginOptions) => {
       const account = createAccountObject(connection, loginOptions.accountId);
@@ -43,8 +40,7 @@ export function createLoginManager(
         keyStore.id,
       );
 
-      // We need need an auth descriptor with admin flag in order to add a
-      // disposable key
+      // We need an auth descriptor with admin flag in order to add a disposable key
       const adminAuthDescriptor = authDescriptors.find((authDescriptor) =>
         authDescriptor.args.flags.includes(FlagsType.Account),
       );
@@ -63,6 +59,8 @@ export function createLoginManager(
       // Get list of flags that will be added to new auth descriptor
       const config = await getConfigFromOptions(authDataService, loginOptions);
 
+      const usedLoginKeyStore =
+        loginOptions.loginKeyStore || createInMemoryLoginKeyStore();
       const loginKeyStore = await usedLoginKeyStore.getKeyStore(account.id);
 
       // If disposable key pair exists in login key store for provided account id,
@@ -108,10 +106,11 @@ export function createLoginManager(
         authDataService,
       );
 
-      return createSession(connection, authenticator);
-    },
-    logout: (accountId: Buffer) => {
-      usedLoginKeyStore.clear(accountId);
+      const session = createSession(connection, authenticator);
+      return Object.freeze({
+        session,
+        logout: () => usedLoginKeyStore.clear(session.account.id), // TODO delete disposable auth descriptor, FT4-426
+      });
     },
   });
 }

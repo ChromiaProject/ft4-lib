@@ -1,16 +1,10 @@
 import { RegistrationDetails, Strategy } from "../../../types";
-import {
-  AnyAuthDescriptorRegistration,
-  aggregateSigners,
-} from "@ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
 import { LoginConfigOptions } from "@ft4/authentication/login-manager";
 import { Connection } from "@ft4/types";
-import {
-  getAccountIdFromSigners,
-  getLoginDetails,
-} from "@ft4/accounts/registration/strategies";
 import { Asset } from "@ft4/asset/index";
+import { fetchLoginDetails } from "@ft4/accounts/registration/strategies";
 
 export * from "./queries";
 
@@ -23,13 +17,11 @@ export function transferFee(
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {
-      const accountId = getAccountIdFromSigners(
-        aggregateSigners(authDescriptor),
+      const loginDetails = await fetchLoginDetails(
+        connection,
+        authDescriptor,
+        loginConfig,
       );
-
-      const loginDetails =
-        loginConfig &&
-        (await getLoginDetails(connection, accountId, loginConfig));
 
       const operation = {
         name: "ft4.ras_transfer_fee",
@@ -43,7 +35,8 @@ export function transferFee(
 
       return {
         strategyOperation: operation,
-        loginKeyStore: loginDetails?.keyStore || null,
+        loginKeyStore: loginDetails?.loginKeyStore || null,
+        disposableKeyStore: loginDetails?.disposableKeyStore || null,
       };
     },
   });
