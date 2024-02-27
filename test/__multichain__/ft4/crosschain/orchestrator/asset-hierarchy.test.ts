@@ -8,9 +8,6 @@ import {
 import { Amount } from "@ft4/asset";
 import adminUser from "../../../../util/admin_user";
 
-// This is needed to allow to check whether transaction is anchored
-jest.unmock("postchain-client");
-
 describe("Asset Hierarchy", () => {
   const mintAmount = createAmount(100, 0);
   let testContext: TestContext;

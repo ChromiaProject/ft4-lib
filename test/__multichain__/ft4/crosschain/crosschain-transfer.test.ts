@@ -18,8 +18,6 @@ import {
 } from "../../../util/blockchain-util";
 import { fetchBlockchains } from "../../util/blockchain";
 
-jest.unmock("postchain-client");
-
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
     const { multichain00, multichain01 } = await fetchBlockchains();

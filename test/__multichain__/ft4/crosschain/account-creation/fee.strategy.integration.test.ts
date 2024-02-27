@@ -29,9 +29,6 @@ let senderConnection: Connection;
 let recipientConnection: Connection;
 let unrelatedConnection: Connection;
 
-// This is needed to allow to check whether transaction is anchored
-jest.unmock("postchain-client");
-
 describe("Fee account creation single step", () => {
   beforeAll(async () => {
     const { multichain00, multichain01, multichain02 } =
