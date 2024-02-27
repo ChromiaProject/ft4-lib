@@ -97,11 +97,9 @@ describe("Fee account creation single step", () => {
       keyStore.id,
     );
 
-    const { account: senderAccount } = await registerAccount(
-      senderConnection,
-      keyStore,
-      open(authDescriptor),
-    );
+    const { account: senderAccount } = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
 
     const startingAmount = createAmount(20, 5);
     mint(
@@ -137,11 +135,13 @@ describe("Fee account creation single step", () => {
     expect(rawAmount).toEqual(1000000n);
     expect(feeRawAmount).toEqual(1000000n);
 
-    const recipientSession = await registerAccount(
-      recipientConnection,
-      keyStore,
-      fee(senderConnection.blockchainRid, asset, authDescriptor),
-    );
+    const recipientSession = (
+      await registerAccount(
+        recipientConnection,
+        keyStore,
+        fee(senderConnection.blockchainRid, asset, authDescriptor),
+      )
+    ).session;
 
     expect(recipientSession.account.id).toEqual(recipientId);
 
@@ -170,17 +170,13 @@ describe("Fee account creation single step", () => {
       keyStore.id,
     );
 
-    const { account: unrelatedAccount } = await registerAccount(
-      unrelatedConnection,
-      keyStore,
-      open(authDescriptor),
-    );
+    const { account: unrelatedAccount } = (
+      await registerAccount(unrelatedConnection, keyStore, open(authDescriptor))
+    ).session;
 
-    const senderSession = await registerAccount(
-      senderConnection,
-      keyStore,
-      open(authDescriptor),
-    );
+    const senderSession = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
 
     const startingAmount = createAmount(20, 5);
     mint(
@@ -301,11 +297,9 @@ describe("Fee account creation single step", () => {
       keyStore.id,
     );
 
-    const { account: senderAccount } = await registerAccount(
-      senderConnection,
-      keyStore,
-      open(authDescriptor),
-    );
+    const { account: senderAccount } = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
 
     const startingAmount = createAmount(0.01, 5);
     mint(
