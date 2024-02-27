@@ -71,7 +71,7 @@ prepare_dapp_folder() {
     echo "/* This is a dummy app module for multichain$chain_num */" >> $rell_filepath
     
     # remove pieces of rell not to be included here
-    for other_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for other_chain_num in $(./scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         if [ "$chain_num" != "$other_chain_num" ]; then
             sed -i.bak "s|^.*//${other_chain_num}\s*$||" $rell_filepath
@@ -89,7 +89,7 @@ include_brids() {
 
     yml_filename="$DEPENDENCIES_PATH/multichain-test-$chain_num.yml"
 
-    for loop_chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for loop_chain_num in $(./scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         grep -l "{chain${loop_chain_num}_rid}" $yml_filename > /dev/null
         contains_rid=$?
@@ -207,7 +207,7 @@ run_main_logic() {
     cp -R "rell/src/tests" "$DEPENDENCIES_PATH/multichain/"
 
     log "Preparing Multichain dApp Chains..."
-    for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for chain_num in $(./scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         prepare_dapp_folder "$chain_num"
     done
@@ -277,7 +277,7 @@ run_main_logic() {
         -cfg $PMC_CONFIG
 
     log "Building and adding blockchains to the container..."
-    for chain_num in $(seq -f "%02g" 0 $((NUM_BLOCKCHAINS-1)))
+    for chain_num in $(./scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do
         include_brids $chain_num
 
