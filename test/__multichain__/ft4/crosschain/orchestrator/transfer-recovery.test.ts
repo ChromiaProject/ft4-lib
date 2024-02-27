@@ -26,8 +26,6 @@ import {
 import { initTransfer } from "@ft4/crosschain/operations";
 import { formatter } from "postchain-client";
 
-jest.unmock("postchain-client");
-
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
   let account0: AuthenticatedAccount, account2: AuthenticatedAccount;
