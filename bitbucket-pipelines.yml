@@ -109,10 +109,11 @@ pipelines:
       - step:
           caches:
             - node
-          services:
-            - docker
           script:
-            - apk add bash git
+            - apk add bash git docker
+            - groupadd docker
+            - usermod -aG docker $(whoami)
+            - service docker start
             - ./install-chr-and-pmc.sh
             - npm ci
             - bash scripts/multichain-jesttest.sh
