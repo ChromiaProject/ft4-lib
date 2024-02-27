@@ -352,7 +352,7 @@ describe("Transaction Builder", () => {
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
+        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
     }, 10000);
@@ -385,6 +385,7 @@ describe("Transaction Builder", () => {
           client,
           [emptyOp(), emptyOp(), operation],
           0,
+          0,
         ),
         null,
       );
@@ -392,6 +393,7 @@ describe("Transaction Builder", () => {
         anchoredHandlerCallbackParameters(
           client,
           [emptyOp(), emptyOp(), operation],
+          1,
           1,
         ),
         null,
@@ -420,7 +422,7 @@ describe("Transaction Builder", () => {
       await promise;
 
       expect(callback).toHaveBeenCalledWith(
-        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0),
+        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
     }, 10000);

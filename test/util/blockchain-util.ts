@@ -71,9 +71,10 @@ export function anchoredHandlerCallbackParameters(
   client: IClient,
   operations: Operation[],
   opIndex: number,
+  mainOpIndex: number,
 ) {
   return expect.objectContaining({
-    operation: operations[opIndex],
+    operation: operations[mainOpIndex],
     opIndex,
     tx: expect.arrayContaining([
       [
