@@ -1,4 +1,4 @@
-image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.1.0
+image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.2.0@sha256:c04590bf5702e3e3071ac3bae28ad4e1129ac7239e1bfd655451f718807ca1fd
 
 options:
   max-time: 15
@@ -40,7 +40,6 @@ multichain-tests: &multichain-tests-anchor
   services:
     - docker
   script:
-    - apk add bash git
     - ./install-chr-and-pmc.sh
     - npm ci
     - bash scripts/multichain-jesttest.sh
@@ -112,16 +111,7 @@ pipelines:
             - npm run deploy:latest
             - rm .chromia/config
     Multichain tests:
-      - step:
-          caches:
-            - node
-          services:
-            - docker
-          script:
-            - apk add bash git
-            - ./install-chr-and-pmc.sh
-            - npm ci
-            - bash scripts/multichain-jesttest.sh
+      - step: *multichain-tests-anchor
 definitions:
   caches:
     demo-node: examples/demo/client/node_modules
