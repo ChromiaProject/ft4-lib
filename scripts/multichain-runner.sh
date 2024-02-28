@@ -152,11 +152,11 @@ run_main_logic() {
       log "Running Postgres container..."
       $DOCKER run \
           --name $DOCKER_POSTGRES_NAME \
-          -e POSTGRES_INITDB_ARGS="--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8" \
           -e POSTGRES_PASSWORD=postchain \
           -e POSTGRES_USER=postchain \
           -p $POSTGRES_PORT:5432 \
-          -d postgres > /dev/null
+          --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
+          -d postgres:14.9-alpine3.18 > /dev/null
     fi
 
     debug "Creating PMC config..."
