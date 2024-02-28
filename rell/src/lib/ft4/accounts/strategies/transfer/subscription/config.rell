@@ -3,7 +3,7 @@ val MODULE_NAME = "lib.ft4.core.accounts.strategy.transfer.subscription";
 struct module_args {
     asset: gtv;
     subscription_period_days: integer;
-    free_operations: gtv;
+    free_operations: gtv = set<text>().to_gtv();
     subscription_account: byte_array? = null;
 }
 
