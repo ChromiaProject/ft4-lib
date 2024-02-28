@@ -39,8 +39,6 @@ blockchains:
           name: transfer_subscription_strategy_asset
           amount: 2L
         subscription_period_days: 30
-        free_operations:
-          - free_operation
 
 libs:
   iccf:
