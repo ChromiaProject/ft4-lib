@@ -3,7 +3,6 @@ image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.1
 options:
   max-time: 15
 
-
 e2e-tests: &e2e-tests-anchor
     max-time: 15
     name: E2E Tests
@@ -34,6 +33,18 @@ e2e-tests: &e2e-tests-anchor
     services:
       - docker
 
+multichain-tests: &multichain-tests-anchor
+  name: Multichain tests
+  caches:
+    - node
+  services:
+    - docker
+  script:
+    - apk add bash git
+    - ./install-chr-and-pmc.sh
+    - npm ci
+    - bash scripts/multichain-jesttest.sh
+
 pipelines:
   pull-requests:
     '**':
@@ -63,16 +74,7 @@ pipelines:
             <<: *e2e-tests-anchor
             trigger: manual
         - step:
-            name: Multichain tests
-            caches:
-              - node
-            services:
-              - docker
-            script:
-              - apk add bash git
-              - ./install-chr-and-pmc.sh
-              - npm ci
-              - bash scripts/multichain-jesttest.sh
+            <<: *multichain-tests-anchor
             trigger: manual
   branches:
     ft4:
@@ -87,6 +89,7 @@ pipelines:
             - rm .chromia/config
     development:
       - step: *e2e-tests-anchor
+      - step: *multichain-tests-anchor
   custom:
     deploy-to-stable:
       - step:
