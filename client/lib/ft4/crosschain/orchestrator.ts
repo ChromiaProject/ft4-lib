@@ -30,10 +30,7 @@ import {
   completeTransfer as completeTransferOp,
   initTransfer as initTransferOp,
 } from "./operations";
-import {
-  createConnectionToBlockchainRid,
-  findPathToChainForAsset,
-} from "./pathfinder";
+import { findPathToChainForAsset } from "./pathfinder";
 import { isTransferApplied } from "./queries";
 import {
   ExternalOrchestratorBase,
@@ -44,6 +41,7 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
+import { createConnectionToBlockchainRid } from "@ft4/ft-session";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -144,7 +142,7 @@ export async function createOrchestrator(
 
 /**
  * Creates an orchestrator instance to handle resuming a transfer
- * which was initiated but did not complete propperly
+ * which was initiated but did not complete properly
  * @param {Session} session - The current user session
  * @param {PendingTransfer} pendingTransfer - The transfer to resume
  * @returns The orchestrator instance which will be able to resume the transfer
@@ -202,7 +200,7 @@ export async function createResumeOrchestrator(
   }
 
   /**
-   * Checks to see wether the specified transfer is already applied to
+   * Checks to see whether the specified transfer is already applied to
    * this blockchainRid.
    * @param targetChainRid the blockchain rid of the chain to check
    * @param txBlockchainRid the blockchain rid of the transaction containing the transfer
@@ -215,7 +213,7 @@ export async function createResumeOrchestrator(
     opIndex: number,
   ): Promise<boolean> {
     const connection = await createConnectionToBlockchainRid(
-      session.client,
+      session,
       targetChainRid,
     );
     return connection.query(isTransferApplied(txBlockchainRid, opIndex));
@@ -239,7 +237,7 @@ async function createBaseOrchestrator(
   };
 
   const directoryClient = await createClient({
-    nodeUrlPool: session.client.config.endpointPool.slice().map((ep) => ep.url),
+    nodeUrlPool: session.client.config.endpointPool.map((ep) => ep.url),
     blockchainIid: 0,
   });
 
@@ -336,7 +334,7 @@ async function createBaseOrchestrator(
     blockchainRid: Buffer,
   ) {
     const connection = await createConnectionToBlockchainRid(
-      session.client,
+      session,
       blockchainRid,
     );
     return transactionBuilder(session.account.authenticator, connection.client);

@@ -13,7 +13,7 @@ export function transferOpen(
     getRegistrationDetails: async (
       connection: Connection,
     ): Promise<RegistrationDetails> => {
-      const loginDetails = await fetchLoginDetails(
+      const { loginDetails } = await fetchLoginDetails(
         connection,
         authDescriptor,
         loginConfig,

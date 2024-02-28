@@ -54,6 +54,26 @@ import {
 } from "./types";
 import { createAuthDescriptorValidator } from "./accounts";
 import { getLoginConfig } from "./authentication/login-manager";
+import { createClient } from "postchain-client";
+import { formatter } from "postchain-client";
+
+export async function createConnectionToBlockchainRid(
+  oldConnection: Connection,
+  newBlockchainRid: BufferId,
+): Promise<Connection> {
+  return createConnection(
+    await createClient({
+      // assume same D1. Cross-chain doesn't work otherwise
+      directoryNodeUrlPool: oldConnection.client.config.endpointPool.map(
+        (ep) => ep.url,
+      ),
+      blockchainRid:
+        typeof newBlockchainRid == "string"
+          ? newBlockchainRid
+          : formatter.toString(newBlockchainRid),
+    }),
+  );
+}
 
 export function createConnection(client: IClient): Connection {
   const connection: Connection = Object.freeze({

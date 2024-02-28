@@ -12,5 +12,7 @@
   - create on transfer
     - subscription
 
+- functions to directly create account with fee and subscription strategies
+
 ### Fixed 🔧
 - uncaught exception triggered after creating evm keystore and when all accounts disconnected from wallet GUI

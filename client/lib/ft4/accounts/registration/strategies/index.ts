@@ -22,15 +22,21 @@ export async function fetchLoginDetails(
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Promise<{
-  authDescriptor: AuthDescriptorRegistration<SingleSig>;
-  loginKeyStore: LoginKeyStore;
-  disposableKeyStore: FtKeyStore;
-} | null> {
+  accountId: Buffer;
+  loginDetails: {
+    authDescriptor: AuthDescriptorRegistration<SingleSig>;
+    loginKeyStore: LoginKeyStore;
+    disposableKeyStore: FtKeyStore;
+  } | null;
+}> {
   const accountId = getAccountIdFromSigners(aggregateSigners(authDescriptor));
 
-  return (
-    loginConfig && (await getLoginDetails(connection, accountId, loginConfig))
-  );
+  return {
+    accountId,
+    loginDetails:
+      loginConfig &&
+      (await getLoginDetails(connection, accountId, loginConfig)),
+  };
 }
 
 export function getAccountIdFromSigners(signers: Buffer[]): Buffer {

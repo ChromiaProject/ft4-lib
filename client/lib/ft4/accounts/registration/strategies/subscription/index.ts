@@ -10,13 +10,13 @@ import {
 } from "@ft4/index";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
 import { BufferId } from "@ft4/utils";
-import { feeAssets } from "../transfer/fee/queries";
+import { subscriptionAssets } from "../transfer/subscription/queries";
 import { fetchLoginDetails } from "@ft4/accounts/registration/strategies";
 import { createConnectionToBlockchainRid } from "@ft4/ft-session";
 
-export function fee(
+export function subscription(
   senderBlockchainRid: BufferId,
-  feeAsset: Asset,
+  subscriptionAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
 ): Strategy {
@@ -29,13 +29,14 @@ export function fee(
         targetConnection,
         senderBlockchainRid,
       );
-      const feeAmounts = await targetConnection.query(feeAssets());
-      const amount = feeAmounts.find(
-        (amt) => amt.asset_id.compare(feeAsset.id) === 0,
+      const subscriptionAmounts =
+        await targetConnection.query(subscriptionAssets());
+      const amount = subscriptionAmounts.find(
+        (amt) => amt.asset_id.compare(subscriptionAsset.id) === 0,
       )?.amount;
       if (amount === undefined) {
         throw new StrategyError(
-          `Fee strategy: asset <${feeAsset.name}> is not supported for account creation.`,
+          `Subscription strategy: asset <${subscriptionAsset.name}> is not supported for account creation.`,
         );
       }
 
@@ -53,8 +54,8 @@ export function fee(
       const orchestrator = await createOrchestrator(
         targetConnection.blockchainRid,
         accountId,
-        feeAsset.id,
-        createAmountFromBalance(amount, feeAsset.decimals),
+        subscriptionAsset.id,
+        createAmountFromBalance(amount, subscriptionAsset.decimals),
         senderSession,
       );
 
@@ -65,9 +66,9 @@ export function fee(
       });
 
       const operation = {
-        name: "ft4.ras_transfer_fee",
+        name: "ft4.ras_transfer_subscription",
         args: [
-          feeAsset.id,
+          subscriptionAsset.id,
           authDescriptorRegistrationToGtv(authDescriptor),
           loginDetails &&
             authDescriptorRegistrationToGtv(loginDetails.authDescriptor),

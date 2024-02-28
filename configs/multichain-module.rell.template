@@ -7,3 +7,4 @@ import tests.operations;
 import lib.ft4.accounts.strategies.open; //00
 import lib.ft4.accounts.strategies.open; //02
 import lib.ft4.accounts.strategies.transfer.fee; //01
+import lib.ft4.accounts.strategies.transfer.subscription; //01

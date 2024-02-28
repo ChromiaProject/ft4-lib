@@ -233,7 +233,7 @@ export function transactionBuilder(
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const directoryClient = await createClient({
-      nodeUrlPool: client.config.endpointPool.slice().map((ep) => ep.url),
+      nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
       blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(

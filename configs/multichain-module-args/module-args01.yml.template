@@ -8,7 +8,15 @@
               - name: fee_strategy_missing_test_asset_00
                 issuing_blockchain_rid: {chain00_rid}
                 min_amount: 1000L
-            strategy: "fee"
+              - name: subscription_strategy_test_asset_00
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 1000000L
+              - name: subscription_strategy_missing_test_asset_00
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 1000L
+            strategy:
+              - fee
+              - subscription
             sender_blockchain: {chain00_rid}
             sender: "X"
             recipient: "X"
@@ -21,3 +29,13 @@
             - name: fee_strategy_missing_test_asset_00
               issuing_blockchain_rid: {chain00_rid}
               amount: 1000L
+      lib.ft4.accounts.strategies.transfer.subscription:
+          asset:
+            - name: subscription_strategy_test_asset_00
+              issuing_blockchain_rid: {chain00_rid}
+              amount: 1000000L
+            - name: subscription_strategy_missing_test_asset_00
+              issuing_blockchain_rid: {chain00_rid}
+              amount: 1000L
+          subscription_period_days: 30
+          free_operations: []
