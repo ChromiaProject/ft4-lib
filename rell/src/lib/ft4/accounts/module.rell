@@ -1,4 +1,4 @@
-@mount('ft')
+@mount('ft4')
 module;
 
 struct rate_limit_config {

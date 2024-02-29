@@ -40,6 +40,7 @@ jest.mock("@ft4/utils/exposed-operations", () => ({
         "ft4.crosschain.apply_transfer",
         "ft4.crosschain.init_transfer",
         "ft4.crosschain.complete_transfer",
+        "ft4.renew_subscription",
       ]),
     ),
 }));

@@ -2,6 +2,7 @@
 
 import ^^^.lib.ft4.assets;
 import ^^.assets.utils;
+import ^^.extensions;
 import ^^^.lib.ft4.test.utils. { evm_auth_operation_for };
 import auth_ext: ^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^.lib.ft4.crosschain.external;
@@ -87,6 +88,18 @@ function test_init_transfer_succeeds_under_valid_conditions() {
         .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
+    
+    assert_true(extensions.crosschain_extensions_state.is_before_init_transfer_called);
+    assert_equals(extensions.crosschain_extensions_state.before_init_transfer_sender, alice.account.id);
+    assert_equals(extensions.crosschain_extensions_state.before_init_transfer_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.before_init_transfer_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.before_init_transfer_amount, 5L);
+
+    assert_true(extensions.crosschain_extensions_state.is_after_init_transfer_called);
+    assert_equals(extensions.crosschain_extensions_state.after_init_transfer_sender, alice.account.id);
+    assert_equals(extensions.crosschain_extensions_state.after_init_transfer_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.after_init_transfer_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.after_init_transfer_amount, 5L);
 }
 
 function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
@@ -136,6 +149,68 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
+    
+    assert_true(extensions.crosschain_extensions_state.is_before_apply_transfer_called);
+    assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_sender_blockchain_rid, source_blockchain_rid);
+    assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_sender, sender_account_id);
+    assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.before_apply_transfer_amount, 5L);
+    assert_true(extensions.crosschain_extensions_state.before_apply_transfer_is_final);
+
+    assert_true(extensions.crosschain_extensions_state.is_after_apply_transfer_called);
+    assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_sender_blockchain_rid, source_blockchain_rid);
+    assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_sender, sender_account_id);
+    assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_recipient, bob.account.id);
+    assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_asset, asset_valid.id);
+    assert_equals(extensions.crosschain_extensions_state.after_apply_transfer_amount, 5L);
+    assert_true(extensions.crosschain_extensions_state.after_apply_transfer_is_final);
+}
+
+function test_apply_transfer_fails_when_applied_twice() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run(); // Should run successfully
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail(
+            "Transaction <%s> transfer at index <1> has already been applied on this chain."
+            .format(
+                tx.to_gtv().hash()
+            )
+        ); // Should fail
 }
 
 function test_apply_transfer_fails_with_mismatched_init_transfer_args() {

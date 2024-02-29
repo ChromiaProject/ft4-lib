@@ -43,7 +43,7 @@ describe("Key store interactor", () => {
         });
       });
 
-      handler!();
+      handler!("0x0000000000000000000000000000000000000000");
 
       await promise;
       expect(callback).toHaveBeenCalled();

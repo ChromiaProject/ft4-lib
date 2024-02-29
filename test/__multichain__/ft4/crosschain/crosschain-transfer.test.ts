@@ -18,8 +18,6 @@ import {
 } from "../../../util/blockchain-util";
 import { fetchBlockchains } from "../../util/blockchain";
 
-jest.unmock("postchain-client");
-
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
     const { multichain00, multichain01 } = await fetchBlockchains();
@@ -33,8 +31,8 @@ describe("Crosschain transfer", () => {
 
     const asset00 = await getNewAsset(
       connection00.client,
-      "crosschain",
-      "CROSSCHAIN",
+      "crosschain-transfer-test-asset",
+      "CROSSCHAIN-transfer-test-asset",
     );
     await registerCrosschainAsset(
       connection01.client,
@@ -80,12 +78,16 @@ describe("Crosschain transfer", () => {
           return;
         }
         const iccfProofOperation = await data.createProof(multichain01.rid);
-        await transactionBuilder(account00.authenticator, connection01.client)
-          .add(iccfProofOperation)
-          .add(applyTransferOp(data.tx, data.tx, 0))
-          .buildAndSend();
+        try {
+          await transactionBuilder(account00.authenticator, connection01.client)
+            .addWithoutAuthenticator(iccfProofOperation)
+            .addWithoutAuthenticator(applyTransferOp(data.tx, data.tx, 0))
+            .buildAndSend();
+        } catch (error) {
+          reject(error);
+        }
+
         resolve();
-        return;
       };
 
       tb.add(initOperation, onAnchoringHandler).buildAndSend();

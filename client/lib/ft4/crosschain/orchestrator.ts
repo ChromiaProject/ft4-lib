@@ -30,10 +30,7 @@ import {
   completeTransfer as completeTransferOp,
   initTransfer as initTransferOp,
 } from "./operations";
-import {
-  createConnectionToBlockchainRid,
-  findPathToChainForAsset,
-} from "./pathfinder";
+import { findPathToChainForAsset } from "./pathfinder";
 import { isTransferApplied } from "./queries";
 import {
   ExternalOrchestratorBase,
@@ -44,6 +41,7 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
+import { createConnectionToBlockchainRid } from "@ft4/ft-session";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -75,7 +73,10 @@ export async function createOrchestrator(
     throw new FactoryError(ErrorMessages.FAILED_TO_FIND_PATH, error);
   }
 
-  const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
+  const { state, ...orchestrator } = await createBaseOrchestrator(
+    session,
+    path,
+  );
 
   /**
    * Initialize the transfer by creating the initial transaction.
@@ -125,7 +126,7 @@ export async function createOrchestrator(
 
       if (!state.tx || !state.initialTx) {
         throw new OrchestratorError(
-          "Unable to perform transfer as tx was not applied propperly",
+          "Unable to perform transfer as tx was not applied properly",
         );
       }
       await orchestrator.walkPath();
@@ -141,7 +142,7 @@ export async function createOrchestrator(
 
 /**
  * Creates an orchestrator instance to handle resuming a transfer
- * which was initiated but did not complete propperly
+ * which was initiated but did not complete properly
  * @param {Session} session - The current user session
  * @param {PendingTransfer} pendingTransfer - The transfer to resume
  * @returns The orchestrator instance which will be able to resume the transfer
@@ -154,7 +155,10 @@ export async function createResumeOrchestrator(
   const initTransferOpArgs = operations[pendingTransfer.opIndex][1];
   const path = initTransferOpArgs[3] as Buffer[];
 
-  const { state, ...orchestrator } = await createBaseOrcestrator(session, path);
+  const { state, ...orchestrator } = await createBaseOrchestrator(
+    session,
+    path,
+  );
 
   /**
    * Accepts a cross chain transfer that was not completed
@@ -196,7 +200,7 @@ export async function createResumeOrchestrator(
   }
 
   /**
-   * Checks to see wether the specified transfer is already applied to
+   * Checks to see whether the specified transfer is already applied to
    * this blockchainRid.
    * @param targetChainRid the blockchain rid of the chain to check
    * @param txBlockchainRid the blockchain rid of the transaction containing the transfer
@@ -209,7 +213,7 @@ export async function createResumeOrchestrator(
     opIndex: number,
   ): Promise<boolean> {
     const connection = await createConnectionToBlockchainRid(
-      session.client,
+      session,
       targetChainRid,
     );
     return connection.query(isTransferApplied(txBlockchainRid, opIndex));
@@ -221,7 +225,7 @@ export async function createResumeOrchestrator(
   });
 }
 
-async function createBaseOrcestrator(
+async function createBaseOrchestrator(
   session: Session,
   path: Buffer[],
 ): Promise<OrchestratorBase> {
@@ -233,7 +237,7 @@ async function createBaseOrcestrator(
   };
 
   const directoryClient = await createClient({
-    nodeUrlPool: session.client.config.endpointPool.slice().map((ep) => ep.url),
+    nodeUrlPool: session.client.config.endpointPool.map((ep) => ep.url),
     blockchainIid: 0,
   });
 
@@ -271,14 +275,12 @@ async function createBaseOrcestrator(
           await (
             await getTransactionBuilderForChain(session, targetChainRid)
           )
-            .add(iccfOp)
-            .add(
+            .addWithoutAuthenticator(iccfOp)
+            .addWithoutAuthenticator(
               applyTransferOp(
                 initTransferTx,
                 state.tx!,
                 path.indexOf(targetChainRid),
-                1,
-                path.indexOf(targetChainRid) === 0 ? 1 : 3,
               ),
               (data: OnAnchoredHandlerData | null, error: Error | null) => {
                 if (error) {
@@ -332,7 +334,7 @@ async function createBaseOrcestrator(
     blockchainRid: Buffer,
   ) {
     const connection = await createConnectionToBlockchainRid(
-      session.client,
+      session,
       blockchainRid,
     );
     return transactionBuilder(session.account.authenticator, connection.client);
@@ -403,8 +405,8 @@ async function createBaseOrcestrator(
       Buffer.from(session.client.config.blockchainRid, "hex"),
     );
     await tb
-      .add(iccfOp)
-      .add(completeTransferOp(tx, transfer?.opIndex ?? 3))
+      .addWithoutAuthenticator(iccfOp)
+      .addWithoutAuthenticator(completeTransferOp(tx, transfer?.opIndex ?? 1))
       .buildAndSend();
 
     localEmitter.emit("TransferComplete");

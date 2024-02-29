@@ -20,6 +20,7 @@ import {
   gtv,
   RawGtx,
   SystemChainException,
+  GTX,
 } from "postchain-client";
 import {
   getNonceIdForTxContext,
@@ -27,7 +28,7 @@ import {
   BufferId,
 } from "@ft4/utils";
 import { OperationNotExistError } from "../errors";
-import { TxContext, TxBuilderTransaction } from "../types";
+import { TxContext } from "../types";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -88,7 +89,7 @@ export function transactionBuilder(
       .filter((store): store is FtKeyStore => !!store);
   }
 
-  async function buildUnsigned(): Promise<TxBuilderTransaction> {
+  async function buildUnsigned(): Promise<GTX> {
     if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
       throw new Error(
         "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
@@ -97,7 +98,7 @@ export function transactionBuilder(
     return await _buildUnsigned();
   }
 
-  async function _buildUnsigned(): Promise<TxBuilderTransaction> {
+  async function _buildUnsigned(): Promise<GTX> {
     const [operations, keyHandlers] = await authenticateOperations(
       _operations,
       _context,
@@ -105,7 +106,7 @@ export function transactionBuilder(
 
     keyHandlers.forEach((kh) => _keysUsed.push(kh));
 
-    const txn: TxBuilderTransaction = {
+    const txn: GTX = {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
       operations: [],
       signers: getSigners(_keysUsed),
@@ -217,7 +218,7 @@ export function transactionBuilder(
   }
 
   async function _build(): Promise<Buffer> {
-    const tx: TxBuilderTransaction = await _buildUnsigned();
+    const tx: GTX = await _buildUnsigned();
     const signersMap = getSignersMap(getFtKeyStores(_keysUsed));
     tx.signatures = await Promise.all(
       // For some signers we don't have access to their key stores, therefor we insert zero buffer
@@ -232,7 +233,7 @@ export function transactionBuilder(
 
   async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
     const directoryClient = await createClient({
-      nodeUrlPool: client.config.endpointPool.slice().map((ep) => ep.url),
+      nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
       blockchainIid: 0,
     });
     const anchoringClient = await getAnchoringClient(

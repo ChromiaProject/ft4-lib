@@ -1,6 +1,5 @@
 import { Buffer } from "buffer";
-import { gtx } from "postchain-client";
-import { TxBuilderTransaction } from "../types";
+import { GTX, gtx } from "postchain-client";
 
 export {
   AuthorizationError,
@@ -13,7 +12,7 @@ export {
 
 export { transactionBuilder } from "./transaction-builder";
 
-export function txDigest(tx: TxBuilderTransaction): Buffer {
+export function txDigest(tx: GTX): Buffer {
   return gtx.getDigestToSign({
     blockchainRid: tx.blockchainRid,
     signers: tx.signers,

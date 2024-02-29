@@ -1,4 +1,4 @@
-import { RellOperation, TransactionReceipt } from "postchain-client";
+import { TransactionReceipt } from "postchain-client";
 import { OptionalPageCursor, Session } from "@ft4/types";
 import { Buffer } from "buffer";
 
@@ -40,13 +40,6 @@ export type EntityRetriever<T> = {
 export type PaginatedEntity<T> = {
   data: T[];
   nextCursor: OptionalPageCursor;
-};
-
-export type TxBuilderTransaction = {
-  blockchainRid: Buffer;
-  operations: RellOperation[];
-  signers: Buffer[];
-  signatures: Buffer[];
 };
 
 export type TxContext = { [nonceId: string]: number | null };

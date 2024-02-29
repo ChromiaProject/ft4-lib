@@ -209,3 +209,17 @@ export function opToRellOp(operation: Operation): RellOperation {
 export function emptyOp(): Operation {
   return { name: "empty_op", args: [] };
 }
+
+export function* numberGenerator(): Generator<number> {
+  let count = 0;
+  while (true) {
+    yield count++;
+  }
+}
+
+export function* asyncNumberGenerator(): Generator<Promise<number>> {
+  let count = 0;
+  while (true) {
+    yield Promise.resolve(count++);
+  }
+}

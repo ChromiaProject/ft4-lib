@@ -17,6 +17,7 @@ import { Connection, Session } from "@ft4/types";
 import { AuthenticatedAccount } from "@ft4/accounts";
 import { Blockchain } from "../../../util/types";
 import { Amount, Asset } from "@ft4/asset";
+import { numberGenerator } from "@ft4/util/util";
 
 export type TestContext = {
   connection0: Connection;
@@ -34,7 +35,12 @@ export type TestContext = {
   sampleAsset: Asset;
 };
 
-export async function setupTestEnvironment(mintAmount?: Amount) {
+const gen = numberGenerator();
+
+export async function setupTestEnvironment(
+  testName: string,
+  mintAmount?: Amount,
+) {
   const { multichain00, multichain01, multichain02 } = await fetchBlockchains();
 
   const connection0 = createConnection(
@@ -47,10 +53,12 @@ export async function setupTestEnvironment(mintAmount?: Amount) {
     await createChromiaClientToMultichain(multichain02.rid),
   );
 
+  const num = gen.next().value;
+
   const asset = await getNewAsset(
     connection0.client,
-    "orchestrator",
-    "ORCHESTRATOR",
+    "orchestrator-test-" + testName + "-asset" + num,
+    "ORCHESTRATOR-test-" + testName + "-asset" + num,
   );
   await registerCrosschainAsset(
     connection2.client,

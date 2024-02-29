@@ -10,7 +10,7 @@ import {
   Operation,
   TransactionReceipt,
 } from "postchain-client";
-import { LoginKeyStore, LoginManager } from "./authentication/login-manager";
+import { LoginManager } from "./authentication/login-manager";
 import { TransferDetail, AuthDescriptorValidator } from "./accounts";
 
 export type PageCursor = string;
@@ -83,8 +83,10 @@ export type KeyStoreInteractor = {
     cursor: OptionalPageCursor,
   ): Promise<PaginatedEntity<Account>>;
   getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(loginKeyStore?: LoginKeyStore): LoginManager;
-  onKeyStoreChanged(callback: (newKeyStore: KeyStoreInteractor) => void): void;
+  getLoginManager(): LoginManager;
+  onKeyStoreChanged(
+    callback: (newKeyStore: KeyStoreInteractor | null) => void,
+  ): void;
 };
 
 export type AuthHandler = {

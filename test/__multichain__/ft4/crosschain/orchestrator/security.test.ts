@@ -8,7 +8,7 @@ describe("Security", () => {
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment();
+    testContext = await setupTestEnvironment("security");
   });
 
   async function createTestOrchestrator(

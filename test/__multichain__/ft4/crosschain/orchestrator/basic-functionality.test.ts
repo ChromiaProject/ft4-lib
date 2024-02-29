@@ -3,15 +3,12 @@ import { TestContext, setupTestEnvironment } from "./common-setup";
 import { createAmount, registerCrosschainAsset } from "@ft4/index";
 import adminUser from "../../../../util/admin_user";
 
-// This is needed to allow to check whether transaction is anchored
-jest.unmock("postchain-client");
-
 describe("Basic Functionality", () => {
   const mintAmount = createAmount(100, 0);
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment(mintAmount);
+    testContext = await setupTestEnvironment("basic-functionality", mintAmount);
   });
 
   async function createTestOrchestrator() {

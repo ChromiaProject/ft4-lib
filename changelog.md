@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2024-02-29
+
+### Breaking 💔
+
+- updated `postchain-client` version to 1.15.0
+- Moved `logout` function from `LoginManager` to object returned from `LoginManager.login()` and `registerAccount()`.
+- Moved `loginKeyStore` parameter from `KeyStoreInteractor.getLoginManager()` to `LoginManager.login(LoginOptions)`.
+
+### Added ✅
+
+- account registration strategies
+  - create on transfer
+    - subscription
+
+- functions to directly create account with fee and subscription strategies
+
+### Fixed 🔧
+- uncaught exception triggered after creating evm keystore and when all accounts disconnected from wallet GUI
+
 ## [0.4.0] - 2024-02-15
 
 ### Changed 🪙

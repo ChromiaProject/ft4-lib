@@ -43,7 +43,6 @@ import {
   createAuthenticator,
 } from "./authentication";
 import { createLoginManager } from "./authentication/login-manager";
-import { LoginKeyStore } from "./authentication/login-manager/stores/types";
 import { authMessageTemplate, nonce } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
@@ -55,6 +54,26 @@ import {
 } from "./types";
 import { createAuthDescriptorValidator } from "./accounts";
 import { getLoginConfig } from "./authentication/login-manager";
+import { createClient } from "postchain-client";
+import { formatter } from "postchain-client";
+
+export async function createConnectionToBlockchainRid(
+  oldConnection: Connection,
+  newBlockchainRid: BufferId,
+): Promise<Connection> {
+  return createConnection(
+    await createClient({
+      // assume same D1. Cross-chain doesn't work otherwise
+      directoryNodeUrlPool: oldConnection.client.config.endpointPool.map(
+        (ep) => ep.url,
+      ),
+      blockchainRid:
+        typeof newBlockchainRid == "string"
+          ? newBlockchainRid
+          : formatter.toString(newBlockchainRid),
+    }),
+  );
+}
 
 export function createConnection(client: IClient): Connection {
   const connection: Connection = Object.freeze({
@@ -245,12 +264,17 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
-    getLoginManager: (loginKeyStore?: LoginKeyStore) =>
-      createLoginManager(connection, keyStore, loginKeyStore),
-    onKeyStoreChanged: async (handler: (arg0: KeyStoreInteractor) => void) => {
-      ftEventEmitter.on("KeyStoreChange", (newKeyStore: KeyStore) =>
-        handler(createKeyStoreInteractor(client, newKeyStore)),
-      );
+    getLoginManager: () => createLoginManager(connection, keyStore),
+    onKeyStoreChanged: async (
+      handler: (arg0: KeyStoreInteractor | null) => void,
+    ) => {
+      ftEventEmitter.on("KeyStoreChange", (newKeyStore: KeyStore | null) => {
+        if (!newKeyStore) {
+          handler(null);
+          return;
+        }
+        handler(createKeyStoreInteractor(client, newKeyStore));
+      });
     },
   });
 }

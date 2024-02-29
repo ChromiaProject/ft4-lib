@@ -13,6 +13,31 @@ import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/s
 import { createAuthDataService } from "@ft4/ft-session";
 import { Connection } from "@ft4/index";
 import { gtv } from "postchain-client";
+import { LoginKeyStore } from "@ft4/authentication/login-manager";
+import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
+import { aggregateSigners } from "@ft4/accounts/auth-descriptor";
+
+export async function fetchLoginDetails(
+  connection: Connection,
+  authDescriptor: AnyAuthDescriptorRegistration,
+  loginConfig: LoginConfigOptions | null = null,
+): Promise<{
+  accountId: Buffer;
+  loginDetails: {
+    authDescriptor: AuthDescriptorRegistration<SingleSig>;
+    loginKeyStore: LoginKeyStore;
+    disposableKeyStore: FtKeyStore;
+  } | null;
+}> {
+  const accountId = getAccountIdFromSigners(aggregateSigners(authDescriptor));
+
+  return {
+    accountId,
+    loginDetails:
+      loginConfig &&
+      (await getLoginDetails(connection, accountId, loginConfig)),
+  };
+}
 
 export function getAccountIdFromSigners(signers: Buffer[]): Buffer {
   if (!signers.length)
@@ -27,20 +52,23 @@ export async function getLoginDetails(
   loginConfig: LoginConfigOptions,
 ): Promise<{
   authDescriptor: AuthDescriptorRegistration<SingleSig>;
-  keyStore: FtKeyStore;
+  loginKeyStore: LoginKeyStore;
+  disposableKeyStore: FtKeyStore;
 }> {
   const authDataService = createAuthDataService(connection);
   const config = await getConfigFromOptions(authDataService, loginConfig);
-  const loginKeyStore = createInMemoryLoginKeyStore();
-  const keyStore = await loginKeyStore.generateKey(accountId);
+  const loginKeyStore =
+    loginConfig.loginKeyStore || createInMemoryLoginKeyStore();
+  const disposableKeyStore = await loginKeyStore.generateKey(accountId);
   const authDescriptor = createSingleSigAuthDescriptorRegistration(
     config.flags,
-    keyStore.id,
+    disposableKeyStore.id,
     config.rules,
   );
 
   return {
-    keyStore,
     authDescriptor,
+    loginKeyStore,
+    disposableKeyStore,
   };
 }

@@ -1,4 +1,4 @@
-import { Operation } from "postchain-client";
+import { GTX, Operation } from "postchain-client";
 import { FtKeyStore, ftAuth } from ".";
 import { AuthDataService, KeyHandler } from "..";
 import {
@@ -6,7 +6,7 @@ import {
   AnyAuthDescriptorRegistration,
   aggregateSigners,
 } from "@ft4/accounts";
-import { BufferId, TxBuilderTransaction, TxContext } from "@ft4/utils";
+import { BufferId, TxContext } from "@ft4/utils";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
@@ -23,7 +23,7 @@ export function createFtKeyHandler(
       _context: TxContext,
       _authDataService: AuthDataService,
     ) => authorize(accountId, authDescriptor.id, operation),
-    sign: (transaction: TxBuilderTransaction) => keyStore.sign(transaction),
+    sign: (transaction: GTX) => keyStore.sign(transaction),
     getSigners: () => aggregateSigners(authDescriptor),
   });
 }

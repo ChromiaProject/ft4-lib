@@ -58,7 +58,7 @@ function test_create_account_on_internal_transfer_success() {
     );
 }
 
-function test_internal_transfer_fails_if_wrong_asset_is_transfereed() {
+function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
     val alice = utils.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -99,7 +99,7 @@ function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
         .run_must_fail("This asset is already transferred");
 }
 
-function test_internal_transfer_fails_if_insufficient_amount_is_transfereed() {
+function test_internal_transfer_fails_if_insufficient_amount_is_transferred() {
     val alice = utils.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -290,7 +290,7 @@ function test_create_account_on_crosschain_transfer_success() {
     );
 }
 
-function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
+function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -321,7 +321,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transfereed() {
         .run_must_fail("No suitable transfer strategy found");
 }
 
-function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
+function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val recipient_id = rell.test.pubkeys.bob.hash();
@@ -333,7 +333,7 @@ function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
     val min_amount = allowed_assets[asset.id];
     val amount = min_amount;
 
-    val tx = gtx_transaction(
+    val tx1 = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
@@ -350,20 +350,37 @@ function test_crosschain_transfer_fails_same_asset_is_transfereed_again() {
         signatures = []
     );
 
+    val tx2 = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = sender_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    receiver_id = recipient_id,
+                    asset_id = asset.id,
+                    amount = amount + 1,
+                    hops = [chain_context.blockchain_rid]
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx1, 1, tx1, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx2, 1, tx2, 1, 0))
         .nop()
         .run_must_fail("This asset is already transferred");
 }
 
-function test_crosschain_transfer_fails_if_insufficient_amount_is_transfereed() {
+function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val recipient_id = rell.test.pubkeys.bob.hash();

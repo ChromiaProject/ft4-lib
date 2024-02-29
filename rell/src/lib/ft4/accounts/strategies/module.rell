@@ -14,7 +14,7 @@ function get_strategy(strategy_name: name): _strategy {
     return strategies[strategy_name];
 }
 
-function _register_account() {
+function _register_account(): accounts.account {
     val tx_operations = op_context.get_all_operations();
     val prev_op = tx_operations[op_context.op_index-1];
     val strategy_name = prev_op.name;
@@ -46,6 +46,8 @@ function _register_account() {
     accounts.create_rate_limiter_state_for_account(account);
 
     strategy.action(account, strategy_params);
+
+    return account;
 }
 
 function get_account_id_from_signers(signers: list<byte_array>) {

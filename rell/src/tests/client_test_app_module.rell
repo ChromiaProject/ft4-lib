@@ -10,3 +10,4 @@ import ^^.lib.ft4.accounts.strategies.open;
 import ^^.lib.ft4.accounts.strategies.transfer;
 import transfer_open: ^^.lib.ft4.accounts.strategies.transfer.open;
 import transfer_fee: ^^.lib.ft4.accounts.strategies.transfer.fee;
+import transfer_subscription: ^^.lib.ft4.accounts.strategies.transfer.subscription;

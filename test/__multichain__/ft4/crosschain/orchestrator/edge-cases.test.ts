@@ -12,7 +12,7 @@ describe("Edge Cases", () => {
   let testContext: TestContext;
 
   beforeEach(async () => {
-    testContext = await setupTestEnvironment(mintAmount);
+    testContext = await setupTestEnvironment("edge-cases", mintAmount);
   });
 
   async function createTestOrchestrator(
@@ -83,7 +83,7 @@ describe("Edge Cases", () => {
 
     await expect(
       createTestOrchestrator(undefined, nonExistingAsset),
-    ).rejects.toThrowError("The specified asset could not be found");
+    ).rejects.toThrow("The specified asset could not be found");
 
     // Test for incompatible asset
     const incompatibleAsset = await getNewAsset(
@@ -95,7 +95,7 @@ describe("Edge Cases", () => {
     // We created the asset but didn't register it, thus it is incompatible
     await expect(
       createTestOrchestrator(undefined, incompatibleAsset),
-    ).rejects.toThrowError(/^Failed to find a path to the target chain/);
+    ).rejects.toThrow(/^Failed to find a path to the target chain/);
   });
 
   it("handles missing or invalid parent details", async () => {

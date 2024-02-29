@@ -2,7 +2,6 @@ import {
   Connection,
   EvmKeyStore,
   FtKeyStore,
-  Session,
   createAuthenticator,
 } from "@ft4/index";
 import { Strategy } from "./types";
@@ -15,30 +14,31 @@ import {
 } from "./operations";
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import { getKeyHandlersForKeyStores, isFtKeyStore } from "@ft4/authentication";
+import { SessionWithLogout } from "@ft4/authentication/login-manager/index";
 
 export async function registerAccount(
   connection: Connection,
-  keyStore: FtKeyStore | EvmKeyStore,
+  masterKeyStore: FtKeyStore | EvmKeyStore,
   strategy: Strategy,
   registerAccountOperation: Operation = registerAccountOp(),
-): Promise<Session> {
-  const { strategyOperation, loginKeyStore } =
-    await strategy.getRegistrationDetails(connection);
+): Promise<SessionWithLogout> {
+  const { strategyOperation, loginKeyStore, disposableKeyStore } =
+    await strategy.getRegistrationDetails(connection, masterKeyStore);
 
   // TODO: update strategy to return account id and then use the value here
-  const accountId = gtv.gtvHash(keyStore.id);
+  const accountId = gtv.gtvHash(masterKeyStore.id);
 
   const ftKeyStores: FtKeyStore[] = [];
   let evmKeyStore: EvmKeyStore | null = null;
 
-  if (isFtKeyStore(keyStore)) {
-    ftKeyStores.push(keyStore);
+  if (isFtKeyStore(masterKeyStore)) {
+    ftKeyStores.push(masterKeyStore);
   } else {
-    evmKeyStore = keyStore;
+    evmKeyStore = masterKeyStore;
   }
 
-  if (loginKeyStore) {
-    ftKeyStores.push(loginKeyStore);
+  if (disposableKeyStore) {
+    ftKeyStores.push(disposableKeyStore);
   }
 
   const transaction = await createAndSignTransaction(
@@ -71,7 +71,15 @@ export async function registerAccount(
     createAuthDataService(connection),
   );
 
-  return createSession(connection, authenticator);
+  return Object.freeze({
+    session: createSession(connection, authenticator),
+    logout: async () => {
+      if (loginKeyStore) {
+        await loginKeyStore.clear(accountId);
+        // TODO delete disposable auth descriptor, FT4-426
+      }
+    },
+  });
 }
 
 async function evmSignaturesOperation(
@@ -85,3 +93,5 @@ async function evmSignaturesOperation(
   const signature = await keyStore.signMessage(message);
   return registerAccountEvmSignatures([signature]);
 }
+
+export { StrategyError } from "./types";

@@ -1,0 +1,99 @@
+import ^^.lib.ft4.assets;
+import ^^.lib.ft4.accounts;
+import ^^.lib.ft4.crosschain;
+
+object crosschain_extensions_state {
+    mutable is_before_init_transfer_called: boolean = false;
+    mutable before_init_transfer_sender: byte_array = x"";
+    mutable before_init_transfer_recipient: byte_array = x"";
+    mutable before_init_transfer_asset: byte_array = x"";
+    mutable before_init_transfer_amount: big_integer = 0L;
+
+    mutable is_after_init_transfer_called: boolean = false;
+    mutable after_init_transfer_sender: byte_array = x"";
+    mutable after_init_transfer_recipient: byte_array = x"";
+    mutable after_init_transfer_asset: byte_array = x"";
+    mutable after_init_transfer_amount: big_integer = 0L;
+
+    mutable is_before_apply_transfer_called: boolean = false;
+    mutable before_apply_transfer_sender_blockchain_rid: byte_array = x"";
+    mutable before_apply_transfer_sender: byte_array = x"";
+    mutable before_apply_transfer_recipient: byte_array = x"";
+    mutable before_apply_transfer_asset: byte_array = x"";
+    mutable before_apply_transfer_amount: big_integer = 0L;
+    mutable before_apply_transfer_is_final: boolean = false;
+
+    mutable is_after_apply_transfer_called: boolean = false;
+    mutable after_apply_transfer_sender_blockchain_rid: byte_array = x"";
+    mutable after_apply_transfer_sender: byte_array = x"";
+    mutable after_apply_transfer_recipient: byte_array = x"";
+    mutable after_apply_transfer_asset: byte_array = x"";
+    mutable after_apply_transfer_amount: big_integer = 0L;
+    mutable after_apply_transfer_is_final: boolean = false;
+}
+
+@extend(crosschain.before_init_transfer) function(
+    sender: accounts.account,
+    recipient_id: byte_array,
+    assets.asset,
+    amount: big_integer,
+    hops: list<byte_array>
+) {
+    crosschain_extensions_state.is_before_init_transfer_called = true;
+    crosschain_extensions_state.before_init_transfer_sender = sender.id;
+    crosschain_extensions_state.before_init_transfer_recipient = recipient_id;
+    crosschain_extensions_state.before_init_transfer_asset = asset.id;
+    crosschain_extensions_state.before_init_transfer_amount = amount;
+}
+
+@extend(crosschain.after_init_transfer) function(
+    sender: accounts.account,
+    recipient_id: byte_array,
+    assets.asset,
+    amount: big_integer,
+    hops: list<byte_array>,
+    crosschain.pending_transfer
+) {
+    crosschain_extensions_state.is_after_init_transfer_called = true;
+    crosschain_extensions_state.after_init_transfer_sender = sender.id;
+    crosschain_extensions_state.after_init_transfer_recipient = recipient_id;
+    crosschain_extensions_state.after_init_transfer_asset = asset.id;
+    crosschain_extensions_state.after_init_transfer_amount = amount;
+}
+
+@extend(crosschain.before_apply_transfer) function(
+    sender_blockchain_rid: byte_array,
+    sender_account_id: byte_array,
+    recipient_id: byte_array,
+    assets.asset,
+    amount: big_integer,
+    hop_index: integer,
+    is_final: boolean
+) {
+    crosschain_extensions_state.is_before_apply_transfer_called = true;
+    crosschain_extensions_state.before_apply_transfer_sender_blockchain_rid = sender_blockchain_rid;
+    crosschain_extensions_state.before_apply_transfer_sender = sender_account_id;
+    crosschain_extensions_state.before_apply_transfer_recipient = recipient_id;
+    crosschain_extensions_state.before_apply_transfer_asset = asset.id;
+    crosschain_extensions_state.before_apply_transfer_amount = amount;
+    crosschain_extensions_state.before_apply_transfer_is_final = is_final;
+}
+
+@extend(crosschain.after_apply_transfer) function(
+    sender_blockchain_rid: byte_array,
+    sender_account_id: byte_array,
+    recipient_id: byte_array,
+    assets.asset,
+    amount: big_integer,
+    hop_index: integer,
+    is_final: boolean,
+    crosschain.applied_transfers
+) {
+    crosschain_extensions_state.is_after_apply_transfer_called = true;
+    crosschain_extensions_state.after_apply_transfer_sender_blockchain_rid = sender_blockchain_rid;
+    crosschain_extensions_state.after_apply_transfer_sender = sender_account_id;
+    crosschain_extensions_state.after_apply_transfer_recipient = recipient_id;
+    crosschain_extensions_state.after_apply_transfer_asset = asset.id;
+    crosschain_extensions_state.after_apply_transfer_amount = amount;
+    crosschain_extensions_state.after_apply_transfer_is_final = is_final;
+}

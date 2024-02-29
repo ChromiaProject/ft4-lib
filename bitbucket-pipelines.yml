@@ -1,8 +1,7 @@
-image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.1.0
+image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.2.0@sha256:c04590bf5702e3e3071ac3bae28ad4e1129ac7239e1bfd655451f718807ca1fd
 
 options:
   max-time: 15
-
 
 e2e-tests: &e2e-tests-anchor
     max-time: 15
@@ -34,6 +33,17 @@ e2e-tests: &e2e-tests-anchor
     services:
       - docker
 
+multichain-tests: &multichain-tests-anchor
+  name: Multichain tests
+  caches:
+    - node
+  services:
+    - docker
+  script:
+    - ./install-chr-and-pmc.sh
+    - npm ci
+    - bash scripts/multichain-jesttest.sh
+
 pipelines:
   pull-requests:
     '**':
@@ -47,6 +57,7 @@ pipelines:
             - chr install -s configs/rell-test.yml
             - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
             - npm ci
+            - npm run compile
             - export JEST_JUNIT_OUTPUT_NAME=unit.xml
             - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
             - export TESTCONTAINERS_RYUK_DISABLED=true
@@ -57,9 +68,13 @@ pipelines:
           services:
             - postgres
             - docker
-      - step:
-          <<: *e2e-tests-anchor
-          trigger: manual
+      - parallel:
+        - step:
+            <<: *e2e-tests-anchor
+            trigger: manual
+        - step:
+            <<: *multichain-tests-anchor
+            trigger: manual
   branches:
     ft4:
       - step:
@@ -73,6 +88,7 @@ pipelines:
             - rm .chromia/config
     development:
       - step: *e2e-tests-anchor
+      - step: *multichain-tests-anchor
   custom:
     deploy-to-stable:
       - step:
@@ -94,6 +110,8 @@ pipelines:
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
+    Multichain tests:
+      - step: *multichain-tests-anchor
 definitions:
   caches:
     demo-node: examples/demo/client/node_modules

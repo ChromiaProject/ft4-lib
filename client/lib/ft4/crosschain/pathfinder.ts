@@ -1,14 +1,10 @@
-import {
-  BlockchainUrlUndefinedException,
-  IClient,
-  createClient,
-  formatter,
-} from "postchain-client";
-import { createConnection, Connection } from "@ft4/index";
+import { BlockchainUrlUndefinedException, formatter } from "postchain-client";
+import { Connection } from "@ft4/index";
 import { Buffer } from "buffer";
 import { Asset } from "@ft4/asset";
 import { getAssetOriginById } from "./query-functions";
 import { BufferId } from "@ft4/utils";
+import { createConnectionToBlockchainRid } from "@ft4/ft-session";
 
 export class PathfinderError extends Error {
   constructor(msg?) {
@@ -61,7 +57,7 @@ export async function findPathToChainForAsset(
 
       try {
         tmpConnection = await createConnectionToBlockchainRid(
-          connection.client,
+          connection,
           lastNode,
         );
       } catch (error) {
@@ -129,22 +125,4 @@ export async function findPathToChainForAsset(
       ),
     )
     .slice(1); // remove starting chain
-}
-
-export async function createConnectionToBlockchainRid(
-  oldClient: IClient,
-  newBlockchainRid: BufferId,
-) {
-  return createConnection(
-    await createClient({
-      // assume same D1. Cross-chain doesn't work otherwise
-      directoryNodeUrlPool: oldClient.config.endpointPool
-        .slice()
-        .map((ep) => ep.url),
-      blockchainRid:
-        typeof newBlockchainRid == "string"
-          ? newBlockchainRid
-          : formatter.toString(newBlockchainRid),
-    }),
-  );
 }
