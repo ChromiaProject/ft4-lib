@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0r] - 2024-02-29
+
+### Breaking 💔
+
+- Change mount name of `lib.ft4.accounts` module from `ft` to `ft4`, affecting these entities:
+    - account
+    - account_auth_descriptor
+    - auth_descriptor_signer
+    - rl_state
+
+### Changed 🪙
+
+- Return created account from _register_account() function
+
+### Added ✅
+ 
+- Extension functions for crosschain transfers: 
+    - before_init_transfer
+    - after_init_transfer
+    - before_apply_transfer
+    - after_apply_transfer
+
+- `register_crosschain_asset` function
+
+- account creation strategies
+    - create on transfer
+        - subscription
+    - configurable fee account
+
 ## [0.4.0r] - 2024-02-15
 
 ### Changed 🪙
