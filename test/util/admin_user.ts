@@ -1,7 +1,7 @@
 import { encryption, gtx } from "postchain-client";
 import { User } from "./test-user";
 import {
-  FlagsType,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts/auth-descriptor";
 import { testAdFromRegistration } from "./util";
@@ -15,7 +15,7 @@ export default function adminUser(): User {
 
   const signatureProvider = gtx.newSignatureProvider(keyPair);
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
-    [FlagsType.Account, FlagsType.Transfer],
+    [AuthFlag.Account, AuthFlag.Transfer],
     signatureProvider.pubKey,
     null,
   );

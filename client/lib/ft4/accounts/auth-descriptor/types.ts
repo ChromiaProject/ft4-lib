@@ -1,10 +1,10 @@
 import { Buffer } from "buffer";
 import { AuthDescriptorRules, RawRules } from "./rules";
 
-export enum FlagsType {
-  Account = "A", // Change Account settings
-  Transfer = "T", // Transfer balance
-}
+export const AuthFlag = Object.freeze({
+  Account: "A", // Change Account settings
+  Transfer: "T", // Transfer balance
+});
 
 export enum AuthType {
   SingleSig = "S",

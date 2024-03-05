@@ -3,7 +3,7 @@ import {
   initTransfer as initTransferOp,
 } from "@ft4/crosschain/operations";
 import {
-  FlagsType,
+  AuthFlag,
   createAmount,
   createConnection,
   registerCrosschainAsset,
@@ -42,12 +42,12 @@ describe("Crosschain transfer", () => {
     );
 
     const account00 = await AccountBuilder.account(connection00)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .withBalance(asset00, createAmount(100, asset00.decimals))
       .build();
 
     const account01 = await AccountBuilder.account(connection01)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);

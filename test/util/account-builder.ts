@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import {
-  FlagsType,
+  AuthFlag,
   deriveAuthDescriptorId,
   AnyAuthDescriptorRegistration,
   AuthDescriptorRules,
@@ -40,7 +40,7 @@ class AccountBuilder {
     authDescriptor: AnyAuthDescriptorRegistration;
     signers: (SignatureProvider | KeyPair)[];
   };
-  private flags: FlagsType[] = [FlagsType.Account, FlagsType.Transfer];
+  private flags: string[] = [AuthFlag.Account, AuthFlag.Transfer];
   private points = 0;
 
   constructor(connection: Connection) {
@@ -52,7 +52,7 @@ class AccountBuilder {
     return new AccountBuilder(connection);
   }
 
-  withAuthFlags(...flags: FlagsType[]): AccountBuilder {
+  withAuthFlags(...flags: string[]): AccountBuilder {
     this.flags = flags;
     return this;
   }
@@ -235,7 +235,7 @@ class AccountBuilder {
 
   private getAccountManagerAuthDescriptor(managerSigProv = this.signer) {
     return createSingleSigAuthDescriptorRegistration(
-      this.flags.concat(FlagsType.Account),
+      this.flags.concat(AuthFlag.Account),
       managerSigProv.pubKey,
       null,
     );

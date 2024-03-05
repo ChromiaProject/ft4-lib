@@ -1,6 +1,6 @@
 import { newSignatureProvider } from "postchain-client";
 import {
-  FlagsType,
+  AuthFlag,
   blockTime,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
@@ -99,7 +99,7 @@ describe("Key store interactor", () => {
       authDescriptor: ad1,
     } = createTestAuthDescriptor(["M"]);
     const { keyStore: keyStore2, authDescriptor: ad2 } =
-      createTestAuthDescriptor([FlagsType.Transfer]);
+      createTestAuthDescriptor([AuthFlag.Transfer]);
 
     const account = await AccountBuilder.account(connection)
       .withSigner(newSignatureProvider(keyPair1))
@@ -128,7 +128,7 @@ describe("Key store interactor", () => {
       .build();
 
     const ad2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyPair2.pubKey,
       lessThan(opCount(2)),
     );
@@ -140,14 +140,14 @@ describe("Key store interactor", () => {
     ).getSession(account.id);
 
     const ad3 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now() + 10000)),
     );
     await account.addAuthDescriptor(ad3, createInMemoryFtKeyStore(keyPair2));
 
     const ad4 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now())),
     );
@@ -193,7 +193,7 @@ describe("Key store interactor", () => {
       .build();
 
     const ad2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyPair2.pubKey,
       lessThan(opCount(2)),
     );
@@ -205,7 +205,7 @@ describe("Key store interactor", () => {
     ).getSession(account.id);
 
     const ad3 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyPair2.pubKey,
       greaterThan(blockTime(Date.now() + 10000)),
     );
@@ -242,7 +242,7 @@ describe("Key store interactor", () => {
       authDescriptor: ad1,
     } = createTestAuthDescriptor();
     const { keyStore: keyStore2, authDescriptor: ad2 } =
-      createTestAuthDescriptor([FlagsType.Transfer]);
+      createTestAuthDescriptor([AuthFlag.Transfer]);
 
     const account = await AccountBuilder.account(connection)
       .withSigner(newSignatureProvider(keyPair1))

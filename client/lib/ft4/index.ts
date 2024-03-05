@@ -62,7 +62,7 @@ export {
   AuthDescriptorSimpleRule,
   AuthDescriptorComplexRule,
   AuthType,
-  FlagsType,
+  AuthFlag,
   Account,
   MultiSig,
   RateLimit,

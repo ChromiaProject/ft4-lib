@@ -13,7 +13,7 @@ import { authDescriptorById } from "@ft4/accounts/account-queries";
 import { createAccountObject } from "@ft4/accounts/account-query-functions";
 import {
   AuthDescriptorRules,
-  FlagsType,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
   gtv,
@@ -42,7 +42,7 @@ export function createLoginManager(
 
       // We need an auth descriptor with admin flag in order to add a disposable key
       const adminAuthDescriptor = authDescriptors.find((authDescriptor) =>
-        authDescriptor.args.flags.includes(FlagsType.Account),
+        authDescriptor.args.flags.includes(AuthFlag.Account),
       );
 
       if (!adminAuthDescriptor) {

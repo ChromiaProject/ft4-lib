@@ -1,7 +1,7 @@
 import { nop } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { emptyOp } from "../util/util";
-import { FlagsType } from "@ft4/index";
+import { AuthFlag } from "@ft4/index";
 import { fetchBlockchains } from "./util/blockchain";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
@@ -23,7 +23,7 @@ describe("transaction builder", () => {
     );
 
     account00 = await AccountBuilder.account(connection00)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
   });
 

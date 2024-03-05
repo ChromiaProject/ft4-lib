@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { EthersError, ethers } from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
 import {
-  FlagsType,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
 } from "@ft4/accounts/auth-descriptor";
@@ -79,7 +79,7 @@ describe("EVM key handler", () => {
     const message = "Sign this message with {nonce}";
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -138,7 +138,7 @@ describe("EVM key handler", () => {
     const message = "Sign this message with {nonce}";
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -196,7 +196,7 @@ describe("EVM key handler", () => {
     const message = "Sign this message with {nonce}";
     let keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       keyStore.address,
       null,
     );

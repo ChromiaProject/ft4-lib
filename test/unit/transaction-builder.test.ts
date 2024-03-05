@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor, emptyOp } from "../util/util";
 import { transfer } from "@ft4/accounts/account-operations";
-import { FlagsType, aggregateSigners } from "@ft4/accounts/auth-descriptor";
+import { AuthFlag, aggregateSigners } from "@ft4/accounts/auth-descriptor";
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { registerAccount } from "@ft4/admin/admin-operations";
 import { createAmount } from "@ft4/asset/amount";
@@ -63,7 +63,7 @@ describe("Transaction Builder", () => {
     const accountId = encryption.randomBytes(32);
 
     const { keyPair: pair, authDescriptor: ad } = createTestAuthDescriptor([
-      FlagsType.Transfer,
+      AuthFlag.Transfer,
     ]);
     authDescriptor = ad;
     keyPair = pair;
@@ -73,9 +73,9 @@ describe("Transaction Builder", () => {
 
     authDataService = createFakeAuthDataService(
       {
-        ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
+        ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
         ["ft4.admin.register_account"]: {
-          flags: [FlagsType.Account],
+          flags: [AuthFlag.Account],
           message: "",
         },
         ["testOperation"]: { flags: [], message: "" },
@@ -92,7 +92,7 @@ describe("Transaction Builder", () => {
 
   function getMocks() {
     const { authDescriptor, keyPair } = createTestAuthDescriptor([
-      FlagsType.Account,
+      AuthFlag.Account,
     ]);
 
     const keyStoreMock: FtKeyStore = {

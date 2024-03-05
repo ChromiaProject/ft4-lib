@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { encryption } from "postchain-client";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor } from "../util/util";
-import { AnyAuthDescriptor, FlagsType } from "@ft4/accounts/auth-descriptor";
+import { AnyAuthDescriptor, AuthFlag } from "@ft4/accounts/auth-descriptor";
 import {
   FtKeyStore,
   createAuthenticator,
@@ -25,9 +25,9 @@ describe("Authenticator", () => {
 
   it("uses non-interactive key store if both non-interactive and interactive auth handlers satisfy auth requirements", async () => {
     const { keyPair: keyPair1, authDescriptor: authDescriptor1 } =
-      createTestAuthDescriptor([FlagsType.Transfer], null);
+      createTestAuthDescriptor([AuthFlag.Transfer], null);
     const { keyPair: keyPair2, authDescriptor: authDescriptor2 } =
-      createTestAuthDescriptor([FlagsType.Transfer], null);
+      createTestAuthDescriptor([AuthFlag.Transfer], null);
 
     const interactiveKeyStore: FtKeyStore = {
       isInteractive: true,

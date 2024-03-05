@@ -10,7 +10,7 @@ import {
 } from "@ft4/accounts/account-operations";
 import {
   AuthDescriptorRegistration,
-  FlagsType,
+  AuthFlag,
   MultiSig,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
@@ -67,7 +67,7 @@ describe("Test the account", () => {
   it("Register account on blockchain", async () => {
     const user = testUser();
     const ad = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account, FlagsType.Transfer],
+      [AuthFlag.Account, AuthFlag.Transfer],
       user.signatureProvider.pubKey,
       null,
     );
@@ -83,7 +83,7 @@ describe("Test the account", () => {
 
   it("can add new auth descriptor if has account edit rights", async () => {
     const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(FlagsType.Account)
+      .withAuthFlags(AuthFlag.Account)
       .build();
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
@@ -96,7 +96,7 @@ describe("Test the account", () => {
 
   it("returns a session that is aware of the new auth descriptor", async () => {
     const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(FlagsType.Account)
+      .withAuthFlags(AuthFlag.Account)
       .build();
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
@@ -116,7 +116,7 @@ describe("Test the account", () => {
 
   it("cannot add new auth descriptor if account doesn't have account edit rights", async () => {
     const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Transfer)
       .buildAsNonManager();
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
@@ -131,7 +131,7 @@ describe("Test the account", () => {
     const kp1 = pcl.newSignatureProvider();
     const kp2 = pcl.newSignatureProvider();
     const ad = createMultiSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       [kp1.pubKey, kp2.pubKey],
       2,
       null,
@@ -157,7 +157,7 @@ describe("Test the account", () => {
     const user1 = testUser();
     const user2 = testUser();
     const registration = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       user1.signatureProvider.pubKey,
       null,
     );
@@ -172,7 +172,7 @@ describe("Test the account", () => {
     };
 
     const ad = createMultiSigAuthDescriptorRegistration(
-      [FlagsType.Account, FlagsType.Transfer],
+      [AuthFlag.Account, AuthFlag.Transfer],
       [user1.signatureProvider.pubKey, user2.signatureProvider.pubKey],
       2,
       null,
@@ -295,7 +295,7 @@ describe("Test the account", () => {
     const keyPair = pcl.encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyStore.pubKey,
       null,
     );
@@ -309,7 +309,7 @@ describe("Test the account", () => {
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       keyPair2.pubKey,
       null,
     );
@@ -320,7 +320,7 @@ describe("Test the account", () => {
 
     const data = await session.account.getAuthDescriptors();
     const authDesc = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       keyStore.pubKey,
       null,
     );
@@ -412,13 +412,13 @@ describe("Test the account", () => {
       .build();
 
     const authDescriptor2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       user2.signatureProvider.pubKey,
       null,
     );
 
     const authDescriptor3 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Transfer],
+      [AuthFlag.Transfer],
       user3.signatureProvider.pubKey,
       null,
     );
@@ -451,13 +451,13 @@ describe("Test the account", () => {
       .build();
 
     const ad2 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account],
+      [AuthFlag.Account],
       user2.signatureProvider.pubKey,
       null,
     );
 
     const ad3 = createSingleSigAuthDescriptorRegistration(
-      [FlagsType.Account, FlagsType.Transfer],
+      [AuthFlag.Account, AuthFlag.Transfer],
       user2.signatureProvider.pubKey,
       null,
     );

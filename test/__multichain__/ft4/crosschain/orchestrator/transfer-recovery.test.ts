@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import { fetchBlockchains } from "../../../util/blockchain";
 import {
-  FlagsType,
+  AuthFlag,
   createAmount,
   createConnection,
   mint,
@@ -60,11 +60,11 @@ describe("Orchestrator", () => {
     );
 
     account0 = await AccountBuilder.account(connection0)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     account2 = await AccountBuilder.account(connection2)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     session0 = createSession(connection0, account0.authenticator);
