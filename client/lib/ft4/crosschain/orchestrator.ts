@@ -82,37 +82,34 @@ export async function createOrchestrator(
    * Initialize the transfer by creating the initial transaction.
    * @returns {Promise<void>}
    */
-  async function initTransfer(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      const tb = session.transactionBuilder();
-
-      tb.add(
+  function initTransfer(): Promise<void> {
+    return session
+      .transactionBuilder()
+      .add(
         initTransferOp(recipientId, assetId, amount, path),
         (data: OnAnchoredHandlerData | null, error: Error | null) => {
           if (error) {
-            reject(
-              new InitTransferError(ErrorMessages.UNABLE_TO_FETCH_PROOF, error),
+            throw new InitTransferError(
+              ErrorMessages.UNABLE_TO_FETCH_PROOF,
+              error,
             );
           } else {
             state.tx = data?.tx;
             state.initialTx = data?.tx;
-            resolve();
           }
         },
       )
-        .add(nop())
-        .buildAndSend()
-        .catch((reason) =>
-          reject(
-            new InitTransferError(
-              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
-              reason,
-            ),
-          ),
+      .add(nop())
+      .buildAndSendWithAnchoring()
+      .catch((reason) => {
+        throw new InitTransferError(
+          ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+          reason,
         );
-    }).then(() => {
-      orchestrator.eventEmitter.emit("TransferInit");
-    });
+      })
+      .then(() => {
+        orchestrator.eventEmitter.emit("TransferInit");
+      });
   }
 
   /**
@@ -296,7 +293,7 @@ async function createBaseOrchestrator(
                 completed = true;
               },
             )
-            .buildAndSend();
+            .buildAndSendWithAnchoring();
         } catch {
           /* Error is sometimes expected here */
         }
@@ -375,7 +372,7 @@ async function createBaseOrchestrator(
   }
 
   /**
-   * Wraps the provied callback in a try/catch block and handles
+   * Wraps the provided callback in a try/catch block and handles
    * emitting error events if the provided callback throws any errors.
    * @param fn
    */

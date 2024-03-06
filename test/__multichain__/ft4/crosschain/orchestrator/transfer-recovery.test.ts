@@ -84,19 +84,11 @@ describe("Orchestrator", () => {
     const path = await findPathToChainForAsset(session0, asset, multichain2Rid);
     const normalizedPath = path.map(formatter.ensureBuffer);
     const amount = createAmount(10);
-    const promise = new Promise<void>((resolve) => {
-      session0
-        .transactionBuilder()
-        .add(
-          initTransfer(account2.id, asset.id, amount, normalizedPath),
-          () => {
-            resolve();
-          },
-        )
-        .buildAndSend();
-    });
+    await session0
+      .transactionBuilder()
+      .add(initTransfer(account2.id, asset.id, amount, normalizedPath))
+      .buildAndSendWithAnchoring();
 
-    await promise;
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
     const orchestrator = await createResumeOrchestrator(
       session0,

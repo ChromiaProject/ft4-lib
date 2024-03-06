@@ -1,3 +1,26 @@
+jest.mock("postchain-client", () => {
+  const originalModule = jest.requireActual("postchain-client");
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    isBlockAnchored: jest.fn().mockResolvedValue(false),
+    getBlockAnchoringTransaction: jest.fn().mockResolvedValue(null),
+    getAnchoringClient: jest.fn(),
+    createClient: jest.fn(),
+  };
+});
+
+jest.mock("@ft4/utils/directory-chain", () => {
+  const originalModule = jest.requireActual("@ft4/utils/directory-chain");
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    getSystemAnchoringChain: jest.fn().mockResolvedValue(Buffer.from("")),
+  };
+});
+
 import { Buffer } from "buffer";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor, emptyOp } from "../util/util";
@@ -21,18 +44,6 @@ import {
 } from "@ft4/utils/transaction-builder";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
-
-jest.mock("postchain-client", () => {
-  const originalModule = jest.requireActual("postchain-client");
-
-  return {
-    __esModule: true,
-    ...originalModule,
-    isBlockAnchored: jest.fn().mockResolvedValue(false),
-    getAnchoringClient: jest.fn(),
-    createClient: jest.fn(),
-  };
-});
 import {
   IClient,
   isBlockAnchored,
@@ -44,6 +55,7 @@ import {
 import { createStubClient } from "postchain-client";
 import { formatter } from "postchain-client";
 import { AnchoringTimeoutError } from "@ft4/utils/transaction-builder";
+import { getBlockAnchoringTransaction } from "postchain-client";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -201,6 +213,16 @@ describe("Transaction Builder", () => {
     await expect(promise).rejects.toThrowError(Error);
   });
 
+  it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .buildAndSend();
+    await expect(promise).rejects.toThrowError(Error);
+  });
+
   it("throws an error if not sufficient permissions", async () => {
     const promise = transactionBuilder(authenticator, client)
       .add(registerAccount(authDescriptor))
@@ -333,52 +355,47 @@ describe("Transaction Builder", () => {
   });
 
   describe("block anchored handling", () => {
-    it("calls registered handler when block is anchored", async () => {
+    it("calls registered handler when block is anchored in system anchoring chain", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const operation = nop();
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(operation)
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 10,
+          waitTimeMs: 10,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(operation)
+        .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
-    });
+    }, 5000);
 
-    it("calls all registered handler when block is anchored", async () => {
+    it("calls all registered handler when block is anchored in system anchoring chain", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const operation = nop();
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      let callback2: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(
-            emptyOp(),
-            (callback2 = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(operation)
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      const callback2: jest.Mock<any, any, any> = jest.fn();
+      await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 10,
+          waitTimeMs: 10,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(emptyOp(), callback2)
+        .add(operation)
+        .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(
@@ -398,93 +415,87 @@ describe("Transaction Builder", () => {
         ),
         null,
       );
-    });
+    }, 5000);
 
     it("calls callbacks even if block is not anchored immediately", async () => {
-      (isBlockAnchored as any)
+      (getBlockAnchoringTransaction as jest.Mock)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce({});
+      (isBlockAnchored as jest.Mock)
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
 
       const operation = nop();
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(operation)
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 10,
+          waitTimeMs: 10,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(operation)
+        .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
-    });
+    }, 5000);
 
-    it("calls callback with an error if polling times out", async () => {
-      (isBlockAnchored as any)
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(false);
+    it("calls callback with an error and reject the promise if polling for cluster anchoring times out", async () => {
+      (getBlockAnchoringTransaction as jest.Mock)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null);
 
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-          {
-            retryCount: 2,
-            waitTimeMs: 1,
-          },
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(nop())
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      const promise = transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 2,
+          waitTimeMs: 1,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(nop())
+        .buildAndSendWithAnchoring();
+
+      await expect(promise).rejects.toThrow(AnchoringTimeoutError);
 
       expect(callback).toHaveBeenCalledWith(
         null,
         expect.any(AnchoringTimeoutError),
       );
-    });
+    }, 5000);
 
-    it("returns receipt without waiting for block to be anchored", async () => {
-      (client.sendTransaction as jest.Mock).mockReturnValueOnce(
-        Promise.resolve({
-          status: "confirmed",
-          statusCode: 200,
-          transactionRid: Buffer.alloc(32),
-        }),
+    it("calls callback with an error and reject the promise if polling for system anchoring times out", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
+      (isBlockAnchored as jest.Mock)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null);
+
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      const promise = transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 2,
+          waitTimeMs: 1,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(nop())
+        .buildAndSendWithAnchoring();
+
+      await expect(promise).rejects.toThrow(AnchoringTimeoutError);
+
+      expect(callback).toHaveBeenCalledWith(
+        null,
+        expect.any(AnchoringTimeoutError),
       );
-
-      //eslint-disable-next-line no-async-promise-executor
-      const promise = new Promise(async (resolve) => {
-        const txInfo = await transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-          {
-            retryCount: 2,
-            waitTimeMs: 1,
-          },
-        )
-          .add(
-            emptyOp(),
-            jest.fn().mockImplementation((op) => resolve(op)),
-          )
-          .add(nop())
-          .buildAndSend();
-        expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
-      });
-      await promise;
-    });
+    }, 5000);
   });
 });

@@ -27,21 +27,14 @@ describe("transaction builder", () => {
       .build();
   });
 
-  it("calls registered handler when block is anchored", async () => {
-    let callback: jest.Mock<any, any, any> | null = null;
+  it("calls registered handler when block is anchored in system anchoring chain", async () => {
+    const callback: jest.Mock<any, any, any> = jest.fn();
     const operation = nop();
 
-    const promise = new Promise((resolve) => {
-      transactionBuilder(account00.authenticator, connection00.client)
-        .add(
-          emptyOp(),
-          (callback = jest.fn().mockImplementation((op) => resolve(op))),
-        )
-        .add(operation)
-        .buildAndSend();
-    });
-
-    await promise;
+    await transactionBuilder(account00.authenticator, connection00.client)
+      .add(emptyOp(), callback)
+      .add(operation)
+      .buildAndSendWithAnchoring();
 
     const authDescriptorId = (await account00.getAuthDescriptors())[0].id;
     expect(callback).toHaveBeenCalledWith(

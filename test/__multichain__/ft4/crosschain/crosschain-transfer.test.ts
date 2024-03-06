@@ -90,7 +90,7 @@ describe("Crosschain transfer", () => {
         resolve();
       };
 
-      tb.add(initOperation, onAnchoringHandler).buildAndSend();
+      tb.add(initOperation, onAnchoringHandler).buildAndSendWithAnchoring();
     });
 
     expect(
