@@ -55,7 +55,12 @@ import {
 import { createStubClient } from "postchain-client";
 import { formatter } from "postchain-client";
 import { AnchoringTimeoutError } from "@ft4/utils/transaction-builder";
-import { getBlockAnchoringTransaction } from "postchain-client";
+import {
+  getBlockAnchoringTransaction,
+  SignedTransaction,
+  TransactionReceipt,
+  Web3PromiEvent,
+} from "postchain-client";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -146,7 +151,15 @@ describe("Transaction Builder", () => {
   beforeEach(async () => {
     setupTestEnvironment();
     client = await createStubClient();
-    client.sendTransaction = jest.fn();
+    client.sendTransaction = jest.fn().mockReturnValue(
+      new Web3PromiEvent((resolve, _reject) =>
+        resolve({
+          status: "confirmed",
+          statusCode: 200,
+          transactionRid: Buffer.alloc(32),
+        }),
+      ),
+    );
   });
 
   it("builds an unsigned transaction", async () => {
@@ -210,6 +223,16 @@ describe("Transaction Builder", () => {
         (_data, _error) => null,
       )
       .build();
+    await expect(promise).rejects.toThrowError(Error);
+  });
+
+  it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .buildAndSend();
     await expect(promise).rejects.toThrowError(Error);
   });
 
@@ -323,7 +346,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
 
-  it("can build and submit a transaction", async () => {
+  it("can build and submit a transaction, and emits 'signed' event while doing so", async () => {
     const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
     const expectedTx = gtx.serialize({
@@ -335,24 +358,22 @@ describe("Transaction Builder", () => {
       signers: [keyPair.pubKey],
     });
 
-    (client.sendTransaction as jest.Mock).mockReturnValueOnce(
-      Promise.resolve({
-        status: "confirmed",
-        statusCode: 200,
-        transactionRid: Buffer.alloc(32),
-      }),
-    );
-
+    let signedEvent: SignedTransaction | undefined = undefined;
     const { tx } = await transactionBuilder(authenticatorMock, client)
       .add(emptyOp())
       .add(operation)
-      .buildAndSend();
+      .buildAndSend()
+      .on("signed", (tx) => {
+        signedEvent = tx;
+      });
 
     expect(gtx.deserialize(tx)).toMatchObject({
       ...gtx.deserialize(expectedTx),
       signatures: expect.arrayContaining([]),
     });
-  });
+
+    expect(signedEvent!.equals(tx));
+  }, 5000);
 
   describe("block anchored handling", () => {
     it("calls registered handler when block is anchored in system anchoring chain", async () => {
@@ -360,7 +381,9 @@ describe("Transaction Builder", () => {
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const operation = nop();
       const callback: jest.Mock<any, any, any> = jest.fn();
-      await transactionBuilder(
+      let signedEvent: SignedTransaction | undefined = undefined;
+      let confirmedEvent: TransactionReceipt | undefined = undefined;
+      const { tx, receipt } = await transactionBuilder(
         createNoopAuthenticator(createFakeAuthDataService({})),
         client,
         {
@@ -370,12 +393,21 @@ describe("Transaction Builder", () => {
       )
         .add(emptyOp(), callback)
         .add(operation)
-        .buildAndSendWithAnchoring();
+        .buildAndSendWithAnchoring()
+        .on("signed", (tx) => {
+          signedEvent = tx;
+        })
+        .on("confirmed", (receipt) => {
+          confirmedEvent = receipt;
+        });
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
+
+      expect(signedEvent!.equals(tx));
+      expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
     }, 5000);
 
     it("calls all registered handler when block is anchored in system anchoring chain", async () => {

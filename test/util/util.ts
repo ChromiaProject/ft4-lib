@@ -210,6 +210,10 @@ export function emptyOp(): Operation {
   return { name: "empty_op", args: [] };
 }
 
+export function rejectedOp(): Operation {
+  return { name: "rejected_op", args: [] };
+}
+
 export function* numberGenerator(): Generator<number> {
   let count = 0;
   while (true) {

@@ -10,6 +10,7 @@ import { createChromiaClientToMultichain } from "../util/blockchain-util";
 import { Connection } from "@ft4/index";
 import { AuthenticatedAccount } from "@ft4/accounts/index";
 import { ftAuth } from "@ft4/authentication/index";
+import { SignedTransaction, TransactionReceipt } from "postchain-client";
 
 describe("transaction builder", () => {
   let connection00: Connection;
@@ -31,10 +32,29 @@ describe("transaction builder", () => {
     const callback: jest.Mock<any, any, any> = jest.fn();
     const operation = nop();
 
-    await transactionBuilder(account00.authenticator, connection00.client)
+    let signedEvent: SignedTransaction | undefined = undefined;
+    let sentEvent: Buffer | undefined = undefined;
+    let confirmedEvent: TransactionReceipt | undefined = undefined;
+    const { tx, receipt } = await transactionBuilder(
+      account00.authenticator,
+      connection00.client,
+    )
       .add(emptyOp(), callback)
       .add(operation)
-      .buildAndSendWithAnchoring();
+      .buildAndSendWithAnchoring()
+      .on("signed", (tx) => {
+        signedEvent = tx;
+      })
+      .on("sent", (txRid) => {
+        sentEvent = txRid;
+      })
+      .on("confirmed", (receipt) => {
+        confirmedEvent = receipt;
+      });
+
+    expect(signedEvent!.equals(tx));
+    expect(sentEvent!.equals(receipt.transactionRid));
+    expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
 
     const authDescriptorId = (await account00.getAuthDescriptors())[0].id;
     expect(callback).toHaveBeenCalledWith(

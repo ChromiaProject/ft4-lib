@@ -21,6 +21,7 @@ import {
   RawGtx,
   SystemChainException,
   GTX,
+  Web3PromiEvent,
 } from "postchain-client";
 import {
   getNonceIdForTxContext,
@@ -36,6 +37,7 @@ import {
   OperationContext,
   TransactionBuilder,
   TransactionBuilderConfig,
+  TransactionWithReceipt,
 } from "./types";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
@@ -201,56 +203,105 @@ export function transactionBuilder(
     return me;
   }
 
-  async function buildAndSend(): Promise<{
-    tx: SignedTransaction;
-    receipt: TransactionReceipt;
-  }> {
-    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
-      throw new Error(
-        "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
-      );
+  function buildAndSend(): Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      signed: SignedTransaction;
+      sent: Buffer;
+    }
+  > {
+    const promiEvent = new Web3PromiEvent<
+      TransactionWithReceipt,
+      {
+        signed: SignedTransaction;
+        sent: Buffer;
+      }
+    >((resolve, reject) => {
+      if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
+        reject(
+          Error(
+            "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
+          ),
+        );
 
-    const tx = await _build();
-    const receipt = await client.sendTransaction(tx);
-
-    return {
-      tx,
-      receipt,
-    };
+      _build()
+        .then((tx) => {
+          promiEvent.emit("signed", tx);
+          return Promise.all([
+            tx,
+            client.sendTransaction(tx).on("sent", (receipt) => {
+              promiEvent.emit("sent", receipt.transactionRid);
+            }),
+          ]);
+        })
+        .then(([tx, receipt]) => {
+          resolve({ tx, receipt });
+        })
+        .catch((reason) => reject(reason));
+    });
+    return promiEvent;
   }
 
-  async function buildAndSendWithAnchoring(): Promise<{
-    tx: SignedTransaction;
-    receipt: TransactionReceipt;
-  }> {
-    const tx = await _build();
-    const receipt = await client.sendTransaction(tx);
-
-    const operationsWithHandlers = _operations.filter(
-      (op: OperationContext) => !!op.onAnchoredHandler,
-    );
-
-    const rawTx = await waitUntilAnchored(tx);
-    if (operationsWithHandlers.length) {
-      if (rawTx) {
-        const createProof = createCreateProof(tx, rawTx);
-        invokeOnAnchoringHandlers(operationsWithHandlers, {
-          rawTx,
-          createProof,
-        });
-      } else {
-        invokeOnAnchoringHandlers(operationsWithHandlers, undefined);
+  function buildAndSendWithAnchoring(): Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      signed: SignedTransaction;
+      sent: Buffer;
+      confirmed: TransactionReceipt;
+    }
+  > {
+    const promiEvent = new Web3PromiEvent<
+      TransactionWithReceipt,
+      {
+        signed: SignedTransaction;
+        sent: Buffer;
+        confirmed: TransactionReceipt;
       }
-    }
+    >((resolve, reject) => {
+      _build()
+        .then((tx) => {
+          promiEvent.emit("signed", tx);
+          return Promise.all([
+            tx,
+            client
+              .sendTransaction(tx)
+              .on("sent", (receipt) =>
+                promiEvent.emit("sent", receipt.transactionRid),
+              ),
+          ]);
+        })
+        .then(([tx, receipt]) => {
+          promiEvent.emit("confirmed", receipt);
+          return Promise.all([tx, receipt, waitUntilAnchored(tx)]);
+        })
+        .then(([tx, receipt, rawTx]) => {
+          const operationsWithHandlers = _operations.filter(
+            (op: OperationContext) => !!op.onAnchoredHandler,
+          );
+          if (operationsWithHandlers.length) {
+            if (rawTx) {
+              const createProof = createCreateProof(tx, rawTx);
+              invokeOnAnchoringHandlers(operationsWithHandlers, {
+                rawTx,
+                createProof,
+              });
+            } else {
+              invokeOnAnchoringHandlers(operationsWithHandlers, undefined);
+            }
+          }
 
-    if (rawTx) {
-      return {
-        tx,
-        receipt,
-      };
-    } else {
-      throw new AnchoringTimeoutError();
-    }
+          if (rawTx) {
+            resolve({
+              tx,
+              receipt,
+            });
+          } else {
+            reject(new AnchoringTimeoutError());
+          }
+        })
+        .catch((reason) => reject(reason));
+    });
+    return promiEvent;
   }
 
   async function waitUntilAnchored(

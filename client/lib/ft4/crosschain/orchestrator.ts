@@ -101,7 +101,7 @@ export async function createOrchestrator(
       )
       .add(nop())
       .buildAndSendWithAnchoring()
-      .catch((reason) => {
+      .catch((reason: Error) => {
         throw new InitTransferError(
           ErrorMessages.FAILED_TO_SEND_TRANSACTION,
           reason,
