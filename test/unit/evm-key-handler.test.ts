@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { EthersError, ethers } from "ethers";
+import eth from "ethers";
 import { IClient, encryption, gtx } from "postchain-client";
 import {
   AuthFlag,
@@ -14,6 +14,8 @@ import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { createStubClient } from "postchain-client";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { testAdFromRegistration } from "../util/util";
+
+const ethers = eth.ethers;
 
 describe("EVM key handler", () => {
   let client: IClient;
@@ -206,7 +208,7 @@ describe("EVM key handler", () => {
     const signMessage = jest
       .fn()
       .mockImplementationOnce(() => {
-        const err = new Error() as EthersError;
+        const err = new Error() as eth.EthersError;
         err.code = "ACTION_REJECTED";
         throw err;
       })
