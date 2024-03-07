@@ -368,7 +368,7 @@ async function createBaseOrchestrator(
       state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
       targetChainRid.toString("hex"),
-      state.tx[0][2], // signers,
+      undefined,
       true,
     );
 

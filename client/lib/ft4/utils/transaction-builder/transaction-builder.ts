@@ -54,6 +54,7 @@ const defaultConfig: TransactionBuilderConfig = {
  * Creates a new TransactionBuilder instance
  * @param authenticator object that holds authentication information for the transaction
  * @param client object that holds connection info for the transaction
+ * @param config optional configuration
  * @returns a TransactionBuilder instance
  */
 export function transactionBuilder(
@@ -280,7 +281,7 @@ export function transactionBuilder(
           );
           if (operationsWithHandlers.length) {
             if (rawTx) {
-              const createProof = createCreateProof(tx, rawTx);
+              const createProof = createCreateProof(rawTx);
               invokeOnAnchoringHandlers(operationsWithHandlers, {
                 rawTx,
                 createProof,
@@ -307,15 +308,10 @@ export function transactionBuilder(
   async function waitUntilAnchored(
     tx: SignedTransaction,
   ): Promise<RawGtx | null> {
-    if (_directoryClient === undefined) {
-      _directoryClient = await createClient({
-        nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
-        blockchainIid: 0,
-      });
-    }
+    const directoryClient = await ensureDirectoryClient();
     if (_clusterAnchoringClient === undefined) {
       _clusterAnchoringClient = await getAnchoringClient(
-        _directoryClient,
+        directoryClient,
         client.config.blockchainRid,
       );
     }
@@ -350,7 +346,7 @@ export function transactionBuilder(
     if (clusterAnchoringTransaction) {
       if (_systemAnchoringClient === undefined) {
         const systemAnchoringChain =
-          await getSystemAnchoringChain(_directoryClient);
+          await getSystemAnchoringChain(directoryClient);
         _systemAnchoringClient = await createClient({
           nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
           blockchainRid: formatter.toString(systemAnchoringChain),
@@ -389,7 +385,6 @@ export function transactionBuilder(
   }
 
   function createCreateProof(
-    tx: Buffer,
     rawTx: RawGtx,
   ): (blockchainRid: BufferId) => Promise<Operation> {
     const proofCache = new Map<string, Operation>();
@@ -398,15 +393,15 @@ export function transactionBuilder(
         return proofCache.get(blockchainRid.toString("hex"))!;
       }
 
-      const txRid = getTransactionRid(rawTx);
+      const directoryClient = await ensureDirectoryClient();
 
       for (let i = 0; i < config.retryCount; ++i) {
         await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
         try {
           const proof = await createIccfProofTx(
-            _directoryClient,
-            txRid,
-            tx,
+            directoryClient,
+            getTransactionRid(rawTx),
+            gtv.gtvHash(rawTx),
             rawTx[0][2], // signers
             client.config.blockchainRid,
             blockchainRid.toString("hex"),
@@ -424,6 +419,16 @@ export function transactionBuilder(
       }
       throw new Error("Block was not properly anchored");
     };
+  }
+
+  async function ensureDirectoryClient(): Promise<IClient> {
+    if (_directoryClient === undefined) {
+      _directoryClient = await createClient({
+        nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
+        blockchainIid: 0,
+      });
+    }
+    return _directoryClient;
   }
 
   function invokeOnAnchoringHandlers(
