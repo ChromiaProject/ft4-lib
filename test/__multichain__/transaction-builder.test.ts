@@ -32,7 +32,7 @@ describe("transaction builder", () => {
     const callback: jest.Mock<any, any, any> = jest.fn();
     const operation = nop();
 
-    let signedEvent: SignedTransaction | undefined = undefined;
+    let builtEvent: SignedTransaction | undefined = undefined;
     let sentEvent: Buffer | undefined = undefined;
     let confirmedEvent: TransactionReceipt | undefined = undefined;
     const { tx, receipt } = await transactionBuilder(
@@ -42,8 +42,8 @@ describe("transaction builder", () => {
       .add(emptyOp(), callback)
       .add(operation)
       .buildAndSendWithAnchoring()
-      .on("signed", (tx) => {
-        signedEvent = tx;
+      .on("built", (tx) => {
+        builtEvent = tx;
       })
       .on("sent", (txRid) => {
         sentEvent = txRid;
@@ -52,7 +52,7 @@ describe("transaction builder", () => {
         confirmedEvent = receipt;
       });
 
-    expect(signedEvent!.equals(tx));
+    expect(builtEvent!.equals(tx));
     expect(sentEvent!.equals(receipt.transactionRid));
     expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
 

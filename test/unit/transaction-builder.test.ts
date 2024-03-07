@@ -358,13 +358,13 @@ describe("Transaction Builder", () => {
       signers: [keyPair.pubKey],
     });
 
-    let signedEvent: SignedTransaction | undefined = undefined;
+    let builtEvent: SignedTransaction | undefined = undefined;
     const { tx } = await transactionBuilder(authenticatorMock, client)
       .add(emptyOp())
       .add(operation)
       .buildAndSend()
-      .on("signed", (tx) => {
-        signedEvent = tx;
+      .on("built", (tx) => {
+        builtEvent = tx;
       });
 
     expect(gtx.deserialize(tx)).toMatchObject({
@@ -372,7 +372,7 @@ describe("Transaction Builder", () => {
       signatures: expect.arrayContaining([]),
     });
 
-    expect(signedEvent!.equals(tx));
+    expect(builtEvent!.equals(tx));
   }, 5000);
 
   describe("block anchored handling", () => {
@@ -394,7 +394,7 @@ describe("Transaction Builder", () => {
         .add(emptyOp(), callback)
         .add(operation)
         .buildAndSendWithAnchoring()
-        .on("signed", (tx) => {
+        .on("built", (tx) => {
           signedEvent = tx;
         })
         .on("confirmed", (receipt) => {

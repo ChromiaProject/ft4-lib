@@ -79,7 +79,7 @@ describe("transaction builder", () => {
   }, 5000);
 
   it("buildAndSend() emits events", async () => {
-    let signedEvent: SignedTransaction | undefined = undefined;
+    let builtEvent: SignedTransaction | undefined = undefined;
     let sentEvent: Buffer | undefined = undefined;
     const { tx, receipt } = await session
       .transactionBuilder()
@@ -88,19 +88,19 @@ describe("transaction builder", () => {
       )
       .add(nop())
       .buildAndSend()
-      .on("signed", (tx) => {
-        signedEvent = tx;
+      .on("built", (tx) => {
+        builtEvent = tx;
       })
       .on("sent", (txRid) => {
         sentEvent = txRid;
       });
 
-    expect(signedEvent!.equals(tx));
+    expect(builtEvent!.equals(tx));
     expect(sentEvent!.equals(receipt.transactionRid));
   }, 5000);
 
   it("buildAndSendWithAnchoring() emits events, and rejects when directory chain is unavailable", async () => {
-    let signedEvent: SignedTransaction | undefined = undefined;
+    let builtEvent: SignedTransaction | undefined = undefined;
     let sentEvent: Buffer | undefined = undefined;
     let confirmedEvent: TransactionReceipt | undefined = undefined;
     const promise = session
@@ -110,8 +110,8 @@ describe("transaction builder", () => {
       )
       .add(nop())
       .buildAndSendWithAnchoring()
-      .on("signed", (tx) => {
-        signedEvent = tx;
+      .on("built", (tx) => {
+        builtEvent = tx;
       })
       .on("sent", (txRid) => {
         sentEvent = txRid;
@@ -122,7 +122,7 @@ describe("transaction builder", () => {
 
     await expect(promise).rejects.toThrow(SystemChainException);
 
-    expect(signedEvent).toBeTruthy();
+    expect(builtEvent).toBeTruthy();
     expect(sentEvent).toBeTruthy();
     expect(confirmedEvent!.status).toEqual(ResponseStatus.Confirmed);
   }, 5000);

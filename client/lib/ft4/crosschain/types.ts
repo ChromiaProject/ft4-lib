@@ -5,6 +5,7 @@ import { OrchestratorError } from "./errors";
 import { TransactionBuilder } from "@ft4/utils/transaction-builder";
 import { Session } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
+import { SignedTransaction } from "postchain-client";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -15,6 +16,7 @@ export type GtvInitTransferArgs = [
 
 export type OrchestratorEvents = {
   TransferInit: [];
+  TransferSigned: [SignedTransaction];
   TransferHop: [BufferId];
   TransferComplete: [];
   TransferError: [OrchestratorError];
@@ -43,6 +45,8 @@ export interface OrchestratorBase {
   ) => Promise<Operation>;
   onTransferInit: (listener: Listener<[]>) => void;
   offTransferInit: (listener: Listener<[]>) => void;
+  onTransferSigned: (listener: Listener<[SignedTransaction]>) => void;
+  offTransferSigned: (listener: Listener<[SignedTransaction]>) => void;
   onTransferHop: (listener: Listener<[BufferId]>) => void;
   offTransferHop: (listener: Listener<[BufferId]>) => void;
   onTransferComplete: (listener: Listener<[]>) => void;

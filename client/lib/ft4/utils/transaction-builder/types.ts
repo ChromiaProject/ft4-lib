@@ -71,7 +71,7 @@ export type TransactionBuilder = {
   /**
    * Build the transaction and submits it to the blockchain.
    *
-   * Will emit events when the transaction is signed, and when it is sent
+   * Will emit events when the transaction is built, and when it is sent
    * (containing the transaction RID).
    *
    * Will return when transaction is included in a block (confirmed), or is rejected.
@@ -81,7 +81,7 @@ export type TransactionBuilder = {
   buildAndSend: () => Web3PromiEvent<
     TransactionWithReceipt,
     {
-      signed: SignedTransaction;
+      built: SignedTransaction;
       sent: Buffer;
     }
   >;
@@ -90,7 +90,7 @@ export type TransactionBuilder = {
    * Build the transaction, submits it to the blockchain and wait until it
    * has been anchored in cluster and system anchoring chains.
    *
-   * Will emit events when the transaction is signed, when it is sent
+   * Will emit events when the transaction is built, when it is sent
    * (containing the transaction RID), and when it is included in a
    * block (confirmed).
    *
@@ -101,7 +101,7 @@ export type TransactionBuilder = {
   buildAndSendWithAnchoring: () => Web3PromiEvent<
     TransactionWithReceipt,
     {
-      signed: SignedTransaction;
+      built: SignedTransaction;
       sent: Buffer;
       confirmed: TransactionReceipt;
     }

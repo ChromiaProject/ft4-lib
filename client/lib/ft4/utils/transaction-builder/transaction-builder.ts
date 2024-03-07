@@ -206,14 +206,14 @@ export function transactionBuilder(
   function buildAndSend(): Web3PromiEvent<
     TransactionWithReceipt,
     {
-      signed: SignedTransaction;
+      built: SignedTransaction;
       sent: Buffer;
     }
   > {
     const promiEvent = new Web3PromiEvent<
       TransactionWithReceipt,
       {
-        signed: SignedTransaction;
+        built: SignedTransaction;
         sent: Buffer;
       }
     >((resolve, reject) => {
@@ -226,7 +226,7 @@ export function transactionBuilder(
 
       _build()
         .then((tx) => {
-          promiEvent.emit("signed", tx);
+          promiEvent.emit("built", tx);
           return Promise.all([
             tx,
             client.sendTransaction(tx).on("sent", (receipt) => {
@@ -245,7 +245,7 @@ export function transactionBuilder(
   function buildAndSendWithAnchoring(): Web3PromiEvent<
     TransactionWithReceipt,
     {
-      signed: SignedTransaction;
+      built: SignedTransaction;
       sent: Buffer;
       confirmed: TransactionReceipt;
     }
@@ -253,14 +253,14 @@ export function transactionBuilder(
     const promiEvent = new Web3PromiEvent<
       TransactionWithReceipt,
       {
-        signed: SignedTransaction;
+        built: SignedTransaction;
         sent: Buffer;
         confirmed: TransactionReceipt;
       }
     >((resolve, reject) => {
       _build()
         .then((tx) => {
-          promiEvent.emit("signed", tx);
+          promiEvent.emit("built", tx);
           return Promise.all([
             tx,
             client

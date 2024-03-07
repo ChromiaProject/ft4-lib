@@ -32,6 +32,17 @@ describe("Basic Functionality", () => {
     expect(initListener).toHaveBeenCalled();
   });
 
+  it("emits event when transaction is signed", async () => {
+    const orchestrator = await createTestOrchestrator();
+
+    const signedListener = jest.fn();
+    orchestrator.onTransferSigned(signedListener);
+
+    await orchestrator.transfer();
+
+    expect(signedListener).toHaveBeenCalled();
+  });
+
   it("executes single hop transfer", async () => {
     const orchestrator = await createTestOrchestrator();
 

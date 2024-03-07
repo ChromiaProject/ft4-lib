@@ -42,6 +42,7 @@ import {
   ResumeOrchestrator,
 } from "./types";
 import { createConnectionToBlockchainRid } from "@ft4/ft-session";
+import { SignedTransaction } from "postchain-client";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -101,6 +102,9 @@ export async function createOrchestrator(
       )
       .add(nop())
       .buildAndSendWithAnchoring()
+      .on("built", (tx) => {
+        orchestrator.eventEmitter.emit("TransferSigned", tx);
+      })
       .catch((reason: Error) => {
         throw new InitTransferError(
           ErrorMessages.FAILED_TO_SEND_TRANSACTION,
@@ -419,6 +423,14 @@ async function createBaseOrchestrator(
     return localEmitter.off("TransferInit", listener);
   }
 
+  function onTransferSigned(listener: Listener<[SignedTransaction]>) {
+    return localEmitter.on("TransferSigned", listener);
+  }
+
+  function offTransferSigned(listener: Listener<[SignedTransaction]>) {
+    return localEmitter.off("TransferSigned", listener);
+  }
+
   function onTransferHop(listener: Listener<[BufferId]>) {
     return localEmitter.on("TransferHop", listener);
   }
@@ -453,6 +465,8 @@ async function createBaseOrchestrator(
     createIccfProofOperation,
     onTransferInit,
     offTransferInit,
+    onTransferSigned,
+    offTransferSigned,
     onTransferHop,
     offTransferHop,
     onTransferComplete,
@@ -469,6 +483,8 @@ function getPublicOrchestratorBase(
     eventEmitter,
     onTransferInit,
     offTransferInit,
+    onTransferSigned,
+    offTransferSigned,
     onTransferHop,
     offTransferHop,
     onTransferComplete,
@@ -481,6 +497,8 @@ function getPublicOrchestratorBase(
     eventEmitter,
     onTransferInit,
     offTransferInit,
+    onTransferSigned,
+    offTransferSigned,
     onTransferHop,
     offTransferHop,
     onTransferComplete,
