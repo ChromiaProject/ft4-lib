@@ -14,7 +14,7 @@ import {
 } from "./operations";
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import { getKeyHandlersForKeyStores, isFtKeyStore } from "@ft4/authentication";
-import { SessionWithLogout } from "@ft4/authentication/login-manager/index";
+import { SessionWithLogout } from "@ft4/authentication/login/index";
 
 export async function registerAccount(
   connection: Connection,

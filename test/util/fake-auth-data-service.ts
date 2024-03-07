@@ -1,5 +1,5 @@
 import { AuthDataService } from "@ft4/authentication";
-import { LoginConfig } from "@ft4/authentication/login-manager";
+import { LoginConfig } from "../../client/lib/ft4/authentication/login";
 import { Connection } from "@ft4/index";
 import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";

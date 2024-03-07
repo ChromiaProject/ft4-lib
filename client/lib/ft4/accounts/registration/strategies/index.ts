@@ -8,12 +8,12 @@ import { FtKeyStore } from "@ft4/authentication";
 import {
   LoginConfigOptions,
   getConfigFromOptions,
-} from "@ft4/authentication/login-manager";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
+} from "../../../authentication/login";
+import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory";
 import { createAuthDataService } from "@ft4/ft-session";
 import { Connection } from "@ft4/index";
 import { gtv } from "postchain-client";
-import { LoginKeyStore } from "@ft4/authentication/login-manager";
+import { LoginKeyStore } from "../../../authentication/login";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
 import { aggregateSigners } from "@ft4/accounts/auth-descriptor";
 

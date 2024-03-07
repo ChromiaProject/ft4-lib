@@ -1,6 +1,6 @@
 import { Operation } from "postchain-client";
 import { Connection, FtKeyStore, KeyStore } from "@ft4/index";
-import { LoginKeyStore } from "@ft4/authentication/login-manager/index";
+import { LoginKeyStore } from "@ft4/authentication/login/index";
 
 export interface Strategy {
   getRegistrationDetails(

@@ -9,7 +9,7 @@ import {
 } from "@ft4/index";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { encryption, gtv } from "postchain-client";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory/index";
+import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory/index";
 
 let _connection: Connection;
 

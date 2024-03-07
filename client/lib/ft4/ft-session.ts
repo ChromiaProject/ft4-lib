@@ -42,7 +42,6 @@ import {
   KeyStore,
   createAuthenticator,
 } from "./authentication";
-import { createLoginManager } from "./authentication/login-manager";
 import { authMessageTemplate, nonce } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
@@ -53,9 +52,11 @@ import {
   Session,
 } from "./types";
 import { createAuthDescriptorValidator } from "./accounts";
-import { getLoginConfig } from "./authentication/login-manager";
+import { getLoginConfig } from "./authentication/login";
 import { createClient } from "postchain-client";
 import { formatter } from "postchain-client";
+import { LoginOptions } from "./authentication/login";
+import { login } from "./authentication/login";
 
 export async function createConnectionToBlockchainRid(
   oldConnection: Connection,
@@ -264,7 +265,8 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
-    getLoginManager: () => createLoginManager(connection, keyStore),
+    login: (loginOptions: LoginOptions) =>
+      login(connection, keyStore, loginOptions),
     onKeyStoreChanged: async (
       handler: (arg0: KeyStoreInteractor | null) => void,
     ) => {

@@ -1,7 +1,7 @@
 import { RegistrationDetails, Strategy, StrategyError } from "../../types";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
-import { LoginConfigOptions } from "@ft4/authentication/login-manager";
+import { LoginConfigOptions } from "../../../../authentication/login";
 import {
   Connection,
   KeyStore,

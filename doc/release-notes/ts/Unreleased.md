@@ -7,6 +7,9 @@
 - Method `buildAndSend` in TransactionBuilder no longer supports OnAnchoredHandler:s, use new method 
   `buildAndSendWithAnchoring` instead.
 
+- Removed `LoginManager` type and the `getLoginManager` method in `KeyStoreInteractor`, 
+  added `login` method to `KeyStoreInteractor` instead.
+
 ### Changed 🪙
 
 - TransactionBuilder will wait for transactions to be anchored in system anchoring chain before invoking 

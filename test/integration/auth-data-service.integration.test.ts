@@ -1,8 +1,5 @@
 import { AuthDataService } from "@ft4/authentication";
-import {
-  relativeBlockHeight,
-  opCount,
-} from "@ft4/authentication/login-manager/rules";
+import { relativeBlockHeight, opCount } from "@ft4/authentication/login/rules";
 import { createAuthDataService, createConnection } from "@ft4/ft-session";
 import { and, lessOrEqual, lessThan, ttlLoginRule } from "@ft4/index";
 import { useChromiaNode } from "@ft4/util/chromia-node";

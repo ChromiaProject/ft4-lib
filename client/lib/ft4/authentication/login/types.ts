@@ -2,7 +2,7 @@ import { Session } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
 import { LoginConfigRules } from "./rules";
 import { RawRules } from "@ft4/accounts/auth-descriptor/rules";
-import { LoginKeyStore } from "@ft4/authentication/login-manager/stores/types";
+import { LoginKeyStore } from "@ft4/authentication/login/stores/types";
 
 export type LoginConfig = {
   flags: string[];
@@ -38,10 +38,6 @@ export type LoginConfigOptions = {
 export type SessionWithLogout = {
   session: Session;
   logout: () => Promise<void>;
-};
-
-export type LoginManager = {
-  login: (loginOptions: LoginOptions) => Promise<SessionWithLogout>;
 };
 
 export class LoginConfigError extends Error {

@@ -4,7 +4,7 @@ import { Connection } from "@ft4/index";
 import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { GTX, Operation } from "postchain-client";
-import { LoginConfig } from "./login-manager";
+import { LoginConfig } from "./login";
 export class KeyHandlerError extends Error {
   constructor(msg?: string) {
     super(msg);

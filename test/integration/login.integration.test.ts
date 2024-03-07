@@ -14,7 +14,7 @@ import { createAmount } from "@ft4/asset/amount";
 import { transfer } from "@ft4/accounts/account-operations";
 import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login-manager/stores/in-memory";
+import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory";
 import {
   createSingleSigAuthDescriptorRegistration,
   lessOrEqual,
@@ -28,9 +28,9 @@ import {
   mapLoginConfigRulesToAuthDescriptorRules,
   opCount,
   relativeBlockHeight,
-} from "@ft4/authentication/login-manager/rules";
+} from "@ft4/authentication/login/rules";
 
-describe("Login manager", () => {
+describe("Login", () => {
   const getClient = useChromiaNode();
 
   let client: IClient;
@@ -58,15 +58,13 @@ describe("Login manager", () => {
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
-    const loginManager = createKeyStoreInteractor(
-      connection.client,
-      keyStore,
-    ).getLoginManager();
-
     const authDescriptorsBeforeLogin = await account.getAuthDescriptors();
     expect(authDescriptorsBeforeLogin.length).toBe(1);
 
-    await loginManager.login({ accountId: account.id });
+    await createKeyStoreInteractor(connection.client, keyStore).login({
+      accountId: account.id,
+    });
+
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin.length).toBe(2);
   });
@@ -81,12 +79,9 @@ describe("Login manager", () => {
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
-    const loginManager = createKeyStoreInteractor(
-      connection.client,
-      keyStore,
-    ).getLoginManager();
-
-    await loginManager.login({ accountId: account.id });
+    await createKeyStoreInteractor(connection.client, keyStore).login({
+      accountId: account.id,
+    });
 
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin[1].rules).toEqual(null);
@@ -102,12 +97,7 @@ describe("Login manager", () => {
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
-    const loginManager = createKeyStoreInteractor(
-      connection.client,
-      keyStore,
-    ).getLoginManager();
-
-    await loginManager.login({
+    await createKeyStoreInteractor(connection.client, keyStore).login({
       accountId: account.id,
       config: { flags: ["T"], rules: ttlLoginRule(minutes(30)) },
     });
@@ -129,11 +119,6 @@ describe("Login manager", () => {
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
-    const loginManager = createKeyStoreInteractor(
-      connection.client,
-      keyStore,
-    ).getLoginManager();
-
     const rules = and(
       lessThan(relativeBlockHeight(2)),
       lessOrEqual(opCount(3)),
@@ -151,7 +136,7 @@ describe("Login manager", () => {
       getBlockHeight,
     );
 
-    await loginManager.login({
+    await createKeyStoreInteractor(connection.client, keyStore).login({
       accountId: account.id,
       config: { flags: ["T"], rules },
     });
@@ -169,12 +154,7 @@ describe("Login manager", () => {
     const accountId = await createAccount(client, ad);
     const account = createAccountObject(connection, accountId);
 
-    const loginManager = createKeyStoreInteractor(
-      connection.client,
-      keyStore,
-    ).getLoginManager();
-
-    await loginManager.login({
+    await createKeyStoreInteractor(connection.client, keyStore).login({
       accountId: account.id,
       config: { flags: ["T"], rules: null },
     });
@@ -198,12 +178,10 @@ describe("Login manager", () => {
     );
     const accountId = await createAccount(client, ad);
 
-    const loginManager = createKeyStoreInteractor(
+    const { session } = await createKeyStoreInteractor(
       connection.client,
       keyStore,
-    ).getLoginManager();
-
-    const { session } = await loginManager.login({
+    ).login({
       accountId: accountId,
       config: {
         flags: [AuthFlag.Transfer],
@@ -254,9 +232,8 @@ describe("Login manager", () => {
       connection.client,
       keyStore2,
     );
-    const loginManager = keyStoreInteractor.getLoginManager();
 
-    expect(loginManager.login({ accountId })).rejects.toThrow(
+    expect(keyStoreInteractor.login({ accountId })).rejects.toThrow(
       `Admin auth descriptor does not exist for provided key store <${keyPair2.pubKey.toString(
         "hex",
       )}>`,
@@ -287,8 +264,7 @@ describe("Login manager", () => {
     );
     await session1.account.addAuthDescriptor(ad2, keyStore2);
 
-    const loginManager = keyStoreInteractor.getLoginManager();
-    const { session, logout } = await loginManager.login({
+    const { session, logout } = await keyStoreInteractor.login({
       accountId,
       config: { flags: ["X"], rules: null },
       loginKeyStore,
