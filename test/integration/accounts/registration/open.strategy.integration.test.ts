@@ -63,9 +63,27 @@ describe("Test open strategy", () => {
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
 
-    expect(await loginKeyStore.getKeyStore(session.account.id)).toBeTruthy();
+    const disposableKeyStore = await loginKeyStore.getKeyStore(
+      session.account.id,
+    );
+    expect(disposableKeyStore).toBeTruthy();
+    expect(
+      (
+        await session.account.getAuthDescriptorsBySigner(
+          disposableKeyStore!.pubKey,
+        )
+      ).length,
+    ).toEqual(1);
+
     await logout();
     expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
+    expect(
+      (
+        await session.account.getAuthDescriptorsBySigner(
+          disposableKeyStore!.pubKey,
+        )
+      ).length,
+    ).toEqual(0);
   });
 
   it("can add disposable key with default login config during account registration", async () => {
@@ -89,9 +107,27 @@ describe("Test open strategy", () => {
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
 
-    expect(await loginKeyStore.getKeyStore(session.account.id)).toBeTruthy();
+    const disposableKeyStore = await loginKeyStore.getKeyStore(
+      session.account.id,
+    );
+    expect(disposableKeyStore).toBeTruthy();
+    expect(
+      (
+        await session.account.getAuthDescriptorsBySigner(
+          disposableKeyStore!.pubKey,
+        )
+      ).length,
+    ).toEqual(1);
+
     await logout();
     expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
+    expect(
+      (
+        await session.account.getAuthDescriptorsBySigner(
+          disposableKeyStore!.pubKey,
+        )
+      ).length,
+    ).toEqual(0);
   });
 
   it("can register account with evm key store", async () => {
@@ -136,8 +172,26 @@ describe("Test open strategy", () => {
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
 
-    expect(await loginKeyStore.getKeyStore(session.account.id)).toBeTruthy();
+    const disposableKeyStore = await loginKeyStore.getKeyStore(
+      session.account.id,
+    );
+    expect(disposableKeyStore).toBeTruthy();
+    expect(
+      (
+        await session.account.getAuthDescriptorsBySigner(
+          disposableKeyStore!.pubKey,
+        )
+      ).length,
+    ).toEqual(1);
+
     await logout();
     expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
+    expect(
+      (
+        await session.account.getAuthDescriptorsBySigner(
+          disposableKeyStore!.pubKey,
+        )
+      ).length,
+    ).toEqual(0);
   });
 });

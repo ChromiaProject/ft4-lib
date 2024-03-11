@@ -21,6 +21,10 @@ import {
 import { Connection, createSession } from "@ft4/index";
 import { createAuthDataService } from "@ft4/ft-session";
 import { mapLoginConfigRulesToAuthDescriptorRules } from "./rules";
+import { AuthenticatedAccount } from "@ft4/accounts/index";
+import { FtKeyStore } from "@ft4/authentication";
+import { call } from "@ft4/ft-session";
+import { deleteAuthDescriptorsForSigner } from "@ft4/accounts/account-operations";
 
 export * from "./types";
 export * from "./queries";
@@ -50,6 +54,7 @@ export async function login(
     );
   }
 
+  let disposableKeyStore: FtKeyStore;
   let disposableKeyHandlers: KeyHandler[] = [];
 
   const authDataService = createAuthDataService(connection);
@@ -64,6 +69,7 @@ export async function login(
   // check if there are already auth descriptors with required flags.
   // If they already exist then it will be used instead of adding a new auth descriptor
   if (loginKeyStore) {
+    disposableKeyStore = loginKeyStore;
     const disposableAuthDescriptors = await account.getAuthDescriptorsBySigner(
       loginKeyStore.id,
     );
@@ -80,14 +86,16 @@ export async function login(
   // or there are no auth descriptors that have required flags.
   // Add new auth descriptor.
   if (!disposableKeyHandlers.length) {
-    const disposableKeyHandler = await addDisposableAuthDescriptor(
-      connection,
-      usedLoginKeyStore,
-      account.id,
-      keyStore.createKeyHandler(adminAuthDescriptor),
-      config.flags,
-      config.rules,
-    );
+    const { disposableKeyStore: _disposableKeyStore, disposableKeyHandler } =
+      await addDisposableAuthDescriptor(
+        connection,
+        usedLoginKeyStore,
+        account.id,
+        keyStore.createKeyHandler(adminAuthDescriptor),
+        config.flags,
+        config.rules,
+      );
+    disposableKeyStore = _disposableKeyStore;
     disposableKeyHandlers = [disposableKeyHandler];
   }
 
@@ -105,7 +113,14 @@ export async function login(
   const session = createSession(connection, authenticator);
   return Object.freeze({
     session,
-    logout: () => usedLoginKeyStore.clear(session.account.id), // TODO delete disposable auth descriptor, FT4-426
+    logout: async () => {
+      await deleteDisposableAuthDescriptors(
+        connection,
+        session.account,
+        disposableKeyStore,
+      );
+      await usedLoginKeyStore.clear(session.account.id);
+    },
   });
 }
 
@@ -162,7 +177,10 @@ async function addDisposableAuthDescriptor(
   adminAuthHandler: KeyHandler,
   flags: string[],
   rules: AuthDescriptorRules | null,
-): Promise<KeyHandler> {
+): Promise<{
+  disposableKeyStore: FtKeyStore;
+  disposableKeyHandler: KeyHandler;
+}> {
   const authenticator = createAuthenticator(
     accountId,
     [adminAuthHandler],
@@ -186,5 +204,20 @@ async function addDisposableAuthDescriptor(
     ),
   );
 
-  return ks.createKeyHandler(ad);
+  return {
+    disposableKeyStore: ks,
+    disposableKeyHandler: ks.createKeyHandler(ad),
+  };
+}
+
+export async function deleteDisposableAuthDescriptors(
+  connection: Connection,
+  account: AuthenticatedAccount,
+  key: FtKeyStore,
+) {
+  await call(
+    connection,
+    account.authenticator,
+    deleteAuthDescriptorsForSigner(key.pubKey),
+  );
 }

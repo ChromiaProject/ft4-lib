@@ -47,3 +47,10 @@ export function deleteAuthDescriptor(authDescriptorId: BufferId): Operation {
     formatter.ensureBuffer(authDescriptorId),
   );
 }
+
+export function deleteAuthDescriptorsForSigner(signer: BufferId): Operation {
+  return op(
+    "ft4.delete_auth_descriptors_for_signer",
+    formatter.ensureBuffer(signer),
+  );
+}

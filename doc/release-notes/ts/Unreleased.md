@@ -15,7 +15,9 @@
 - TransactionBuilder will wait for transactions to be anchored in system anchoring chain before invoking 
   OnAnchoredHandler:s.
 - Methods `buildAndSend` and `buildAndSendWithAnchoring` in TransactionBuilder return `Web3PromiEvent` and emits 
-  events when transaction is built, sent and confirmed (only `buildAndSendWithAnchoring`). 
+  events when transaction is built, sent and confirmed (only `buildAndSendWithAnchoring`).
+- `logout` function returned from `KeyStoreInteractor.login()` and `registerAccount()` will delete auth descriptors 
+  for disposable key.
 
 ### Added ✅
 

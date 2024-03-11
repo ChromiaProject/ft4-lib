@@ -270,6 +270,11 @@ describe("Login", () => {
       loginKeyStore,
     });
 
+    expect(
+      (await session.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
+        .length,
+    ).toEqual(1);
+
     const keyStoreIds = session.account.authenticator.keyHandlers.map(
       (keyHandler) => keyHandler.keyStore.id,
     );
@@ -280,5 +285,10 @@ describe("Login", () => {
 
     await logout();
     expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
+
+    expect(
+      (await session.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
+        .length,
+    ).toEqual(0);
   });
 });

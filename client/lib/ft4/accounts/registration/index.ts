@@ -14,7 +14,10 @@ import {
 } from "./operations";
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import { getKeyHandlersForKeyStores, isFtKeyStore } from "@ft4/authentication";
-import { SessionWithLogout } from "@ft4/authentication/login/index";
+import {
+  SessionWithLogout,
+  deleteDisposableAuthDescriptors,
+} from "@ft4/authentication/login/index";
 
 export async function registerAccount(
   connection: Connection,
@@ -71,12 +74,19 @@ export async function registerAccount(
     createAuthDataService(connection),
   );
 
+  const session = createSession(connection, authenticator);
   return Object.freeze({
-    session: createSession(connection, authenticator),
+    session,
     logout: async () => {
+      if (disposableKeyStore) {
+        await deleteDisposableAuthDescriptors(
+          connection,
+          session.account,
+          disposableKeyStore,
+        );
+      }
       if (loginKeyStore) {
         await loginKeyStore.clear(accountId);
-        // TODO delete disposable auth descriptor, FT4-426
       }
     },
   });
