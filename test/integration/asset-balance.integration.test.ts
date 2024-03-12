@@ -6,6 +6,7 @@ import AccountBuilder from "../util/account-builder";
 import { getNewAsset } from "../util/blockchain-util";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { useChromiaNode } from "@ft4/util/chromia-node";
+import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
 
 let connection: Connection;
 let client: IClient;
@@ -58,8 +59,9 @@ describe("Asset balance", () => {
           symbol: asset1.symbol,
           decimals: asset1.decimals,
           blockchainRid: asset1.blockchainRid,
-          supply: BigInt(10),
           iconUrl: "",
+          type: ASSET_TYPE_FT4,
+          supply: BigInt(10),
         },
         amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
       },
@@ -69,9 +71,10 @@ describe("Asset balance", () => {
           name: asset2.name,
           decimals: asset2.decimals,
           blockchainRid: asset2.blockchainRid,
-          supply: BigInt("20" + "0".repeat(asset2.decimals)),
           symbol: asset2.symbol,
           iconUrl: "",
+          type: ASSET_TYPE_FT4,
+          supply: BigInt("20" + "0".repeat(asset2.decimals)),
         },
         amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
       },
@@ -98,6 +101,7 @@ describe("Asset balance", () => {
         decimals: asset2.decimals,
         blockchainRid: asset2.blockchainRid,
         iconUrl: "",
+        type: ASSET_TYPE_FT4,
         supply: BigInt(70 + "0".repeat(asset2.decimals)),
         symbol: asset2.symbol,
       },

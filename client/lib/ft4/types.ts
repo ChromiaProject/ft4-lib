@@ -50,6 +50,11 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
+  getAssetsByType: (
+    type: string,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: (
     limit?: number,
     cursor?: OptionalPageCursor,

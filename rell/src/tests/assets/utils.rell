@@ -116,12 +116,13 @@ function create_multisig_auth_descriptor(
         );
 }
 
-function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "") {
-    admin.register_asset(
+function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "", type: text = assets.ASSET_TYPE_FT4) {
+    admin.register_asset_with_type(
             name,
             symbol,
             decimals,
-            icon_url
+            icon_url,
+            type
         )
         .sign(chain_context.args.admin_priv_key)
         .run();

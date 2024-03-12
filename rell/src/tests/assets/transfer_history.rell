@@ -170,6 +170,7 @@ function test_transfer_history_entry() {
                 decimals = entry.asset.decimals,
                 blockchain_rid = entry.asset.issuing_blockchain_rid,
                 icon_url = entry.asset.icon_url,
+                type = assets.ASSET_TYPE_FT4,
                 supply = entry.asset.total_supply
             ),
             is_input = entry.is_input,

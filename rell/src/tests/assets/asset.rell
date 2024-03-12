@@ -257,8 +257,9 @@ struct gtv_asset {
     symbol: text;
     decimals: integer;
     blockchain_rid: byte_array;
-    supply: big_integer;
     icon_url: text;
+    type: text;
+    supply: big_integer;
 }
 
 struct gtv_balance {
@@ -324,6 +325,7 @@ function test_paginated_asset_balances_have_correct_format() {
                     symbol = "TST1",
                     decimals = 0,
                     icon_url = "",
+                    type = assets.ASSET_TYPE_FT4,
                     supply = 10L,
                     blockchain_rid = asset1.issuing_blockchain_rid
                 ),
@@ -348,6 +350,7 @@ function test_assets_by_name_are_paginated() {
         decimals = asset.decimals,
         blockchain_rid = asset.issuing_blockchain_rid,
         icon_url = asset.icon_url,
+        type = asset.type,
         supply = asset.total_supply
     );
     
@@ -358,6 +361,7 @@ function test_assets_by_name_are_paginated() {
         decimals = asset.decimals,
         blockchain_rid = asset.issuing_blockchain_rid,
         icon_url = asset.icon_url,
+        type = asset.type,
         supply = asset.total_supply
     );
 
@@ -377,6 +381,24 @@ function test_assets_are_returned_in_correct_order() {
     assert_equals(gtv_asset.from_gtv_pretty(assets[1]).name, asset2.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[2]).name, asset3.name);
 }
+
+function test_get_assets_by_type() {
+    val asset1 = utils.create_asset("test1", "TST1", 0);
+    val asset2 = utils.create_asset("test2", "TST2", 0, type = "original");
+    val asset3 = utils.create_asset("test3", "TST3", 0);
+
+    val assets1 = ft4.assets_ext.get_assets_by_type(assets.ASSET_TYPE_FT4, 10, null).data;
+    assert_equals(assets1.size(), 2);
+    assert_equals(gtv_asset.from_gtv_pretty(assets1[0]).name, asset1.name);
+    assert_equals(gtv_asset.from_gtv_pretty(assets1[1]).name, asset3.name);
+
+    val assets2 = ft4.assets_ext.get_assets_by_type("original", 10, null).data;
+    assert_equals(assets2.size(), 1);
+    assert_equals(gtv_asset.from_gtv_pretty(assets2[0]).name, asset2.name);
+
+    assert_true(ft4.assets_ext.get_assets_by_type("bogus", 10, null).data.empty());
+}
+
 function test_assets_are_paginated() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
     val asset2 = utils.create_asset("test2", "TST2", 0);
@@ -394,15 +416,16 @@ function test_assets_are_paginated() {
 }
 function test_paginated_assets_have_correct_format() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
-    val assets = ft4.assets_ext.get_all_assets(3, null).data;
-    assert_equals(gtv_asset.from_gtv_pretty(assets[0]), gtv_asset(
+    val all_assets = ft4.assets_ext.get_all_assets(3, null).data;
+    assert_equals(gtv_asset.from_gtv_pretty(all_assets[0]), gtv_asset(
         id = asset1.id,
         name = asset1.name,
         symbol = asset1.symbol,
         decimals = asset1.decimals,
         blockchain_rid = chain_context.blockchain_rid,
-        supply = 0,
-        icon_url = asset1.icon_url
+        type = assets.ASSET_TYPE_FT4,
+        icon_url = asset1.icon_url,
+        supply = 0
     ));
 }
 function test_it_gets_asset_by_symbol() {
@@ -419,6 +442,7 @@ function test_it_gets_asset_by_symbol() {
             decimals = 0,
             blockchain_rid = asset1.issuing_blockchain_rid,
             icon_url = "",
+            type = assets.ASSET_TYPE_FT4,
             supply = 0L
         )
     );

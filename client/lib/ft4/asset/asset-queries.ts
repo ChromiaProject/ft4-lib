@@ -46,6 +46,24 @@ export function assetsByName(
   };
 }
 
+export function assetsByType(
+  type: string,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  PaginatedEntity<AssetResponse>,
+  { type: string; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
+> {
+  return {
+    name: "ft4.get_assets_by_type",
+    args: {
+      type: type,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
 export function allAssets(
   limit: OptionalLimit,
   cursor: OptionalPageCursor,

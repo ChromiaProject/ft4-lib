@@ -31,6 +31,7 @@ import {
   getTransferDetailsByAsset,
 } from "./accounts/transfer-history/transfer-history-query-functions";
 import {
+  getAssetsByType,
   getAllAssets,
   getAssetById,
   getAssetBySymbol,
@@ -117,6 +118,11 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor?: OptionalPageCursor,
     ) => getAssetsByName(connection, name, limit, cursor),
+    getAssetsByType: (
+      type: string,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getAssetsByType(connection, type, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
     getTransferDetails: (txRid: BufferId, opIndex: number) =>

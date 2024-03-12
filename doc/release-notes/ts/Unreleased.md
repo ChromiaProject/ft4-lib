@@ -25,4 +25,6 @@
   anchoring chains before resolving promise.
 - New event `TransferSigned` in Orchestrator which is emitted when the `initTransfer` transaction is signed.
 
+- `getAssetsByType` query function
+
 ### Fixed 🔧

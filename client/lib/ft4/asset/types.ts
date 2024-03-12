@@ -1,14 +1,17 @@
 import { RawGtv } from "postchain-client";
 import { Buffer } from "buffer";
 
+export const ASSET_TYPE_FT4 = "ft4";
+
 export type Asset = {
   id: Buffer;
   name: string;
   symbol: string;
   decimals: number;
   blockchainRid: Buffer;
-  supply: bigint;
   iconUrl: string;
+  type: string;
+  supply: bigint;
 };
 
 export type AssetResponse = {
@@ -17,8 +20,9 @@ export type AssetResponse = {
   symbol: string;
   decimals: number;
   blockchain_rid: Buffer;
-  supply: bigint;
   icon_url: string;
+  type: string;
+  supply: bigint;
 };
 
 export type Balance = {

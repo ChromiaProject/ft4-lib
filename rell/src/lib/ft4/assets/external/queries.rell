@@ -31,6 +31,13 @@ query get_asset_by_symbol(symbol: text) {
     return assets.asset @? { .symbol == symbol } ( assets.map_asset($) );
 } 
 
+query get_assets_by_type(type: text, page_size: integer?, page_cursor: text?) {
+    return utils.make_page(
+        assets.get_assets_by_type(type, page_size, page_cursor),
+        page_size
+    );
+}
+
 query get_all_assets(page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_all_assets(page_size, page_cursor),
