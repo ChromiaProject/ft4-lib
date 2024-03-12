@@ -22,6 +22,7 @@ import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/qu
 import adminUser from "@ft4/util/admin_user";
 import { open } from "@ft4/accounts/registration/strategies/open";
 import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
+import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
 
 let asset: Asset;
 let nonExistentChain00Asset: Asset;
@@ -65,6 +66,7 @@ describe("Fee account creation single step", () => {
       blockchainRid: multichain00.rid,
       supply: 10000n,
       iconUrl: "https://missing.asset",
+      type: ASSET_TYPE_FT4,
     };
     await registerCrosschainAsset(
       recipientConnection.client,

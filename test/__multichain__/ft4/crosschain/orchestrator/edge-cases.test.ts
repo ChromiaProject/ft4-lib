@@ -6,6 +6,7 @@ import { createAmount, registerCrosschainAsset } from "@ft4/index";
 import adminUser from "../../../../util/admin_user";
 import { getNewAsset } from "../../../../util/blockchain-util";
 import { InitTransferError } from "@ft4/crosschain/errors";
+import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
 
 describe("Edge Cases", () => {
   const mintAmount = createAmount(100, 0);
@@ -37,6 +38,7 @@ describe("Edge Cases", () => {
       blockchainRid: Buffer.from("invalid-blockchain-rid"),
       supply: BigInt(0),
       iconUrl: "",
+      type: ASSET_TYPE_FT4,
       ...overrides,
     };
   }
