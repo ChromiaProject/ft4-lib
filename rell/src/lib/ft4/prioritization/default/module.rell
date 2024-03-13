@@ -5,9 +5,26 @@ import ^^.accounts;
 import ^^.prioritization.*;
 
 @extend(priority_check) function(tx_body: gtx_transaction_body, tx_size: integer, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
-    val tx_accounts = tx_body.operations @*
-        { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] }
-        (auth.fetch_account_and_auth_descriptor($.args)[0]);
+    val auth_ops = tx_body.operations @* { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] };
+
+    val tx_accounts = list<accounts.account>();
+    for (auth_op in auth_ops) {
+        val (account_id, auth_descriptor_id) = auth.extract_account_and_auth_descriptor(auth_op.args);
+
+        val account = accounts.account @? { .id == account_id };
+        if (account == null) {
+            log("Account not found: %s".format(account_id));
+            return no_op_priority_state();
+        }
+
+        val auth_descriptor = auth.try_fetch_auth_descriptor(account, auth_descriptor_id);
+        if (auth_descriptor == null) {
+            log("Auth descriptor '%s' not found for account '%s'".format(auth_descriptor_id, account_id));
+            return no_op_priority_state();
+        } else {
+            tx_accounts.add(account);
+        }
+    }
 
     // TODO consider tx_size for tx_cost_points
 

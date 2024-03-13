@@ -32,7 +32,7 @@ export default async function () {
 
   // Start a Chromia node container
   const container = await new GenericContainer(
-    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.15.0",
+    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.16.2",
   )
     .withNetwork(network)
     .withCopyDirectoriesToContainer([
@@ -55,10 +55,14 @@ export default async function () {
       "rell/config/jest-test/node-config.properties",
       "--wipe",
     ])
-    .withWaitStrategy(Wait.forLogMessage("Blockchain has been started"))
+    .withWaitStrategy(Wait.forLogMessage("Node is initialized"))
     .withStartupTimeout(60000)
     .withLogConsumer((stream) => {
-      stream.on("data", (data) => file.writeFile(data));
+      stream.on("data", (data) => {
+        file.writeFile(data);
+        if (data.startsWith("ERROR") || data.startsWith("WARN"))
+          console.warn(data);
+      });
       stream.on("err", (data) => file.writeFile(data));
       stream.on("end", file.close);
     })
