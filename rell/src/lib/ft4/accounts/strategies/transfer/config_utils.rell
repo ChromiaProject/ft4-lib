@@ -240,9 +240,14 @@ function parse_asset_limit(input: map<name, gtv>): asset_limit {
             (if ("issuing_blockchain_rid" in input) byte_array.from_gtv(input["issuing_blockchain_rid"]) else chain_context.blockchain_rid)
             else null,
         name = if ("name" in input) text.from_gtv(input["name"]) else null,
-        min_amount = big_integer.from_text(text.from_gtv(input["min_amount"]).replace("L", ""))
+        min_amount = parse_amount(input["min_amount"])
     );
 }
+
+function parse_amount(input: gtv): big_integer = if (is_text(input))
+    big_integer.from_text(text.from_gtv(input).replace("L", ""))
+else
+    big_integer.from_gtv(input);
 
 function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
 
