@@ -52,14 +52,15 @@ describe("Crosschain transfer", () => {
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
-    await new Promise<void>((resolve, reject) => {
-      const initOperation = initTransferOp(
-        account01.id,
-        asset00.id,
-        createAmount(100, asset00.decimals),
-        [multichain01.rid],
-      );
+    const initOperation = initTransferOp(
+      account01.id,
+      asset00.id,
+      createAmount(100, asset00.decimals),
+      [multichain01.rid],
+    );
 
+    let transferTransactionRid: Buffer | undefined = undefined;
+    await new Promise<void>((resolve, reject) => {
       const onAnchoringHandler = async (
         data: {
           operation: Operation;
@@ -90,11 +91,41 @@ describe("Crosschain transfer", () => {
         resolve();
       };
 
-      tb.add(initOperation, onAnchoringHandler).buildAndSendWithAnchoring();
+      tb.add(initOperation, onAnchoringHandler)
+        .buildAndSendWithAnchoring()
+        .then((res) => {
+          transferTransactionRid = res.receipt.transactionRid;
+        });
     });
 
     expect(
       (await account01.getBalanceByAssetId(asset00.id))?.amount.value,
     ).toEqual(createAmount(100, asset00.decimals).value);
+
+    const history = await account00.getTransferHistory();
+
+    const entry = history.data[0];
+    expect(entry.isInput).toEqual(true);
+    expect(entry.operationName).toEqual(initOperation.name);
+    expect(entry.delta.value).toEqual(100n);
+    expect(entry.asset.id).toEqual(asset00.id);
+    expect(entry.transactionId).toEqual(transferTransactionRid);
+    expect(entry.opIndex).toEqual(1);
+    expect(entry.isCrosschain).toBeTruthy();
+
+    const transferDetails = await connection00.getTransferDetails(
+      transferTransactionRid!,
+      entry.opIndex,
+    );
+    expect(transferDetails.length).toEqual(2);
+    expect(transferDetails[0].blockchainRid).toEqual(multichain00.rid);
+    expect(transferDetails[0].accountId).toEqual(account00.id);
+    expect(transferDetails[0].assetId).toEqual(asset00.id);
+    expect(transferDetails[0].delta).toEqual(100n);
+    expect(transferDetails[0].isInput).toEqual(true);
+    expect(transferDetails[1].blockchainRid).toEqual(multichain01.rid);
+    expect(transferDetails[1].assetId).toEqual(asset00.id);
+    expect(transferDetails[1].delta).toEqual(100n);
+    expect(transferDetails[1].isInput).toEqual(false);
   });
 });

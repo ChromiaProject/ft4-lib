@@ -179,7 +179,8 @@ function test_transfer_history_entry() {
             tx_rid = entry.transaction.tx_rid,
             tx_data = entry.transaction.tx_data,
             operation_name = "ft4.admin.mint",
-            op_index = entry.op_index
+            op_index = entry.op_index,
+            is_crosschain = false
         )
     );
 }
@@ -225,24 +226,26 @@ function test_transfer_details() {
     val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
     val tx_rid = transaction @ { last_block } (.tx_rid);
 
-    val expected = [
+    val expected = set([
         assets.transfer_detail(
+            blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 1L,
             is_input = true
         ),
         assets.transfer_detail(
+            blockchain_rid = chain_context.blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 1L,
             is_input = false
         )
-    ];
+    ]);
 
     assert_equals(ft4.assets_ext.get_transfer_details(tx_rid, 1), expected);
     assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset.id), expected);
-    assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset2.id), list<assets.transfer_detail>());
+    assert_equals(ft4.assets_ext.get_transfer_details_by_asset(tx_rid, 1, asset2.id), set<assets.transfer_detail>());
 }
 
 function test_history_by_asset() {

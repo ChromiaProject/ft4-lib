@@ -13,4 +13,8 @@
 - `get_assets_by_type` query
 - `register_asset_with_type` admin operation
 
+- Include `is_crosschain` flag in response from queries `get_transfer_history`, `get_transfer_history_from_height` 
+  and `get_transfer_history_entry`.
+- Include `blockchain_rid` in response from queries `get_transfer_details` and `get_transfer_details_by_asset`.
+
 ### Fixed 🔧

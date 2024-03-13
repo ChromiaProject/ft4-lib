@@ -72,7 +72,6 @@ function test_get_pending_transfers_for_account_is_paginated() {
   assert_equals(page1.data[0], pending_transfers[0]);
   assert_equals(page2.data.size(), 1);
   assert_equals(page2.data[0], pending_transfers[1]);
-
 }
 
 function test_returns_false_if_transfer_is_not_applied() {

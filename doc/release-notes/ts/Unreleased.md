@@ -27,4 +27,8 @@
 
 - `getAssetsByType` query function
 
+- Include `isCrosschain` flag in response from queries `getTransferHistory`, `getTransferHistoryFromHeight` 
+  and `getTransferHistoryEntry`.
+- Include `blockchainRid` in response from queries `getTransferDetails` and `getTransferDetailsByAsset`.
+
 ### Fixed 🔧

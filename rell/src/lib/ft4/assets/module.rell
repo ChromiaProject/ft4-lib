@@ -5,4 +5,5 @@ import .external;
 import ^.accounts;
 import ^.assets;
 import ^.utils;
+import ^.crosschain;
 import ^.version;

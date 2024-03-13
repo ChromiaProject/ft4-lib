@@ -54,6 +54,14 @@ operation init_transfer(
         asset,
         amount
     );
+    create assets.crosschain_transfer_history_entry(
+        .blockchain_rid = hops[hops.size() - 1],
+        .account_id = receiver_id,
+        .asset = asset,
+        .delta = amount,
+        .op_index = op_context.op_index,
+        .is_input = false
+    );
 
     val pending_transfer = create crosschain.pending_transfer(
         account = account,
@@ -192,6 +200,14 @@ operation apply_transfer(
                 asset,
                 init_transfer_details.args.amount);
         }
+        create assets.crosschain_transfer_history_entry(
+            .blockchain_rid = init_transfer_tx.body.blockchain_rid,
+            .account_id = init_transfer_details.sender_account_id,
+            .asset = asset,
+            .delta = init_transfer_details.args.amount,
+            .op_index = op_context.op_index,
+            .is_input = true
+        );
     }
 
     // Add transfer to applied transfers table so that it cannot be applied more than once

@@ -37,6 +37,7 @@ export function getTransferDetailsByAsset(
 
 function createTransferDetail(td: RawTransferDetail) {
   return Object.freeze({
+    blockchainRid: td.blockchain_rid,
     accountId: td.account_id,
     assetId: td.asset_id,
     delta: td.delta,
