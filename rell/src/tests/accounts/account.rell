@@ -110,3 +110,10 @@ function test_accounts_by_ad_id_is_paginated() {
     )
   );
 }
+
+function test_get_config() {
+  assert_equals(acc_external.get_config(), (
+    rate_limit = acc.rate_limit_config(max_points = 5),
+    auth_descriptor = acc.auth_descriptor_config(max_rules = 4)
+  ));
+}

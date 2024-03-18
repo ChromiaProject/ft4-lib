@@ -1,7 +1,8 @@
 
 query get_config() {
     return (
-        rate_limit = accounts.get_rate_limit_config()
+        rate_limit = accounts.get_rate_limit_config(),
+        auth_descriptor = accounts.get_auth_descriptor_config()
     );
 }
 

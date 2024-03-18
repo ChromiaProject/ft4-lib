@@ -11,6 +11,10 @@ export type Config = {
     recoveryTime: number;
     pointsAtAccountCreation: number;
   };
+  authDescriptor: {
+    maxRules: number;
+    maxNumberPerAccount: number;
+  };
 };
 
 export type ConnectionCallbackParams = {

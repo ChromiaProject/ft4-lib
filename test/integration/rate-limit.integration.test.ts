@@ -3,7 +3,7 @@ import { createConnection } from "@ft4/ft-session";
 import { Connection } from "@ft4/types";
 import AccountBuilder from "@ft4/util/account-builder";
 import TestUser, { User } from "@ft4/util/test-user";
-import { BufferId, Config } from "@ft4/utils/types";
+import { BufferId } from "@ft4/utils/types";
 import { ftAuth } from "@ft4/authentication";
 import { op } from "@ft4/index";
 import { useChromiaNode } from "@ft4/util/chromia-node";
@@ -12,8 +12,6 @@ jest.setTimeout(2000000);
 
 let _connection: Connection;
 
-const REQUEST_MAX_COUNT = 10;
-const RECOVERY_TIME = 5000;
 const POINTS_AT_ACCOUNT_CREATION = 2;
 
 describe("Rate Limit", () => {
@@ -22,20 +20,6 @@ describe("Rate Limit", () => {
   beforeAll(async () => {
     const client = getClient();
     _connection = createConnection(client);
-  });
-
-  describe("Blockchain request configuration in config.yaml", () => {
-    it("should have 10 max requests and 5000 milliseconds recovery time", async () => {
-      const info = await _connection.getConfig();
-      expect(info).toEqual(<Config>{
-        rateLimit: {
-          active: 1,
-          maxPoints: REQUEST_MAX_COUNT,
-          recoveryTime: RECOVERY_TIME,
-          pointsAtAccountCreation: POINTS_AT_ACCOUNT_CREATION,
-        },
-      });
-    });
   });
 
   describe("Test the account rate limit", () => {

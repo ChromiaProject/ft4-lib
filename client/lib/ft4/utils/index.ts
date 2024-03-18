@@ -40,6 +40,10 @@ export async function getConfig(session: IClient): Promise<Config> {
       recoveryTime: response.rate_limit.recovery_time,
       pointsAtAccountCreation: response.rate_limit.points_at_account_creation,
     },
+    authDescriptor: {
+      maxRules: response.auth_descriptor.max_rules,
+      maxNumberPerAccount: response.auth_descriptor.max_number_per_account,
+    },
   });
 }
 
@@ -80,6 +84,10 @@ type ConfigResponse = {
     max_points: number;
     recovery_time: number;
     points_at_account_creation: number;
+  };
+  auth_descriptor: {
+    max_rules: number;
+    max_number_per_account: number;
   };
 };
 

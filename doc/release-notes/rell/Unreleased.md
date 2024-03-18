@@ -19,4 +19,8 @@
 
 - Pending transfers when account is registered with direct strategies are completed.
 
+- Include auth descriptor config (`max_rules` and `max_number_per_account`) in `get_config` query.
+
+- 1 day expiration in default login config.
+
 ### Fixed 🔧

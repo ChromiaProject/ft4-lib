@@ -13,7 +13,13 @@ query get_login_config(name? = null) {
     val config_name = name ?: auth.DEFAULT_LOGIN_CONFIG_NAME;
 
     if (config_name == auth.DEFAULT_LOGIN_CONFIG_NAME) {
-        return if (config_name in configs) configs[config_name] else auth._login_config(flags = []);
+        return if (config_name in configs)
+            configs[config_name]
+        else
+            auth._login_config(
+                flags = [],
+                rules = auth.ttl(1 * utils.MILLISECONDS_PER_DAY)
+            );
     }
     
     return require(

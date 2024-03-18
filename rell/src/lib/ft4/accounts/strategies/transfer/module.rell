@@ -5,6 +5,7 @@ import ^^.strategies;
 import ^^^.accounts;
 import ^^^.assets;
 import ^^^.crosschain;
+import ^^^.utils;
 
 struct module_args_list_element {
     sender_blockchain: gtv;

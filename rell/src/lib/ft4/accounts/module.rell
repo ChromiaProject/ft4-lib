@@ -23,6 +23,8 @@ val AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND = min(
     chain_context.args.auth_descriptor.max_number_per_account
 );
 
+function get_auth_descriptor_config() = chain_context.args.auth_descriptor;
+
 import ^.auth;
 import ^.utils;
 import ^.version;

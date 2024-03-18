@@ -12,6 +12,7 @@ describe("Blockchain", () => {
     const client = getClient();
     connection = createConnection(client);
   });
+
   it("should provide info", async () => {
     const config = await connection.getConfig();
 
@@ -21,6 +22,10 @@ describe("Blockchain", () => {
         maxPoints: 10,
         recoveryTime: 5000,
         pointsAtAccountCreation: 2,
+      },
+      authDescriptor: {
+        maxRules: 8,
+        maxNumberPerAccount: 10,
       },
     });
   });

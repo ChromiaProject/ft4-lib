@@ -31,4 +31,6 @@
   and `getTransferHistoryEntry`.
 - Include `blockchainRid` in response from queries `getTransferDetails` and `getTransferDetailsByAsset`.
 
+- Include auth descriptor config (`maxRules` and `maxNumberPerAccount`) in `Config`.
+
 ### Fixed 🔧
