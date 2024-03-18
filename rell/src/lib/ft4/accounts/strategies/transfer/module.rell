@@ -63,6 +63,24 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id:
     create_on_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
 }
 
+@extend(strategies.after_register_account)
+function(accounts.account) {
+    val pool_account = ensure_pool_account(chain_context.blockchain_rid);
+
+    for (account_creation_transfer in
+            account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending }) {
+        assets.Unsafe.transfer(
+            pool_account,
+            account,
+            account_creation_transfer.asset,
+            account_creation_transfer.amount);
+
+        account_creation_transfer.state = account_creation_state.done;
+        account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
+        account_creation_transfer.op_index = op_context.op_index;
+    }
+}
+
 function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
     val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
     return accounts.account @? { .id == pool_account_id }

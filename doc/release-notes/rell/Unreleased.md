@@ -17,4 +17,6 @@
   and `get_transfer_history_entry`.
 - Include `blockchain_rid` in response from queries `get_transfer_details` and `get_transfer_details_by_asset`.
 
+- Pending transfers when account is registered with direct strategies are completed.
+
 ### Fixed 🔧

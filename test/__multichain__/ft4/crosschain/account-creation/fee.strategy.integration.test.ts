@@ -16,13 +16,14 @@ import {
   getNewAsset,
 } from "@ft4/util/blockchain-util";
 import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import { open } from "@ft4/accounts/registration/strategies/open";
 import { fee } from "@ft4/accounts/registration/strategies/fee";
 import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import adminUser from "@ft4/util/admin_user";
-import { open } from "@ft4/accounts/registration/strategies/open";
 import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
 import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
+import { createAmountFromBalance } from "@ft4/index";
 
 let asset: Asset;
 let nonExistentChain00Asset: Asset;
@@ -153,6 +154,80 @@ describe("Fee account creation single step", () => {
     );
     expect(assetBalanceSender!.amount.value).toBe(
       startingAmount.value - feeRawAmount!,
+    );
+
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
+  });
+
+  it("can complete pending crosschain transfers when account is registered with direct strategies", async () => {
+    const sigProv = newSignatureProvider();
+    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const senderSession = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
+
+    const startingAmount = createAmount(20, 5);
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderSession.account.id,
+      asset.id,
+      startingAmount,
+    );
+
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    expect(senderSession.account.id).toEqual(recipientId);
+
+    const _allowedAssets = (await recipientConnection.query(
+      allowedAssets(
+        senderConnection.blockchainRid,
+        senderSession.account.id,
+        recipientId,
+      ),
+    ))!;
+
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find(
+      (v) => v.asset_id.compare(asset.id) === 0,
+    )?.min_amount;
+
+    expect(rawAmount).toEqual(1000000n);
+
+    const orchestrator = await createOrchestrator(
+      recipientConnection.blockchainRid,
+      recipientId,
+      asset.id,
+      createAmountFromBalance(rawAmount!, asset.decimals),
+      senderSession,
+    );
+    await new Promise((resolve, reject) => {
+      orchestrator.onTransferError(reject);
+      orchestrator.transfer().then(resolve).catch(reject);
+    });
+
+    const recipientSession = (
+      await registerAccount(recipientConnection, keyStore, open(authDescriptor))
+    ).session;
+
+    expect(recipientSession.account.id).toEqual(recipientId);
+
+    const assetBalanceRecipient =
+      await recipientSession.account.getBalanceByAssetId(asset.id);
+    expect(assetBalanceRecipient?.amount?.value).toBe(rawAmount);
+
+    const assetBalanceSender = await senderSession.account.getBalanceByAssetId(
+      asset.id,
+    );
+    expect(assetBalanceSender?.amount?.value).toBe(
+      startingAmount.value - rawAmount!,
     );
 
     expect(
