@@ -1,7 +1,6 @@
 import { Buffer } from "buffer";
 import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "@ft4/events";
-import { OrchestratorError } from "./errors";
 import { TransactionBuilder } from "@ft4/utils/transaction-builder";
 import { Session } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
@@ -19,7 +18,7 @@ export type OrchestratorEvents = {
   TransferSigned: [SignedTransaction];
   TransferHop: [BufferId];
   TransferComplete: [];
-  TransferError: [OrchestratorError];
+  TransferError: [Error];
 };
 
 export type OrchestratorState = {
@@ -51,8 +50,8 @@ export interface OrchestratorBase {
   offTransferHop: (listener: Listener<[BufferId]>) => void;
   onTransferComplete: (listener: Listener<[]>) => void;
   offTransferComplete: (listener: Listener<[]>) => void;
-  onTransferError: (listener: Listener<[OrchestratorError]>) => void;
-  offTransferError: (listener: Listener<[OrchestratorError]>) => void;
+  onTransferError: (listener: Listener<[Error]>) => void;
+  offTransferError: (listener: Listener<[Error]>) => void;
 }
 
 export type ExternalOrchestratorBase = Omit<

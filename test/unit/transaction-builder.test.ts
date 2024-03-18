@@ -61,6 +61,16 @@ import {
   TransactionReceipt,
   Web3PromiEvent,
 } from "postchain-client";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
+import eth from "ethers";
+import { createEvmKeyHandler } from "@ft4/authentication";
+import { testAdFromRegistration } from "../util/util";
+import { SigningError } from "@ft4/authentication";
+import {
+  createFtKeyHandler,
+  createInMemoryEvmKeyStore,
+} from "@ft4/authentication";
+import { op } from "@ft4/utils";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -346,7 +356,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
 
-  it("can build and submit a transaction, and emits 'signed' event while doing so", async () => {
+  it("can build and submit a transaction, and emits 'built' event while doing so", async () => {
     const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
     const expectedTx = gtx.serialize({
@@ -374,6 +384,72 @@ describe("Transaction Builder", () => {
 
     expect(builtEvent!.equals(tx));
   }, 5000);
+
+  it("throw SigningError if user rejects FT signature", async () => {
+    const accountId = encryption.randomBytes(32);
+    const keyPair = encryption.makeKeyPair();
+    let keyStore = createInMemoryFtKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      keyStore.pubKey,
+      null,
+    );
+
+    // Rewire the keystore to let us fake signing failure
+    const sign = jest.fn().mockImplementation(() => {
+      throw new Error("signing failed");
+    });
+    keyStore = { ...keyStore, sign };
+
+    const authService = createFakeAuthDataService({
+      foo: { flags: ["T"], message: "bogus" },
+    });
+    const authenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
+      authService,
+    );
+
+    await expect(
+      transactionBuilder(authenticator, client).add(op("foo")).build(),
+    ).rejects.toThrow(SigningError);
+  });
+
+  it("throw SigningError if user rejects EVM signature", async () => {
+    const accountId = encryption.randomBytes(32);
+    const keyPair = encryption.makeKeyPair();
+    const message = "Sign this message with {nonce}";
+    let keyStore = createInMemoryEvmKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      keyStore.address,
+      null,
+    );
+
+    // Rewire the keystore to let us fake a user rejection
+    const signMessage = jest.fn().mockImplementation(() => {
+      const err = new Error() as eth.ActionRejectedError;
+      err.code = "ACTION_REJECTED";
+      err.reason = "rejected";
+      err.message = "signing rejected";
+      err.shortMessage = "signing rejected";
+      throw err;
+    });
+    keyStore = { ...keyStore, signMessage };
+
+    const authService = createFakeAuthDataService({
+      foo: { flags: ["T"], message },
+    });
+    const authenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
+      authService,
+    );
+
+    await expect(
+      transactionBuilder(authenticator, client).add(op("foo")).build(),
+    ).rejects.toThrow(SigningError);
+  });
 
   describe("block anchored handling", () => {
     it("calls registered handler when block is anchored in system anchoring chain", async () => {

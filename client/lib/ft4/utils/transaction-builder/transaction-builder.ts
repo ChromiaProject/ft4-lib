@@ -44,6 +44,7 @@ import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
 import { AnchoringTransaction } from "postchain-client";
 import { getBlockAnchoringTransaction } from "postchain-client";
 import { formatter } from "postchain-client";
+import { SigningError } from "@ft4/authentication";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -168,12 +169,17 @@ export function transactionBuilder(
         );
       }
       keyHandlers.push(keyHandler);
-      const ops = await keyHandler.authorize(
-        authenticator.accountId,
-        operation,
-        ctx,
-        authenticator.authDataService,
-      );
+      let ops: Operation[];
+      try {
+        ops = await keyHandler.authorize(
+          authenticator.accountId,
+          operation,
+          ctx,
+          authenticator.authDataService,
+        );
+      } catch (e) {
+        throw new SigningError(`Unable to sign operation ${operation.name}`, e);
+      }
       const nonceId = getNonceIdForTxContext(
         authenticator.accountId,
         keyHandler.authDescriptor.id,
@@ -473,10 +479,18 @@ export function transactionBuilder(
     tx.signatures = await Promise.all(
       // For some signers we don't have access to their key stores, therefor we insert zero buffer
       // as a placeholder for their signatures
-      tx.signers.map(
-        (signer) =>
-          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
-      ),
+      tx.signers.map((signer) => {
+        try {
+          return (
+            signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64)
+          );
+        } catch (e) {
+          throw new SigningError(
+            `Unable to sign transaction for signer ${signer.toString("hex")}`,
+            e,
+          );
+        }
+      }),
     );
     return gtx.serialize(tx);
   }

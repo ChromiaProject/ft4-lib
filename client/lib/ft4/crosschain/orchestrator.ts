@@ -43,6 +43,7 @@ import {
 } from "./types";
 import { createConnectionToBlockchainRid } from "@ft4/ft-session";
 import { SignedTransaction } from "postchain-client";
+import { SigningError } from "@ft4/authentication/index";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
@@ -106,10 +107,14 @@ export async function createOrchestrator(
         orchestrator.eventEmitter.emit("TransferSigned", tx);
       })
       .catch((reason: Error) => {
-        throw new InitTransferError(
-          ErrorMessages.FAILED_TO_SEND_TRANSACTION,
-          reason,
-        );
+        if (reason instanceof SigningError) {
+          throw reason;
+        } else {
+          throw new InitTransferError(
+            ErrorMessages.FAILED_TO_SEND_TRANSACTION,
+            reason,
+          );
+        }
       })
       .then(() => {
         orchestrator.eventEmitter.emit("TransferInit");
@@ -384,9 +389,11 @@ async function createBaseOrchestrator(
     try {
       await fn();
     } catch (error) {
-      let orchError: TransferExecutionError;
+      let orchError: Error;
 
       if (error instanceof TransferExecutionError) {
+        orchError = error;
+      } else if (error instanceof SigningError) {
         orchError = error;
       } else {
         const errorMessage = error.message ? error.message : error.toString();
@@ -447,11 +454,11 @@ async function createBaseOrchestrator(
     return localEmitter.off("TransferComplete", listener);
   }
 
-  function onTransferError(listener: Listener<[OrchestratorError]>) {
+  function onTransferError(listener: Listener<[Error]>) {
     return localEmitter.on("TransferError", listener);
   }
 
-  function offTransferError(listener: Listener<[OrchestratorError]>) {
+  function offTransferError(listener: Listener<[Error]>) {
     return localEmitter.off("TransferError", listener);
   }
 

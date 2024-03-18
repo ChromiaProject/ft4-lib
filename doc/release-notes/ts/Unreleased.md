@@ -18,6 +18,8 @@
   events when transaction is built, sent and confirmed (only `buildAndSendWithAnchoring`).
 - `logout` function returned from `KeyStoreInteractor.login()` and `registerAccount()` will delete auth descriptors 
   for disposable key.
+- TransactionBuilder will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
+- Orchestrator will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
 
 ### Added ✅
 

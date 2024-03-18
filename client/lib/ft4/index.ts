@@ -17,6 +17,7 @@ export {
   LoginConfigComplexRule,
   LoginConfigSimpleRule,
   LoginConfigRules,
+  SigningError,
   mapLoginConfigRulesToAuthDescriptorRules,
   blockHeight,
   relativeBlockHeight,
