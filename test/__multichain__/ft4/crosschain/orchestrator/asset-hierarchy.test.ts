@@ -1,12 +1,9 @@
 import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import {
-  createAmount,
-  Orchestrator,
-  registerCrosschainAsset,
-} from "@ft4/index";
+import { createAmount, registerCrosschainAsset } from "@ft4/index";
 import { Amount } from "@ft4/asset";
 import adminUser from "../../../../util/admin_user";
+import { Orchestrator } from "@ft4/crosschain/index";
 
 describe("Asset Hierarchy", () => {
   const mintAmount = createAmount(100, 0);
@@ -20,15 +17,7 @@ describe("Asset Hierarchy", () => {
     orchestrator: Orchestrator,
     expectedBalances: { [key: number]: Amount | undefined },
   ) {
-    const completedListener = jest.fn();
-    orchestrator.onTransferComplete(completedListener);
-    const errorListener = jest.fn();
-    orchestrator.onTransferError(errorListener);
-
     await orchestrator.transfer();
-
-    expect(errorListener).not.toHaveBeenCalled();
-    expect(completedListener).toHaveBeenCalled();
 
     for (const [accountNum, expectedBalance] of Object.entries(
       expectedBalances,
@@ -58,11 +47,12 @@ describe("Asset Hierarchy", () => {
     );
 
     const orchestratorFromRootToLeaf = await createOrchestrator(
+      testContext.session0, // From root
+      testContext.session0.account.authenticator,
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session0, // From root
     );
 
     await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {
@@ -71,11 +61,12 @@ describe("Asset Hierarchy", () => {
     });
 
     const orchestratorFromLeafToRoot = await createOrchestrator(
+      testContext.session1, // From leaf
+      testContext.session1.account.authenticator,
       testContext.multichain0.rid, // To root
       testContext.account0.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session1, // From leaf
     );
 
     await verifyEndTransferAndBalances(orchestratorFromLeafToRoot, {
@@ -95,21 +86,23 @@ describe("Asset Hierarchy", () => {
     );
 
     const orchestratorFromRootToLeaf = await createOrchestrator(
+      testContext.session0, // From root
+      testContext.session0.account.authenticator,
       testContext.multichain2.rid, // To leaf
       testContext.account2.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session0, // From root
     );
 
     await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {});
 
     const orchestratorFromLeafToSibling = await createOrchestrator(
+      testContext.session2, // From root
+      testContext.session2.account.authenticator,
       testContext.multichain1.rid, // To sibling
       testContext.account1.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session2, // From leaf
     );
 
     await verifyEndTransferAndBalances(orchestratorFromLeafToSibling, {
@@ -130,21 +123,23 @@ describe("Asset Hierarchy", () => {
     );
 
     const orchestratorFromRootToLeaf = await createOrchestrator(
+      testContext.session0, // From root
+      testContext.session0.account.authenticator,
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session0, // From root
     );
 
     await verifyEndTransferAndBalances(orchestratorFromRootToLeaf, {});
 
     const orchestratorFromLeafToBranch = await createOrchestrator(
+      testContext.session1, // From root
+      testContext.session1.account.authenticator,
       testContext.multichain2.rid, // To branch
       testContext.account2.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session1, // From leaf
     );
 
     await verifyEndTransferAndBalances(orchestratorFromLeafToBranch, {
@@ -165,21 +160,23 @@ describe("Asset Hierarchy", () => {
     );
 
     const orchestratorFromRootToBranch = await createOrchestrator(
+      testContext.session0, // From root
+      testContext.session0.account.authenticator,
       testContext.multichain2.rid, // To branch
       testContext.account2.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session0, // From root
     );
 
     await verifyEndTransferAndBalances(orchestratorFromRootToBranch, {});
 
     const orchestratorFromBranchToLeaf = await createOrchestrator(
+      testContext.session2, // From root
+      testContext.session2.account.authenticator,
       testContext.multichain1.rid, // To leaf
       testContext.account1.id,
       testContext.sampleAsset.id,
       createAmount(10, decimals),
-      testContext.session2, // From branch
     );
 
     await verifyEndTransferAndBalances(orchestratorFromBranchToLeaf, {

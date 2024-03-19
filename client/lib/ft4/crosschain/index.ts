@@ -4,11 +4,7 @@ export {
   getAssetOriginById,
 } from "./query-functions";
 export { createOrchestrator } from "./orchestrator";
-export {
-  initTransfer,
-  applyTransfer,
-  getInitTransferArgs,
-} from "./op-functions";
+export { initTransfer, applyTransfer, completeTransfer } from "./operations";
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";
@@ -20,3 +16,13 @@ export {
   PendingTransfer,
   PendingTransferResponse,
 } from "./types";
+
+export {
+  OrchestratorError,
+  FactoryError,
+  TransferExecutionError,
+  InitTransferError,
+  ApplyTransferError,
+} from "./errors";
+
+export { crosschainTransfer, resumeCrosschainTransfer } from "./transfer";

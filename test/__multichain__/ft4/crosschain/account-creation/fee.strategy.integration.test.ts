@@ -4,7 +4,6 @@ import {
   createAmount,
   createConnection,
   createInMemoryFtKeyStore,
-  createOrchestrator,
   createSingleSigAuthDescriptorRegistration,
   mint,
   registerCrosschainAsset,
@@ -201,17 +200,12 @@ describe("Fee account creation single step", () => {
 
     expect(rawAmount).toEqual(1000000n);
 
-    const orchestrator = await createOrchestrator(
+    await senderSession.account.crosschainTransfer(
       recipientConnection.blockchainRid,
       recipientId,
       asset.id,
       createAmountFromBalance(rawAmount!, asset.decimals),
-      senderSession,
     );
-    await new Promise((resolve, reject) => {
-      orchestrator.onTransferError(reject);
-      orchestrator.transfer().then(resolve).catch(reject);
-    });
 
     const recipientSession = (
       await registerAccount(recipientConnection, keyStore, open(authDescriptor))
@@ -261,17 +255,12 @@ describe("Fee account creation single step", () => {
       startingAmount,
     );
 
-    const orchestrator = await createOrchestrator(
+    await senderSession.account.crosschainTransfer(
       unrelatedConnection.client.config.blockchainRid + "",
       unrelatedAccount.id,
       asset.id,
       startingAmount,
-      senderSession,
     );
-    orchestrator.onTransferError((e) => {
-      throw e;
-    });
-    await orchestrator.transfer();
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
     expect(unrelatedAccount.id).toEqual(recipientId);

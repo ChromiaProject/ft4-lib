@@ -111,14 +111,13 @@ export { Listener, EventEmitter } from "./events";
 
 // Crosschain
 export {
-  Orchestrator,
-  OrchestratorEvents,
-  PathfinderError,
-  applyTransfer,
-  createOrchestrator,
-  findPathToChainForAsset,
+  PendingTransfer,
   getAssetOriginById,
+  getPendingTransfersForAccount,
+  isTransferApplied,
   initTransfer,
+  applyTransfer,
+  completeTransfer,
 } from "./crosschain";
 
 import * as accountRegistration from "@ft4/accounts/registration";

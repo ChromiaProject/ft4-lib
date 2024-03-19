@@ -1,7 +1,4 @@
-import {
-  applyTransfer as applyTransferOp,
-  initTransfer as initTransferOp,
-} from "@ft4/crosschain/operations";
+import { applyTransfer, initTransfer } from "@ft4/crosschain/operations";
 import {
   AuthFlag,
   createAmount,
@@ -52,7 +49,7 @@ describe("Crosschain transfer", () => {
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
-    const initOperation = initTransferOp(
+    const initOperation = initTransfer(
       account01.id,
       asset00.id,
       createAmount(100, asset00.decimals),
@@ -82,7 +79,7 @@ describe("Crosschain transfer", () => {
         try {
           await transactionBuilder(account00.authenticator, connection01.client)
             .addWithoutAuthenticator(iccfProofOperation)
-            .addWithoutAuthenticator(applyTransferOp(data.tx, data.tx, 0))
+            .addWithoutAuthenticator(applyTransfer(data.tx, data.tx, 0))
             .buildAndSend();
         } catch (error) {
           reject(error);

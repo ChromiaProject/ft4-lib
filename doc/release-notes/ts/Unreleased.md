@@ -10,6 +10,9 @@
 - Removed `LoginManager` type and the `getLoginManager` method in `KeyStoreInteractor`, 
   added `login` method to `KeyStoreInteractor` instead.
 
+- Removed the Orchestrator from the public API, use new `crosschainTransfer` and `resumeCrosschainTransfer` 
+  methods in `AuthenticatedAccount` instead. 
+
 ### Changed 🪙
 
 - TransactionBuilder will wait for transactions to be anchored in system anchoring chain before invoking 
@@ -19,13 +22,13 @@
 - `logout` function returned from `KeyStoreInteractor.login()` and `registerAccount()` will delete auth descriptors 
   for disposable key.
 - TransactionBuilder will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
-- Orchestrator will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
+- `crosschainTransfer` method will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
 
 ### Added ✅
 
 - New method `buildAndSendWithAnchoring` in TransactionBuilder which will wait for anchoring in cluster and system 
   anchoring chains before resolving promise.
-- New event `TransferSigned` in Orchestrator which is emitted when the `initTransfer` transaction is signed.
+- New event `signed` in `crosschainTransfer` method which is emitted when the `initTransfer` transaction is signed.
 
 - `getAssetsByType` query function
 

@@ -10,10 +10,7 @@ import {
 import { AuthenticatedAccount } from "@ft4/accounts";
 import { Asset } from "@ft4/asset/types";
 import { PendingTransfer, findPathToChainForAsset } from "@ft4/crosschain";
-import {
-  createOrchestrator,
-  createResumeOrchestrator,
-} from "@ft4/crosschain/orchestrator";
+import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { createSession } from "@ft4/ft-session";
 import { Connection, Session } from "@ft4/types";
 import { PaginatedEntity } from "@ft4/utils/types";
@@ -90,12 +87,8 @@ describe("Orchestrator", () => {
       .buildAndSendWithAnchoring();
 
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    const orchestrator = await createResumeOrchestrator(
-      session0,
-      pendingTransfers.data[0],
-    );
+    await session0.account.resumeCrosschainTransfer(pendingTransfers.data[0]);
 
-    await orchestrator.resumeTransfer();
     const balance = await account2.getBalanceByAssetId(asset.id);
     Object.assign(BigInt.prototype, {
       toJSON: function () {
@@ -109,11 +102,12 @@ describe("Orchestrator", () => {
 
   it("removes pending transfer once transfer is completed", async () => {
     const orchestrator = await createOrchestrator(
+      session0,
+      session0.account.authenticator,
       multichain2Rid,
       account2.id,
       asset.id,
       amount,
-      session0,
     );
 
     const pendingTransfers = new Promise<PaginatedEntity<PendingTransfer>>(

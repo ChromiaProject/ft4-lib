@@ -2,12 +2,7 @@ import { RegistrationDetails, Strategy, StrategyError } from "../../types";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
 import { LoginConfigOptions } from "../../../../authentication/login";
-import {
-  Connection,
-  KeyStore,
-  createKeyStoreInteractor,
-  createOrchestrator,
-} from "@ft4/index";
+import { Connection, KeyStore, createKeyStoreInteractor } from "@ft4/index";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
 import { BufferId } from "@ft4/utils";
 import { subscriptionAssets } from "../transfer/subscription/queries";
@@ -51,19 +46,12 @@ export function subscription(
         keyStore,
       ).getSession(accountId);
 
-      const orchestrator = await createOrchestrator(
+      await senderSession.account.crosschainTransfer(
         targetConnection.blockchainRid,
         accountId,
         subscriptionAsset.id,
         createAmountFromBalance(amount, subscriptionAsset.decimals),
-        senderSession,
       );
-
-      await new Promise((resolve, reject) => {
-        orchestrator.onTransferError(reject);
-
-        orchestrator.transfer().then(resolve).catch(reject);
-      });
 
       const operation = {
         name: "ft4.ras_transfer_subscription",

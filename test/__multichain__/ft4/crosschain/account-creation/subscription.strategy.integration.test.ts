@@ -4,7 +4,6 @@ import {
   createAmount,
   createConnection,
   createInMemoryFtKeyStore,
-  createOrchestrator,
   createSingleSigAuthDescriptorRegistration,
   mint,
   registerCrosschainAsset,
@@ -187,17 +186,12 @@ describe("Subscription account creation single step", () => {
       startingAmount,
     );
 
-    const orchestrator = await createOrchestrator(
+    await senderSession.account.crosschainTransfer(
       unrelatedConnection.client.config.blockchainRid + "",
       unrelatedAccount.id,
       asset.id,
       startingAmount,
-      senderSession,
     );
-    orchestrator.onTransferError((e) => {
-      throw e;
-    });
-    await orchestrator.transfer();
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
     expect(unrelatedAccount.id).toEqual(recipientId);

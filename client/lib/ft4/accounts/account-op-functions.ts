@@ -27,6 +27,9 @@ import {
   TransactionSessionCompletion,
 } from "@ft4/utils/types";
 import { Amount } from "@ft4/asset";
+import { crosschainTransfer } from "@ft4/crosschain/index";
+import { PendingTransfer } from "@ft4/crosschain/index";
+import { resumeCrosschainTransfer } from "@ft4/crosschain/transfer";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -44,6 +47,22 @@ export function createAuthenticatedAccount(
     //   _deleteAllAuthDescriptorsExclude(connection, authenticator, authDescriptorId),
     transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
       transfer(connection, authenticator, receiverId, assetId, amount),
+    crosschainTransfer: (
+      targetChainId: BufferId,
+      recipientId: BufferId,
+      assetId: BufferId,
+      amount: Amount,
+    ) =>
+      crosschainTransfer(
+        connection,
+        authenticator,
+        targetChainId,
+        recipientId,
+        assetId,
+        amount,
+      ),
+    resumeCrosschainTransfer: (pendingTransfer: PendingTransfer) =>
+      resumeCrosschainTransfer(connection, authenticator, pendingTransfer),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),
