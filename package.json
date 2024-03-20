@@ -32,7 +32,7 @@
     "multichain:demo": "./scripts/multichain-rundemo.sh",
     "deploy:latest": "./scripts/deploy.sh",
     "deploy:stable": "./scripts/deploy.sh --stable",
-    "compile": "rimraf dist && tsc --project tsconfig.dist.json",
+    "compile": "rimraf dist && tsc --project tsconfig.json",
     "build:clean": "rimraf dist",
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias --resolve-full-paths -p tsconfig.esm.json",
     "build:umd": "tsc --project tsconfig.umd.json && tsc-alias -p tsconfig.umd.json",
