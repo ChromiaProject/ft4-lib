@@ -19,11 +19,8 @@ export {
   LoginConfigRules,
   SigningError,
   mapLoginConfigRulesToAuthDescriptorRules,
-  blockHeight,
   relativeBlockHeight,
-  blockTime,
   relativeBlockTime,
-  opCount,
   minutes,
   hours,
   days,
@@ -81,6 +78,9 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  opCount,
+  blockHeight,
+  blockTime,
   createAuthDescriptorValidator,
 } from "./accounts";
 

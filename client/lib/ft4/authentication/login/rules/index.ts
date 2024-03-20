@@ -5,13 +5,13 @@ import {
   RawSimpleRule,
   RuleOperator,
 } from "@ft4/accounts/auth-descriptor/rules";
+import { enumValueFromString } from "@ft4/utils/enum-parser";
 import {
   LoginConfigComplexRule,
+  LoginConfigRelativeRuleVariable,
   LoginConfigRules,
   LoginConfigSimpleRule,
 } from "./types";
-import { LoginConfigRuleVariable } from "./variables";
-import { enumValueFromString } from "@ft4/utils/enum-parser";
 
 export * from "./types";
 export * from "./variables";
@@ -34,23 +34,16 @@ export async function ensureAuthDescriptorRule(
   let variable: AuthDescriptorRuleVariable;
 
   switch (rule.variable) {
-    case LoginConfigRuleVariable.RelativeBlockHeight:
+    case LoginConfigRelativeRuleVariable.RelativeBlockHeight:
       variable = AuthDescriptorRuleVariable.BlockHeight;
       valueToAdd = await getBlockHeight();
       break;
-    case LoginConfigRuleVariable.BlockHeight:
-      variable = AuthDescriptorRuleVariable.BlockHeight;
-      break;
-    case LoginConfigRuleVariable.RelativeBlockTime:
+    case LoginConfigRelativeRuleVariable.RelativeBlockTime:
       variable = AuthDescriptorRuleVariable.BlockTime;
       valueToAdd = Date.now();
       break;
-    case LoginConfigRuleVariable.BlockTime:
-      variable = AuthDescriptorRuleVariable.BlockTime;
-      break;
-    case LoginConfigRuleVariable.OpCount:
-      variable = AuthDescriptorRuleVariable.OpCount;
-      break;
+    default:
+      variable = rule.variable;
   }
 
   return {
@@ -116,7 +109,7 @@ export const weeks = (w: number) => w * days(7);
 export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
   return {
     operator: RuleOperator.LessThan,
-    variable: LoginConfigRuleVariable.RelativeBlockTime,
+    variable: LoginConfigRelativeRuleVariable.RelativeBlockTime,
     value: ttl,
   };
 }
@@ -126,7 +119,10 @@ export function loginConfigRuleMapper(
 ): LoginConfigSimpleRule {
   return {
     operator: enumValueFromString(rule[0], RuleOperator),
-    variable: enumValueFromString(rule[1], LoginConfigRuleVariable),
+    variable: enumValueFromString(rule[1], {
+      ...LoginConfigRelativeRuleVariable,
+      ...AuthDescriptorRuleVariable,
+    }),
     value: rule[2],
   };
 }

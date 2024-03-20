@@ -16,17 +16,17 @@ import { IClient, encryption, gtx } from "postchain-client";
 import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
 import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory";
 import {
+  blockTime,
   createSingleSigAuthDescriptorRegistration,
   lessOrEqual,
   lessThan,
+  opCount,
 } from "@ft4/accounts/auth-descriptor";
 import { aggregateSigners } from "@ft4/accounts";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import {
-  blockTime,
   mapLoginConfigRulesToAuthDescriptorRules,
-  opCount,
   relativeBlockHeight,
 } from "@ft4/authentication/login/rules";
 
