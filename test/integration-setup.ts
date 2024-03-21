@@ -76,4 +76,5 @@ export default async function () {
 
   globalThis.__POSTGRES__ = postgres;
   globalThis.__POSTCHAIN__ = container;
+  globalThis.__NETWORK__ = network;
 }
