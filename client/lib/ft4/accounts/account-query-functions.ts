@@ -38,7 +38,10 @@ import {
   PendingTransferResponse,
   pendingTransfersForAccount,
 } from "@ft4/crosschain";
-import { mapPendingTransfers } from "@ft4/crosschain/query-functions";
+import {
+  getLastPendingTransferForAccount,
+  mapPendingTransfers,
+} from "@ft4/crosschain/query-functions";
 import { createTransferHistoryEntryFromResponse } from "./transfer-history/transfer-history-entry";
 
 //this will be outdated as soon as another tx is sent to the same account:
@@ -117,6 +120,21 @@ export function createAccountObject(
         connection,
         pendingTransfersForAccount(accountId, limit, cursor),
         mapPendingTransfers,
+      );
+    },
+    getLastPendingCrosschainTransfer: async (
+      targetBlockchainRid: BufferId,
+      recipientId: BufferId,
+      assetId: BufferId,
+      amount: bigint,
+    ) => {
+      return getLastPendingTransferForAccount(
+        connection,
+        accountId,
+        targetBlockchainRid,
+        recipientId,
+        assetId,
+        amount,
       );
     },
   });

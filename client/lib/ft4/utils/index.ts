@@ -7,6 +7,7 @@ import {
   Operation,
   RawGtv,
   RawGtx,
+  SignedTransaction,
   encryption,
   gtv,
   gtx,
@@ -136,4 +137,17 @@ export async function createAndSignTransaction(
   );
 
   return gtx.serialize(transaction);
+}
+
+export function loadOperationFromTransaction(
+  tx: RawGtx | SignedTransaction,
+  opIndex: number,
+): Operation {
+  const transaction = Buffer.isBuffer(tx) ? (gtv.decode(tx) as RawGtx) : tx;
+  const operations = transaction[0][1];
+  const operation = operations[opIndex];
+  return {
+    name: operation[0],
+    args: operation[1],
+  };
 }

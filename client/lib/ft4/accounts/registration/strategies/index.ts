@@ -16,6 +16,7 @@ import { gtv } from "postchain-client";
 import { LoginKeyStore } from "../../../authentication/login";
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
 import { aggregateSigners } from "@ft4/accounts/auth-descriptor";
+import { LoginDetails } from "./types";
 
 export async function fetchLoginDetails(
   connection: Connection,
@@ -23,11 +24,7 @@ export async function fetchLoginDetails(
   loginConfig: LoginConfigOptions | null = null,
 ): Promise<{
   accountId: Buffer;
-  loginDetails: {
-    authDescriptor: AuthDescriptorRegistration<SingleSig>;
-    loginKeyStore: LoginKeyStore;
-    disposableKeyStore: FtKeyStore;
-  } | null;
+  loginDetails: LoginDetails | null;
 }> {
   const accountId = getAccountIdFromSigners(aggregateSigners(authDescriptor));
 

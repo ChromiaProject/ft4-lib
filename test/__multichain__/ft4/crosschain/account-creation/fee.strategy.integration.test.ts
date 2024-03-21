@@ -2,6 +2,7 @@ import { registerAccount } from "@ft4/accounts/registration";
 import {
   Connection,
   createAmount,
+  createAmountFromBalance,
   createConnection,
   createInMemoryFtKeyStore,
   createSingleSigAuthDescriptorRegistration,
@@ -9,7 +10,7 @@ import {
   registerCrosschainAsset,
 } from "@ft4/index";
 import { Asset } from "@ft4/index";
-import { gtv, newSignatureProvider } from "postchain-client";
+import { encryption, gtv, newSignatureProvider } from "postchain-client";
 import {
   createChromiaClientToMultichain,
   getNewAsset,
@@ -21,8 +22,8 @@ import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/qu
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import adminUser from "@ft4/util/admin_user";
 import { fetchBlockchains } from "@ft4/__multichain__/util/blockchain";
+import { initTransfer } from "@ft4/crosschain/operations";
 import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
-import { createAmountFromBalance } from "@ft4/index";
 
 let asset: Asset;
 let nonExistentChain00Asset: Asset;
@@ -230,6 +231,101 @@ describe("Fee account creation single step", () => {
     ).toBe(0);
   });
 
+  it("can resume account registration when transfer is interrupted", async () => {
+    const sigProv = newSignatureProvider();
+    const keyStore = createInMemoryFtKeyStore(sigProv);
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const senderSession = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
+    const senderAccount = senderSession.account;
+
+    const feeAmounts = await recipientConnection.query(feeAssets());
+    const amount = feeAmounts.find((amt) =>
+      amt.asset_id.equals(asset.id),
+    )!.amount;
+
+    const feeAmount = createAmountFromBalance(amount, asset.decimals);
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderAccount.id,
+      asset.id,
+      feeAmount,
+    );
+
+    const recipientId = gtv.gtvHash(sigProv.pubKey);
+    expect(senderAccount.id).toEqual(recipientId);
+
+    await senderSession
+      .transactionBuilder()
+      .add(
+        initTransfer(recipientId, asset.id, feeAmount, [
+          recipientConnection.blockchainRid,
+        ]),
+      )
+      .buildAndSendWithAnchoring();
+
+    const recipientSession = (
+      await registerAccount(
+        recipientConnection,
+        keyStore,
+        fee(senderConnection.blockchainRid, asset, authDescriptor),
+      )
+    ).session;
+    expect(recipientSession.account.id).toEqual(recipientId);
+  });
+
+  it("can resume account registration when transfer is completed but account is not registered yet", async () => {
+    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const senderSession = (
+      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+    ).session;
+    const senderAccount = senderSession.account;
+
+    const feeAmounts = await recipientConnection.query(feeAssets());
+    const amount = feeAmounts.find((amt) =>
+      amt.asset_id.equals(asset.id),
+    )!.amount;
+
+    const feeAmount = createAmountFromBalance(amount, asset.decimals);
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderAccount.id,
+      asset.id,
+      feeAmount,
+    );
+
+    const recipientId = gtv.gtvHash(keyStore.id);
+    expect(senderAccount.id).toEqual(recipientId);
+
+    await senderAccount.crosschainTransfer(
+      recipientConnection.blockchainRid,
+      recipientId,
+      asset.id,
+      feeAmount,
+    );
+
+    const recipientSession = (
+      await registerAccount(
+        recipientConnection,
+        keyStore,
+        fee(senderConnection.blockchainRid, asset, authDescriptor),
+      )
+    ).session;
+    expect(recipientSession.account.id).toEqual(recipientId);
+  });
+
   it("handles asset coming from wrong chain properly", async () => {
     const sigProv = newSignatureProvider();
     const keyStore = createInMemoryFtKeyStore(sigProv);
@@ -389,5 +485,50 @@ describe("Fee account creation single step", () => {
         .length,
     ).toBe(0);
     expect(await recipientConnection.getAccountById(recipientId)).toBeNull();
+  });
+
+  it("throws error when account is already registered", async () => {
+    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const { session } = await registerAccount(
+      senderConnection,
+      keyStore,
+      open(authDescriptor),
+    );
+
+    const feeAmounts = await recipientConnection.query(feeAssets());
+    const amount = feeAmounts.find((amount) =>
+      amount.asset_id.equals(asset.id),
+    )!.amount;
+
+    const feeAmount = createAmountFromBalance(amount, asset.decimals);
+
+    mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      session.account.id,
+      asset.id,
+      feeAmount,
+    );
+
+    await registerAccount(
+      recipientConnection,
+      keyStore,
+      fee(senderConnection.blockchainRid, asset, authDescriptor),
+    );
+
+    const promise = registerAccount(
+      recipientConnection,
+      keyStore,
+      fee(senderConnection.blockchainRid, asset, authDescriptor),
+    );
+
+    expect(promise).rejects.toThrow(
+      `Account <${session.account.id.toString("hex")}> already registered on blockchain <${recipientConnection.blockchainRid.toString("hex")}>`,
+    );
   });
 });

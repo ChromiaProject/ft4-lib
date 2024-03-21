@@ -6,7 +6,7 @@ import {
   registerCrosschainAsset,
 } from "@ft4/index";
 import { BufferId, transactionBuilder } from "@ft4/utils";
-import { Operation, RawGtx } from "postchain-client";
+import { Operation, RawGtx, gtv } from "postchain-client";
 import AccountBuilder from "../../../util/account-builder";
 import adminUser from "../../../util/admin_user";
 import {
@@ -124,5 +124,53 @@ describe("Crosschain transfer", () => {
     expect(transferDetails[1].assetId).toEqual(asset00.id);
     expect(transferDetails[1].delta).toEqual(100n);
     expect(transferDetails[1].isInput).toEqual(false);
+  });
+
+  it("can query pending transfers by recipient, asset and amount", async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+
+    const asset00 = await getNewAsset(
+      connection00.client,
+      "crosschain-pending-transfer-test-asset",
+      "CROSSCHAIN-pending-transfer-test-asset",
+    );
+
+    const account00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
+      .build();
+
+    const tx = await transactionBuilder(
+      account00.authenticator,
+      connection00.client,
+    )
+      .add(
+        initTransfer(
+          account00.id,
+          asset00.id,
+          createAmount(100, asset00.decimals),
+          [multichain01.rid],
+        ),
+      )
+      .build();
+
+    await connection00.client.sendTransaction(tx);
+
+    const transfer = await account00.getLastPendingCrosschainTransfer(
+      multichain01.rid,
+      account00.id,
+      asset00.id,
+      createAmount(100, asset00.decimals).value,
+    );
+
+    expect(transfer).toEqual({
+      opIndex: 1,
+      tx: gtv.decode(tx),
+      accountId: account00.id,
+    });
   });
 });

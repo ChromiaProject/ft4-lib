@@ -105,6 +105,7 @@ export {
   retrievePaginatedEntity,
   EntityRetriever,
   PaginatedEntity,
+  loadOperationFromTransaction,
 } from "./utils";
 
 export { Listener, EventEmitter } from "./events";

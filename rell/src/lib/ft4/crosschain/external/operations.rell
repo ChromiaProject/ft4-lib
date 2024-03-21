@@ -16,7 +16,7 @@ function init_transfer_message(gtv) {
             assets.format_amount_with_decimals(params.amount, asset.decimals),
             asset.name,
             chain_context.blockchain_rid,
-            params.receiver_id,
+            params.recipient_id,
             params.hops[params.hops.size()-1]
         );
 }
@@ -29,7 +29,7 @@ function () = auth.add_overridable_auth_handler(
 );
 
 operation init_transfer(
-    receiver_id: byte_array,
+    recipient_id: byte_array,
     asset_id: byte_array,
     amount: big_integer,
     hops: list<byte_array>
@@ -42,7 +42,7 @@ operation init_transfer(
 
     crosschain.before_init_transfer(
         account,
-        receiver_id,
+        recipient_id,
         asset,
         amount,
         hops
@@ -56,7 +56,7 @@ operation init_transfer(
     );
     create assets.crosschain_transfer_history_entry(
         .blockchain_rid = hops[hops.size() - 1],
-        .account_id = receiver_id,
+        .account_id = recipient_id,
         .asset = asset,
         .delta = amount,
         .op_index = op_context.op_index,
@@ -64,14 +64,14 @@ operation init_transfer(
     );
 
     val pending_transfer = create crosschain.pending_transfer(
-        account = account,
+        sender = account,
         transaction = op_context.transaction,
         op_index = op_context.op_index
     );
 
     crosschain.after_init_transfer(
         account,
-        receiver_id,
+        recipient_id,
         asset,
         amount,
         hops,
@@ -163,7 +163,7 @@ operation apply_transfer(
     crosschain.before_apply_transfer(
         sender_blockchain_rid = init_transfer_tx.body.blockchain_rid,
         sender_account_id = init_transfer_details.sender_account_id,
-        recipient_id = init_transfer_details.args.receiver_id,
+        recipient_id = init_transfer_details.args.recipient_id,
         asset = asset,
         amount = init_transfer_details.args.amount,
         hop_index = hop_index,
@@ -181,7 +181,7 @@ operation apply_transfer(
         );
     } else {
         // final hop -- send money to recipient account
-        val recipient = accounts.account @? { .id == init_transfer_details.args.receiver_id };
+        val recipient = accounts.account @? { .id == init_transfer_details.args.recipient_id };
         if (recipient != null) {
             crosschain.Unsafe.update_balances_if_needed(
                 crosschain.ensure_blockchain_account(from_blockchain_rid),
@@ -192,11 +192,11 @@ operation apply_transfer(
         } else {
             require(crosschain.is_create_on_crosschain_transfer_enabled(),
                 "Account <%s> does not exist and creating accounts on transfer is not enabled"
-                    .format(init_transfer_details.args.receiver_id));
+                    .format(init_transfer_details.args.recipient_id));
             crosschain.create_on_crosschain_transfer(
                 init_transfer_tx.body.blockchain_rid,
                 init_transfer_details.sender_account_id,
-                init_transfer_details.args.receiver_id,
+                init_transfer_details.args.recipient_id,
                 asset,
                 init_transfer_details.args.amount);
         }
@@ -216,7 +216,7 @@ operation apply_transfer(
     crosschain.after_apply_transfer(
         sender_blockchain_rid = init_transfer_tx.body.blockchain_rid,
         sender_account_id = init_transfer_details.sender_account_id,
-        recipient_id = init_transfer_details.args.receiver_id,
+        recipient_id = init_transfer_details.args.recipient_id,
         asset = asset,
         amount = init_transfer_details.args.amount,
         hop_index = hop_index,

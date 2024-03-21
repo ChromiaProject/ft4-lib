@@ -1,6 +1,7 @@
 ## [Unreleased] - 2024-xx-xx
 
 ### Breaking 💔
+- rename `account` to `sender` in `pending_transfer` entity
 
 ### Changed 🪙
 
@@ -22,5 +23,7 @@
 - Include auth descriptor config (`max_rules` and `max_number_per_account`) in `get_config` query.
 
 - 1 day expiration in default login config.
+- Added `get_last_pending_transfer_for_account` query that returns last pending cross-chain transfer that matches provided parameters (sender, target chain, recipient, asset, amount)
+- Added `has_pending_create_account_transfer_for_strategy` query that checks whether "create on transfer" account registration is initiated for provided strategy
 
 ### Fixed 🔧

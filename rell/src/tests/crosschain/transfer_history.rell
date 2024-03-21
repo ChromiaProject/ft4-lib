@@ -73,7 +73,7 @@ function test_apply_transfer_history() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = bob.account.id,
+                    recipient_id = bob.account.id,
                     asset_id = asset.id,
                     amount = 5L,
                     hops = [chain_context.blockchain_rid]

@@ -20,7 +20,7 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
 
   val pending_transfers = xc.pending_transfer @* {};
   assert_equals(pending_transfers.size(), 1);
-  assert_equals(pending_transfers[0].account, alice.account);
+  assert_equals(pending_transfers[0].sender, alice.account);
 }
 
 function test_it_fetches_pending_transactions_for_the_specified_account() {
@@ -64,7 +64,7 @@ function test_get_pending_transfers_for_account_is_paginated() {
     (
       tx_data = .transaction.tx_data,
       op_index = .op_index,
-      account_id = .account.id
+      account_id = .sender.id
     ).to_gtv_pretty()
   );
 
@@ -72,6 +72,29 @@ function test_get_pending_transfers_for_account_is_paginated() {
   assert_equals(page1.data[0], pending_transfers[0]);
   assert_equals(page2.data.size(), 1);
   assert_equals(page2.data[0], pending_transfers[1]);
+}
+
+function test_it_fetches_pending_transfers_by_sender_asset_and_amount() {
+  val alice = utils.register_alice();
+  val recipient1_id = rell.test.pubkeys.bob.hash();
+  val recipient2_id = rell.test.pubkeys.trudy.hash();
+  val target_blockchain_rid = "1".hash();
+
+  val asset = utils.create_asset("test", "t", 1);
+  utils.mint(alice.account, asset, 3);
+
+  rell.test.tx()
+    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc_ext.init_transfer(recipient1_id, asset.id, 1, [target_blockchain_rid]))
+    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc_ext.init_transfer(recipient2_id, asset.id, 2, [target_blockchain_rid]))
+    .sign(alice.keypair)
+    .run();
+
+  assert_not_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient1_id, asset.id, 1));
+  assert_not_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient2_id, asset.id, 2));
+  assert_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient1_id, asset.id, 2));
+  assert_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient2_id, asset.id, 1));
 }
 
 function test_returns_false_if_transfer_is_not_applied() {

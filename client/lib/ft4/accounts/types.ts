@@ -57,6 +57,12 @@ export interface Account {
   getPendingCrosschainTransfers: () => Promise<
     PaginatedEntity<PendingTransfer>
   >;
+  getLastPendingCrosschainTransfer: (
+    targetBlockchainRid: BufferId,
+    recipientId: BufferId,
+    assetId: BufferId,
+    amount: bigint,
+  ) => Promise<PendingTransfer | null>;
 }
 
 export interface AuthenticatedAccount extends Account {

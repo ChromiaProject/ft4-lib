@@ -38,4 +38,8 @@
 
 - Include auth descriptor config (`maxRules` and `maxNumberPerAccount`) in `Config`.
 
+- Added `loadOperationFromTransaction` that receives `RawGtx` or `SignedTransaction` (encoded tx) and returns `Operation` at provided index
+
+- Added `getLastPendingCrosschainTransaction` to `Account` interface
+
 ### Fixed 🔧
