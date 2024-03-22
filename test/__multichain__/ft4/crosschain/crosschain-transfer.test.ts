@@ -3,6 +3,7 @@ import {
   AuthFlag,
   createAmount,
   createConnection,
+  days,
   registerCrosschainAsset,
 } from "@ft4/index";
 import { BufferId, transactionBuilder } from "@ft4/utils";
@@ -54,6 +55,7 @@ describe("Crosschain transfer", () => {
       asset00.id,
       createAmount(100, asset00.decimals),
       [multichain01.rid],
+      10000000000000,
     );
 
     let transferTransactionRid: Buffer | undefined = undefined;
@@ -154,6 +156,7 @@ describe("Crosschain transfer", () => {
           asset00.id,
           createAmount(100, asset00.decimals),
           [multichain01.rid],
+          Date.now() + days(1),
         ),
       )
       .build();
@@ -172,5 +175,40 @@ describe("Crosschain transfer", () => {
       tx: gtv.decode(tx),
       accountId: account00.id,
     });
+  });
+
+  test("transfer fails if expired before init", async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+
+    const asset00 = await getNewAsset(
+      connection00.client,
+      "crosschain-transfer-expiry-test-asset",
+      "CROSSCHAIN-transfer-expiry-test-asset",
+    );
+
+    const account00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
+      .build();
+
+    const tb = transactionBuilder(account00.authenticator, connection00.client);
+
+    const initOperation = initTransfer(
+      Buffer.alloc(64),
+      asset00.id,
+      createAmount(100, asset00.decimals),
+      [multichain01.rid],
+      1,
+    );
+
+    const promise = tb.add(initOperation).buildAndSend();
+
+    await expect(promise).rejects.toThrow(
+      "Parameter 'deadline' cannot be a past timestamp. Value: 1",
+    );
   });
 });

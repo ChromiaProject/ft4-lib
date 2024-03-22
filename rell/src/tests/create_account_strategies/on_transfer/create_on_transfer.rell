@@ -256,7 +256,8 @@ function test_create_account_on_crosschain_transfer_success() {
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -314,7 +315,8 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
                     recipient_id,
                     asset_id = asset.id,
                     amount = 10L,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -352,7 +354,8 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -369,7 +372,8 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount + 1,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -411,7 +415,8 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -449,7 +454,8 @@ function test_multiple_crosschain_transfers_success() {
                     recipient_id,
                     asset_id = asset1.id,
                     amount = amount1,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -471,7 +477,8 @@ function test_multiple_crosschain_transfers_success() {
                     recipient_id,
                     asset_id = asset2.id,
                     amount = amount2,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []

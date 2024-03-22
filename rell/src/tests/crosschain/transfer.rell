@@ -14,7 +14,7 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
 
   rell.test.tx()
     .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
+    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
     .sign(alice.keypair)
     .run();
 
@@ -33,9 +33,9 @@ function test_it_fetches_pending_transactions_for_the_specified_account() {
 
   rell.test.tx()
     .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
+    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
     .op(auth_ext.ft_auth(bob.account.id, bob.auth_descriptor_id))
-    .op(xc_ext.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()]))
+    .op(xc_ext.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
     .sign(alice.keypair, bob.keypair)
     .run();
 
@@ -51,9 +51,9 @@ function test_get_pending_transfers_for_account_is_paginated() {
 
   rell.test.tx()
     .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"]))
+    .op(xc_ext.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
     .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"]))
+    .op(xc_ext.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
     .sign(rell.test.keypairs.alice)
     .run();
 
@@ -85,9 +85,9 @@ function test_it_fetches_pending_transfers_by_sender_asset_and_amount() {
 
   rell.test.tx()
     .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(recipient1_id, asset.id, 1, [target_blockchain_rid]))
+    .op(xc_ext.init_transfer(recipient1_id, asset.id, 1, [target_blockchain_rid], 10000000000000))
     .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(recipient2_id, asset.id, 2, [target_blockchain_rid]))
+    .op(xc_ext.init_transfer(recipient2_id, asset.id, 2, [target_blockchain_rid], 10000000000000))
     .sign(alice.keypair)
     .run();
 

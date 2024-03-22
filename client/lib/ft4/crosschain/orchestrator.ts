@@ -1,5 +1,6 @@
 import { Amount } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
+import { days } from "@ft4/index";
 import {
   BufferId,
   OnAnchoredHandlerData,
@@ -50,6 +51,7 @@ import { Authenticator } from "@ft4/authentication/index";
  * @param {BufferId} recipientId - ID of the recipient.
  * @param {BufferId} assetId - ID of the asset to be transferred.
  * @param {Amount} amount - The amount to be transferred.
+ * @param {number} ttl - The number of milliseconds after which the transaction can only be reverted.
  * @returns {Orchestrator} The orchestrator instance with functionalities like initiating transfers,
  * subscribing/unsubscribing to various transfer events.
  */
@@ -60,6 +62,7 @@ export async function createOrchestrator(
   recipientId: BufferId,
   assetId: BufferId,
   amount: Amount,
+  ttl: number = days(1),
 ): Promise<Orchestrator> {
   const asset = await connection.getAssetById(assetId);
   if (!asset) {
@@ -81,7 +84,7 @@ export async function createOrchestrator(
   function performInitTransfer(): Promise<void> {
     return transactionBuilder(authenticator, connection.client)
       .add(
-        initTransfer(recipientId, assetId, amount, path),
+        initTransfer(recipientId, assetId, amount, path, Date.now() + ttl),
         (data: OnAnchoredHandlerData | null, error: Error | null) => {
           if (error) {
             throw new InitTransferError(

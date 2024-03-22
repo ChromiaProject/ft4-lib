@@ -3,7 +3,8 @@
     recipient_id: byte_array,
     assets.asset,
     amount: big_integer,
-    hops: list<byte_array>
+    hops: list<byte_array>,
+    deadline: timestamp
 );
 
 @extendable function after_init_transfer(
@@ -12,6 +13,7 @@
     assets.asset,
     amount: big_integer,
     hops: list<byte_array>,
+    deadline: timestamp,
     pending_transfer
 );
 

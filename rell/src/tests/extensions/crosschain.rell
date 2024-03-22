@@ -8,12 +8,14 @@ object crosschain_extensions_state {
     mutable before_init_transfer_recipient: byte_array = x"";
     mutable before_init_transfer_asset: byte_array = x"";
     mutable before_init_transfer_amount: big_integer = 0L;
+    mutable before_init_transfer_deadline: timestamp = 0;
 
     mutable is_after_init_transfer_called: boolean = false;
     mutable after_init_transfer_sender: byte_array = x"";
     mutable after_init_transfer_recipient: byte_array = x"";
     mutable after_init_transfer_asset: byte_array = x"";
     mutable after_init_transfer_amount: big_integer = 0L;
+    mutable after_init_transfer_deadline: timestamp = 0;
 
     mutable is_before_apply_transfer_called: boolean = false;
     mutable before_apply_transfer_sender_blockchain_rid: byte_array = x"";
@@ -37,13 +39,15 @@ object crosschain_extensions_state {
     recipient_id: byte_array,
     assets.asset,
     amount: big_integer,
-    hops: list<byte_array>
+    hops: list<byte_array>,
+    deadline: timestamp
 ) {
     crosschain_extensions_state.is_before_init_transfer_called = true;
     crosschain_extensions_state.before_init_transfer_sender = sender.id;
     crosschain_extensions_state.before_init_transfer_recipient = recipient_id;
     crosschain_extensions_state.before_init_transfer_asset = asset.id;
     crosschain_extensions_state.before_init_transfer_amount = amount;
+    crosschain_extensions_state.before_init_transfer_deadline = deadline;
 }
 
 @extend(crosschain.after_init_transfer) function(
@@ -52,6 +56,7 @@ object crosschain_extensions_state {
     assets.asset,
     amount: big_integer,
     hops: list<byte_array>,
+    deadline: timestamp,
     crosschain.pending_transfer
 ) {
     crosschain_extensions_state.is_after_init_transfer_called = true;
@@ -59,6 +64,7 @@ object crosschain_extensions_state {
     crosschain_extensions_state.after_init_transfer_recipient = recipient_id;
     crosschain_extensions_state.after_init_transfer_asset = asset.id;
     crosschain_extensions_state.after_init_transfer_amount = amount;
+    crosschain_extensions_state.after_init_transfer_deadline = deadline;
 }
 
 @extend(crosschain.before_apply_transfer) function(

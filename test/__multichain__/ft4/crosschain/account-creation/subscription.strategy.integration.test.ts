@@ -6,6 +6,7 @@ import {
   createConnection,
   createInMemoryFtKeyStore,
   createSingleSigAuthDescriptorRegistration,
+  days,
   mint,
   registerCrosschainAsset,
 } from "@ft4/index";
@@ -204,9 +205,13 @@ describe("Subscription account creation single step", () => {
     await senderSession
       .transactionBuilder()
       .add(
-        initTransfer(recipientId, asset.id, subscriptionAmount, [
-          recipientConnection.blockchainRid,
-        ]),
+        initTransfer(
+          recipientId,
+          asset.id,
+          subscriptionAmount,
+          [recipientConnection.blockchainRid],
+          Date.now() + days(1),
+        ),
       )
       .buildAndSendWithAnchoring();
 

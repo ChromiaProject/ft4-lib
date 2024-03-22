@@ -83,7 +83,15 @@ describe("Orchestrator", () => {
     const amount = createAmount(10);
     await session0
       .transactionBuilder()
-      .add(initTransfer(account2.id, asset.id, amount, normalizedPath))
+      .add(
+        initTransfer(
+          account2.id,
+          asset.id,
+          amount,
+          normalizedPath,
+          10000000000000,
+        ),
+      )
       .buildAndSendWithAnchoring();
 
     const pendingTransfers = await account0.getPendingCrosschainTransfers();

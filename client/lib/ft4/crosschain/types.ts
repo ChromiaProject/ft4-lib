@@ -12,6 +12,7 @@ export type GtvInitTransferArgs = [
   assetId: Buffer,
   amount: bigint,
   hops: Buffer[],
+  deadline: number,
 ];
 
 export type OrchestratorEvents = {

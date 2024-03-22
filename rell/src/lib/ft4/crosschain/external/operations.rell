@@ -32,8 +32,14 @@ operation init_transfer(
     recipient_id: byte_array,
     asset_id: byte_array,
     amount: big_integer,
-    hops: list<byte_array>
+    hops: list<byte_array>,
+    deadline: timestamp
 ) {
+    require(
+        deadline > op_context.last_block_time,
+        "Parameter 'deadline' cannot be a past timestamp. Value: %s".format(deadline)
+    );
+
     val account = auth.authenticate();
     val asset = require(
         assets.asset @? { .id == asset_id }, 
@@ -45,7 +51,8 @@ operation init_transfer(
         recipient_id,
         asset,
         amount,
-        hops
+        hops,
+        deadline
     );
 
     crosschain.Unsafe.update_balances_if_needed(
@@ -75,6 +82,7 @@ operation init_transfer(
         asset,
         amount,
         hops,
+        deadline,
         pending_transfer
     );
 }
@@ -87,6 +95,15 @@ operation apply_transfer(
     hop_index: integer
 ) {
     val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
+
+    val init_args = init_transfer_details.args;
+
+    require(
+        init_args.deadline >= op_context.last_block_time,
+        "This transfer has expired at timestamp <%s>. It can only be reverted."
+            .format(init_args.deadline)
+    );
+
     require(
         crosschain.applied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
         "Transaction <%s> transfer at index <%s> has already been applied on this chain."
@@ -123,8 +140,6 @@ operation apply_transfer(
     }
 
     val my_blockchain_rid = chain_context.blockchain_rid;
-
-    val init_args = init_transfer_details.args;
 
     require(
         init_args.hops.size() > hop_index,

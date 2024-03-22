@@ -6,7 +6,7 @@ import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { SignedTransaction } from "postchain-client";
 import { formatter } from "postchain-client";
 import { TransactionReceipt } from "postchain-client";
-import { Authenticator } from "@ft4/authentication/index";
+import { Authenticator, days } from "@ft4/authentication/index";
 import { Connection } from "@ft4/types";
 import { PendingTransfer } from "@ft4/crosschain/types";
 import { createResumeOrchestrator } from "@ft4/crosschain/orchestrator";
@@ -18,6 +18,7 @@ export function crosschainTransfer(
   recipientId: BufferId,
   assetId: BufferId,
   amount: Amount,
+  ttl: number = days(1),
 ): Web3PromiEvent<
   void,
   {
@@ -41,6 +42,7 @@ export function crosschainTransfer(
       recipientId,
       assetId,
       amount,
+      ttl,
     )
       .then((orchestrator) => {
         orchestrator.onTransferSigned((tx) => {

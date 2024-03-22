@@ -11,10 +11,11 @@ export function initTransfer(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
+  deadline: number,
 ): Operation {
   return op(
     "ft4.crosschain.init_transfer",
-    ...getInitTransferArgs(recipientId, assetId, amount, hops),
+    ...getInitTransferArgs(recipientId, assetId, amount, hops, deadline),
   );
 }
 
@@ -23,12 +24,14 @@ export function getInitTransferArgs(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
+  deadline: number,
 ): GtvInitTransferArgs {
   return [
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),
     amount.value,
     hops.map(formatter.ensureBuffer),
+    deadline,
   ];
 }
 

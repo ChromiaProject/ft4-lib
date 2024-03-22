@@ -21,7 +21,13 @@ function test_init_transfer_history() {
 
     rell.test.tx()
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(bob.account.id, asset.id, 5L, [target_blockchain_rid]))
+        .op(xchain_ext.init_transfer(
+            bob.account.id,
+            asset.id,
+            5L,
+            [target_blockchain_rid],
+            10000000000000
+        ))
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -76,7 +82,8 @@ function test_apply_transfer_history() {
                     recipient_id = bob.account.id,
                     asset_id = asset.id,
                     amount = 5L,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
