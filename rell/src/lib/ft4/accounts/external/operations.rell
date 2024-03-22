@@ -70,8 +70,7 @@ operation delete_auth_descriptors_for_signer(signer: byte_array) {
     val ads = (a_ad: accounts.account_auth_descriptor, ad_s: accounts.auth_descriptor_signer) @* {
         a_ad.account == account,
         ad_s.account_auth_descriptor == a_ad,
-        ad_s.id == signer,
-        a_ad.auth_type == accounts.auth_type.S
+        ad_s.id == signer
     } (a_ad);
     for (ad in ads) {
         accounts._delete_auth_descriptor(ad);

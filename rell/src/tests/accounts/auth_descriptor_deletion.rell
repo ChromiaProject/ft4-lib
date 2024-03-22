@@ -26,14 +26,14 @@ function test_returns_ad_to_be_deleted_when_in_list() {
 function test_returns_ad_with_account_flag_if_deleting_other_ad() {
     val alice = utils.register_alice();
     val new_ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.charlie.pub);
 
     rell.test.tx()
         .op(test_op.add_ad_to_account(alice.account, new_ad))
         .op(test_op.add_ad_to_account(alice.account, new_ad2))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run();
 
     val args = struct<accounts_ext.delete_auth_descriptor>(
@@ -71,14 +71,14 @@ function test_returns_null_if_no_valid_ads_in_list() {
 function test_returns_null_if_excluded_ad_not_in_list() {
     val alice = utils.register_alice();
     val new_ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub, ["A"]);
+    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.charlie.pub, ["A"]);
 
     rell.test.tx()
         .op(test_op.add_ad_to_account(alice.account, new_ad))
         .op(test_op.add_ad_to_account(alice.account, new_ad2))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run();
 
     val args = struct<accounts_ext.delete_all_auth_descriptors_exclude>(
@@ -139,19 +139,19 @@ function test_can_delete_ad_if_signed_with_ad_with_account_flag() {
 function test_can_not_delete_ad_if_signed_with_ad_without_account_flag() {
     val alice = utils.register_alice();
     val new_ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.charlie.pub);
 
     rell.test.tx()
         .op(test_op.add_ad_to_account(alice.account, new_ad))
         .op(test_op.add_ad_to_account(alice.account, new_ad2))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run();
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.trudy.pub))
+        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.charlie.pub))
         .op(accounts_ext.delete_auth_descriptor(new_ad.hash()))
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run_must_fail("The provided auth descriptor is not valid for this operation");
 }
 
@@ -184,10 +184,10 @@ function test_can_delete_ads_for_signer_if_signed_with_ad_with_account_flag() {
     );
 }
 
-function test_can_not_delete_ads_for_signer_if_signed_with_ad_without_account_flag() {
+function test_can_delete_multisig_ads_for_signer_if_signed_with_ad_with_account_flag() {
     val alice = utils.register_alice();
-    val new_ad1 = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+    val new_ad1 = utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["T", "X"]);
+    val new_ad2 = utils.create_multisig_auth_descriptor(1, [rell.test.keypairs.charlie.pub, rell.test.keypairs.dave.pub]);
 
     test_op.add_ad_to_account(alice.account, new_ad1)
         .sign(rell.test.keypairs.alice)
@@ -195,7 +195,45 @@ function test_can_not_delete_ads_for_signer_if_signed_with_ad_without_account_fl
         .run();
     test_op.add_ad_to_account(alice.account, new_ad2)
         .sign(rell.test.keypairs.alice)
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
+        .sign(rell.test.keypairs.dave)
+        .run();
+    assert_equals(
+        accounts.get_auth_descriptors_by_signer(alice.account.id, rell.test.keypairs.charlie.pub).size(),
+        1
+    );
+    assert_equals(
+        accounts.get_auth_descriptors_by_signer(alice.account.id, rell.test.keypairs.dave.pub).size(),
+        1
+    );
+
+    rell.test.tx()
+        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.alice.pub))
+        .op(accounts_ext.delete_auth_descriptors_for_signer(rell.test.keypairs.charlie.pub))
+        .sign(rell.test.keypairs.alice)
+        .run();
+    assert_equals(
+        accounts.get_auth_descriptors_by_signer(alice.account.id, rell.test.keypairs.charlie.pub).size(),
+        0
+    );
+    assert_equals(
+        accounts.get_auth_descriptors_by_signer(alice.account.id, rell.test.keypairs.dave.pub).size(),
+        0
+    );
+}
+
+function test_can_not_delete_ads_for_signer_if_signed_with_ad_without_account_flag() {
+    val alice = utils.register_alice();
+    val new_ad1 = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
+    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.charlie.pub);
+
+    test_op.add_ad_to_account(alice.account, new_ad1)
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
+        .run();
+    test_op.add_ad_to_account(alice.account, new_ad2)
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.charlie)
         .run();
     assert_equals(
         accounts.get_auth_descriptors_by_signer(alice.account.id, rell.test.keypairs.bob.pub).size(),
@@ -203,9 +241,9 @@ function test_can_not_delete_ads_for_signer_if_signed_with_ad_without_account_fl
     );
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.trudy.pub))
+        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.charlie.pub))
         .op(accounts_ext.delete_auth_descriptors_for_signer(rell.test.keypairs.bob.pub))
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run_must_fail("The provided auth descriptor is not valid for this operation");
 }
 
@@ -241,7 +279,7 @@ function test_ad_can_delete_itself_for_signer_without_account_flag() {
 function test_can_not_delete_multisig_ads_for_signer_if_signed_with_ad_without_account_flag() {
     val alice = utils.register_alice();
     val new_ad1 = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_multisig_auth_descriptor(1, [rell.test.keypairs.trudy.pub, rell.test.keypairs.charlie.pub]);
+    val new_ad2 = utils.create_multisig_auth_descriptor(1, [rell.test.keypairs.charlie.pub, rell.test.keypairs.dave.pub]);
 
     test_op.add_ad_to_account(alice.account, new_ad1)
         .sign(rell.test.keypairs.alice)
@@ -249,8 +287,8 @@ function test_can_not_delete_multisig_ads_for_signer_if_signed_with_ad_without_a
         .run();
     test_op.add_ad_to_account(alice.account, new_ad2)
         .sign(rell.test.keypairs.alice)
-        .sign(rell.test.keypairs.trudy)
         .sign(rell.test.keypairs.charlie)
+        .sign(rell.test.keypairs.dave)
         .run();
     assert_equals(
         accounts.get_auth_descriptors_by_signer(alice.account.id, rell.test.keypairs.bob.pub).size(),
@@ -258,28 +296,29 @@ function test_can_not_delete_multisig_ads_for_signer_if_signed_with_ad_without_a
     );
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.trudy.pub))
-        .op(accounts_ext.delete_auth_descriptors_for_signer(rell.test.keypairs.trudy.pub))
-        .sign(rell.test.keypairs.trudy)
+        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.charlie.pub))
+        .op(accounts_ext.delete_auth_descriptors_for_signer(rell.test.keypairs.charlie.pub))
+        .sign(rell.test.keypairs.charlie)
+        .sign(rell.test.keypairs.dave)
         .run_must_fail("The provided auth descriptor is not valid for this operation");
 }
 
 function test_can_delete_ad_if_excluded_ad_has_account_flag() {
     val alice = utils.register_alice();
     val new_ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub, ["A"]);
+    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.charlie.pub, ["A"]);
 
     rell.test.tx()
         .op(test_op.add_ad_to_account(alice.account, new_ad))
         .op(test_op.add_ad_to_account(alice.account, new_ad2))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run();
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.trudy.pub))
+        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.charlie.pub))
         .op(accounts_ext.delete_all_auth_descriptors_exclude(alice.account.id, new_ad2.hash()))
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run();
 
     assert_equals(
@@ -291,19 +330,19 @@ function test_can_delete_ad_if_excluded_ad_has_account_flag() {
 function test_can_not_delete_ad_if_excluded_ad_does_not_have_account_flag() {
     val alice = utils.register_alice();
     val new_ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+    val new_ad2 = utils.create_auth_descriptor(rell.test.keypairs.charlie.pub);
 
     rell.test.tx()
         .op(test_op.add_ad_to_account(alice.account, new_ad))
         .op(test_op.add_ad_to_account(alice.account, new_ad2))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run();
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.trudy.pub))
+        .op(test_utils.ft_auth_operation_for(rell.test.keypairs.charlie.pub))
         .op(accounts_ext.delete_all_auth_descriptors_exclude(alice.account.id, new_ad2.hash()))
-        .sign(rell.test.keypairs.trudy)
+        .sign(rell.test.keypairs.charlie)
         .run_must_fail("required flags [A] are missing");
 }
 
