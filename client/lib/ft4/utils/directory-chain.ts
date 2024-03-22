@@ -1,10 +1,10 @@
 import { Buffer } from "buffer";
-import { IClient } from "postchain-client";
+import { Queryable } from "postchain-client";
 import { SystemChainException } from "postchain-client";
 import { QueryObject } from "postchain-client";
 
 export async function getSystemAnchoringChain(
-  directoryClient: IClient,
+  directoryClient: Queryable,
 ): Promise<Buffer> {
   try {
     return await directoryClient.query(systemAnchoringChain());

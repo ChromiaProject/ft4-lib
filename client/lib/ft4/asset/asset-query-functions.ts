@@ -7,83 +7,84 @@ import {
   assetsByName,
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
-import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/types";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
 import { assetsByType } from "./asset-queries";
+import { Queryable } from "postchain-client";
 
 export async function getAssetById(
-  connection: Connection,
+  queryable: Queryable,
   id: BufferId,
 ): Promise<Asset | null> {
-  const response = await connection.query(assetById(id));
+  const response = await queryable.query(assetById(id));
   return response ? createAssetObject(response) : null;
 }
 
 export async function getAssetBySymbol(
-  connection: Connection,
+  queryable: Queryable,
   symbol: string,
 ): Promise<Asset | null> {
-  const response = await connection.query(assetBySymbol(symbol));
+  const response = await queryable.query(assetBySymbol(symbol));
   return response ? createAssetObject(response) : null;
 }
 
 export function getAssetsByName(
-  connection: Connection,
+  queryable: Queryable,
   name: string,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ) {
   return retrievePaginatedEntity<Asset, AssetResponse>(
-    connection,
+    queryable,
     assetsByName(name, limit, cursor),
     (a) => a.map(createAssetObject),
   );
 }
 
 export async function getAssetsByType(
-  connection: Connection,
+  queryable: Queryable,
   type: string,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
   return retrievePaginatedEntity<Asset, AssetResponse>(
-    connection,
+    queryable,
     assetsByType(type, limit, cursor),
     (a) => a.map(createAssetObject),
   );
 }
 
 export async function getAllAssets(
-  connection: Connection,
+  queryable: Queryable,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
   return retrievePaginatedEntity<Asset, AssetResponse>(
-    connection,
+    queryable,
     allAssets(limit, cursor),
     (a) => a.map(createAssetObject),
   );
 }
 
 export async function getBalanceByAccountId(
-  connection: Connection,
+  queryable: Queryable,
   accountId: BufferId,
   assetId: BufferId,
 ): Promise<Balance | null> {
-  return await connection
+  return await queryable
     .query(balanceByAccountId(accountId, assetId))
     .then((res) => (res !== null ? createBalanceObject(res) : res));
 }
 
 export async function getBalancesByAccountId(
-  connection: Connection,
+  queryable: Queryable,
   accountId: BufferId,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Balance>> {
   return retrievePaginatedEntity<Balance, BalanceResponse>(
-    connection,
+    queryable,
     balancesByAccountId(accountId, limit, cursor),
     (balances) => balances.map(createBalanceObject),
   );

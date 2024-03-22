@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { formatter, IClient, Queryable } from "postchain-client";
+import { formatter, Queryable } from "postchain-client";
 import {
   getBalanceByAccountId,
   getBalancesByAccountId,
@@ -47,16 +47,16 @@ import { createTransferHistoryEntryFromResponse } from "./transfer-history/trans
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
 export async function getRateLimit(
-  session: IClient,
+  queryable: Queryable,
   accountId: BufferId,
 ): Promise<RateLimit> {
-  const rateLimitResponse = await session.query(RateLimitQuery(accountId));
+  const rateLimitResponse = await queryable.query(RateLimitQuery(accountId));
   const rateLimit = {
     points: rateLimitResponse.points,
     lastUpdate: new Date(rateLimitResponse.lastUpdate),
   };
 
-  const chainInfo = await getConfig(session);
+  const chainInfo = await getConfig(queryable);
 
   return Object.freeze({
     points: rateLimit.points,
@@ -177,11 +177,11 @@ export async function getByAuthDescriptorId(
 }
 
 export async function isAuthDescriptorValid(
-  connection: Connection,
+  queryable: Queryable,
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): Promise<boolean> {
-  return (await connection.query(
+  return (await queryable.query(
     Query.isAuthDescriptorValid(accountId, authDescriptorId),
   ))!;
 }

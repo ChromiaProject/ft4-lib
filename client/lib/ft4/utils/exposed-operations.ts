@@ -1,13 +1,13 @@
-import { Connection } from "@ft4/types";
 import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
+import { Queryable } from "postchain-client";
 
 export async function fetchExposedOperations(
-  connection: Connection,
+  queryable: Queryable,
 ): Promise<Set<string>> {
   const appStructureQuery = rellAppStructure();
 
-  const appStructure = await connection.query(appStructureQuery);
+  const appStructure = await queryable.query(appStructureQuery);
 
   if (!appStructure?.modules) {
     throw new FetchAppStructureError(

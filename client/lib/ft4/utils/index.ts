@@ -2,9 +2,9 @@ import { AuthHandler, Connection } from "@ft4/types";
 import { Buffer } from "buffer";
 import {
   GTX,
-  IClient,
   KeyPair,
   Operation,
+  Queryable,
   RawGtv,
   RawGtx,
   SignedTransaction,
@@ -32,8 +32,8 @@ export function op(name: string, ...args: readonly RawGtv[]): Operation {
   return { name, args: args as RawGtv[] };
 }
 
-export async function getConfig(session: IClient): Promise<Config> {
-  const response = await session.query<ConfigResponse>("ft4.get_config");
+export async function getConfig(queryable: Queryable): Promise<Config> {
+  const response = await queryable.query<ConfigResponse>("ft4.get_config");
   return Object.freeze({
     rateLimit: {
       active: response.rate_limit.active,
@@ -59,8 +59,8 @@ export function getNonceIdForTxContext(
   return accountId.toString("hex") + authDescriptorId.toString("hex");
 }
 
-export async function getVersion(session: IClient): Promise<string> {
-  return Object.freeze(await session.query<string>("ft4.get_version"));
+export async function getVersion(queryable: Queryable): Promise<string> {
+  return Object.freeze(await queryable.query<string>("ft4.get_version"));
 }
 
 export function getPubkey(keyPair: KeyPair): Buffer {
@@ -93,9 +93,9 @@ type ConfigResponse = {
 };
 
 export async function getAllAuthHandlers(
-  connection: Connection,
+  queryable: Queryable,
 ): Promise<{ [key: string]: AuthHandler }> {
-  const authHandlers = await connection.query(allAuthHandlers());
+  const authHandlers = await queryable.query(allAuthHandlers());
   return authHandlers.reduce(
     (acc, curr) => ({ ...acc, [curr.name]: curr }),
     {},

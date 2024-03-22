@@ -6,7 +6,7 @@ import {
 } from "@ft4/index";
 import { Strategy } from "./types";
 import { createAuthDataService, createSession } from "@ft4/ft-session";
-import { Operation, gtv } from "postchain-client";
+import { Operation, Queryable, gtv } from "postchain-client";
 import { registerAccountMessage } from "./queries";
 import {
   registerAccountEvmSignatures,
@@ -93,11 +93,11 @@ export async function registerAccount(
 }
 
 async function evmSignaturesOperation(
-  connection: Connection,
+  queryable: Queryable,
   keyStore: EvmKeyStore,
   strategyOperation: Operation,
 ): Promise<Operation> {
-  const message = await connection.query(
+  const message = await queryable.query(
     registerAccountMessage(strategyOperation),
   );
   const signature = await keyStore.signMessage(message);

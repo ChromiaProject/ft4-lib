@@ -85,7 +85,7 @@ export function createConnection(client: IClient): Connection {
       nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
       args?: TArgs,
       callback?: QueryCallback<TReturn>,
-    ) => query<TReturn, TArgs>(connection, nameOrQueryObject, args, callback),
+    ) => client.query<TReturn, TArgs>(nameOrQueryObject, args, callback),
     getConfig: () => getConfig(client),
     getVersion: () => getVersion(client),
 
@@ -151,18 +151,6 @@ export function createSession(
       callWithoutNop(connection, authenticator, ...operations),
     ...connection,
   });
-}
-
-async function query<
-  TReturn extends RawGtv,
-  TArgs extends DictPair | undefined,
->(
-  connection: Connection,
-  nameOrQueryObject: string | QueryObject<TReturn, TArgs>,
-  args?: TArgs,
-  callback?: QueryCallback<TReturn>,
-): Promise<TReturn> {
-  return await connection.client.query(nameOrQueryObject, args, callback);
 }
 
 export function call(
