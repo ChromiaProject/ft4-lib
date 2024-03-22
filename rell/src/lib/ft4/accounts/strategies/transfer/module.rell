@@ -101,7 +101,18 @@ function create_on_transfer(
         asset = asset,
         amount = amount
     );
-    require(not rules.empty(), "No suitable transfer strategy found");
+    require(
+        not rules.empty(),
+        ("Recipient account <%s> does not exist, and no rule was found that allows account"+
+        " creation with <%s> <%s> from account <%s> of chain <%s>")
+            .format(
+                recipient_id,
+                assets.format_amount_with_decimals(amount, asset.decimals),
+                asset.symbol,
+                sender_id,
+                sender_blockchain_rid
+            )
+    );
 
     require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
         "This asset is already transferred");

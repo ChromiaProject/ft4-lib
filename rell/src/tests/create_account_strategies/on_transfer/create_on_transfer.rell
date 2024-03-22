@@ -71,7 +71,10 @@ function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(recipient_id, asset.id, 10L))
         .sign(alice.keypair)
-        .run_must_fail("No suitable transfer strategy found");
+        .run_must_fail(
+            "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <0x0000000000000000000000000000000000000000000000000000000000000000>"
+                .format(recipient_id, alice.account.id)
+        );
 }
 
 function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
@@ -116,7 +119,10 @@ function test_internal_transfer_fails_if_insufficient_amount_is_transferred() {
         .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
         .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
-        .run_must_fail("No suitable transfer strategy found");
+        .run_must_fail(
+            "Recipient account <%s> does not exist, and no rule was found that allows account creation with <%s> <TEST> from account <%s> of chain <0x0000000000000000000000000000000000000000000000000000000000000000>"
+                .format(recipient_id, assets.format_amount_with_decimals(amount, asset.decimals), alice.account.id)
+        );
 }
 
 function test_create_account_on_transfer_fails_if_no_account_creation_transfer_exists() {
@@ -319,7 +325,10 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
-        .run_must_fail("No suitable transfer strategy found");
+        .run_must_fail(
+            "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <%s>"
+                .format(recipient_id, sender_account_id, sender_blockchain_rid)
+        );
 }
 
 function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
@@ -413,7 +422,10 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
-        .run_must_fail("No suitable transfer strategy found");
+        .run_must_fail(
+            "Recipient account <%s> does not exist, and no rule was found that allows account creation with <%s> <TEST> from account <%s> of chain <%s>"
+                .format(recipient_id, assets.format_amount_with_decimals(amount, asset.decimals), sender_account_id, sender_blockchain_rid)
+        );
 }
 
 function test_multiple_crosschain_transfers_success() {
