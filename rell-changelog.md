@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0r] - 2024-03-22
+
+### Breaking 💔
+- rename `account` to `sender` in `pending_transfer` entity
+
+### Added ✅
+
+- Operation `delete_auth_descriptors_for_signer` to delete all auth descriptors for a specific signer from an account
+  (corresponding to query `get_account_auth_descriptors_by_signer`).
+
+- `type` attribute in asset entity
+- `get_assets_by_type` query
+- `register_asset_with_type` admin operation
+
+- Include `is_crosschain` flag in response from queries `get_transfer_history`, `get_transfer_history_from_height` 
+  and `get_transfer_history_entry`.
+- Include `blockchain_rid` in response from queries `get_transfer_details` and `get_transfer_details_by_asset`.
+
+- Pending transfers when account is registered with direct strategies are completed.
+
+- Include auth descriptor config (`max_rules` and `max_number_per_account`) in `get_config` query.
+
+- 1 day expiration in default login config.
+- Added `get_last_pending_transfer_for_account` query that returns last pending cross-chain transfer that matches provided parameters (sender, target chain, recipient, asset, amount)
+- Added `has_pending_create_account_transfer_for_strategy` query that checks whether "create on transfer" account registration is initiated for provided strategy
+
 ## [0.5.0r] - 2024-02-29
 
 ### Breaking 💔

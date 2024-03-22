@@ -33,6 +33,6 @@ describe("Blockchain", () => {
   it("should provide ft4 rell-side version number", async () => {
     const info = await connection.getVersion();
 
-    expect(info).toEqual("0.5.0");
+    expect(info).toEqual("0.6.0");
   });
 });
