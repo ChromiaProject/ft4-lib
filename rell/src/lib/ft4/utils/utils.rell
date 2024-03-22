@@ -16,3 +16,9 @@ function invalid(error: text) = validation_result(false, error);
 function make_auth_message(message: text) {
     return "Blockchain:\n{blockchain_rid}\n\n" + message + "\n\nNonce: {nonce}";
 }
+
+function latest_time() =
+    if (op_context.exists and op_context.block_height > 0)
+        op_context.last_block_time
+    else
+        block @ {} (@max .timestamp) ?: 0;

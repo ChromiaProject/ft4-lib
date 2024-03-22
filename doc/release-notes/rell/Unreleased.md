@@ -2,6 +2,8 @@
 
 ### Breaking 💔
 
+- `latest_time` is now in `utils` instead of `accounts`
+
 ### Changed 🪙
 
 ### Added ✅

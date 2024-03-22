@@ -108,7 +108,7 @@ function create_on_transfer(
 
     create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         rules = rules.to_gtv().to_bytes(),
-        timestamp = accounts.latest_time());
+        timestamp = utils.latest_time());
 }
 
 function do_transfer(accounts.account, strategy: text) {

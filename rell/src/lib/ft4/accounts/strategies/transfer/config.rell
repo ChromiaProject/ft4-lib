@@ -41,7 +41,7 @@ function is_asset_amount_allowed(rule, asset: assets.asset, amount: big_integer)
 
 function has_tx_expired(rule, tx_start_timestamp: timestamp) {
     val timeout_millis = rule.timeout_days * utils.MILLISECONDS_PER_DAY;
-    return tx_start_timestamp + timeout_millis < accounts.latest_time();
+    return tx_start_timestamp + timeout_millis < utils.latest_time();
 }
 
 function is_strategy_active(rule, strategy: text) {
