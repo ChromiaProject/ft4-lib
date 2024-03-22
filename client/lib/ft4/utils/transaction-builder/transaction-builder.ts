@@ -21,6 +21,7 @@ import {
   RawGtx,
   SystemChainException,
   GTX,
+  Web3PromiEvent,
 } from "postchain-client";
 import {
   getNonceIdForTxContext,
@@ -36,8 +37,14 @@ import {
   OperationContext,
   TransactionBuilder,
   TransactionBuilderConfig,
+  TransactionWithReceipt,
 } from "./types";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
+import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
+import { AnchoringTransaction } from "postchain-client";
+import { getBlockAnchoringTransaction } from "postchain-client";
+import { formatter } from "postchain-client";
+import { SigningError } from "@ft4/authentication";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 10,
@@ -48,6 +55,7 @@ const defaultConfig: TransactionBuilderConfig = {
  * Creates a new TransactionBuilder instance
  * @param authenticator object that holds authentication information for the transaction
  * @param client object that holds connection info for the transaction
+ * @param config optional configuration
  * @returns a TransactionBuilder instance
  */
 export function transactionBuilder(
@@ -59,6 +67,9 @@ export function transactionBuilder(
   const _keysUsed: (KeyStore | KeyHandler)[] = [];
   const _context: TxContext = {};
   let _noopAuthenticator: Authenticator;
+  let _directoryClient: IClient;
+  let _clusterAnchoringClient: IClient;
+  let _systemAnchoringClient: IClient;
 
   function add(
     operation: Operation,
@@ -92,7 +103,7 @@ export function transactionBuilder(
   async function buildUnsigned(): Promise<GTX> {
     if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
       throw new Error(
-        "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
+        "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
       );
 
     return await _buildUnsigned();
@@ -158,12 +169,17 @@ export function transactionBuilder(
         );
       }
       keyHandlers.push(keyHandler);
-      const ops = await keyHandler.authorize(
-        authenticator.accountId,
-        operation,
-        ctx,
-        authenticator.authDataService,
-      );
+      let ops: Operation[];
+      try {
+        ops = await keyHandler.authorize(
+          authenticator.accountId,
+          operation,
+          ctx,
+          authenticator.authDataService,
+        );
+      } catch (e) {
+        throw new SigningError(`Unable to sign operation ${operation.name}`, e);
+      }
       const nonceId = getNonceIdForTxContext(
         authenticator.accountId,
         keyHandler.authDescriptor.id,
@@ -183,7 +199,7 @@ export function transactionBuilder(
   async function build(): Promise<Buffer> {
     if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
       throw new Error(
-        "Cannot build transaction with onAnchoredHandlers, use buildAndSend() instead",
+        "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
       );
 
     return await _build();
@@ -194,27 +210,267 @@ export function transactionBuilder(
     return me;
   }
 
-  async function buildAndSend(): Promise<{
-    tx: SignedTransaction;
-    receipt: TransactionReceipt;
-  }> {
-    const tx = await _build();
-    const receipt = await client.sendTransaction(tx);
+  function buildAndSend(): Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  > {
+    const promiEvent = new Web3PromiEvent<
+      TransactionWithReceipt,
+      {
+        built: SignedTransaction;
+        sent: Buffer;
+      }
+    >((resolve, reject) => {
+      if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
+        reject(
+          Error(
+            "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
+          ),
+        );
 
-    const operationsWithHandlers = _operations.filter(
-      (op: OperationContext) => !!op.onAnchoredHandler,
-    );
+      _build()
+        .then((tx) => {
+          promiEvent.emit("built", tx);
+          return Promise.all([
+            tx,
+            client.sendTransaction(tx).on("sent", (receipt) => {
+              promiEvent.emit("sent", receipt.transactionRid);
+            }),
+          ]);
+        })
+        .then(([tx, receipt]) => {
+          resolve({ tx, receipt });
+        })
+        .catch((reason) => reject(reason));
+    });
+    return promiEvent;
+  }
 
-    if (operationsWithHandlers.length) {
-      new Promise((resolve) =>
-        resolve(waitUntilAnchored(operationsWithHandlers, tx)),
+  function buildAndSendWithAnchoring(): Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+      confirmed: TransactionReceipt;
+    }
+  > {
+    const promiEvent = new Web3PromiEvent<
+      TransactionWithReceipt,
+      {
+        built: SignedTransaction;
+        sent: Buffer;
+        confirmed: TransactionReceipt;
+      }
+    >((resolve, reject) => {
+      _build()
+        .then((tx) => {
+          promiEvent.emit("built", tx);
+          return Promise.all([
+            tx,
+            client
+              .sendTransaction(tx)
+              .on("sent", (receipt) =>
+                promiEvent.emit("sent", receipt.transactionRid),
+              ),
+          ]);
+        })
+        .then(([tx, receipt]) => {
+          promiEvent.emit("confirmed", receipt);
+          return Promise.all([tx, receipt, waitUntilAnchored(tx)]);
+        })
+        .then(([tx, receipt, rawTx]) => {
+          const operationsWithHandlers = _operations.filter(
+            (op: OperationContext) => !!op.onAnchoredHandler,
+          );
+          if (operationsWithHandlers.length) {
+            if (rawTx) {
+              const createProof = createCreateProof(rawTx);
+              invokeOnAnchoringHandlers(operationsWithHandlers, {
+                rawTx,
+                createProof,
+              });
+            } else {
+              invokeOnAnchoringHandlers(operationsWithHandlers, undefined);
+            }
+          }
+
+          if (rawTx) {
+            resolve({
+              tx,
+              receipt,
+            });
+          } else {
+            reject(new AnchoringTimeoutError());
+          }
+        })
+        .catch((reason) => reject(reason));
+    });
+    return promiEvent;
+  }
+
+  async function waitUntilAnchored(
+    tx: SignedTransaction,
+  ): Promise<RawGtx | null> {
+    const directoryClient = await ensureDirectoryClient();
+    if (_clusterAnchoringClient === undefined) {
+      _clusterAnchoringClient = await getAnchoringClient(
+        directoryClient,
+        client.config.blockchainRid,
       );
     }
+    const rawTx = gtv.decode(tx) as RawGtx;
+    const txRid = getTransactionRid(rawTx);
 
-    return {
-      tx,
-      receipt,
+    let clusterAnchoringTransaction: AnchoringTransaction | null = null;
+    for (let i = 0; i < config.retryCount; ++i) {
+      await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
+
+      try {
+        clusterAnchoringTransaction = await getBlockAnchoringTransaction(
+          client,
+          _clusterAnchoringClient,
+          txRid,
+        );
+      } catch (error) {
+        if (
+          error instanceof BlockAnchoringException ||
+          error instanceof SystemChainException
+        ) {
+          clusterAnchoringTransaction = null;
+        } else {
+          throw error;
+        }
+      }
+
+      if (clusterAnchoringTransaction) break;
+    }
+
+    let isAnchored = false;
+    if (clusterAnchoringTransaction) {
+      if (_systemAnchoringClient === undefined) {
+        const systemAnchoringChain =
+          await getSystemAnchoringChain(directoryClient);
+        _systemAnchoringClient = await createClient({
+          nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
+          blockchainRid: formatter.toString(systemAnchoringChain),
+        });
+      }
+
+      for (let i = 0; i < config.retryCount; ++i) {
+        await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
+
+        try {
+          isAnchored = await isBlockAnchored(
+            _clusterAnchoringClient,
+            _systemAnchoringClient,
+            clusterAnchoringTransaction.txRid,
+          );
+        } catch (error) {
+          if (
+            error instanceof BlockAnchoringException ||
+            error instanceof SystemChainException
+          ) {
+            isAnchored = false;
+          } else {
+            throw error;
+          }
+        }
+
+        if (isAnchored) break;
+      }
+    }
+
+    if (isAnchored) {
+      return rawTx;
+    } else {
+      return null;
+    }
+  }
+
+  function createCreateProof(
+    rawTx: RawGtx,
+  ): (blockchainRid: BufferId) => Promise<Operation> {
+    const proofCache = new Map<string, Operation>();
+    return async (blockchainRid: BufferId): Promise<Operation> => {
+      if (proofCache.has(blockchainRid.toString("hex"))) {
+        return proofCache.get(blockchainRid.toString("hex"))!;
+      }
+
+      const directoryClient = await ensureDirectoryClient();
+
+      for (let i = 0; i < config.retryCount; ++i) {
+        await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
+        try {
+          const proof = await createIccfProofTx(
+            directoryClient,
+            getTransactionRid(rawTx),
+            gtv.gtvHash(rawTx),
+            rawTx[0][2], // signers
+            client.config.blockchainRid,
+            blockchainRid.toString("hex"),
+            undefined,
+            true,
+          );
+
+          const iccfProofOperation = proof.iccfTx.operations[0];
+          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
+          return iccfProofOperation;
+        } catch (err) {
+          console.log(err);
+          throw err;
+        }
+      }
+      throw new Error("Block was not properly anchored");
     };
+  }
+
+  async function ensureDirectoryClient(): Promise<IClient> {
+    if (_directoryClient === undefined) {
+      _directoryClient = await createClient({
+        nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
+        blockchainIid: 0,
+      });
+    }
+    return _directoryClient;
+  }
+
+  function invokeOnAnchoringHandlers(
+    operationsWithHandlers: OperationContext[],
+    data:
+      | {
+          rawTx: RawGtx;
+          createProof: (blockchainRid: BufferId) => Promise<Operation>;
+        }
+      | undefined,
+  ) {
+    if (data) {
+      const { rawTx, createProof } = data;
+      operationsWithHandlers.forEach((op: OperationContext, idx: number) => {
+        if (!op.onAnchoredHandler) return;
+        op.onAnchoredHandler(
+          {
+            operation: op.operation,
+            opIndex: idx,
+            tx: rawTx,
+            createProof,
+          },
+          null,
+        );
+      });
+    } else {
+      operationsWithHandlers.forEach((op) => {
+        if (!op.onAnchoredHandler) return;
+        op.onAnchoredHandler(
+          null,
+          new AnchoringTimeoutError(
+            "Block was not anchored within the specified timeout",
+          ),
+        );
+      });
+    }
   }
 
   async function _build(): Promise<Buffer> {
@@ -223,107 +479,20 @@ export function transactionBuilder(
     tx.signatures = await Promise.all(
       // For some signers we don't have access to their key stores, therefor we insert zero buffer
       // as a placeholder for their signatures
-      tx.signers.map(
-        (signer) =>
-          signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64),
-      ),
+      tx.signers.map((signer) => {
+        try {
+          return (
+            signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64)
+          );
+        } catch (e) {
+          throw new SigningError(
+            `Unable to sign transaction for signer ${signer.toString("hex")}`,
+            e,
+          );
+        }
+      }),
     );
     return gtx.serialize(tx);
-  }
-
-  async function waitUntilAnchored(operations: OperationContext[], tx: Buffer) {
-    const directoryClient = await createClient({
-      nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
-      blockchainIid: 0,
-    });
-    const anchoringClient = await getAnchoringClient(
-      directoryClient,
-      client.config.blockchainRid,
-    );
-    const rawTx = gtv.decode(tx) as RawGtx;
-    const txRid = getTransactionRid(rawTx);
-
-    for (let i = 0; i < config.retryCount; ++i) {
-      await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
-
-      let isAnchored = false;
-      try {
-        isAnchored = await isBlockAnchored(client, anchoringClient, txRid);
-      } catch (error) {
-        // TODO: Uncomment to pollute logs with errors
-        // console.error("Error while checking block anchoring status", error);
-
-        if (
-          error instanceof BlockAnchoringException ||
-          error instanceof SystemChainException
-        ) {
-          isAnchored = false;
-        } else {
-          throw error;
-        }
-      }
-
-      if (isAnchored) {
-        const proofCache = new Map<string, Operation>();
-        const createProof = async (
-          blockchainRid: BufferId,
-        ): Promise<Operation> => {
-          if (proofCache.has(blockchainRid.toString("hex"))) {
-            return proofCache.get(blockchainRid.toString("hex"))!;
-          }
-
-          for (let i = 0; i < config.retryCount; ++i) {
-            await new Promise((resolve) =>
-              setTimeout(resolve, config.waitTimeMs),
-            );
-            try {
-              const proof = await createIccfProofTx(
-                directoryClient,
-                txRid,
-                tx,
-                rawTx[0][2], // signers
-                client.config.blockchainRid,
-                blockchainRid.toString("hex"),
-                undefined,
-                true,
-              );
-
-              const iccfProofOperation = proof.iccfTx.operations[0];
-              proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
-              return iccfProofOperation;
-            } catch (err) {
-              console.log(err);
-              throw err;
-            }
-          }
-          throw new Error("Block was not properly anchored");
-        };
-
-        operations.forEach((op: OperationContext, idx: number) => {
-          if (!op.onAnchoredHandler) return;
-          op.onAnchoredHandler(
-            {
-              operation: op.operation,
-              opIndex: idx,
-              tx: rawTx,
-              createProof,
-            },
-            null,
-          );
-        });
-        return;
-      }
-    }
-
-    operations.forEach((op) => {
-      if (!op.onAnchoredHandler) return;
-      op.onAnchoredHandler(
-        null,
-        new AnchoringTimeoutError(
-          "Block was not anchored within the specified timeout",
-        ),
-      );
-    });
   }
 
   function addWithAuthenticator(
@@ -370,6 +539,7 @@ export function transactionBuilder(
     build,
     buildUnsigned,
     buildAndSend,
+    buildAndSendWithAnchoring,
     session: client,
   });
 

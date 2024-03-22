@@ -6,6 +6,7 @@ import { OptionalPageCursor } from "@ft4/types";
 import { TransferHistoryEntryResponse } from "@ft4/accounts";
 
 export type RawTransferDetail = {
+  blockchain_rid: Buffer;
   account_id: Buffer;
   asset_id: Buffer;
   delta: bigint;

@@ -2,18 +2,19 @@
 module;
 
 import ^^^.lib.ft4.auth;
+import ^^^.lib.ft4.utils;
 import auth_external: ^^^.lib.ft4.auth.external;
 
 function test_querying_default_login_config_returns_empty_flags_list_when_default_config_is_not_overriden() {
     val config = auth_external.get_login_config("default");
 
-    assert_equals(config, auth._login_config(flags = []));
+    assert_equals(config, auth._login_config(flags = [], rules = auth.ttl(1 * utils.MILLISECONDS_PER_DAY)));
 }
 
 function test_querying_login_config_without_config_name_returns_default_login_config() {
     val config = auth_external.get_login_config();
 
-    assert_equals(config, auth._login_config(flags = []));
+    assert_equals(config, auth._login_config(flags = [], rules = auth.ttl(1 * utils.MILLISECONDS_PER_DAY)));
 }
 
 function test_querying_unknown_login_config_throws_error() {

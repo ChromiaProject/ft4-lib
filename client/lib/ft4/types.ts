@@ -10,8 +10,8 @@ import {
   Operation,
   TransactionReceipt,
 } from "postchain-client";
-import { LoginManager } from "./authentication/login-manager";
 import { TransferDetail, AuthDescriptorValidator } from "./accounts";
+import { LoginOptions, SessionWithLogout } from "./authentication/login";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -50,6 +50,11 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
+  getAssetsByType: (
+    type: string,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Asset>>;
   getAllAssets: (
     limit?: number,
     cursor?: OptionalPageCursor,
@@ -83,7 +88,7 @@ export type KeyStoreInteractor = {
     cursor: OptionalPageCursor,
   ): Promise<PaginatedEntity<Account>>;
   getSession(accountId: BufferId): Promise<Session>;
-  getLoginManager(): LoginManager;
+  login: (loginOptions: LoginOptions) => Promise<SessionWithLogout>;
   onKeyStoreChanged(
     callback: (newKeyStore: KeyStoreInteractor | null) => void,
   ): void;

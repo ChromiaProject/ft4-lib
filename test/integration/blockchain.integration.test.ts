@@ -12,6 +12,7 @@ describe("Blockchain", () => {
     const client = getClient();
     connection = createConnection(client);
   });
+
   it("should provide info", async () => {
     const config = await connection.getConfig();
 
@@ -22,12 +23,16 @@ describe("Blockchain", () => {
         recoveryTime: 5000,
         pointsAtAccountCreation: 2,
       },
+      authDescriptor: {
+        maxRules: 8,
+        maxNumberPerAccount: 10,
+      },
     });
   });
 
   it("should provide ft4 rell-side version number", async () => {
     const info = await connection.getVersion();
 
-    expect(info).toEqual("0.5.0");
+    expect(info).toEqual("0.6.0");
   });
 });

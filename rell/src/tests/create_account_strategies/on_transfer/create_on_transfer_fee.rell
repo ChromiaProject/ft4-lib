@@ -7,6 +7,7 @@ import ^^^^.lib.ft4.ft4_basic_dev.*;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
+import ^^^^.lib.ft4.accounts.strategies.open;
 import ^^^.assets.utils;
 import auth_ext: ^^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^^.lib.ft4.crosschain.external;
@@ -60,6 +61,56 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     val bob = accounts.account_by_id(recipient_id);
     assert_equals(assets.get_asset_balance(bob, asset), amount - fee_amount);
     assert_equals(assets.get_asset_balance(fee_account, asset), fee_amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        1
+    );
+}
+
+function test_can_complete_pending_transfers_when_account_is_registered_with_direct_strategies() {
+    helpers.create_system_account(rell.test.pubkeys.trudy).run();
+    val fee_account = accounts.Account(rell.test.pubkeys.trudy);
+
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = utils.create_asset("test", "TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+    assert_not_null(create_on_transfer.account_creation_transfer @? {
+        .sender_blockchain_rid == chain_context.blockchain_rid,
+        .sender_id == sender.id,
+        recipient_id,
+        asset,
+        amount,
+        .state == create_on_transfer.account_creation_state.pending
+    });
+    assert_false(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    rell.test.tx()
+        .op(open.ras_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
+        .op(strategies.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    val bob = accounts.account_by_id(recipient_id);
+    assert_equals(assets.get_asset_balance(bob, asset), amount);
+    assert_equals(assets.get_asset_balance(fee_account, asset), 0);
     assert_equals(
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1

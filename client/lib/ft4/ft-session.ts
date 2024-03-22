@@ -31,6 +31,7 @@ import {
   getTransferDetailsByAsset,
 } from "./accounts/transfer-history/transfer-history-query-functions";
 import {
+  getAssetsByType,
   getAllAssets,
   getAssetById,
   getAssetBySymbol,
@@ -42,7 +43,6 @@ import {
   KeyStore,
   createAuthenticator,
 } from "./authentication";
-import { createLoginManager } from "./authentication/login-manager";
 import { authMessageTemplate, nonce } from "./authentication/queries";
 import { ftEventEmitter } from "./events";
 import {
@@ -53,9 +53,11 @@ import {
   Session,
 } from "./types";
 import { createAuthDescriptorValidator } from "./accounts";
-import { getLoginConfig } from "./authentication/login-manager";
+import { getLoginConfig } from "./authentication/login";
 import { createClient } from "postchain-client";
 import { formatter } from "postchain-client";
+import { LoginOptions } from "./authentication/login";
+import { login } from "./authentication/login";
 
 export async function createConnectionToBlockchainRid(
   oldConnection: Connection,
@@ -116,6 +118,11 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor?: OptionalPageCursor,
     ) => getAssetsByName(connection, name, limit, cursor),
+    getAssetsByType: (
+      type: string,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getAssetsByType(connection, type, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
     getTransferDetails: (txRid: BufferId, opIndex: number) =>
@@ -264,7 +271,8 @@ export function createKeyStoreInteractor(
 
       return createSession(connection, authenticator);
     },
-    getLoginManager: () => createLoginManager(connection, keyStore),
+    login: (loginOptions: LoginOptions) =>
+      login(connection, keyStore, loginOptions),
     onKeyStoreChanged: async (
       handler: (arg0: KeyStoreInteractor | null) => void,
     ) => {

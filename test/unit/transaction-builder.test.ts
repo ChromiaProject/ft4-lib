@@ -1,8 +1,31 @@
+jest.mock("postchain-client", () => {
+  const originalModule = jest.requireActual("postchain-client");
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    isBlockAnchored: jest.fn().mockResolvedValue(false),
+    getBlockAnchoringTransaction: jest.fn().mockResolvedValue(null),
+    getAnchoringClient: jest.fn(),
+    createClient: jest.fn(),
+  };
+});
+
+jest.mock("@ft4/utils/directory-chain", () => {
+  const originalModule = jest.requireActual("@ft4/utils/directory-chain");
+
+  return {
+    __esModule: true,
+    ...originalModule,
+    getSystemAnchoringChain: jest.fn().mockResolvedValue(Buffer.from("")),
+  };
+});
+
 import { Buffer } from "buffer";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { createTestAuthDescriptor, emptyOp } from "../util/util";
 import { transfer } from "@ft4/accounts/account-operations";
-import { FlagsType, aggregateSigners } from "@ft4/accounts/auth-descriptor";
+import { AuthFlag, aggregateSigners } from "@ft4/accounts/auth-descriptor";
 import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
 import { registerAccount } from "@ft4/admin/admin-operations";
 import { createAmount } from "@ft4/asset/amount";
@@ -21,18 +44,6 @@ import {
 } from "@ft4/utils/transaction-builder";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
-
-jest.mock("postchain-client", () => {
-  const originalModule = jest.requireActual("postchain-client");
-
-  return {
-    __esModule: true,
-    ...originalModule,
-    isBlockAnchored: jest.fn().mockResolvedValue(false),
-    getAnchoringClient: jest.fn(),
-    createClient: jest.fn(),
-  };
-});
 import {
   IClient,
   isBlockAnchored,
@@ -44,6 +55,22 @@ import {
 import { createStubClient } from "postchain-client";
 import { formatter } from "postchain-client";
 import { AnchoringTimeoutError } from "@ft4/utils/transaction-builder";
+import {
+  getBlockAnchoringTransaction,
+  SignedTransaction,
+  TransactionReceipt,
+  Web3PromiEvent,
+} from "postchain-client";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
+import eth from "ethers";
+import { createEvmKeyHandler } from "@ft4/authentication";
+import { testAdFromRegistration } from "../util/util";
+import { SigningError } from "@ft4/authentication";
+import {
+  createFtKeyHandler,
+  createInMemoryEvmKeyStore,
+} from "@ft4/authentication";
+import { op } from "@ft4/utils";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -63,7 +90,7 @@ describe("Transaction Builder", () => {
     const accountId = encryption.randomBytes(32);
 
     const { keyPair: pair, authDescriptor: ad } = createTestAuthDescriptor([
-      FlagsType.Transfer,
+      AuthFlag.Transfer,
     ]);
     authDescriptor = ad;
     keyPair = pair;
@@ -73,9 +100,9 @@ describe("Transaction Builder", () => {
 
     authDataService = createFakeAuthDataService(
       {
-        ["ft4.transfer"]: { flags: [FlagsType.Transfer], message: "" },
+        ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
         ["ft4.admin.register_account"]: {
-          flags: [FlagsType.Account],
+          flags: [AuthFlag.Account],
           message: "",
         },
         ["testOperation"]: { flags: [], message: "" },
@@ -92,7 +119,7 @@ describe("Transaction Builder", () => {
 
   function getMocks() {
     const { authDescriptor, keyPair } = createTestAuthDescriptor([
-      FlagsType.Account,
+      AuthFlag.Account,
     ]);
 
     const keyStoreMock: FtKeyStore = {
@@ -134,7 +161,15 @@ describe("Transaction Builder", () => {
   beforeEach(async () => {
     setupTestEnvironment();
     client = await createStubClient();
-    client.sendTransaction = jest.fn();
+    client.sendTransaction = jest.fn().mockReturnValue(
+      new Web3PromiEvent((resolve, _reject) =>
+        resolve({
+          status: "confirmed",
+          statusCode: 200,
+          transactionRid: Buffer.alloc(32),
+        }),
+      ),
+    );
   });
 
   it("builds an unsigned transaction", async () => {
@@ -198,6 +233,26 @@ describe("Transaction Builder", () => {
         (_data, _error) => null,
       )
       .build();
+    await expect(promise).rejects.toThrowError(Error);
+  });
+
+  it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .buildAndSend();
+    await expect(promise).rejects.toThrowError(Error);
+  });
+
+  it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
+    const promise = transactionBuilder(authenticator, client)
+      .add(
+        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
+        (_data, _error) => null,
+      )
+      .buildAndSend();
     await expect(promise).rejects.toThrowError(Error);
   });
 
@@ -301,7 +356,7 @@ describe("Transaction Builder", () => {
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
 
-  it("can build and submit a transaction", async () => {
+  it("can build and submit a transaction, and emits 'built' event while doing so", async () => {
     const { authenticatorMock, keyPair } = getMocks();
     const operation = nop();
     const expectedTx = gtx.serialize({
@@ -313,72 +368,142 @@ describe("Transaction Builder", () => {
       signers: [keyPair.pubKey],
     });
 
-    (client.sendTransaction as jest.Mock).mockReturnValueOnce(
-      Promise.resolve({
-        status: "confirmed",
-        statusCode: 200,
-        transactionRid: Buffer.alloc(32),
-      }),
-    );
-
+    let builtEvent: SignedTransaction | undefined = undefined;
     const { tx } = await transactionBuilder(authenticatorMock, client)
       .add(emptyOp())
       .add(operation)
-      .buildAndSend();
+      .buildAndSend()
+      .on("built", (tx) => {
+        builtEvent = tx;
+      });
 
     expect(gtx.deserialize(tx)).toMatchObject({
       ...gtx.deserialize(expectedTx),
       signatures: expect.arrayContaining([]),
     });
+
+    expect(builtEvent!.equals(tx));
+  }, 5000);
+
+  it("throw SigningError if user rejects FT signature", async () => {
+    const accountId = encryption.randomBytes(32);
+    const keyPair = encryption.makeKeyPair();
+    let keyStore = createInMemoryFtKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      keyStore.pubKey,
+      null,
+    );
+
+    // Rewire the keystore to let us fake signing failure
+    const sign = jest.fn().mockImplementation(() => {
+      throw new Error("signing failed");
+    });
+    keyStore = { ...keyStore, sign };
+
+    const authService = createFakeAuthDataService({
+      foo: { flags: ["T"], message: "bogus" },
+    });
+    const authenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
+      authService,
+    );
+
+    await expect(
+      transactionBuilder(authenticator, client).add(op("foo")).build(),
+    ).rejects.toThrow(SigningError);
+  });
+
+  it("throw SigningError if user rejects EVM signature", async () => {
+    const accountId = encryption.randomBytes(32);
+    const keyPair = encryption.makeKeyPair();
+    const message = "Sign this message with {nonce}";
+    let keyStore = createInMemoryEvmKeyStore(keyPair);
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      keyStore.address,
+      null,
+    );
+
+    // Rewire the keystore to let us fake a user rejection
+    const signMessage = jest.fn().mockImplementation(() => {
+      const err = new Error() as eth.ActionRejectedError;
+      err.code = "ACTION_REJECTED";
+      err.reason = "rejected";
+      err.message = "signing rejected";
+      err.shortMessage = "signing rejected";
+      throw err;
+    });
+    keyStore = { ...keyStore, signMessage };
+
+    const authService = createFakeAuthDataService({
+      foo: { flags: ["T"], message },
+    });
+    const authenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
+      authService,
+    );
+
+    await expect(
+      transactionBuilder(authenticator, client).add(op("foo")).build(),
+    ).rejects.toThrow(SigningError);
   });
 
   describe("block anchored handling", () => {
-    it("calls registered handler when block is anchored", async () => {
+    it("calls registered handler when block is anchored in system anchoring chain", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const operation = nop();
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(operation)
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      let signedEvent: SignedTransaction | undefined = undefined;
+      let confirmedEvent: TransactionReceipt | undefined = undefined;
+      const { tx, receipt } = await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 10,
+          waitTimeMs: 10,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(operation)
+        .buildAndSendWithAnchoring()
+        .on("built", (tx) => {
+          signedEvent = tx;
+        })
+        .on("confirmed", (receipt) => {
+          confirmedEvent = receipt;
+        });
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
-    });
 
-    it("calls all registered handler when block is anchored", async () => {
+      expect(signedEvent!.equals(tx));
+      expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
+    }, 5000);
+
+    it("calls all registered handler when block is anchored in system anchoring chain", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
       (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
       const operation = nop();
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      let callback2: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(
-            emptyOp(),
-            (callback2 = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(operation)
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      const callback2: jest.Mock<any, any, any> = jest.fn();
+      await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 10,
+          waitTimeMs: 10,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(emptyOp(), callback2)
+        .add(operation)
+        .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(
@@ -398,93 +523,87 @@ describe("Transaction Builder", () => {
         ),
         null,
       );
-    });
+    }, 5000);
 
     it("calls callbacks even if block is not anchored immediately", async () => {
-      (isBlockAnchored as any)
+      (getBlockAnchoringTransaction as jest.Mock)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce({});
+      (isBlockAnchored as jest.Mock)
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
 
       const operation = nop();
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(operation)
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 10,
+          waitTimeMs: 10,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(operation)
+        .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
         null,
       );
-    });
+    }, 5000);
 
-    it("calls callback with an error if polling times out", async () => {
-      (isBlockAnchored as any)
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(false);
+    it("calls callback with an error and reject the promise if polling for cluster anchoring times out", async () => {
+      (getBlockAnchoringTransaction as jest.Mock)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null);
 
-      let callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = new Promise((resolve) => {
-        transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-          {
-            retryCount: 2,
-            waitTimeMs: 1,
-          },
-        )
-          .add(
-            emptyOp(),
-            (callback = jest.fn().mockImplementation((op) => resolve(op))),
-          )
-          .add(nop())
-          .buildAndSend();
-      });
-      await promise;
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      const promise = transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 2,
+          waitTimeMs: 1,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(nop())
+        .buildAndSendWithAnchoring();
+
+      await expect(promise).rejects.toThrow(AnchoringTimeoutError);
 
       expect(callback).toHaveBeenCalledWith(
         null,
         expect.any(AnchoringTimeoutError),
       );
-    });
+    }, 5000);
 
-    it("returns receipt without waiting for block to be anchored", async () => {
-      (client.sendTransaction as jest.Mock).mockReturnValueOnce(
-        Promise.resolve({
-          status: "confirmed",
-          statusCode: 200,
-          transactionRid: Buffer.alloc(32),
-        }),
+    it("calls callback with an error and reject the promise if polling for system anchoring times out", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
+      (isBlockAnchored as jest.Mock)
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null);
+
+      const callback: jest.Mock<any, any, any> = jest.fn();
+      const promise = transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+        {
+          retryCount: 2,
+          waitTimeMs: 1,
+        },
+      )
+        .add(emptyOp(), callback)
+        .add(nop())
+        .buildAndSendWithAnchoring();
+
+      await expect(promise).rejects.toThrow(AnchoringTimeoutError);
+
+      expect(callback).toHaveBeenCalledWith(
+        null,
+        expect.any(AnchoringTimeoutError),
       );
-
-      //eslint-disable-next-line no-async-promise-executor
-      const promise = new Promise(async (resolve) => {
-        const txInfo = await transactionBuilder(
-          createNoopAuthenticator(createFakeAuthDataService({})),
-          client,
-          {
-            retryCount: 2,
-            waitTimeMs: 1,
-          },
-        )
-          .add(
-            emptyOp(),
-            jest.fn().mockImplementation((op) => resolve(op)),
-          )
-          .add(nop())
-          .buildAndSend();
-        expect(txInfo.receipt).toMatchObject({ status: "confirmed" });
-      });
-      await promise;
-    });
+    }, 5000);
   });
 });

@@ -17,6 +17,9 @@ import {
 } from "@ft4/accounts/auth-descriptor";
 import { FtKeyStore } from "@ft4/authentication";
 import { PendingTransfer } from "@ft4/crosschain";
+import { Web3PromiEvent } from "postchain-client";
+import { SignedTransaction } from "postchain-client";
+import { TransactionReceipt } from "postchain-client";
 
 export type RateLimit = {
   points: number;
@@ -54,6 +57,12 @@ export interface Account {
   getPendingCrosschainTransfers: () => Promise<
     PaginatedEntity<PendingTransfer>
   >;
+  getLastPendingCrosschainTransfer: (
+    targetBlockchainRid: BufferId,
+    recipientId: BufferId,
+    assetId: BufferId,
+    amount: bigint,
+  ) => Promise<PendingTransfer | null>;
 }
 
 export interface AuthenticatedAccount extends Account {
@@ -70,5 +79,52 @@ export interface AuthenticatedAccount extends Account {
     assetId: BufferId,
     amount: Amount,
   ) => Promise<TransactionCompletion>;
+
+  /**
+   * Perform a cross-chain transfer.
+   *
+   * @param {BufferId} targetChainRid - RID of the target blockchain.
+   * @param {BufferId} recipientId - ID of the recipient.
+   * @param {BufferId} assetId - ID of the asset to be transferred.
+   * @param {Amount} amount - The amount to be transferred.
+   *
+   * Will emit events when the `init_transfer` transaction is signed,
+   * when `init_transfer` transaction is anchored,
+   * and on each hop (containing blockchain RID).
+   *
+   * Will resolve when `complete_transfer` transaction is confirmed.
+   */
+  crosschainTransfer: (
+    targetChainId: BufferId,
+    recipientId: BufferId,
+    assetId: BufferId,
+    amount: Amount,
+  ) => Web3PromiEvent<
+    void,
+    {
+      signed: SignedTransaction;
+      init: TransactionReceipt;
+      hop: Buffer;
+    }
+  >;
+
+  /**
+   * Resume a cross-chain transfer which was initiated but did not complete properly.
+   *
+   * @param {PendingTransfer} pendingTransfer - The transfer to resume
+   *
+   * Will emit event on each hop (containing blockchain RID).
+   *
+   * Will resolve when `complete_transfer` transaction is confirmed.
+   */
+  resumeCrosschainTransfer: (
+    pendingTransfer: PendingTransfer,
+  ) => Web3PromiEvent<
+    void,
+    {
+      hop: Buffer;
+    }
+  >;
+
   burn: (assetId: BufferId, amount: Amount) => Promise<TransactionCompletion>;
 }

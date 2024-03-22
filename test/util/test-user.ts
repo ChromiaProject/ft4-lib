@@ -3,7 +3,7 @@ import {
   AuthDescriptorRules,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
-  FlagsType,
+  AuthFlag,
   SingleSig,
 } from "@ft4/accounts/auth-descriptor";
 import { AuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
@@ -21,7 +21,7 @@ export function newSingleSigUser(
 ): User {
   const signatureProvider = gtx.newSignatureProvider(keyPair);
   const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
-    [FlagsType.Account, FlagsType.Transfer],
+    [AuthFlag.Account, AuthFlag.Transfer],
     signatureProvider.pubKey,
     rule,
   );

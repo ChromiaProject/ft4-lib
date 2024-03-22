@@ -133,7 +133,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = bob.account.id,
+                    recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
                     hops = [chain_context.blockchain_rid]
@@ -182,7 +182,7 @@ function test_apply_transfer_fails_when_applied_twice() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = bob.account.id,
+                    recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
                     hops = [chain_context.blockchain_rid]
@@ -224,7 +224,7 @@ function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
             operations = [
                 auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = alice.account.id,
+                    recipient_id = alice.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
                     hops = [x"abcdef"]
@@ -241,7 +241,7 @@ function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
             operations = [
                 auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = bob.account.id,
+                    recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
                     hops = [x"abcdef"]
@@ -270,7 +270,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
             operations = [
                 auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = bob.account.id,
+                    recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
                     hops = hops
@@ -320,7 +320,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
             operations = [
                 auth_ext.ft_auth(sender_account_id.hash(), sender_auth_descriptor_id.hash()).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = bogus_recipient_id,
+                    recipient_id = bogus_recipient_id,
                     asset_id = asset_valid.id,
                     amount = 5L,
                     hops = [chain_context.blockchain_rid]

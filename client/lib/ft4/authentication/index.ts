@@ -15,22 +15,19 @@ export {
   LoginConfigSimpleRule,
   LoginConfigComplexRule,
   mapLoginConfigRulesToAuthDescriptorRules,
-  blockHeight,
-  blockTime,
   relativeBlockHeight,
   relativeBlockTime,
-  opCount,
   minutes,
   hours,
   days,
   weeks,
   ttlLoginRule,
-} from "./login-manager/rules";
+} from "@ft4/authentication/login/rules";
 
 export {
   createSessionStorageLoginKeyStore,
   createLocalStorageLoginKeyStore,
-} from "./login-manager/stores";
+} from "@ft4/authentication/login/stores";
 
 export function createAuthenticator(
   accountBufferId: BufferId,

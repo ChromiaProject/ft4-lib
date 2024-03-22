@@ -86,12 +86,14 @@ describe("Transfer history", () => {
       expect(entry.opIndex).toEqual(1);
       const expectedDetails: TransferDetail[] = [
         {
+          blockchainRid: session.blockchainRid,
           accountId: account1.id,
           assetId: asset.id,
           delta: 10n,
           isInput: true,
         },
         {
+          blockchainRid: session.blockchainRid,
           accountId: account2.id,
           assetId: asset.id,
           delta: 10n,
@@ -213,6 +215,8 @@ describe("Transfer history", () => {
 
       const history = await account1.getTransferHistory();
       expect(history.data.length).toStrictEqual(2);
+      expect(history.data[0].isCrosschain).toBeFalsy();
+      expect(history.data[1].isCrosschain).toBeFalsy();
     });
   });
 

@@ -14,6 +14,20 @@ query get_pending_transfers_for_account(account_id: byte_array, page_size: integ
     );
 }
 
+query get_last_pending_transfer_for_account(
+    sender_id: byte_array, 
+    target_blockchain_rid: byte_array, 
+    recipient_id: byte_array,
+    asset_id: byte_array, 
+    amount: big_integer
+) = crosschain.get_last_pending_transfer_for_account(
+    sender_id,
+    target_blockchain_rid,
+    recipient_id,
+    asset_id,
+    amount
+);
+
 query is_transfer_applied(tx_rid: byte_array, op_index: integer) {
     val transfer = crosschain.applied_transfers @? { .tx_rid == tx_rid, .op_index == op_index };
     return transfer != null;

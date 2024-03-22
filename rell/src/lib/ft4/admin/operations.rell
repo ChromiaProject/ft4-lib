@@ -9,6 +9,11 @@ operation register_asset(name, symbol: text, decimals: integer, icon_url: text) 
     assets.Unsafe.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url);
 }
 
+operation register_asset_with_type(name, symbol: text, decimals: integer, icon_url: text, type: text) {
+    require_admin();
+    assets.Unsafe.register_asset(name, symbol, decimals, chain_context.blockchain_rid, icon_url, type);
+}
+
 operation mint(account_id: byte_array, asset_id: byte_array, amount: big_integer) {
     require_admin();
     assets.Unsafe.mint(accounts.Account(account_id), assets.Asset(asset_id), amount);

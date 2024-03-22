@@ -29,9 +29,13 @@ jest.mock("postchain-client", () => {
 });
 
 import { generateId } from "../util/util";
-import { IClient, MissingNodeUrlError, formatter } from "postchain-client";
+import {
+  createClient,
+  IClient,
+  MissingNodeUrlError,
+  formatter,
+} from "postchain-client";
 import { Connection } from "@ft4/types";
-import { createStubClient } from "../util/blockchain-util";
 import { createConnection } from "@ft4/index";
 import { Asset } from "@ft4/asset/types";
 import { findPathToChainForAsset } from "@ft4/crosschain/pathfinder";
@@ -52,7 +56,11 @@ let connection: Connection;
 
 describe("Pathfinder", () => {
   beforeAll(async () => {
-    connection = createConnection(await createStubClient());
+    const client = await createClient({
+      nodeUrlPool: "",
+      blockchainRid: formatter.toString(startingChainRid),
+    });
+    connection = createConnection(client);
   });
 
   beforeEach(async () => {

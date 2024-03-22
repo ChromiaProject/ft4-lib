@@ -10,19 +10,19 @@ entity applied_transfers {
 entity pending_transfer {
     key transaction, op_index; 
     op_index: integer;
-    index accounts.account;
+    index sender: accounts.account;
 }
 
 namespace Unsafe {
 
     function update_balances_if_needed(
         sender: accounts.account,
-        receiver: accounts.account,
+        recipient: accounts.account,
         assets.asset,
         amount: big_integer
     ) {
         require(
-            sender != receiver,
+            sender != recipient,
             "Cannot transfer to own account"
         );
         require(
@@ -30,7 +30,7 @@ namespace Unsafe {
             "Cannot transfer from this blockchain's account"
         );
         require(
-            chain_context.blockchain_rid != receiver.id,
+            chain_context.blockchain_rid != recipient.id,
             "Cannot transfer to this blockchain's account"
         );
         assets.require_zero_exclusive_asset_amount_limits(
@@ -40,7 +40,7 @@ namespace Unsafe {
 
         val origin_blockchain_rid = asset_origin @? { asset } .origin_blockchain_rid;
         val is_sender_blockchain = exists(blockchain_account @? { sender });
-        val is_receiver_blockchain = exists(blockchain_account @? { receiver });
+        val is_recipient_blockchain = exists(blockchain_account @? { recipient });
         
         if (
             not exists(origin_blockchain_rid)
@@ -64,14 +64,14 @@ namespace Unsafe {
 
         if (
             not exists(origin_blockchain_rid)
-            or not is_receiver_blockchain
-            or origin_blockchain_rid != receiver.id
+            or not is_recipient_blockchain
+            or origin_blockchain_rid != recipient.id
         ) {
-            assets.increase_balance(receiver, asset, amount);
+            assets.increase_balance(recipient, asset, amount);
         }
 
         create assets.transfer_history_entry(
-            .account = receiver,
+            .account = recipient,
             .asset = asset,
             .delta = amount,
             .op_index = op_context.op_index,

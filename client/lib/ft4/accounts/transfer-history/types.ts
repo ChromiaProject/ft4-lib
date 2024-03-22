@@ -20,6 +20,7 @@ export type TransferHistoryEntryResponse = {
   tx_data: string;
   operation_name: string;
   op_index: number;
+  is_crosschain: number;
 };
 
 export type TransferHistoryEntry = {
@@ -33,6 +34,7 @@ export type TransferHistoryEntry = {
   blockHeight: number;
   operationName: string;
   opIndex: number;
+  isCrosschain: boolean;
 };
 
 export enum TransferHistoryType {
@@ -45,6 +47,7 @@ export type TransferHistoryFilter = {
 };
 
 export type TransferDetail = {
+  blockchainRid: Buffer;
   accountId: Buffer;
   assetId: Buffer;
   delta: bigint;

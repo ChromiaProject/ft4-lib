@@ -2,7 +2,7 @@ import { Buffer } from "buffer";
 import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/index";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
-import { RawGtx, gtx } from "postchain-client";
+import { Queryable, RawGtx, gtv } from "postchain-client";
 import { BufferId } from "@ft4/utils";
 
 export async function getAssetOriginById(
@@ -13,7 +13,7 @@ export async function getAssetOriginById(
 }
 
 export async function getPendingTransfersForAccount(
-  connection: Connection,
+  connection: Queryable,
   accountId: Buffer,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
@@ -23,25 +23,41 @@ export async function getPendingTransfersForAccount(
     .then(mapPendingTransfers);
 }
 
+export async function getLastPendingTransferForAccount(
+  queryable: Queryable,
+  senderId: BufferId,
+  targetBlockchainRid: BufferId,
+  recipientId: BufferId,
+  assetId: BufferId,
+  amount: bigint,
+): Promise<PendingTransfer | null> {
+  return queryable
+    .query(
+      Query.lastPendingTransferForAccount(
+        senderId,
+        targetBlockchainRid,
+        recipientId,
+        assetId,
+        amount,
+      ),
+    )
+    .then((transfer) => transfer && mapPendingTransfer(transfer));
+}
+
 export function mapPendingTransfers(
   transfers: PendingTransferResponse[],
 ): PendingTransfer[] {
-  return transfers.map((transfer) => {
-    const deserialized = gtx.deserialize(transfer.tx_data);
-    const tx: RawGtx = [
-      [
-        deserialized.blockchainRid,
-        deserialized.operations.map((op) => [op.opName, op.args]),
-        deserialized.signers,
-      ],
-      deserialized.signatures ?? [],
-    ];
-    return {
-      accountId: transfer.account_id,
-      opIndex: transfer.op_index,
-      tx,
-    };
-  });
+  return transfers.map(mapPendingTransfer);
+}
+
+export function mapPendingTransfer(
+  transfer: PendingTransferResponse,
+): PendingTransfer {
+  return {
+    opIndex: transfer.op_index,
+    tx: gtv.decode(transfer.tx_data) as RawGtx,
+    accountId: transfer.account_id,
+  };
 }
 
 export async function isTransferApplied(

@@ -1,6 +1,6 @@
 import { newSignatureProvider } from "postchain-client";
 import {
-  FlagsType,
+  AuthFlag,
   deriveAuthDescriptorId,
   createMultiSigAuthDescriptorRegistration,
 } from "@ft4/accounts/auth-descriptor";
@@ -75,7 +75,7 @@ describe("Transfer", () => {
 
   it("should fail if auth descriptor doesn't have transfer rights", async () => {
     const account1 = await AccountBuilder.account(connection)
-      .withAuthFlags(FlagsType.Account)
+      .withAuthFlags(AuthFlag.Account)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
@@ -100,7 +100,7 @@ describe("Transfer", () => {
       .build();
 
     const authDescriptor = createMultiSigAuthDescriptorRegistration(
-      [FlagsType.Account, FlagsType.Transfer],
+      [AuthFlag.Account, AuthFlag.Transfer],
       [user2.signatureProvider.pubKey, user3.signatureProvider.pubKey],
       2,
       null,

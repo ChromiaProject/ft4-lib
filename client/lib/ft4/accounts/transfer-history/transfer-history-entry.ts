@@ -17,6 +17,7 @@ export function createTransferHistoryEntryFromResponse(
     tx_data: txData,
     operation_name: operationName,
     op_index: opIndex,
+    is_crosschain,
   } = responseEntry;
 
   return Object.freeze({
@@ -30,5 +31,6 @@ export function createTransferHistoryEntryFromResponse(
     blockHeight,
     operationName,
     opIndex,
+    isCrosschain: is_crosschain === 1,
   });
 }

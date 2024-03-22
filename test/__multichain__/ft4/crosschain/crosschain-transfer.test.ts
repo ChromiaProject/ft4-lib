@@ -1,15 +1,12 @@
+import { applyTransfer, initTransfer } from "@ft4/crosschain/operations";
 import {
-  applyTransfer as applyTransferOp,
-  initTransfer as initTransferOp,
-} from "@ft4/crosschain/operations";
-import {
-  FlagsType,
+  AuthFlag,
   createAmount,
   createConnection,
   registerCrosschainAsset,
 } from "@ft4/index";
 import { BufferId, transactionBuilder } from "@ft4/utils";
-import { Operation, RawGtx } from "postchain-client";
+import { Operation, RawGtx, gtv } from "postchain-client";
 import AccountBuilder from "../../../util/account-builder";
 import adminUser from "../../../util/admin_user";
 import {
@@ -42,24 +39,25 @@ describe("Crosschain transfer", () => {
     );
 
     const account00 = await AccountBuilder.account(connection00)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .withBalance(asset00, createAmount(100, asset00.decimals))
       .build();
 
     const account01 = await AccountBuilder.account(connection01)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const tb = transactionBuilder(account00.authenticator, connection00.client);
 
-    await new Promise<void>((resolve, reject) => {
-      const initOperation = initTransferOp(
-        account01.id,
-        asset00.id,
-        createAmount(100, asset00.decimals),
-        [multichain01.rid],
-      );
+    const initOperation = initTransfer(
+      account01.id,
+      asset00.id,
+      createAmount(100, asset00.decimals),
+      [multichain01.rid],
+    );
 
+    let transferTransactionRid: Buffer | undefined = undefined;
+    await new Promise<void>((resolve, reject) => {
       const onAnchoringHandler = async (
         data: {
           operation: Operation;
@@ -81,7 +79,7 @@ describe("Crosschain transfer", () => {
         try {
           await transactionBuilder(account00.authenticator, connection01.client)
             .addWithoutAuthenticator(iccfProofOperation)
-            .addWithoutAuthenticator(applyTransferOp(data.tx, data.tx, 0))
+            .addWithoutAuthenticator(applyTransfer(data.tx, data.tx, 0))
             .buildAndSend();
         } catch (error) {
           reject(error);
@@ -90,11 +88,89 @@ describe("Crosschain transfer", () => {
         resolve();
       };
 
-      tb.add(initOperation, onAnchoringHandler).buildAndSend();
+      tb.add(initOperation, onAnchoringHandler)
+        .buildAndSendWithAnchoring()
+        .then((res) => {
+          transferTransactionRid = res.receipt.transactionRid;
+        });
     });
 
     expect(
       (await account01.getBalanceByAssetId(asset00.id))?.amount.value,
     ).toEqual(createAmount(100, asset00.decimals).value);
+
+    const history = await account00.getTransferHistory();
+
+    const entry = history.data[0];
+    expect(entry.isInput).toEqual(true);
+    expect(entry.operationName).toEqual(initOperation.name);
+    expect(entry.delta.value).toEqual(100n);
+    expect(entry.asset.id).toEqual(asset00.id);
+    expect(entry.transactionId).toEqual(transferTransactionRid);
+    expect(entry.opIndex).toEqual(1);
+    expect(entry.isCrosschain).toBeTruthy();
+
+    const transferDetails = await connection00.getTransferDetails(
+      transferTransactionRid!,
+      entry.opIndex,
+    );
+    expect(transferDetails.length).toEqual(2);
+    expect(transferDetails[0].blockchainRid).toEqual(multichain00.rid);
+    expect(transferDetails[0].accountId).toEqual(account00.id);
+    expect(transferDetails[0].assetId).toEqual(asset00.id);
+    expect(transferDetails[0].delta).toEqual(100n);
+    expect(transferDetails[0].isInput).toEqual(true);
+    expect(transferDetails[1].blockchainRid).toEqual(multichain01.rid);
+    expect(transferDetails[1].assetId).toEqual(asset00.id);
+    expect(transferDetails[1].delta).toEqual(100n);
+    expect(transferDetails[1].isInput).toEqual(false);
+  });
+
+  it("can query pending transfers by recipient, asset and amount", async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+
+    const asset00 = await getNewAsset(
+      connection00.client,
+      "crosschain-pending-transfer-test-asset",
+      "CROSSCHAIN-pending-transfer-test-asset",
+    );
+
+    const account00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
+      .build();
+
+    const tx = await transactionBuilder(
+      account00.authenticator,
+      connection00.client,
+    )
+      .add(
+        initTransfer(
+          account00.id,
+          asset00.id,
+          createAmount(100, asset00.decimals),
+          [multichain01.rid],
+        ),
+      )
+      .build();
+
+    await connection00.client.sendTransaction(tx);
+
+    const transfer = await account00.getLastPendingCrosschainTransfer(
+      multichain01.rid,
+      account00.id,
+      asset00.id,
+      createAmount(100, asset00.decimals).value,
+    );
+
+    expect(transfer).toEqual({
+      opIndex: 1,
+      tx: gtv.decode(tx),
+      accountId: account00.id,
+    });
   });
 });

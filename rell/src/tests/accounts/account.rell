@@ -1,7 +1,6 @@
 @test module;
 
 import acc: ^^^.lib.ft4.accounts;
-import auth_ext: ^^^.lib.ft4.auth.external;
 import utils: ^^^.lib.ft4.utils;
 import acc_external: ^^^.lib.ft4.accounts.external;
 import asset_utils: ^^.assets.utils;
@@ -112,57 +111,9 @@ function test_accounts_by_ad_id_is_paginated() {
   );
 }
 
-function test_ad_can_delete_itself_without_admin_flag() {
-  val account_data = asset_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
-  val ad = asset_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["T"]);
-  rell.test
-    .tx(test_op.add_ad_to_account(account_data.account, ad))
-    .sign(rell.test.keypairs.bob)
-    .sign(rell.test.keypairs.alice)
-    .run();
-
-  val ad_id = acc.account_auth_descriptor @ {} ( @sort_desc @omit .rowid, .id ) limit 1;
-  val ads = acc.account_auth_descriptor @* { .account.id == account_data.account.id };
-  assert_equals(ads.size(), 2);
-  assert_equals(ads[1].id, ad_id);
-  
-  rell.test.tx()
-    .op(test_utils.ft_auth_operation_for(rell.test.keypairs.bob.pub))
-    .op(acc_external.delete_auth_descriptor(ad_id))
-    .sign(rell.test.keypairs.bob)
-    .run();
-  
-  val remaining_ads = acc.account_auth_descriptor @* { .account.id == account_data.account.id };
-  assert_equals(remaining_ads.size(), 1);
-  assert_equals(remaining_ads[0].id, account_data.auth_descriptor_id);
-}
-
-function test_the_remaining_ad_is_selected_when_calling_delete_all_auth_descriptors_exclude() {
-  val account_data = asset_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
-  val ad = asset_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["A"]);
-  rell.test
-    .tx(test_op.add_ad_to_account(account_data.account, ad))
-    .sign(rell.test.keypairs.bob)
-    .sign(rell.test.keypairs.alice)
-    .run();
-
-  val ad_id = acc.account_auth_descriptor @ {} ( @sort_desc @omit .rowid, .id ) limit 1;
-  val ads = acc.account_auth_descriptor @* { .account.id == account_data.account.id };
-
-  assert_equals(ads.size(), 2);
-  assert_equals(ads[1].id, ad_id);
-
-  val op_args = struct<acc_external.delete_all_auth_descriptors_exclude>(
-    account_id=account_data.account.id,
-    auth_descriptor_id=account_data.auth_descriptor_id
-  ).to_gtv();
-
-  val selected_ad_id = auth_ext.get_first_allowed_auth_descriptor(
-    "ft4.delete_all_auth_descriptors_exclude",
-    op_args,
-    account_data.account.id,
-    acc.account_auth_descriptor @* {} ( .id )
-  );
-
-  assert_equals(selected_ad_id, account_data.auth_descriptor_id);
+function test_get_config() {
+  assert_equals(acc_external.get_config(), (
+    rate_limit = acc.rate_limit_config(max_points = 5),
+    auth_descriptor = acc.auth_descriptor_config(max_rules = 4)
+  ));
 }

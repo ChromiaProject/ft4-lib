@@ -93,18 +93,36 @@ function create_auth_descriptor(
             acc.auth_type.S,
             [
                 set(permissions).to_gtv(),
-                signer.to_hex().to_gtv()
+                signer.to_gtv()
             ],
             rules
         );
 }
 
-function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "") {
-    admin.register_asset(
+function create_multisig_auth_descriptor(
+    signatures_required: integer,
+    signers: list<byte_array>,
+    permissions: list<text> = ["T"],
+    rules: gtv = null.to_gtv()
+): acc.auth_descriptor {
+    return acc.auth_descriptor(
+            acc.auth_type.M,
+            [
+                set(permissions).to_gtv(),
+                signatures_required.to_gtv(),
+                signers.to_gtv()
+            ],
+            rules
+        );
+}
+
+function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "", type: text = assets.ASSET_TYPE_FT4) {
+    admin.register_asset_with_type(
             name,
             symbol,
             decimals,
-            icon_url
+            icon_url,
+            type
         )
         .sign(chain_context.args.admin_priv_key)
         .run();

@@ -2,6 +2,7 @@ import { registerAccount } from "@ft4/accounts/registration";
 import { transferOpen } from "@ft4/accounts/registration/strategies/transfer/open/index";
 import {
   Connection,
+  createAmount,
   createConnection,
   createInMemoryFtKeyStore,
   createSingleSigAuthDescriptorRegistration,
@@ -13,7 +14,10 @@ import { TxRejectedError } from "postchain-client";
 import { gtv } from "postchain-client";
 import { getNewAsset } from "@ft4/util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
-import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
+import {
+  hasPendingCreateAccountTransferForStrategy,
+  pendingTransferStrategies,
+} from "@ft4/accounts/registration/strategies/transfer/queries";
 import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
 import { createAmountFromBalance } from "@ft4/index";
 
@@ -95,5 +99,66 @@ describe("Test transfer strategy", () => {
     await expect(
       registerAccount(connection, keyStore, transferOpen(authDescriptor)),
     ).rejects.toThrow(TxRejectedError);
+  });
+
+  it("can find pending create account transfer when transfer is made and account registration is not completed", async () => {
+    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const recipientId = gtv.gtvHash(keyStore.pubKey);
+
+    const sender = await AccountBuilder.account(connection)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const amount = createAmount(100, asset.decimals);
+
+    await sender.transfer(recipientId, asset.id, amount);
+
+    const hasPendingAccountCreation = await connection.query(
+      hasPendingCreateAccountTransferForStrategy(
+        "open",
+        connection.blockchainRid,
+        sender.id,
+        recipientId,
+        asset.id,
+        amount.value,
+      ),
+    );
+
+    expect(hasPendingAccountCreation).toBeTruthy();
+  });
+
+  it("cannot find pending create account transfer when account registration is completed", async () => {
+    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const recipientId = gtv.gtvHash(keyStore.pubKey);
+
+    const sender = await AccountBuilder.account(connection)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const amount = createAmount(100, asset.decimals);
+
+    await sender.transfer(recipientId, asset.id, amount);
+
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    await registerAccount(connection, keyStore, transferOpen(authDescriptor));
+
+    const hasPendingAccountCreation = await connection.query(
+      hasPendingCreateAccountTransferForStrategy(
+        "open",
+        connection.blockchainRid,
+        sender.id,
+        recipientId,
+        asset.id,
+        amount.value,
+      ),
+    );
+
+    expect(hasPendingAccountCreation).toBeFalsy();
   });
 });

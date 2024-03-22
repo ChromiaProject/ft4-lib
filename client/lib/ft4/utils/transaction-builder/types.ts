@@ -6,6 +6,7 @@ import {
   RawGtx,
   SignedTransaction,
   TransactionReceipt,
+  Web3PromiEvent,
 } from "postchain-client";
 import { BufferId } from "@ft4/utils";
 import { RequireTogether } from "../types";
@@ -55,28 +56,56 @@ export type TransactionBuilder = {
    * Builds a transaction the same way as `buildUnsigned` and also signs it
    * using the same key handlers that were used to authorize the operations,
    * as well as any explicitly added key handlers.
-   * @param signers array of signers that should sign this transaction
-   * @returns A promised containing the unsigned transaction
+   *
+   * @returns A promised containing the signed transaction
    */
   build: () => Promise<SignedTransaction>;
   /**
    * Builds an unsigned transaction containing the previously added
    * transactions, as well as any authorization operations as needed.
-   * @param signers array of signers that should sign this transaction
-   * @returns A promise containing the signed transaction
+   *
+   * @returns A promise containing the unsigned transaction
    */
   buildUnsigned: () => Promise<GTX>;
 
   /**
-   * Build the transaction and submits it to the blockchain. Will return
-   * when transaction is included in a block, or is rejected. Using this
-   * function will also trigger any registered `OnAnchoredHandler`s.
+   * Build the transaction and submits it to the blockchain.
+   *
+   * Will emit events when the transaction is built, and when it is sent
+   * (containing the transaction RID).
+   *
+   * Will return when transaction is included in a block (confirmed), or is rejected.
+   *
    * @returns an object containing the signed transaction and its receipt
    */
-  buildAndSend: () => Promise<{
-    tx: SignedTransaction;
-    receipt: TransactionReceipt;
-  }>;
+  buildAndSend: () => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
+
+  /**
+   * Build the transaction, submits it to the blockchain and wait until it
+   * has been anchored in cluster and system anchoring chains.
+   *
+   * Will emit events when the transaction is built, when it is sent
+   * (containing the transaction RID), and when it is included in a
+   * block (confirmed).
+   *
+   * Will trigger any registered `OnAnchoredHandler`s before returning.
+   *
+   * @returns an object containing the signed transaction and its receipt
+   */
+  buildAndSendWithAnchoring: () => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+      confirmed: TransactionReceipt;
+    }
+  >;
 
   session: IClient;
 };
@@ -122,4 +151,9 @@ export type OnAnchoredHandlerData = {
 type ConfigOptions = {
   retryCount?: number;
   waitTimeMs?: number;
+};
+
+export type TransactionWithReceipt = {
+  tx: SignedTransaction;
+  receipt: TransactionReceipt;
 };

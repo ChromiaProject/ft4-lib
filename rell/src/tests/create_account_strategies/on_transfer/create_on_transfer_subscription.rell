@@ -3,12 +3,13 @@ module;
 
 import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.assets;
+import ^^^^.lib.ft4.utils;
 import ^^^^.lib.ft4.ft4_basic_dev.*;
 import test_utils: ^^^^.lib.ft4.test.utils;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
-import ^^^.assets.utils;
+import asset_utils: ^^^.assets.utils;
 import auth_ext: ^^^^.lib.ft4.auth.external;
 import xchain_ext: ^^^^.lib.ft4.crosschain.external;
 import iccf_op: ^^^.operations.iccf_op;
@@ -20,12 +21,12 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
     val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
 
-    val alice = utils.register_alice();
+    val alice = asset_utils.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 20);
+    val asset = asset_utils.create_asset("test", "TEST", 1);
+    asset_utils.mint_to_account(alice, asset, 20);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -53,7 +54,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     var last_block_time = rell.test.last_block_time;
     rell.test.tx()
-        .op(subscription.ras_transfer_subscription(asset.id, utils.create_auth_descriptor(rell.test.pubkeys.bob)))
+        .op(subscription.ras_transfer_subscription(asset.id, asset_utils.create_auth_descriptor(rell.test.pubkeys.bob)))
         .op(strategies.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -71,7 +72,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     );
     assert_equals(subscription.get_subscription_details(bob.id), (
         asset_id = asset.id,
-        period_millis = 30 * subscription.MILLIS_PER_DAY,
+        period_millis = 30 * utils.MILLISECONDS_PER_DAY,
         last_payment = last_block_time
     ));
 
@@ -90,7 +91,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
 
     // Subscription has now expired
-    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 31);
+    rell.test.set_next_block_time_delta(utils.MILLISECONDS_PER_DAY * 31);
     rell.test.block().run();
 
     rell.test.tx()
@@ -107,7 +108,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .sign(rell.test.keypairs.bob)
         .run();
 
-    assert_equals(subscription.get_subscription_period_millis(), 30 * subscription.MILLIS_PER_DAY);
+    assert_equals(subscription.get_subscription_period_millis(), 30 * utils.MILLISECONDS_PER_DAY);
 
     last_block_time = rell.test.last_block_time;
     rell.test.tx()
@@ -120,7 +121,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     assert_equals(assets.get_asset_balance(subscription_account, asset), 2 * subscription_amount);
     assert_equals(subscription.get_subscription_details(bob.id), (
         asset_id = asset.id,
-        period_millis = 30 * subscription.MILLIS_PER_DAY,
+        period_millis = 30 * utils.MILLISECONDS_PER_DAY,
         last_payment = last_block_time
     ));
 
@@ -139,7 +140,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
 
     // Renew subscription before it has expired...
-    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 2);
+    rell.test.set_next_block_time_delta(utils.MILLISECONDS_PER_DAY * 2);
     rell.test.block().run();
 
     rell.test.tx()
@@ -157,7 +158,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
 
     // ...should extend next period
-    rell.test.set_next_block_time_delta(subscription.MILLIS_PER_DAY * 31);
+    rell.test.set_next_block_time_delta(utils.MILLISECONDS_PER_DAY * 31);
     rell.test.block().run();
 
     rell.test.tx()

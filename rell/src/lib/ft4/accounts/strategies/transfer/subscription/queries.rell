@@ -8,4 +8,4 @@ query get_subscription_details(account_id: byte_array): (asset_id: byte_array, p
         "No subscription for account <%s>".format(account.id));
 }
 
-query get_subscription_period_millis(): integer = subscription_period_days() * MILLIS_PER_DAY;
+query get_subscription_period_millis(): integer = subscription_period_days() * utils.MILLISECONDS_PER_DAY;

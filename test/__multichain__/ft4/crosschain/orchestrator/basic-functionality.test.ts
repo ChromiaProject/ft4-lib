@@ -1,4 +1,3 @@
-import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { createAmount, registerCrosschainAsset } from "@ft4/index";
 import adminUser from "../../../../util/admin_user";
@@ -11,39 +10,32 @@ describe("Basic Functionality", () => {
     testContext = await setupTestEnvironment("basic-functionality", mintAmount);
   });
 
-  async function createTestOrchestrator() {
-    return await createOrchestrator(
-      testContext.multichain2.rid,
-      testContext.account2.id,
-      testContext.sampleAsset.id,
-      createAmount(10, mintAmount.decimals),
-      testContext.session0,
-    );
-  }
-
-  it("initializes transfer correctly", async () => {
-    const orchestrator = await createTestOrchestrator();
-
+  it("emits events", async () => {
+    const signedListener = jest.fn();
     const initListener = jest.fn();
-    orchestrator.onTransferInit(initListener);
-
-    await orchestrator.transfer();
-
-    expect(initListener).toHaveBeenCalled();
-  });
-
-  it("executes single hop transfer", async () => {
-    const orchestrator = await createTestOrchestrator();
-
     const hopListener = jest.fn();
-    orchestrator.onTransferHop(hopListener);
 
-    await orchestrator.transfer();
+    await testContext.account0
+      .crosschainTransfer(
+        testContext.multichain2.rid,
+        testContext.account2.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      )
+      .on("signed", signedListener)
+      .on("init", initListener)
+      .on("hop", hopListener);
 
+    expect(signedListener).toHaveBeenCalledTimes(1);
+    expect(initListener).toHaveBeenCalledTimes(1);
     expect(hopListener).toHaveBeenCalledTimes(1);
   });
 
   it("executes multiple hops transfer", async () => {
+    const signedListener = jest.fn();
+    const initListener = jest.fn();
+    const hopListener = jest.fn();
+
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
@@ -51,42 +43,20 @@ describe("Basic Functionality", () => {
       testContext.multichain2.rid, // Branch
     );
 
-    const orchestrator = await createOrchestrator(
-      testContext.multichain1.rid, // To branch
-      testContext.account1.id,
-      testContext.sampleAsset.id,
-      createAmount(10, mintAmount.decimals),
-      testContext.session0, // From root
-    );
+    await testContext.account0
+      .crosschainTransfer(
+        // From root
+        testContext.multichain1.rid, // To branch
+        testContext.account1.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      )
+      .on("signed", signedListener)
+      .on("init", initListener)
+      .on("hop", hopListener);
 
-    const hopListener = jest.fn();
-    orchestrator.onTransferHop(hopListener);
-
-    await orchestrator.transfer();
-
+    expect(signedListener).toHaveBeenCalledTimes(1);
+    expect(initListener).toHaveBeenCalledTimes(1);
     expect(hopListener).toHaveBeenCalledTimes(2);
-  });
-
-  it("marks transfer as complete", async () => {
-    const orchestrator = await createTestOrchestrator();
-
-    const completeListener = jest.fn();
-    orchestrator.onTransferComplete(completeListener);
-
-    await orchestrator.transfer();
-
-    expect(completeListener).toHaveBeenCalled();
-  });
-
-  it("ensures no errors are thrown throughout the process", async () => {
-    const orchestrator = await createTestOrchestrator();
-
-    const errorListener = jest.fn();
-
-    orchestrator.onTransferError(errorListener);
-
-    await orchestrator.transfer();
-
-    expect(errorListener).not.toHaveBeenCalled();
   });
 });

@@ -84,17 +84,23 @@ function _ft_auth(required_flags: list<text>, account: accounts.account, auth_de
 }
 
 function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.account, accounts.account_auth_descriptor) {
-    val account_id = byte_array.from_gtv(auth_args[0]);
-    val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
-
+    val (account_id, auth_descriptor_id) = extract_account_and_auth_descriptor(auth_args);
     val account = accounts.Account(account_id);
     val auth_descriptor = require(
-        accounts.account_auth_descriptor @? { .id == auth_descriptor_id, .account == account },
+        try_fetch_auth_descriptor(account, auth_descriptor_id),
         "Auth descriptor '%s' not found for account '%s'".format(auth_descriptor_id, account_id)
     );
-    
     return (account, auth_descriptor);
 }
+
+function extract_account_and_auth_descriptor(auth_args: list<gtv>): (byte_array, byte_array) {
+    val account_id = byte_array.from_gtv(auth_args[0]);
+    val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
+    return (account_id, auth_descriptor_id);
+}
+
+function try_fetch_auth_descriptor(accounts.account, auth_descriptor_id: byte_array): accounts.account_auth_descriptor? =
+    accounts.account_auth_descriptor @? { .id == auth_descriptor_id, .account == account };
 
 function get_auth_flags(op_name: name, is_strict: boolean) = get_auth_handler(op_name, is_strict).flags;
 

@@ -36,6 +36,8 @@ function _register_account(): accounts.account {
 
     val account_id = account_details.account_id;
 
+    before_register_account(account_id);
+
     val account = create accounts.account(account_id);
     accounts.add_auth_descriptor_to_account(account, account_details.initial, false);
 
@@ -47,8 +49,14 @@ function _register_account(): accounts.account {
 
     strategy.action(account, strategy_params);
 
+    after_register_account(account);
+
     return account;
 }
+
+@extendable function before_register_account(account_id: byte_array);
+
+@extendable function after_register_account(accounts.account);
 
 function get_account_id_from_signers(signers: list<byte_array>) {
     require(signers.size() > 0, "Cannot derive account id. Signers list is empty");
@@ -69,8 +77,6 @@ function verify_all_signatures(signers: list<byte_array>, evm_signatures: list<a
         }
     }
 }
-
-
 
 function get_signers(accounts.auth_descriptor)
     = when (auth_descriptor.auth_type) {

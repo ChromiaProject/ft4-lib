@@ -17,12 +17,10 @@ export {
   LoginConfigComplexRule,
   LoginConfigSimpleRule,
   LoginConfigRules,
+  SigningError,
   mapLoginConfigRulesToAuthDescriptorRules,
-  blockHeight,
   relativeBlockHeight,
-  blockTime,
   relativeBlockTime,
-  opCount,
   minutes,
   hours,
   days,
@@ -62,7 +60,7 @@ export {
   AuthDescriptorSimpleRule,
   AuthDescriptorComplexRule,
   AuthType,
-  FlagsType,
+  AuthFlag,
   Account,
   MultiSig,
   RateLimit,
@@ -80,6 +78,9 @@ export {
   greaterThan,
   greaterOrEqual,
   and,
+  opCount,
+  blockHeight,
+  blockTime,
   createAuthDescriptorValidator,
 } from "./accounts";
 
@@ -104,20 +105,20 @@ export {
   retrievePaginatedEntity,
   EntityRetriever,
   PaginatedEntity,
+  loadOperationFromTransaction,
 } from "./utils";
 
 export { Listener, EventEmitter } from "./events";
 
 // Crosschain
 export {
-  Orchestrator,
-  OrchestratorEvents,
-  PathfinderError,
-  applyTransfer,
-  createOrchestrator,
-  findPathToChainForAsset,
+  PendingTransfer,
   getAssetOriginById,
+  getPendingTransfersForAccount,
+  isTransferApplied,
   initTransfer,
+  applyTransfer,
+  completeTransfer,
 } from "./crosschain";
 
 import * as accountRegistration from "@ft4/accounts/registration";

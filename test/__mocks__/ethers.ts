@@ -21,7 +21,7 @@ class MockedBrowserProvider {
 
 import * as original from "ethers";
 
-module.exports = {
+export default {
   ethers: {
     BrowserProvider: MockedBrowserProvider,
     Wallet: original.Wallet,

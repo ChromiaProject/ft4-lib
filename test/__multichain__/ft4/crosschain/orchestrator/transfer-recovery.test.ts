@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import { fetchBlockchains } from "../../../util/blockchain";
 import {
-  FlagsType,
+  AuthFlag,
   createAmount,
   createConnection,
   mint,
@@ -10,10 +10,7 @@ import {
 import { AuthenticatedAccount } from "@ft4/accounts";
 import { Asset } from "@ft4/asset/types";
 import { PendingTransfer, findPathToChainForAsset } from "@ft4/crosschain";
-import {
-  createOrchestrator,
-  createResumeOrchestrator,
-} from "@ft4/crosschain/orchestrator";
+import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { createSession } from "@ft4/ft-session";
 import { Connection, Session } from "@ft4/types";
 import { PaginatedEntity } from "@ft4/utils/types";
@@ -60,11 +57,11 @@ describe("Orchestrator", () => {
     );
 
     account0 = await AccountBuilder.account(connection0)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     account2 = await AccountBuilder.account(connection2)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     session0 = createSession(connection0, account0.authenticator);
@@ -84,26 +81,14 @@ describe("Orchestrator", () => {
     const path = await findPathToChainForAsset(session0, asset, multichain2Rid);
     const normalizedPath = path.map(formatter.ensureBuffer);
     const amount = createAmount(10);
-    const promise = new Promise<void>((resolve) => {
-      session0
-        .transactionBuilder()
-        .add(
-          initTransfer(account2.id, asset.id, amount, normalizedPath),
-          () => {
-            resolve();
-          },
-        )
-        .buildAndSend();
-    });
+    await session0
+      .transactionBuilder()
+      .add(initTransfer(account2.id, asset.id, amount, normalizedPath))
+      .buildAndSendWithAnchoring();
 
-    await promise;
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    const orchestrator = await createResumeOrchestrator(
-      session0,
-      pendingTransfers.data[0],
-    );
+    await session0.account.resumeCrosschainTransfer(pendingTransfers.data[0]);
 
-    await orchestrator.resumeTransfer();
     const balance = await account2.getBalanceByAssetId(asset.id);
     Object.assign(BigInt.prototype, {
       toJSON: function () {
@@ -117,11 +102,12 @@ describe("Orchestrator", () => {
 
   it("removes pending transfer once transfer is completed", async () => {
     const orchestrator = await createOrchestrator(
+      session0,
+      session0.account.authenticator,
       multichain2Rid,
       account2.id,
       asset.id,
       amount,
-      session0,
     );
 
     const pendingTransfers = new Promise<PaginatedEntity<PendingTransfer>>(

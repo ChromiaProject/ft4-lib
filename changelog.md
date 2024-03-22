@@ -5,6 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2024-03-22
+
+### Breaking 💔
+
+- Rename `FlagsType` to `AuthFlag`, and changed it from an enum to an object to allow adding custom flags.
+
+- Method `buildAndSend` in TransactionBuilder no longer supports OnAnchoredHandler:s, use new method 
+  `buildAndSendWithAnchoring` instead.
+
+- Removed `LoginManager` type and the `getLoginManager` method in `KeyStoreInteractor`, 
+  added `login` method to `KeyStoreInteractor` instead.
+
+- Removed the Orchestrator from the public API, use new `crosschainTransfer` and `resumeCrosschainTransfer` 
+  methods in `AuthenticatedAccount` instead. 
+
+#### Migration
+
+Instead of making cross-chain transfer with Orchestrator:
+```ts
+val orchestrator = await createOrchestrator(targetBlockchainRid, recipientId, assetId, amount, senderSession);
+
+orchestrator.onTransferInit(() => { ... });
+orchestrator.onTransferHop((brid) => { ... });
+orchestrator.onTransferComplete(() => { ... });
+orchestrator.onTransferError((error) => { ... });
+
+await orchestrator.transfer();
+```
+now it has to be done like this:
+```ts
+await senderSession.account.crosschainTransfer(targetBlockchainRid, recipientId, assetId, amount)
+  .on("signed", () => { ... })
+  .on("init", (receipt: TransactionReceipt) => { ... })
+  .on("hop", (blockchainRid: Buffer) => { ... });
+```
+
+Interrupted cross-chain transfers can be resumed like this:
+```ts
+await senderSession.account.resumeCrosschainTransfer(pendingTransfer)
+  .on("hop", (blockchainRid: Buffer) => { ... })
+```
+
+Since `logout` method was removed from `LoginManager` in previous release, there is no longer need for `LoginManager` type. Login (adding disposable auth descriptors) can be performed by calling `login` on `KeyStoreInteractor`. So instead of
+```ts
+const { session } = await keyStoreInteractor.getLoginManager().login({ accountId });
+```
+now we login like this:
+```ts
+const { session } = await keyStoreInteractor.login({ accountId });
+```
+
+
+### Changed 🪙
+
+- TransactionBuilder will wait for transactions to be anchored in system anchoring chain before invoking 
+  OnAnchoredHandler:s.
+- Methods `buildAndSend` and `buildAndSendWithAnchoring` in TransactionBuilder return `Web3PromiEvent` and emits 
+  events when transaction is built, sent and confirmed (only `buildAndSendWithAnchoring`).
+- `logout` function returned from `KeyStoreInteractor.login()` and `registerAccount()` will delete auth descriptors 
+  for disposable key.
+- TransactionBuilder will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
+- `crosschainTransfer` method will throw `SigningError` if signing fails for some reason (e.g. is rejected by user).
+
+### Added ✅
+
+- New method `buildAndSendWithAnchoring` in TransactionBuilder which will wait for anchoring in cluster and system 
+  anchoring chains before resolving promise.
+- New event `signed` in `crosschainTransfer` method which is emitted when the `initTransfer` transaction is signed.
+
+- `getAssetsByType` query function
+
+- Include `isCrosschain` flag in response from queries `getTransferHistory`, `getTransferHistoryFromHeight` 
+  and `getTransferHistoryEntry`.
+- Include `blockchainRid` in response from queries `getTransferDetails` and `getTransferDetailsByAsset`.
+
+- Include auth descriptor config (`maxRules` and `maxNumberPerAccount`) in `Config`.
+
+- Added `loadOperationFromTransaction` that receives `RawGtx` or `SignedTransaction` (encoded tx) and returns `Operation` at provided index
+
+- Added `getLastPendingCrosschainTransaction` to `Account` interface
+
 ## [0.5.0] - 2024-02-29
 
 ### Breaking 💔

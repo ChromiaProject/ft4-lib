@@ -1,11 +1,12 @@
 import { Buffer } from "buffer";
-import { createOrchestrator } from "@ft4/crosschain/orchestrator";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Amount, Asset } from "@ft4/asset";
 import { createAmount, registerCrosschainAsset } from "@ft4/index";
 import adminUser from "../../../../util/admin_user";
 import { getNewAsset } from "../../../../util/blockchain-util";
-import { InitTransferError } from "@ft4/crosschain/errors";
+import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
+import { PathfinderError } from "@ft4/crosschain/index";
+import { FactoryError } from "@ft4/crosschain/errors";
 
 describe("Edge Cases", () => {
   const mintAmount = createAmount(100, 0);
@@ -15,16 +16,15 @@ describe("Edge Cases", () => {
     testContext = await setupTestEnvironment("edge-cases", mintAmount);
   });
 
-  async function createTestOrchestrator(
+  function testTransfer(
     amount: Amount = createAmount(10, mintAmount.decimals),
     asset: Asset = testContext.sampleAsset,
   ) {
-    return await createOrchestrator(
+    return testContext.session0.account.crosschainTransfer(
       testContext.multichain2.rid,
       testContext.account2.id,
       asset.id,
       amount,
-      testContext.session0,
     );
   }
 
@@ -37,42 +37,26 @@ describe("Edge Cases", () => {
       blockchainRid: Buffer.from("invalid-blockchain-rid"),
       supply: BigInt(0),
       iconUrl: "",
+      type: ASSET_TYPE_FT4,
       ...overrides,
     };
   }
 
   it("handles invalid amounts", async () => {
-    const errorListener = jest.fn();
-
     // Test for negative amount
-    const orchestratorNegativeAmount = await createTestOrchestrator(
-      createAmount(-10, 1),
+    await expect(testTransfer(createAmount(-10, 1))).rejects.toThrow(
+      /value must be non-zero positive/,
     );
-    orchestratorNegativeAmount.onTransferError(errorListener);
-    await orchestratorNegativeAmount.transfer();
-    expect(errorListener).toHaveBeenCalled();
-
-    // Reset errorListener
-    errorListener.mockClear();
 
     // Test for zero amount
-    const orchestratorZeroAmount = await createTestOrchestrator(
-      createAmount(0, 1),
+    await expect(testTransfer(createAmount(0, 1))).rejects.toThrow(
+      /value must be non-zero positive/,
     );
-    orchestratorZeroAmount.onTransferError(errorListener);
-    await orchestratorZeroAmount.transfer();
-    expect(errorListener).toHaveBeenCalled();
-
-    // Reset errorListener
-    errorListener.mockClear();
 
     // Test for amount larger than asset supply
-    const orchestratorLargeAmount = await createTestOrchestrator(
-      createAmount(1e10, 1),
+    await expect(testTransfer(createAmount(1e10, 1))).rejects.toThrow(
+      /Balance is too low/,
     );
-    orchestratorLargeAmount.onTransferError(errorListener);
-    await orchestratorLargeAmount.transfer();
-    expect(errorListener).toHaveBeenCalled();
   });
 
   it("handles invalid assets", async () => {
@@ -81,9 +65,9 @@ describe("Edge Cases", () => {
       id: Buffer.from("non-existing-asset"),
     });
 
-    await expect(
-      createTestOrchestrator(undefined, nonExistingAsset),
-    ).rejects.toThrow("The specified asset could not be found");
+    await expect(testTransfer(undefined, nonExistingAsset)).rejects.toThrow(
+      FactoryError,
+    );
 
     // Test for incompatible asset
     const incompatibleAsset = await getNewAsset(
@@ -93,9 +77,9 @@ describe("Edge Cases", () => {
     );
 
     // We created the asset but didn't register it, thus it is incompatible
-    await expect(
-      createTestOrchestrator(undefined, incompatibleAsset),
-    ).rejects.toThrow(/^Failed to find a path to the target chain/);
+    await expect(testTransfer(undefined, incompatibleAsset)).rejects.toThrow(
+      PathfinderError,
+    );
   });
 
   it("handles missing or invalid parent details", async () => {
@@ -112,29 +96,17 @@ describe("Edge Cases", () => {
       Buffer.from("deadbeef", "hex"),
     );
 
-    await expect(createTestOrchestrator(undefined, asset)).rejects.toThrowError(
-      /^Failed to find a path to the target chain/,
+    await expect(testTransfer(undefined, asset)).rejects.toThrowError(
+      PathfinderError,
     );
   });
 
   it("handles insufficient funds when sending assets back", async () => {
-    const orchestratorTo = await createTestOrchestrator();
-
-    await orchestratorTo.transfer();
+    await testTransfer();
 
     // Source chain account only has 10 tokens
-    const orchestratorFrom = await createTestOrchestrator(createAmount(20, 1));
-
-    const errorListener = jest.fn();
-    orchestratorFrom.onTransferError(errorListener);
-
-    await orchestratorFrom.transfer();
-
-    expect(errorListener).toHaveBeenCalled();
-
-    expect(errorListener.mock.calls[0][0]).toBeInstanceOf(InitTransferError);
-    expect(errorListener.mock.calls[0][0].message).toMatch(
-      /^Failed to send transaction/i,
+    await expect(testTransfer(createAmount(20, 1))).rejects.toThrow(
+      /Balance is too low/,
     );
   });
 });

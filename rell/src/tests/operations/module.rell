@@ -45,3 +45,13 @@ operation consume_point(account_id: byte_array) {
 	state.points -= 1;
     state.last_update = op_context.last_block_time;
 }
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    scope = rell.meta(rejected_op).mount_name,
+    flags = ["A"]
+);
+
+operation rejected_op() {
+    require(false, "always rejected");
+}

@@ -1,10 +1,11 @@
 import { Buffer } from "buffer";
 import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "@ft4/events";
-import { OrchestratorError } from "./errors";
 import { TransactionBuilder } from "@ft4/utils/transaction-builder";
-import { Session } from "@ft4/index";
 import { BufferId } from "@ft4/utils";
+import { SignedTransaction, TransactionReceipt } from "postchain-client";
+import { Connection } from "@ft4/index";
+import { Authenticator } from "@ft4/authentication/index";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -14,10 +15,9 @@ export type GtvInitTransferArgs = [
 ];
 
 export type OrchestratorEvents = {
-  TransferInit: [];
+  TransferSigned: [SignedTransaction];
+  TransferInit: [TransactionReceipt];
   TransferHop: [BufferId];
-  TransferComplete: [];
-  TransferError: [OrchestratorError];
 };
 
 export type OrchestratorState = {
@@ -32,23 +32,24 @@ export interface OrchestratorBase {
   eventEmitter: EventEmitter<OrchestratorEvents>;
   walkPath: () => Promise<void>;
   getTransactionBuilderForChain: (
-    session: Session,
+    connection: Connection,
+    authenticator: Authenticator,
     blockchainRid: Buffer,
   ) => Promise<TransactionBuilder>;
-  handleErrors: (fn: () => Promise<void>) => Promise<void>;
-  completeTransfer: (tx: RawGtx, transfer?: PendingTransfer) => Promise<void>;
+  performCompleteTransfer: (
+    tx: RawGtx,
+    transfer?: PendingTransfer,
+  ) => Promise<void>;
   createIccfProofOperation: (
     targetChainRid: Buffer,
     hopIndex: number,
   ) => Promise<Operation>;
-  onTransferInit: (listener: Listener<[]>) => void;
-  offTransferInit: (listener: Listener<[]>) => void;
+  onTransferSigned: (listener: Listener<[SignedTransaction]>) => void;
+  offTransferSigned: (listener: Listener<[SignedTransaction]>) => void;
+  onTransferInit: (listener: Listener<[TransactionReceipt]>) => void;
+  offTransferInit: (listener: Listener<[TransactionReceipt]>) => void;
   onTransferHop: (listener: Listener<[BufferId]>) => void;
   offTransferHop: (listener: Listener<[BufferId]>) => void;
-  onTransferComplete: (listener: Listener<[]>) => void;
-  offTransferComplete: (listener: Listener<[]>) => void;
-  onTransferError: (listener: Listener<[OrchestratorError]>) => void;
-  offTransferError: (listener: Listener<[OrchestratorError]>) => void;
 }
 
 export type ExternalOrchestratorBase = Omit<
@@ -56,8 +57,7 @@ export type ExternalOrchestratorBase = Omit<
   | "state"
   | "walkPath"
   | "getTransactionBuilderForChain"
-  | "handleErrors"
-  | "completeTransfer"
+  | "performCompleteTransfer"
   | "createIccfProofOperation"
 >;
 

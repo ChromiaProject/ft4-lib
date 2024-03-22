@@ -10,6 +10,7 @@ import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
 import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/types";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
+import { assetsByType } from "./asset-queries";
 
 export async function getAssetById(
   connection: Connection,
@@ -36,6 +37,19 @@ export function getAssetsByName(
   return retrievePaginatedEntity<Asset, AssetResponse>(
     connection,
     assetsByName(name, limit, cursor),
+    (a) => a.map(createAssetObject),
+  );
+}
+
+export async function getAssetsByType(
+  connection: Connection,
+  type: string,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Asset>> {
+  return retrievePaginatedEntity<Asset, AssetResponse>(
+    connection,
+    assetsByType(type, limit, cursor),
     (a) => a.map(createAssetObject),
   );
 }
@@ -83,8 +97,9 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
       symbol: balance.asset.symbol,
       decimals: balance.asset.decimals,
       blockchainRid: balance.asset.blockchain_rid,
-      supply: balance.asset.supply,
       iconUrl: balance.asset.icon_url,
+      type: balance.asset.type,
+      supply: balance.asset.supply,
     },
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
   });
@@ -97,7 +112,8 @@ export function createAssetObject(asset: AssetResponse): Asset {
     symbol: asset.symbol,
     decimals: asset.decimals,
     blockchainRid: asset.blockchain_rid,
-    supply: asset.supply,
     iconUrl: asset.icon_url,
+    type: asset.type,
+    supply: asset.supply,
   });
 }

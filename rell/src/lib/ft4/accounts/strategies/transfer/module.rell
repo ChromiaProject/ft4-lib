@@ -5,6 +5,7 @@ import ^^.strategies;
 import ^^^.accounts;
 import ^^^.assets;
 import ^^^.crosschain;
+import ^^^.utils;
 
 struct module_args_list_element {
     sender_blockchain: gtv;
@@ -54,13 +55,31 @@ function() = true;
 @extend(crosschain.create_on_crosschain_transfer)
 function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array, assets.asset, amount: big_integer) {
     crosschain.Unsafe.update_balances_if_needed(
-       crosschain.ensure_blockchain_account(sender_blockchain_rid),
-       ensure_pool_account(chain_context.blockchain_rid),
-       asset,
-       amount
+        crosschain.ensure_blockchain_account(sender_blockchain_rid),
+        ensure_pool_account(chain_context.blockchain_rid),
+        asset,
+        amount
     );
 
     create_on_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
+}
+
+@extend(strategies.after_register_account)
+function(accounts.account) {
+    val pool_account = ensure_pool_account(chain_context.blockchain_rid);
+
+    for (account_creation_transfer in
+            account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending }) {
+        assets.Unsafe.transfer(
+            pool_account,
+            account,
+            account_creation_transfer.asset,
+            account_creation_transfer.amount);
+
+        account_creation_transfer.state = account_creation_state.done;
+        account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
+        account_creation_transfer.op_index = op_context.op_index;
+    }
 }
 
 function ensure_pool_account(blockchain_rid: byte_array): accounts.account {

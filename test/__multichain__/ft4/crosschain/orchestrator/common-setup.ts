@@ -1,6 +1,6 @@
 import { fetchBlockchains } from "../../../util/blockchain";
 import {
-  FlagsType,
+  AuthFlag,
   createAmount,
   createConnection,
   mint,
@@ -68,15 +68,15 @@ export async function setupTestEnvironment(
   );
 
   const account0 = await AccountBuilder.account(connection0)
-    .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
   const account1 = await AccountBuilder.account(connection1)
-    .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
   const account2 = await AccountBuilder.account(connection2)
-    .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
   const session0 = createSession(connection0, account0.authenticator);

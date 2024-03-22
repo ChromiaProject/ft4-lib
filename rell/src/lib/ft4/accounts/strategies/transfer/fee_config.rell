@@ -43,6 +43,6 @@ function parse_fee_asset(input: map<name, gtv>, module_name: text): fee_asset {
             (if ("issuing_blockchain_rid" in input) byte_array.from_gtv(input["issuing_blockchain_rid"]) else chain_context.blockchain_rid)
             else null,
         name = if ("name" in input) text.from_gtv(input["name"]) else null,
-        amount = big_integer.from_text(text.from_gtv(input["amount"]).replace("L", ""))
+        amount = parse_amount(input["amount"])
     );
 }

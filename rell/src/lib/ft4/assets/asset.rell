@@ -1,4 +1,6 @@
 
+val ASSET_TYPE_FT4 = "ft4";
+
 entity asset {
     key id: byte_array;
     name;
@@ -6,6 +8,7 @@ entity asset {
     decimals: integer;
     issuing_blockchain_rid: byte_array;
     icon_url: text;
+    type: text = ASSET_TYPE_FT4;
     mutable total_supply: big_integer;
 }
 
@@ -61,6 +64,7 @@ function map_asset(asset: asset) {
         decimals = asset.decimals,
         blockchain_rid = asset.issuing_blockchain_rid,
         icon_url = asset.icon_url,
+        type = asset.type,
         supply = asset.total_supply
     );
 }
@@ -76,6 +80,19 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
                 asset = map_asset(.asset),
                 amount = .amount
             ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_assets_by_type(type: text, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return assets.asset @* {
+        type,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (map_asset($)).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);
@@ -191,7 +208,8 @@ namespace Unsafe {
         symbol: text,
         decimals: integer,
         blockchain_rid: byte_array,
-        icon_url: text): asset {
+        icon_url: text,
+        type: text = ASSET_TYPE_FT4): asset {
 
         require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
 
@@ -211,6 +229,7 @@ namespace Unsafe {
             decimals,
             issuing_blockchain_rid=blockchain_rid,
             icon_url=trimmed_icon_url,
+            type=type,
             total_supply=0L
         );
     }

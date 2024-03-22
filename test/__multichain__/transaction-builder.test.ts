@@ -1,7 +1,7 @@
 import { nop } from "@ft4/utils";
 import { transactionBuilder } from "@ft4/utils/transaction-builder";
 import { emptyOp } from "../util/util";
-import { FlagsType } from "@ft4/index";
+import { AuthFlag } from "@ft4/index";
 import { fetchBlockchains } from "./util/blockchain";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import AccountBuilder from "@ft4/util/account-builder";
@@ -10,6 +10,7 @@ import { createChromiaClientToMultichain } from "../util/blockchain-util";
 import { Connection } from "@ft4/index";
 import { AuthenticatedAccount } from "@ft4/accounts/index";
 import { ftAuth } from "@ft4/authentication/index";
+import { SignedTransaction, TransactionReceipt } from "postchain-client";
 
 describe("transaction builder", () => {
   let connection00: Connection;
@@ -23,25 +24,37 @@ describe("transaction builder", () => {
     );
 
     account00 = await AccountBuilder.account(connection00)
-      .withAuthFlags(FlagsType.Account, FlagsType.Transfer)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
   });
 
-  it("calls registered handler when block is anchored", async () => {
-    let callback: jest.Mock<any, any, any> | null = null;
+  it("calls registered handler when block is anchored in system anchoring chain", async () => {
+    const callback: jest.Mock<any, any, any> = jest.fn();
     const operation = nop();
 
-    const promise = new Promise((resolve) => {
-      transactionBuilder(account00.authenticator, connection00.client)
-        .add(
-          emptyOp(),
-          (callback = jest.fn().mockImplementation((op) => resolve(op))),
-        )
-        .add(operation)
-        .buildAndSend();
-    });
+    let builtEvent: SignedTransaction | undefined = undefined;
+    let sentEvent: Buffer | undefined = undefined;
+    let confirmedEvent: TransactionReceipt | undefined = undefined;
+    const { tx, receipt } = await transactionBuilder(
+      account00.authenticator,
+      connection00.client,
+    )
+      .add(emptyOp(), callback)
+      .add(operation)
+      .buildAndSendWithAnchoring()
+      .on("built", (tx) => {
+        builtEvent = tx;
+      })
+      .on("sent", (txRid) => {
+        sentEvent = txRid;
+      })
+      .on("confirmed", (receipt) => {
+        confirmedEvent = receipt;
+      });
 
-    await promise;
+    expect(builtEvent!.equals(tx));
+    expect(sentEvent!.equals(receipt.transactionRid));
+    expect(confirmedEvent!.transactionRid.equals(receipt.transactionRid));
 
     const authDescriptorId = (await account00.getAuthDescriptors())[0].id;
     expect(callback).toHaveBeenCalledWith(

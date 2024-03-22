@@ -7,6 +7,7 @@ import {
   Operation,
   RawGtv,
   RawGtx,
+  SignedTransaction,
   encryption,
   gtv,
   gtx,
@@ -39,6 +40,10 @@ export async function getConfig(session: IClient): Promise<Config> {
       maxPoints: response.rate_limit.max_points,
       recoveryTime: response.rate_limit.recovery_time,
       pointsAtAccountCreation: response.rate_limit.points_at_account_creation,
+    },
+    authDescriptor: {
+      maxRules: response.auth_descriptor.max_rules,
+      maxNumberPerAccount: response.auth_descriptor.max_number_per_account,
     },
   });
 }
@@ -80,6 +85,10 @@ type ConfigResponse = {
     max_points: number;
     recovery_time: number;
     points_at_account_creation: number;
+  };
+  auth_descriptor: {
+    max_rules: number;
+    max_number_per_account: number;
   };
 };
 
@@ -128,4 +137,17 @@ export async function createAndSignTransaction(
   );
 
   return gtx.serialize(transaction);
+}
+
+export function loadOperationFromTransaction(
+  tx: RawGtx | SignedTransaction,
+  opIndex: number,
+): Operation {
+  const transaction = Buffer.isBuffer(tx) ? (gtv.decode(tx) as RawGtx) : tx;
+  const operations = transaction[0][1];
+  const operation = operations[opIndex];
+  return {
+    name: operation[0],
+    args: operation[1],
+  };
 }

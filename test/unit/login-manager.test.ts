@@ -7,7 +7,7 @@ import {
   lessThan,
   opCount,
 } from "@ft4/accounts/auth-descriptor/rules";
-import * as lc from "@ft4/authentication/login-manager/rules";
+import * as lc from "@ft4/authentication/login/rules";
 
 describe("Login manager", () => {
   beforeAll(() => {
@@ -33,7 +33,7 @@ describe("Login manager", () => {
   });
   it("converts absolute login config to auth descriptor rules", async () => {
     const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
-      and(greaterThan(lc.blockHeight(100)), greaterOrEqual(lc.blockTime(12))),
+      and(greaterThan(blockHeight(100)), greaterOrEqual(blockTime(12))),
       getFakeBlockHeight(),
     );
 
@@ -44,9 +44,9 @@ describe("Login manager", () => {
   it("converts mixed login config to auth descriptor rules", async () => {
     const loginRule = await lc.mapLoginConfigRulesToAuthDescriptorRules(
       and(
-        lessThan(lc.opCount(5)),
+        lessThan(opCount(5)),
         greaterThan(lc.relativeBlockHeight(100)),
-        greaterOrEqual(lc.blockTime(12)),
+        greaterOrEqual(blockTime(12)),
       ),
       getFakeBlockHeight(200),
     );

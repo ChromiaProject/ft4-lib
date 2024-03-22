@@ -1,6 +1,5 @@
 import { Amount } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
-import { Session } from "@ft4/index";
 import {
   BufferId,
   OnAnchoredHandlerData,
@@ -19,17 +18,11 @@ import {
 } from "postchain-client";
 import {
   ApplyTransferError,
-  ErrorMessages,
   FactoryError,
   InitTransferError,
   OrchestratorError,
-  TransferExecutionError,
 } from "./errors";
-import {
-  applyTransfer as applyTransferOp,
-  completeTransfer as completeTransferOp,
-  initTransfer as initTransferOp,
-} from "./operations";
+import { applyTransfer, completeTransfer, initTransfer } from "./operations";
 import { findPathToChainForAsset } from "./pathfinder";
 import { isTransferApplied } from "./queries";
 import {
@@ -42,39 +35,42 @@ import {
   ResumeOrchestrator,
 } from "./types";
 import { createConnectionToBlockchainRid } from "@ft4/ft-session";
+import { SignedTransaction } from "postchain-client";
+import { SigningError } from "@ft4/authentication/index";
+import { TransactionReceipt } from "postchain-client";
+import { Connection } from "@ft4/index";
+import { Authenticator } from "@ft4/authentication/index";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
  * @async
+ * @param {Connection} connection - The connection.
+ * @param {Authenticator} authenticator - The authenticator.
  * @param {BufferId} targetChainId - ID of the target blockchain.
  * @param {BufferId} recipientId - ID of the recipient.
  * @param {BufferId} assetId - ID of the asset to be transferred.
  * @param {Amount} amount - The amount to be transferred.
- * @param {Session} session - The current user session.
  * @returns {Orchestrator} The orchestrator instance with functionalities like initiating transfers,
  * subscribing/unsubscribing to various transfer events.
  */
 export async function createOrchestrator(
+  connection: Connection,
+  authenticator: Authenticator,
   targetChainId: BufferId,
   recipientId: BufferId,
   assetId: BufferId,
   amount: Amount,
-  session: Session,
 ): Promise<Orchestrator> {
-  const asset = await session.getAssetById(assetId);
+  const asset = await connection.getAssetById(assetId);
   if (!asset) {
-    throw new FactoryError(ErrorMessages.ASSET_NOT_FOUND);
+    throw new FactoryError("The specified asset could not be found");
   }
-  let path: Buffer[];
 
-  try {
-    path = await findPathToChainForAsset(session, asset, targetChainId);
-  } catch (error) {
-    throw new FactoryError(ErrorMessages.FAILED_TO_FIND_PATH, error);
-  }
+  const path = await findPathToChainForAsset(connection, asset, targetChainId);
 
   const { state, ...orchestrator } = await createBaseOrchestrator(
-    session,
+    connection,
+    authenticator,
     path,
   );
 
@@ -82,37 +78,40 @@ export async function createOrchestrator(
    * Initialize the transfer by creating the initial transaction.
    * @returns {Promise<void>}
    */
-  async function initTransfer(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      const tb = session.transactionBuilder();
-
-      tb.add(
-        initTransferOp(recipientId, assetId, amount, path),
+  function performInitTransfer(): Promise<void> {
+    return transactionBuilder(authenticator, connection.client)
+      .add(
+        initTransfer(recipientId, assetId, amount, path),
         (data: OnAnchoredHandlerData | null, error: Error | null) => {
           if (error) {
-            reject(
-              new InitTransferError(ErrorMessages.UNABLE_TO_FETCH_PROOF, error),
+            throw new InitTransferError(
+              `Unable to fetch proof: ${error.message}`,
+              error,
             );
           } else {
             state.tx = data?.tx;
             state.initialTx = data?.tx;
-            resolve();
           }
         },
       )
-        .add(nop())
-        .buildAndSend()
-        .catch((reason) =>
-          reject(
-            new InitTransferError(
-              ErrorMessages.FAILED_TO_SEND_TRANSACTION,
-              reason,
-            ),
-          ),
-        );
-    }).then(() => {
-      orchestrator.eventEmitter.emit("TransferInit");
-    });
+      .add(nop())
+      .buildAndSendWithAnchoring()
+      .on("built", (tx) => {
+        orchestrator.eventEmitter.emit("TransferSigned", tx);
+      })
+      .then(({ tx: _tx, receipt }) => {
+        orchestrator.eventEmitter.emit("TransferInit", receipt);
+      })
+      .catch((reason: Error) => {
+        if (reason instanceof SigningError) {
+          throw reason;
+        } else {
+          throw new InitTransferError(
+            `Failed to send transaction: ${reason.message}`,
+            reason,
+          );
+        }
+      });
   }
 
   /**
@@ -121,17 +120,15 @@ export async function createOrchestrator(
    * @returns {Promise<void>}
    */
   async function transfer(): Promise<void> {
-    await orchestrator.handleErrors(async () => {
-      await initTransfer();
+    await performInitTransfer();
 
-      if (!state.tx || !state.initialTx) {
-        throw new OrchestratorError(
-          "Unable to perform transfer as tx was not applied properly",
-        );
-      }
-      await orchestrator.walkPath();
-      await orchestrator.completeTransfer(state.tx);
-    });
+    if (!state.tx || !state.initialTx) {
+      throw new OrchestratorError(
+        "Unable to perform transfer as tx was not applied properly",
+      );
+    }
+    await orchestrator.walkPath();
+    await orchestrator.performCompleteTransfer(state.tx);
   }
 
   return Object.freeze({
@@ -143,12 +140,14 @@ export async function createOrchestrator(
 /**
  * Creates an orchestrator instance to handle resuming a transfer
  * which was initiated but did not complete properly
- * @param {Session} session - The current user session
+ * @param {Connection} connection - The connection.
+ * @param {Authenticator} authenticator - The authenticator.
  * @param {PendingTransfer} pendingTransfer - The transfer to resume
  * @returns The orchestrator instance which will be able to resume the transfer
  */
 export async function createResumeOrchestrator(
-  session: Session,
+  connection: Connection,
+  authenticator: Authenticator,
   pendingTransfer: PendingTransfer,
 ): Promise<ResumeOrchestrator> {
   const operations = pendingTransfer.tx[0][1];
@@ -156,7 +155,8 @@ export async function createResumeOrchestrator(
   const path = initTransferOpArgs[3] as Buffer[];
 
   const { state, ...orchestrator } = await createBaseOrchestrator(
-    session,
+    connection,
+    authenticator,
     path,
   );
 
@@ -187,16 +187,12 @@ export async function createResumeOrchestrator(
       state.currentHopIndex === state.path.length - 1
     ) {
       // Transfer already applied, make sure that pending transfer is also cleaned up
-      await orchestrator.handleErrors(async () => {
-        await orchestrator.completeTransfer(state.tx!, pendingTransfer);
-      });
+      await orchestrator.performCompleteTransfer(state.tx!, pendingTransfer);
       return;
     }
 
-    await orchestrator.handleErrors(async () => {
-      await orchestrator.walkPath();
-      await orchestrator.completeTransfer(state.tx!, pendingTransfer);
-    });
+    await orchestrator.walkPath();
+    await orchestrator.performCompleteTransfer(state.tx!, pendingTransfer);
   }
 
   /**
@@ -212,11 +208,11 @@ export async function createResumeOrchestrator(
     txBlockchainRid: Buffer,
     opIndex: number,
   ): Promise<boolean> {
-    const connection = await createConnectionToBlockchainRid(
-      session,
+    const newConnection = await createConnectionToBlockchainRid(
+      connection,
       targetChainRid,
     );
-    return connection.query(isTransferApplied(txBlockchainRid, opIndex));
+    return newConnection.query(isTransferApplied(txBlockchainRid, opIndex));
   }
 
   return Object.freeze({
@@ -226,7 +222,8 @@ export async function createResumeOrchestrator(
 }
 
 async function createBaseOrchestrator(
-  session: Session,
+  connection: Connection,
+  authenticator: Authenticator,
   path: Buffer[],
 ): Promise<OrchestratorBase> {
   const state: OrchestratorState = {
@@ -237,7 +234,7 @@ async function createBaseOrchestrator(
   };
 
   const directoryClient = await createClient({
-    nodeUrlPool: session.client.config.endpointPool.map((ep) => ep.url),
+    nodeUrlPool: connection.client.config.endpointPool.map((ep) => ep.url),
     blockchainIid: 0,
   });
 
@@ -250,7 +247,7 @@ async function createBaseOrchestrator(
    * @param {Buffer} targetChainRid - The ID of the target blockchain.
    * @returns {Promise<void>}
    */
-  async function applyTransfer(
+  async function performApplyTransfer(
     initTransferTx: RawGtx,
     targetChainRid: Buffer,
   ): Promise<void> {
@@ -273,11 +270,15 @@ async function createBaseOrchestrator(
         await new Promise((resolve) => setTimeout(resolve, 1000));
         try {
           await (
-            await getTransactionBuilderForChain(session, targetChainRid)
+            await getTransactionBuilderForChain(
+              connection,
+              authenticator,
+              targetChainRid,
+            )
           )
             .addWithoutAuthenticator(iccfOp)
             .addWithoutAuthenticator(
-              applyTransferOp(
+              applyTransfer(
                 initTransferTx,
                 state.tx!,
                 path.indexOf(targetChainRid),
@@ -286,7 +287,7 @@ async function createBaseOrchestrator(
                 if (error) {
                   reject(
                     new ApplyTransferError(
-                      ErrorMessages.UNABLE_TO_FETCH_PROOF,
+                      `Unable to fetch proof: ${error.message}`,
                       error,
                     ),
                   );
@@ -296,7 +297,7 @@ async function createBaseOrchestrator(
                 completed = true;
               },
             )
-            .buildAndSend();
+            .buildAndSendWithAnchoring();
         } catch {
           /* Error is sometimes expected here */
         }
@@ -304,7 +305,11 @@ async function createBaseOrchestrator(
       if (completed) {
         resolve();
       } else {
-        reject("Unable to apply transfer within the specified timeout");
+        reject(
+          new ApplyTransferError(
+            "Unable to apply transfer within the specified timeout",
+          ),
+        );
       }
     }).then(() => {
       localEmitter.emit("TransferHop", targetChainRid);
@@ -323,21 +328,22 @@ async function createBaseOrchestrator(
       hopIndex++
     ) {
       const nextBlockchainRid = path[hopIndex];
-      await applyTransfer(state.initialTx, nextBlockchainRid);
+      await performApplyTransfer(state.initialTx, nextBlockchainRid);
 
       state.currentHopIndex++;
     }
   }
 
   async function getTransactionBuilderForChain(
-    session: Session,
+    connection: Connection,
+    authenticator: Authenticator,
     blockchainRid: Buffer,
   ) {
-    const connection = await createConnectionToBlockchainRid(
-      session,
+    const newConnection = await createConnectionToBlockchainRid(
+      connection,
       blockchainRid,
     );
-    return transactionBuilder(session.account.authenticator, connection.client);
+    return transactionBuilder(authenticator, newConnection.client);
   }
 
   /**
@@ -358,7 +364,9 @@ async function createBaseOrchestrator(
     }
 
     const sourceBlockchainRid =
-      hopIndex === 0 ? session.client.config.blockchainRid : path[hopIndex - 1];
+      hopIndex === 0
+        ? connection.client.config.blockchainRid
+        : path[hopIndex - 1];
 
     const proofTx = await createIccfProofTx(
       directoryClient,
@@ -367,59 +375,47 @@ async function createBaseOrchestrator(
       state.tx[0][2], // signers
       sourceBlockchainRid.toString("hex"),
       targetChainRid.toString("hex"),
-      state.tx[0][2], // signers,
+      undefined,
       true,
     );
 
     return proofTx.iccfTx.operations[0];
   }
 
-  /**
-   * Wraps the provied callback in a try/catch block and handles
-   * emitting error events if the provided callback throws any errors.
-   * @param fn
-   */
-  async function handleErrors(fn: () => Promise<void>) {
-    try {
-      await fn();
-    } catch (error) {
-      let orchError: TransferExecutionError;
-
-      if (error instanceof TransferExecutionError) {
-        orchError = error;
-      } else {
-        const errorMessage = error.message ? error.message : error.toString();
-        orchError = new TransferExecutionError(errorMessage, error);
-      }
-
-      localEmitter.emit("TransferError", orchError);
-    }
-  }
-
-  async function completeTransfer(tx: RawGtx, transfer?: PendingTransfer) {
+  async function performCompleteTransfer(
+    tx: RawGtx,
+    transfer?: PendingTransfer,
+  ) {
     const targetChainRid = path.slice(-1)[0];
 
     const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
     const tb = await getTransactionBuilderForChain(
-      session,
-      Buffer.from(session.client.config.blockchainRid, "hex"),
+      connection,
+      authenticator,
+      Buffer.from(connection.client.config.blockchainRid, "hex"),
     );
     await tb
       .addWithoutAuthenticator(iccfOp)
-      .addWithoutAuthenticator(completeTransferOp(tx, transfer?.opIndex ?? 1))
+      .addWithoutAuthenticator(completeTransfer(tx, transfer?.opIndex ?? 1))
       .buildAndSend();
-
-    localEmitter.emit("TransferComplete");
   }
 
   /* Cross-Chain Transfer convenience event handlers */
 
-  function onTransferInit(listener: Listener<[]>) {
+  function onTransferInit(listener: Listener<[TransactionReceipt]>) {
     return localEmitter.on("TransferInit", listener);
   }
 
-  function offTransferInit(listener: Listener<[]>) {
+  function offTransferInit(listener: Listener<[TransactionReceipt]>) {
     return localEmitter.off("TransferInit", listener);
+  }
+
+  function onTransferSigned(listener: Listener<[SignedTransaction]>) {
+    return localEmitter.on("TransferSigned", listener);
+  }
+
+  function offTransferSigned(listener: Listener<[SignedTransaction]>) {
+    return localEmitter.off("TransferSigned", listener);
   }
 
   function onTransferHop(listener: Listener<[BufferId]>) {
@@ -430,38 +426,19 @@ async function createBaseOrchestrator(
     return localEmitter.off("TransferHop", listener);
   }
 
-  function onTransferComplete(listener: Listener<[]>) {
-    return localEmitter.on("TransferComplete", listener);
-  }
-
-  function offTransferComplete(listener: Listener<[]>) {
-    return localEmitter.off("TransferComplete", listener);
-  }
-
-  function onTransferError(listener: Listener<[OrchestratorError]>) {
-    return localEmitter.on("TransferError", listener);
-  }
-
-  function offTransferError(listener: Listener<[OrchestratorError]>) {
-    return localEmitter.off("TransferError", listener);
-  }
-
   return Object.freeze({
     state,
     eventEmitter: localEmitter,
     walkPath,
     getTransactionBuilderForChain,
-    handleErrors,
-    completeTransfer,
+    performCompleteTransfer,
     createIccfProofOperation,
     onTransferInit,
     offTransferInit,
+    onTransferSigned,
+    offTransferSigned,
     onTransferHop,
     offTransferHop,
-    onTransferComplete,
-    offTransferComplete,
-    onTransferError,
-    offTransferError,
   });
 }
 
@@ -472,23 +449,19 @@ function getPublicOrchestratorBase(
     eventEmitter,
     onTransferInit,
     offTransferInit,
+    onTransferSigned,
+    offTransferSigned,
     onTransferHop,
     offTransferHop,
-    onTransferComplete,
-    offTransferComplete,
-    onTransferError,
-    offTransferError,
   } = orchestrator;
 
   return Object.freeze({
     eventEmitter,
     onTransferInit,
     offTransferInit,
+    onTransferSigned,
+    offTransferSigned,
     onTransferHop,
     offTransferHop,
-    onTransferComplete,
-    offTransferComplete,
-    onTransferError,
-    offTransferError,
   });
 }

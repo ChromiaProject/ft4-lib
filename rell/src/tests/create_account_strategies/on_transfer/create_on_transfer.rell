@@ -246,7 +246,7 @@ function test_create_account_on_crosschain_transfer_success() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset.id,
                     amount = amount,
                     hops = [chain_context.blockchain_rid]
@@ -304,7 +304,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset.id,
                     amount = 10L,
                     hops = [chain_context.blockchain_rid]
@@ -339,7 +339,7 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset.id,
                     amount = amount,
                     hops = [chain_context.blockchain_rid]
@@ -356,7 +356,7 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset.id,
                     amount = amount + 1,
                     hops = [chain_context.blockchain_rid]
@@ -398,7 +398,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset.id,
                     amount = amount,
                     hops = [chain_context.blockchain_rid]
@@ -433,7 +433,7 @@ function test_multiple_crosschain_transfers_success() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset1.id,
                     amount = amount1,
                     hops = [chain_context.blockchain_rid]
@@ -455,7 +455,7 @@ function test_multiple_crosschain_transfers_success() {
             operations = [
                 auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 xchain_ext.init_transfer(
-                    receiver_id = recipient_id,
+                    recipient_id,
                     asset_id = asset2.id,
                     amount = amount2,
                     hops = [chain_context.blockchain_rid]

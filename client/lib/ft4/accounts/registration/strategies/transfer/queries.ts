@@ -1,5 +1,6 @@
+import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { QueryObject } from "postchain-client";
+import { QueryObject, formatter } from "postchain-client";
 
 export function allowedAssets(
   senderBlockchainRid: Buffer,
@@ -30,6 +31,37 @@ export function pendingTransferStrategies(
     name: "ft4.get_pending_transfer_strategies",
     args: {
       recipient_id: recipientId,
+    },
+  };
+}
+
+export function hasPendingCreateAccountTransferForStrategy(
+  strategyName: string,
+  senderBlockchainRid: BufferId,
+  senderId: BufferId,
+  recipientId: BufferId,
+  assetId: BufferId,
+  amount: bigint,
+): QueryObject<
+  boolean,
+  {
+    strategy_name: string;
+    sender_blockchain_rid: Buffer;
+    sender_id: Buffer;
+    recipient_id: Buffer;
+    asset_id: Buffer;
+    amount: bigint;
+  }
+> {
+  return {
+    name: "ft4.has_pending_create_account_transfer_for_strategy",
+    args: {
+      strategy_name: strategyName,
+      sender_blockchain_rid: formatter.ensureBuffer(senderBlockchainRid),
+      sender_id: formatter.ensureBuffer(senderId),
+      recipient_id: formatter.ensureBuffer(recipientId),
+      asset_id: formatter.ensureBuffer(assetId),
+      amount,
     },
   };
 }
