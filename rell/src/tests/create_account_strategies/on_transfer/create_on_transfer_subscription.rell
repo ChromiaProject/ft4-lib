@@ -7,6 +7,7 @@ import ^^^^.lib.ft4.utils;
 import ^^^^.lib.ft4.ft4_basic_dev.*;
 import test_utils: ^^^^.lib.ft4.test.utils;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
+import strategies_ext: ^^^^.lib.ft4.accounts.strategies.external;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
 import asset_utils: ^^^.assets.utils;
@@ -55,7 +56,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     var last_block_time = rell.test.last_block_time;
     rell.test.tx()
         .op(subscription.ras_transfer_subscription(asset.id, asset_utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 

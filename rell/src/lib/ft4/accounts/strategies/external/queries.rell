@@ -1,0 +1,2 @@
+query get_register_account_message(strategy_name: name, gtv) =
+    strategies.get_register_account_message(strategy_name, gtv);

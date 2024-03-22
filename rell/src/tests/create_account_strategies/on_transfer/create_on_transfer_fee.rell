@@ -5,6 +5,7 @@ import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.assets;
 import ^^^^.lib.ft4.ft4_basic_dev.*;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
+import strategies_ext: ^^^^.lib.ft4.accounts.strategies.external;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
 import ^^^^.lib.ft4.accounts.strategies.open;
@@ -51,7 +52,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
 
     rell.test.tx()
         .op(fee.ras_transfer_fee(asset.id, utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -101,7 +102,7 @@ function test_can_complete_pending_transfers_when_account_is_registered_with_dir
 
     rell.test.tx()
         .op(open.ras_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 

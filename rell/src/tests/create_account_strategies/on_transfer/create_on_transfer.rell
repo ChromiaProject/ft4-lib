@@ -5,6 +5,7 @@ import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.assets;
 import ^^^^.lib.ft4.ft4_basic_dev.*;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
+import strategies_ext: ^^^^.lib.ft4.accounts.strategies.external;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.open;
 import ^^^.assets.utils;
@@ -43,7 +44,7 @@ function test_create_account_on_internal_transfer_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -123,7 +124,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
 
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
 
@@ -165,7 +166,7 @@ function test_multiple_internal_transfers_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -213,7 +214,7 @@ function test_create_account_on_internal_transfer_success_with_any_asset() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.charlie)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
 
@@ -275,7 +276,7 @@ function test_create_account_on_crosschain_transfer_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -481,7 +482,7 @@ function test_multiple_crosschain_transfers_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 

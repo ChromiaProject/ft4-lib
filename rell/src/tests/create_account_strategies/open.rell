@@ -3,6 +3,7 @@ module;
 
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
+import strategies_ext: lib.ft4.accounts.strategies.external;
 import lib.ft4.accounts.strategies.open;
 
 import lib.ft4.test.utils. { evm_sign };
@@ -15,7 +16,7 @@ function test_account_can_be_registered_with_open_strategy() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -39,9 +40,9 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(strategies.register_account_evm_signatures([signature]))
+        .op(strategies_ext.register_account_evm_signatures([signature]))
         .op(open)
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .run();
 
     val account = accounts.account @? { .id == evm_address.hash() };
@@ -57,7 +58,7 @@ function test_account_registration_fails_with_invalid_ft_signature() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor, null))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("Missing signature for signer <%s>".format(rell.test.pubkeys.alice));
 }
@@ -77,9 +78,9 @@ function test_account_registration_fails_with_invalid_evm_signature() {
     val signature = evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
-        .op(strategies.register_account_evm_signatures([signature]))
+        .op(strategies_ext.register_account_evm_signatures([signature]))
         .op(open)
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .run_must_fail("Missing signature for signer <0x1563915e194d8cfba1943570603f7606a3115508>");
 }
 
@@ -138,7 +139,7 @@ function test_account_registration_fails_when_account_already_exists() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor, null))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -148,7 +149,7 @@ function test_account_registration_fails_when_account_already_exists() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor, null))
-        .op(strategies.register_account())
+        .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.alice)
         .nop()
         .run_must_fail("duplicate key value violates unique constraint");

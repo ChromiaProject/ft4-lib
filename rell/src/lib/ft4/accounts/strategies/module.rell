@@ -4,17 +4,13 @@ module;
 import ^^.accounts;
 import ^^.auth;
 
-operation register_account() {
-    _register_account();
-}
-
 function get_strategy(strategy_name: name): _strategy {
     val strategies = strategy();
     require(strategy_name in strategies, "Strategy <%s> is not loaded or does not exist.".format(strategy_name));
     return strategies[strategy_name];
 }
 
-function _register_account(): accounts.account {
+function register_account(): accounts.account {
     val tx_operations = op_context.get_all_operations();
     val prev_op = tx_operations[op_context.op_index-1];
     val strategy_name = prev_op.name;
@@ -117,7 +113,7 @@ function load_evm_signatures(): list<auth.signature> {
         [];
 }
 
-query get_register_account_message(strategy_name: name, gtv) {
+function get_register_account_message(strategy_name: name, gtv) {
     val strategy = get_strategy(strategy_name);
 
     val account_details = strategy.account_details(gtv);
@@ -155,5 +151,3 @@ function multi_sig_message(args: accounts.multi_sig_args) {
     message = message + "\nRequired signatures: %d\n\n".format(args.signatures_required);
     return message + "Flags:\n%s".format(args.flags);
 }
-
-operation register_account_evm_signatures(signatures: list<auth.signature>) {}
