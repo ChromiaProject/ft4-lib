@@ -98,7 +98,11 @@ describe("Subscription account creation single step", () => {
     );
 
     const { account: senderAccount } = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(20, 5);
@@ -138,7 +142,7 @@ describe("Subscription account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection,
+        recipientConnection.client,
         keyStore,
         subscription(senderConnection.blockchainRid, asset, authDescriptor),
       )
@@ -172,7 +176,11 @@ describe("Subscription account creation single step", () => {
     );
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
     const senderAccount = senderSession.account;
 
@@ -204,7 +212,7 @@ describe("Subscription account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection,
+        recipientConnection.client,
         keyStore,
         subscription(senderConnection.blockchainRid, asset, authDescriptor),
       )
@@ -221,7 +229,11 @@ describe("Subscription account creation single step", () => {
     );
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
     const senderAccount = senderSession.account;
 
@@ -253,7 +265,7 @@ describe("Subscription account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection,
+        recipientConnection.client,
         keyStore,
         subscription(senderConnection.blockchainRid, asset, authDescriptor),
       )
@@ -271,11 +283,19 @@ describe("Subscription account creation single step", () => {
     );
 
     const { account: unrelatedAccount } = (
-      await registerAccount(unrelatedConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        unrelatedConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(20, 5);
@@ -312,7 +332,7 @@ describe("Subscription account creation single step", () => {
     expect(_subscriptionAssets).toBeTruthy();
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       subscription(unrelatedConnection.blockchainRid, asset, authDescriptor),
     );
@@ -334,12 +354,16 @@ describe("Subscription account creation single step", () => {
       keyStore.id,
     );
 
-    await registerAccount(senderConnection, keyStore, open(authDescriptor));
+    await registerAccount(
+      senderConnection.client,
+      keyStore,
+      open(authDescriptor),
+    );
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       subscription(
         senderConnection.blockchainRid,
@@ -370,7 +394,7 @@ describe("Subscription account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       subscription(senderConnection.blockchainRid, asset, authDescriptor),
     );
@@ -394,7 +418,11 @@ describe("Subscription account creation single step", () => {
     );
 
     const { account: senderAccount } = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(0.01, 5);
@@ -409,7 +437,7 @@ describe("Subscription account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       subscription(senderConnection.blockchainRid, asset, authDescriptor),
     );
@@ -432,7 +460,7 @@ describe("Subscription account creation single step", () => {
     );
 
     const { session } = await registerAccount(
-      senderConnection,
+      senderConnection.client,
       keyStore,
       open(authDescriptor),
     );
@@ -454,13 +482,13 @@ describe("Subscription account creation single step", () => {
     );
 
     await registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       subscription(senderConnection.blockchainRid, asset, authDescriptor),
     );
 
     const promise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       subscription(senderConnection.blockchainRid, asset, authDescriptor),
     );

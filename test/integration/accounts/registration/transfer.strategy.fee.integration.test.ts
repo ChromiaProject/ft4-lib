@@ -73,7 +73,7 @@ describe("Test transfer with fee", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
       transferFee(asset, authDescriptor),
     );
@@ -121,7 +121,7 @@ describe("Test transfer with fee", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
       open(authDescriptor),
     );

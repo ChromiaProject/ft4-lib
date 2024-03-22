@@ -98,7 +98,11 @@ describe("Fee account creation single step", () => {
     );
 
     const { account: senderAccount } = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(20, 5);
@@ -137,7 +141,7 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection,
+        recipientConnection.client,
         keyStore,
         fee(senderConnection.blockchainRid, asset, authDescriptor),
       )
@@ -171,7 +175,11 @@ describe("Fee account creation single step", () => {
     );
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(20, 5);
@@ -209,7 +217,11 @@ describe("Fee account creation single step", () => {
     );
 
     const recipientSession = (
-      await registerAccount(recipientConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        recipientConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     expect(recipientSession.account.id).toEqual(recipientId);
@@ -240,7 +252,11 @@ describe("Fee account creation single step", () => {
     );
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
     const senderAccount = senderSession.account;
 
@@ -272,7 +288,7 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection,
+        recipientConnection.client,
         keyStore,
         fee(senderConnection.blockchainRid, asset, authDescriptor),
       )
@@ -288,7 +304,11 @@ describe("Fee account creation single step", () => {
     );
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
     const senderAccount = senderSession.account;
 
@@ -318,7 +338,7 @@ describe("Fee account creation single step", () => {
 
     const recipientSession = (
       await registerAccount(
-        recipientConnection,
+        recipientConnection.client,
         keyStore,
         fee(senderConnection.blockchainRid, asset, authDescriptor),
       )
@@ -335,11 +355,19 @@ describe("Fee account creation single step", () => {
     );
 
     const { account: unrelatedAccount } = (
-      await registerAccount(unrelatedConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        unrelatedConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const senderSession = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(20, 5);
@@ -375,7 +403,7 @@ describe("Fee account creation single step", () => {
     expect(_feeAssets).toBeTruthy();
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       fee(unrelatedConnection.blockchainRid, asset, authDescriptor),
     );
@@ -397,12 +425,16 @@ describe("Fee account creation single step", () => {
       keyStore.id,
     );
 
-    await registerAccount(senderConnection, keyStore, open(authDescriptor));
+    await registerAccount(
+      senderConnection.client,
+      keyStore,
+      open(authDescriptor),
+    );
 
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       fee(
         senderConnection.blockchainRid,
@@ -433,7 +465,7 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
@@ -457,7 +489,11 @@ describe("Fee account creation single step", () => {
     );
 
     const { account: senderAccount } = (
-      await registerAccount(senderConnection, keyStore, open(authDescriptor))
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        open(authDescriptor),
+      )
     ).session;
 
     const startingAmount = createAmount(0.01, 5);
@@ -472,7 +508,7 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(sigProv.pubKey);
 
     const recipientSessionPromise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
@@ -495,7 +531,7 @@ describe("Fee account creation single step", () => {
     );
 
     const { session } = await registerAccount(
-      senderConnection,
+      senderConnection.client,
       keyStore,
       open(authDescriptor),
     );
@@ -516,13 +552,13 @@ describe("Fee account creation single step", () => {
     );
 
     await registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );
 
     const promise = registerAccount(
-      recipientConnection,
+      recipientConnection.client,
       keyStore,
       fee(senderConnection.blockchainRid, asset, authDescriptor),
     );

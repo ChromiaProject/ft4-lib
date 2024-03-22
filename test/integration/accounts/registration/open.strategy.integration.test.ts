@@ -31,7 +31,7 @@ describe("Test open strategy", () => {
     );
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
       open(authDescriptor),
     );
@@ -53,7 +53,7 @@ describe("Test open strategy", () => {
     const loginKeyStore = createInMemoryLoginKeyStore();
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
       open(authDescriptor, {
         loginKeyStore,
@@ -98,7 +98,7 @@ describe("Test open strategy", () => {
     const loginKeyStore = createInMemoryLoginKeyStore();
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
       open(authDescriptor, {
         loginKeyStore,
@@ -140,7 +140,7 @@ describe("Test open strategy", () => {
     );
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
       open(authDescriptor),
     );
@@ -162,7 +162,7 @@ describe("Test open strategy", () => {
     const loginKeyStore = createInMemoryLoginKeyStore();
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
       open(authDescriptor, {
         loginKeyStore,

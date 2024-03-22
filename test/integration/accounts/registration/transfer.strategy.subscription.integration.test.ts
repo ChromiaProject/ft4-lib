@@ -77,7 +77,7 @@ describe("Test transfer with subscription", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
       transferSubscription(asset, authDescriptor),
     );

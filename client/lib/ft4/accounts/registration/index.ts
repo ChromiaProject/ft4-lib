@@ -1,12 +1,12 @@
 import {
-  Connection,
   EvmKeyStore,
   FtKeyStore,
   createAuthenticator,
+  createConnection,
 } from "@ft4/index";
 import { Strategy } from "./types";
 import { createAuthDataService, createSession } from "@ft4/ft-session";
-import { Operation, Queryable, gtv } from "postchain-client";
+import { IClient, Operation, Queryable, gtv } from "postchain-client";
 import { registerAccountMessage } from "./queries";
 import {
   registerAccountEvmSignatures,
@@ -20,11 +20,12 @@ import {
 } from "@ft4/authentication/login/index";
 
 export async function registerAccount(
-  connection: Connection,
+  client: IClient,
   masterKeyStore: FtKeyStore | EvmKeyStore,
   strategy: Strategy,
   registerAccountOperation: Operation = registerAccountOp(),
 ): Promise<SessionWithLogout> {
+  const connection = createConnection(client);
   const { strategyOperation, loginKeyStore, disposableKeyStore } =
     await strategy.getRegistrationDetails(connection, masterKeyStore);
 

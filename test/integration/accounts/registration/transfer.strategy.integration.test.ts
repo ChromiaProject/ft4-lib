@@ -72,7 +72,7 @@ describe("Test transfer strategy", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
       transferOpen(authDescriptor),
     );
@@ -97,7 +97,11 @@ describe("Test transfer strategy", () => {
     );
 
     await expect(
-      registerAccount(connection, keyStore, transferOpen(authDescriptor)),
+      registerAccount(
+        connection.client,
+        keyStore,
+        transferOpen(authDescriptor),
+      ),
     ).rejects.toThrow(TxRejectedError);
   });
 
@@ -146,7 +150,11 @@ describe("Test transfer strategy", () => {
       keyStore.id,
     );
 
-    await registerAccount(connection, keyStore, transferOpen(authDescriptor));
+    await registerAccount(
+      connection.client,
+      keyStore,
+      transferOpen(authDescriptor),
+    );
 
     const hasPendingAccountCreation = await connection.query(
       hasPendingCreateAccountTransferForStrategy(
