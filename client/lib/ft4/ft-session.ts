@@ -8,7 +8,7 @@ import {
   getVersion,
   nop,
 } from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { Buffer } from "buffer";
 import {
   DictPair,

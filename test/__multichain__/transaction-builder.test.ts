@@ -1,5 +1,5 @@
 import { nop } from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { emptyOp } from "../util/util";
 import { AuthFlag } from "@ft4/index";
 import { fetchBlockchains } from "./util/blockchain";

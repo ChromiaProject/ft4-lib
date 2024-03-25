@@ -1,13 +1,11 @@
 import { Amount } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
 import { days } from "@ft4/index";
+import { BufferId, getTransactionRid, nop } from "@ft4/utils";
 import {
-  BufferId,
+  transactionBuilder,
   OnAnchoredHandlerData,
-  getTransactionRid,
-  nop,
-} from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+} from "@ft4/transaction-builder";
 import { Buffer } from "buffer";
 import {
   Operation,

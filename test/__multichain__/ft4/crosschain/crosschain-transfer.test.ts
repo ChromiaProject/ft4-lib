@@ -6,7 +6,8 @@ import {
   days,
   registerCrosschainAsset,
 } from "@ft4/index";
-import { BufferId, transactionBuilder } from "@ft4/utils";
+import { BufferId } from "@ft4/utils";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { Operation, RawGtx, gtv } from "postchain-client";
 import AccountBuilder from "../../../util/account-builder";
 import adminUser from "../../../util/admin_user";

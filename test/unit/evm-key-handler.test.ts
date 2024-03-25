@@ -10,7 +10,7 @@ import { createAuthenticator } from "@ft4/authentication";
 import { createEvmKeyHandler, evmAuth } from "@ft4/authentication/evm";
 import { createInMemoryEvmKeyStore } from "@ft4/authentication/evm/key-stores/in-memory";
 import { op } from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { createStubClient } from "postchain-client";
 import { createFakeAuthDataService } from "../util/fake-auth-data-service";
 import { testAdFromRegistration } from "../util/util";

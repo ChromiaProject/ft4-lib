@@ -33,7 +33,7 @@ import {
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
+import { transactionBuilder } from "@ft4/transaction-builder";
 import { BufferId } from "@ft4/utils/types";
 
 function generateId(n: number): Buffer {

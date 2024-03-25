@@ -1,7 +1,7 @@
 import { Buffer } from "buffer";
 import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "@ft4/events";
-import { TransactionBuilder } from "@ft4/utils/transaction-builder";
+import { TransactionBuilder } from "@ft4/transaction-builder";
 import { BufferId } from "@ft4/utils";
 import { SignedTransaction, TransactionReceipt } from "postchain-client";
 import { Connection } from "@ft4/index";

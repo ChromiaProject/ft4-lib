@@ -19,7 +19,7 @@ import {
 } from "@ft4/accounts/auth-descriptor";
 import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
 import { nop, op } from "@ft4/utils";
-import { AuthorizationError } from "@ft4/utils/transaction-builder";
+import { AuthorizationError } from "@ft4/transaction-builder";
 import { BufferId } from "@ft4/utils/types";
 import {
   addAuthDescriptorTo,

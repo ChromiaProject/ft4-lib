@@ -105,11 +105,6 @@ export async function getAllAuthHandlers(
 export { retrievePaginatedEntity } from "./entity-retriever";
 export * from "./exposed-operations";
 export * from "./queries";
-export {
-  transactionBuilder,
-  TransactionBuilder,
-  OnAnchoredHandlerData,
-} from "./transaction-builder";
 
 export function compactArray<T>(elements: (T | null)[]): T[] {
   return elements.filter((element): element is T => element !== null);

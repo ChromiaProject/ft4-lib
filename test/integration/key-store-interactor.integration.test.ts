@@ -19,7 +19,7 @@ import AccountBuilder from "@ft4/util/account-builder";
 import { useChromiaNode } from "@ft4/util/chromia-node";
 import { nop, op } from "@ft4/utils";
 import { nonce } from "@ft4/authentication/queries";
-import { AuthorizationError } from "@ft4/utils/transaction-builder";
+import { AuthorizationError } from "@ft4/transaction-builder";
 import { createAuthenticator, createFtKeyHandler } from "@ft4/authentication";
 import { createTestAuthDescriptor } from "@ft4/util/util";
 import { deleteAuthDescriptor } from "@ft4/accounts/account-operations";

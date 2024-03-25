@@ -3,7 +3,7 @@ import { Asset } from "./asset";
 import { Buffer } from "buffer";
 import { BufferId, PaginatedEntity } from "@ft4/utils";
 import { Config } from "@ft4/utils/types";
-import { TransactionBuilder } from "@ft4/utils/transaction-builder";
+import { TransactionBuilder } from "@ft4/transaction-builder";
 import {
   IClient,
   Queryable,

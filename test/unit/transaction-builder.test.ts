@@ -53,7 +53,7 @@ import { nop } from "@ft4/utils";
 import {
   AuthorizationError,
   transactionBuilder,
-} from "@ft4/utils/transaction-builder";
+} from "@ft4/transaction-builder";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import {
@@ -66,7 +66,7 @@ import {
 } from "postchain-client";
 import { createStubClient } from "postchain-client";
 import { formatter } from "postchain-client";
-import { AnchoringTimeoutError } from "@ft4/utils/transaction-builder";
+import { AnchoringTimeoutError } from "@ft4/transaction-builder";
 import {
   getBlockAnchoringTransaction,
   SignedTransaction,

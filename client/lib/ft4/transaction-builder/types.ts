@@ -8,7 +8,7 @@ import {
   Web3PromiEvent,
 } from "postchain-client";
 import { BufferId } from "@ft4/utils";
-import { RequireTogether } from "../types";
+import { RequireTogether } from "@ft4/utils/types";
 
 export type TransactionBuilder = {
   /**

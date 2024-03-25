@@ -99,6 +99,14 @@ export {
   createKeyStoreInteractor,
 } from "./ft-session";
 
+export {
+  AuthorizationError,
+  AnchoringTimeoutError,
+  OnAnchoredHandler,
+  OnAnchoredHandlerData,
+  TransactionBuilder,
+} from "./transaction-builder";
+
 // Utils & Others
 export {
   op,

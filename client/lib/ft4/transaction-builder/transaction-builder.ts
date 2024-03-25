@@ -30,8 +30,8 @@ import {
   getTransactionRid,
   BufferId,
 } from "@ft4/utils";
-import { OperationNotExistError } from "../errors";
-import { TxContext } from "../types";
+import { OperationNotExistError } from "@ft4/utils/errors";
+import { TxContext } from "@ft4/utils/types";
 import {
   AnchoringTimeoutError,
   AuthorizationError,

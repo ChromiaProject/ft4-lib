@@ -7,7 +7,7 @@ import { createTestAuthDescriptor } from "../util/util";
 import { createAccount } from "../util/util";
 import { getSessionForAccount } from "../util/util";
 import { Session } from "@ft4/index";
-import { AuthorizationError } from "@ft4/utils/transaction-builder/index";
+import { AuthorizationError } from "@ft4/transaction-builder";
 import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
 import { AnyAuthDescriptor } from "@ft4/index";
 import { rejectedOp } from "../util/util";
