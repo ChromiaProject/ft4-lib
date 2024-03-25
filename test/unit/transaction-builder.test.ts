@@ -62,7 +62,7 @@ import {
   Web3PromiEvent,
 } from "postchain-client";
 import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
-import eth from "ethers";
+import { ethers } from "ethers";
 import { createEvmKeyHandler } from "@ft4/authentication";
 import { testAdFromRegistration } from "../util/util";
 import { SigningError } from "@ft4/authentication";
@@ -428,7 +428,7 @@ describe("Transaction Builder", () => {
 
     // Rewire the keystore to let us fake a user rejection
     const signMessage = jest.fn().mockImplementation(() => {
-      const err = new Error() as eth.ActionRejectedError;
+      const err = new Error() as ethers.ActionRejectedError;
       err.code = "ACTION_REJECTED";
       err.reason = "rejected";
       err.message = "signing rejected";

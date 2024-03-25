@@ -21,10 +21,8 @@ class MockedBrowserProvider {
 
 import * as original from "ethers";
 
-export default {
-  ethers: {
-    BrowserProvider: MockedBrowserProvider,
-    Wallet: original.Wallet,
-    Signature: original.Signature,
-  },
+export const ethers = {
+  BrowserProvider: MockedBrowserProvider,
+  Wallet: original.Wallet,
+  Signature: original.Signature,
 };

@@ -1,6 +1,6 @@
 import { Operation, formatter } from "postchain-client";
 import { KeyStore } from "..";
-import eth from "ethers";
+import { ethers } from "ethers";
 import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 
@@ -35,13 +35,13 @@ export interface EvmKeyStore extends KeyStore {
 
 export async function signMessage(
   message: string,
-  signer: eth.ethers.Signer,
+  signer: ethers.Signer,
 ): Promise<Signature> {
   return sliceSignature(await signer.signMessage(message));
 }
 
 export function sliceSignature(signature: string): Signature {
-  const { r, s, v } = eth.ethers.Signature.from(signature);
+  const { r, s, v } = ethers.Signature.from(signature);
   return {
     r: Buffer.from(r.slice(2), "hex"),
     s: Buffer.from(s.slice(2), "hex"),
