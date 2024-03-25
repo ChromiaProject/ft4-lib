@@ -13,3 +13,4 @@
 ### Fixed 🔧
 
 - Fix TS client build.
+- Fix use of ethers library.
