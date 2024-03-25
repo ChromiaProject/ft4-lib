@@ -7,5 +7,3 @@
 ### Added ✅
 
 ### Fixed 🔧
-
-- Fix TS client build.
