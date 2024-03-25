@@ -3,6 +3,7 @@
 ### Breaking 💔
 
 - `registration.registerAccount` now accepts an IClient instead of a Connection.
+- Removed the `buildUnsigned` method from TransactionBuilder. 
 
 ### Changed 🪙
 
@@ -10,6 +11,9 @@
 
 - Added ttl to crosschainTransfer, which specifies after how much time the transaction should become invalid and must be reverted back to the starting chain.
 
+- `addWithAnchoring` method in `TransactionBuilder` to get callback when transaction is anchored in a specific target
+  chain.
+- 
 ### Fixed 🔧
 
 - Fix TS client build.

@@ -5,6 +5,7 @@ import {
   isFtKeyStore,
   FtKeyStore,
 } from "@ft4/authentication";
+import { SigningError } from "@ft4/authentication";
 import { Buffer } from "buffer";
 import {
   Operation,
@@ -12,7 +13,6 @@ import {
   IClient,
   isBlockAnchored,
   getAnchoringClient,
-  createClient,
   BlockAnchoringException,
   SignedTransaction,
   TransactionReceipt,
@@ -23,6 +23,8 @@ import {
   GTX,
   Web3PromiEvent,
 } from "postchain-client";
+import { getBlockAnchoringTransaction } from "postchain-client";
+import { formatter, createClient } from "postchain-client";
 import {
   getNonceIdForTxContext,
   getTransactionRid,
@@ -41,14 +43,12 @@ import {
 } from "./types";
 import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
-import { AnchoringTransaction } from "postchain-client";
-import { getBlockAnchoringTransaction } from "postchain-client";
-import { formatter } from "postchain-client";
-import { SigningError } from "@ft4/authentication";
+import { getDirectoryClient } from "@ft4/utils/directory-chain";
+import { getBlockchainApiUrls } from "@ft4/utils/directory-chain";
 
 const defaultConfig: TransactionBuilderConfig = {
-  retryCount: 10,
-  waitTimeMs: 500,
+  retryCount: 40,
+  waitTimeMs: 1000,
 };
 
 /**
@@ -69,13 +69,95 @@ export function transactionBuilder(
   let _noopAuthenticator: Authenticator;
   let _directoryClient: IClient;
   let _clusterAnchoringClient: IClient;
-  let _systemAnchoringClient: IClient;
+  let _systemAnchoringChain: Buffer;
 
   function add(
     operation: Operation,
     onAnchoredHandler?: OnAnchoredHandler,
   ): TransactionBuilder {
-    _operations.push({ operation, authenticator, onAnchoredHandler });
+    _operations.push({
+      operation,
+      authenticator,
+      onAnchoredHandler,
+    });
+    return me;
+  }
+
+  function addWithAuthenticator(
+    operation: Operation,
+    authenticator: Authenticator,
+    onAnchoredHandler?: OnAnchoredHandler,
+  ): TransactionBuilder {
+    _operations.push({
+      operation,
+      authenticator,
+      onAnchoredHandler,
+    });
+    return me;
+  }
+
+  function addWithoutAuthenticator(
+    operation: Operation,
+    onAnchoredHandler?: OnAnchoredHandler,
+  ): TransactionBuilder {
+    if (_noopAuthenticator === undefined) {
+      _noopAuthenticator = createNoopAuthenticator(
+        authenticator.authDataService,
+      );
+    }
+    _operations.push({
+      operation,
+      authenticator: _noopAuthenticator,
+      onAnchoredHandler,
+    });
+    return me;
+  }
+
+  function addWithAnchoring(
+    operation: Operation,
+    targetBlockchainRid: BufferId,
+    onAnchoredHandler: OnAnchoredHandler,
+  ): TransactionBuilder {
+    _operations.push({
+      operation,
+      authenticator,
+      targetBlockchainRid: formatter.ensureBuffer(targetBlockchainRid),
+      onAnchoredHandler,
+    });
+    return me;
+  }
+
+  function addWithAnchoringWithAuthenticator(
+    operation: Operation,
+    authenticator: Authenticator,
+    targetBlockchainRid: BufferId,
+    onAnchoredHandler: OnAnchoredHandler,
+  ): TransactionBuilder {
+    _operations.push({
+      operation,
+      authenticator,
+      targetBlockchainRid: formatter.ensureBuffer(targetBlockchainRid),
+      onAnchoredHandler,
+    });
+    return me;
+  }
+
+  function addWithAnchoringWithoutAuthenticator(
+    operation: Operation,
+    targetBlockchainRid: BufferId,
+    onAnchoredHandler: OnAnchoredHandler,
+  ): TransactionBuilder {
+    if (_noopAuthenticator === undefined) {
+      _noopAuthenticator = createNoopAuthenticator(
+        authenticator.authDataService,
+      );
+    }
+    _operations.push({
+      operation,
+      authenticator: _noopAuthenticator,
+      targetBlockchainRid: formatter.ensureBuffer(targetBlockchainRid),
+      onAnchoredHandler,
+    });
     return me;
   }
 
@@ -100,15 +182,6 @@ export function transactionBuilder(
       .filter((store): store is FtKeyStore => !!store);
   }
 
-  async function buildUnsigned(): Promise<GTX> {
-    if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
-      throw new Error(
-        "Cannot build transaction with onAnchoredHandlers, use buildAndSendWithAnchoring() instead",
-      );
-
-    return await _buildUnsigned();
-  }
-
   async function _buildUnsigned(): Promise<GTX> {
     const [operations, keyHandlers] = await authenticateOperations(
       _operations,
@@ -117,29 +190,24 @@ export function transactionBuilder(
 
     keyHandlers.forEach((kh) => _keysUsed.push(kh));
 
-    const txn: GTX = {
+    return {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
-      operations: [],
+      operations: operations.map((op: Operation) => ({
+        opName: op.name,
+        args: op.args ?? [],
+      })),
       signers: getSigners(_keysUsed),
       signatures: [],
     };
-
-    const addOperation = (op: Operation) => {
-      txn.operations.push({ opName: op.name, args: op.args ?? [] });
-    };
-
-    operations.forEach((op: Operation | Operation[]) => {
-      Array.isArray(op) ? op.forEach(addOperation) : addOperation(op);
-    });
-    return txn;
   }
 
   async function authenticateOperations(
     opContexts: OperationContext[],
     ctx: TxContext,
   ): Promise<[Operation[], KeyHandler[]]> {
+    const processedOperations: Operation[] = [];
     const keyHandlers: KeyHandler[] = [];
-    const processedOperations: Operation[][] = [];
+    let opIndex = 0;
 
     for (const opContext of opContexts) {
       const { operation, authenticator } = opContext;
@@ -154,7 +222,9 @@ export function transactionBuilder(
       }
 
       if (operation.name === "nop") {
-        processedOperations.push([operation]);
+        processedOperations.push(operation);
+        opContext.opIndex = opIndex;
+        opIndex++;
         continue;
       }
 
@@ -185,15 +255,11 @@ export function transactionBuilder(
         keyHandler.authDescriptor.id,
       );
       ctx[nonceId] = (ctx[nonceId] ?? 0) + 1;
-      processedOperations.push(ops);
+      ops.forEach((op) => processedOperations.push(op));
+      opIndex += ops.length;
+      opContext.opIndex = opIndex - 1;
     }
-    let opsToReturn: Operation[] = [];
-    processedOperations.forEach((item) => {
-      opsToReturn = Array.isArray(item)
-        ? opsToReturn.concat(item)
-        : [...opsToReturn, item];
-    });
-    return [opsToReturn, keyHandlers];
+    return [processedOperations, keyHandlers];
   }
 
   async function build(): Promise<Buffer> {
@@ -279,25 +345,14 @@ export function transactionBuilder(
         })
         .then(([tx, receipt]) => {
           promiEvent.emit("confirmed", receipt);
-          return Promise.all([tx, receipt, waitUntilAnchored(tx)]);
+          return Promise.all([
+            tx,
+            receipt,
+            handleAnchoring(tx, receipt.transactionRid),
+          ]);
         })
-        .then(([tx, receipt, rawTx]) => {
-          const operationsWithHandlers = _operations.filter(
-            (op: OperationContext) => !!op.onAnchoredHandler,
-          );
-          if (operationsWithHandlers.length) {
-            if (rawTx) {
-              const createProof = createCreateProof(rawTx);
-              invokeOnAnchoringHandlers(operationsWithHandlers, {
-                rawTx,
-                createProof,
-              });
-            } else {
-              invokeOnAnchoringHandlers(operationsWithHandlers, undefined);
-            }
-          }
-
-          if (rawTx) {
+        .then(([tx, receipt, isAnchored]) => {
+          if (isAnchored) {
             resolve({
               tx,
               receipt,
@@ -311,83 +366,143 @@ export function transactionBuilder(
     return promiEvent;
   }
 
-  async function waitUntilAnchored(
+  async function handleAnchoring(
     tx: SignedTransaction,
-  ): Promise<RawGtx | null> {
-    const directoryClient = await ensureDirectoryClient();
+    txRid: Buffer,
+  ): Promise<boolean> {
+    const operationsWithHandlers = _operations.filter(
+      (op: OperationContext) => !!op.onAnchoredHandler,
+    );
+
+    const clusterAnchorTxRid = await waitUntilClusterAnchored(txRid);
+
+    if (
+      clusterAnchorTxRid &&
+      (await waitUntilAnchoredInChain(
+        await createClient({
+          nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
+          blockchainRid: formatter.toString(await ensureSystemAnchoringChain()),
+        }),
+        clusterAnchorTxRid,
+      ))
+    ) {
+      const rawTx = gtv.decode(tx) as RawGtx;
+      const createProof = createCreateProof(rawTx);
+
+      const handlersWithoutChain = operationsWithHandlers.filter(
+        (op) => !op.targetBlockchainRid,
+      );
+      const handlersByChain = new Map<string, OperationContext[]>();
+      operationsWithHandlers
+        .filter((op) => op.targetBlockchainRid)
+        .forEach((op) => {
+          const targetBlockchainRidHex = formatter.toString(
+            op.targetBlockchainRid!,
+          );
+          if (!handlersByChain.has(targetBlockchainRidHex)) {
+            handlersByChain.set(targetBlockchainRidHex, []);
+          }
+          handlersByChain.get(targetBlockchainRidHex)!.push(op);
+        });
+
+      invokeOnAnchoringHandlers(handlersWithoutChain, {
+        rawTx,
+        createProof,
+      });
+
+      for (const [targetBlockchainRidHex, ops] of handlersByChain) {
+        const clientToSystemAnchoringChainReplicaInTargetChainCluster =
+          await createClient({
+            nodeUrlPool: await getBlockchainApiUrls(
+              await ensureDirectoryClient(),
+              formatter.toBuffer(targetBlockchainRidHex),
+            ),
+            blockchainRid: formatter.toString(
+              await ensureSystemAnchoringChain(),
+            ),
+          });
+        if (
+          await waitUntilAnchoredInChain(
+            clientToSystemAnchoringChainReplicaInTargetChainCluster,
+            clusterAnchorTxRid,
+          )
+        ) {
+          invokeOnAnchoringHandlers(ops, {
+            rawTx,
+            createProof,
+          });
+        } else {
+          invokeOnAnchoringHandlers(ops, undefined);
+        }
+      }
+      return true;
+    } else {
+      invokeOnAnchoringHandlers(operationsWithHandlers, undefined);
+      return false;
+    }
+  }
+
+  async function waitUntilClusterAnchored(
+    txRid: Buffer,
+  ): Promise<Buffer | null> {
     if (_clusterAnchoringClient === undefined) {
       _clusterAnchoringClient = await getAnchoringClient(
-        directoryClient,
+        await ensureDirectoryClient(),
         client.config.blockchainRid,
       );
     }
-    const rawTx = gtv.decode(tx) as RawGtx;
-    const txRid = getTransactionRid(rawTx);
 
-    let clusterAnchoringTransaction: AnchoringTransaction | null = null;
     for (let i = 0; i < config.retryCount; ++i) {
       await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
 
       try {
-        clusterAnchoringTransaction = await getBlockAnchoringTransaction(
+        return (await getBlockAnchoringTransaction(
           client,
           _clusterAnchoringClient,
           txRid,
-        );
+        ))!.txRid;
       } catch (error) {
         if (
-          error instanceof BlockAnchoringException ||
-          error instanceof SystemChainException
+          !(
+            error instanceof BlockAnchoringException ||
+            error instanceof SystemChainException
+          )
         ) {
-          clusterAnchoringTransaction = null;
-        } else {
           throw error;
         }
       }
-
-      if (clusterAnchoringTransaction) break;
     }
+    return null;
+  }
 
-    let isAnchored = false;
-    if (clusterAnchoringTransaction) {
-      if (_systemAnchoringClient === undefined) {
-        const systemAnchoringChain =
-          await getSystemAnchoringChain(directoryClient);
-        _systemAnchoringClient = await createClient({
-          nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
-          blockchainRid: formatter.toString(systemAnchoringChain),
-        });
-      }
+  async function waitUntilAnchoredInChain(
+    systemAnchoringClient: IClient,
+    txRid: Buffer,
+  ) {
+    for (let i = 0; i < config.retryCount; ++i) {
+      await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
 
-      for (let i = 0; i < config.retryCount; ++i) {
-        await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
-
-        try {
-          isAnchored = await isBlockAnchored(
+      try {
+        if (
+          await isBlockAnchored(
             _clusterAnchoringClient,
-            _systemAnchoringClient,
-            clusterAnchoringTransaction.txRid,
-          );
-        } catch (error) {
-          if (
+            systemAnchoringClient,
+            txRid,
+          )
+        )
+          return true;
+      } catch (error) {
+        if (
+          !(
             error instanceof BlockAnchoringException ||
             error instanceof SystemChainException
-          ) {
-            isAnchored = false;
-          } else {
-            throw error;
-          }
+          )
+        ) {
+          throw error;
         }
-
-        if (isAnchored) break;
       }
     }
-
-    if (isAnchored) {
-      return rawTx;
-    } else {
-      return null;
-    }
+    return false;
   }
 
   function createCreateProof(
@@ -401,40 +516,39 @@ export function transactionBuilder(
 
       const directoryClient = await ensureDirectoryClient();
 
-      for (let i = 0; i < config.retryCount; ++i) {
-        await new Promise((resolve) => setTimeout(resolve, config.waitTimeMs));
-        try {
-          const proof = await createIccfProofTx(
-            directoryClient,
-            getTransactionRid(rawTx),
-            gtv.gtvHash(rawTx),
-            rawTx[0][2], // signers
-            client.config.blockchainRid,
-            blockchainRid.toString("hex"),
-            undefined,
-            true,
-          );
+      const proof = await createIccfProofTx(
+        directoryClient,
+        getTransactionRid(rawTx),
+        gtv.gtvHash(rawTx),
+        rawTx[0][2], // signers
+        client.config.blockchainRid,
+        blockchainRid.toString("hex"),
+        undefined,
+        true,
+      );
 
-          const iccfProofOperation = proof.iccfTx.operations[0];
-          proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
-          return iccfProofOperation;
-        } catch (err) {
-          console.log(err);
-          throw err;
-        }
-      }
-      throw new Error("Block was not properly anchored");
+      const iccfProofOperation = proof.iccfTx.operations[0];
+      proofCache.set(blockchainRid.toString("hex"), iccfProofOperation);
+      return iccfProofOperation;
     };
   }
 
   async function ensureDirectoryClient(): Promise<IClient> {
     if (_directoryClient === undefined) {
-      _directoryClient = await createClient({
-        nodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
-        blockchainIid: 0,
-      });
+      _directoryClient = await getDirectoryClient(
+        client.config.endpointPool.map((ep) => ep.url),
+      );
     }
     return _directoryClient;
+  }
+
+  async function ensureSystemAnchoringChain(): Promise<Buffer> {
+    if (_systemAnchoringChain === undefined) {
+      _systemAnchoringChain = await getSystemAnchoringChain(
+        await ensureDirectoryClient(),
+      );
+    }
+    return _systemAnchoringChain;
   }
 
   function invokeOnAnchoringHandlers(
@@ -448,12 +562,12 @@ export function transactionBuilder(
   ) {
     if (data) {
       const { rawTx, createProof } = data;
-      operationsWithHandlers.forEach((op: OperationContext, idx: number) => {
+      operationsWithHandlers.forEach((op: OperationContext) => {
         if (!op.onAnchoredHandler) return;
         op.onAnchoredHandler(
           {
             operation: op.operation,
-            opIndex: idx,
+            opIndex: op.opIndex!,
             tx: rawTx,
             createProof,
           },
@@ -495,32 +609,6 @@ export function transactionBuilder(
     return gtx.serialize(tx);
   }
 
-  function addWithAuthenticator(
-    operation: Operation,
-    authenticator: Authenticator,
-    onAnchoredHandler?: OnAnchoredHandler,
-  ): TransactionBuilder {
-    _operations.push({ operation, authenticator, onAnchoredHandler });
-    return me;
-  }
-
-  function addWithoutAuthenticator(
-    operation: Operation,
-    onAnchoredHandler?: OnAnchoredHandler,
-  ): TransactionBuilder {
-    if (_noopAuthenticator === undefined) {
-      _noopAuthenticator = createNoopAuthenticator(
-        authenticator.authDataService,
-      );
-    }
-    _operations.push({
-      operation,
-      authenticator: _noopAuthenticator,
-      onAnchoredHandler,
-    });
-    return me;
-  }
-
   function getSignersMap(stores: FtKeyStore[]) {
     return stores.reduce(
       (acc, curr: FtKeyStore) => ({
@@ -535,9 +623,11 @@ export function transactionBuilder(
     add,
     addWithAuthenticator,
     addWithoutAuthenticator,
+    addWithAnchoring,
+    addWithAnchoringWithAuthenticator,
+    addWithAnchoringWithoutAuthenticator,
     addSigners,
     build,
-    buildUnsigned,
     buildAndSend,
     buildAndSendWithAnchoring,
     session: client,

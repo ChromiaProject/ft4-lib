@@ -15,9 +15,10 @@ import { SignedTransaction, TransactionReceipt } from "postchain-client";
 describe("transaction builder", () => {
   let connection00: Connection;
   let account00: AuthenticatedAccount;
+  let rid01: Buffer;
 
   beforeEach(async () => {
-    const { multichain00 } = await fetchBlockchains();
+    const { multichain00, multichain01 } = await fetchBlockchains();
 
     connection00 = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
@@ -26,10 +27,13 @@ describe("transaction builder", () => {
     account00 = await AccountBuilder.account(connection00)
       .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
+
+    rid01 = multichain01.rid;
   });
 
   it("calls registered handler when block is anchored in system anchoring chain", async () => {
     const callback: jest.Mock<any, any, any> = jest.fn();
+    const callback2: jest.Mock<any, any, any> = jest.fn();
     const operation = nop();
 
     let builtEvent: SignedTransaction | undefined = undefined;
@@ -40,6 +44,7 @@ describe("transaction builder", () => {
       connection00.client,
     )
       .add(emptyOp(), callback)
+      .addWithAnchoring(emptyOp(), rid01, callback2)
       .add(operation)
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {
@@ -60,9 +65,28 @@ describe("transaction builder", () => {
     expect(callback).toHaveBeenCalledWith(
       anchoredHandlerCallbackParameters(
         connection00.client,
-        [ftAuth(account00.id, authDescriptorId), emptyOp(), operation],
-        0,
+        [
+          ftAuth(account00.id, authDescriptorId),
+          emptyOp(),
+          ftAuth(account00.id, authDescriptorId),
+          emptyOp(),
+          operation,
+        ],
         1,
+      ),
+      null,
+    );
+    expect(callback2).toHaveBeenCalledWith(
+      anchoredHandlerCallbackParameters(
+        connection00.client,
+        [
+          ftAuth(account00.id, authDescriptorId),
+          emptyOp(),
+          ftAuth(account00.id, authDescriptorId),
+          emptyOp(),
+          operation,
+        ],
+        3,
       ),
       null,
     );
