@@ -25,7 +25,9 @@ export type OrchestratorState = {
   currentHopIndex: number;
   path: Buffer[];
   tx?: RawGtx;
+  opIndex?: number;
   initialTx?: RawGtx;
+  initialOpIndex?: number;
 };
 
 export interface OrchestratorBase {
@@ -37,10 +39,7 @@ export interface OrchestratorBase {
     authenticator: Authenticator,
     blockchainRid: Buffer,
   ) => Promise<TransactionBuilder>;
-  performCompleteTransfer: (
-    tx: RawGtx,
-    transfer?: PendingTransfer,
-  ) => Promise<void>;
+  performCompleteTransfer: (tx: RawGtx, opIndex: number) => Promise<void>;
   createIccfProofOperation: (
     targetChainRid: Buffer,
     hopIndex: number,

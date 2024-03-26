@@ -81,8 +81,9 @@ export async function createOrchestrator(
    */
   function performInitTransfer(): Promise<void> {
     return transactionBuilder(authenticator, connection.client)
-      .add(
+      .addWithAnchoring(
         initTransfer(recipientId, assetId, amount, path, Date.now() + ttl),
+        path[0],
         (data: OnAnchoredHandlerData | null, error: Error | null) => {
           if (error) {
             throw new InitTransferError(
@@ -91,7 +92,9 @@ export async function createOrchestrator(
             );
           } else {
             state.tx = data?.tx;
+            state.initialOpIndex = data?.opIndex;
             state.initialTx = data?.tx;
+            state.opIndex = data?.opIndex;
           }
         },
       )
@@ -123,13 +126,13 @@ export async function createOrchestrator(
   async function transfer(): Promise<void> {
     await performInitTransfer();
 
-    if (!state.tx || !state.initialTx) {
+    if (state.tx === undefined || state.opIndex === undefined) {
       throw new OrchestratorError(
         "Unable to perform transfer as tx was not applied properly",
       );
     }
     await orchestrator.walkPath();
-    await orchestrator.performCompleteTransfer(state.tx);
+    await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
   }
 
   return Object.freeze({
@@ -165,17 +168,18 @@ export async function createResumeOrchestrator(
    * Accepts a cross chain transfer that was not completed
    * and resumes it. This function returns when the transfer
    * has been successfully completed.
-   * @param transfer the transfer to resume
    */
   async function resumeTransfer(): Promise<void> {
     state.tx = pendingTransfer.tx;
+    state.opIndex = pendingTransfer.opIndex;
     state.initialTx = pendingTransfer.tx;
+    state.initialOpIndex = pendingTransfer.opIndex;
     for (let i = 0; i < state.path.length; i++) {
       if (
         await isAppliedOnBlockchainRid(
           formatter.ensureBuffer(state.path[i]),
           getTransactionRid(state.tx),
-          pendingTransfer.opIndex,
+          state.opIndex,
         )
       ) {
         state.currentHopIndex = i + 1;
@@ -188,12 +192,12 @@ export async function createResumeOrchestrator(
       state.currentHopIndex === state.path.length - 1
     ) {
       // Transfer already applied, make sure that pending transfer is also cleaned up
-      await orchestrator.performCompleteTransfer(state.tx!, pendingTransfer);
+      await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
       return;
     }
 
     await orchestrator.walkPath();
-    await orchestrator.performCompleteTransfer(state.tx!, pendingTransfer);
+    await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
   }
 
   /**
@@ -245,80 +249,68 @@ async function createBaseOrchestrator(
   /**
    * Apply the transfer operation targeting a specific blockchain.
    * @param {RawGtx} initTransferTx - The tx that was used to initialize the transfer
+   * @param {number} initTransferOpIndex - Op index of `initTransferTx`
    * @param {Buffer} targetChainRid - The ID of the target blockchain.
    * @returns {Promise<void>}
    */
   async function performApplyTransfer(
     initTransferTx: RawGtx,
+    initTransferOpIndex: number,
     targetChainRid: Buffer,
   ): Promise<void> {
-    if (!state.tx) {
+    if (state.tx === undefined) {
       throw new OrchestratorError(
         "Unable to apply transfer for non existing transaction",
       );
     }
 
-    const iccfOp = await createIccfProofOperation(
+    const hopIndex = path.findIndex((brid) => brid.equals(targetChainRid));
+
+    const iccfOp = await createIccfProofOperation(targetChainRid, hopIndex);
+
+    const tb = await getTransactionBuilderForChain(
+      connection,
+      authenticator,
       targetChainRid,
-      path.indexOf(targetChainRid),
     );
 
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise<void>(async (resolve, reject) => {
-      let completed = false;
-      for (let i = 0; i < 20; ++i) {
-        if (completed) break;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        try {
-          await (
-            await getTransactionBuilderForChain(
-              connection,
-              authenticator,
-              targetChainRid,
-            )
-          )
-            .addWithoutAuthenticator(iccfOp)
-            .addWithoutAuthenticator(
-              applyTransfer(
-                initTransferTx,
-                state.tx!,
-                path.indexOf(targetChainRid),
-              ),
-              (data: OnAnchoredHandlerData | null, error: Error | null) => {
-                if (error) {
-                  reject(
-                    new ApplyTransferError(
-                      `Unable to fetch proof: ${error.message}`,
-                      error,
-                    ),
-                  );
-                  return;
-                }
-                state.tx = data?.tx;
-                completed = true;
-              },
-            )
-            .buildAndSendWithAnchoring();
-        } catch {
-          /* Error is sometimes expected here */
-        }
-      }
-      if (completed) {
-        resolve();
-      } else {
-        reject(
-          new ApplyTransferError(
-            "Unable to apply transfer within the specified timeout",
+    const anchoringTargetChain =
+      hopIndex + 1 > path.length - 1
+        ? connection.blockchainRid
+        : path[hopIndex + 1];
+
+    try {
+      await tb
+        .addWithoutAuthenticator(iccfOp)
+        .addWithAnchoringWithoutAuthenticator(
+          applyTransfer(
+            initTransferTx,
+            initTransferOpIndex,
+            state.tx!,
+            state.opIndex!,
+            hopIndex,
           ),
-        );
-      }
-    }).then(() => {
+          anchoringTargetChain,
+          (data: OnAnchoredHandlerData | null, error: Error | null) => {
+            if (error) {
+              throw new ApplyTransferError(
+                `Unable to fetch proof: ${error.message}`,
+                error,
+              );
+            }
+            state.tx = data?.tx;
+            state.opIndex = data?.opIndex;
+          },
+        )
+        .buildAndSendWithAnchoring();
       localEmitter.emit("TransferHop", targetChainRid);
-    });
+    } catch (error) {
+      throw new ApplyTransferError("Unable to apply transfer", error);
+    }
   }
 
   async function walkPath() {
-    if (!state.initialTx) {
+    if (state.initialTx === undefined || state.initialOpIndex === undefined) {
       throw new OrchestratorError(
         "Unable to perform transfer as no initial tx supplied",
       );
@@ -329,7 +321,11 @@ async function createBaseOrchestrator(
       hopIndex++
     ) {
       const nextBlockchainRid = path[hopIndex];
-      await performApplyTransfer(state.initialTx, nextBlockchainRid);
+      await performApplyTransfer(
+        state.initialTx,
+        state.initialOpIndex,
+        nextBlockchainRid,
+      );
 
       state.currentHopIndex++;
     }
@@ -358,7 +354,7 @@ async function createBaseOrchestrator(
     targetChainRid: Buffer,
     hopIndex: number,
   ): Promise<Operation> {
-    if (!state.tx) {
+    if (state.tx === undefined) {
       throw new OrchestratorError(
         "Unable to create a proof operation for a non existing transaction",
       );
@@ -383,10 +379,7 @@ async function createBaseOrchestrator(
     return proofTx.iccfTx.operations[0];
   }
 
-  async function performCompleteTransfer(
-    tx: RawGtx,
-    transfer?: PendingTransfer,
-  ) {
+  async function performCompleteTransfer(tx: RawGtx, opIndex: number) {
     const targetChainRid = path.slice(-1)[0];
 
     const iccfOp = await createIccfProofOperation(targetChainRid, path.length);
@@ -397,7 +390,7 @@ async function createBaseOrchestrator(
     );
     await tb
       .addWithoutAuthenticator(iccfOp)
-      .addWithoutAuthenticator(completeTransfer(tx, transfer?.opIndex ?? 1))
+      .addWithoutAuthenticator(completeTransfer(tx, opIndex))
       .buildAndSend();
   }
 

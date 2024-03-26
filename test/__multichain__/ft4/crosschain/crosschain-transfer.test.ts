@@ -82,7 +82,9 @@ describe("Crosschain transfer", () => {
         try {
           await transactionBuilder(account00.authenticator, connection01.client)
             .addWithoutAuthenticator(iccfProofOperation)
-            .addWithoutAuthenticator(applyTransfer(data.tx, data.tx, 0))
+            .addWithoutAuthenticator(
+              applyTransfer(data.tx, data.opIndex, data.tx, data.opIndex, 0),
+            )
             .buildAndSend();
         } catch (error) {
           reject(error);
