@@ -45,6 +45,7 @@ import { createNoopAuthenticator } from "@ft4/authentication/noop";
 import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
 import { getDirectoryClient } from "@ft4/utils/directory-chain";
 import { getBlockchainApiUrls } from "@ft4/utils/directory-chain";
+import { EMPTY_SIGNATURE } from "@ft4/transaction-builder/utils";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 40,
@@ -596,7 +597,7 @@ export function transactionBuilder(
       tx.signers.map((signer) => {
         try {
           return (
-            signersMap[signer.toString("hex")]?.sign(tx) ?? Buffer.alloc(64)
+            signersMap[signer.toString("hex")]?.sign(tx) ?? EMPTY_SIGNATURE
           );
         } catch (e) {
           throw new SigningError(

@@ -13,7 +13,9 @@
 
 - `addWithAnchoring` method in `TransactionBuilder` to get callback when transaction is anchored in a specific target
   chain.
-- 
+
+- `sign` and `signAndSend` methods in `Session` to add your signature to an existing transaction.
+
 ### Fixed 🔧
 
 - Fix TS client build.

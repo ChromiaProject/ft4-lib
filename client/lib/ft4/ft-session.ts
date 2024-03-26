@@ -52,10 +52,14 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
-import { createAuthDescriptorValidator } from "./accounts";
-import { getLoginConfig } from "./authentication/login";
 import { createClient } from "postchain-client";
 import { formatter } from "postchain-client";
+import { GTX } from "postchain-client";
+import { RawGtx } from "postchain-client";
+import { SignedTransaction } from "postchain-client";
+import { signTransaction } from "@ft4/transaction-builder";
+import { createAuthDescriptorValidator } from "./accounts";
+import { getLoginConfig } from "./authentication/login";
 import { LoginOptions } from "./authentication/login";
 import { login } from "./authentication/login";
 
@@ -149,6 +153,10 @@ export function createSession(
       call(connection, authenticator, ...operations),
     callWithoutNop: (...operations: Operation[]) =>
       callWithoutNop(connection, authenticator, ...operations),
+    sign: (tx: GTX | RawGtx | SignedTransaction) =>
+      signTransaction(connection, authenticator, tx),
+    signAndSend: (tx: GTX | RawGtx | SignedTransaction) =>
+      signAndSendTransaction(connection, authenticator, tx),
     ...connection,
   });
 }
@@ -170,6 +178,15 @@ export async function callWithoutNop(
   operations.forEach((operation: Operation) => tb.add(operation));
   const tx = await tb.build();
   return connection.client.sendTransaction(tx);
+}
+
+export async function signAndSendTransaction(
+  connection: Connection,
+  authenticator: Authenticator,
+  tx: GTX | RawGtx | SignedTransaction,
+): Promise<TransactionReceipt> {
+  const signedTx = await signTransaction(connection, authenticator, tx);
+  return connection.client.sendTransaction(signedTx);
 }
 
 export function createAuthDataService(connection: Connection): AuthDataService {

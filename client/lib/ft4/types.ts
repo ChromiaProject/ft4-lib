@@ -12,6 +12,9 @@ import {
 } from "postchain-client";
 import { TransferDetail, AuthDescriptorValidator } from "./accounts";
 import { LoginOptions, SessionWithLogout } from "./authentication/login";
+import { GTX } from "postchain-client";
+import { RawGtx } from "postchain-client";
+import { SignedTransaction } from "postchain-client";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -75,6 +78,10 @@ export interface Session extends Connection {
   call: (...operations: Operation[]) => Promise<TransactionReceipt>;
   callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
   transactionBuilder: () => TransactionBuilder;
+  sign: (tx: GTX | RawGtx | SignedTransaction) => Promise<SignedTransaction>;
+  signAndSend: (
+    tx: GTX | RawGtx | SignedTransaction,
+  ) => Promise<TransactionReceipt>;
 }
 
 export type KeyStoreInteractor = {
