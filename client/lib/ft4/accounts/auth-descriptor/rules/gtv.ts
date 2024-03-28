@@ -1,15 +1,12 @@
-import { enumValueFromString } from "@ft4/utils/enum-parser";
-import { RuleOperator } from "./operators";
+import { enumValueFromString } from "@ft4/utils";
+import { isGtvSimpleRule, isSimpleRule } from "./type-predicates";
 import {
-  AuthDescriptorRules,
+  AuthDescriptorRuleVariable, AuthDescriptorRules,
   AuthDescriptorSimpleRule,
   ComplexRule,
   RawRules,
-  RawSimpleRule,
-  SimpleRule,
+  RawSimpleRule, RuleOperator, SimpleRule
 } from "./types";
-import { AuthDescriptorRuleVariable } from "./variables";
-import { isGtvSimpleRule, isSimpleRule } from "./type-predicates";
 
 export function authDescriptorRuleMapper(
   rule: RawSimpleRule,

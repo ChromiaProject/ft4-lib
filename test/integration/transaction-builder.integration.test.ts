@@ -1,20 +1,25 @@
-import { nop } from "@ft4/utils";
-import { emptyOp } from "../util/util";
-import { createConnection } from "@ft4/index";
-import { SignedTransaction } from "postchain-client";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { createTestAuthDescriptor } from "../util/util";
-import { createAccount } from "../util/util";
-import { getSessionForAccount } from "../util/util";
-import { Session } from "@ft4/index";
+import {
+  createAccount,
+  createTestAuthDescriptor,
+  emptyOp,
+  getSessionForAccount,
+  rejectedOp,
+  useChromiaNode,
+} from "@ft4-test/util";
+import {
+  AnyAuthDescriptor,
+  deleteAllAuthDescriptorsExclude,
+} from "@ft4/accounts";
+import { Session, createConnection } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
-import { AnyAuthDescriptor } from "@ft4/index";
-import { rejectedOp } from "../util/util";
-import { TxRejectedError } from "postchain-client";
-import { TransactionReceipt } from "postchain-client";
-import { ResponseStatus } from "postchain-client";
-import { SystemChainException } from "postchain-client";
+import { nop } from "@ft4/utils";
+import {
+  ResponseStatus,
+  SignedTransaction,
+  SystemChainException,
+  TransactionReceipt,
+  TxRejectedError,
+} from "postchain-client";
 
 describe("transaction builder", () => {
   let session: Session;

@@ -1,4 +1,4 @@
-import { NetworkSettings } from "postchain-client";
+import { Buffer } from "buffer";
 
 const clusterAnchoringClient = "clusterAnchoringClient";
 
@@ -20,7 +20,7 @@ jest.mock("postchain-client", () => {
 });
 
 jest.mock("@ft4/utils/directory-chain", () => {
-  const originalModule = jest.requireActual("@ft4/utils/directory-chain");
+  const originalModule = jest.requireActual("@ft4/utils");
 
   return {
     __esModule: true,
@@ -33,58 +33,59 @@ jest.mock("@ft4/utils/directory-chain", () => {
   };
 });
 
-import { Buffer } from "buffer";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createTestAuthDescriptor, emptyOp } from "../util/util";
-import { transfer } from "@ft4/accounts/account-operations";
-import { AuthFlag, aggregateSigners } from "@ft4/accounts/auth-descriptor";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
-import { registerAccount } from "@ft4/admin/admin-operations";
-import { createAmount } from "@ft4/asset/amount";
+import {
+  anchoredHandlerCallbackParameters,
+  createFakeAuthDataService,
+  createTestAuthDescriptor,
+  emptyOp,
+  testAdFromRegistration,
+} from "@ft4-test/util";
+import {
+  AnyAuthDescriptor,
+  AuthFlag,
+  aggregateSigners,
+  createSingleSigAuthDescriptorRegistration,
+  transfer,
+} from "@ft4/accounts";
+import { registerAccountAdminOp } from "@ft4/admin";
+import { createAmount } from "@ft4/asset";
 import {
   AuthDataService,
   Authenticator,
   FtKeyStore,
   KeyHandler,
+  SigningError,
   createAuthenticator,
+  createEvmKeyHandler,
+  createFtKeyHandler,
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
+  createNoopAuthenticator,
+  ftAuth,
 } from "@ft4/authentication";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { nop } from "@ft4/utils";
 import {
+  AnchoringTimeoutError,
   AuthorizationError,
   transactionBuilder,
 } from "@ft4/transaction-builder";
-import { createNoopAuthenticator } from "@ft4/authentication/noop";
-import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
 import {
   IClient,
-  isBlockAnchored,
   KeyPair,
+  NetworkSettings,
   Operation,
-  encryption,
-  gtx,
-} from "postchain-client";
-import { createStubClient } from "postchain-client";
-import { formatter } from "postchain-client";
-import { AnchoringTimeoutError } from "@ft4/transaction-builder";
-import {
-  getBlockAnchoringTransaction,
   SignedTransaction,
   TransactionReceipt,
   Web3PromiEvent,
+  createStubClient,
+  encryption,
+  formatter,
+  getBlockAnchoringTransaction,
+  gtx,
+  isBlockAnchored,
+  BlockAnchoringException,
 } from "postchain-client";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
+import { nop, op } from "@ft4/utils";
 import { ethers } from "ethers";
-import { createEvmKeyHandler } from "@ft4/authentication";
-import { testAdFromRegistration } from "../util/util";
-import { SigningError } from "@ft4/authentication";
-import {
-  createFtKeyHandler,
-  createInMemoryEvmKeyStore,
-} from "@ft4/authentication";
-import { op } from "@ft4/utils";
-import { BlockAnchoringException } from "postchain-client";
-import { ftAuth } from "@ft4/authentication";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -259,7 +260,7 @@ describe("Transaction Builder", () => {
 
   it("throws an error if not sufficient permissions", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(registerAccount(authDescriptor))
+      .add(registerAccountAdminOp(authDescriptor))
       .build();
     await expect(promise).rejects.toThrow(AuthorizationError);
   });
@@ -278,7 +279,10 @@ describe("Transaction Builder", () => {
     const { authenticatorMock, keyHandlerMock, keyStoreMock, authDescriptor } =
       getMocks();
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(registerAccount(authDescriptor), authenticatorMock)
+      .addWithAuthenticator(
+        registerAccountAdminOp(authDescriptor),
+        authenticatorMock,
+      )
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyStoreMock.sign).toHaveBeenCalled();

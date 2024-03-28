@@ -1,4 +1,4 @@
-export type EnumLike = Record<string, string | number>;
+import { EnumLike } from "./types";
 
 export function enumValueFromString<T extends EnumLike>(
   str: string,

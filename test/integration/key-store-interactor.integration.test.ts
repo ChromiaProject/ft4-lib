@@ -1,28 +1,33 @@
-import { newSignatureProvider } from "postchain-client";
+import {
+  AccountBuilder,
+  createTestAuthDescriptor,
+  useChromiaNode,
+} from "@ft4-test/util";
 import {
   AuthFlag,
   blockTime,
   createSingleSigAuthDescriptorRegistration,
+  deleteAuthDescriptor,
   deriveAuthDescriptorId,
   greaterThan,
   lessThan,
   opCount,
-} from "@ft4/accounts/auth-descriptor";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+} from "@ft4/accounts";
 import {
+  createAuthenticator,
+  createFtKeyHandler,
+  createInMemoryFtKeyStore,
+  nonce,
+} from "@ft4/authentication";
+import {
+  Connection,
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
-import AccountBuilder from "@ft4/util/account-builder";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { nop, op } from "@ft4/utils";
-import { nonce } from "@ft4/authentication/queries";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { createAuthenticator, createFtKeyHandler } from "@ft4/authentication";
-import { createTestAuthDescriptor } from "@ft4/util/util";
-import { deleteAuthDescriptor } from "@ft4/accounts/account-operations";
+import { nop, op } from "@ft4/utils";
+import { newSignatureProvider } from "postchain-client";
 
 let connection: Connection;
 

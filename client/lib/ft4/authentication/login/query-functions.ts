@@ -1,7 +1,7 @@
 import { Queryable } from "postchain-client";
 import { LoginConfig } from "./types";
 import { loginConfig } from "./queries";
-import { rulesFromGtv } from "@ft4/accounts/auth-descriptor/rules/gtv";
+import { gtv } from "@ft4/accounts";
 import { loginConfigRuleMapper } from "./rules";
 
 export async function getLoginConfig(
@@ -11,6 +11,6 @@ export async function getLoginConfig(
   const config = await queryable.query(loginConfig(configName));
   return {
     flags: config.flags,
-    rules: config.rules && rulesFromGtv(config.rules, loginConfigRuleMapper),
+    rules: config.rules && gtv.rulesFromGtv(config.rules, loginConfigRuleMapper),
   };
 }

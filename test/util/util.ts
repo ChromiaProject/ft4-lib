@@ -1,3 +1,30 @@
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  AuthDescriptor,
+  AuthDescriptorRegistration,
+  AuthDescriptorRules,
+  AuthFlag,
+  MultiSig,
+  SingleSig,
+  addAuthDescriptor,
+  createMultiSigAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "@ft4/accounts";
+import {
+  FtKeyStore,
+  createAuthenticator,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
+import {
+  Connection,
+  createAuthDataService,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
+import { BufferId, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   IClient,
@@ -6,35 +33,11 @@ import {
   RellOperation,
   SignatureProvider,
   encryption,
+  gtx,
   gtv as pclGtv,
 } from "postchain-client";
-import adminUser from "./admin_user";
-import { AuthDescriptorRules, Connection } from "@ft4/index";
-import { addAuthDescriptor } from "@ft4/accounts/account-operations";
-import {
-  createMultiSigAuthDescriptorRegistration,
-  createSingleSigAuthDescriptorRegistration,
-  deriveAuthDescriptorId,
-  gtv,
-} from "@ft4/accounts/auth-descriptor";
-import {
-  AnyAuthDescriptor,
-  AnyAuthDescriptorRegistration,
-  AuthDescriptor,
-  AuthDescriptorRegistration,
-  MultiSig,
-  SingleSig,
-} from "@ft4/accounts/auth-descriptor/types";
-import { FtKeyStore, createAuthenticator } from "@ft4/authentication";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import {
-  createAuthDataService,
-  createConnection,
-  createKeyStoreInteractor,
-} from "@ft4/ft-session";
-import { op } from "@ft4/utils";
+import { User } from "./test-user";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { BufferId } from "@ft4/utils/types";
 
 function generateId(n: number): Buffer {
   return encryption.hash256(Buffer.from(`${n}`));
@@ -74,6 +77,30 @@ class LocalStorageMock implements Storage {
 }
 
 export { LocalStorageMock, blockchainAccountId, generateId };
+
+export function adminUser(): User {
+  const keyPair = encryption.makeKeyPair(
+    process.env.TEST_ADMIN_1_PRIV ||
+      "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
+  );
+
+  const signatureProvider = gtx.newSignatureProvider(keyPair);
+  const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+    [AuthFlag.Account, AuthFlag.Transfer],
+    signatureProvider.pubKey,
+    null,
+  );
+  return {
+    signatureProvider,
+    authDescriptor: testAdFromRegistration(singleSigAuthDescriptor),
+    keyStore: createInMemoryFtKeyStore(keyPair),
+  };
+}
+
+export const adminKeyPair = encryption.makeKeyPair(
+  process.env.TEST_ADMIN_1_PRIV ||
+    "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
+);
 
 export function createTestAuthDescriptor(
   flags: string[] = [],

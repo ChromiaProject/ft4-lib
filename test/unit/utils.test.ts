@@ -1,4 +1,4 @@
-import { loadOperationFromTransaction } from "@ft4/index";
+import { loadOperationFromTransaction } from "@ft4/utils";
 import { RawGtx, gtv } from "postchain-client";
 
 describe("Utils", () => {

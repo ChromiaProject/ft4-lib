@@ -25,6 +25,8 @@ export type AssetResponse = {
   supply: bigint;
 };
 
+export type RawAmount = { value: bigint; decimals: number };
+
 export type Balance = {
   asset: Asset;
   amount: Amount;

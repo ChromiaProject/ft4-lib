@@ -1,15 +1,13 @@
-import { registerAccount } from "@ft4/accounts/registration";
-import { open } from "@ft4/accounts/registration/strategies/open";
 import {
-  Connection,
-  createConnection,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+  createInMemoryLoginKeyStore,
+} from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
+import { registrationStrategy, registerAccount } from "@ft4/registration";
+import { useChromiaNode } from "@ft4-test/util";
 import { encryption, gtv } from "postchain-client";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory/index";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
 
 let _connection: Connection;
 
@@ -33,7 +31,7 @@ describe("Test open strategy", () => {
     const { session, logout } = await registerAccount(
       _connection.client,
       keyStore,
-      open(authDescriptor),
+      registrationStrategy.open(authDescriptor),
     );
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
@@ -55,7 +53,7 @@ describe("Test open strategy", () => {
     const { session, logout } = await registerAccount(
       _connection.client,
       keyStore,
-      open(authDescriptor, {
+      registrationStrategy.open(authDescriptor, {
         loginKeyStore,
         config: { flags: [], rules: null },
       }),
@@ -100,7 +98,7 @@ describe("Test open strategy", () => {
     const { session, logout } = await registerAccount(
       _connection.client,
       keyStore,
-      open(authDescriptor, {
+      registrationStrategy.open(authDescriptor, {
         loginKeyStore,
       }),
     );
@@ -142,7 +140,7 @@ describe("Test open strategy", () => {
     const { session, logout } = await registerAccount(
       _connection.client,
       keyStore,
-      open(authDescriptor),
+      registrationStrategy.open(authDescriptor),
     );
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
@@ -164,7 +162,7 @@ describe("Test open strategy", () => {
     const { session, logout } = await registerAccount(
       _connection.client,
       keyStore,
-      open(authDescriptor, {
+      registrationStrategy.open(authDescriptor, {
         loginKeyStore,
         config: { flags: [], rules: null },
       }),

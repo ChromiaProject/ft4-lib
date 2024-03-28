@@ -37,6 +37,7 @@ export default {
      */
     //"maxWorkers": 1,
     'moduleNameMapper': {
-        '^@ft4/(.*)$': ['<rootDir>/client/lib/ft4/$1', '<rootDir>/test/$1']
+        '^@ft4/(.*)$': ['<rootDir>/client/lib/ft4/$1'],
+        '^@ft4-test/(.*)$': ['<rootDir>/test/$1'],
     }
 };

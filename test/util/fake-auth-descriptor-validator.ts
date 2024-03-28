@@ -1,4 +1,4 @@
-import { AuthDescriptorValidationService } from "@ft4/accounts/auth-descriptor/validator/types";
+import { AuthDescriptorValidationService } from "@ft4/accounts";
 import { BufferId } from "@ft4/utils";
 
 export function createFakeAuthDescriptorValidationService(params: {

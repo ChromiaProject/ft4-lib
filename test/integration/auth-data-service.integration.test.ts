@@ -1,9 +1,11 @@
-import { opCount } from "@ft4/accounts";
-import { AuthDataService } from "@ft4/authentication";
-import { relativeBlockHeight } from "@ft4/authentication/login/rules";
+import { useChromiaNode } from "@ft4-test/util";
+import {
+  AuthDataService,
+  relativeBlockHeight,
+  ttlLoginRule,
+} from "@ft4/authentication";
+import { and, lessOrEqual, lessThan, opCount } from "@ft4/accounts";
 import { createAuthDataService, createConnection } from "@ft4/ft-session";
-import { and, lessOrEqual, lessThan, ttlLoginRule } from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
 
 describe("Test auth data service", () => {
   let _authDataService: AuthDataService;

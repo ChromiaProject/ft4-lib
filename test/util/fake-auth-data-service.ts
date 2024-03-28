@@ -1,8 +1,7 @@
-import { AuthDataService } from "@ft4/authentication";
-import { LoginConfig } from "../../client/lib/ft4/authentication/login";
-import { Connection } from "@ft4/index";
-import { Buffer } from "buffer";
+import { AuthDataService, LoginConfig } from "@ft4/authentication";
+import { Connection } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
+import { Buffer } from "buffer";
 import { Operation } from "postchain-client";
 import { asyncNumberGenerator } from "./util";
 

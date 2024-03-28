@@ -1,9 +1,13 @@
-import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
-import { Connection, KeyStoreInteractor } from "@ft4/types";
 import {
   Eip1193Provider,
   createWeb3ProviderEvmKeyStore,
 } from "@ft4/authentication";
+import {
+  Connection,
+  KeyStoreInteractor,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
 import { createStubClient } from "postchain-client";
 
 let connection: Connection;

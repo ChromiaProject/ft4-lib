@@ -2,13 +2,13 @@ import {
   AmountDecimalsError,
   AmountInputError,
   AmountOutOfRangeError,
+  DecimalFormat,
   RawAmount,
   convertToRawAmount,
   createAmount,
   createAmountFromBalance,
   stringify,
-} from "@ft4/asset/amount";
-import { DecimalFormat } from "@ft4/asset/types";
+} from "@ft4/asset";
 
 describe("Asset amount", () => {
   const amounts = [

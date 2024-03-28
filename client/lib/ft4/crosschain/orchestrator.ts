@@ -1,15 +1,18 @@
 import { Amount } from "@ft4/asset";
+import { Authenticator, SigningError, days } from "@ft4/authentication";
 import { EventEmitter, Listener } from "@ft4/events";
-import { days } from "@ft4/index";
-import { BufferId, getTransactionRid, nop } from "@ft4/utils";
+import { Connection, createConnectionToBlockchainRid } from "@ft4/ft-session";
 import {
-  transactionBuilder,
   OnAnchoredHandlerData,
+  transactionBuilder,
 } from "@ft4/transaction-builder";
+import { BufferId, getTransactionRid, nop } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   Operation,
   RawGtx,
+  SignedTransaction,
+  TransactionReceipt,
   createClient,
   createIccfProofTx,
   formatter,
@@ -33,12 +36,6 @@ import {
   PendingTransfer,
   ResumeOrchestrator,
 } from "./types";
-import { createConnectionToBlockchainRid } from "@ft4/ft-session";
-import { SignedTransaction } from "postchain-client";
-import { SigningError } from "@ft4/authentication/index";
-import { TransactionReceipt } from "postchain-client";
-import { Connection } from "@ft4/index";
-import { Authenticator } from "@ft4/authentication/index";
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.

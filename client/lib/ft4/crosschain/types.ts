@@ -1,11 +1,15 @@
-import { Buffer } from "buffer";
-import { Operation, RawGtx } from "postchain-client";
+import { Authenticator } from "@ft4/authentication";
 import { EventEmitter, Listener } from "@ft4/events";
-import { TransactionBuilder } from "@ft4/transaction-builder";
+import { Connection } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
-import { SignedTransaction, TransactionReceipt } from "postchain-client";
-import { Connection } from "@ft4/index";
-import { Authenticator } from "@ft4/authentication/index";
+import { Buffer } from "buffer";
+import {
+  Operation,
+  RawGtx,
+  SignedTransaction,
+  TransactionReceipt,
+} from "postchain-client";
+import { TransactionBuilder } from "@ft4/transaction-builder";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,

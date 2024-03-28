@@ -1,11 +1,15 @@
 import { Buffer } from "buffer";
-import { ethers } from "ethers";
+import { ethers, Eip1193Provider as Eip1193ProviderEthers } from "ethers";
 import { EventEmitter } from "events";
-import { createEvmKeyHandler, EvmKeyStore, signMessage } from "..";
 import { AnyAuthDescriptor } from "@ft4/accounts";
 import { ftEventEmitter } from "@ft4/events";
+import {
+  EvmKeyStore,
+  createEvmKeyHandler,
+  signMessage,
+} from "@ft4/authentication";
 
-export interface Eip1193Provider extends ethers.Eip1193Provider, EventEmitter {}
+export interface Eip1193Provider extends Eip1193ProviderEthers, EventEmitter {}
 
 export async function createWeb3ProviderEvmKeyStore(
   externalProvider: Eip1193Provider,

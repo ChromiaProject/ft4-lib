@@ -6,7 +6,7 @@ import {
   gtx,
   formatter,
 } from "postchain-client";
-import { Connection } from "@ft4/types";
+import { Connection } from "@ft4/ft-session";
 import { Authenticator, isFtKeyStore } from "@ft4/authentication";
 import { EMPTY_SIGNATURE } from "@ft4/transaction-builder/utils";
 

@@ -1,24 +1,19 @@
-import { registerAccount } from "@ft4/accounts/registration";
+import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import { Asset, createAmountFromBalance } from "@ft4/asset";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
 import {
-  Connection,
-  createConnection,
-  createInMemoryFtKeyStore,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/index";
-import { Asset } from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { encryption } from "postchain-client";
-import { gtv } from "postchain-client";
-import { getNewAsset } from "@ft4/util/blockchain-util";
-import AccountBuilder from "@ft4/util/account-builder";
-import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { transferSubscription } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
-import { subscriptionAssets } from "@ft4/accounts/registration/strategies/transfer/subscription/queries";
-import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { createAmountFromBalance } from "@ft4/index";
-import { subscriptionDetails } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
-import { renewSubscription } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
-import { subscriptionPeriodMillis } from "@ft4/accounts/registration/strategies/transfer/subscription/index";
+  allowedAssets,
+  pendingTransferStrategies,
+  registerAccount,
+  renewSubscription,
+  subscriptionAssets,
+  subscriptionDetails,
+  subscriptionPeriodMillis,
+  transferSubscription,
+} from "@ft4/registration";
+import { encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;

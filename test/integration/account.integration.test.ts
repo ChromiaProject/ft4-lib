@@ -1,36 +1,35 @@
-import * as pcl from "postchain-client";
-import { Buffer } from "buffer";
-import { Connection } from "@ft4/types";
-import { ftAuth } from "@ft4/authentication";
-import { registerAccount } from "@ft4/admin/admin-op-functions";
-import { createInMemoryFtKeyStore } from "@ft4/index";
 import {
-  addAuthDescriptor,
-  deleteAllAuthDescriptorsExclude,
-} from "@ft4/accounts/account-operations";
+  AccountBuilder,
+  addAuthDescriptorTo,
+  adminUser,
+  createAccount,
+  createTestAuthDescriptor,
+  getSessionForAccount,
+  singleSigUser as testUser,
+  useChromiaNode,
+} from "@ft4-test/util";
 import {
   AuthDescriptorRegistration,
   AuthFlag,
   MultiSig,
+  addAuthDescriptor,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
+  deleteAllAuthDescriptorsExclude,
   deriveAuthDescriptorId,
   gtv,
-} from "@ft4/accounts/auth-descriptor";
-import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
-import { nop, op } from "@ft4/utils";
-import { AuthorizationError } from "@ft4/transaction-builder";
-import { BufferId } from "@ft4/utils/types";
+} from "@ft4/accounts";
+import { registerAccountAdmin } from "@ft4/admin";
+import { createInMemoryFtKeyStore, ftAuth } from "@ft4/authentication";
 import {
-  addAuthDescriptorTo,
-  createAccount,
-  createTestAuthDescriptor,
-  getSessionForAccount,
-} from "@ft4/util/util";
-import testUser from "@ft4/util/test-user";
-import AccountBuilder from "@ft4/util/account-builder";
-import adminUser from "@ft4/util/admin_user";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+  Connection,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
+import { AuthorizationError } from "@ft4/transaction-builder";
+import { BufferId, nop, op } from "@ft4/utils";
+import { Buffer } from "buffer";
+import * as pcl from "postchain-client";
 
 let _connection: Connection;
 const admin = adminUser();
@@ -72,7 +71,7 @@ describe("Test the account", () => {
       null,
     );
 
-    const accountPromise = registerAccount(
+    const accountPromise = registerAccountAdmin(
       _connection.client,
       adminUser().signatureProvider,
       ad,
@@ -178,7 +177,7 @@ describe("Test the account", () => {
       null,
     );
 
-    await registerAccount(_connection.client, admin.signatureProvider, ad);
+    await registerAccountAdmin(_connection.client, admin.signatureProvider, ad);
 
     const adId = deriveAuthDescriptorId(ad);
     const promise = addAuthDescriptorTo(_connection.client, adId, user1, {

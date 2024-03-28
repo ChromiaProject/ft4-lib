@@ -1,7 +1,7 @@
 import { Operation, RawGtx, formatter } from "postchain-client";
 import { Amount } from "@ft4/asset";
 import { op, BufferId } from "@ft4/utils";
-import { GtvInitTransferArgs } from "@ft4/crosschain/types";
+import { GtvInitTransferArgs } from "./types";
 
 export function initTransfer(
   recipientId: BufferId,

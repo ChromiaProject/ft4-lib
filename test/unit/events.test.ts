@@ -1,5 +1,4 @@
-import { Listener, EventHandlers } from "@ft4/events";
-import { ftEventEmitter } from "@ft4/events";
+import { EventHandlers, Listener, ftEventEmitter } from "@ft4/events";
 
 describe("EventEmitter functionality", () => {
   let listener: Listener<[string]>;

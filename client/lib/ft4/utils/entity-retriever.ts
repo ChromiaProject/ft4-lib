@@ -1,7 +1,6 @@
-import { DictPair, QueryObject, RawGtv } from "postchain-client";
-import { PagedResponse } from "@ft4/types";
+import { DictPair, QueryObject, RawGtv, Queryable } from "postchain-client";
+import { PagedResponse } from "@ft4/ft-session";
 import { PaginatedEntity } from "./types";
-import { Queryable } from "postchain-client";
 
 /**
  *

@@ -1,7 +1,9 @@
+import { createFakeAuthDescriptorValidationService } from "@ft4-test/util";
 import {
   AnyAuthDescriptor,
   blockHeight,
   blockTime,
+  createBaseAuthDescriptorValidator,
   equals,
   greaterOrEqual,
   greaterThan,
@@ -9,8 +11,6 @@ import {
   lessThan,
   opCount,
 } from "@ft4/accounts";
-import { createBaseAuthDescriptorValidator } from "@ft4/accounts/auth-descriptor/validator/evaluation";
-import { createFakeAuthDescriptorValidationService } from "@ft4/util/fake-auth-descriptor-validator";
 
 describe("Rules", () => {
   it("correctly identifies active rules", async () => {

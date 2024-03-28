@@ -1,14 +1,14 @@
-import { GTX, Operation, formatter } from "postchain-client";
-import { EvmKeyStore, evmAuth } from ".";
-import { hasAuthDescriptorFlags } from "../ft/key-handler";
+import { AnyAuthDescriptor } from "@ft4/accounts";
 import {
   AuthDataService,
   KeyHandler,
   KeyHandlerError,
+  hasAuthDescriptorFlags,
 } from "@ft4/authentication";
-import { AnyAuthDescriptor } from "@ft4/accounts";
-import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
-import { TxContext } from "@ft4/utils/types";
+import { BufferId, TxContext, getNonceIdForTxContext } from "@ft4/utils";
+import { GTX, Operation, formatter } from "postchain-client";
+import { evmAuth } from "./main";
+import { EvmKeyStore } from "./types";
 
 export function createEvmKeyHandler(
   authDescriptor: AnyAuthDescriptor,

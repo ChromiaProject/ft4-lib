@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
-import { sliceSignature, createEvmKeyHandler } from "..";
-import { AnyAuthDescriptor } from "@ft4/accounts/";
+import { AnyAuthDescriptor } from "@ft4/accounts";
+import { createEvmKeyHandler, sliceSignature } from "@ft4/authentication";
 
 export async function createGenericEvmKeyStore(config: {
   address: string;

@@ -1,14 +1,5 @@
-import { ComplexRule, SimpleRule } from "./types";
+import { ComplexRule, RuleOperator, RuleVariableValue, SimpleRule } from "./types";
 
-export type RuleVariableValue<T extends string> = [T, number];
-
-export enum RuleOperator {
-  LessThan = "lt",
-  LessOrEqual = "le",
-  Equals = "eq",
-  GreaterThan = "gt",
-  GreaterOrEqual = "ge",
-}
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with

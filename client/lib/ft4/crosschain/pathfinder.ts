@@ -1,10 +1,9 @@
-import { BlockchainUrlUndefinedException, formatter } from "postchain-client";
-import { Connection } from "@ft4/index";
-import { Buffer } from "buffer";
 import { Asset } from "@ft4/asset";
-import { getAssetOriginById } from "./query-functions";
+import { Connection, createConnectionToBlockchainRid } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
-import { createConnectionToBlockchainRid } from "@ft4/ft-session";
+import { Buffer } from "buffer";
+import { BlockchainUrlUndefinedException, formatter } from "postchain-client";
+import { getAssetOriginById } from "./query-functions";
 
 export class PathfinderError extends Error {
   constructor(msg?) {

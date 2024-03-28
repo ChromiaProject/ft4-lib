@@ -1,25 +1,27 @@
-import { Buffer } from "buffer";
-import { Amount, Balance } from "@ft4/asset";
-import { Authenticator } from "@ft4/authentication";
-import { OptionalPageCursor } from "@ft4/index";
-import { BufferId, PaginatedEntity } from "@ft4/utils";
 import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+} from "@ft4/accounts";
+import { Amount, Balance } from "@ft4/asset";
+import { Authenticator, FtKeyStore } from "@ft4/authentication";
+import { PendingTransfer } from "@ft4/crosschain";
+import { OptionalPageCursor } from "@ft4/ft-session";
+import {
+  BufferId,
+  PaginatedEntity,
   TransactionCompletion,
   TransactionSessionCompletion,
-} from "@ft4/utils/types";
+} from "@ft4/utils";
+import { Buffer } from "buffer";
 import {
   TransferHistoryEntry,
   TransferHistoryFilter,
 } from "./transfer-history";
 import {
-  AnyAuthDescriptor,
-  AnyAuthDescriptorRegistration,
-} from "@ft4/accounts/auth-descriptor";
-import { FtKeyStore } from "@ft4/authentication";
-import { PendingTransfer } from "@ft4/crosschain";
-import { Web3PromiEvent } from "postchain-client";
-import { SignedTransaction } from "postchain-client";
-import { TransactionReceipt } from "postchain-client";
+  SignedTransaction,
+  TransactionReceipt,
+  Web3PromiEvent,
+} from "postchain-client";
 
 export type RateLimit = {
   points: number;

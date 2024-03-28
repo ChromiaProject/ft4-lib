@@ -1,31 +1,11 @@
-import { Amount, DecimalFormat, SupportedNumber } from "./types";
+import { AmountDecimalsError, AmountInputError, AmountOutOfRangeError } from "./error";
+import { Amount, DecimalFormat, RawAmount, SupportedNumber } from "./types";
 
-export type RawAmount = { value: bigint; decimals: number };
+
 type AnyAssetAmount = RawAmount | Amount;
 
 // (2^256)-1 = (2^(4*64))-1 = (16^64)-1
 export const MAX = BigInt("0x" + "f".repeat(64));
-
-export class AmountInputError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AmountInputError";
-  }
-}
-
-export class AmountOutOfRangeError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AmountOutOfRangeError";
-  }
-}
-
-export class AmountDecimalsError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AmountDecimalsError";
-  }
-}
 
 function buildAmountObject(amount: RawAmount): Amount {
   checkValueInRange(amount.value);

@@ -1,29 +1,6 @@
-import { GTX, Operation, formatter } from "postchain-client";
-import { KeyStore } from "..";
-import { Buffer } from "buffer";
-import { BufferId } from "@ft4/utils/types";
-
-export function ftAuth(
-  accountId: BufferId,
-  authDescriptorId: BufferId,
-): Operation {
-  return {
-    name: "ft4.ft_auth",
-    args: [
-      formatter.ensureBuffer(accountId),
-      formatter.ensureBuffer(authDescriptorId),
-    ],
-  };
-}
-
-export interface FtKeyStore extends KeyStore {
-  pubKey: Buffer;
-  sign(transaction: GTX): Promise<Buffer>;
-}
-
-export { createInMemoryFtKeyStore } from "./key-stores/in-memory";
+export * from "./types";
+export * from "./main"
 export { createFtKeyHandler } from "./key-handler";
+export { createInMemoryFtKeyStore } from "./in-memory-keystore";
 
-export function isFtKeyStore(keyStore: KeyStore): keyStore is FtKeyStore {
-  return (keyStore as FtKeyStore).pubKey !== undefined;
-}
+

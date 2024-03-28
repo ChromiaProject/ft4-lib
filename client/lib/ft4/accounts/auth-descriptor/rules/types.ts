@@ -1,7 +1,20 @@
 // ======== Client side data model ============
 
-import { RuleOperator } from "./operators";
-import { AuthDescriptorRuleVariable } from "./variables";
+export enum AuthDescriptorRuleVariable {
+  BlockHeight = "block_height",
+  BlockTime = "block_time",
+  OpCount = "op_count",
+}
+
+export type RuleVariableValue<T extends string> = [T, number];
+
+export enum RuleOperator {
+  LessThan = "lt",
+  LessOrEqual = "le",
+  Equals = "eq",
+  GreaterThan = "gt",
+  GreaterOrEqual = "ge",
+}
 
 export type SimpleRule<T extends string> = {
   variable: T;

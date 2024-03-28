@@ -5,12 +5,12 @@ import {
   allAssets,
   assetBySymbol,
   assetsByName,
+  assetsByType,
 } from "./asset-queries";
 import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
-import { assetsByType } from "./asset-queries";
 import { Queryable } from "postchain-client";
 
 export async function getAssetById(

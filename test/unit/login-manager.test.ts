@@ -6,8 +6,8 @@ import {
   greaterThan,
   lessThan,
   opCount,
-} from "@ft4/accounts/auth-descriptor/rules";
-import * as lc from "@ft4/authentication/login/rules";
+} from "@ft4/accounts";
+import * as lc from "@ft4/authentication";
 
 describe("Login manager", () => {
   beforeAll(() => {

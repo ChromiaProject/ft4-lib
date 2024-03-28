@@ -1,5 +1,5 @@
 import { QueryObject, formatter } from "postchain-client";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/types";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 import { AssetResponse, BalanceResponse } from "./types";
 import { BufferId, PaginatedEntity } from "@ft4/utils";

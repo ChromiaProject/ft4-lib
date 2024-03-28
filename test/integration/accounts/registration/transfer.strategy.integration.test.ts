@@ -1,25 +1,16 @@
-import { registerAccount } from "@ft4/accounts/registration";
-import { transferOpen } from "@ft4/accounts/registration/strategies/transfer/open/index";
+import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
 import {
-  Connection,
-  createAmount,
-  createConnection,
-  createInMemoryFtKeyStore,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/index";
-import { Asset } from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { encryption } from "postchain-client";
-import { TxRejectedError } from "postchain-client";
-import { gtv } from "postchain-client";
-import { getNewAsset } from "@ft4/util/blockchain-util";
-import AccountBuilder from "@ft4/util/account-builder";
-import {
+  allowedAssets,
   hasPendingCreateAccountTransferForStrategy,
   pendingTransferStrategies,
-} from "@ft4/accounts/registration/strategies/transfer/queries";
-import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { createAmountFromBalance } from "@ft4/index";
+  registerAccount,
+  registrationStrategy,
+} from "@ft4/registration";
+import { TxRejectedError, encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -74,7 +65,7 @@ describe("Test transfer strategy", () => {
     const { session } = await registerAccount(
       connection.client,
       keyStore,
-      transferOpen(authDescriptor),
+      registrationStrategy.transferOpen(authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -100,7 +91,7 @@ describe("Test transfer strategy", () => {
       registerAccount(
         connection.client,
         keyStore,
-        transferOpen(authDescriptor),
+        registrationStrategy.transferOpen(authDescriptor),
       ),
     ).rejects.toThrow(TxRejectedError);
   });
@@ -153,7 +144,7 @@ describe("Test transfer strategy", () => {
     await registerAccount(
       connection.client,
       keyStore,
-      transferOpen(authDescriptor),
+      registrationStrategy.transferOpen(authDescriptor),
     );
 
     const hasPendingAccountCreation = await connection.query(

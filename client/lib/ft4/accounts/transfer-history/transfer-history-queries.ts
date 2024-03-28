@@ -1,17 +1,8 @@
-import { QueryObject } from "postchain-client";
-import { Buffer } from "buffer";
+import { OptionalPageCursor } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
-import { formatter } from "postchain-client";
-import { OptionalPageCursor } from "@ft4/types";
-import { TransferHistoryEntryResponse } from "@ft4/accounts";
-
-export type RawTransferDetail = {
-  blockchain_rid: Buffer;
-  account_id: Buffer;
-  asset_id: Buffer;
-  delta: bigint;
-  is_input: number;
-};
+import { Buffer } from "buffer";
+import { QueryObject, formatter } from "postchain-client";
+import { RawTransferDetail, TransferHistoryEntryResponse } from "./types";
 
 export function transferDetails(
   txRid: BufferId,

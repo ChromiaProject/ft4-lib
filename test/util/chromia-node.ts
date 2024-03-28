@@ -1,5 +1,5 @@
 import { IClient } from "postchain-client";
-import { createChromiaClient } from "@ft4/util/blockchain-util";
+import { createChromiaClient } from "@ft4-test/util";
 import { readFile } from "node:fs/promises";
 
 export function useChromiaNode() {

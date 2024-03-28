@@ -1,6 +1,5 @@
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor";
-import { AuthHandler } from "@ft4/types";
-import { Connection } from "@ft4/index";
+import { AnyAuthDescriptor } from "@ft4/accounts";
+import { Connection } from "@ft4/ft-session";
 import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { GTX, Operation } from "postchain-client";
@@ -13,6 +12,11 @@ export class KeyHandlerError extends Error {
   }
 }
 
+export type AuthHandler = {
+  name: string;
+  flags: string[];
+  dynamic: boolean;
+};
 export class SigningError extends Error {
   originalError: Error;
 

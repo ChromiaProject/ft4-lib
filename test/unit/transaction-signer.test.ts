@@ -1,24 +1,27 @@
-import { Buffer } from "buffer";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createTestAuthDescriptor } from "../util/util";
-import { AuthFlag } from "@ft4/accounts/auth-descriptor";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
+import {
+  createFakeAuthDataService,
+  createTestAuthDescriptor,
+  testAdFromRegistration,
+} from "@ft4-test/util";
+import {
+  AnyAuthDescriptor,
+  AuthFlag,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
 import {
   AuthDataService,
   Authenticator,
   KeyHandler,
   createAuthenticator,
+  createEvmKeyHandler,
+  createFtKeyHandler,
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
 } from "@ft4/authentication";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+import { Connection } from "@ft4/ft-session";
+import { EMPTY_SIGNATURE, signTransaction } from "@ft4/transaction-builder";
+import { Buffer } from "buffer";
 import { KeyPair, encryption, formatter, gtx } from "postchain-client";
-import { Connection } from "@ft4/types";
-import { createInMemoryEvmKeyStore } from "@ft4/authentication";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
-import { createEvmKeyHandler } from "@ft4/authentication";
-import { testAdFromRegistration } from "../util/util";
-import { createFtKeyHandler } from "@ft4/authentication";
-import { signTransaction } from "@ft4/transaction-builder/transaction-signer";
-import { EMPTY_SIGNATURE } from "@ft4/transaction-builder/utils";
 
 describe("Transaction Signer", () => {
   const blockchainRid = formatter.toBuffer("ABCD1234");

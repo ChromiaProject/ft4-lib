@@ -1,37 +1,42 @@
 import {
   Authenticator,
+  FtKeyStore,
   KeyHandler,
   KeyStore,
+  SigningError,
+  createNoopAuthenticator,
   isFtKeyStore,
-  FtKeyStore,
 } from "@ft4/authentication";
-import { SigningError } from "@ft4/authentication";
+import {
+  BufferId,
+  OperationNotExistError,
+  TxContext,
+  getBlockchainApiUrls,
+  getDirectoryClient,
+  getNonceIdForTxContext,
+  getSystemAnchoringChain,
+  getTransactionRid,
+} from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
-  Operation,
-  gtx,
-  IClient,
-  isBlockAnchored,
-  getAnchoringClient,
   BlockAnchoringException,
-  SignedTransaction,
-  TransactionReceipt,
-  createIccfProofTx,
-  gtv,
-  RawGtx,
-  SystemChainException,
   GTX,
+  IClient,
+  Operation,
+  RawGtx,
+  SignedTransaction,
+  SystemChainException,
+  TransactionReceipt,
   Web3PromiEvent,
+  createClient,
+  createIccfProofTx,
+  formatter,
+  getAnchoringClient,
+  getBlockAnchoringTransaction,
+  gtv,
+  gtx,
+  isBlockAnchored,
 } from "postchain-client";
-import { getBlockAnchoringTransaction } from "postchain-client";
-import { formatter, createClient } from "postchain-client";
-import {
-  getNonceIdForTxContext,
-  getTransactionRid,
-  BufferId,
-} from "@ft4/utils";
-import { OperationNotExistError } from "@ft4/utils/errors";
-import { TxContext } from "@ft4/utils/types";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
@@ -41,11 +46,7 @@ import {
   TransactionBuilderConfig,
   TransactionWithReceipt,
 } from "./types";
-import { createNoopAuthenticator } from "@ft4/authentication/noop";
-import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
-import { getDirectoryClient } from "@ft4/utils/directory-chain";
-import { getBlockchainApiUrls } from "@ft4/utils/directory-chain";
-import { EMPTY_SIGNATURE } from "@ft4/transaction-builder/utils";
+import { EMPTY_SIGNATURE } from "./utils";
 
 const defaultConfig: TransactionBuilderConfig = {
   retryCount: 40,

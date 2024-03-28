@@ -2,9 +2,13 @@ export {
   isTransferApplied,
   getPendingTransfersForAccount,
   getAssetOriginById,
+  mapPendingTransfers,
+  getLastPendingTransferForAccount,
 } from "./query-functions";
-export { createOrchestrator } from "./orchestrator";
-export { initTransfer, applyTransfer, completeTransfer } from "./operations";
+export { createOrchestrator, createResumeOrchestrator } from "./orchestrator";
+
+export { initTransfer, applyTransfer } from "./operations";
+
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";

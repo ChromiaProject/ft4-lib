@@ -28,15 +28,14 @@ jest.mock("postchain-client", () => {
   };
 });
 
-import { generateId } from "../util/util";
+import { generateId } from "@ft4-test/util";
 import {
   createClient,
   IClient,
   MissingNodeUrlError,
   formatter,
 } from "postchain-client";
-import { Connection } from "@ft4/types";
-import { createConnection } from "@ft4/index";
+import { Connection, createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
 import { findPathToChainForAsset } from "@ft4/crosschain/pathfinder";
 import { BufferId } from "@ft4/utils/types";

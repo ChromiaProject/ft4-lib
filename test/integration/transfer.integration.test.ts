@@ -1,21 +1,24 @@
-import { newSignatureProvider } from "postchain-client";
+import {
+  AccountBuilder,
+  singleSigUser as TestUser,
+  adminUser,
+  getNewAsset,
+  useChromiaNode,
+} from "@ft4-test/util";
 import {
   AuthFlag,
-  deriveAuthDescriptorId,
   createMultiSigAuthDescriptorRegistration,
-} from "@ft4/accounts/auth-descriptor";
-import { createAmount } from "@ft4/asset/amount";
-import { Asset } from "@ft4/asset/types";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
-import AccountBuilder from "../util/account-builder";
-import adminUser from "../util/admin_user";
-import { getNewAsset } from "../util/blockchain-util";
-import TestUser from "../util/test-user";
-import { registerAccount } from "@ft4/admin/admin-op-functions";
-import { Connection } from "@ft4/types";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { IClient } from "postchain-client";
+  deriveAuthDescriptorId,
+} from "@ft4/accounts";
+import { registerAccountAdmin } from "@ft4/admin";
+import { Asset, createAmount } from "@ft4/asset";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import {
+  Connection,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
+import { IClient, newSignatureProvider } from "postchain-client";
 
 let asset: Asset;
 let connection: Connection;
@@ -105,7 +108,7 @@ describe("Transfer", () => {
       2,
       null,
     );
-    await registerAccount(
+    await registerAccountAdmin(
       connection.client,
       admin.signatureProvider,
       authDescriptor,

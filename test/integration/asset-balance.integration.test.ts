@@ -1,12 +1,12 @@
+import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import { ASSET_TYPE_FT4, Amount, Asset, createAmount } from "@ft4/asset";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import {
+  Connection,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
 import { IClient, encryption } from "postchain-client";
-import { Asset, Amount, createAmount } from "@ft4/asset";
-import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
-import AccountBuilder from "../util/account-builder";
-import { getNewAsset } from "../util/blockchain-util";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { ASSET_TYPE_FT4 } from "@ft4/asset/types";
 
 let connection: Connection;
 let client: IClient;
@@ -29,13 +29,8 @@ describe("Asset balance", () => {
   beforeAll(async () => {
     client = getClient();
     connection = createConnection(client);
-    asset1 = await getNewAsset(client, "asset_balance_1", "ASSET_BALANACE_1");
-    asset2 = await getNewAsset(
-      client,
-      "asset_balance_2",
-      "ASSET_BALANACE_2",
-      5,
-    );
+    asset1 = await getNewAsset(client, "asset_balance_1", "ASSET_BALANCE_1");
+    asset2 = await getNewAsset(client, "asset_balance_2", "ASSET_BALANCE_2", 5);
   });
 
   it("should be returned when queried by account id", async () => {
@@ -116,17 +111,17 @@ describe("Asset balance", () => {
     const asset1 = await getNewAsset(
       client,
       "asset_balance_3",
-      "ASSET_BALANACE_3",
+      "ASSET_BALANCE_3",
     );
     const asset2 = await getNewAsset(
       client,
       "asset_balance_4",
-      "ASSET_BALANACE_4",
+      "ASSET_BALANCE_4",
     );
     const asset3 = await getNewAsset(
       client,
       "asset_balance_5",
-      "ASSET_BALANACE_5",
+      "ASSET_BALANCE_5",
     );
 
     const keyPair = encryption.makeKeyPair();

@@ -1,19 +1,23 @@
-import { Buffer } from "buffer";
-import { ethers } from "ethers";
-import { IClient, encryption, gtx } from "postchain-client";
+import {
+  createFakeAuthDataService,
+  testAdFromRegistration,
+} from "@ft4-test/util";
 import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
-} from "@ft4/accounts/auth-descriptor";
-import { createAuthenticator } from "@ft4/authentication";
-import { createEvmKeyHandler, evmAuth } from "@ft4/authentication/evm";
-import { createInMemoryEvmKeyStore } from "@ft4/authentication/evm/key-stores/in-memory";
-import { op } from "@ft4/utils";
+} from "@ft4/accounts";
+import {
+  createAuthenticator,
+  createEvmKeyHandler,
+  createInMemoryEvmKeyStore,
+  evmAuth,
+} from "@ft4/authentication";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { createStubClient } from "postchain-client";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { testAdFromRegistration } from "../util/util";
+import { op } from "@ft4/utils";
+import { Buffer } from "buffer";
+import { ethers } from "ethers";
+import { IClient, createStubClient, encryption, gtx } from "postchain-client";
 
 describe("EVM key handler", () => {
   let client: IClient;

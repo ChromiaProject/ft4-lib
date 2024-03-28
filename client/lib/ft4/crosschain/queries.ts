@@ -1,6 +1,6 @@
 import { QueryObject, formatter } from "postchain-client";
 import { Buffer } from "buffer";
-import { OptionalLimit, OptionalPageCursor } from "@ft4/index";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { PendingTransferResponse } from "./types";
 import { BufferId } from "@ft4/utils";
 

@@ -1,8 +1,12 @@
 import { Buffer } from "buffer";
 import { ethers } from "ethers";
 import { KeyPair } from "postchain-client";
-import { createEvmKeyHandler, EvmKeyStore, signMessage } from "..";
 import { AnyAuthDescriptor } from "@ft4/accounts";
+import {
+  EvmKeyStore,
+  createEvmKeyHandler,
+  signMessage,
+} from "@ft4/authentication";
 
 export function createInMemoryEvmKeyStore(keyPair: KeyPair): EvmKeyStore {
   const wallet = new ethers.Wallet(keyPair.privKey.toString("hex"));

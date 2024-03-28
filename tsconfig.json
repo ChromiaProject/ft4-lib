@@ -19,7 +19,9 @@
     "types": ["jest"],
     "paths": {
       "@ft4/*": [
-        "./client/lib/ft4/*",
+        "./client/lib/ft4/*"
+      ],
+      "@ft4-test/*": [
         "./test/*"
       ]
     }

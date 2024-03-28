@@ -4,6 +4,8 @@
 
 - `registration.registerAccount` now accepts an IClient instead of a Connection.
 - Removed the `buildUnsigned` method from TransactionBuilder. 
+- All registration strategies can now be found inside the `registrationStrategy`-object. E.g., `registrationStrategy.fee(...)`
+- `registerAccount` has been renamed to `registerAccountAdmin`
 
 ### Changed 🪙
 
@@ -15,6 +17,7 @@
   chain.
 
 - `sign` and `signAndSend` methods in `Session` to add your signature to an existing transaction.
+- `gtv` object that contains functions for converting objects to/from `gtv`, e.g., `gtv.authDescriptorFromGtv(...)`
 
 ### Fixed 🔧
 
