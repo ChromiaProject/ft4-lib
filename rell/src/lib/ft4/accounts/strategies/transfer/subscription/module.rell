@@ -97,7 +97,7 @@ function renew_subscription_message(gtv) {
 @extend(auth.before_authenticate) function(accounts.account, accounts.account_auth_descriptor) {
     val subscription = subscription @? { account };
     if (subscription != null) {
-        val op = op_context.get_all_operations()[op_context.op_index];
+        val op = op_context.get_current_operation();
         val free_operations = free_operations();
         free_operations.add(rell.meta(renew_subscription).mount_name);
         if (op.name not in free_operations) {

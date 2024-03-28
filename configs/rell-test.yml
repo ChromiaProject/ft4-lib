@@ -55,8 +55,8 @@ blockchains:
           admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
         lib.ft4.accounts.strategies.transfer:
-          rules: 
-            - sender_blockchain: 
+          rules:
+            - sender_blockchain:
                 - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
                 - "$"
               sender: X
@@ -141,4 +141,4 @@ libs:
 
 compile:
   source: ../rell/src
-  rellVersion: 0.13.5
+  rellVersion: 0.13.9

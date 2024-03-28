@@ -14,7 +14,7 @@ val EVM_AUTH_OP = "ft4.evm_auth";
 val FT_AUTH_OP = "ft4.ft_auth";
 
 function authenticate(is_strict: boolean = true) {
-    val op = op_context.get_all_operations()[op_context.op_index];
+    val op = op_context.get_current_operation();
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];

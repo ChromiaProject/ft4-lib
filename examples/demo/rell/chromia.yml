@@ -11,7 +11,7 @@ blockchains:
 
 
 compile:
-  rellVersion: 0.13.5
+  rellVersion: 0.13.9
 
 libs:
   ft4:

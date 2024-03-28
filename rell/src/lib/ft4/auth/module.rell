@@ -76,7 +76,7 @@ function valid_scope_name(scope: text) {
     return scope_name;
 }
 
-function args() = op_context.get_all_operations()[op_context.op_index].args.to_gtv();
+function args() = op_context.get_current_operation().args.to_gtv();
 
 struct signature {
     r: byte_array;

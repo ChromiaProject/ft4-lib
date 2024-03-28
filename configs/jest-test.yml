@@ -50,4 +50,4 @@ libs:
 compile:
   source: ../rell/src
   target: ../rell/out
-  rellVersion: 0.13.5
+  rellVersion: 0.13.9
