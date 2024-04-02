@@ -1,4 +1,8 @@
-import { signTransaction, transactionBuilder } from "@ft4/transaction-builder";
+import {
+  TransactionBuilderConfig,
+  signTransaction,
+  transactionBuilder,
+} from "@ft4/transaction-builder";
 import { Buffer } from "buffer";
 import {
   DictPair,
@@ -145,8 +149,9 @@ export function createSession(
 ): Session {
   return Object.freeze({
     account: createAuthenticatedAccount(connection, authenticator),
-    transactionBuilder: () =>
-      transactionBuilder(authenticator, connection.client),
+    transactionBuilder: (
+      config: TransactionBuilderConfig | undefined = undefined,
+    ) => transactionBuilder(authenticator, connection.client, config),
     call: (...operations: Operation[]) =>
       call(connection, authenticator, ...operations),
     callWithoutNop: (...operations: Operation[]) =>

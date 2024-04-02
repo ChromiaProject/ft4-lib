@@ -1,6 +1,9 @@
 import { BufferId, Config, PaginatedEntity } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { TransactionBuilder } from "@ft4/transaction-builder";
+import {
+  TransactionBuilder,
+  TransactionBuilderConfig,
+} from "@ft4/transaction-builder";
 import {
   GTX,
   IClient,
@@ -80,7 +83,9 @@ export interface Session extends Connection {
   account: AuthenticatedAccount;
   call: (...operations: Operation[]) => Promise<TransactionReceipt>;
   callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
-  transactionBuilder: () => TransactionBuilder;
+  transactionBuilder: (
+    config?: TransactionBuilderConfig | undefined,
+  ) => TransactionBuilder;
   sign: (tx: GTX | RawGtx | SignedTransaction) => Promise<SignedTransaction>;
   signAndSend: (
     tx: GTX | RawGtx | SignedTransaction,
