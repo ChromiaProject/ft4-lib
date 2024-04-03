@@ -9,9 +9,7 @@ import {
 import { createInMemoryFtKeyStore, FtKeyStore } from "@ft4/authentication";
 import { encryption, gtx, KeyPair, SignatureProvider } from "postchain-client";
 
-export function singleSigUser(
-  rule: AuthDescriptorRules | null = null,
-): User {
+export function singleSigUser(rule: AuthDescriptorRules | null = null): User {
   return newSingleSigUser(encryption.makeKeyPair(), rule);
 }
 

@@ -1,4 +1,7 @@
-import { createFakeAuthDataService, createTestAuthDescriptor } from "@ft4-test/util";
+import {
+  createFakeAuthDataService,
+  createTestAuthDescriptor,
+} from "@ft4-test/util";
 import { aggregateSigners } from "@ft4/accounts";
 import { createInMemoryFtKeyStore, ftAuth } from "@ft4/authentication";
 import { op } from "@ft4/utils";
