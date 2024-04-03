@@ -14,11 +14,7 @@ import {
   RawSingleSig,
   RawMultiSig,
 } from "./types";
-import {
-  authDescriptorRuleMapper,
-  rulesFromGtv,
-  rulesToGtv,
-} from "./rules";
+import { authDescriptorRuleMapper, rulesFromGtv, rulesToGtv } from "./rules";
 
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,

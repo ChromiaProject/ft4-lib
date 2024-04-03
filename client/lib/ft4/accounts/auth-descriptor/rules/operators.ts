@@ -1,5 +1,9 @@
-import { ComplexRule, RuleOperator, RuleVariableValue, SimpleRule } from "./types";
-
+import {
+  ComplexRule,
+  RuleOperator,
+  RuleVariableValue,
+  SimpleRule,
+} from "./types";
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with

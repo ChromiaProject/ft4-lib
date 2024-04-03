@@ -1,4 +1,9 @@
-import { AnyAuthDescriptor, AuthDescriptorRuleVariable, AuthDescriptorSimpleRule, RuleOperator } from "@ft4/accounts";
+import {
+  AnyAuthDescriptor,
+  AuthDescriptorRuleVariable,
+  AuthDescriptorSimpleRule,
+  RuleOperator,
+} from "@ft4/accounts";
 import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,

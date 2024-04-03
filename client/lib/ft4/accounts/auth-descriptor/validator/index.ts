@@ -1,4 +1,3 @@
-export * from "./main"
-export * from "./types"
-export * from "./evaluation"
-
+export * from "./main";
+export * from "./types";
+export * from "./evaluation";

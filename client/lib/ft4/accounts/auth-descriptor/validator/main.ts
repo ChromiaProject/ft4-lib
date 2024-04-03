@@ -1,4 +1,3 @@
-
 import { createBaseAuthDescriptorValidator } from "./evaluation";
 import {
   AuthDescriptorValidationService,

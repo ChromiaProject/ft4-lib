@@ -1,4 +1,3 @@
-
 export class AmountInputError extends Error {
   constructor(msg?: string) {
     super(msg);

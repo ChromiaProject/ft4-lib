@@ -6,6 +6,4 @@ export {
   registerCrosschainAsset,
 } from "./admin-op-functions";
 
-export {
-  registerAccount as registerAccountAdminOp
-} from "./admin-operations"
+export { registerAccount as registerAccountAdminOp } from "./admin-operations";

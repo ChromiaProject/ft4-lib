@@ -1,4 +1,3 @@
-
 import { KeyStore } from "@ft4/authentication";
 import { GTX } from "postchain-client";
 

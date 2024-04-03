@@ -1,6 +1,9 @@
-import { AmountDecimalsError, AmountInputError, AmountOutOfRangeError } from "./error";
+import {
+  AmountDecimalsError,
+  AmountInputError,
+  AmountOutOfRangeError,
+} from "./error";
 import { Amount, DecimalFormat, RawAmount, SupportedNumber } from "./types";
-
 
 type AnyAssetAmount = RawAmount | Amount;
 

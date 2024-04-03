@@ -6,8 +6,7 @@ export {
   callWithoutNop,
   createAuthDataService,
   createKeyStoreInteractor,
-
-} from "./main"
+} from "./main";
 
 export {
   PageCursor,
@@ -17,4 +16,4 @@ export {
   Connection,
   Session,
   KeyStoreInteractor,
-} from "./types"
+} from "./types";

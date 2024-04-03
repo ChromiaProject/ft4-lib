@@ -5,7 +5,8 @@ import {
   createAuthenticator,
   getKeyHandlersForKeyStores,
   isFtKeyStore,
- deleteDisposableAuthDescriptors } from "@ft4/authentication";
+  deleteDisposableAuthDescriptors,
+} from "@ft4/authentication";
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import { IClient, Operation, Queryable, gtv } from "postchain-client";
 import {

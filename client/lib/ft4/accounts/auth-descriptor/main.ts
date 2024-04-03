@@ -1,7 +1,10 @@
-import { gtv } from "postchain-client"
+import { gtv } from "postchain-client";
 import { authDescriptorRegistrationToGtv } from "./gtv";
 import { AuthDescriptorRules } from "./rules";
-import { isRawAnyAuthDescriptorRegistration, isSingleSigArgs } from "./type-predicates";
+import {
+  isRawAnyAuthDescriptorRegistration,
+  isSingleSigArgs,
+} from "./type-predicates";
 import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,

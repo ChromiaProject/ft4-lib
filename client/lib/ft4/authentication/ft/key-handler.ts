@@ -1,7 +1,4 @@
-import {
-  AnyAuthDescriptor,
-  aggregateSigners,
-} from "@ft4/accounts";
+import { AnyAuthDescriptor, aggregateSigners } from "@ft4/accounts";
 import {
   AuthDataService,
   KeyHandler,
@@ -39,4 +36,3 @@ async function authorize(
 ): Promise<Operation[]> {
   return [ftAuth(accountId, authDescriptorId), operation];
 }
-
