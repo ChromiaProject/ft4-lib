@@ -26,7 +26,7 @@ import {
 } from "./errors";
 import { applyTransfer, completeTransfer, initTransfer } from "./operations";
 import { findPathToChainForAsset } from "./pathfinder";
-import { isTransferApplied } from "./queries";
+import { applyTransferTx, isTransferApplied } from "./queries";
 import {
   ExternalOrchestratorBase,
   Orchestrator,
@@ -171,17 +171,18 @@ export async function createResumeOrchestrator(
     state.opIndex = pendingTransfer.opIndex;
     state.initialTx = pendingTransfer.tx;
     state.initialOpIndex = pendingTransfer.opIndex;
+    let currentHopIndex: number | undefined = undefined;
     for (let i = 0; i < state.path.length; i++) {
       if (
-        await isAppliedOnBlockchainRid(
+        !(await isAppliedOnBlockchainRid(
           formatter.ensureBuffer(state.path[i]),
           getTransactionRid(state.tx),
           state.opIndex,
-        )
+        ))
       ) {
-        state.currentHopIndex = i + 1;
         break;
       }
+      currentHopIndex = i;
     }
 
     if (
@@ -193,8 +194,31 @@ export async function createResumeOrchestrator(
       return;
     }
 
+    if (currentHopIndex !== undefined) {
+      state.tx = await getAppliedTx(
+        getTransactionRid(state.tx),
+        state.path[currentHopIndex],
+        state.opIndex,
+      );
+      state.currentHopIndex = currentHopIndex + 1;
+    } else {
+      state.currentHopIndex = 0;
+    }
+
     await orchestrator.walkPath();
     await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
+  }
+
+  async function getAppliedTx(
+    tx_rid: Buffer,
+    targetChainRid: Buffer,
+    opIndex: number,
+  ) {
+    const newConnection = await createConnectionToBlockchainRid(
+      connection,
+      targetChainRid,
+    );
+    return newConnection.query(applyTransferTx(tx_rid, opIndex));
   }
 
   /**

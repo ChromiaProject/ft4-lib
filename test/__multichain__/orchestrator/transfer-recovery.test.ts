@@ -10,6 +10,7 @@ import { mint, registerCrosschainAsset } from "@ft4/admin";
 import { Asset, createAmount } from "@ft4/asset";
 import {
   PendingTransfer,
+  applyTransfer,
   createOrchestrator,
   findPathToChainForAsset,
   initTransfer,
@@ -22,7 +23,11 @@ import {
 } from "@ft4/ft-session";
 import { PaginatedEntity } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { formatter } from "postchain-client";
+import { setupTestEnvironment } from "./common-setup";
+import {
+  OnAnchoredHandlerData,
+  transactionBuilder,
+} from "@ft4/transaction-builder";
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;
@@ -31,7 +36,7 @@ describe("Orchestrator", () => {
   let asset: Asset;
   let multichain2Rid: Buffer;
 
-  const amount = createAmount(10, 1);
+  const amount = createAmount(10, 0);
   let counter = 0;
 
   beforeEach(async () => {
@@ -80,23 +85,14 @@ describe("Orchestrator", () => {
 
   it("resumes a transfer that was initiated but not completed", async () => {
     const path = await findPathToChainForAsset(session0, asset, multichain2Rid);
-    const normalizedPath = path.map(formatter.ensureBuffer);
-    const amount = createAmount(10);
+    const amount = createAmount(10, 0);
     await session0
       .transactionBuilder()
-      .add(
-        initTransfer(
-          account2.id,
-          asset.id,
-          amount,
-          normalizedPath,
-          10000000000000,
-        ),
-      )
+      .add(initTransfer(account2.id, asset.id, amount, path, 10000000000000))
       .buildAndSendWithAnchoring();
 
     const pendingTransfers = await account0.getPendingCrosschainTransfers();
-    await session0.account.resumeCrosschainTransfer(pendingTransfers.data[0]);
+    await account0.resumeCrosschainTransfer(pendingTransfers.data[0]);
 
     const balance = await account2.getBalanceByAssetId(asset.id);
     Object.assign(BigInt.prototype, {
@@ -106,6 +102,91 @@ describe("Orchestrator", () => {
     });
     expect(JSON.stringify(balance)).toStrictEqual(
       JSON.stringify({ asset, amount }),
+    );
+  });
+
+  it("resumes a transfer that was applied to intermediary but not completed", async () => {
+    const mintAmount = createAmount(100, 0);
+    const testContext = await setupTestEnvironment(
+      "transfer-recovery",
+      mintAmount,
+    );
+
+    // Register a crosschain asset
+    await registerCrosschainAsset(
+      testContext.connection1.client, // Leaf
+      adminUser().signatureProvider,
+      testContext.sampleAsset,
+      testContext.multichain2.rid, // Branch
+    );
+
+    // Submit init transfer on source chain
+    const path = await findPathToChainForAsset(
+      testContext.session0,
+      testContext.sampleAsset,
+      testContext.multichain1.rid,
+    );
+    const state = {} as any;
+    await testContext.session0
+      .transactionBuilder()
+      .addWithAnchoring(
+        initTransfer(
+          testContext.account1.id,
+          testContext.sampleAsset.id,
+          amount,
+          path,
+          10000000000000,
+        ),
+        path[0],
+        (data: OnAnchoredHandlerData | null) => {
+          state.tx = data?.tx;
+          state.initialOpIndex = data?.opIndex;
+          state.initialTx = data?.tx;
+          state.opIndex = data?.opIndex;
+          state.proof = data?.createProof(path[0]);
+        },
+      )
+      .buildAndSendWithAnchoring();
+
+    state.proof = await state.proof;
+
+    // Perform apply transfer on intermediary
+    await transactionBuilder(
+      testContext.account0.authenticator,
+      testContext.connection2.client,
+    )
+      .addWithoutAuthenticator(state.proof)
+      .addWithAnchoringWithoutAuthenticator(
+        applyTransfer(
+          state.initialTx!,
+          state.initialOpIndex!,
+          state.tx!,
+          state.opIndex!,
+          0,
+        ),
+        connection0.blockchainRid,
+        () => {},
+      )
+      .buildAndSendWithAnchoring();
+
+    // Use Orchestrator to recover the transfer
+    const pendingTransfers =
+      await testContext.account0.getPendingCrosschainTransfers();
+    await testContext.account0.resumeCrosschainTransfer(
+      pendingTransfers.data[0],
+    );
+
+    // Assert that transfer were completed
+    const balance = await testContext.account1.getBalanceByAssetId(
+      testContext.sampleAsset.id,
+    );
+    Object.assign(BigInt.prototype, {
+      toJSON: function () {
+        return this.toString();
+      },
+    });
+    expect(JSON.stringify(balance)).toStrictEqual(
+      JSON.stringify({ asset: testContext.sampleAsset, amount }),
     );
   });
 

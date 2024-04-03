@@ -226,7 +226,7 @@ operation apply_transfer(
     }
 
     // Add transfer to applied transfers table so that it cannot be applied more than once
-    val applied_transfer = create crosschain.applied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+    val applied_transfer = create crosschain.applied_transfers(init_transfer_details.tx_rid, init_tx_op_index, op_context.transaction);
 
     crosschain.after_apply_transfer(
         sender_blockchain_rid = init_transfer_tx.body.blockchain_rid,
@@ -283,7 +283,7 @@ function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
         "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(INIT_TRANSFER_OP_NAME, op_index, op.name)
     );
 
-    val tx_rid = tx.hash();
+    val tx_rid = tx.body.hash();
     val args = struct<init_transfer>.from_gtv(op.args.to_gtv());
 
     val auth_op = tx.body.operations[op_index - 1];

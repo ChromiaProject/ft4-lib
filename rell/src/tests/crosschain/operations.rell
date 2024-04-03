@@ -290,7 +290,7 @@ function test_apply_transfer_fails_when_applied_twice() {
         .run_must_fail(
             "Transaction <%s> transfer at index <1> has already been applied on this chain."
             .format(
-                tx.to_gtv().hash()
+                tx.body.to_gtv().hash()
             )
         ); // Should fail
 }

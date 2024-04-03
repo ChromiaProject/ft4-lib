@@ -5,6 +5,7 @@ entity applied_transfers {
     key tx_rid, op_index; 
     tx_rid: byte_array;
     op_index: integer;
+    transaction;
 }
 
 entity pending_transfer {

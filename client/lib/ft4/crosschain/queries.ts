@@ -1,4 +1,4 @@
-import { QueryObject, formatter } from "postchain-client";
+import { QueryObject, RawGtx, formatter } from "postchain-client";
 import { Buffer } from "buffer";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { PendingTransferResponse } from "./types";
@@ -71,6 +71,19 @@ export function isTransferApplied(
 ): QueryObject<boolean, { tx_rid: Buffer; op_index: number }> {
   return {
     name: "ft4.crosschain.is_transfer_applied",
+    args: {
+      tx_rid: txRid,
+      op_index: opIndex,
+    },
+  };
+}
+
+export function applyTransferTx(
+  txRid: Buffer,
+  opIndex: number,
+): QueryObject<RawGtx, { tx_rid: Buffer; op_index: number }> {
+  return {
+    name: "ft4.crosschain.get_apply_transfer_tx",
     args: {
       tx_rid: txRid,
       op_index: opIndex,
