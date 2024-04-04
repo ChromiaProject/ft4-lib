@@ -2,11 +2,9 @@ import {
   Authenticator,
   KeyHandler,
   FtKeyStore,
-  Signer,
   FtSigner,
   isFtSigner,
   SigningError,
-  createNoopAuthenticator,
   isFtKeyStore,
 } from "@ft4/authentication";
 import {
@@ -43,7 +41,7 @@ import {
 import {
   AnchoringTimeoutError,
   AuthorizationError,
-  OnAnchoredHandler,
+  OperationConfig,
   OperationContext,
   TransactionBuilder,
   TransactionBuilderConfig,
@@ -71,116 +69,21 @@ export function transactionBuilder(
   const _operations: OperationContext[] = [];
   const _finalFtSigners: FtSigner[] = [];
   const _context: TxContext = {};
-
-  let _noopAuthenticator: Authenticator;
   let _directoryClient: IClient;
   let _clusterAnchoringClient: IClient;
   let _systemAnchoringChain: Buffer;
 
   function add(
     operation: Operation,
-    onAnchoredHandler?: OnAnchoredHandler,
+    config: OperationConfig = {},
   ): TransactionBuilder {
     _operations.push({
       operation,
-      authenticator,
-      onAnchoredHandler,
+      authenticator: config.authenticator ?? authenticator,
+      onAnchoredHandler: config.onAnchoredHandler,
+      signers: config.signers,
+      targetBlockchainRid: config.targetBlockchainRid,
     });
-    return me;
-  }
-
-  function addWithAuthenticator(
-    operation: Operation,
-    authenticator: Authenticator,
-    onAnchoredHandler?: OnAnchoredHandler,
-  ): TransactionBuilder {
-    _operations.push({
-      operation,
-      authenticator,
-      onAnchoredHandler,
-    });
-    return me;
-  }
-
-  function addWithoutAuthenticator(
-    operation: Operation,
-    onAnchoredHandler?: OnAnchoredHandler,
-  ): TransactionBuilder {
-    _operations.push({
-      operation,
-      authenticator: ensureNoopAuthenticator(),
-      onAnchoredHandler,
-    });
-    return me;
-  }
-
-  function addWithAnchoring(
-    operation: Operation,
-    targetBlockchainRid: BufferId,
-    onAnchoredHandler: OnAnchoredHandler,
-  ): TransactionBuilder {
-    _operations.push({
-      operation,
-      authenticator,
-      targetBlockchainRid: formatter.ensureBuffer(targetBlockchainRid),
-      onAnchoredHandler,
-    });
-    return me;
-  }
-
-  function addWithAnchoringWithAuthenticator(
-    operation: Operation,
-    authenticator: Authenticator,
-    targetBlockchainRid: BufferId,
-    onAnchoredHandler: OnAnchoredHandler,
-  ): TransactionBuilder {
-    _operations.push({
-      operation,
-      authenticator,
-      targetBlockchainRid: formatter.ensureBuffer(targetBlockchainRid),
-      onAnchoredHandler,
-    });
-    return me;
-  }
-
-  function addWithAnchoringWithoutAuthenticator(
-    operation: Operation,
-    targetBlockchainRid: BufferId,
-    onAnchoredHandler: OnAnchoredHandler,
-  ): TransactionBuilder {
-    if (_noopAuthenticator === undefined) {
-      _noopAuthenticator = createNoopAuthenticator(
-        authenticator.authDataService,
-      );
-    }
-    _operations.push({
-      operation,
-      authenticator: _noopAuthenticator,
-      targetBlockchainRid: formatter.ensureBuffer(targetBlockchainRid),
-      onAnchoredHandler,
-    });
-    return me;
-  }
-
-  function addWithSigner(
-    operation: Operation,
-    signers: Signer[],
-    onAnchoredHandler?: OnAnchoredHandler,
-  ): TransactionBuilder {
-    _operations.push({ operation, authenticator, signers, onAnchoredHandler });
-    return me;
-  }
-
-  function addWithSignersOnly(
-    operation: Operation,
-    signers: Signer[],
-  ): TransactionBuilder {
-    _operations.push({
-      operation,
-      authenticator: ensureNoopAuthenticator(),
-      signers,
-    });
-
     return me;
   }
 
@@ -592,16 +495,6 @@ export function transactionBuilder(
     return _directoryClient;
   }
 
-  function ensureNoopAuthenticator(): Authenticator {
-    if (_noopAuthenticator === undefined) {
-      _noopAuthenticator = createNoopAuthenticator(
-        authenticator.authDataService,
-      );
-    }
-
-    return _noopAuthenticator;
-  }
-
   async function ensureSystemAnchoringChain(): Promise<Buffer> {
     if (_systemAnchoringChain === undefined) {
       _systemAnchoringChain = await getSystemAnchoringChain(
@@ -659,13 +552,6 @@ export function transactionBuilder(
 
   const me = Object.freeze({
     add,
-    addWithSigner,
-    addWithSignersOnly,
-    addWithAuthenticator,
-    addWithoutAuthenticator,
-    addWithAnchoring,
-    addWithAnchoringWithAuthenticator,
-    addWithAnchoringWithoutAuthenticator,
     addSigners,
     build,
     buildAndSend,

@@ -13,98 +13,10 @@ export type TransactionBuilder = {
   /**
    * Adds an operation to include in the final transaction
    * @param operation the operation to add to the transaction
-   * @param handler called when the transaction is anchored
+   * @param config a configuration object that will be used for this operation when building the transaction
    * @returns an instance of the transaction builder object
    */
-  add: (
-    operation: Operation,
-    handler?: OnAnchoredHandler,
-  ) => TransactionBuilder;
-
-  addWithSigner: (
-    operation: Operation,
-    signers: Signer[],
-    handler?: OnAnchoredHandler,
-  ) => TransactionBuilder;
-
-  addWithSignersOnly: (
-    operation: Operation,
-    signers: Signer[],
-  ) => TransactionBuilder;
-
-  /**
-   * Adds an operation to include in the final transaction.
-   * The operation will be authenticated using the provided
-   * authenticator, and if `build` is called, the authenticator
-   * will also be used to sign the transaction.
-   * @param operation the operation to add
-   * @param authenticator the authenticator to use for this and only this operation
-   * @param handler called when the transaction is anchored
-   * @returns an instance of the transaction builder object
-   */
-  addWithAuthenticator: (
-    operation: Operation,
-    authenticator: Authenticator,
-    handler?: OnAnchoredHandler,
-  ) => TransactionBuilder;
-  /**
-   * Adds an operation to include in the final transaction.
-   * The operation will not be authenticated using FT4 authentication.
-   * @param operation the operation to add
-   * @param handler called when the transaction is anchored
-   * @returns an instance of the transaction builder object
-   */
-  addWithoutAuthenticator: (
-    operation: Operation,
-    handler?: OnAnchoredHandler,
-  ) => TransactionBuilder;
-
-  /**
-   * Adds an operation to include in the final transaction,
-   * and wait for it to be ready to be proven in another chain.
-   * @param operation the operation to add to the transaction
-   * @param targetBlockchainRid the chain where the operation should be proven
-   * @param handler called when the transaction is anchored and ready to be proven in the target chain
-   * @returns an instance of the transaction builder object
-   */
-  addWithAnchoring: (
-    operation: Operation,
-    targetBlockchainRid: BufferId,
-    handler: OnAnchoredHandler,
-  ) => TransactionBuilder;
-
-  /**
-   * Adds an operation to include in the final transaction,
-   * and wait for it to be ready to be proven in another chain.
-   * The operation will be authenticated using the provided
-   * authenticator, and it will also be used to sign the transaction.
-   * @param operation the operation to add to the transaction
-   * @param authenticator the authenticator to use for this and only this operation
-   * @param targetBlockchainRid the chain where the operation should be proven
-   * @param handler called when the transaction is anchored and ready to be proven in the target chain
-   * @returns an instance of the transaction builder object
-   */
-  addWithAnchoringWithAuthenticator: (
-    operation: Operation,
-    authenticator: Authenticator,
-    targetBlockchainRid: BufferId,
-    handler: OnAnchoredHandler,
-  ) => TransactionBuilder;
-
-  /**
-   * Adds an operation to include in the final transaction,
-   * and wait for it to be ready to be proven in another chain.
-   * The operation will not be authenticated using FT4 authentication.
-   * @param operation the operation to add to the transaction
-   * @param targetBlockchainRid the chain where the operation should be proven
-   * @param handler called when the transaction is anchored and ready to be proven in the target chain
-   * @returns an instance of the transaction builder object
-   */
-  addWithAnchoringWithoutAuthenticator: (
-    operation: Operation,
-    targetBlockchainRid: BufferId,
-    handler: OnAnchoredHandler,
-  ) => TransactionBuilder;
+  add: (operation: Operation, config?: OperationConfig) => TransactionBuilder;
 
   /**
    * Add key stores that will also be included as signers to this transaction.
@@ -190,13 +102,28 @@ export type OnAnchoredHandler = ((
 ) => void) &
   ((data: null, error: Error) => void);
 
-export type OperationContext = {
-  operation: Operation;
-  opIndex?: number;
-  authenticator: Authenticator;
+/**
+ * Configuration options for an operation.
+ * @typedef {Object} OperationConfig
+ * @property {Authenticator} [authenticator] - An optional authenticator instance used for the operation.
+ * @property {OnAnchoredHandler} [onAnchoredHandler] - Callback function to be called when the transaction is anchored. If provided, `targetBlockchainRid` must also be provided.
+ * @property {FtKeyStore[]} [signers] - An optional array of FtKeyStore instances that will be used to sign this operation.
+ * @property {Buffer} [targetBlockchainRid] - Buffer representing the rid where this operation should be anchored. If provided, `onAnchoredHandler` must also be provided.
+ */
+export type OperationConfig = {
+  authenticator?: Authenticator;
+  onAnchoredHandler?: OnAnchoredHandler;
   signers?: Signer[];
   targetBlockchainRid?: Buffer;
+};
+
+export type OperationContext = {
+  operation: Operation;
+  authenticator: Authenticator;
   onAnchoredHandler?: OnAnchoredHandler;
+  targetBlockchainRid?: Buffer;
+  opIndex?: number;
+  signers?: Signer[];
 };
 
 export type OnAnchoredHandlerData = {

@@ -79,7 +79,9 @@ async function addAuthDescriptor(
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
-    .addWithSigner(addAuthDescriptorOp(authDescriptorRegistration), [keyStore])
+    .add(addAuthDescriptorOp(authDescriptorRegistration), {
+      signers: [keyStore],
+    })
     .build();
 
   const receipt = await connection.client.sendTransaction(tx);

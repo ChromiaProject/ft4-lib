@@ -1,5 +1,10 @@
 import { Amount } from "@ft4/asset";
-import { Authenticator, SigningError, days } from "@ft4/authentication";
+import {
+  Authenticator,
+  SigningError,
+  noopAuthenticator,
+  days,
+} from "@ft4/authentication";
 import { EventEmitter, Listener } from "@ft4/events";
 import { Connection, createConnectionToBlockchainRid } from "@ft4/ft-session";
 import {
@@ -78,10 +83,12 @@ export async function createOrchestrator(
    */
   function performInitTransfer(): Promise<void> {
     return transactionBuilder(authenticator, connection.client)
-      .addWithAnchoring(
-        initTransfer(recipientId, assetId, amount, path, Date.now() + ttl),
-        path[0],
-        (data: OnAnchoredHandlerData | null, error: Error | null) => {
+      .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl), {
+        targetBlockchainRid: path[0],
+        onAnchoredHandler: (
+          data: OnAnchoredHandlerData | null,
+          error: Error | null,
+        ) => {
           if (error) {
             throw new InitTransferError(
               `Unable to fetch proof: ${error.message}`,
@@ -94,7 +101,7 @@ export async function createOrchestrator(
             state.opIndex = data?.opIndex;
           }
         },
-      )
+      })
       .add(nop())
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {
@@ -306,8 +313,8 @@ async function createBaseOrchestrator(
 
     try {
       await tb
-        .addWithoutAuthenticator(iccfOp)
-        .addWithAnchoringWithoutAuthenticator(
+        .add(iccfOp, { authenticator: noopAuthenticator })
+        .add(
           applyTransfer(
             initTransferTx,
             initTransferOpIndex,
@@ -315,16 +322,22 @@ async function createBaseOrchestrator(
             state.opIndex!,
             hopIndex,
           ),
-          anchoringTargetChain,
-          (data: OnAnchoredHandlerData | null, error: Error | null) => {
-            if (error) {
-              throw new ApplyTransferError(
-                `Unable to fetch proof: ${error.message}`,
-                error,
-              );
-            }
-            state.tx = data?.tx;
-            state.opIndex = data?.opIndex;
+          {
+            authenticator: noopAuthenticator,
+            targetBlockchainRid: anchoringTargetChain,
+            onAnchoredHandler: (
+              data: OnAnchoredHandlerData | null,
+              error: Error | null,
+            ) => {
+              if (error) {
+                throw new ApplyTransferError(
+                  `Unable to fetch proof: ${error.message}`,
+                  error,
+                );
+              }
+              state.tx = data?.tx;
+              state.opIndex = data?.opIndex;
+            },
           },
         )
         .buildAndSendWithAnchoring();
@@ -414,8 +427,10 @@ async function createBaseOrchestrator(
       Buffer.from(connection.client.config.blockchainRid, "hex"),
     );
     await tb
-      .addWithoutAuthenticator(iccfOp)
-      .addWithoutAuthenticator(completeTransfer(tx, opIndex))
+      .add(iccfOp, { authenticator: noopAuthenticator })
+      .add(completeTransfer(tx, opIndex), {
+        authenticator: noopAuthenticator,
+      })
       .buildAndSend();
   }
 

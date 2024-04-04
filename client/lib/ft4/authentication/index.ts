@@ -64,7 +64,7 @@ export {
   isFtSigner,
 } from "./ft";
 
-export { createNoopAuthenticator } from "./noop";
+export { createNoopAuthenticator, noopAuthenticator } from "./noop";
 
 export {
   createAuthenticator,

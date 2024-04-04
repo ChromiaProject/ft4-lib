@@ -8,7 +8,7 @@ import {
 import { AuthFlag } from "@ft4/accounts";
 import { registerCrosschainAsset } from "@ft4/admin";
 import { createAmount } from "@ft4/asset";
-import { days } from "@ft4/authentication";
+import { noopAuthenticator, days } from "@ft4/authentication";
 import { applyTransfer, initTransfer } from "@ft4/crosschain";
 import { createConnection } from "@ft4/ft-session";
 import { transactionBuilder } from "@ft4/transaction-builder";
@@ -59,7 +59,7 @@ describe("Crosschain transfer", () => {
 
     let transferTransactionRid: Buffer | undefined = undefined;
     await new Promise<void>((resolve, reject) => {
-      const onAnchoringHandler = async (
+      const onAnchoredHandler = async (
         data: {
           operation: Operation;
           opIndex: number;
@@ -79,9 +79,12 @@ describe("Crosschain transfer", () => {
         const iccfProofOperation = await data.createProof(multichain01.rid);
         try {
           await transactionBuilder(account00.authenticator, connection01.client)
-            .addWithoutAuthenticator(iccfProofOperation)
-            .addWithoutAuthenticator(
+            .add(iccfProofOperation, {
+              authenticator: noopAuthenticator,
+            })
+            .add(
               applyTransfer(data.tx, data.opIndex, data.tx, data.opIndex, 0),
+              { authenticator: noopAuthenticator },
             )
             .buildAndSend();
         } catch (error) {
@@ -91,7 +94,7 @@ describe("Crosschain transfer", () => {
         resolve();
       };
 
-      tb.add(initOperation, onAnchoringHandler)
+      tb.add(initOperation, { onAnchoredHandler })
         .buildAndSendWithAnchoring()
         .then((res) => {
           transferTransactionRid = res.receipt.transactionRid;

@@ -62,10 +62,11 @@ import {
   createFtKeyHandler,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
-  createNoopAuthenticator,
   ftAuth,
+  noopAuthenticator,
   ftSigner,
   toRawSignature,
+  createNoopAuthenticator,
 } from "@ft4/authentication";
 import {
   AnchoringTimeoutError,
@@ -239,30 +240,27 @@ describe("Transaction Builder", () => {
 
   it("does not allow build() when there are onAnchoredHandlers", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
+        onAnchoredHandler: (_data, _error) => null,
+      })
       .build();
     await expect(promise).rejects.toThrow(Error);
   });
 
   it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
+        onAnchoredHandler: (_data, _error) => null,
+      })
       .buildAndSend();
     await expect(promise).rejects.toThrow(Error);
   });
 
   it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
+        onAnchoredHandler: (_data, _error) => null,
+      })
       .buildAndSend();
     await expect(promise).rejects.toThrow(Error);
   });
@@ -288,10 +286,9 @@ describe("Transaction Builder", () => {
     const { authenticatorMock, keyHandlerMock, keyStoreMock, authDescriptor } =
       getMocks();
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(
-        registerAccountAdminOp(authDescriptor),
-        authenticatorMock,
-      )
+      .add(registerAccountAdminOp(authDescriptor), {
+        authenticator: authenticatorMock,
+      })
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyStoreMock.sign).toHaveBeenCalled();
@@ -301,9 +298,9 @@ describe("Transaction Builder", () => {
     const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
     const tx = gtx.deserialize(
       await transactionBuilder(authenticator, client)
-        .addWithoutAuthenticator(
-          transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
-        )
+        .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)), {
+          authenticator: noopAuthenticator,
+        })
         .build(),
     );
 
@@ -364,10 +361,9 @@ describe("Transaction Builder", () => {
     const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
     const tx = gtx.deserialize(
       await transactionBuilder(authenticator, client)
-        .addWithAuthenticator(
-          transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
-          createNoopAuthenticator(createFakeAuthDataService({})),
-        )
+        .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)), {
+          authenticator: noopAuthenticator,
+        })
         .build(),
     );
 
@@ -483,7 +479,7 @@ describe("Transaction Builder", () => {
         retryCount: 10,
         waitTimeMs: 10,
       })
-        .add(mockOperation, callback)
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(operation)
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {
@@ -522,8 +518,8 @@ describe("Transaction Builder", () => {
         retryCount: 10,
         waitTimeMs: 10,
       })
-        .add(mockOperation, callback)
-        .add(mockOperation, callback2)
+        .add(mockOperation, { onAnchoredHandler: callback })
+        .add(mockOperation, { onAnchoredHandler: callback2 })
         .add(operation)
         .buildAndSendWithAnchoring();
 
@@ -569,7 +565,7 @@ describe("Transaction Builder", () => {
         retryCount: 10,
         waitTimeMs: 10,
       })
-        .add(mockOperation, callback)
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(operation)
         .buildAndSendWithAnchoring();
 
@@ -601,7 +597,7 @@ describe("Transaction Builder", () => {
         retryCount: 10,
         waitTimeMs: 10,
       })
-        .add(mockOperation, callback)
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(operation)
         .buildAndSendWithAnchoring();
 
@@ -629,7 +625,7 @@ describe("Transaction Builder", () => {
         retryCount: 2,
         waitTimeMs: 1,
       })
-        .add(mockOperation, callback)
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(nop())
         .buildAndSendWithAnchoring();
 
@@ -654,7 +650,7 @@ describe("Transaction Builder", () => {
         retryCount: 2,
         waitTimeMs: 1,
       })
-        .add(mockOperation, callback)
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(nop())
         .buildAndSendWithAnchoring();
 
@@ -670,11 +666,11 @@ describe("Transaction Builder", () => {
       const blockchainRid = Buffer.alloc(32);
       const ftKeyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
 
-      const tx = await transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-      )
-        .addWithSignersOnly(emptyOp(), [ftKeyStore])
+      const tx = await transactionBuilder(noopAuthenticator, client)
+        .add(emptyOp(), {
+          signers: [ftKeyStore],
+          authenticator: noopAuthenticator,
+        })
         .build();
 
       const expectedTxWithoutSignatures: RawGtx = [
@@ -694,11 +690,8 @@ describe("Transaction Builder", () => {
       const blockchainRid = Buffer.alloc(32);
       const signer = ftSigner(encryption.makeKeyPair().pubKey);
 
-      const tx = await transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-      )
-        .addWithSignersOnly(emptyOp(), [signer])
+      const tx = await transactionBuilder(noopAuthenticator, client)
+        .add(emptyOp(), { signers: [signer] })
         .build();
 
       const expectedTx = gtv.encode([
@@ -716,16 +709,11 @@ describe("Transaction Builder", () => {
       const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
       const signer4 = ftSigner(encryption.makeKeyPair().pubKey);
 
-      const tx = await transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-      )
-        .addWithSignersOnly(emptyOp(), [
-          ftKeyStore1,
-          signer2,
-          ftKeyStore3,
-          signer4,
-        ])
+      const tx = await transactionBuilder(noopAuthenticator, client)
+        .add(emptyOp(), {
+          signers: [ftKeyStore1, signer2, ftKeyStore3, signer4],
+          authenticator: noopAuthenticator,
+        })
         .build();
 
       const expectedTxWithoutSignatures: RawGtx = [
@@ -760,7 +748,7 @@ describe("Transaction Builder", () => {
         }),
       );
       const tx = await transactionBuilder(authenticator, client)
-        .addWithSignersOnly(emptyOp(), [evmKeyStore])
+        .add(emptyOp(), { signers: [evmKeyStore] })
         .build();
 
       const expectedTx = gtv.encode([
@@ -799,7 +787,7 @@ describe("Transaction Builder", () => {
         }),
       );
       const tx = await transactionBuilder(authenticator, client)
-        .addWithSignersOnly(emptyOp(), [signer])
+        .add(emptyOp(), { signers: [signer], authenticator: noopAuthenticator })
         .build();
 
       const expectedTx = gtv.encode([
@@ -832,12 +820,9 @@ describe("Transaction Builder", () => {
         }),
       );
       const tx = await transactionBuilder(authenticator, client)
-        .addWithSignersOnly(emptyOp(), [
-          evmKeyStore1,
-          signer2,
-          evmKeyStore3,
-          signer4,
-        ])
+        .add(emptyOp(), {
+          signers: [evmKeyStore1, signer2, evmKeyStore3, signer4],
+        })
         .build();
 
       const expectedTx = gtv.encode([
@@ -889,12 +874,9 @@ describe("Transaction Builder", () => {
         }),
       );
       const tx = await transactionBuilder(authenticator, client)
-        .addWithSignersOnly(emptyOp(), [
-          evmKeyStore1,
-          evmSigner2,
-          ftKeyStore3,
-          ftSigner4,
-        ])
+        .add(emptyOp(), {
+          signers: [evmKeyStore1, evmSigner2, ftKeyStore3, ftSigner4],
+        })
         .build();
 
       const expectedTxWithoutSignatures: RawGtx = [
@@ -945,7 +927,7 @@ describe("Transaction Builder", () => {
       );
 
       const tx = await transactionBuilder(authenticator, client)
-        .addWithSigner(emptyOp(), [evmKeyStore])
+        .add(emptyOp(), { signers: [evmKeyStore] })
         .build();
 
       const expectedTxWithoutSignatures: RawGtx = [
@@ -998,7 +980,7 @@ describe("Transaction Builder", () => {
       );
 
       const tx = await transactionBuilder(authenticator, client)
-        .addWithSigner(emptyOp(), [evmKeyStore2])
+        .add(emptyOp(), { signers: [evmKeyStore2] })
         .build();
 
       const expectedTx = gtv.encode([
@@ -1057,9 +1039,18 @@ describe("Transaction Builder", () => {
         retryCount: 10,
         waitTimeMs: 10,
       })
-        .addWithAnchoring(mockOperation, targetBlockchainRid1, callback1)
-        .addWithAnchoring(mockOperation, targetBlockchainRid2, callback2)
-        .addWithAnchoring(mockOperation, targetBlockchainRid2, callback3)
+        .add(mockOperation, {
+          targetBlockchainRid: targetBlockchainRid1,
+          onAnchoredHandler: callback1,
+        })
+        .add(mockOperation, {
+          targetBlockchainRid: targetBlockchainRid2,
+          onAnchoredHandler: callback2,
+        })
+        .add(mockOperation, {
+          targetBlockchainRid: targetBlockchainRid2,
+          onAnchoredHandler: callback3,
+        })
         .buildAndSendWithAnchoring();
 
       expect(isBlockAnchored).toHaveBeenCalledTimes(3);

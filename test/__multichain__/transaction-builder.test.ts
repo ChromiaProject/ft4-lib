@@ -43,8 +43,13 @@ describe("transaction builder", () => {
       account00.authenticator,
       connection00.client,
     )
-      .add(emptyOp(), callback)
-      .addWithAnchoring(emptyOp(), rid01, callback2)
+      .add(emptyOp(), {
+        onAnchoredHandler: callback,
+      })
+      .add(emptyOp(), {
+        targetBlockchainRid: rid01,
+        onAnchoredHandler: callback2,
+      })
       .add(operation)
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {
