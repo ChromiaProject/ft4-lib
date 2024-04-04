@@ -1,7 +1,7 @@
 import { BufferId } from "@ft4/utils";
 import { Operation, formatter } from "postchain-client";
-import { FtKeyStore } from "./types";
-import { KeyStore } from "@ft4/authentication";
+import { FtKeyStore, FtSigner } from "./types";
+import { Signer } from "@ft4/authentication";
 
 export function ftAuth(
   accountId: BufferId,
@@ -16,6 +16,16 @@ export function ftAuth(
   };
 }
 
-export function isFtKeyStore(keyStore: KeyStore): keyStore is FtKeyStore {
-  return (keyStore as FtKeyStore).pubKey !== undefined;
+export function ftSigner(pubKey: BufferId): FtSigner {
+  return {
+    pubKey: formatter.ensureBuffer(pubKey),
+  };
+}
+
+export function isFtSigner(signer: Signer): signer is FtSigner {
+  return (signer as FtSigner).pubKey !== undefined;
+}
+
+export function isFtKeyStore(keyStore: Signer): keyStore is FtKeyStore {
+  return isFtSigner(keyStore) && (keyStore as FtKeyStore).sign !== undefined;
 }

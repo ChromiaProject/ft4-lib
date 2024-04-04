@@ -1,4 +1,4 @@
-import { Authenticator, FtKeyStore } from "@ft4/authentication";
+import { Authenticator, FtKeyStore, Signer } from "@ft4/authentication";
 import {
   IClient,
   Operation,
@@ -20,6 +20,18 @@ export type TransactionBuilder = {
     operation: Operation,
     handler?: OnAnchoredHandler,
   ) => TransactionBuilder;
+
+  addWithSigner: (
+    operation: Operation,
+    signers: Signer[],
+    handler?: OnAnchoredHandler,
+  ) => TransactionBuilder;
+
+  addWithSignersOnly: (
+    operation: Operation,
+    signers: Signer[],
+  ) => TransactionBuilder;
+
   /**
    * Adds an operation to include in the final transaction.
    * The operation will be authenticated using the provided
@@ -180,10 +192,11 @@ export type OnAnchoredHandler = ((
 
 export type OperationContext = {
   operation: Operation;
-  authenticator: Authenticator;
-  targetBlockchainRid?: Buffer;
-  onAnchoredHandler: OnAnchoredHandler | undefined;
   opIndex?: number;
+  authenticator: Authenticator;
+  signers?: Signer[];
+  targetBlockchainRid?: Buffer;
+  onAnchoredHandler?: OnAnchoredHandler;
 };
 
 export type OnAnchoredHandlerData = {

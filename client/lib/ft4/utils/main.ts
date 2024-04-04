@@ -45,6 +45,10 @@ export function getTransactionRid(tx: RawGtx): Buffer {
   return gtv.gtvHash(tx[0]); //tx body
 }
 
+export function isRawGtx(tx: GTX | RawGtx): tx is RawGtx {
+  return Array.isArray(tx);
+}
+
 export function getNonceIdForTxContext(
   accountId: BufferId,
   authDescriptorId: BufferId,
@@ -70,8 +74,10 @@ export async function getAllAuthHandlers(
   );
 }
 
-export function compactArray<T>(elements: (T | null)[]): T[] {
-  return elements.filter((element): element is T => element !== null);
+export function compactArray<T>(elements: (T | null | undefined)[]): T[] {
+  return elements.filter(
+    (element): element is T => element !== null && element !== undefined,
+  );
 }
 
 export async function createAndSignTransaction(

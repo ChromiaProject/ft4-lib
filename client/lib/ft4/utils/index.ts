@@ -15,6 +15,7 @@ export {
   createAndSignTransaction,
   getNonceIdForTxContext,
   getTransactionRid,
+  isRawGtx,
   getConfig,
   op,
   nop,

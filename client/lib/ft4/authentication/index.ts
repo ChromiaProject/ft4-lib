@@ -25,6 +25,7 @@ export {
 } from "./login";
 
 export {
+  Signer,
   KeyStore,
   KeyHandler,
   AuthDataService,
@@ -37,6 +38,7 @@ export {
 export {
   Signature,
   EvmKeyStore,
+  EvmSigner,
   Eip1193Provider,
   createGenericEvmKeyStore,
   createInMemoryEvmKeyStore,
@@ -44,15 +46,22 @@ export {
   createEvmKeyHandler,
   signMessage,
   sliceSignature,
+  toRawSignature,
+  isEvmKeyStore,
+  isEvmSigner,
+  evmSigner,
   evmAuth,
 } from "./evm";
 
 export {
   FtKeyStore,
+  FtSigner,
   ftAuth,
   createInMemoryFtKeyStore,
   createFtKeyHandler,
+  ftSigner,
   isFtKeyStore,
+  isFtSigner,
 } from "./ft";
 
 export { createNoopAuthenticator } from "./noop";

@@ -153,7 +153,7 @@ function has_flags(account_auth_descriptor, required_flags: list<text>): boolean
 }
 
 function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
-    val signers = get_signers(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes());
+    val signers = get_signers(auth_descriptor);
     require(not safe or op_context.get_signers().size() >= signers.size(), "Too few transaction signers");
     val auth_descriptor_signers = list<struct<auth_descriptor_signer>>();
     for (signer in signers) {
@@ -165,7 +165,7 @@ function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: bo
 
 function _add_evm_signer(account, auth_descriptor, account_auth_descriptor) {
     create auth_descriptor_signer(
-        get_signers(auth_descriptor.auth_type, auth_descriptor.args.to_gtv().to_bytes()) @* {}
+        get_signers(auth_descriptor) @* {}
             (struct<auth_descriptor_signer>(account_auth_descriptor, id = $))
     );
 }

@@ -13,6 +13,9 @@ function after_authenticate(accounts.account, accounts.account_auth_descriptor?)
 val EVM_AUTH_OP = "ft4.evm_auth";
 val FT_AUTH_OP = "ft4.ft_auth";
 
+val EVM_ADDRESS_SIZE = 20;
+val FT_PUBKEY_SIZE = 33;
+
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_current_operation();
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
@@ -20,7 +23,7 @@ function authenticate(is_strict: boolean = true) {
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
         is_auth_op(previous_op),
-        "Error authenticating operation. Incorrect auth operation %s".format(previous_op.name)
+        "Error authorizing operation. Incorrect auth operation %s".format(previous_op.name)
     );
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
@@ -180,7 +183,7 @@ function _validate_ft4_signature(
    	val result: utils.validation_result = accounts.check_auth_args(
           		auth_descriptor.auth_type,
           		auth_descriptor.args,
-                accounts.get_signers(auth_descriptor.auth_type, auth_descriptor.args),
+                accounts.get_signers_from_encoded_auth_descriptor(auth_descriptor.auth_type, auth_descriptor.args),
           		flags
    	);
 
@@ -233,6 +236,66 @@ function _validate_multiple_evm_addresses(message: text, signatures: list<signat
     return recovered_keys;
 }
 
+/**
+  * Verifies whether provided list of signers have signed the operation/transaction.
+  * FT (GTX) signers are checked against GTX `signers` and `signatures` fields, while 
+  * EVM signers are checked against signers and signatures provided in `ft4.evm_signatures` operation.
+  */
+function verify_signers(ft_and_evm_signers: list<byte_array>) {
+    val (signers, signatures) = get_evm_signatures();
+
+    val op = op_context.get_current_operation();
+    val message = get_auth_message_template(op.name, op.args.to_gtv(), true);
+
+    for (i in range(signatures.size())) {
+        val signer = signers[i];
+        require(
+            signer == _recover_evm_address(message, signatures[i]),
+            "Invalid signature for address <%s>".format(signer)
+        );
+    }
+
+    val evm_signers = set(signers);
+
+    for (signer in ft_and_evm_signers) {
+        if (signer.size() == EVM_ADDRESS_SIZE) require(signer in evm_signers, "Missing signature for address <%s>".format(signer));
+        else if (signer.size() == FT_PUBKEY_SIZE) require(op_context.is_signer(signer), "Missing signature for public key <%s>".format(signer));
+        else require(false, "Unsupported signer <%d>".format(signer));
+    }
+}
+
+function get_evm_signatures() {
+    if (op_context.op_index == 0) return (signers = list<byte_array>(), signatures = list<signature>());
+
+    val tx_operations = op_context.get_all_operations();
+    val prev_op = tx_operations[op_context.op_index-1];
+    var evm_signatures_op: gtx_operation? = null;
+    
+    if (is_evm_signatures_op(prev_op)) {
+        evm_signatures_op = prev_op;
+    } else if (
+        op_context.op_index > 1 and
+        is_auth_op(prev_op) and 
+        is_evm_signatures_op(tx_operations[op_context.op_index-2])
+    ) {
+        evm_signatures_op = tx_operations[op_context.op_index-2];
+    }
+
+    if (empty(evm_signatures_op)) return (signers = list<byte_array>(), signatures = list<signature>());
+
+    val args = struct<external.evm_signatures>.from_gtv(evm_signatures_op.args.to_gtv());
+
+    require(
+        args.signers.size() == args.signatures.size(),
+        "Number of evm signers <%d> is not equal to number of evm signatures <%d>".format(args.signers.size(), args.signatures.size())
+    );
+
+    return (
+        signers = args.signers,
+        signatures = args.signatures
+    );
+}
+
 function extract_account_id(auth_op: gtx_operation): byte_array {
     require(is_auth_op(auth_op), "Operation %s is not an auth operation".format(auth_op.name));
     require(auth_op.args.size() >= 1, "Invalid auth op, insufficient number of args: %s".format(auth_op.args.size()));
@@ -240,3 +303,5 @@ function extract_account_id(auth_op: gtx_operation): byte_array {
 }
 
 function is_auth_op(op: gtx_operation) = op.name in [EVM_AUTH_OP, FT_AUTH_OP];
+
+function is_evm_signatures_op(op: gtx_operation) = op.name == "ft4.evm_signatures";

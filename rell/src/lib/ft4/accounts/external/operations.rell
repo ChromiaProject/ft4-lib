@@ -126,5 +126,7 @@ function () = auth.add_overridable_auth_handler(
 
 operation add_auth_descriptor(new_desc: accounts.auth_descriptor) {
     val account = auth.authenticate();
-    accounts.add_auth_descriptor_to_account(account, new_desc);
+    val signers = accounts.get_signers(new_desc);
+    auth.verify_signers(signers);
+    accounts.add_auth_descriptor_to_account(account, new_desc, false);
 }

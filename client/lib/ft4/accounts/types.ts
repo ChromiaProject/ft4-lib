@@ -1,10 +1,5 @@
-import {
-  AnyAuthDescriptor,
-  AnyAuthDescriptorRegistration,
-} from "@ft4/accounts";
 import { Amount, Balance } from "@ft4/asset";
-import { Authenticator, FtKeyStore } from "@ft4/authentication";
-import { PendingTransfer } from "@ft4/crosschain";
+import { Authenticator, KeyStore } from "@ft4/authentication";
 import { OptionalPageCursor } from "@ft4/ft-session";
 import {
   BufferId,
@@ -17,6 +12,11 @@ import {
   TransferHistoryEntry,
   TransferHistoryFilter,
 } from "./transfer-history";
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+} from "@ft4/accounts";
+import { PendingTransfer } from "@ft4/crosschain";
 import {
   SignedTransaction,
   TransactionReceipt,
@@ -71,7 +71,7 @@ export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
     authDescriptor: AnyAuthDescriptorRegistration,
-    keyStore: FtKeyStore,
+    keyStore: KeyStore,
   ) => Promise<TransactionSessionCompletion>;
   deleteAuthDescriptor: (
     authDescriptorId: BufferId,

@@ -1,4 +1,4 @@
-import { KeyStore } from "@ft4/authentication";
+import { KeyStore, Signer } from "@ft4/authentication";
 
 export type Signature = {
   r: Buffer;
@@ -6,7 +6,13 @@ export type Signature = {
   v: number;
 };
 
-export interface EvmKeyStore extends KeyStore {
+export type RawSignature = [r: Buffer, s: Buffer, v: number];
+
+export interface EvmSigner extends Signer {
+  address: Buffer;
+}
+
+export interface EvmKeyStore extends KeyStore, EvmSigner {
   address: Buffer;
   signMessage(message: string): Promise<Signature>;
 }

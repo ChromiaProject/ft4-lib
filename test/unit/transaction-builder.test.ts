@@ -37,6 +37,7 @@ import {
   anchoredHandlerCallbackParameters,
   createFakeAuthDataService,
   createTestAuthDescriptor,
+  createTestAuthDescriptorWithSigner,
   emptyOp,
   testAdFromRegistration,
 } from "@ft4-test/util";
@@ -56,16 +57,20 @@ import {
   KeyHandler,
   SigningError,
   createAuthenticator,
+  evmSigner,
   createEvmKeyHandler,
   createFtKeyHandler,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
   createNoopAuthenticator,
   ftAuth,
+  ftSigner,
+  toRawSignature,
 } from "@ft4/authentication";
 import {
   AnchoringTimeoutError,
   AuthorizationError,
+  EMPTY_SIGNATURE,
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import {
@@ -73,6 +78,7 @@ import {
   KeyPair,
   NetworkSettings,
   Operation,
+  gtv,
   SignedTransaction,
   TransactionReceipt,
   Web3PromiEvent,
@@ -83,6 +89,7 @@ import {
   gtx,
   isBlockAnchored,
   BlockAnchoringException,
+  RawGtx,
 } from "postchain-client";
 import { nop, op } from "@ft4/utils";
 import { ethers } from "ethers";
@@ -94,6 +101,8 @@ describe("Transaction Builder", () => {
   let authDescriptor: AnyAuthDescriptor;
   let keyHandler: KeyHandler;
   let authDataService: AuthDataService;
+
+  const emptyOpAuthMessage = "empty op auth message";
 
   const mockOperation: Operation = {
     name: "testOperation",
@@ -656,6 +665,378 @@ describe("Transaction Builder", () => {
         expect.any(AnchoringTimeoutError),
       );
     }, 5000);
+
+    it("adds signer and signature when FtKeyStore provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const ftKeyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+
+      const tx = await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+      )
+        .addWithSignersOnly(emptyOp(), [ftKeyStore])
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [blockchainRid, [["empty_op", []]], [ftKeyStore.id]],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [await ftKeyStore.sign(expectedTxWithoutSignatures)],
+        ]),
+      );
+    });
+
+    it("adds signer without signature when FtSigner provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const signer = ftSigner(encryption.makeKeyPair().pubKey);
+
+      const tx = await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+      )
+        .addWithSignersOnly(emptyOp(), [signer])
+        .build();
+
+      const expectedTx = gtv.encode([
+        [blockchainRid, [["empty_op", []]], [signer.pubKey]],
+        [EMPTY_SIGNATURE],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signers and signatures when FtSigners and FtKeyStores provided as signers", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const signer2 = ftSigner(encryption.makeKeyPair().pubKey);
+      const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const signer4 = ftSigner(encryption.makeKeyPair().pubKey);
+
+      const tx = await transactionBuilder(
+        createNoopAuthenticator(createFakeAuthDataService({})),
+        client,
+      )
+        .addWithSignersOnly(emptyOp(), [
+          ftKeyStore1,
+          signer2,
+          ftKeyStore3,
+          signer4,
+        ])
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [["empty_op", []]],
+          [ftKeyStore1.id, signer2.pubKey, ftKeyStore3.id, signer4.pubKey],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [
+            await ftKeyStore1.sign(expectedTxWithoutSignatures),
+            EMPTY_SIGNATURE,
+            await ftKeyStore3.sign(expectedTxWithoutSignatures),
+            EMPTY_SIGNATURE,
+          ],
+        ]),
+      );
+    });
+
+    it("adds signer and signature when EvmKeyStore provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithSignersOnly(emptyOp(), [evmKeyStore])
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.id],
+                [
+                  toRawSignature(
+                    await evmKeyStore.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signer without signature when EvmSigner provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const signer = evmSigner(evmKeyStore.address);
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithSignersOnly(emptyOp(), [signer])
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            ["ft4.evm_signatures", [[signer.address], [null]]],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signers and signatures when EvmSigners and EvmKeyStores provided as signers", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore3 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore4 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const signer2 = evmSigner(evmKeyStore2.id);
+      const signer4 = evmSigner(evmKeyStore4.id);
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithSignersOnly(emptyOp(), [
+          evmKeyStore1,
+          signer2,
+          evmKeyStore3,
+          signer4,
+        ])
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [
+                  evmKeyStore1.id,
+                  signer2.address,
+                  evmKeyStore3.id,
+                  signer4.address,
+                ],
+                [
+                  toRawSignature(
+                    await evmKeyStore1.signMessage(emptyOpAuthMessage),
+                  ),
+                  null,
+                  toRawSignature(
+                    await evmKeyStore3.signMessage(emptyOpAuthMessage),
+                  ),
+                  null,
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signers and signatures when EvmKeyStore, EvmSigner, FtKeyStore and FtSigner provided as signers", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const ftSigner4 = ftSigner(encryption.makeKeyPair().pubKey);
+      const evmSigner2 = evmSigner(evmKeyStore2.id);
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithSignersOnly(emptyOp(), [
+          evmKeyStore1,
+          evmSigner2,
+          ftKeyStore3,
+          ftSigner4,
+        ])
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore1.id, evmSigner2.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore1.signMessage(emptyOpAuthMessage),
+                  ),
+                  null,
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [ftKeyStore3.id, ftSigner4.pubKey],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [
+            await ftKeyStore3.sign(expectedTxWithoutSignatures),
+            EMPTY_SIGNATURE,
+          ],
+        ]),
+      );
+    });
+
+    it("can combine evm_signatures operation with ft_auth operation", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const accountId = encryption.randomBytes(32);
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithSigner(emptyOp(), [evmKeyStore])
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["ft4.ft_auth", [accountId, authDescriptor.id]],
+            ["empty_op", []],
+          ],
+          [keyStore.id],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [await keyStore.sign(expectedTxWithoutSignatures)],
+        ]),
+      );
+    });
+
+    it("can combine evm_signatures operation with evm_auth operation", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const accountId = gtv.gtvHash(evmKeyStore1.id);
+      const authDescriptor = createTestAuthDescriptorWithSigner(
+        accountId,
+        evmKeyStore1.id,
+      );
+      const authenticator = createAuthenticator(
+        accountId,
+        [evmKeyStore1.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .addWithSigner(emptyOp(), [evmKeyStore2])
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore2.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore2.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            [
+              "ft4.evm_auth",
+              [
+                accountId,
+                authDescriptor.id,
+                [
+                  toRawSignature(
+                    await evmKeyStore1.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
 
     it("calls registered handler when block is anchored target cluster", async () => {
       const targetBlockchainRid1 = formatter.toBuffer("1111");

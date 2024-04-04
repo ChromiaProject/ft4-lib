@@ -1,4 +1,9 @@
 import {
+  ftAuth,
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
+import {
   AccountBuilder,
   addAuthDescriptorTo,
   adminUser,
@@ -20,7 +25,6 @@ import {
   gtv,
 } from "@ft4/accounts";
 import { registerAccountAdmin } from "@ft4/admin";
-import { createInMemoryFtKeyStore, ftAuth } from "@ft4/authentication";
 import {
   Connection,
   createConnection,
@@ -80,15 +84,31 @@ describe("Test the account", () => {
     await expect(accountPromise).resolves.toBeDefined();
   });
 
-  it("can add new auth descriptor if has account edit rights", async () => {
+  it("can add new FT auth descriptor if has account edit rights", async () => {
     const account = await AccountBuilder.account(_connection)
       .withAuthFlags(AuthFlag.Account)
       .build();
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
-      createTestAuthDescriptor(["A"]);
+      createTestAuthDescriptor();
 
     await account.addAuthDescriptor(authDescriptor2, keyStore2);
+
+    expect((await account.getAuthDescriptors()).length).toBe(2);
+  });
+
+  it("can add new EVM auth descriptor if has account edit rights", async () => {
+    const account = await AccountBuilder.account(_connection)
+      .withAuthFlags(AuthFlag.Account)
+      .build();
+
+    const evmKeyStore = createInMemoryEvmKeyStore(pcl.encryption.makeKeyPair());
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      [],
+      evmKeyStore.id,
+    );
+
+    await account.addAuthDescriptor(authDescriptor, evmKeyStore);
 
     expect((await account.getAuthDescriptors()).length).toBe(2);
   });

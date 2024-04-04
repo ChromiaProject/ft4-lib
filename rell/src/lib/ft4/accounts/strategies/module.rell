@@ -21,12 +21,12 @@ function register_account(): accounts.account {
     val strategy = get_strategy(strategy_name);
     val account_details = strategy.account_details(strategy_params);
 
-    val signers = get_signers(account_details.initial);
+    val signers = accounts.get_signers(account_details.initial);
     val message = get_register_account_message(strategy_name, strategy_params);
     verify_all_signatures(signers, evm_signatures, message);
 
     if (account_details.disposable??) {
-        val disposable_auth_descriptor_signers = get_signers(account_details.disposable!!);
+        val disposable_auth_descriptor_signers = accounts.get_signers(account_details.disposable!!);
         verify_all_signatures(disposable_auth_descriptor_signers, evm_signatures, message);
     }
 
@@ -73,12 +73,6 @@ function verify_all_signatures(signers: list<byte_array>, evm_signatures: list<a
         }
     }
 }
-
-function get_signers(accounts.auth_descriptor)
-    = when (auth_descriptor.auth_type) {
-        S -> [accounts.single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).signer];
-        M -> accounts.multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()).signers;
-    };
 
 function get_mandatory_flags() = ["A"];
 

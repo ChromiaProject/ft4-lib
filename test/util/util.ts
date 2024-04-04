@@ -33,6 +33,7 @@ import {
   RellOperation,
   SignatureProvider,
   encryption,
+  formatter,
   gtx,
   gtv as pclGtv,
 } from "postchain-client";
@@ -111,20 +112,35 @@ export function createTestAuthDescriptor(
   keyStore: FtKeyStore;
 } {
   const keyPair = encryption.makeKeyPair();
-  const ad = createSingleSigAuthDescriptorRegistration(
-    flags,
-    keyPair.pubKey,
-    rules,
-  );
   return {
     keyPair,
-    authDescriptor: {
-      ...ad,
-      id: deriveAuthDescriptorId(ad),
-      accountId: deriveAuthDescriptorId(ad),
-      created: new Date(0),
-    },
+    authDescriptor: createTestAuthDescriptorWithSigner(
+      pclGtv.gtvHash(keyPair.pubKey),
+      keyPair.pubKey,
+      flags,
+      rules,
+    ),
     keyStore: createInMemoryFtKeyStore(keyPair),
+  };
+}
+
+export function createTestAuthDescriptorWithSigner(
+  accountId: BufferId,
+  signer: BufferId,
+  flags: string[] = [],
+  rules: AuthDescriptorRules | null = null,
+): AuthDescriptor<SingleSig> {
+  const ad = createSingleSigAuthDescriptorRegistration(
+    flags,
+    formatter.ensureBuffer(signer),
+    rules,
+  );
+
+  return {
+    accountId: formatter.ensureBuffer(accountId),
+    id: deriveAuthDescriptorId(ad),
+    created: new Date(0),
+    ...ad,
   };
 }
 

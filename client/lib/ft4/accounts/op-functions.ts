@@ -1,7 +1,7 @@
 import { Amount } from "@ft4/asset";
 import {
   Authenticator,
-  FtKeyStore,
+  KeyStore,
   createAuthenticator,
 } from "@ft4/authentication";
 import {
@@ -40,7 +40,7 @@ export function createAuthenticatedAccount(
     authenticator,
     addAuthDescriptor: (
       authDescriptor: AnyAuthDescriptorRegistration,
-      keyStore: FtKeyStore,
+      keyStore: KeyStore,
     ) => addAuthDescriptor(connection, authenticator, authDescriptor, keyStore),
     deleteAuthDescriptor: (authDescriptorId: BufferId) =>
       deleteAuthDescriptor(connection, authenticator, authDescriptorId),
@@ -74,13 +74,12 @@ async function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorRegistration: AnyAuthDescriptorRegistration,
-  keyStore: FtKeyStore,
+  keyStore: KeyStore,
 ): Promise<TransactionSessionCompletion> {
   const tb = transactionBuilder(authenticator, connection.client);
 
   const tx = await tb
-    .add(addAuthDescriptorOp(authDescriptorRegistration))
-    .addSigners(keyStore)
+    .addWithSigner(addAuthDescriptorOp(authDescriptorRegistration), [keyStore])
     .build();
 
   const receipt = await connection.client.sendTransaction(tx);

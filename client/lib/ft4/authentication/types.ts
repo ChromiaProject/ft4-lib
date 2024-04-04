@@ -58,7 +58,9 @@ export interface KeyHandler {
   getSigners(): Buffer[];
 }
 
-export interface KeyStore {
+export interface Signer {}
+
+export interface KeyStore extends Signer {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;

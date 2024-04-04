@@ -2,7 +2,8 @@ import { Operation, formatter } from "postchain-client";
 import { ethers } from "ethers";
 import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
-import { Signature } from "./types";
+import { EvmKeyStore, EvmSigner, RawSignature, Signature } from "./types";
+import { Signer } from "@ft4/authentication";
 
 export function evmAuth(
   accountId: BufferId,
@@ -14,7 +15,7 @@ export function evmAuth(
     args: [
       formatter.ensureBuffer(accountId),
       formatter.ensureBuffer(authDescriptorId),
-      signatures.map(({ r, s, v }) => [r, s, v]),
+      signatures.map(toRawSignature),
     ],
   };
 }
@@ -33,4 +34,25 @@ export function sliceSignature(signature: string): Signature {
     s: Buffer.from(s.slice(2), "hex"),
     v,
   };
+}
+
+export function evmSigner(address: BufferId): EvmSigner {
+  return {
+    address: formatter.ensureBuffer(address),
+  };
+}
+
+export function toRawSignature(signature: Signature): RawSignature {
+  const { r, s, v } = signature;
+  return [r, s, v];
+}
+
+export function isEvmSigner(signer: Signer): signer is EvmSigner {
+  return (signer as EvmSigner).address !== undefined;
+}
+
+export function isEvmKeyStore(keyStore: Signer): keyStore is EvmKeyStore {
+  return (
+    isEvmSigner(keyStore) && (keyStore as EvmKeyStore).signMessage !== undefined
+  );
 }
