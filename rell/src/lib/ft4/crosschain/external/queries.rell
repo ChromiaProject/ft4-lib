@@ -34,4 +34,7 @@ query is_transfer_applied(tx_rid: byte_array, op_index: integer) {
 }
 
 query get_apply_transfer_tx(tx_rid: byte_array, op_index: integer) =
-    crosschain.applied_transfers @ { .tx_rid == tx_rid, .op_index == op_index }( gtx_transaction.from_bytes($.transaction.tx_data).to_gtv() );
+    crosschain.applied_transfers @ { .tx_rid == tx_rid, .op_index == op_index } ( 
+        tx = gtx_transaction.from_bytes($.transaction.tx_data).to_gtv(),
+        op_index = $.op_index
+    );

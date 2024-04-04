@@ -81,7 +81,10 @@ export function isTransferApplied(
 export function applyTransferTx(
   txRid: Buffer,
   opIndex: number,
-): QueryObject<RawGtx, { tx_rid: Buffer; op_index: number }> {
+): QueryObject<
+  { tx: RawGtx; op_index: number },
+  { tx_rid: Buffer; op_index: number }
+> {
   return {
     name: "ft4.crosschain.get_apply_transfer_tx",
     args: {

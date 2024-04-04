@@ -195,11 +195,13 @@ export async function createResumeOrchestrator(
     }
 
     if (currentHopIndex !== undefined) {
-      state.tx = await getAppliedTx(
+      const res = await getAppliedTx(
         getTransactionRid(state.tx),
         state.path[currentHopIndex],
         state.opIndex,
       );
+      state.tx = res.tx;
+      state.opIndex = res.opIndex;
       state.currentHopIndex = currentHopIndex + 1;
     } else {
       state.currentHopIndex = 0;
@@ -218,7 +220,9 @@ export async function createResumeOrchestrator(
       connection,
       targetChainRid,
     );
-    return newConnection.query(applyTransferTx(tx_rid, opIndex));
+    return newConnection
+      .query(applyTransferTx(tx_rid, opIndex))
+      .then((res) => ({ tx: res.tx, opIndex: res.op_index }));
   }
 
   /**
