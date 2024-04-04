@@ -179,7 +179,7 @@ function require_evm_signatures_can_be_used() {
     }
 
     require(
-        is_evm_signatures_authorized_operation(op_to_authorize!!.name),
-        "Cannot authorize operation <%s> with evm_signatures".format(op_to_authorize!!.name)
+        is_evm_signatures_authorized_operation(op_to_authorize.name),
+        "Cannot authorize operation <%s> with evm_signatures".format(op_to_authorize.name)
     );
 }
