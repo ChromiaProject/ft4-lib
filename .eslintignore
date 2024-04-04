@@ -5,3 +5,4 @@
 !/examples
 !/cypress
 !cypress.config.ts
+!jest.setup.ts
