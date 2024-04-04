@@ -147,6 +147,7 @@ libs:
 compile:
   source: ../rell/src
   rellVersion: 0.13.9
+  quiet: false
 
 test:
   failOnError: false

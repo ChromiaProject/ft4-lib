@@ -51,3 +51,4 @@ compile:
   source: ../rell/src
   target: ../rell/out
   rellVersion: 0.13.9
+  quiet: false
