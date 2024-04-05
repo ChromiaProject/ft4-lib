@@ -5,13 +5,15 @@ import { BufferId } from "@ft4/utils";
 import { EvmKeyStore, EvmSigner, RawSignature, Signature } from "./types";
 import { Signer } from "@ft4/authentication";
 
+export const EVM_AUTH = "ft4.evm_auth";
+
 export function evmAuth(
   accountId: BufferId,
   authDescriptorId: BufferId,
   signatures: Signature[],
 ): Operation {
   return {
-    name: "ft4.evm_auth",
+    name: EVM_AUTH,
     args: [
       formatter.ensureBuffer(accountId),
       formatter.ensureBuffer(authDescriptorId),
@@ -56,3 +58,8 @@ export function isEvmKeyStore(keyStore: Signer): keyStore is EvmKeyStore {
     isEvmSigner(keyStore) && (keyStore as EvmKeyStore).signMessage !== undefined
   );
 }
+
+export const BLOCKCHAIN_RID_PLACEHOLDER = "{blockchain_rid}";
+export const ACCOUNT_ID_PLACEHOLDER = "{account_id}";
+export const AUTH_DESCRIPTOR_ID_PLACEHOLDER = "{auth_descriptor_id}";
+export const NONCE_PLACEHOLDER = "{nonce}";

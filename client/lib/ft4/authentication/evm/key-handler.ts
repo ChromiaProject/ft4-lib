@@ -7,7 +7,13 @@ import {
 } from "@ft4/authentication";
 import { BufferId, TxContext, getNonceIdForTxContext } from "@ft4/utils";
 import { GTX, Operation, formatter } from "postchain-client";
-import { evmAuth } from "./main";
+import {
+  ACCOUNT_ID_PLACEHOLDER,
+  AUTH_DESCRIPTOR_ID_PLACEHOLDER,
+  BLOCKCHAIN_RID_PLACEHOLDER,
+  NONCE_PLACEHOLDER,
+  evmAuth,
+} from "./main";
 import { EvmKeyStore } from "./types";
 
 export function createEvmKeyHandler(
@@ -71,13 +77,16 @@ async function authorize(
 
   const blockchainRid = authDataService.getBlockchainRid();
   const message = messageTemplate
-    .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
-      "{auth_descriptor_id}",
-      formatter.ensureBuffer(authDescriptorId).toString("hex"),
+      ACCOUNT_ID_PLACEHOLDER,
+      formatter.toString(formatter.ensureBuffer(accountId)),
     )
-    .replace("{blockchain_rid}", blockchainRid.toString("hex"))
-    .replace("{nonce}", `${nonce}`);
+    .replace(
+      AUTH_DESCRIPTOR_ID_PLACEHOLDER,
+      formatter.toString(formatter.ensureBuffer(authDescriptorId)),
+    )
+    .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
+    .replace(NONCE_PLACEHOLDER, `${nonce}`);
 
   const signature = await keyStore.signMessage(message);
   return [evmAuth(accountId, authDescriptorId, [signature]), operation];

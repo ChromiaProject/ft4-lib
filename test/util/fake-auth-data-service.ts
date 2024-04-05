@@ -23,7 +23,7 @@ export function createFakeAuthDataService(
       generator.next().value,
     getLoginConfig: (_configName: string) =>
       Promise.resolve({ flags: [], rules: null } as LoginConfig),
-    getBlockchainRid: () => Buffer.from(""),
+    getBlockchainRid: () => Buffer.alloc(32),
     getAuthHandlerForOperation: (operationName: string) =>
       Promise.resolve({
         name: operationName,

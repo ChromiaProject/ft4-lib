@@ -16,6 +16,11 @@ val FT_AUTH_OP = "ft4.ft_auth";
 val EVM_ADDRESS_SIZE = 20;
 val FT_PUBKEY_SIZE = 33;
 
+val BLOCKCHAIN_RID_PLACEHOLDER = "{blockchain_rid}";
+val ACCOUNT_ID_PLACEHOLDER = "{account_id}";
+val AUTH_DESCRIPTOR_ID_PLACEHOLDER = "{auth_descriptor_id}";
+val NONCE_PLACEHOLDER = "{nonce}";
+
 function authenticate(is_strict: boolean = true) {
     val op = op_context.get_current_operation();
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
@@ -142,8 +147,8 @@ function _validate_evm_signature(
 }
 
 function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
-    require(message_template.contains("{nonce}"), "Message template has to include '{nonce}'");
-    require(message_template.contains("{blockchain_rid}"), "Message template has to include '{blockchain_rid}'");
+    require(message_template.contains(NONCE_PLACEHOLDER), "Message template has to include '%s'".format(NONCE_PLACEHOLDER));
+    require(message_template.contains(BLOCKCHAIN_RID_PLACEHOLDER), "Message template has to include '%s'".format(BLOCKCHAIN_RID_PLACEHOLDER));
     var message = message_template;
     
     // TODO: check if this is still needed
@@ -152,10 +157,10 @@ function create_message_from_template(accounts.evm_auth_args, message_template: 
     }
     
     return message
-        .replace("{account_id}", evm_auth_args.account.id.to_hex())
-        .replace("{auth_descriptor_id}", evm_auth_args.account_auth_descriptor.id.to_hex())
-        .replace("{nonce}", ctr.to_text().replace("\"", ""))
-        .replace("{blockchain_rid}", chain_context.blockchain_rid.to_hex());
+        .replace(ACCOUNT_ID_PLACEHOLDER, evm_auth_args.account.id.to_hex().upper_case())
+        .replace(AUTH_DESCRIPTOR_ID_PLACEHOLDER, evm_auth_args.account_auth_descriptor.id.to_hex().upper_case())
+        .replace(NONCE_PLACEHOLDER, ctr.to_text().replace("\"", ""))
+        .replace(BLOCKCHAIN_RID_PLACEHOLDER, chain_context.blockchain_rid.to_hex().upper_case());
 }
 
 function _validate_evm_arguments(
@@ -245,7 +250,22 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
     val (signers, signatures) = get_evm_signatures();
 
     val op = op_context.get_current_operation();
-    val message = get_auth_message_template(op.name, op.args.to_gtv(), true);
+    val message_template = get_auth_message_template(op.name, op.args.to_gtv(), true);
+
+    var message = message_template
+        .replace(BLOCKCHAIN_RID_PLACEHOLDER, chain_context.blockchain_rid.to_hex().upper_case())
+        .replace(NONCE_PLACEHOLDER, "0");
+
+    if (message_template.contains(ACCOUNT_ID_PLACEHOLDER) or message_template.contains(AUTH_DESCRIPTOR_ID_PLACEHOLDER)) {
+        val auth_details = require(
+            get_auth_details_from_auth_operation(),
+            "Cannot extract auth details. Auth operation not found"
+        );
+        
+        message = message
+            .replace(ACCOUNT_ID_PLACEHOLDER, auth_details.account_id.to_hex().upper_case())
+            .replace(AUTH_DESCRIPTOR_ID_PLACEHOLDER, auth_details.auth_descriptor_id.to_hex().upper_case());
+    }
 
     for (i in range(signatures.size())) {
         val signer = signers[i];
@@ -305,3 +325,14 @@ function extract_account_id(auth_op: gtx_operation): byte_array {
 function is_auth_op(op: gtx_operation) = op.name in [EVM_AUTH_OP, FT_AUTH_OP];
 
 function is_evm_signatures_op(op: gtx_operation) = op.name == "ft4.evm_signatures";
+
+function get_auth_details_from_auth_operation() {
+    if (op_context.op_index == 0) return null;
+    val op = op_context.get_all_operations()[op_context.op_index-1];
+    if (not is_auth_op(op)) return null;
+
+    return (
+        account_id = byte_array.from_gtv(op.args[0]),
+        auth_descriptor_id = byte_array.from_gtv(op.args[1])
+    );
+}

@@ -5,6 +5,7 @@ import acc: ^^^.lib.ft4.accounts;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
+import ^^^.lib.ft4.auth;
 import ^^.operations;
 
 struct module_args {
@@ -248,17 +249,33 @@ function mint_to_account(account_data, assets.asset, amount: big_integer) {
         .run();
 }
 
-function create_auth_message(template: text, account_data) {
-    val nonce = acc.account_auth_descriptor @ {
-        account_data.account,
-        .id == account_data.auth_descriptor_id
-    }.ctr;
+function create_auth_message(template: text, account_data: account_data? = null) {
+    var message = template.replace(
+        auth.BLOCKCHAIN_RID_PLACEHOLDER, 
+        chain_context.blockchain_rid.to_hex().upper_case()
+    );
 
-    return template
-        .replace("{account_id}", account_data.account.id.to_hex())
-        .replace("{auth_descriptor_id}", account_data.auth_descriptor_id.to_hex())
-        .replace("{blockchain_rid}", chain_context.blockchain_rid.to_hex())
-        .replace("{nonce}", nonce.to_text());
+    if (account_data??) {
+        val nonce = acc.account_auth_descriptor @ {
+            account_data.account,
+            .id == account_data.auth_descriptor_id
+        }.ctr;
+
+        message = message
+            .replace(
+                auth.ACCOUNT_ID_PLACEHOLDER, 
+                account_data.account.id.to_hex().upper_case()
+            )
+            .replace(
+                auth.AUTH_DESCRIPTOR_ID_PLACEHOLDER, 
+                account_data.auth_descriptor_id.to_hex().upper_case()
+            )
+            .replace(auth.NONCE_PLACEHOLDER, nonce.to_text());
+    } else {
+        message = message.replace(auth.NONCE_PLACEHOLDER, "0");
+    }
+
+    return message;
 }
 
 function evm_sign(hash: byte_array, privkey: byte_array) {

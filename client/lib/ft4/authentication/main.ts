@@ -8,6 +8,8 @@ import { Connection } from "@ft4/ft-session";
 import { BufferId, TxContext } from "@ft4/utils";
 import { Operation, formatter } from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
+import { EVM_AUTH } from "./evm";
+import { FT_AUTH } from "./ft";
 
 export function hasAuthDescriptorFlags(
   authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
@@ -121,4 +123,8 @@ export async function getKeyHandlersForKeyStores(
   }
 
   return allKeyHandlers;
+}
+
+export function isAuthOperation(operation: Operation): boolean {
+  return [EVM_AUTH, FT_AUTH].includes(operation.name);
 }

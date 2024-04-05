@@ -3,12 +3,14 @@ import { Operation, formatter } from "postchain-client";
 import { FtKeyStore, FtSigner } from "./types";
 import { Signer } from "@ft4/authentication";
 
+export const FT_AUTH = "ft4.ft_auth";
+
 export function ftAuth(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): Operation {
   return {
-    name: "ft4.ft_auth",
+    name: FT_AUTH,
     args: [
       formatter.ensureBuffer(accountId),
       formatter.ensureBuffer(authDescriptorId),

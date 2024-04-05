@@ -51,6 +51,10 @@ export {
   isEvmSigner,
   evmSigner,
   evmAuth,
+  BLOCKCHAIN_RID_PLACEHOLDER,
+  ACCOUNT_ID_PLACEHOLDER,
+  AUTH_DESCRIPTOR_ID_PLACEHOLDER,
+  NONCE_PLACEHOLDER,
 } from "./evm";
 
 export {
@@ -70,6 +74,7 @@ export {
   createAuthenticator,
   hasAuthDescriptorFlags,
   getKeyHandlersForKeyStores,
+  isAuthOperation,
 } from "./main";
 
 export { nonce, authMessageTemplate, authFlags } from "./queries";

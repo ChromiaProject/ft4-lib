@@ -1020,6 +1020,197 @@ describe("Transaction Builder", () => {
       expect(tx).toEqual(expectedTx);
     });
 
+    it("throws error if account_id placeholder exists in auth message template but there is not auth operation", async () => {
+      const authMessageTemplate = "auth message with {account_id}";
+      const accountId = encryption.randomBytes(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(accountId, [], authDataService);
+
+      const promise = transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          authenticator: createNoopAuthenticator(authDataService),
+          signers: [evmKeyStore],
+        })
+        .build();
+
+      await expect(promise).rejects.toThrow(
+        "Unable to sign operation empty_op",
+      );
+    });
+
+    it("throws error if auth_descriptor_id placeholder exists in auth message template but there is not auth operation", async () => {
+      const authMessageTemplate = "auth message with {auth_descriptor_id}";
+      const accountId = encryption.randomBytes(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(accountId, [], authDataService);
+
+      const promise = transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          authenticator: createNoopAuthenticator(authDataService),
+          signers: [evmKeyStore],
+        })
+        .build();
+
+      await expect(promise).rejects.toThrow(
+        "Unable to sign operation empty_op",
+      );
+    });
+
+    it("adds evm_signatures when account_id and auth_descriptor_id placeholders exist in auth message template and there is ft auth operation", async () => {
+      const authMessageTemplate =
+        "auth message with {account_id} {auth_descriptor_id}";
+      const accountId = encryption.randomBytes(32);
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        authDataService,
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore] })
+        .build();
+
+      const message = `auth message with ${formatter.toString(accountId)} ${formatter.toString(authDescriptor.id)}`;
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.id],
+                [toRawSignature(await evmKeyStore.signMessage(message))],
+              ],
+            ],
+            ["ft4.ft_auth", [accountId, authDescriptor.id]],
+            ["empty_op", []],
+          ],
+          [keyStore.id],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [await keyStore.sign(expectedTxWithoutSignatures)],
+        ]),
+      );
+    });
+
+    it("adds evm_signatures when account_id and auth_descriptor_id placeholders exist in auth message template and there is evm auth operation", async () => {
+      const authMessageTemplate =
+        "auth message with {account_id} {auth_descriptor_id}";
+      const accountId = encryption.randomBytes(32);
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const authDescriptor = createTestAuthDescriptorWithSigner(
+        accountId,
+        evmKeyStore1.id,
+      );
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(
+        accountId,
+        [evmKeyStore1.createKeyHandler(authDescriptor)],
+        authDataService,
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore2] })
+        .build();
+
+      const message = `auth message with ${formatter.toString(accountId)} ${formatter.toString(authDescriptor.id)}`;
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore2.id],
+                [toRawSignature(await evmKeyStore2.signMessage(message))],
+              ],
+            ],
+            [
+              "ft4.evm_auth",
+              [
+                accountId,
+                authDescriptor.id,
+                [toRawSignature(await evmKeyStore1.signMessage(message))],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds evm_signatures when nonce and blockchain_rid exist in auth message template but there is not auth operation", async () => {
+      const authMessageTemplate = "auth message with {blockchain_rid} {nonce}";
+      const blockchainRid = Buffer.alloc(32);
+      const accountId = encryption.randomBytes(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(accountId, [], authDataService);
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          authenticator: createNoopAuthenticator(authDataService),
+          signers: [evmKeyStore],
+        })
+        .build();
+
+      const message = `auth message with ${formatter.toString(blockchainRid)} 0`;
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.id],
+                [toRawSignature(await evmKeyStore.signMessage(message))],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
     it("calls registered handler when block is anchored target cluster", async () => {
       const targetBlockchainRid1 = formatter.toBuffer("1111");
       const targetBlockchainRid2 = formatter.toBuffer("2222");

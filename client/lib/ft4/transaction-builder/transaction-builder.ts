@@ -168,7 +168,7 @@ export function transactionBuilder(
         ops = compactArray([
           signers &&
             (await signOperation(
-              operation,
+              authOps,
               signers,
               authenticator.authDataService,
             )),
