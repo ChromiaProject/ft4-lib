@@ -128,5 +128,23 @@ export interface AuthenticatedAccount extends Account {
     }
   >;
 
+  /**
+   * Revert a cross-chain transfer which was initiated but did not complete properly.
+   *
+   * @param {PendingTransfer} pendingTransfer - The transfer to revert
+   *
+   * Will emit event on each hop (containing blockchain RID).
+   *
+   * Will resolve when `revert_transfer` transaction is confirmed.
+   */
+  revertCrosschainTransfer: (
+    pendingTransfer: PendingTransfer,
+  ) => Web3PromiEvent<
+    void,
+    {
+      hop: Buffer;
+    }
+  >;
+
   burn: (assetId: BufferId, amount: Amount) => Promise<TransactionCompletion>;
 }

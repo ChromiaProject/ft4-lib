@@ -14,6 +14,7 @@ import {
   Web3PromiEvent,
   formatter,
 } from "postchain-client";
+import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
 
 export function crosschainTransfer(
   connection: Connection,
@@ -88,6 +89,35 @@ export function resumeCrosschainTransfer(
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
         });
         return orchestrator.resumeTransfer();
+      })
+      .then(() => resolve())
+      .catch((reason) => reject(reason));
+  });
+  return promiEvent;
+}
+
+export function revertCrosschainTransfer(
+  connection: Connection,
+  authenticator: Authenticator,
+  pendingTransfer: PendingTransfer,
+): Web3PromiEvent<
+  void,
+  {
+    hop: Buffer;
+  }
+> {
+  const promiEvent = new Web3PromiEvent<
+    void,
+    {
+      hop: Buffer;
+    }
+  >((resolve, reject) => {
+    return createRevertOrchestrator(connection, authenticator, pendingTransfer)
+      .then((orchestrator) => {
+        orchestrator.onTransferHop((blockchainRid) => {
+          promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
+        });
+        return orchestrator.revertTransfer();
       })
       .then(() => resolve())
       .catch((reason) => reject(reason));

@@ -31,6 +31,7 @@ import {
   resumeCrosschainTransfer,
 } from "@ft4/crosschain";
 import { Connection, call, createSession } from "@ft4/ft-session";
+import { revertCrosschainTransfer } from "@ft4/crosschain/transfer";
 
 export function createAuthenticatedAccount(
   connection: Connection,
@@ -64,6 +65,8 @@ export function createAuthenticatedAccount(
       ),
     resumeCrosschainTransfer: (pendingTransfer: PendingTransfer) =>
       resumeCrosschainTransfer(connection, authenticator, pendingTransfer),
+    revertCrosschainTransfer: (pendingTransfer: PendingTransfer) =>
+      revertCrosschainTransfer(connection, authenticator, pendingTransfer),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),

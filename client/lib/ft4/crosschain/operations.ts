@@ -52,3 +52,52 @@ export function applyTransfer(
 export function completeTransfer(tx: RawGtx, opIndex: number): Operation {
   return op("ft4.crosschain.complete_transfer", tx, opIndex);
 }
+
+export function cancelTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+  tx: RawGtx,
+  operationIndex: number,
+  targetChainIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.cancel_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+    tx,
+    operationIndex,
+    targetChainIndex,
+  );
+}
+
+export function unapplyTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+  tx: RawGtx,
+  operationIndex: number,
+  targetChainIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.unapply_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+    tx,
+    operationIndex,
+    targetChainIndex,
+  );
+}
+
+export function revertTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+  tx: RawGtx,
+  operationIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.revert_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+    tx,
+    operationIndex,
+  );
+}

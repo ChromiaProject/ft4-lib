@@ -1,6 +1,4 @@
-import { Authenticator } from "@ft4/authentication";
 import { EventEmitter, Listener } from "@ft4/events";
-import { Connection } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
@@ -9,7 +7,6 @@ import {
   SignedTransaction,
   TransactionReceipt,
 } from "postchain-client";
-import { TransactionBuilder } from "@ft4/transaction-builder";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
@@ -38,11 +35,6 @@ export interface OrchestratorBase {
   state: OrchestratorState;
   eventEmitter: EventEmitter<OrchestratorEvents>;
   walkPath: () => Promise<void>;
-  getTransactionBuilderForChain: (
-    connection: Connection,
-    authenticator: Authenticator,
-    blockchainRid: Buffer,
-  ) => Promise<TransactionBuilder>;
   performCompleteTransfer: (tx: RawGtx, opIndex: number) => Promise<void>;
   createIccfProofOperation: (
     targetChainRid: Buffer,
@@ -58,11 +50,7 @@ export interface OrchestratorBase {
 
 export type ExternalOrchestratorBase = Omit<
   OrchestratorBase,
-  | "state"
-  | "walkPath"
-  | "getTransactionBuilderForChain"
-  | "performCompleteTransfer"
-  | "createIccfProofOperation"
+  "state" | "walkPath" | "performCompleteTransfer" | "createIccfProofOperation"
 >;
 
 export type Orchestrator = ExternalOrchestratorBase & {
@@ -71,6 +59,10 @@ export type Orchestrator = ExternalOrchestratorBase & {
 
 export type ResumeOrchestrator = ExternalOrchestratorBase & {
   resumeTransfer: () => Promise<void>;
+};
+
+export type RevertOrchestrator = ExternalOrchestratorBase & {
+  revertTransfer: () => Promise<void>;
 };
 
 export type PendingTransfer = {

@@ -5,9 +5,21 @@ export {
   mapPendingTransfers,
   getLastPendingTransferForAccount,
 } from "./query-functions";
-export { createOrchestrator, createResumeOrchestrator } from "./orchestrator";
 
-export { initTransfer, applyTransfer } from "./operations";
+export {
+  createOrchestrator,
+  createResumeOrchestrator,
+  createRevertOrchestrator,
+} from "./orchestrator";
+
+export {
+  initTransfer,
+  applyTransfer,
+  completeTransfer,
+  cancelTransfer,
+  unapplyTransfer,
+  revertTransfer,
+} from "./operations";
 
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
@@ -29,4 +41,8 @@ export {
   ApplyTransferError,
 } from "./errors";
 
-export { crosschainTransfer, resumeCrosschainTransfer } from "./transfer";
+export {
+  crosschainTransfer,
+  resumeCrosschainTransfer,
+  revertCrosschainTransfer,
+} from "./transfer";
