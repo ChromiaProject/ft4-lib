@@ -117,7 +117,7 @@ describe("Orchestrator", () => {
 
   it("reverts a transfer that was applied to intermediary but not completed", async () => {
     const testContext = await setupTestEnvironment(
-      "transfer-recovery",
+      "revert-transfer",
       mintAmount,
     );
 
