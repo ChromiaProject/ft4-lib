@@ -38,6 +38,12 @@ function buildAmountObject(amount: RawAmount): Amount {
     eq: (other: SupportedNumber) =>
       eq(amount, convertToRawAmount(other, amount.decimals)),
 
+    equals: (other: SupportedNumber) =>
+      eq(amount, convertToRawAmount(other, amount.decimals)),
+
+    compare: (other: SupportedNumber) =>
+      compare(amount, convertToRawAmount(other, amount.decimals)),
+
     toString: () => stringify(amount),
     format: function (
       which: DecimalFormat,
@@ -391,6 +397,11 @@ function gte(amount: RawAmount, other: RawAmount): boolean {
 function lte(amount: AnyAssetAmount, other: RawAmount): boolean {
   requireSameDecimals(amount, other);
   return amount.value <= other.value;
+}
+
+function compare(amount: AnyAssetAmount, other: RawAmount): number {
+  requireSameDecimals(amount, other);
+  return amount.value < other.value ? -1 : amount.value > other.value ? 1 : 0;
 }
 
 function requireSameDecimals(amount: AnyAssetAmount, other: RawAmount): void {

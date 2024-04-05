@@ -61,6 +61,19 @@ export interface Amount {
   lte: (other: SupportedNumber) => boolean;
   eq: (other: SupportedNumber) => boolean;
 
+  equals: (other: SupportedNumber) => boolean;
+
+  /**
+   * Can be used as compareFn with `Array.sort()`.
+   *
+   * @param other  amount to compare with
+   *
+   * @return 0 if other is equal to this
+   *         1 if other should come before this when sorted
+   *        -1 if other should come after this when sorted
+   */
+  compare: (other: SupportedNumber) => number;
+
   toString: () => string;
   format(
     which: DecimalFormat.scientific,

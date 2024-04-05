@@ -19,6 +19,8 @@
 - `sign` and `signAndSend` methods in `Session` to add your signature to an existing transaction.
 - `gtv` object that contains functions for converting objects to/from `gtv`, e.g., `gtv.authDescriptorFromGtv(...)`
 
+- `equals` and `compare` methods to `Amount`.
+
 ### Fixed 🔧
 
 - Fix TS client build.

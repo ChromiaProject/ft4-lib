@@ -331,9 +331,12 @@ describe("Asset amount", () => {
     expect(first.gt(firstNegative)).toBe(true);
     expect(first.lt(firstNegative)).toBe(false);
     expect(first.eq(firstNegative)).toBe(false);
+    expect(first.equals(firstNegative)).toBe(false);
     expect(first.gte(firstNegative)).toBe(true);
     expect(first.lte(firstNegative)).toBe(false);
+    expect(first.compare(firstNegative)).toBe(1);
     expect(first.eq(firstCopy)).toBe(true);
+    expect(first.equals(firstCopy)).toBe(true);
   });
 
   it("should compare properly with decimals", async () => {
@@ -343,9 +346,12 @@ describe("Asset amount", () => {
     expect(second.gt(third)).toBe(false);
     expect(second.lt(third)).toBe(true);
     expect(second.eq(third)).toBe(false);
+    expect(second.equals(third)).toBe(false);
     expect(second.gte(third)).toBe(false);
     expect(second.lte(third)).toBe(true);
+    expect(second.compare(third)).toBe(-1);
     expect(second.eq(secondCopy)).toBe(true);
+    expect(second.equals(secondCopy)).toBe(true);
   });
 
   it("should not compare different decimal amounts", async () => {
@@ -354,8 +360,21 @@ describe("Asset amount", () => {
     expect(() => first.gt(second)).toThrow(AmountDecimalsError);
     expect(() => first.lt(second)).toThrow(AmountDecimalsError);
     expect(() => first.eq(second)).toThrow(AmountDecimalsError);
+    expect(() => first.equals(second)).toThrow(AmountDecimalsError);
     expect(() => first.gte(second)).toThrow(AmountDecimalsError);
     expect(() => first.lte(second)).toThrow(AmountDecimalsError);
+    expect(() => first.compare(second)).toThrow(AmountDecimalsError);
+  });
+
+  it("should sort with compare", async () => {
+    const first = createAmount(1, 0);
+    const second = createAmount(2, 0);
+    const third = createAmount(3, 0);
+    expect([second, first, third].sort((a, b) => a.compare(b))).toEqual([
+      first,
+      second,
+      third,
+    ]);
   });
 
   it("should handle addition with different types correctly", async () => {
@@ -437,6 +456,8 @@ describe("Asset amount", () => {
       "lt",
       "gte",
       "lte",
+      "equals",
+      "compare",
     ];
 
     nonExportedFunctions.forEach((funcName) => {
