@@ -1,0 +1,420 @@
+@test module;
+
+import ^^^.lib.ft4.assets;
+import ^^.assets.utils;
+import ^^.extensions;
+import auth_ext: ^^^.lib.ft4.auth.external;
+import xchain_ext: ^^^.lib.ft4.crosschain.external;
+import xc: ^^^.lib.ft4.crosschain;
+import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
+import iccf_op: ^^.operations.iccf_op;
+import operations: ^^.operations;
+
+function test_apply_transfer_fails_if_canceled() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run();
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run_must_fail(
+            "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+            .format(tx.body.to_gtv().hash(), 1)
+        );
+}
+
+function test_cancel_transfer_fails_if_applied() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run();
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run_must_fail(
+            "Transaction <%s> transfer at index <%s> has already been applied on this chain."
+            .format(tx.body.to_gtv().hash(), 1)
+        );
+}
+
+function test_can_cancel_with_proof_of_init_transfer_once_but_not_twice() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, init_tx, 1, 0))
+        .nop()
+        .run();
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, init_tx, 1, 0))
+        .nop()
+        .run_must_fail(
+            "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+            .format(init_tx.body.to_gtv().hash(), 1)
+        );
+}
+
+function test_can_cancel_with_proof_of_apply_transfer_one_but_not_twice() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"AAAA";
+    val intermediate_blockchain_rid = x"BBBB";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [intermediate_blockchain_rid, chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    val apply_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = intermediate_blockchain_rid,
+            operations = [
+                xchain_ext.apply_transfer(
+                    init_transfer_tx = init_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = init_tx,
+                    op_index = 1,
+                    hop_index = 0
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
+        .nop()
+        .run();
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
+        .nop()
+        .run_must_fail(
+            "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+            .format(init_tx.body.to_gtv().hash(), 1)
+        );
+}
+
+function test_can_not_cancel_without_proof() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run_must_fail("No proof operation present for TX");
+}
+
+function test_can_not_cancel_before_expiry() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    val deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 2;
+
+    // Simulate a valid transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = deadline
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run_must_fail("This transfer has not yet expired. It can not be reverted before <%s>.".format(deadline));
+}
+
+function test_can_not_cancel_with_wrong_op() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate a valid transaction and operation index
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    val bogus_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                operations.empty_op().to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, bogus_tx, 0, 0))
+        .nop()
+        .run_must_fail("Invalid parameter. Previous hop tx must be equal to init transfer tx");
+}
+
+function test_can_not_cancel_with_invalid_hop_index() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"AAAA";
+    val intermediate_blockchain_rid = x"BBBB";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [intermediate_blockchain_rid, chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    val apply_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = intermediate_blockchain_rid,
+            operations = [
+                xchain_ext.apply_transfer(
+                    init_transfer_tx = init_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = init_tx,
+                    op_index = 1,
+                    hop_index = 0
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 2))
+        .nop()
+        .run_must_fail("Argument mismatch: init_transfer hops size (2) is greater than hop_index (2)");
+}
+
+function test_can_noy_cancel_with_proof_of_apply_transfer_on_wrong_chain() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"AAAA";
+    val intermediate_blockchain_rid = x"BBBB";
+    val wrong_blockchain_rid = x"FFFF";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [intermediate_blockchain_rid, chain_context.blockchain_rid],
+                    deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME - 1
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    val apply_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = wrong_blockchain_rid,
+            operations = [
+                xchain_ext.apply_transfer(
+                    init_transfer_tx = init_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = init_tx,
+                    op_index = 1,
+                    hop_index = 0
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(wrong_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
+        .nop()
+        .run_must_fail(
+            "Argument mismatch: init_transfer hops (%s) and tx blockchain_rid (%s) don't correspond"
+            .format(intermediate_blockchain_rid, wrong_blockchain_rid)
+        );
+}

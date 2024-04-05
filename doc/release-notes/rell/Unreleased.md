@@ -6,10 +6,12 @@
 - `latest_time` is now in `utils` instead of `accounts`
 - Rename `_register_account()` function to `register_account()`
 - Requires Rell 0.13.9
-- Add field `transaction` to entity `applied_transfers`
+- Changed entity `ft4.crosschain.applied_transfers`
 
 ### Changed 🪙
 
 ### Added ✅
+
+- Possibility to revert uncompleted crosschain transfers after deadline has passed.
 
 ### Fixed 🔧

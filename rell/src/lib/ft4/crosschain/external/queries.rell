@@ -28,13 +28,13 @@ query get_last_pending_transfer_for_account(
     amount
 );
 
-query is_transfer_applied(tx_rid: byte_array, op_index: integer) {
-    val transfer = crosschain.applied_transfers @? { .tx_rid == tx_rid, .op_index == op_index };
+query is_transfer_applied(init_tx_rid: byte_array, init_op_index: integer) {
+    val transfer = crosschain.applied_transfers @? { .init_tx_rid == init_tx_rid, .init_op_index == init_op_index };
     return transfer != null;
 }
 
-query get_apply_transfer_tx(tx_rid: byte_array, op_index: integer) =
-    crosschain.applied_transfers @ { .tx_rid == tx_rid, .op_index == op_index } ( 
+query get_apply_transfer_tx(init_tx_rid: byte_array, init_op_index: integer) =
+    crosschain.applied_transfers @ { .init_tx_rid == init_tx_rid, .init_op_index == init_op_index } (
         tx = gtx_transaction.from_bytes($.transaction.tx_data).to_gtv(),
         op_index = $.op_index
     );

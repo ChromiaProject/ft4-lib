@@ -7,6 +7,7 @@ import ^^^.lib.ft4.assets;
 import assets_ext: ^^^.lib.ft4.assets.external;
 import ^^^.lib.ft4.ft4_basic_dev.*;
 import acc: ^^^.lib.ft4.accounts;
+import test_util: ^^.utils.utils;
 import test_utils: ^.utils;
 import utils: ^^^.lib.ft4.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
@@ -223,8 +224,7 @@ function test_transfer_details() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
-    val tx_rid = transaction @ { last_block } (.tx_rid);
+    val tx_rid = test_util.get_last_transaction().tx_rid;
 
     val expected = set([
         assets.transfer_detail(

@@ -1,0 +1,6 @@
+@test module;
+
+function get_last_transaction(): transaction {
+    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
+    return transaction @ { last_block };
+}

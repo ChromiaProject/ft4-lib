@@ -1,11 +1,24 @@
 import ^.assets;
 import ^.accounts;
 
-entity applied_transfers { 
-    key tx_rid, op_index; 
-    tx_rid: byte_array;
-    op_index: integer;
+entity applied_transfers {
+    key init_tx_rid, init_op_index;
+    init_tx_rid: byte_array;
+    init_op_index: integer;
     transaction;
+    op_index: integer;
+}
+
+entity canceled_transfers {
+    key init_tx_rid, init_op_index;
+    init_tx_rid: byte_array;
+    init_op_index: integer;
+}
+
+entity unapplied_transfers {
+    key init_tx_rid, init_op_index;
+    init_tx_rid: byte_array;
+    init_op_index: integer;
 }
 
 entity pending_transfer {

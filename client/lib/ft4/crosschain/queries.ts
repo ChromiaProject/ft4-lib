@@ -66,30 +66,30 @@ export function lastPendingTransferForAccount(
 }
 
 export function isTransferApplied(
-  txRid: Buffer,
-  opIndex: number,
-): QueryObject<boolean, { tx_rid: Buffer; op_index: number }> {
+  initTxRid: Buffer,
+  initOpIndex: number,
+): QueryObject<boolean, { init_tx_rid: Buffer; init_op_index: number }> {
   return {
     name: "ft4.crosschain.is_transfer_applied",
     args: {
-      tx_rid: txRid,
-      op_index: opIndex,
+      init_tx_rid: initTxRid,
+      init_op_index: initOpIndex,
     },
   };
 }
 
 export function applyTransferTx(
-  txRid: Buffer,
-  opIndex: number,
+  initTxRid: Buffer,
+  initOpIndex: number,
 ): QueryObject<
   { tx: RawGtx; op_index: number },
-  { tx_rid: Buffer; op_index: number }
+  { init_tx_rid: Buffer; init_op_index: number }
 > {
   return {
     name: "ft4.crosschain.get_apply_transfer_tx",
     args: {
-      tx_rid: txRid,
-      op_index: opIndex,
+      init_tx_rid: initTxRid,
+      init_op_index: initOpIndex,
     },
   };
 }

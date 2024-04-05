@@ -4,9 +4,6 @@ import ^^.auth;
 import crosschain: ^;
 import ^^^.iccf;
 
-val INIT_TRANSFER_OP_NAME = "ft4.crosschain.init_transfer";
-val APPLY_TRANSFER_OP_NAME = "ft4.crosschain.apply_transfer";
-
 function init_transfer_message(gtv) {
     val params = struct<init_transfer>.from_gtv(gtv);
     val asset = assets.Asset(params.asset_id);
@@ -94,84 +91,21 @@ operation apply_transfer(
     op_index: integer,
     hop_index: integer
 ) {
-    val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
-
-    val init_args = init_transfer_details.args;
-
-    require(
-        init_args.deadline >= op_context.last_block_time,
-        "This transfer has expired at timestamp <%s>. It can only be reverted."
-            .format(init_args.deadline)
-    );
-
-    require(
-        crosschain.applied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
-        "Transaction <%s> transfer at index <%s> has already been applied on this chain."
-            .format(init_transfer_details.tx_rid, init_tx_op_index)
-    );
-
-    if (hop_index == 0) {
-        /* 
-         * For the first hop init_transfer_tx and previous_hop_tx are equal.
-         * Consider making previous_hop_tx optional, so that we don't have to send the same transaction twice.
-         */ 
-        
-        require(
-            init_transfer_tx == previous_hop_tx,
-            "Invalid parameter. Previous hop tx must be equal to init transfer tx"
-        );
-
-        require(
-            op_index == init_tx_op_index,
-            "Invalid parameter. init_transfer indices should be same"
-        );
-    } else {
-        val previous_hop_details = get_apply_transfer_details(previous_hop_tx, op_index);
-        
-        require(
-            init_transfer_details.tx_rid == previous_hop_details.init.tx_rid,
-            "apply_transfer of previous hop does not correspond to init_transfer"
-        );
-
-        require(
-            init_tx_op_index == previous_hop_details.args.init_tx_op_index,
-            "This transfer does not correspond to transfer of provided previous hop"
-        );
-    }
-
-    val my_blockchain_rid = chain_context.blockchain_rid;
-
-    require(
-        init_args.hops.size() > hop_index,
-        "Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(init_args.hops.size(), hop_index)
-    );
-
-    val current_hop_blockchain_rid = init_transfer_details.args.hops[hop_index];
-    require(
-        current_hop_blockchain_rid == my_blockchain_rid,
-        "This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
-    );
-
-    val from_blockchain_rid = previous_hop_tx.body.blockchain_rid; 
-
-    if (hop_index > 0) {
-        val previous_hop_blockchain_rid = init_transfer_details.args.hops[hop_index - 1];
-        require(
-            from_blockchain_rid == previous_hop_blockchain_rid,
-            "Argument mismatch: init_args.hops (%s) and tx blockchain_rid (%s) don't correspond"
-                .format(
-                    previous_hop_blockchain_rid, from_blockchain_rid
-                )
-        );
-    }
-
-    iccf.require_valid_proof(
+    val (init_transfer_details, from_blockchain_rid) = validate_apply_transfer(
+        init_transfer_tx,
+        init_tx_op_index,
         previous_hop_tx,
-        require_anchored_proof=true,
-        verify_signers=false
+        op_index,
+        hop_index
     );
 
-    val asset = assets.Asset(init_args.asset_id);
+    require(
+        init_transfer_details.args.deadline >= op_context.last_block_time,
+        "This transfer has expired at timestamp <%s>. It can only be reverted."
+            .format(init_transfer_details.args.deadline)
+    );
+
+    val asset = assets.Asset(init_transfer_details.args.asset_id);
 
     val is_intermediate = init_transfer_details.args.hops.size() > hop_index + 1;
 
@@ -226,7 +160,12 @@ operation apply_transfer(
     }
 
     // Add transfer to applied transfers table so that it cannot be applied more than once
-    val applied_transfer = create crosschain.applied_transfers(init_transfer_details.tx_rid, init_tx_op_index, op_context.transaction);
+    val applied_transfer = create crosschain.applied_transfers(
+        init_tx_rid = init_transfer_details.tx_rid,
+        init_op_index = init_tx_op_index,
+        transaction = op_context.transaction,
+        op_index = op_context.op_index
+    );
 
     crosschain.after_apply_transfer(
         sender_blockchain_rid = init_transfer_tx.body.blockchain_rid,
@@ -244,14 +183,8 @@ operation complete_transfer(
     final_apply_transfer_tx: gtx_transaction,
     op_index: integer
 ) {
-    iccf.require_valid_proof(
-        final_apply_transfer_tx,
-        require_anchored_proof=true,
-        verify_signers=false
-    );
-
     require(
-        final_apply_transfer_tx.body.operations[op_index].name == "ft4.crosschain.apply_transfer",
+        final_apply_transfer_tx.body.operations[op_index].name == rell.meta(apply_transfer).mount_name,
         "Operation at op_index was not apply_transfer"
     );
 
@@ -271,16 +204,342 @@ operation complete_transfer(
         "The provided transaction was not applied to the expected target chain"
     );
 
+    iccf.require_valid_proof(
+        final_apply_transfer_tx,
+        require_anchored_proof=true,
+        verify_signers=false
+    );
+
     // delete the pending transfer as it is now completed
     delete crosschain.pending_transfer @ { .transaction.tx_hash == init_transfer_tx_hash, .op_index == final_apply_transfer_args.init_tx_op_index };
+}
+
+operation cancel_transfer(
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer,
+    previous_hop_tx: gtx_transaction,
+    op_index: integer,
+    hop_index: integer
+) {
+    val (init_transfer_details, from_blockchain_rid) = validate_apply_transfer(
+        init_transfer_tx,
+        init_tx_op_index,
+        previous_hop_tx,
+        op_index,
+        hop_index
+    );
+
+    require(
+        init_transfer_details.args.deadline < op_context.last_block_time,
+        "This transfer has not yet expired. It can not be reverted before <%s>."
+            .format(init_transfer_details.args.deadline)
+    );
+
+    create crosschain.canceled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+}
+
+operation unapply_transfer(
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer,
+    cancel_or_unapply_tx: gtx_transaction,
+    cancel_or_unapply_op_index: integer,
+    hop_index: integer
+) {
+    val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
+
+    val (apply_tx_data, apply_op_index) = require_not_empty(
+        crosschain.applied_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index} (.transaction.tx_data, .op_index),
+        "Transaction <%s> transfer at index <%s> was never applied on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    require(
+        crosschain.canceled_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    require(
+        crosschain.unapplied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        "Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    val cancel_or_unapply_op = cancel_or_unapply_tx.body.operations[cancel_or_unapply_op_index];
+
+    when (cancel_or_unapply_op.name) {
+        rell.meta(cancel_transfer).mount_name -> {
+            val args = struct<cancel_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            require(
+                init_transfer_tx == args.init_transfer_tx,
+                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+            );
+            require(
+                init_tx_op_index == args.init_tx_op_index,
+                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+            );
+            require(
+                args.previous_hop_tx.to_bytes() == apply_tx_data,
+                "cancel_or_unapply_tx's previous_hop_tx must be the apply_transfer to cancel"
+            );
+            require(
+                args.op_index == apply_op_index,
+                "cancel_or_unapply_tx's op_index must be the apply_transfer to cancel"
+            );
+        }
+        rell.meta(unapply_transfer).mount_name -> {
+            val args = struct<unapply_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            require(
+                init_transfer_tx == args.init_transfer_tx,
+                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+            );
+            require(
+                init_tx_op_index == args.init_tx_op_index,
+                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+            );
+        }
+        else -> {
+            require(false, "cancel_or_unapply_tx[cancel_or_unapply_op_index] must be %s or %s".format(
+                rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name)
+            );
+        }
+    }
+
+    require(
+        init_transfer_details.args.hops.size() > hop_index,
+        "Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(init_transfer_details.args.hops.size(), hop_index)
+    );
+
+    require(
+        init_transfer_details.args.hops.size() - 1 != hop_index,
+        "Cannot unapply last step (%d)".format(hop_index)
+    );
+
+    val current_hop_blockchain_rid = init_transfer_details.args.hops[hop_index];
+    require(
+        current_hop_blockchain_rid == chain_context.blockchain_rid,
+        "This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
+    );
+
+    val next_hop_blockchain_rid = init_transfer_details.args.hops[hop_index + 1];
+    require(
+        cancel_or_unapply_tx.body.blockchain_rid == next_hop_blockchain_rid,
+        "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
+            .format(
+                next_hop_blockchain_rid, cancel_or_unapply_tx.body.blockchain_rid
+            )
+    );
+
+    require(
+        init_transfer_details.args.deadline < op_context.last_block_time,
+        "This transfer has not yet expired. It can not be reverted before <%s>."
+            .format(init_transfer_details.args.deadline)
+    );
+
+    iccf.require_valid_proof(
+        cancel_or_unapply_tx,
+        require_anchored_proof=true,
+        verify_signers=false
+    );
+
+    val asset = assets.Asset(init_transfer_details.args.asset_id);
+    val previous_hop = if (hop_index > 0) init_transfer_details.args.hops[hop_index - 1] else init_transfer_tx.body.blockchain_rid;
+    crosschain.Unsafe.update_balances_if_needed(
+        crosschain.ensure_blockchain_account(next_hop_blockchain_rid),
+        crosschain.ensure_blockchain_account(previous_hop),
+        asset,
+        init_transfer_details.args.amount
+    );
+
+    create crosschain.unapplied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
+}
+
+operation revert_transfer(
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer,
+    cancel_or_unapply_tx: gtx_transaction,
+    cancel_or_unapply_op_index: integer
+) {
+    val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
+    val hops = init_transfer_details.args.hops;
+
+    val account = accounts.Account(init_transfer_details.sender_account_id);
+    val asset = assets.Asset(init_transfer_details.args.asset_id);
+    val amount = init_transfer_details.args.amount;
+
+    val next_hop_blockchain_rid = hops[0];
+    require(
+        cancel_or_unapply_tx.body.blockchain_rid == next_hop_blockchain_rid,
+        "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
+            .format(
+                next_hop_blockchain_rid, cancel_or_unapply_tx.body.blockchain_rid
+            )
+    );
+
+    require(
+        init_transfer_details.args.deadline < op_context.last_block_time,
+        "This transfer has not yet expired. It can not be reverted before <%s>."
+            .format(init_transfer_details.args.deadline)
+    );
+
+    val cancel_or_unapply_op = cancel_or_unapply_tx.body.operations[cancel_or_unapply_op_index];
+
+    when (cancel_or_unapply_op.name) {
+        rell.meta(cancel_transfer).mount_name -> {
+            val args = struct<cancel_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            require(
+                init_transfer_tx == args.init_transfer_tx,
+                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+            );
+            require(
+                init_tx_op_index == args.init_tx_op_index,
+                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+            );
+        }
+        rell.meta(unapply_transfer).mount_name -> {
+            val args = struct<unapply_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            require(
+                init_transfer_tx == args.init_transfer_tx,
+                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+            );
+            require(
+                init_tx_op_index == args.init_tx_op_index,
+                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+            );
+        }
+        else -> {
+            require(false, "cancel_or_unapply_tx[cancel_or_unapply_op_index] must be %s or %s".format(
+                rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name)
+            );
+        }
+    }
+
+    iccf.require_valid_proof(
+        cancel_or_unapply_tx,
+        require_anchored_proof=true,
+        verify_signers=false
+    );
+
+    val pending_transfer = require(
+      crosschain.pending_transfer @? { .transaction.tx_rid == init_transfer_details.tx_rid, .op_index == init_tx_op_index },
+      "Cannot revert cross-chain transfer for transaction <%s> at index <%d>. Pending transfer not found."
+          .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    // delete the pending transfer as it is now reverted
+    delete pending_transfer;
+
+    crosschain.Unsafe.update_balances_if_needed(
+        crosschain.ensure_blockchain_account(hops[0]),
+        account,
+        asset,
+        amount
+    );
+    create assets.crosschain_transfer_history_entry(
+        .blockchain_rid = hops[hops.size() - 1],
+        .account_id = init_transfer_details.args.recipient_id,
+        .asset = asset,
+        .delta = amount,
+        .op_index = op_context.op_index,
+        .is_input = true
+    );
+}
+
+function validate_apply_transfer(
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer,
+    previous_hop_tx: gtx_transaction,
+    op_index: integer,
+    hop_index: integer
+) {
+    val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
+
+    require(
+        crosschain.applied_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index} == null,
+        "Transaction <%s> transfer at index <%s> has already been applied on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    require(
+        crosschain.canceled_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    require(
+        crosschain.unapplied_transfers @? {init_transfer_details.tx_rid, init_tx_op_index} == null,
+        "Transaction <%s> transfer at index <%s> has already been unapplied on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    if (hop_index == 0) {
+        /*
+         * For the first hop init_transfer_tx and previous_hop_tx are equal.
+         * Consider making previous_hop_tx optional, so that we don't have to send the same transaction twice.
+         */
+
+        require(
+            init_transfer_tx == previous_hop_tx,
+            "Invalid parameter. Previous hop tx must be equal to init transfer tx"
+        );
+
+        require(
+            op_index == init_tx_op_index,
+            "Invalid parameter. init_transfer indices should be same"
+        );
+    } else {
+        val previous_hop_details = get_apply_transfer_details(previous_hop_tx, op_index);
+
+        require(
+            init_transfer_details.tx_rid == previous_hop_details.init.tx_rid,
+            "apply_transfer of previous hop does not correspond to init_transfer"
+        );
+
+        require(
+            init_tx_op_index == previous_hop_details.args.init_tx_op_index,
+            "This transfer does not correspond to transfer of provided previous hop"
+        );
+    }
+
+    require(
+        init_transfer_details.args.hops.size() > hop_index,
+        "Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(init_transfer_details.args.hops.size(), hop_index)
+    );
+
+    val current_hop_blockchain_rid = init_transfer_details.args.hops[hop_index];
+    require(
+        current_hop_blockchain_rid == chain_context.blockchain_rid,
+        "This transaction hop must happen on a chain with blockchain_rid %s".format(current_hop_blockchain_rid)
+    );
+
+    val from_blockchain_rid = previous_hop_tx.body.blockchain_rid;
+
+    if (hop_index > 0) {
+        val previous_hop_blockchain_rid = init_transfer_details.args.hops[hop_index - 1];
+        require(
+            from_blockchain_rid == previous_hop_blockchain_rid,
+            "Argument mismatch: init_transfer hops (%s) and tx blockchain_rid (%s) don't correspond"
+                .format(
+                    previous_hop_blockchain_rid, from_blockchain_rid
+                )
+        );
+    }
+
+    iccf.require_valid_proof(
+        previous_hop_tx,
+        require_anchored_proof=true,
+        verify_signers=false
+    );
+
+    return (init_transfer_details, from_blockchain_rid);
 }
 
 function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     val op = tx.body.operations[op_index]; 
 
     require(
-        op.name == INIT_TRANSFER_OP_NAME,
-        "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(INIT_TRANSFER_OP_NAME, op_index, op.name)
+        op.name == rell.meta(init_transfer).mount_name,
+        "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(rell.meta(init_transfer).mount_name, op_index, op.name)
     );
 
     val tx_rid = tx.body.hash();
@@ -300,11 +559,11 @@ function get_apply_transfer_details(tx: gtx_transaction, apply_op_index: integer
     val op = tx.body.operations[apply_op_index];
 
     require(
-        op.name == APPLY_TRANSFER_OP_NAME,
-        "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(APPLY_TRANSFER_OP_NAME, apply_op_index, op.name)
+        op.name == rell.meta(apply_transfer).mount_name,
+        "Invalid parameters. Expected <%s> at index <%d>, found <%s>".format(rell.meta(apply_transfer).mount_name, apply_op_index, op.name)
     );
 
-    val tx_rid = tx.hash();
+    val tx_rid = tx.body.hash();
     val args = struct<apply_transfer>.from_gtv(op.args.to_gtv());
 
     val init_details = get_init_transfer_details(args.init_transfer_tx, args.init_tx_op_index);

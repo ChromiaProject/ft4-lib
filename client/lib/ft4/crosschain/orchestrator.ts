@@ -203,8 +203,8 @@ export async function createResumeOrchestrator(
 
     if (currentHopIndex !== undefined) {
       const res = await getAppliedTx(
-        getTransactionRid(state.tx),
         state.path[currentHopIndex],
+        getTransactionRid(state.tx),
         state.opIndex,
       );
       state.tx = res.tx;
@@ -219,8 +219,8 @@ export async function createResumeOrchestrator(
   }
 
   async function getAppliedTx(
-    tx_rid: Buffer,
     targetChainRid: Buffer,
+    txRid: Buffer,
     opIndex: number,
   ) {
     const newConnection = await createConnectionToBlockchainRid(
@@ -228,28 +228,28 @@ export async function createResumeOrchestrator(
       targetChainRid,
     );
     return newConnection
-      .query(applyTransferTx(tx_rid, opIndex))
+      .query(applyTransferTx(txRid, opIndex))
       .then((res) => ({ tx: res.tx, opIndex: res.op_index }));
   }
 
   /**
    * Checks to see whether the specified transfer is already applied to
    * this blockchainRid.
-   * @param targetChainRid the blockchain rid of the chain to check
-   * @param txBlockchainRid the blockchain rid of the transaction containing the transfer
+   * @param targetChainRid the blockchain RID of the chain to check
+   * @param txRid the RID of the transaction containing the transfer
    * @param opIndex the index of the transfer in the transaction
    * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
    */
   async function isAppliedOnBlockchainRid(
     targetChainRid: Buffer,
-    txBlockchainRid: Buffer,
+    txRid: Buffer,
     opIndex: number,
   ): Promise<boolean> {
     const newConnection = await createConnectionToBlockchainRid(
       connection,
       targetChainRid,
     );
-    return newConnection.query(isTransferApplied(txBlockchainRid, opIndex));
+    return newConnection.query(isTransferApplied(txRid, opIndex));
   }
 
   return Object.freeze({

@@ -1,6 +1,7 @@
 @test module;
 
 import ^^^.lib.ft4.assets;
+import test_utils: ^^.utils.utils;
 import ^^.assets.utils;
 import ^^.extensions;
 import auth_ext: ^^^.lib.ft4.auth.external;
@@ -31,8 +32,7 @@ function test_init_transfer_history() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
-    val tx_rid = transaction @ { last_block } (.tx_rid);
+    val tx_rid = test_utils.get_last_transaction().tx_rid;
 
     val history = assets_ext.get_transfer_history(alice.account.id, assets.filter(null), null, null)!!.data;
     val history_entry = map<text,gtv>.from_gtv(history[0]);
@@ -97,8 +97,7 @@ function test_apply_transfer_history() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
-    val tx_rid = transaction @ { last_block } (.tx_rid);
+    val tx_rid = test_utils.get_last_transaction().tx_rid;
 
     val history = assets_ext.get_transfer_history(bob.account.id, assets.filter(null), null, null)!!.data;
     val history_entry = map<text,gtv>.from_gtv(history[0]);
