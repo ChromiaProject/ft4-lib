@@ -2,7 +2,7 @@ import { AnyAuthDescriptor } from "@ft4/accounts";
 import { Connection } from "@ft4/ft-session";
 import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { GTX, Operation } from "postchain-client";
+import { GTX, Operation, RellOperation } from "postchain-client";
 import { LoginConfig } from "./login";
 
 export class KeyHandlerError extends Error {
@@ -70,7 +70,7 @@ export interface KeyStore extends Signer {
 export interface AuthDataService {
   connection: Connection;
   isOperationExposed(operationName: string): Promise<boolean>;
-  getAuthMessageTemplate(operation: Operation): Promise<string>;
+  getAuthMessageTemplate(operation: Operation | RellOperation): Promise<string>;
   getNonce(
     accountId: BufferId,
     authDescriptorId: BufferId,

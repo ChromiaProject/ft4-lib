@@ -16,6 +16,7 @@ import { BufferId } from "@ft4/utils";
 import { GTX, Operation, formatter, gtx } from "postchain-client";
 
 export const EMPTY_SIGNATURE = Buffer.alloc(64);
+export const EVM_SIGNATURES = "ft4.evm_signatures";
 
 export function txDigest(tx: GTX): Buffer {
   return gtx.getDigestToSign({
@@ -99,7 +100,7 @@ export function evmSignatures(
   signatures: (Signature | null)[],
 ): Operation {
   return {
-    name: "ft4.evm_signatures",
+    name: EVM_SIGNATURES,
     args: [
       signers.map(formatter.ensureBuffer),
       signatures.map((signature) => signature && toRawSignature(signature)),

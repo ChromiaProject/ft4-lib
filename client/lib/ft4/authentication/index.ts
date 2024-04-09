@@ -38,6 +38,7 @@ export {
 export {
   Signature,
   EvmKeyStore,
+  RawSignature,
   EvmSigner,
   Eip1193Provider,
   createGenericEvmKeyStore,
@@ -55,6 +56,7 @@ export {
   ACCOUNT_ID_PLACEHOLDER,
   AUTH_DESCRIPTOR_ID_PLACEHOLDER,
   NONCE_PLACEHOLDER,
+  EVM_AUTH,
 } from "./evm";
 
 export {

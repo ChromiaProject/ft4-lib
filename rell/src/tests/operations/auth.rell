@@ -39,7 +39,7 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
 }
 
 function test_authenticated_operation_message(gtv) {
-    return "{nonce}";
+    return "";
 }
 
 @extend(auth.auth_handler)
