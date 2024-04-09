@@ -29,7 +29,7 @@ describe("Test transfer strategy", () => {
     );
   });
 
-  it("can register account which receives transferred assets", async () => {
+  it("can register account which receives transferred assets, and it cannot be recalled", async () => {
     const keyPair = encryption.makeKeyPair();
     const recipientId = gtv.gtvHash(keyPair.pubKey);
 
@@ -48,7 +48,7 @@ describe("Test transfer strategy", () => {
     expect(rawAmount).toBeTruthy();
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
-    await account1.transfer(recipientId, asset.id, amount);
+    const { receipt } = await account1.transfer(recipientId, asset.id, amount);
 
     const strategies = await connection.query(
       pendingTransferStrategies(recipientId),
@@ -76,6 +76,10 @@ describe("Test transfer strategy", () => {
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
+
+    await expect(
+      account1.recallUnclaimedTransfer(receipt.transactionRid, 1),
+    ).rejects.toThrow("No pending transfer found");
   });
 
   it("can not register account without pending transfer", async () => {
@@ -159,5 +163,89 @@ describe("Test transfer strategy", () => {
     );
 
     expect(hasPendingAccountCreation).toBeFalsy();
+  });
+
+  it("can recall unclaimed transfer after timeout has passed", async () => {
+    const timeoutAsset = await getNewAsset(
+      connection.client,
+      "timeout_asset",
+      "TIMEOUT_ASSET",
+      5,
+    );
+
+    const keyPair = encryption.makeKeyPair();
+    const recipientId = gtv.gtvHash(keyPair.pubKey);
+
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(timeoutAsset, 200)
+      .withPoints(1)
+      .build();
+
+    const initialBalance = (await account1.getBalanceByAssetId(
+      timeoutAsset.id,
+    ))!.amount.value;
+
+    const _allowedAssets = (await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(timeoutAsset.id),
+    )?.min_amount;
+    expect(rawAmount).toBeTruthy();
+    const amount = createAmountFromBalance(rawAmount!, timeoutAsset.decimals);
+
+    const { receipt } = await account1.transfer(
+      recipientId,
+      timeoutAsset.id,
+      amount,
+    );
+
+    expect(
+      (await account1.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
+    ).toBe(initialBalance - rawAmount!);
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toContain("open");
+
+    await account1.recallUnclaimedTransfer(receipt.transactionRid, 1);
+
+    expect(
+      (await account1.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
+    ).toBe(initialBalance);
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toStrictEqual([]);
+  });
+
+  it("can not recall unclaimed transfer before timeout has passed", async () => {
+    const keyPair = encryption.makeKeyPair();
+    const recipientId = gtv.gtvHash(keyPair.pubKey);
+
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const _allowedAssets = (await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(asset.id),
+    )?.min_amount;
+    expect(rawAmount).toBeTruthy();
+    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
+
+    const { receipt } = await account1.transfer(recipientId, asset.id, amount);
+
+    const strategies = await connection.query(
+      pendingTransferStrategies(recipientId),
+    );
+    expect(strategies).toContain("open");
+
+    await expect(
+      account1.recallUnclaimedTransfer(receipt.transactionRid, 1),
+    ).rejects.toThrow("This transfer has not timed out yet");
   });
 });

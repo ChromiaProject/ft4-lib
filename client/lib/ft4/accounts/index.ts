@@ -61,6 +61,7 @@ export {
   deleteAllAuthDescriptorsExclude,
   addAuthDescriptor,
   transfer,
+  recallUnclaimedTransfer,
 } from "./operations";
 
 export { authDescriptorById } from "./queries";

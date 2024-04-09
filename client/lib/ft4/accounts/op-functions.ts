@@ -16,6 +16,7 @@ import {
   burn as burnOp,
   deleteAuthDescriptor as deleteAuthDescriptorOp,
   transfer as transferOp,
+  recallUnclaimedTransfer as recallUnclaimedTransferOp,
 } from "./operations";
 import { authDescriptorById } from "./queries";
 import { createAccountObject } from "./query-functions";
@@ -49,6 +50,8 @@ export function createAuthenticatedAccount(
     //   _deleteAllAuthDescriptorsExclude(connection, authenticator, authDescriptorId),
     transfer: (receiverId: BufferId, assetId: BufferId, amount: Amount) =>
       transfer(connection, authenticator, receiverId, assetId, amount),
+    recallUnclaimedTransfer: (txRid: BufferId, opIndex: number) =>
+      recallUnclaimedTransfer(connection, authenticator, txRid, opIndex),
     crosschainTransfer: (
       targetChainId: BufferId,
       recipientId: BufferId,
@@ -143,6 +146,21 @@ async function transfer(
       connection,
       authenticator,
       transferOp(receiverId, assetId, amount),
+    ),
+  };
+}
+
+async function recallUnclaimedTransfer(
+  connection: Connection,
+  authenticator: Authenticator,
+  txRid: BufferId,
+  opIndex: number,
+): Promise<TransactionCompletion> {
+  return {
+    receipt: await call(
+      connection,
+      authenticator,
+      recallUnclaimedTransferOp(txRid, opIndex),
     ),
   };
 }

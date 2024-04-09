@@ -32,6 +32,17 @@ export function transfer(
   );
 }
 
+export function recallUnclaimedTransfer(
+  txRid: BufferId,
+  opIndex: number,
+): Operation {
+  return op(
+    "ft4.recall_unclaimed_transfer",
+    formatter.ensureBuffer(txRid),
+    opIndex,
+  );
+}
+
 export function addAuthDescriptor(
   authDescriptor: AnyAuthDescriptorRegistration,
 ): Operation {

@@ -81,6 +81,10 @@ export interface AuthenticatedAccount extends Account {
     assetId: BufferId,
     amount: Amount,
   ) => Promise<TransactionCompletion>;
+  recallUnclaimedTransfer: (
+    txRid: BufferId,
+    opIndex: number,
+  ) => Promise<TransactionCompletion>;
 
   /**
    * Perform a cross-chain transfer.

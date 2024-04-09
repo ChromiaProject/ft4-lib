@@ -28,6 +28,17 @@ blockchains:
               - "open"
               - "fee"
               - "subscription"
+          - sender_blockchain: "$"
+            sender: "*"
+            recipient: "*"
+            asset:
+              - name: timeout_asset
+                min_amount: 5L
+            timeout_days: 0
+            strategy:
+              - "open"
+              - "fee"
+              - "subscription"
 
       lib.ft4.accounts.strategies.transfer.fee:
         asset:

@@ -25,6 +25,7 @@ jest.mock("@ft4/utils/exposed-operations", () => ({
         "ft4.admin.register_asset",
         "ft4.burn",
         "ft4.transfer",
+        "ft4.recall_unclaimed_transfer",
         "ft4.evm_auth",
         "ft4.ft_auth",
         "add_ad_to_account",

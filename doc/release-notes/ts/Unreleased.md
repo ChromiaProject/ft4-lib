@@ -13,6 +13,7 @@
 
 - Added ttl to crosschainTransfer, which specifies after how much time the transaction should become invalid and must be reverted back to the starting chain.
 - Possibility to revert uncompleted crosschain transfers after deadline has passed.
+- Possibility to recall unclaimed register account transfers after timeout has passed.
 
 - `addWithAnchoring` method in `TransactionBuilder` to get callback when transaction is anchored in a specific target
   chain.
