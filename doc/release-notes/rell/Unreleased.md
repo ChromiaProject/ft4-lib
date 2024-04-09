@@ -7,11 +7,13 @@
 - Rename `_register_account()` function to `register_account()`
 - Requires Rell 0.13.9
 - Changed entity `ft4.crosschain.applied_transfers`
+- Changed entity `ft4.account_creation_transfer`
 
 ### Changed 🪙
 
 ### Added ✅
 
 - Possibility to revert uncompleted crosschain transfers after deadline has passed.
+- Possibility to recall unclaimed register account transfers after timeout has passed.
 
 ### Fixed 🔧

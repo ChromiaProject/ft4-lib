@@ -150,8 +150,8 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
                 xchain_ext.unapply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
-                    cancel_or_unapply_tx = cancel_tx,
-                    cancel_or_unapply_op_index = 0,
+                    last_tx = cancel_tx,
+                    last_op_index = 0,
                     hop_index = 0
                 ).to_gtx_operation()
             ],
@@ -391,7 +391,7 @@ function test_can_not_revert_with_wrong_op() {
         .op(iccf_op.iccf_proof(target_blockchain_rid, bogus_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.revert_transfer(init_tx, 1, bogus_tx, 0))
         .nop()
-        .run_must_fail("cancel_or_unapply_tx[cancel_or_unapply_op_index] must be ft4.crosschain.cancel_transfer or ft4.crosschain.unapply_transfer");
+        .run_must_fail("last_tx[last_op_index] must be ft4.crosschain.cancel_transfer, ft4.crosschain.unapply_transfer or ft4.crosschain.recall_unclaimed_transfer");
 }
 
 function test_can_not_revert_transfer_canceled_on_wrong_chain() {
@@ -494,8 +494,8 @@ function test_can_not_revert_transfer_unapplied_on_wrong_chain() {
                 xchain_ext.unapply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
-                    cancel_or_unapply_tx = cancel_tx,
-                    cancel_or_unapply_op_index = 0,
+                    last_tx = cancel_tx,
+                    last_op_index = 0,
                     hop_index = 0
                 ).to_gtx_operation()
             ],

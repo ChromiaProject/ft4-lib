@@ -131,9 +131,9 @@ function test_can_unapply_unapplied_transfer_once_but_not_twice() {
                 xchain_ext.unapply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
-                    cancel_or_unapply_tx =
+                    last_tx =
                         gtx_transaction(body = gtx_transaction_body(blockchain_rid = x"", operations = [], signers = []), signatures = []),
-                    cancel_or_unapply_op_index = -1,
+                    last_op_index = -1,
                     hop_index = 1
                 ).to_gtx_operation()
             ],
@@ -383,7 +383,7 @@ function test_can_not_unapply_with_wrong_op() {
         .op(iccf_op.iccf_proof(target_blockchain_rid, bogus_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.unapply_transfer(init_tx, 1, bogus_tx, 0, 0))
         .nop()
-        .run_must_fail("cancel_or_unapply_tx[cancel_or_unapply_op_index] must be ft4.crosschain.cancel_transfer or ft4.crosschain.unapply_transfer");
+        .run_must_fail("last_tx[last_op_index] must be ft4.crosschain.cancel_transfer, ft4.crosschain.unapply_transfer or ft4.crosschain.recall_unclaimed_transfer");
 }
 
 function test_can_not_unapply_transfer_canceled_on_wrong_chain() {
@@ -520,7 +520,7 @@ function test_can_not_unapply_transfer_canceled_with_wrong_apply_tx() {
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.unapply_transfer(init_tx, 1, cancel_tx, 0, 0))
         .nop()
-        .run_must_fail("cancel_or_unapply_tx's previous_hop_tx must be the apply_transfer to cancel");
+        .run_must_fail("last_tx's previous_hop_tx must be the apply_transfer to cancel");
 }
 
 function test_can_not_unapply_transfer_unapplied_on_wrong_chain() {
@@ -567,9 +567,9 @@ function test_can_not_unapply_transfer_unapplied_on_wrong_chain() {
                 xchain_ext.unapply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
-                    cancel_or_unapply_tx =
+                    last_tx =
                         gtx_transaction(body = gtx_transaction_body(blockchain_rid = x"", operations = [], signers = []), signatures = []),
-                    cancel_or_unapply_op_index = -1,
+                    last_op_index = -1,
                     hop_index = 1
                 ).to_gtx_operation()
             ],

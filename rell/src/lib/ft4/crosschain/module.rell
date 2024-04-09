@@ -16,6 +16,14 @@ function create_on_crosschain_transfer(
    amount: big_integer
 );
 
+@extendable
+function recall_on_crosschain_transfer(
+    sender_blockchain_rid: byte_array,
+    sender_id: byte_array,
+    transfer_tx_rid: byte_array,
+    transfer_op_index: integer
+);
+
 function get_paginated_pending_transfers(account_id: byte_array, page_size: integer?, page_cursor: text?) {
     val after_rowid = utils.before_rowid(page_cursor);
 

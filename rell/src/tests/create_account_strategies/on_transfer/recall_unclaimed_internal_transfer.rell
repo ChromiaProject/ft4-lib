@@ -1,0 +1,76 @@
+@test module;
+
+import assets_utils: ^^^.assets.utils;
+import ^^^^.lib.ft4.admin;
+import ^^^^.lib.ft4.assets;
+import assets_ext: ^^^^.lib.ft4.assets.external;
+import ^^^^.lib.ft4.accounts;
+import ^^^^.lib.ft4.utils;
+import ft_utils: ^^^^.lib.ft4.test.utils;
+import auth_ext: ^^^^.lib.ft4.auth.external;
+import transfer_strategy: ^^^^.lib.ft4.accounts.strategies.transfer;
+import test_utils: ^^^.utils.utils;
+
+function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
+    val alice = assets_utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = assets_utils.create_asset("test", "TEST", 1);
+    assets_utils.mint_to_account(alice, asset, 10);
+
+    val allowed_assets = map(require(transfer_strategy.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
+    val amount = allowed_assets[asset.id];
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets_ext.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    val tx_rid = test_utils.get_last_transaction().tx_rid;
+
+    val account_creation_transfer_before = transfer_strategy.account_creation_transfer @? { recipient_id };
+    assert_not_null(account_creation_transfer_before);
+    assert_equals(account_creation_transfer_before.amount, amount);
+    assert_equals(account_creation_transfer_before.state, transfer_strategy.account_creation_state.pending);
+
+    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
+    val pool_account = accounts.account @? { .id == pool_account_id };
+    assert_not_null(pool_account);
+    
+    assert_equals(assets.get_asset_balance(pool_account, asset), amount);
+    assert_equals(assets.get_asset_balance(alice.account, asset), 10L - amount);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets_ext.recall_unclaimed_transfer(tx_rid, 1))
+        .sign(alice.keypair)
+        .run_must_fail("This transfer has not timed out yet");
+
+    run_block_after_timeout();
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets_ext.recall_unclaimed_transfer(tx_rid, 1))
+        .nop()
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(pool_account, asset), 0L);
+    assert_equals(assets.get_asset_balance(alice.account, asset), 10L);
+
+    val account_creation_transfer_after = require(transfer_strategy.account_creation_transfer @? { recipient_id });
+    assert_equals(account_creation_transfer_after.state, transfer_strategy.account_creation_state.recalled);
+
+    rell.test.tx()
+        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets_ext.recall_unclaimed_transfer(tx_rid, 1))
+        .nop()
+        .sign(alice.keypair)
+        .run_must_fail("No pending transfer found");
+}
+
+function run_block_after_timeout() {
+    rell.test.set_next_block_time(rell.test.last_block_time + (utils.MILLISECONDS_PER_DAY * 60) + 1);
+    rell.test.block().run();
+}

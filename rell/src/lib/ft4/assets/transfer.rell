@@ -9,6 +9,13 @@ function create_on_internal_transfer(
    amount: big_integer
 );
 
+@extendable
+function recall_on_internal_transfer(
+   sender: accounts.account,
+   transfer_tx_rid: byte_array,
+   transfer_op_index: integer
+);
+
 namespace Unsafe {
 
    function transfer_to_recipient_id(sender: accounts.account, recipient_id: byte_array, assets.asset, amount: big_integer) {
@@ -47,5 +54,10 @@ namespace Unsafe {
       );
 
       after_transfer(from, to, asset, amount);
+   }
+
+   function recall_unclaimed_transfer(accounts.account, transfer_tx_rid: byte_array, transfer_op_index: integer) {
+      require(is_create_on_internal_transfer_enabled(), "Creating accounts on transfer is not enabled");
+      recall_on_internal_transfer(account, transfer_tx_rid, transfer_op_index);
    }
 }

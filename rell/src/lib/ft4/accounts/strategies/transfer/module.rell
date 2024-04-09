@@ -22,10 +22,12 @@ struct module_args {
 
 enum account_creation_state {
     pending,
-    done
+    done,
+    recalled
 }
 
 entity account_creation_transfer {
+    index transaction, op_index: integer;
     sender_blockchain_rid: byte_array;
     sender_id: byte_array;
     index recipient_id: byte_array;
@@ -34,8 +36,8 @@ entity account_creation_transfer {
     rules: byte_array;
     timestamp;
     mutable state: account_creation_state = account_creation_state.pending;
-    mutable tx_rid: byte_array = x"";
-    mutable op_index: integer = -1;
+    mutable final_tx_rid: byte_array = x"";
+    mutable final_op_index: integer = -1;
 }
 
 @extend(assets.is_create_on_internal_transfer_enabled)
@@ -47,6 +49,14 @@ function(sender: accounts.account, recipient_id: byte_array, assets.asset, amoun
 
     val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
     create_on_transfer(sender_blockchain_rid, sender.id, recipient_id, asset, amount);
+}
+
+@extend(assets.recall_on_internal_transfer)
+function(sender: accounts.account, transfer_tx_rid: byte_array, transfer_op_index: integer) {
+    val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
+    val (asset, amount) = recall_transfer(sender_blockchain_rid, sender.id, transfer_tx_rid, transfer_op_index);
+
+    assets.Unsafe.transfer(ensure_pool_account(chain_context.blockchain_rid), sender, asset, amount);
 }
 
 @extend(crosschain.is_create_on_crosschain_transfer_enabled)
@@ -64,6 +74,18 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id:
     create_on_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
 }
 
+@extend(crosschain.recall_on_crosschain_transfer)
+function(sender_blockchain_rid: byte_array, sender_id: byte_array, transfer_tx_rid: byte_array, transfer_op_index: integer) {
+    val (asset, amount) = recall_transfer(sender_blockchain_rid, sender_id, transfer_tx_rid, transfer_op_index);
+
+    crosschain.Unsafe.update_balances_if_needed(
+        ensure_pool_account(chain_context.blockchain_rid),
+        crosschain.ensure_blockchain_account(sender_blockchain_rid),
+        asset,
+        amount
+    );
+}
+
 @extend(strategies.after_register_account)
 function(accounts.account) {
     val pool_account = ensure_pool_account(chain_context.blockchain_rid);
@@ -77,8 +99,8 @@ function(accounts.account) {
             account_creation_transfer.amount);
 
         account_creation_transfer.state = account_creation_state.done;
-        account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
-        account_creation_transfer.op_index = op_context.op_index;
+        account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;
+        account_creation_transfer.final_op_index = op_context.op_index;
     }
 }
 
@@ -117,7 +139,9 @@ function create_on_transfer(
     require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
         "This asset is already transferred");
 
-    create account_creation_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount,
+    create account_creation_transfer(
+        op_context.transaction, op_index = op_context.op_index,
+        sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         rules = rules.to_gtv().to_bytes(),
         timestamp = utils.latest_time());
 }
@@ -137,8 +161,8 @@ function do_transfer(accounts.account, strategy: text) {
             account_creation_transfer.amount);
 
         account_creation_transfer.state = account_creation_state.done;
-        account_creation_transfer.tx_rid = op_context.transaction.tx_rid;
-        account_creation_transfer.op_index = op_context.op_index;
+        account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;
+        account_creation_transfer.final_op_index = op_context.op_index;
 
         val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
         val rule = rules.get_or_null(strategy);
@@ -151,6 +175,39 @@ function do_transfer(accounts.account, strategy: text) {
         }
     }
     require(enough_transferred, "Insufficient amount of asset transferred");
+}
+
+function recall_transfer(
+    sender_blockchain_rid: byte_array,
+    sender_id: byte_array,
+    transfer_tx_rid: byte_array,
+    transfer_op_index: integer
+) {
+    val account_creation_transfers = account_creation_transfer @* {
+        .transaction.tx_rid == transfer_tx_rid,
+        .op_index == transfer_op_index,
+        sender_blockchain_rid,
+        sender_id,
+        .state == account_creation_state.pending
+    };
+
+    require(account_creation_transfers.size() > 0, "No pending transfer found");
+    require(account_creation_transfers.size() < 2,
+        "%d pending transfers found, should not happen".format(account_creation_transfers.size()));
+    val account_creation_transfer = account_creation_transfers[0];
+
+    val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
+    val timeout = (rules.values() @ {} (@min .timeout_days))!! * utils.MILLISECONDS_PER_DAY;
+    val latest_time = utils.latest_time();
+    val occurred_time = account_creation_transfer.timestamp;
+    val delta = (latest_time - occurred_time);
+    require(delta > timeout, "This transfer has not timed out yet");
+
+    account_creation_transfer.state = account_creation_state.recalled;
+    account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;
+    account_creation_transfer.final_op_index = op_context.op_index;
+
+    return (account_creation_transfer.asset, account_creation_transfer.amount);
 }
 
 function ensure_fee_account(custom_account_id: byte_array?, blockchain_rid: byte_array): accounts.account {

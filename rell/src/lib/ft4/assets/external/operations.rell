@@ -25,6 +25,27 @@ operation transfer(receiver_id: byte_array, asset_id: byte_array, amount: big_in
     assets.Unsafe.transfer_to_recipient_id(sender, receiver_id, asset, amount);
 }
 
+function recall_unclaimed_transfer_message(gtv) {
+    val params = struct<recall_unclaimed_transfer>.from_gtv(gtv);
+
+    return "Please sign the message\nto recall transfer in transaction %s with op index %s"
+        .format(
+            params.transfer_tx_rid, params.transfer_op_index
+        );
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_overridable_auth_handler(
+    scope = rell.meta(recall_unclaimed_transfer).mount_name,
+    flags = ["T"],
+    message = recall_unclaimed_transfer_message(*)
+);
+
+operation recall_unclaimed_transfer(transfer_tx_rid: byte_array, transfer_op_index: integer) {
+    val account = auth.authenticate();
+    assets.Unsafe.recall_unclaimed_transfer(account, transfer_tx_rid, transfer_op_index);
+}
+
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(burn).mount_name,

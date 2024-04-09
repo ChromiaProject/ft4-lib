@@ -1,0 +1,125 @@
+@test module;
+
+import assets_utils: ^^^.assets.utils;
+import ^^^^.lib.ft4.admin;
+import ^^^^.lib.ft4.assets;
+import ^^^^.lib.ft4.accounts;
+import ^^^^.lib.ft4.utils;
+import iccf_op: ^^^.operations.iccf_op;
+import ft_utils: ^^^^.lib.ft4.test.utils;
+import auth_ext: ^^^^.lib.ft4.auth.external;
+import xchain_ext: ^^^^.lib.ft4.crosschain.external;
+import transfer_strategy: ^^^^.lib.ft4.accounts.strategies.transfer;
+
+function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_without_apply() {
+    val sender_account_id = rell.test.keypairs.alice.pub;
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+
+    val source_blockchain_rid = x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28";
+    val recipient_id = rell.test.keypairs.alice.pub;
+    val asset = assets_utils.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
+    
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id,
+                    asset.id,
+                    5L,
+                    [chain_context.blockchain_rid],
+                    deadline = rell.test.last_block_time + rell.test.DEFAULT_BLOCK_INTERVAL * 2
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .run_must_fail(
+            "Transaction <%s> transfer at index <%s> has not been applied on this chain."
+                .format(init_tx.body.hash(), 1)
+        );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xchain_ext.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .nop()
+        .run();
+
+    val account_creation_transfer_before = transfer_strategy.account_creation_transfer @? { recipient_id };
+    assert_not_null(account_creation_transfer_before);
+    assert_equals(account_creation_transfer_before.amount, 5L);
+    assert_equals(account_creation_transfer_before.state, transfer_strategy.account_creation_state.pending);
+
+    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
+    val pool_account = accounts.account @? { .id == pool_account_id };
+    assert_not_null(pool_account);
+    
+    assert_equals(assets.get_asset_balance(pool_account, asset), 5L);
+
+    rell.test.tx()
+        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .run_must_fail("This transfer has not timed out yet");
+
+    run_block_after_timeout();
+    rell.test.tx()
+        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .nop()
+        .run();
+
+    assert_equals(assets.get_asset_balance(pool_account, asset), 0L);
+
+    val account_creation_transfer_after = require(transfer_strategy.account_creation_transfer @? { recipient_id });
+    assert_equals(account_creation_transfer_after.state, transfer_strategy.account_creation_state.recalled);
+
+    rell.test.tx()
+        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .nop()
+        .run_must_fail(
+            "Transaction <%s> transfer at index <%s> has already been recalled on this chain."
+                 .format(init_tx.body.hash(), 1)
+        );
+}
+
+function test_can_not_reclaim_transfer_on_wrong_chain() {
+    val sender_account_id = rell.test.keypairs.alice.pub;
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+
+    val source_blockchain_rid = x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28";
+    val wrong_blockchain_rid = x"FFFF";
+    val recipient_id = rell.test.keypairs.alice.pub;
+    val asset = assets_utils.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
+
+    val init_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xchain_ext.init_transfer(
+                    recipient_id,
+                    asset.id,
+                    5L,
+                    [wrong_blockchain_rid],
+                    deadline = rell.test.last_block_time + rell.test.DEFAULT_BLOCK_INTERVAL * 2
+                ).to_gtx_operation()
+            ],
+            signers = [rell.test.pubkeys.alice.to_gtv()]
+        ),
+        signatures = [x"".to_gtv()]
+    );
+
+    rell.test.tx()
+        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .run_must_fail(
+            "This transaction must happen on a chain with blockchain_rid %s".format(wrong_blockchain_rid)
+        );
+}
+
+function run_block_after_timeout() {
+    rell.test.set_next_block_time(rell.test.last_block_time + (utils.MILLISECONDS_PER_DAY * 10) + 1);
+    rell.test.block().run();
+}

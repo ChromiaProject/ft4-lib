@@ -241,8 +241,8 @@ operation cancel_transfer(
 operation unapply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
-    cancel_or_unapply_tx: gtx_transaction,
-    cancel_or_unapply_op_index: integer,
+    last_tx: gtx_transaction,
+    last_op_index: integer,
     hop_index: integer
 ) {
     val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
@@ -265,42 +265,53 @@ operation unapply_transfer(
             .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
-    val cancel_or_unapply_op = cancel_or_unapply_tx.body.operations[cancel_or_unapply_op_index];
+    val last_op = last_tx.body.operations[last_op_index];
 
-    when (cancel_or_unapply_op.name) {
+    when (last_op.name) {
         rell.meta(cancel_transfer).mount_name -> {
-            val args = struct<cancel_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            val args = struct<cancel_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+                "init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+                "init_tx_op_index must match argument of last_tx"
             );
             require(
                 args.previous_hop_tx.to_bytes() == apply_tx_data,
-                "cancel_or_unapply_tx's previous_hop_tx must be the apply_transfer to cancel"
+                "last_tx's previous_hop_tx must be the apply_transfer to cancel"
             );
             require(
                 args.op_index == apply_op_index,
-                "cancel_or_unapply_tx's op_index must be the apply_transfer to cancel"
+                "last_tx's op_index must be the apply_transfer to cancel"
             );
         }
         rell.meta(unapply_transfer).mount_name -> {
-            val args = struct<unapply_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            val args = struct<unapply_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+                "init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+                "init_tx_op_index must match argument of last_tx"
+            );
+        }
+        rell.meta(recall_unclaimed_transfer).mount_name -> {
+            val args = struct<recall_unclaimed_transfer>.from_gtv(last_op.args.to_gtv());
+            require(
+                init_transfer_tx == args.init_transfer_tx,
+                "init_transfer_tx must match argument of last_tx"
+            );
+            require(
+                init_tx_op_index == args.init_tx_op_index,
+                "init_tx_op_index must match argument of last_tx"
             );
         }
         else -> {
-            require(false, "cancel_or_unapply_tx[cancel_or_unapply_op_index] must be %s or %s".format(
-                rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name)
+            require(false, "last_tx[last_op_index] must be %s, %s or %s".format(
+                rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name, rell.meta(recall_unclaimed_transfer).mount_name)
             );
         }
     }
@@ -323,10 +334,10 @@ operation unapply_transfer(
 
     val next_hop_blockchain_rid = init_transfer_details.args.hops[hop_index + 1];
     require(
-        cancel_or_unapply_tx.body.blockchain_rid == next_hop_blockchain_rid,
+        last_tx.body.blockchain_rid == next_hop_blockchain_rid,
         "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
             .format(
-                next_hop_blockchain_rid, cancel_or_unapply_tx.body.blockchain_rid
+                next_hop_blockchain_rid, last_tx.body.blockchain_rid
             )
     );
 
@@ -337,7 +348,7 @@ operation unapply_transfer(
     );
 
     iccf.require_valid_proof(
-        cancel_or_unapply_tx,
+        last_tx,
         require_anchored_proof=true,
         verify_signers=false
     );
@@ -357,8 +368,8 @@ operation unapply_transfer(
 operation revert_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
-    cancel_or_unapply_tx: gtx_transaction,
-    cancel_or_unapply_op_index: integer
+    last_tx: gtx_transaction,
+    last_op_index: integer
 ) {
     val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
     val hops = init_transfer_details.args.hops;
@@ -369,10 +380,10 @@ operation revert_transfer(
 
     val next_hop_blockchain_rid = hops[0];
     require(
-        cancel_or_unapply_tx.body.blockchain_rid == next_hop_blockchain_rid,
+        last_tx.body.blockchain_rid == next_hop_blockchain_rid,
         "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
             .format(
-                next_hop_blockchain_rid, cancel_or_unapply_tx.body.blockchain_rid
+                next_hop_blockchain_rid, last_tx.body.blockchain_rid
             )
     );
 
@@ -382,40 +393,51 @@ operation revert_transfer(
             .format(init_transfer_details.args.deadline)
     );
 
-    val cancel_or_unapply_op = cancel_or_unapply_tx.body.operations[cancel_or_unapply_op_index];
+    val last_op = last_tx.body.operations[last_op_index];
 
-    when (cancel_or_unapply_op.name) {
+    when (last_op.name) {
         rell.meta(cancel_transfer).mount_name -> {
-            val args = struct<cancel_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            val args = struct<cancel_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+                "init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+                "init_tx_op_index must match argument of last_tx"
             );
         }
         rell.meta(unapply_transfer).mount_name -> {
-            val args = struct<unapply_transfer>.from_gtv(cancel_or_unapply_op.args.to_gtv());
+            val args = struct<unapply_transfer>.from_gtv(last_op.args.to_gtv());
             require(
                 init_transfer_tx == args.init_transfer_tx,
-                "init_transfer_tx must match argument of cancel_or_unapply_tx"
+                "init_transfer_tx must match argument of last_tx"
             );
             require(
                 init_tx_op_index == args.init_tx_op_index,
-                "init_tx_op_index must match argument of cancel_or_unapply_tx"
+                "init_tx_op_index must match argument of last_tx"
+            );
+        }
+        rell.meta(recall_unclaimed_transfer).mount_name -> {
+            val args = struct<recall_unclaimed_transfer>.from_gtv(last_op.args.to_gtv());
+            require(
+                init_transfer_tx == args.init_transfer_tx,
+                "init_transfer_tx must match argument of last_tx"
+            );
+            require(
+                init_tx_op_index == args.init_tx_op_index,
+                "init_tx_op_index must match argument of last_tx"
             );
         }
         else -> {
-            require(false, "cancel_or_unapply_tx[cancel_or_unapply_op_index] must be %s or %s".format(
-                rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name)
+            require(false, "last_tx[last_op_index] must be %s, %s or %s".format(
+                rell.meta(cancel_transfer).mount_name, rell.meta(unapply_transfer).mount_name, rell.meta(recall_unclaimed_transfer).mount_name)
             );
         }
     }
 
     iccf.require_valid_proof(
-        cancel_or_unapply_tx,
+        last_tx,
         require_anchored_proof=true,
         verify_signers=false
     );
@@ -443,6 +465,53 @@ operation revert_transfer(
         .op_index = op_context.op_index,
         .is_input = true
     );
+}
+
+operation recall_unclaimed_transfer(
+    init_transfer_tx: gtx_transaction,
+    init_tx_op_index: integer)
+{
+    require(crosschain.is_create_on_crosschain_transfer_enabled(), "Creating accounts on transfer is not enabled");
+
+    val init_transfer_details = get_init_transfer_details(init_transfer_tx, init_tx_op_index);
+
+    val last_hope_blockchain_rid = init_transfer_details.args.hops[init_transfer_details.args.hops.size()-1];
+    require(
+        last_hope_blockchain_rid == chain_context.blockchain_rid,
+        "This transaction must happen on a chain with blockchain_rid %s".format(last_hope_blockchain_rid)
+    );
+
+    val apply_tx = require(
+        crosschain.applied_transfers @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index },
+        "Transaction <%s> transfer at index <%s> has not been applied on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    require(
+        crosschain.recalled_transfers @? { init_transfer_details.tx_rid, init_tx_op_index } == null,
+        "Transaction <%s> transfer at index <%s> has already been recalled on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    val asset = assets.Asset(init_transfer_details.args.asset_id);
+
+    crosschain.recall_on_crosschain_transfer(
+        init_transfer_tx.body.blockchain_rid,
+        init_transfer_details.sender_account_id,
+        apply_tx.transaction.tx_rid,
+        apply_tx.op_index
+    );
+
+    create assets.crosschain_transfer_history_entry(
+        blockchain_rid = init_transfer_tx.body.blockchain_rid,
+        account_id = init_transfer_details.sender_account_id,
+        asset = asset,
+        delta = init_transfer_details.args.amount,
+        op_index = op_context.op_index,
+        is_input = false
+    );
+
+    create crosschain.recalled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
 function validate_apply_transfer(
