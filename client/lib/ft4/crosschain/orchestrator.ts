@@ -37,6 +37,7 @@ import {
   cancelTransfer,
   unapplyTransfer,
   revertTransfer as revertTransferOp,
+  recallUnclaimedTransfer as reclaimUnclaimedTransferOp,
 } from "./operations";
 import { findPathToChainForAsset } from "./pathfinder";
 import { applyTransferTx, isTransferApplied } from "./queries";
@@ -46,7 +47,7 @@ import {
   OrchestratorBase,
   OrchestratorEvents,
   OrchestratorState,
-  PendingTransfer,
+  TransferRef,
   ResumeOrchestrator,
   RevertOrchestrator,
 } from "./types";
@@ -88,9 +89,8 @@ export async function createOrchestrator(
 
   /**
    * Initialize the transfer by creating the initial transaction.
-   * @returns {Promise<void>}
    */
-  function performInitTransfer(): Promise<void> {
+  function performInitTransfer(): Promise<TransferRef> {
     return transactionBuilder(authenticator, connection.client)
       .add(initTransfer(recipientId, assetId, amount, path, Date.now() + ttl), {
         targetBlockchainRid: path[0],
@@ -118,6 +118,7 @@ export async function createOrchestrator(
       })
       .then(({ tx: _tx, receipt }) => {
         orchestrator.eventEmitter.emit("TransferInit", receipt);
+        return { tx: state.tx!, opIndex: state.opIndex! };
       })
       .catch((reason: Error) => {
         if (reason instanceof SigningError) {
@@ -133,11 +134,9 @@ export async function createOrchestrator(
 
   /**
    * Execute the transfer operation across all steps.
-   * @async
-   * @returns {Promise<void>}
    */
-  async function transfer(): Promise<void> {
-    await performInitTransfer();
+  async function transfer(): Promise<TransferRef> {
+    const transferRef = await performInitTransfer();
 
     if (state.tx === undefined || state.opIndex === undefined) {
       throw new OrchestratorError(
@@ -146,6 +145,7 @@ export async function createOrchestrator(
     }
     await orchestrator.walkPath();
     await orchestrator.performCompleteTransfer(state.tx, state.opIndex);
+    return transferRef;
   }
 
   return Object.freeze({
@@ -159,13 +159,13 @@ export async function createOrchestrator(
  * which was initiated but did not complete properly
  * @param {Connection} connection - The connection.
  * @param {Authenticator} authenticator - The authenticator.
- * @param {PendingTransfer} pendingTransfer - The transfer to resume
+ * @param {TransferRef} pendingTransfer - The transfer to resume
  * @returns The orchestrator instance which will be able to resume the transfer
  */
 export async function createResumeOrchestrator(
   connection: Connection,
   authenticator: Authenticator,
-  pendingTransfer: PendingTransfer,
+  pendingTransfer: TransferRef,
 ): Promise<ResumeOrchestrator> {
   const operations = pendingTransfer.tx[0][1];
   const initTransferOpArgs = operations[pendingTransfer.opIndex][1];
@@ -238,11 +238,16 @@ export async function createResumeOrchestrator(
 export async function createRevertOrchestrator(
   connection: Connection,
   authenticator: Authenticator,
-  pendingTransfer: PendingTransfer,
+  pendingTransfer: TransferRef,
 ): Promise<RevertOrchestrator> {
   const operations = pendingTransfer.tx[0][1];
   const initTransferOpArgs = operations[pendingTransfer.opIndex][1];
   const path = initTransferOpArgs[3] as Buffer[];
+
+  const directoryClient = await createClient({
+    nodeUrlPool: connection.client.config.endpointPool.map((ep) => ep.url),
+    blockchainIid: 0,
+  });
 
   const { state, ...orchestrator } = await createBaseOrchestrator(
     connection,
@@ -251,11 +256,6 @@ export async function createRevertOrchestrator(
   );
 
   async function revertTransfer(): Promise<void> {
-    const directoryClient = await createClient({
-      nodeUrlPool: connection.client.config.endpointPool.map((ep) => ep.url),
-      blockchainIid: 0,
-    });
-
     let firstNotAppliedHopIndex: number | undefined = undefined;
     for (let i = 0; i < path.length; i++) {
       if (
@@ -354,7 +354,55 @@ export async function createRevertOrchestrator(
     orchestrator.eventEmitter.emit("TransferHop", targetBlockchainRid);
 
     sourceBlockchainRid = targetBlockchainRid;
+    await doRevert(firstNotAppliedHopIndex, sourceBlockchainRid, tx, opIndex);
+  }
 
+  async function recallUnclaimedTransfer(): Promise<void> {
+    let tx: RawGtx;
+    let opIndex: number;
+
+    const targetBlockchainRid = path[path.length - 1];
+
+    const tb = await getTransactionBuilderForChain(
+      connection,
+      authenticator,
+      targetBlockchainRid,
+    );
+
+    await tb
+      .add(
+        reclaimUnclaimedTransferOp(pendingTransfer.tx, pendingTransfer.opIndex),
+        {
+          authenticator: noopAuthenticator,
+          targetBlockchainRid,
+          onAnchoredHandler: (
+            data: OnAnchoredHandlerData | null,
+            error: Error | null,
+          ) => {
+            if (error) {
+              throw new OrchestratorError(
+                `Unable to fetch proof: ${error.message}`,
+                error,
+              );
+            }
+            tx = data!.tx;
+            opIndex = data!.opIndex;
+          },
+        },
+      )
+      .buildAndSendWithAnchoring();
+    orchestrator.eventEmitter.emit("TransferHop", targetBlockchainRid);
+
+    // @ts-expect-error `tx` and `opIndex` are assigned in async callback
+    await doRevert(path.length - 1, targetBlockchainRid, tx, opIndex);
+  }
+
+  async function doRevert(
+    firstNotAppliedHopIndex: number,
+    sourceBlockchainRid: Buffer,
+    tx: RawGtx,
+    opIndex: number,
+  ): Promise<void> {
     for (let hop = firstNotAppliedHopIndex - 1; hop >= 0; hop--) {
       const targetBlockchainRid = path[hop];
 
@@ -442,6 +490,7 @@ export async function createRevertOrchestrator(
   return Object.freeze({
     ...getPublicOrchestratorBase({ state, ...orchestrator }),
     revertTransfer,
+    recallUnclaimedTransfer,
   });
 }
 

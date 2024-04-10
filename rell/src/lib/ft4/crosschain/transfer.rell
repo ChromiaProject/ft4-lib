@@ -33,6 +33,12 @@ entity pending_transfer {
     index sender: accounts.account;
 }
 
+entity reverted_transfer {
+    key init_tx_rid, init_op_index;
+    init_tx_rid: byte_array;
+    init_op_index: integer;
+}
+
 namespace Unsafe {
 
     function update_balances_if_needed(

@@ -27,9 +27,10 @@ import {
 } from "./auth-descriptor";
 import { AuthenticatedAccount } from "./types";
 import {
-  PendingTransfer,
+  TransferRef,
   crosschainTransfer,
   resumeCrosschainTransfer,
+  recallUnclaimedCrosschainTransfer,
 } from "@ft4/crosschain";
 import { Connection, call, createSession } from "@ft4/ft-session";
 import { revertCrosschainTransfer } from "@ft4/crosschain/transfer";
@@ -66,10 +67,16 @@ export function createAuthenticatedAccount(
         assetId,
         amount,
       ),
-    resumeCrosschainTransfer: (pendingTransfer: PendingTransfer) =>
+    resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
       resumeCrosschainTransfer(connection, authenticator, pendingTransfer),
-    revertCrosschainTransfer: (pendingTransfer: PendingTransfer) =>
+    revertCrosschainTransfer: (pendingTransfer: TransferRef) =>
       revertCrosschainTransfer(connection, authenticator, pendingTransfer),
+    recallUnclaimedCrosschainTransfer: (pendingTransfer: TransferRef) =>
+      recallUnclaimedCrosschainTransfer(
+        connection,
+        authenticator,
+        pendingTransfer,
+      ),
     burn: (assetId: BufferId, amount: Amount) =>
       burn(connection, authenticator, assetId, amount),
     ...createAccountObject(connection, authenticator.accountId),

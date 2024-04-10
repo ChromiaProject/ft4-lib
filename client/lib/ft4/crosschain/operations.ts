@@ -101,3 +101,14 @@ export function revertTransfer(
     operationIndex,
   );
 }
+
+export function recallUnclaimedTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.recall_unclaimed_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+  );
+}

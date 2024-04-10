@@ -96,7 +96,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
-        .run_must_fail("Cannot revert cross-chain transfer for transaction <%s> at index <%d>. Pending transfer not found."
+        .run_must_fail("Transaction <%s> transfer at index <%s> has already been reverted on this chain."
                   .format(init_tx.body.hash(), 1));
 }
 
@@ -202,7 +202,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
         .op(iccf_op.iccf_proof(intermediate_blockchain_rid, unapply_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.revert_transfer(init_tx, 1, unapply_tx, 0))
         .nop()
-        .run_must_fail("Cannot revert cross-chain transfer for transaction <%s> at index <%d>. Pending transfer not found."
+        .run_must_fail("Transaction <%s> transfer at index <%s> has already been reverted on this chain."
                   .format(init_tx.body.hash(), 1));
 }
 
@@ -303,7 +303,7 @@ function test_can_not_revert_non_existing_transfer() {
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
-        .run_must_fail("Cannot revert cross-chain transfer for transaction <%s> at index <%d>. Pending transfer not found."
+        .run_must_fail("Cannot revert cross-chain transfer for transaction <%s> at index <%d>. init_transfer not found."
                   .format(init_tx.body.hash(), 1));
 }
 

@@ -46,6 +46,7 @@ jest.mock("@ft4/utils/exposed-operations", () => ({
         "ft4.crosschain.cancel_transfer",
         "ft4.crosschain.unapply_transfer",
         "ft4.crosschain.revert_transfer",
+        "ft4.crosschain.recall_unclaimed_transfer",
         "ft4.renew_subscription",
       ]),
     ),

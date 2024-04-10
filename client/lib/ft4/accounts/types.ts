@@ -16,7 +16,7 @@ import {
   AnyAuthDescriptor,
   AnyAuthDescriptorRegistration,
 } from "@ft4/accounts";
-import { PendingTransfer } from "@ft4/crosschain";
+import { PendingTransfer, TransferRef } from "@ft4/crosschain";
 import {
   SignedTransaction,
   TransactionReceipt,
@@ -106,7 +106,7 @@ export interface AuthenticatedAccount extends Account {
     assetId: BufferId,
     amount: Amount,
   ) => Web3PromiEvent<
-    void,
+    TransferRef,
     {
       signed: SignedTransaction;
       init: TransactionReceipt;
@@ -117,15 +117,13 @@ export interface AuthenticatedAccount extends Account {
   /**
    * Resume a cross-chain transfer which was initiated but did not complete properly.
    *
-   * @param {PendingTransfer} pendingTransfer - The transfer to resume
+   * @param {TransferRef} pendingTransfer - The transfer to resume
    *
    * Will emit event on each hop (containing blockchain RID).
    *
    * Will resolve when `complete_transfer` transaction is confirmed.
    */
-  resumeCrosschainTransfer: (
-    pendingTransfer: PendingTransfer,
-  ) => Web3PromiEvent<
+  resumeCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
     void,
     {
       hop: Buffer;
@@ -135,14 +133,31 @@ export interface AuthenticatedAccount extends Account {
   /**
    * Revert a cross-chain transfer which was initiated but did not complete properly.
    *
-   * @param {PendingTransfer} pendingTransfer - The transfer to revert
+   * @param {TransferRef} pendingTransfer - The transfer to revert
    *
    * Will emit event on each hop (containing blockchain RID).
    *
    * Will resolve when `revert_transfer` transaction is confirmed.
    */
-  revertCrosschainTransfer: (
-    pendingTransfer: PendingTransfer,
+  revertCrosschainTransfer: (pendingTransfer: TransferRef) => Web3PromiEvent<
+    void,
+    {
+      hop: Buffer;
+    }
+  >;
+
+  /**
+   * Recalls a cross-chain account creation transfer which was not claimed
+   * before timeout.
+   *
+   * @param {TransferRef} pendingTransfer - The transfer to recall
+   *
+   * Will emit event on each hop (containing blockchain RID).
+   *
+   * Will resolve when `revert_transfer` transaction is confirmed.
+   */
+  recallUnclaimedCrosschainTransfer: (
+    pendingTransfer: TransferRef,
   ) => Web3PromiEvent<
     void,
     {

@@ -12,8 +12,12 @@ import {
   createAmount,
   createAmountFromBalance,
 } from "@ft4/asset";
-import { createInMemoryFtKeyStore, days } from "@ft4/authentication";
-import { initTransfer } from "@ft4/crosschain";
+import {
+  createInMemoryFtKeyStore,
+  days,
+  noopAuthenticator,
+} from "@ft4/authentication";
+import { initTransfer, crosschainTransfer } from "@ft4/crosschain";
 import { Connection, createConnection } from "@ft4/ft-session";
 import {
   allowedAssets,
@@ -22,9 +26,18 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { encryption, gtv, newSignatureProvider } from "postchain-client";
+import {
+  encryption,
+  formatter,
+  gtv,
+  newSignatureProvider,
+} from "postchain-client";
+import { nop } from "@ft4/utils/index";
+import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
+import { transactionBuilder } from "@ft4/transaction-builder/index";
 
 let asset: Asset;
+let timeoutAsset: Asset;
 let nonExistentChain00Asset: Asset;
 let senderConnection: Connection;
 let recipientConnection: Connection;
@@ -51,6 +64,13 @@ describe("Fee account creation single step", () => {
       5,
     );
 
+    timeoutAsset = await getNewAsset(
+      senderConnection.client,
+      "fee_strategy_timeout_test_asset_00",
+      "FEE_STRATEGY_TIMEOUT_TEST_ASSET_00",
+      5,
+    );
+
     // based on the assumption that asset ID is:
     // (name, blockchain_rid).hash()
     const missingAssetId = gtv.gtvHash([
@@ -72,6 +92,12 @@ describe("Fee account creation single step", () => {
       recipientConnection.client,
       adminUser().signatureProvider,
       asset,
+      multichain00.rid,
+    );
+    await registerCrosschainAsset(
+      recipientConnection.client,
+      adminUser().signatureProvider,
+      timeoutAsset,
       multichain00.rid,
     );
     await registerCrosschainAsset(
@@ -105,7 +131,7 @@ describe("Fee account creation single step", () => {
     ).session;
 
     const startingAmount = createAmount(20, 5);
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderAccount.id,
@@ -186,7 +212,7 @@ describe("Fee account creation single step", () => {
     ).session;
 
     const startingAmount = createAmount(20, 5);
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderSession.account.id,
@@ -212,7 +238,7 @@ describe("Fee account creation single step", () => {
 
     expect(rawAmount).toEqual(1000000n);
 
-    await senderSession.account.crosschainTransfer(
+    const transferRef = await senderSession.account.crosschainTransfer(
       recipientConnection.blockchainRid,
       recipientId,
       asset.id,
@@ -244,6 +270,10 @@ describe("Fee account creation single step", () => {
       (await recipientConnection.query(pendingTransferStrategies(recipientId)))
         .length,
     ).toBe(0);
+
+    await expect(
+      senderSession.account.recallUnclaimedCrosschainTransfer(transferRef),
+    ).rejects.toThrow("No pending transfer found");
   });
 
   it("can resume account registration when transfer is interrupted", async () => {
@@ -269,7 +299,7 @@ describe("Fee account creation single step", () => {
     )!.amount;
 
     const feeAmount = createAmountFromBalance(amount, asset.decimals);
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderAccount.id,
@@ -329,7 +359,7 @@ describe("Fee account creation single step", () => {
     )!.amount;
 
     const feeAmount = createAmountFromBalance(amount, asset.decimals);
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderAccount.id,
@@ -340,12 +370,16 @@ describe("Fee account creation single step", () => {
     const recipientId = gtv.gtvHash(keyStore.id);
     expect(senderAccount.id).toEqual(recipientId);
 
-    await senderAccount.crosschainTransfer(
+    const transferRef = await senderAccount.crosschainTransfer(
       recipientConnection.blockchainRid,
       recipientId,
       asset.id,
       feeAmount,
     );
+
+    await expect(
+      senderSession.account.recallUnclaimedCrosschainTransfer(transferRef),
+    ).rejects.toThrow("This transfer has not timed out yet");
 
     const recipientSession = (
       await registerAccount(
@@ -386,7 +420,7 @@ describe("Fee account creation single step", () => {
     ).session;
 
     const startingAmount = createAmount(20, 5);
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderSession.account.id,
@@ -520,7 +554,7 @@ describe("Fee account creation single step", () => {
     ).session;
 
     const startingAmount = createAmount(0.01, 5);
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       senderAccount.id,
@@ -570,7 +604,7 @@ describe("Fee account creation single step", () => {
 
     const feeAmount = createAmountFromBalance(amount, asset.decimals);
 
-    mint(
+    await mint(
       senderConnection.client,
       adminUser().signatureProvider,
       session.account.id,
@@ -598,8 +632,78 @@ describe("Fee account creation single step", () => {
       ),
     );
 
-    expect(promise).rejects.toThrow(
+    await expect(promise).rejects.toThrow(
       `Account <${session.account.id.toString("hex")}> already registered on blockchain <${recipientConnection.blockchainRid.toString("hex")}>`,
+    );
+  });
+
+  it("can recall completed crosschain transfer if account is not registered after timeout, but not twice", async () => {
+    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    const senderSession = (
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        registrationStrategy.open(authDescriptor),
+      )
+    ).session;
+    const senderAccount = senderSession.account;
+
+    const feeAmounts = await recipientConnection.query(feeAssets());
+    const amount = feeAmounts.find((amt) =>
+      amt.asset_id.equals(timeoutAsset.id),
+    )!.amount;
+
+    const feeAmount = createAmountFromBalance(amount, timeoutAsset.decimals);
+    await mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderAccount.id,
+      timeoutAsset.id,
+      feeAmount,
+    );
+
+    const recipientId = gtv.gtvHash(keyStore.id);
+    expect(senderAccount.id).toEqual(recipientId);
+
+    const transferRef = await crosschainTransfer(
+      senderConnection,
+      senderAccount.authenticator,
+      recipientConnection.blockchainRid,
+      recipientId,
+      timeoutAsset.id,
+      feeAmount,
+      /*ttl=*/ 0,
+    );
+
+    expect(await senderAccount.getBalanceByAssetId(timeoutAsset.id)).toBeNull();
+    expect(
+      await recipientConnection.query(pendingTransferStrategies(recipientId)),
+    ).toContain("fee");
+
+    await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
+
+    expect(
+      (await senderAccount.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
+    ).toBe(amount);
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
+
+    await expect(
+      transactionBuilder(noopAuthenticator, recipientConnection.client)
+        .add(recallUnclaimedTransfer(transferRef.tx, transferRef.opIndex), {
+          authenticator: noopAuthenticator,
+        })
+        .add(nop())
+        .buildAndSend(),
+    ).rejects.toThrow(
+      `Transaction <0x${formatter.toString(gtv.gtvHash(transferRef.tx[0])).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
     );
   });
 });

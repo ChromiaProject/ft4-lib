@@ -442,14 +442,20 @@ operation revert_transfer(
         verify_signers=false
     );
 
-    val pending_transfer = require(
-      crosschain.pending_transfer @? { .transaction.tx_rid == init_transfer_details.tx_rid, .op_index == init_tx_op_index },
-      "Cannot revert cross-chain transfer for transaction <%s> at index <%d>. Pending transfer not found."
+    require(
+        crosschain.reverted_transfer @? { .init_tx_rid == init_transfer_details.tx_rid, .init_op_index == init_tx_op_index } == null,
+        "Transaction <%s> transfer at index <%s> has already been reverted on this chain."
+            .format(init_transfer_details.tx_rid, init_tx_op_index)
+    );
+
+    require(
+      transaction @? { .tx_rid == init_transfer_details.tx_rid },
+      "Cannot revert cross-chain transfer for transaction <%s> at index <%d>. init_transfer not found."
           .format(init_transfer_details.tx_rid, init_tx_op_index)
     );
 
-    // delete the pending transfer as it is now reverted
-    delete pending_transfer;
+    // delete any pending transfer as it is now reverted
+    delete crosschain.pending_transfer @? { .transaction.tx_rid == init_transfer_details.tx_rid, .op_index == init_tx_op_index };
 
     crosschain.Unsafe.update_balances_if_needed(
         crosschain.ensure_blockchain_account(hops[0]),
@@ -465,6 +471,8 @@ operation revert_transfer(
         .op_index = op_context.op_index,
         .is_input = true
     );
+
+    create crosschain.reverted_transfer(init_tx_rid = init_transfer_details.tx_rid, init_op_index = init_tx_op_index);
 }
 
 operation recall_unclaimed_transfer(

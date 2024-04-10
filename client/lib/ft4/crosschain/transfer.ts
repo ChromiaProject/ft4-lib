@@ -1,7 +1,7 @@
 import { Amount } from "@ft4/asset";
 import { Authenticator, days } from "@ft4/authentication";
 import {
-  PendingTransfer,
+  TransferRef,
   createOrchestrator,
   createResumeOrchestrator,
 } from "@ft4/crosschain";
@@ -25,7 +25,7 @@ export function crosschainTransfer(
   amount: Amount,
   ttl: number = days(1),
 ): Web3PromiEvent<
-  void,
+  TransferRef,
   {
     signed: SignedTransaction;
     init: TransactionReceipt;
@@ -33,7 +33,7 @@ export function crosschainTransfer(
   }
 > {
   const promiEvent = new Web3PromiEvent<
-    void,
+    TransferRef,
     {
       signed: SignedTransaction;
       init: TransactionReceipt;
@@ -61,7 +61,7 @@ export function crosschainTransfer(
         });
         return orchestrator.transfer();
       })
-      .then(() => resolve())
+      .then((tr) => resolve(tr))
       .catch((reason) => reject(reason));
   });
   return promiEvent;
@@ -70,7 +70,7 @@ export function crosschainTransfer(
 export function resumeCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
-  pendingTransfer: PendingTransfer,
+  pendingTransfer: TransferRef,
 ): Web3PromiEvent<
   void,
   {
@@ -99,7 +99,7 @@ export function resumeCrosschainTransfer(
 export function revertCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
-  pendingTransfer: PendingTransfer,
+  pendingTransfer: TransferRef,
 ): Web3PromiEvent<
   void,
   {
@@ -118,6 +118,35 @@ export function revertCrosschainTransfer(
           promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
         });
         return orchestrator.revertTransfer();
+      })
+      .then(() => resolve())
+      .catch((reason) => reject(reason));
+  });
+  return promiEvent;
+}
+
+export function recallUnclaimedCrosschainTransfer(
+  connection: Connection,
+  authenticator: Authenticator,
+  pendingTransfer: TransferRef,
+): Web3PromiEvent<
+  void,
+  {
+    hop: Buffer;
+  }
+> {
+  const promiEvent = new Web3PromiEvent<
+    void,
+    {
+      hop: Buffer;
+    }
+  >((resolve, reject) => {
+    return createRevertOrchestrator(connection, authenticator, pendingTransfer)
+      .then((orchestrator) => {
+        orchestrator.onTransferHop((blockchainRid) => {
+          promiEvent.emit("hop", formatter.ensureBuffer(blockchainRid));
+        });
+        return orchestrator.recallUnclaimedTransfer();
       })
       .then(() => resolve())
       .catch((reason) => reject(reason));

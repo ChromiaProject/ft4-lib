@@ -16,7 +16,7 @@ describe("Basic Functionality", () => {
     const initListener = jest.fn();
     const hopListener = jest.fn();
 
-    await testContext.account0
+    const transferRef = await testContext.account0
       .crosschainTransfer(
         testContext.multichain2.rid,
         testContext.account2.id,
@@ -26,6 +26,9 @@ describe("Basic Functionality", () => {
       .on("signed", signedListener)
       .on("init", initListener)
       .on("hop", hopListener);
+
+    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.opIndex).toBe(1);
 
     expect(signedListener).toHaveBeenCalledTimes(1);
     expect(initListener).toHaveBeenCalledTimes(1);
@@ -44,7 +47,7 @@ describe("Basic Functionality", () => {
       testContext.multichain2.rid, // Branch
     );
 
-    await testContext.account0
+    const transferRef = await testContext.account0
       .crosschainTransfer(
         // From root
         testContext.multichain1.rid, // To branch
@@ -55,6 +58,9 @@ describe("Basic Functionality", () => {
       .on("signed", signedListener)
       .on("init", initListener)
       .on("hop", hopListener);
+
+    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.opIndex).toBe(1);
 
     expect(signedListener).toHaveBeenCalledTimes(1);
     expect(initListener).toHaveBeenCalledTimes(1);

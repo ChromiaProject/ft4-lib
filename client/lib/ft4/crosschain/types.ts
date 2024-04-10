@@ -54,7 +54,7 @@ export type ExternalOrchestratorBase = Omit<
 >;
 
 export type Orchestrator = ExternalOrchestratorBase & {
-  transfer: () => Promise<void>;
+  transfer: () => Promise<TransferRef>;
 };
 
 export type ResumeOrchestrator = ExternalOrchestratorBase & {
@@ -63,6 +63,12 @@ export type ResumeOrchestrator = ExternalOrchestratorBase & {
 
 export type RevertOrchestrator = ExternalOrchestratorBase & {
   revertTransfer: () => Promise<void>;
+  recallUnclaimedTransfer: () => Promise<void>;
+};
+
+export type TransferRef = {
+  tx: RawGtx;
+  opIndex: number;
 };
 
 export type PendingTransfer = {

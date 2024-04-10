@@ -31,6 +31,7 @@ export {
   GtvInitTransferArgs,
   PendingTransfer,
   PendingTransferResponse,
+  TransferRef,
 } from "./types";
 
 export {
@@ -45,4 +46,5 @@ export {
   crosschainTransfer,
   resumeCrosschainTransfer,
   revertCrosschainTransfer,
+  recallUnclaimedCrosschainTransfer,
 } from "./transfer";
