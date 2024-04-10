@@ -9,6 +9,7 @@ node_modules/
 package-lock.json
 
 # Log files
+*.log
 logs/
 **.pid
 /db.log
@@ -47,7 +48,10 @@ postchain/runtime
 /scripts
 /doc
 /compile-changelog.sh
+/install-chr-and-pmc.sh
 
 # Cypress related files and directories
 /cypress
 cypress.config.ts
+
+/coverage
