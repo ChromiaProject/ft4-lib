@@ -12,7 +12,8 @@ import {
   RawGtx,
   SignedTransaction,
   TransactionReceipt,
- Web3PromiEvent } from "postchain-client";
+  Web3PromiEvent,
+} from "postchain-client";
 import {
   Account,
   AuthDescriptorValidator,

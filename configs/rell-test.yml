@@ -59,6 +59,10 @@ blockchains:
         tests.assets.utils:
           admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
+        lib.ft4.auth:
+          evm_signatures_authorized_operations:
+            - register_player
+
         lib.ft4.accounts.strategies.transfer:
           rules:
             - sender_blockchain:

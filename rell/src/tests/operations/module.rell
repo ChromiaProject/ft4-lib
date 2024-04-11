@@ -1,4 +1,5 @@
 import acc: ^^.lib.ft4.accounts;
+import ^^.lib.ft4.accounts.strategies;
 import assets: ^^.lib.ft4.assets;
 import auth: ^^.lib.ft4.auth;
 import test_auth: .auth;
@@ -54,4 +55,18 @@ function () = auth.add_auth_handler(
 
 operation rejected_op() {
     require(false, "always rejected");
+}
+
+entity player {
+    key acc.account;
+    name;
+}
+
+operation register_player(name) {
+    val account = strategies.register_account();
+    create player(account, name);
+}
+
+operation register_player2(name) {
+    strategies.register_account();
 }

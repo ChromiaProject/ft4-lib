@@ -3,10 +3,12 @@ module;
 
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
+import auth_ext: lib.ft4.auth.external;
 import strategies_ext: lib.ft4.accounts.strategies.external;
 import lib.ft4.accounts.strategies.open;
-
 import lib.ft4.test.utils. { evm_sign };
+
+import ^^.operations;
 
 function test_account_can_be_registered_with_open_strategy() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
@@ -40,7 +42,7 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(strategies_ext.register_account_evm_signatures([signature]))
+        .op(auth_ext.evm_signatures([evm_address], [signature]))
         .op(open)
         .op(strategies_ext.register_account())
         .run();
@@ -48,6 +50,75 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
     val account = accounts.account @? { .id == evm_address.hash() };
 
     assert_not_null(account);
+}
+
+function test_account_can_be_registered_with_custom_operation() {
+    val name = "Alice (the neighbour)";
+
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor))
+        .op(operations.register_player(name))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val account = accounts.account @? { .id == rell.test.keypairs.alice.pub.hash() };
+    assert_not_null(account);
+    val player_name = operations.player @? { account } ( .name );
+    assert_equals(player_name, name);
+}
+
+function test_account_can_be_registered_with_custom_operation_and_evm_signature() {
+    val name = "Alice (the neighbour)";
+
+    val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        evm_address,
+        set(["A", "T"])
+    );
+
+    val open = open.ras_open(auth_descriptor);
+
+    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
+    val signature = evm_sign(message, rell.test.keypairs.alice.priv);
+
+    rell.test.tx()
+        .op(auth_ext.evm_signatures([evm_address], [signature]))
+        .op(open)
+        .op(operations.register_player(name))
+        .run();
+
+    val account = accounts.account @? { .id == evm_address.hash() };
+    assert_not_null(account);
+    val player_name = operations.player @? { account } ( .name );
+    assert_equals(player_name, name);
+}
+
+function test_account_account_registration_fails_with_unknown_custom_operation_and_evm_signature() {
+    val name = "Alice (the neighbour)";
+
+    val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        evm_address,
+        set(["A", "T"])
+    );
+
+    val open = open.ras_open(auth_descriptor);
+
+    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
+    val signature = evm_sign(message, rell.test.keypairs.alice.priv);
+
+    rell.test.tx()
+        .op(auth_ext.evm_signatures([evm_address], [signature]))
+        .op(open)
+        .op(operations.register_player2(name))
+        .run_must_fail("Cannot authorize operation <register_player2> with evm_signatures");
 }
 
 function test_account_registration_fails_with_invalid_ft_signature() {
@@ -60,7 +131,7 @@ function test_account_registration_fails_with_invalid_ft_signature() {
         .op(open.ras_open(auth_descriptor, null))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
-        .run_must_fail("Missing signature for signer <%s>".format(rell.test.pubkeys.alice));
+        .run_must_fail("Missing signature for public key <%s>".format(rell.test.pubkeys.alice));
 }
 
 function test_account_registration_fails_with_invalid_evm_signature() {
@@ -78,10 +149,10 @@ function test_account_registration_fails_with_invalid_evm_signature() {
     val signature = evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
-        .op(strategies_ext.register_account_evm_signatures([signature]))
+        .op(auth_ext.evm_signatures([evm_address], [signature]))
         .op(open)
         .op(strategies_ext.register_account())
-        .run_must_fail("Missing signature for signer <0x1563915e194d8cfba1943570603f7606a3115508>");
+        .run_must_fail("Invalid signature for address <%s>".format(evm_address));
 }
 
 function test_register_account_message() {

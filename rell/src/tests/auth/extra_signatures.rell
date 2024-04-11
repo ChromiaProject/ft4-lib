@@ -218,7 +218,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_operation_is_
     rell.test.tx()
         .op(auth_ext.evm_signatures([address], [signature]))
         .op(op)
-        .run_must_fail("Cannot authorize operation <%s> with evm_signatures".format(op.name));      
+        .run_must_fail("Cannot authorize operation <%s> with evm_signatures".format(op.name));
 }
 
 function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing() {

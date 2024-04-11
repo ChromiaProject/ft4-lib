@@ -1,5 +1,3 @@
 operation register_account() {
     strategies.register_account();
 }
-
-operation register_account_evm_signatures(signatures: list<auth.signature>) {}

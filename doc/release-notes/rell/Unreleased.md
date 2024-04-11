@@ -8,6 +8,8 @@
 - Requires Rell 0.13.10
 - Changed entity `ft4.crosschain.applied_transfers`
 - Changed entity `ft4.account_creation_transfer`
+- Add field `transaction` to entity `applied_transfers`
+- Removed operation `ft4.register_account_evm_signatures` and use `ft4.evm_signatures` instead
 
 ### Changed 🪙
 

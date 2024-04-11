@@ -2,6 +2,7 @@
 module;
 
 import ^.accounts;
+import ^.accounts.strategies;
 import ^.utils;
 import ^.version;
 import .external;
@@ -140,14 +141,15 @@ function require_valid_scope_name(name) =
  * We don't keep track of nonce for keys used with evm_signatures, therefore if not used with care,
  * authorizing an operation with `evm_signatures` could lead to replay attack. In order to use it with
  * an operation, the operation has to be whitelisted. By default, library only allows 
- * `evm_signatures` to be used with `ft4.add_auth_descriptor`. `evm_signatures` is safe to use in 
- * combination with `ft_auth` or `evm_auth` operation. However if used as only way to authorize an
- * operation, then the operation has to ensure that it cannot be called more than once with same parameters,
- * e.g. operation creates an entity that has id that is derived from operation parameters.
+ * `evm_signatures` to be used with `ft4.add_auth_descriptor` and `ft4.register_account`.
+ * `evm_signatures` is safe to use in combination with `ft_auth` or `evm_auth` operation.
+ * However if used as only way to authorize an operation, then the operation has to ensure that it
+ * cannot be called more than once with same parameters, e.g. operation creates an entity that has id
+ * that is derived from operation parameters.
  */
   
 function is_evm_signatures_authorized_operation(name): boolean {
-    val whitelisted_operations = set(["ft4.add_auth_descriptor"]);
+    val whitelisted_operations = set(["ft4.add_auth_descriptor", "ft4.register_account"]);
 
     if (chain_context.args.evm_signatures_authorized_operations??) {
         whitelisted_operations.add_all(require(
@@ -161,18 +163,19 @@ function is_evm_signatures_authorized_operation(name): boolean {
 
 function require_evm_signatures_can_be_used() {
     val all_operations = op_context.get_all_operations();
+
     require(
-        all_operations.size() >= op_context.op_index+2,
+        all_operations.size() > op_context.op_index+1,
         "Cannot find an operation to authorize with 'ft4.evm_signatures'"
     );
     var next_op = all_operations[op_context.op_index+1];
-    
+
     var op_to_authorize: gtx_operation?;
-    if (not is_auth_op(next_op)) {
+    if (not (is_auth_op(next_op) or strategies.is_strategy_op(next_op))) {
         op_to_authorize = next_op;
     } else {
         require(
-            all_operations.size() >= op_context.op_index+3,
+            all_operations.size() > op_context.op_index+2,
             "Cannot find an operation to authorize with 'ft4.evm_signatures'"
         );
         op_to_authorize = all_operations[op_context.op_index+2];

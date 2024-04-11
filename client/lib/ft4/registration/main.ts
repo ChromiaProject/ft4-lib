@@ -9,10 +9,7 @@ import {
 } from "@ft4/authentication";
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import { IClient, Operation, Queryable, gtv } from "postchain-client";
-import {
-  registerAccountEvmSignatures,
-  registerAccount as registerAccountOp,
-} from "./operations";
+import { registerAccount as registerAccountOp } from "./operations";
 import { registerAccountMessage } from "./queries";
 import { Strategy } from "./types";
 import {
@@ -20,6 +17,7 @@ import {
   createConnection,
   createSession,
 } from "@ft4/ft-session";
+import { evmSignatures } from "@ft4/transaction-builder/utils";
 
 export async function registerAccount(
   client: IClient,
@@ -104,5 +102,5 @@ async function evmSignaturesOperation(
     registerAccountMessage(strategyOperation),
   );
   const signature = await keyStore.signMessage(message);
-  return registerAccountEvmSignatures([signature]);
+  return evmSignatures([keyStore.address], [signature]);
 }

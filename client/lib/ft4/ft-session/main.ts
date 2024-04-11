@@ -17,7 +17,8 @@ import {
   TransactionReceipt,
   createClient,
   formatter,
- Web3PromiEvent } from "postchain-client";
+  Web3PromiEvent,
+} from "postchain-client";
 import {
   BufferId,
   authHandlerForOperation,

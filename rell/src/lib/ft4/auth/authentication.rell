@@ -244,11 +244,9 @@ function _validate_multiple_evm_addresses(message: text, signatures: list<signat
 /**
   * Verifies whether provided list of signers have signed the operation/transaction.
   * FT (GTX) signers are checked against GTX `signers` and `signatures` fields, while 
-  * EVM signers are checked against signers and signatures provided in `ft4.evm_signatures` operation.
+  * EVM signers are checked against signers and signatures provided in `ft4.evm_signatures` operation.
   */
 function verify_signers(ft_and_evm_signers: list<byte_array>) {
-    val (signers, signatures) = get_evm_signatures();
-
     val op = op_context.get_current_operation();
     val message_template = get_auth_message_template(op.name, op.args.to_gtv(), true);
 
@@ -267,6 +265,11 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
             .replace(AUTH_DESCRIPTOR_ID_PLACEHOLDER, auth_details.auth_descriptor_id.to_hex().upper_case());
     }
 
+    verify_signers_with_message(ft_and_evm_signers, message);
+}
+
+function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, message: text) {
+    val (signers, signatures) = get_evm_signatures();
     for (i in range(signatures.size())) {
         val signer = signers[i];
         require(
@@ -295,7 +298,7 @@ function get_evm_signatures() {
         evm_signatures_op = prev_op;
     } else if (
         op_context.op_index > 1 and
-        is_auth_op(prev_op) and 
+        (is_auth_op(prev_op) or strategies.is_strategy_op(prev_op)) and 
         is_evm_signatures_op(tx_operations[op_context.op_index-2])
     ) {
         evm_signatures_op = tx_operations[op_context.op_index-2];
