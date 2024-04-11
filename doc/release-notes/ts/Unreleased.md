@@ -10,6 +10,8 @@
 ### Changed 🪙
 
 - `crosschainTransfer` function returns a `TransferRef`, which can be used when resuming, reverting and recalling the transfer.
+- Changed return type of methods `call` and `callWithoutNop` in `Session` to `Web3PromiEvent`
+- Changed return type of methods in `AuthenticatedAccount` to `Web3PromiEvent`
 
 ### Added ✅
 

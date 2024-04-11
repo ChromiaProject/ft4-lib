@@ -4,13 +4,12 @@ import {
   KeyStore,
   createAuthenticator,
 } from "@ft4/authentication";
+import { BufferId, TransactionSessionCompletion } from "@ft4/utils";
+import { formatter, SignedTransaction, Web3PromiEvent } from "postchain-client";
 import {
-  BufferId,
-  TransactionCompletion,
-  TransactionSessionCompletion,
-} from "@ft4/utils";
-import { formatter } from "postchain-client";
-import { transactionBuilder } from "@ft4/transaction-builder";
+  TransactionWithReceipt,
+  transactionBuilder,
+} from "@ft4/transaction-builder";
 import {
   addAuthDescriptor as addAuthDescriptorOp,
   burn as burnOp,
@@ -83,102 +82,150 @@ export function createAuthenticatedAccount(
   });
 }
 
-async function addAuthDescriptor(
+function addAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorRegistration: AnyAuthDescriptorRegistration,
   keyStore: KeyStore,
-): Promise<TransactionSessionCompletion> {
-  const tb = transactionBuilder(authenticator, connection.client);
-
-  const tx = await tb
-    .add(addAuthDescriptorOp(authDescriptorRegistration), {
-      signers: [keyStore],
-    })
-    .build();
-
-  const receipt = await connection.client.sendTransaction(tx);
-  const ad = await connection.query(
-    authDescriptorById(
-      authenticator.accountId,
-      deriveAuthDescriptorId(authDescriptorRegistration),
-    ),
-  );
-
-  const newAuth = createAuthenticator(
-    authenticator.accountId,
-    authenticator.keyHandlers.concat(
-      keyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
-    ),
-    authenticator.authDataService,
-  );
-
-  return {
-    receipt,
-    session: createSession(connection, newAuth),
-  };
+): Web3PromiEvent<
+  TransactionSessionCompletion,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
+  const promiEvent = new Web3PromiEvent<
+    TransactionSessionCompletion,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >((resolve, reject) => {
+    transactionBuilder(authenticator, connection.client)
+      .add(addAuthDescriptorOp(authDescriptorRegistration), {
+        signers: [keyStore],
+      })
+      .buildAndSend()
+      .on("built", (tx) => promiEvent.emit("built", tx))
+      .on("sent", (txRid) => promiEvent.emit("sent", txRid))
+      .then(({ receipt }) =>
+        Promise.all([
+          receipt,
+          connection.query(
+            authDescriptorById(
+              authenticator.accountId,
+              deriveAuthDescriptorId(authDescriptorRegistration),
+            ),
+          ),
+        ]),
+      )
+      .then(([receipt, ad]) => {
+        const newAuth = createAuthenticator(
+          authenticator.accountId,
+          authenticator.keyHandlers.concat(
+            keyStore.createKeyHandler(gtv.authDescriptorFromGtv(ad)),
+          ),
+          authenticator.authDataService,
+        );
+        resolve({
+          receipt,
+          session: createSession(connection, newAuth),
+        });
+      })
+      .catch((reason) => reject(reason));
+  });
+  return promiEvent;
 }
 
-async function deleteAuthDescriptor(
+function deleteAuthDescriptor(
   connection: Connection,
   authenticator: Authenticator,
   authDescriptorId: BufferId,
-): Promise<TransactionSessionCompletion> {
-  const newAuth = createAuthenticator(
-    authenticator.accountId,
-    authenticator.keyHandlers.filter((kh) =>
-      kh.authDescriptor.id.compare(formatter.ensureBuffer(authDescriptorId)),
-    ),
-    authenticator.authDataService,
-  );
-  return {
-    receipt: await call(
-      connection,
-      authenticator,
-      deleteAuthDescriptorOp(authDescriptorId),
-    ),
-    session: createSession(connection, newAuth),
-  };
+): Web3PromiEvent<
+  TransactionSessionCompletion,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
+  const promiEvent = new Web3PromiEvent<
+    TransactionSessionCompletion,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >((resolve, reject) => {
+    const newAuth = createAuthenticator(
+      authenticator.accountId,
+      authenticator.keyHandlers.filter((kh) =>
+        kh.authDescriptor.id.compare(formatter.ensureBuffer(authDescriptorId)),
+      ),
+      authenticator.authDataService,
+    );
+    call(connection, authenticator, deleteAuthDescriptorOp(authDescriptorId))
+      .on("built", (tx) => promiEvent.emit("built", tx))
+      .on("sent", (txRid) => promiEvent.emit("sent", txRid))
+      .then(({ receipt }) => {
+        resolve({
+          receipt,
+          session: createSession(connection, newAuth),
+        });
+      })
+      .catch((reason) => reject(reason));
+  });
+  return promiEvent;
 }
 
-async function transfer(
+function transfer(
   connection: Connection,
   authenticator: Authenticator,
   receiverId: BufferId,
   assetId: BufferId,
   amount: Amount,
-): Promise<TransactionCompletion> {
-  return {
-    receipt: await call(
-      connection,
-      authenticator,
-      transferOp(receiverId, assetId, amount),
-    ),
-  };
+): Web3PromiEvent<
+  TransactionWithReceipt,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
+  return call(
+    connection,
+    authenticator,
+    transferOp(receiverId, assetId, amount),
+  );
 }
 
-async function recallUnclaimedTransfer(
+function recallUnclaimedTransfer(
   connection: Connection,
   authenticator: Authenticator,
   txRid: BufferId,
   opIndex: number,
-): Promise<TransactionCompletion> {
-  return {
-    receipt: await call(
-      connection,
-      authenticator,
-      recallUnclaimedTransferOp(txRid, opIndex),
-    ),
-  };
+): Web3PromiEvent<
+  TransactionWithReceipt,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
+  return call(
+    connection,
+    authenticator,
+    recallUnclaimedTransferOp(txRid, opIndex),
+  );
 }
 
-async function burn(
+function burn(
   connection: Connection,
   authenticator: Authenticator,
   assetId: BufferId,
   amount: Amount,
-) {
-  return {
-    receipt: await call(connection, authenticator, burnOp(assetId, amount)),
-  };
+): Web3PromiEvent<
+  TransactionWithReceipt,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
+  return call(connection, authenticator, burnOp(assetId, amount));
 }

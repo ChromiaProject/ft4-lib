@@ -4,7 +4,6 @@ import { OptionalPageCursor } from "@ft4/ft-session";
 import {
   BufferId,
   PaginatedEntity,
-  TransactionCompletion,
   TransactionSessionCompletion,
 } from "@ft4/utils";
 import { Buffer } from "buffer";
@@ -22,6 +21,7 @@ import {
   TransactionReceipt,
   Web3PromiEvent,
 } from "postchain-client";
+import { TransactionWithReceipt } from "@ft4/transaction-builder/index";
 
 export type RateLimit = {
   points: number;
@@ -72,19 +72,41 @@ export interface AuthenticatedAccount extends Account {
   addAuthDescriptor: (
     authDescriptor: AnyAuthDescriptorRegistration,
     keyStore: KeyStore,
-  ) => Promise<TransactionSessionCompletion>;
-  deleteAuthDescriptor: (
-    authDescriptorId: BufferId,
-  ) => Promise<TransactionSessionCompletion>;
+  ) => Web3PromiEvent<
+    TransactionSessionCompletion,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
+  deleteAuthDescriptor: (authDescriptorId: BufferId) => Web3PromiEvent<
+    TransactionSessionCompletion,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
   transfer: (
     receiverId: BufferId,
     assetId: BufferId,
     amount: Amount,
-  ) => Promise<TransactionCompletion>;
+  ) => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
   recallUnclaimedTransfer: (
     txRid: BufferId,
     opIndex: number,
-  ) => Promise<TransactionCompletion>;
+  ) => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
 
   /**
    * Perform a cross-chain transfer.
@@ -165,5 +187,14 @@ export interface AuthenticatedAccount extends Account {
     }
   >;
 
-  burn: (assetId: BufferId, amount: Amount) => Promise<TransactionCompletion>;
+  burn: (
+    assetId: BufferId,
+    amount: Amount,
+  ) => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
 }

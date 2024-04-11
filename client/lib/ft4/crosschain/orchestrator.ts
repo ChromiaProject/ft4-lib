@@ -116,7 +116,7 @@ export async function createOrchestrator(
       .on("built", (tx) => {
         orchestrator.eventEmitter.emit("TransferSigned", tx);
       })
-      .then(({ tx: _tx, receipt }) => {
+      .then(({ receipt }) => {
         orchestrator.eventEmitter.emit("TransferInit", receipt);
         return { tx: state.tx!, opIndex: state.opIndex! };
       })

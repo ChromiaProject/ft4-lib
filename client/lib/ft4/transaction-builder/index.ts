@@ -5,6 +5,7 @@ export {
   OnAnchoredHandlerData,
   TransactionBuilder,
   TransactionBuilderConfig,
+  TransactionWithReceipt,
 } from "./types";
 
 export { transactionBuilder } from "./transaction-builder";

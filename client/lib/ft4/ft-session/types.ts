@@ -12,7 +12,7 @@ import {
   RawGtx,
   SignedTransaction,
   TransactionReceipt,
-} from "postchain-client";
+ Web3PromiEvent } from "postchain-client";
 import {
   Account,
   AuthDescriptorValidator,
@@ -21,6 +21,7 @@ import {
 } from "@ft4/accounts";
 import { Asset } from "@ft4/asset";
 import { LoginOptions, SessionWithLogout } from "@ft4/authentication";
+import { TransactionWithReceipt } from "@ft4/transaction-builder/types";
 
 export type PageCursor = string;
 export type OptionalPageCursor = PageCursor | null;
@@ -81,8 +82,20 @@ export interface Connection extends Queryable {
 
 export interface Session extends Connection {
   account: AuthenticatedAccount;
-  call: (...operations: Operation[]) => Promise<TransactionReceipt>;
-  callWithoutNop: (...operations: Operation[]) => Promise<TransactionReceipt>;
+  call: (...operations: Operation[]) => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
+  callWithoutNop: (...operations: Operation[]) => Web3PromiEvent<
+    TransactionWithReceipt,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
   transactionBuilder: (
     config?: TransactionBuilderConfig | undefined,
   ) => TransactionBuilder;

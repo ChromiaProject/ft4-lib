@@ -17,7 +17,7 @@ import {
   TransactionReceipt,
   createClient,
   formatter,
-} from "postchain-client";
+ Web3PromiEvent } from "postchain-client";
 import {
   BufferId,
   authHandlerForOperation,
@@ -64,6 +64,7 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
+import { TransactionWithReceipt } from "@ft4/transaction-builder/types";
 
 export async function createConnectionToBlockchainRid(
   oldConnection: Connection,
@@ -168,19 +169,30 @@ export function call(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Promise<TransactionReceipt> {
+): Web3PromiEvent<
+  TransactionWithReceipt,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
   return callWithoutNop(connection, authenticator, ...operations, nop());
 }
 
-export async function callWithoutNop(
+export function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
   ...operations: Operation[]
-): Promise<TransactionReceipt> {
+): Web3PromiEvent<
+  TransactionWithReceipt,
+  {
+    built: SignedTransaction;
+    sent: Buffer;
+  }
+> {
   const tb = transactionBuilder(authenticator, connection.client);
   operations.forEach((operation: Operation) => tb.add(operation));
-  const tx = await tb.build();
-  return connection.client.sendTransaction(tx);
+  return tb.buildAndSend();
 }
 
 export async function signAndSendTransaction(
