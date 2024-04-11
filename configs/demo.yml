@@ -12,7 +12,7 @@ blockchains:
 compile:
   source: ../rell/src
   target: ../rell/out
-  rellVersion: 0.13.9
+  rellVersion: 0.13.10
 
 libs:
   iccf:
