@@ -27,7 +27,7 @@ export function crosschainTransfer(
 ): Web3PromiEvent<
   TransferRef,
   {
-    signed: SignedTransaction;
+    built: SignedTransaction;
     init: TransactionReceipt;
     hop: Buffer;
   }
@@ -35,7 +35,7 @@ export function crosschainTransfer(
   const promiEvent = new Web3PromiEvent<
     TransferRef,
     {
-      signed: SignedTransaction;
+      built: SignedTransaction;
       init: TransactionReceipt;
       hop: Buffer;
     }
@@ -51,7 +51,7 @@ export function crosschainTransfer(
     )
       .then((orchestrator) => {
         orchestrator.onTransferSigned((tx) => {
-          promiEvent.emit("signed", tx);
+          promiEvent.emit("built", tx);
         });
         orchestrator.onTransferInit((receipt) => {
           promiEvent.emit("init", receipt);

@@ -116,7 +116,7 @@ export interface AuthenticatedAccount extends Account {
    * @param {BufferId} assetId - ID of the asset to be transferred.
    * @param {Amount} amount - The amount to be transferred.
    *
-   * Will emit events when the `init_transfer` transaction is signed,
+   * Will emit events when the `init_transfer` transaction is built,
    * when `init_transfer` transaction is anchored,
    * and on each hop (containing blockchain RID).
    *
@@ -130,7 +130,7 @@ export interface AuthenticatedAccount extends Account {
   ) => Web3PromiEvent<
     TransferRef,
     {
-      signed: SignedTransaction;
+      built: SignedTransaction;
       init: TransactionReceipt;
       hop: Buffer;
     }

@@ -6,6 +6,7 @@
 - Removed the `buildUnsigned` method from TransactionBuilder. 
 - All registration strategies can now be found inside the `registrationStrategy`-object. E.g., `registrationStrategy.fee(...)`
 - `registerAccount` has been renamed to `registerAccountAdmin`
+- Rename "signed" event to "built" in `crosschainTransfer` method
 
 ### Changed 🪙
 

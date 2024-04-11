@@ -12,7 +12,7 @@ describe("Basic Functionality", () => {
   });
 
   it("emits events", async () => {
-    const signedListener = jest.fn();
+    const builtListener = jest.fn();
     const initListener = jest.fn();
     const hopListener = jest.fn();
 
@@ -23,20 +23,20 @@ describe("Basic Functionality", () => {
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
       )
-      .on("signed", signedListener)
+      .on("built", builtListener)
       .on("init", initListener)
       .on("hop", hopListener);
 
     expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
     expect(transferRef.opIndex).toBe(1);
 
-    expect(signedListener).toHaveBeenCalledTimes(1);
+    expect(builtListener).toHaveBeenCalledTimes(1);
     expect(initListener).toHaveBeenCalledTimes(1);
     expect(hopListener).toHaveBeenCalledTimes(1);
   });
 
   it("executes multiple hops transfer", async () => {
-    const signedListener = jest.fn();
+    const builtListener = jest.fn();
     const initListener = jest.fn();
     const hopListener = jest.fn();
 
@@ -55,14 +55,14 @@ describe("Basic Functionality", () => {
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
       )
-      .on("signed", signedListener)
+      .on("built", builtListener)
       .on("init", initListener)
       .on("hop", hopListener);
 
     expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
     expect(transferRef.opIndex).toBe(1);
 
-    expect(signedListener).toHaveBeenCalledTimes(1);
+    expect(builtListener).toHaveBeenCalledTimes(1);
     expect(initListener).toHaveBeenCalledTimes(1);
     expect(hopListener).toHaveBeenCalledTimes(2);
   });
