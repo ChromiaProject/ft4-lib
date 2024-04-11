@@ -46,14 +46,12 @@ async function multiSigCall(
   ...ops: pcl.Operation[]
 ) {
   const adId = deriveAuthDescriptorId(multiSigAuthDescriptor);
-  const tx = {
+  let signedTx: Buffer | pcl.Transaction = {
     operations: [ftAuth(accountId, adId), ...ops, nop()],
     signers: signers
       .map((s) => s.pubKey)
       .filter((pk): pk is Buffer => pk !== undefined),
   };
-
-  let signedTx: Buffer | pcl.Transaction = tx;
   for (const signer of signers) {
     signedTx = await _connection.client.signTransaction(signedTx, signer);
   }
@@ -138,8 +136,8 @@ describe("Test the account", () => {
     );
 
     expect(session.account.authenticator.keyHandlers.length).toBe(2);
-    const keyHandler = session.account.authenticator.keyHandlers.find(
-      (kh) => !kh.authDescriptor.id.compare(authDescriptor2.id),
+    const keyHandler = session.account.authenticator.keyHandlers.find((kh) =>
+      kh.authDescriptor.id.equals(authDescriptor2.id),
     );
     expect(keyHandler?.authDescriptor.args.flags).toEqual(["T"]);
   });

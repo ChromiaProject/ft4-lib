@@ -125,15 +125,15 @@ describe("Subscription account creation single step", () => {
     ))!;
 
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find(
-      (v) => v.asset_id.compare(asset.id) === 0,
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(asset.id),
     )?.min_amount;
 
     const _subscriptionAssets =
       await recipientConnection.query(subscriptionAssets());
     expect(_subscriptionAssets).toBeTruthy();
-    const subscriptionRawAmount = _subscriptionAssets.find(
-      (v) => v.asset_id.compare(asset.id) === 0,
+    const subscriptionRawAmount = _subscriptionAssets.find((v) =>
+      v.asset_id.equals(asset.id),
     )?.amount;
 
     expect(rawAmount).toEqual(1000000n);

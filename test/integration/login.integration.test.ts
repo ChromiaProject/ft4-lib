@@ -193,8 +193,8 @@ describe("Login", () => {
       .build();
 
     const disposableAuthHandler =
-      session.account.authenticator.keyHandlers.filter((keyHandler) =>
-        keyHandler.authDescriptor.id.compare(keyStore.address),
+      session.account.authenticator.keyHandlers.filter(
+        (keyHandler) => !keyHandler.authDescriptor.id.equals(keyStore.address),
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(

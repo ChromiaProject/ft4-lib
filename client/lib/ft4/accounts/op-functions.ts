@@ -194,8 +194,9 @@ function updateMainAuthDescriptor(
       )
       .then(([oldMainAuthDescriptor, receipt, newMainAuthDescriptor]) => {
         const keyHandlers = authenticator.keyHandlers
-          .filter(({ authDescriptor }) =>
-            authDescriptor.id.compare(oldMainAuthDescriptor.id),
+          .filter(
+            ({ authDescriptor }) =>
+              !authDescriptor.id.equals(oldMainAuthDescriptor.id),
           )
           .concat(keyStore.createKeyHandler(newMainAuthDescriptor));
 
@@ -236,8 +237,11 @@ function deleteAuthDescriptor(
   >((resolve, reject) => {
     const newAuth = createAuthenticator(
       authenticator.accountId,
-      authenticator.keyHandlers.filter((kh) =>
-        kh.authDescriptor.id.compare(formatter.ensureBuffer(authDescriptorId)),
+      authenticator.keyHandlers.filter(
+        (kh) =>
+          !kh.authDescriptor.id.equals(
+            formatter.ensureBuffer(authDescriptorId),
+          ),
       ),
       authenticator.authDataService,
     );

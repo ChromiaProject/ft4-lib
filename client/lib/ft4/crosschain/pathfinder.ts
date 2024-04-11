@@ -35,7 +35,7 @@ export async function findPathToChainForAsset(
 
     lastNode = currentArray[currentArray.length - 1];
 
-    if (lastNode.compare(rootNode)) {
+    if (!lastNode.equals(rootNode)) {
       // Get the origin chain from the one we're currently exploring.
       // If the config is broken, two scenarios may arise:
       // 1. No origin chain. This call throws.
@@ -90,8 +90,8 @@ export async function findPathToChainForAsset(
 
       currentArray.push(nextHop);
       if (
-        (isSearchingSource ? pathEndToRoot : pathSourceToRoot).some(
-          (x) => !x.compare(nextHop),
+        (isSearchingSource ? pathEndToRoot : pathSourceToRoot).some((x) =>
+          x.equals(nextHop),
         )
       ) {
         commonNode = nextHop;
@@ -107,8 +107,8 @@ export async function findPathToChainForAsset(
 
     // switch branch only if the other hasn't reached root node yet
     isSearchingSource = isSearchingSource
-      ? !pathEndToRoot[pathEndToRoot.length - 1].compare(rootNode)
-      : !!pathSourceToRoot[pathSourceToRoot.length - 1].compare(rootNode);
+      ? pathEndToRoot[pathEndToRoot.length - 1].equals(rootNode)
+      : !pathSourceToRoot[pathSourceToRoot.length - 1].equals(rootNode);
   }
 
   const pathRootToEnd = pathEndToRoot.reverse();
@@ -116,12 +116,10 @@ export async function findPathToChainForAsset(
   return pathSourceToRoot
     .slice(
       0,
-      pathSourceToRoot.findIndex((x) => !x.compare(commonNode)),
+      pathSourceToRoot.findIndex((x) => x.equals(commonNode)),
     )
     .concat(
-      pathRootToEnd.slice(
-        pathRootToEnd.findIndex((x) => !x.compare(commonNode)),
-      ),
+      pathRootToEnd.slice(pathRootToEnd.findIndex((x) => x.equals(commonNode))),
     )
     .slice(1); // remove starting chain
 }

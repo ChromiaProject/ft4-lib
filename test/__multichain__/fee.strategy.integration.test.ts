@@ -151,14 +151,14 @@ describe("Fee account creation single step", () => {
     ))!;
 
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find(
-      (v) => v.asset_id.compare(asset.id) === 0,
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(asset.id),
     )?.min_amount;
 
     const _feeAssets = await recipientConnection.query(feeAssets());
     expect(_feeAssets).toBeTruthy();
-    const feeRawAmount = _feeAssets.find(
-      (v) => v.asset_id.compare(asset.id) === 0,
+    const feeRawAmount = _feeAssets.find((v) =>
+      v.asset_id.equals(asset.id),
     )?.amount;
 
     expect(rawAmount).toEqual(1000000n);
@@ -232,8 +232,8 @@ describe("Fee account creation single step", () => {
     ))!;
 
     expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find(
-      (v) => v.asset_id.compare(asset.id) === 0,
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(asset.id),
     )?.min_amount;
 
     expect(rawAmount).toEqual(1000000n);
