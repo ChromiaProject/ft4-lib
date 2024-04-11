@@ -350,3 +350,19 @@ function test_get_config_fails_when_mandatory_values_are_missing() {
         create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }
+
+function test_get_config_fails_when_timeout_days_is_negative() {
+    val rule_gtv_pretty = [(
+        timeout_days = -1,
+        sender_blockchain = ["012345"],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "timeout_days cannot be negative",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}

@@ -60,6 +60,7 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
             asset_limits = res;
         }
 
+        require(input.timeout_days >= 0, "timeout_days cannot be negative");
         config.add(
             rule(
                 timeout_days = input.timeout_days,
