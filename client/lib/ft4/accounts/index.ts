@@ -58,7 +58,8 @@ export { createAuthenticatedAccount } from "./op-functions";
 export {
   deleteAuthDescriptor,
   deleteAuthDescriptorsForSigner,
-  deleteAllAuthDescriptorsExclude,
+  deleteAllAuthDescriptorsExceptMain,
+  updateMainAuthDescriptor,
   addAuthDescriptor,
   transfer,
   recallUnclaimedTransfer,
@@ -71,6 +72,7 @@ export {
   getBySigner,
   getByAuthDescriptorId,
   createAccountObject,
+  getAccountMainAuthDescriptor,
 } from "./query-functions";
 
 export * from "./types";

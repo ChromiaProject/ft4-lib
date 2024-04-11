@@ -22,3 +22,11 @@ function latest_time() =
         op_context.last_block_time
     else
         block @ {} (@max .timestamp) ?: 0;
+
+function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
+
+function is_text(gtv) = gtv.to_bytes()[0] == 162;
+
+function is_dict(gtv) = gtv.to_bytes()[0] == 164;
+
+function is_list(gtv) = gtv.to_bytes()[0] == 165;

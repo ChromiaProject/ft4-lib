@@ -39,6 +39,12 @@ query get_account_auth_descriptor_by_id(account_id: byte_array, id: byte_array) 
     } ( accounts.get_auth_descriptor_data($.to_struct()) );
 }
 
+query get_account_main_auth_descriptor(account_id: byte_array) {
+    return accounts.main_auth_descriptor @ {
+        .account.id == account_id
+    } ( accounts.get_auth_descriptor_data(.auth_descriptor.to_struct()) );
+}
+
 query get_account_by_id(id: byte_array) {
     return accounts.account @? { id } ( .id );
 }

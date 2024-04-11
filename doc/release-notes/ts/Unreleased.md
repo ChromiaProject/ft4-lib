@@ -29,6 +29,11 @@
 
 - `equals` and `compare` methods to `Amount`.
 
+- Added `deleteAllAuthDescriptorsExceptMain` to `AuthenticatedAccount` interface.
+- Added `updateMainAuthDescriptor` function to `AuthenticateAccount` interface.
+- Added `getMainAuthDescriptor` to `Account` interface.
+- Added `getAuthDescriptorById` to `Account` interface.
+
 ### Fixed 🔧
 
 - Fix TS client build.

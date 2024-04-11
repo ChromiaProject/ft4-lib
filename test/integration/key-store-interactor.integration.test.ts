@@ -4,7 +4,9 @@ import {
   useChromiaNode,
 } from "@ft4-test/util";
 import {
+  AuthDescriptor,
   AuthFlag,
+  SingleSig,
   blockTime,
   createSingleSigAuthDescriptorRegistration,
   deleteAuthDescriptor,
@@ -66,10 +68,10 @@ describe("Key store interactor", () => {
       .withSigner(keyPair2)
       .build();
 
-    await account1.addAuthDescriptor(
-      (await account2.getAuthDescriptors())[0],
-      keyStore2,
-    );
+    const authDescriptor = (
+      await account2.getAuthDescriptors()
+    )[0] as AuthDescriptor<SingleSig>;
+    await account1.addAuthDescriptor(authDescriptor, keyStore2);
 
     const accounts = await createKeyStoreInteractor(
       connection.client,

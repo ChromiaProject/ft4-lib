@@ -20,7 +20,8 @@ import {
   addAuthDescriptor,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
-  deleteAllAuthDescriptorsExclude,
+  deleteAllAuthDescriptorsExceptMain,
+  getAccountMainAuthDescriptor,
   deriveAuthDescriptorId,
   gtv,
 } from "@ft4/accounts";
@@ -82,6 +83,16 @@ describe("Test the account", () => {
     );
 
     await expect(accountPromise).resolves.toBeDefined();
+  });
+
+  it("finds main auth descriptor", async () => {
+    const account = await AccountBuilder.account(_connection)
+      .withAuthFlags(AuthFlag.Account)
+      .build();
+
+    const mainAd = await getAccountMainAuthDescriptor(_connection, account.id);
+
+    expect(mainAd.id.equals(account.id)).toBe(true);
   });
 
   it("can add new FT auth descriptor if has account edit rights", async () => {
@@ -346,7 +357,7 @@ describe("Test the account", () => {
     expect(data[0]).toMatchObject(authDesc);
   });
 
-  it("has only one auth descriptor after calling deleteAllExcluding", async () => {
+  it("has only one auth descriptor after calling deleteAllExceptMain", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor(["A"]);
 
     await createAccount(_connection.client, authDescriptor);
@@ -364,13 +375,13 @@ describe("Test the account", () => {
 
     const tx = await session
       .transactionBuilder()
-      .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
-      )
+      .add(deleteAllAuthDescriptorsExceptMain())
       .build();
     await _connection.client.sendTransaction(tx);
 
-    expect((await session.account.getAuthDescriptors()).length).toBe(1);
+    const authDescriptors = await session.account.getAuthDescriptors();
+    expect(authDescriptors.length).toBe(1);
+    expect(authDescriptors[0].id).toEqual(authDescriptor.id);
   });
 
   it("registers account by directly calling 'register_account' operation", async () => {

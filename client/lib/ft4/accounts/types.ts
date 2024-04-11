@@ -13,7 +13,8 @@ import {
 } from "./transfer-history";
 import {
   AnyAuthDescriptor,
-  AnyAuthDescriptorRegistration,
+  AuthDescriptorRegistration,
+  SingleSig,
 } from "@ft4/accounts";
 import { PendingTransfer, TransferRef } from "@ft4/crosschain";
 import {
@@ -43,7 +44,11 @@ export interface Account {
   ) => Promise<PaginatedEntity<Balance>>;
   getBalanceByAssetId: (assetId: BufferId) => Promise<Balance | null>;
   isAuthDescriptorValid: (authDescriptorId: BufferId) => Promise<boolean>;
+  getMainAuthDescriptor: () => Promise<AnyAuthDescriptor>;
   getAuthDescriptors: () => Promise<AnyAuthDescriptor[]>;
+  getAuthDescriptorById: (
+    authDescriptorId: BufferId,
+  ) => Promise<AnyAuthDescriptor>;
   getAuthDescriptorsBySigner: (
     signer: BufferId,
   ) => Promise<AnyAuthDescriptor[]>;
@@ -70,7 +75,17 @@ export interface Account {
 export interface AuthenticatedAccount extends Account {
   authenticator: Authenticator;
   addAuthDescriptor: (
-    authDescriptor: AnyAuthDescriptorRegistration,
+    authDescriptor: AuthDescriptorRegistration<SingleSig>,
+    keyStore: KeyStore,
+  ) => Web3PromiEvent<
+    TransactionSessionCompletion,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
+  updateMainAuthDescriptor: (
+    authDescroptor: AuthDescriptorRegistration<SingleSig>,
     keyStore: KeyStore,
   ) => Web3PromiEvent<
     TransactionSessionCompletion,
@@ -80,6 +95,13 @@ export interface AuthenticatedAccount extends Account {
     }
   >;
   deleteAuthDescriptor: (authDescriptorId: BufferId) => Web3PromiEvent<
+    TransactionSessionCompletion,
+    {
+      built: SignedTransaction;
+      sent: Buffer;
+    }
+  >;
+  deleteAllAuthDescriptorsExceptMain: () => Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;

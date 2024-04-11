@@ -1,0 +1,75 @@
+@test 
+module;
+
+import lib.ft4.accounts;
+
+function test_parsing_gtv_encoded_text_list_succeeds() {
+    assert_equals(
+        accounts.parse_auth_flags(["A", "_B", "C_", "D_E", "f", "_g", "i_", "j_k"].to_gtv()),
+        ["A", "_B", "C_", "D_E", "f", "_g", "i_", "j_k"]
+    );
+}
+
+function test_parsing_gtv_encoded_comma_separated_list_succeeds() {
+    assert_equals(
+        accounts.parse_auth_flags("A, _B, C_, D_E, f, _g, i_, j_k".to_gtv()),
+        ["A", "_B", "C_", "D_E", "f", "_g", "i_", "j_k"]
+    );
+}
+
+function test_parsing_gtv_encoded_text_list_fails_when_number_as_name_is_used() {
+    assert_fails(
+        "Found invalid flags <[1]>",
+        accounts.parse_auth_flags(["A", "B", "C", "1"].to_gtv(), *)
+    );
+}
+
+function test_parsing_gtv_encoded_text_list_fails_when_name_with_whitespace_is_used() {
+    assert_fails(
+        "Found invalid flags <[D E]>",
+        accounts.parse_auth_flags(["A", "B", "C", "D E"].to_gtv(), *)
+    );
+}
+
+function test_parsing_gtv_encoded_comma_separated_list_fails_when_number_as_name_is_used() {
+    assert_fails(
+        "Found invalid flags <[1]>",
+        accounts.parse_auth_flags("A, B, C, 1".to_gtv(), *)
+    );
+}
+
+function test_parsing_gtv_encoded_comma_list_fails_when_name_with_whitespace_is_used() {
+    assert_fails(
+        "Found invalid flags <[D E]>",
+        accounts.parse_auth_flags("A, B, C, D E".to_gtv(), *)
+    );
+}
+
+function test_parsing_gtv_encoded_integer_as_auth_flag_fails() {
+    assert_fails(
+        "Expected flags list or comma separated flags list, but found <4>",
+        accounts.parse_auth_flags((4).to_gtv(), *)
+    );
+}
+
+function test_parsing_gtv_encoded_list_of_integers_as_auth_flags_fails() {
+    assert_fails(
+        "Cannot parse auth flags. Expected flags list, but found <[1,2,3,4]>",
+        accounts.parse_auth_flags([1, 2, 3, 4].to_gtv(), *)
+    );
+}
+
+function test_get_auth_flags_config_returns_mandatory_flags_as_default_flags_when_default_flags_omitted() {
+    val flags_config = accounts.get_raw_auth_flags_config();
+    
+    assert_equals(flags_config.mandatory, ["A", "T"].to_gtv());
+    assert_null(flags_config.default);
+    
+    assert_equals(
+        accounts.get_auth_flags_config(),
+        (
+            mandatory = ["A", "T"],
+            default = ["A", "T"]
+        )
+    );
+}

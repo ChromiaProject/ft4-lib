@@ -23,6 +23,20 @@ function test_an_account_can_be_created() {
   assert_not_null(accounts.account @? { auth_descriptor.hash() });
 }
 
+function test_main_ad_is_registered() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+  
+  admin.register_account(auth_descriptor)
+    .sign(test_utils.admin_priv_key())
+    .run();
+
+  val ad_id = auth_descriptor.hash();
+  val acc = accounts.account @? { ad_id };
+  
+  assert_not_null(acc);
+  assert_equals(accounts.main_auth_descriptor @ { acc } (.auth_descriptor.id), ad_id);
+}
+
 function test_cannot_create_account_with_no_A_flag() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["T"]);
   

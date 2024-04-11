@@ -8,7 +8,7 @@ import {
 } from "@ft4-test/util";
 import {
   AnyAuthDescriptor,
-  deleteAllAuthDescriptorsExclude,
+  deleteAllAuthDescriptorsExceptMain,
 } from "@ft4/accounts";
 import { Session, createConnection } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
@@ -88,9 +88,7 @@ describe("transaction builder", () => {
     let sentEvent: Buffer | undefined = undefined;
     const { tx, receipt } = await session
       .transactionBuilder()
-      .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
-      )
+      .add(deleteAllAuthDescriptorsExceptMain())
       .add(nop())
       .buildAndSend()
       .on("built", (tx) => {
@@ -110,9 +108,7 @@ describe("transaction builder", () => {
     let confirmedEvent: TransactionReceipt | undefined = undefined;
     const promise = session
       .transactionBuilder()
-      .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
-      )
+      .add(deleteAllAuthDescriptorsExceptMain())
       .add(nop())
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {

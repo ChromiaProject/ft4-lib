@@ -10,6 +10,7 @@
 - Changed entity `ft4.account_creation_transfer`
 - Add field `transaction` to entity `applied_transfers`
 - Removed operation `ft4.register_account_evm_signatures` and use `ft4.evm_signatures` instead
+- Remove `ft4.delete_all_auth_descriptors_exclude` operation (replaced with `ft4.delete_all_auth_descriptors_except_main`).
 
 ### Changed 🪙
 
@@ -17,5 +18,7 @@
 
 - Possibility to revert uncompleted crosschain transfers after deadline has passed.
 - Possibility to recall unclaimed register account transfers after timeout has passed.
+- Added `ft4.delete_all_auth_descriptors_except_main` operation that deletes all auth descriptors except main.
+- Added `auth_flags` config to set mandatory and default auth flags.
 
 ### Fixed 🔧

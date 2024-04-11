@@ -32,7 +32,7 @@ function get_config(config_gtv: gtv = chain_context.args.rules): list<rule> {
     val inputs = list<module_args_list_element>.from_gtv_pretty(config_gtv);
 
     for (input in inputs) {
-        val strats = if (is_list(input.strategy))
+        val strats = if (utils.is_list(input.strategy))
             list<text>.from_gtv(input.strategy)
         else [text.from_gtv(input.strategy)];
 
@@ -82,7 +82,7 @@ function parse_account_ids_from_gtv(gtv): (
     allowlist: allowlist,
     require_same: boolean
 ) {
-    if (is_list(gtv)) {
+    if (utils.is_list(gtv)) {
         val allowed_values = list<byte_array>();
         val gtv_list = list<gtv>.from_gtv(gtv);
 
@@ -121,7 +121,7 @@ function parse_account_id_single_value_from_gtv(gtv): (
     var allowed_value: byte_array? = null;
     var is_x = false;
 
-    if (is_text(gtv)) { // "*" or "abcdef"
+    if (utils.is_text(gtv)) { // "*" or "abcdef"
         val input = text.from_gtv(gtv);
         if (input == "*") {
             allow_all = true;
@@ -139,7 +139,7 @@ function parse_account_id_single_value_from_gtv(gtv): (
         }
     } else {
         require(
-            is_byte_array(gtv),
+            utils.is_byte_array(gtv),
             _CONFIG_ERROR_TEXT +
             "sender and recipient fields only support strings, byte arrays and lists of these types. Received <%s>."
                 .format(gtv)
@@ -155,7 +155,7 @@ function parse_account_id_single_value_from_gtv(gtv): (
 }
 
 function parse_blockchains_from_gtv(gtv): allowlist {
-    if (is_list(gtv)) {
+    if (utils.is_list(gtv)) {
         val allowed_values = list<byte_array>();
         val gtv_list = list<gtv>.from_gtv(gtv);
 
@@ -186,7 +186,7 @@ function parse_blockchain_single_value_from_gtv(gtv): (
     var allow_all = false;
     var allowed_value: byte_array? = null;
 
-    if (is_text(gtv)) { // "*" or "$" or "abcdef"
+    if (utils.is_text(gtv)) { // "*" or "$" or "abcdef"
         val input = text.from_gtv(gtv);
         if (input == "*") {
             allow_all = true;
@@ -203,7 +203,7 @@ function parse_blockchain_single_value_from_gtv(gtv): (
         }
     } else {
         require(
-            is_byte_array(gtv),
+            utils.is_byte_array(gtv),
             _CONFIG_ERROR_TEXT + "sender_blockchain only supports strings, byte arrays and lists of these types. Received <%s>."
                 .format(gtv)
         );
@@ -217,10 +217,10 @@ function parse_blockchain_single_value_from_gtv(gtv): (
 }
 
 function parse_asset_limits_from_gtv(gtv): list<asset_limit>? {
-    if (is_dict(gtv)) {
+    if (utils.is_dict(gtv)) {
         val input = map<name, gtv>.from_gtv_pretty(gtv);
         return [parse_asset_limit(input)];
-    } else if (is_list(gtv)) {
+    } else if (utils.is_list(gtv)) {
         val inputs = list<map<name, gtv>>.from_gtv_pretty(gtv);
         return inputs @* {} (parse_asset_limit($));
     } else {
@@ -245,15 +245,7 @@ function parse_asset_limit(input: map<name, gtv>): asset_limit {
     );
 }
 
-function parse_amount(input: gtv): big_integer = if (is_text(input))
+function parse_amount(input: gtv): big_integer = if (utils.is_text(input))
     big_integer.from_text(text.from_gtv(input).replace("L", ""))
 else
     big_integer.from_gtv(input);
-
-function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
-
-function is_text(gtv) = gtv.to_bytes()[0] == 162;
-
-function is_dict(gtv) = gtv.to_bytes()[0] == 164;
-
-function is_list(gtv) = gtv.to_bytes()[0] == 165;

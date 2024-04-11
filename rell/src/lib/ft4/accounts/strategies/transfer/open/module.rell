@@ -6,16 +6,16 @@ import ^^^.strategies;
 import transfer: ^;
 
 operation ras_transfer_open(
-    initial: accounts.auth_descriptor,
+    main: accounts.auth_descriptor,
     disposable: accounts.auth_descriptor? = null
 ) {}
 
 function account_details(gtv) {
     val params = struct<ras_transfer_open>.from_gtv(gtv);
-    val signers = accounts.get_signers(params.initial);
+    val signers = accounts.get_signers(params.main);
     return strategies.account_details(
         account_id = strategies.get_account_id_from_signers(signers),
-        initial = params.initial,
+        main = params.main,
         disposable = params.disposable
     );
 }

@@ -18,10 +18,10 @@ function resolve_fee_assets(config: list<fee_asset>): map<byte_array, big_intege
 }
 
 function parse_fee_assets(gtv, module_name: text): list<fee_asset> {
-    if (is_dict(gtv)) {
+    if (utils.is_dict(gtv)) {
         val input = map<name, gtv>.from_gtv_pretty(gtv);
         return [parse_fee_asset(input, module_name)];
-    } else if (is_list(gtv)) {
+    } else if (utils.is_list(gtv)) {
         val inputs = list<map<name, gtv>>.from_gtv_pretty(gtv);
         return inputs @* {} (parse_fee_asset($, module_name));
     }

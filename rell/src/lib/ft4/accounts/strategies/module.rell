@@ -24,7 +24,15 @@ function register_account(): accounts.account {
     val strategy = get_strategy(strategy_name);
     val account_details = strategy.account_details(strategy_params);
 
-    var signers = accounts.get_signers(account_details.initial);
+    val flags = set(accounts.get_flags(account_details.main));
+    val mandatory = accounts.get_auth_flags_config().mandatory;
+    require(
+        flags.contains_all(mandatory),
+        "Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
+    );
+
+    var signers = accounts.get_signers(account_details.main);
+
     if (account_details.disposable??) {
         signers.add_all(accounts.get_signers(account_details.disposable!!));
     }
@@ -37,7 +45,8 @@ function register_account(): accounts.account {
     before_register_account(account_id);
 
     val account = create accounts.account(account_id);
-    accounts.add_auth_descriptor_to_account(account, account_details.initial, false);
+    val main = accounts.add_auth_descriptor_to_account(account, account_details.main, false);
+    create accounts.main_auth_descriptor(account, main);
 
     if (account_details.disposable??) {
         accounts.add_auth_descriptor_to_account(account, account_details.disposable!!, false);
@@ -62,10 +71,6 @@ function get_account_id_from_signers(signers: list<byte_array>) {
     return if (signers.size() == 1) signers[0].hash() else signers @* {} (@sort $).hash();
 }
 
-function get_mandatory_flags() = ["A"];
-
-function get_default_flags() = get_mandatory_flags();
-
 @extendable 
 function strategy(): map<name, _strategy>;
 
@@ -77,7 +82,7 @@ struct _strategy {
 
 struct account_details {
     account_id: byte_array;
-    initial: accounts.auth_descriptor;
+    main: accounts.auth_descriptor;
     disposable: accounts.auth_descriptor? = null;
 }
 
@@ -98,7 +103,7 @@ function get_register_account_message(strategy_name: name, gtv) {
             account_id
         );
 
-    message = message + "Initial:\n" + auth_descriptor_message(account_details.initial);
+    message = message + "Main:\n" + auth_descriptor_message(account_details.main);
 
     if (account_details.disposable??) {
         message = message + "\n\nDisposable:\n" + auth_descriptor_message(account_details.disposable!!);

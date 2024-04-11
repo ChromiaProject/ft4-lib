@@ -12,7 +12,7 @@ import {
   AuthDescriptorRules,
   AuthenticatedAccount,
   createAuthenticatedAccount,
-  deleteAllAuthDescriptorsExclude,
+  deleteAllAuthDescriptorsExceptMain,
   lessOrEqual,
   opCount,
 } from "@ft4/accounts";
@@ -139,7 +139,7 @@ describe("Auth Descriptor Rule", () => {
 
     const tx = await session
       .transactionBuilder()
-      .add(deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .add(deleteAllAuthDescriptorsExceptMain())
       .build();
     await _connection.client.sendTransaction(tx);
 

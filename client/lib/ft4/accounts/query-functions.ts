@@ -23,6 +23,7 @@ import {
   accountById,
   accountsByAuthDescriptorId,
   accountsBySigner,
+  authDescriptorById,
   transferHistory,
 } from "./queries";
 import { AnyAuthDescriptor, gtv } from "./auth-descriptor";
@@ -79,6 +80,10 @@ export function createAccountObject(
     isAuthDescriptorValid: (authDescriptorId: BufferId) =>
       isAuthDescriptorValid(connection, accountId, authDescriptorId),
     getAuthDescriptors: () => getAuthDescriptors(connection, accountId),
+    getAuthDescriptorById: (authDescriptorId: BufferId) =>
+      getAuthDescriptorById(connection, accountId, authDescriptorId),
+    getMainAuthDescriptor: () =>
+      getAccountMainAuthDescriptor(connection, accountId),
     getAuthDescriptorsBySigner: (signer: BufferId) =>
       getAuthDescriptorsBySigner(connection, accountId, signer),
     getRateLimit: () => getRateLimit(connection.client, accountId),
@@ -197,4 +202,26 @@ export async function getAuthDescriptors(
   );
 
   return authDescriptors ? gtv.mapAuthDescriptorsFromGtv(authDescriptors) : [];
+}
+
+export async function getAuthDescriptorById(
+  queryable: Queryable,
+  accountId: BufferId,
+  authDescriptorId: BufferId,
+): Promise<AnyAuthDescriptor> {
+  const authDescriptor = await queryable.query(
+    authDescriptorById(accountId, authDescriptorId),
+  );
+  return gtv.authDescriptorFromGtv(authDescriptor);
+}
+
+export async function getAccountMainAuthDescriptor(
+  queryable: Queryable,
+  accountId: BufferId,
+): Promise<AnyAuthDescriptor> {
+  const authDescriptor = await queryable.query(
+    Query.accountMainAuthDescriptor(accountId),
+  );
+
+  return gtv.authDescriptorFromGtv(authDescriptor);
 }

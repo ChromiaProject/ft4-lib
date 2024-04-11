@@ -149,7 +149,11 @@ function require_valid_scope_name(name) =
  */
   
 function is_evm_signatures_authorized_operation(name): boolean {
-    val whitelisted_operations = set(["ft4.add_auth_descriptor", "ft4.register_account"]);
+    val whitelisted_operations = set([
+        "ft4.register_account",
+        "ft4.add_auth_descriptor",
+        "ft4.update_main_auth_descriptor"
+    ]);
 
     if (chain_context.args.evm_signatures_authorized_operations??) {
         whitelisted_operations.add_all(require(

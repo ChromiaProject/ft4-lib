@@ -55,7 +55,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     var last_block_time = rell.test.last_block_time;
     rell.test.tx()
-        .op(subscription.ras_transfer_subscription(asset.id, asset_utils.create_auth_descriptor(rell.test.pubkeys.bob)))
+        .op(subscription.ras_transfer_subscription(asset.id, asset_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();

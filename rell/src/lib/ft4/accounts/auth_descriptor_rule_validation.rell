@@ -1,6 +1,3 @@
-val GTV_NULL = null.to_gtv();
-val GTV_NULL_BYTES = null.to_gtv().to_bytes();
-
 function serialize_rules(rules: list<rule_expression>): gtv {
 	if (rules.size() == 0) {
 		return GTV_NULL;
@@ -237,7 +234,7 @@ function delete_expired_auth_descriptors(account) {
 
 	for (auth_descriptor in auth_descriptors) {
 		if (is_active(auth_descriptor) and have_violating_rules(auth_descriptor)) {
-			_delete_auth_descriptor(auth_descriptor);
+			delete_auth_descriptor(auth_descriptor);
 			deleted_descriptors.add(auth_descriptor);
 		}
 	}

@@ -161,7 +161,7 @@ function test_register_account_message() {
         set(["A", "T"])
     );
 
-    val expected_message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\nInitial:\nSigner:\n%s\n\nFlags:\n%s\n"
+    val expected_message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\nMain:\nSigner:\n%s\n\nFlags:\n%s\n"
         .format(
             chain_context.blockchain_rid,
             rell.test.keypairs.alice.pub.hash(),

@@ -16,7 +16,8 @@ jest.mock("@ft4/utils/exposed-operations", () => ({
       new Set([
         "nop",
         "ft4.add_auth_descriptor",
-        "ft4.delete_all_auth_descriptors_exclude",
+        "ft4.update_main_auth_descriptor",
+        "ft4.delete_all_auth_descriptors_except_main",
         "ft4.delete_auth_descriptor",
         "ft4.delete_auth_descriptors_for_signer",
         "ft4.admin.add_rate_limit_points",
