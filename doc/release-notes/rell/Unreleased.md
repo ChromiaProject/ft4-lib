@@ -20,5 +20,6 @@
 - Possibility to recall unclaimed register account transfers after timeout has passed.
 - Added `ft4.delete_all_auth_descriptors_except_main` operation that deletes all auth descriptors except main.
 - Added `auth_flags` config to set mandatory and default auth flags.
+- Updated `ft4.get_register_account_message` to add register account operation parameters to auth message
 
 ### Fixed 🔧

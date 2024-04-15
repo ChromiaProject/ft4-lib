@@ -54,6 +54,7 @@ export async function registerAccount(
           connection,
           evmKeyStore,
           strategyOperation,
+          registerAccountOperation,
         )),
       strategyOperation,
       registerAccountOperation,
@@ -97,9 +98,10 @@ async function evmSignaturesOperation(
   queryable: Queryable,
   keyStore: EvmKeyStore,
   strategyOperation: Operation,
+  registerAccountOperation: Operation,
 ): Promise<Operation> {
   const message = await queryable.query(
-    registerAccountMessage(strategyOperation),
+    registerAccountMessage(strategyOperation, registerAccountOperation),
   );
   const signature = await keyStore.signMessage(message);
   return evmSignatures([keyStore.address], [signature]);

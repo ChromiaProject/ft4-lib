@@ -1,12 +1,13 @@
 @test
 module;
 
+import lib.ft4.auth;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
-import auth_ext: lib.ft4.auth.external;
-import strategies_ext: lib.ft4.accounts.strategies.external;
 import lib.ft4.accounts.strategies.open;
 import lib.ft4.test.utils. { evm_sign };
+import auth_ext: lib.ft4.auth.external;
+import strategies_ext: lib.ft4.accounts.strategies.external;
 
 import ^^.operations;
 
@@ -36,9 +37,13 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
     );
 
     val open = open.ras_open(auth_descriptor);
+    val register_account = strategies_ext.register_account();
 
-    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
-    print(message);
+    val message = strategies.get_register_account_message(
+        open.to_gtx_operation(),
+        strategies_ext.register_account().to_gtx_operation()
+    );
+    
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -83,14 +88,15 @@ function test_account_can_be_registered_with_custom_operation_and_evm_signature(
     );
 
     val open = open.ras_open(auth_descriptor);
+    val register_player = operations.register_player(name);
 
-    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
+    val message = strategies.get_register_account_message(open.to_gtx_operation(), register_player.to_gtx_operation());
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth_ext.evm_signatures([evm_address], [signature]))
         .op(open)
-        .op(operations.register_player(name))
+        .op(register_player)
         .run();
 
     val account = accounts.account @? { .id == evm_address.hash() };
@@ -110,14 +116,15 @@ function test_account_account_registration_fails_with_unknown_custom_operation_a
     );
 
     val open = open.ras_open(auth_descriptor);
+    val register_player2 = operations.register_player2(name);
 
-    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
+    val message = strategies.get_register_account_message(open.to_gtx_operation(), register_player2.to_gtx_operation());
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
         .op(auth_ext.evm_signatures([evm_address], [signature]))
         .op(open)
-        .op(operations.register_player2(name))
+        .op(register_player2)
         .run_must_fail("Cannot authorize operation <register_player2> with evm_signatures");
 }
 
@@ -143,9 +150,13 @@ function test_account_registration_fails_with_invalid_evm_signature() {
     );
 
     val open = open.ras_open(auth_descriptor);
+    val register_account = strategies_ext.register_account();
 
-    val message = strategies.get_register_account_message(open.name, open.args.to_gtv());
-    print(message);
+    val message = strategies.get_register_account_message(
+        open.to_gtx_operation(), 
+        strategies_ext.register_account().to_gtx_operation()
+    );
+    
     val signature = evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
@@ -153,23 +164,6 @@ function test_account_registration_fails_with_invalid_evm_signature() {
         .op(open)
         .op(strategies_ext.register_account())
         .run_must_fail("Invalid signature for address <%s>".format(evm_address));
-}
-
-function test_register_account_message() {
-    val auth_descriptor = accounts.single_sig_auth_descriptor(
-        rell.test.keypairs.alice.pub,
-        set(["A", "T"])
-    );
-
-    val expected_message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\nMain:\nSigner:\n%s\n\nFlags:\n%s\n"
-        .format(
-            chain_context.blockchain_rid,
-            rell.test.keypairs.alice.pub.hash(),
-            rell.test.keypairs.alice.pub,
-            set(["A", "T"])
-        );
-
-    assert_equals(strategies.get_register_account_message("ft4.ras_open", [auth_descriptor, null].to_gtv()), expected_message);
 }
 
 function test_account_id_does_not_change_if_signers_provided_in_different_orders() {

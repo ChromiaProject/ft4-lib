@@ -222,12 +222,22 @@ function account_by_id(id: byte_array) = require(
     "Account not found: '%s'".format(id)
 );
 
-function single_sig_auth_descriptor(pubkey, flags: set<text>) = auth_descriptor(
+function single_sig_auth_descriptor(signer: byte_array, flags: set<text>) = auth_descriptor(
     auth_type = auth_type.S,
-    args = [
-        flags.to_gtv(),
-        pubkey.to_gtv()
-    ],
+    args = list<gtv>.from_gtv(single_sig_args(
+        flags = flags,
+        signer = signer
+    ).to_gtv()),
+    GTV_NULL
+);
+
+function multi_sig_auth_descriptor(signers: list<byte_array>, signatures_required: integer, flags: set<text>) = auth_descriptor(
+    auth_type = auth_type.M,
+    args = list<gtv>.from_gtv(multi_sig_args(
+        signers = signers,
+        signatures_required = signatures_required,
+        flags = flags
+    ).to_gtv()),
     GTV_NULL
 );
 

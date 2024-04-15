@@ -17,9 +17,9 @@ function is_strategy_op(op: gtx_operation): boolean {
 
 function register_account(): accounts.account {
     val tx_operations = op_context.get_all_operations();
-    val prev_op = tx_operations[op_context.op_index-1];
-    val strategy_name = prev_op.name;
-    val strategy_params = prev_op.args.to_gtv();
+    val strategy_op = tx_operations[op_context.op_index-1];
+    val strategy_name = strategy_op.name;
+    val strategy_params = strategy_op.args.to_gtv();
 
     val strategy = get_strategy(strategy_name);
     val account_details = strategy.account_details(strategy_params);
@@ -32,12 +32,11 @@ function register_account(): accounts.account {
     );
 
     var signers = accounts.get_signers(account_details.main);
-
     if (account_details.disposable??) {
         signers.add_all(accounts.get_signers(account_details.disposable!!));
     }
 
-    val message = get_register_account_message(strategy_name, strategy_params);
+    val message = get_register_account_message(strategy_op, op_context.get_current_operation());
     auth.verify_signers_with_message(signers, message);
 
     val account_id = account_details.account_id;
@@ -90,42 +89,3 @@ function add_strategy(op: rell.meta, account_details: (gtv) -> account_details, 
     = [op.mount_name: _strategy(op, account_details, action ?: _no_action(*))];
 
 function _no_action(accounts.account, strategy_params: gtv) {}
-
-function get_register_account_message(strategy_name: name, gtv) {
-    val strategy = get_strategy(strategy_name);
-
-    val account_details = strategy.account_details(gtv);
-    val account_id = account_details.account_id;
-
-    var message = "Blockchain: %s\n\nPlease sign the message to register account\n\nAccount ID:\n%s\n\n"
-        .format(
-            chain_context.blockchain_rid,
-            account_id
-        );
-
-    message = message + "Main:\n" + auth_descriptor_message(account_details.main);
-
-    if (account_details.disposable??) {
-        message = message + "\n\nDisposable:\n" + auth_descriptor_message(account_details.disposable!!);
-    }
-
-    return message;
-}
-
-function auth_descriptor_message(accounts.auth_descriptor)
-    = when (auth_descriptor.auth_type) {
-        S -> single_sig_message(accounts.single_sig_args.from_gtv(auth_descriptor.args.to_gtv()));
-        M -> multi_sig_message(accounts.multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()));
-    };
-
-function single_sig_message(args: accounts.single_sig_args)
-    = "Signer:\n%s\n\nFlags:\n%s\n".format(args.signer, args.flags);
-
-function multi_sig_message(args: accounts.multi_sig_args) {
-    var message = "Signers:\n";
-    for (signer in args.signers) {
-        message = message + signer + "\n";
-    }
-    message = message + "\nRequired signatures: %d\n\n".format(args.signatures_required);
-    return message + "Flags:\n%s".format(args.flags);
-}
