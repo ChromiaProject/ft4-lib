@@ -59,13 +59,6 @@ function test_get_auth_flags_throws_error_when_name_starts_with_period() {
     );
 }
 
-function test_does_not_resolve_inexact_module_in_strict_mode() {
-    assert_fails(
-        "Strict mode is used and no auth handler matches exactly",
-        auth.get_auth_handler("a.b.bar", is_strict=true, *)
-    );
-}
-
 function test_can_override_overridable_auth_handler() {
     val auth_handler_flags = auth_ext.get_auth_flags("a.b.baz");
     assert_equals(auth_handler_flags, ["H"]);

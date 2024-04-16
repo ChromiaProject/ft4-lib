@@ -33,8 +33,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descript
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
         account_id = alice.account.id,
-        signers = [rell.test.pubkeys.alice],
-        is_strict = false);
+        signers = [rell.test.pubkeys.alice]);
     assert_equals(result, alice.auth_descriptor_id);
 }
 
@@ -44,8 +43,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descript
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
         account_id = alice.account.id,
-        signers = [rell.test.pubkeys.bob, rell.test.pubkeys.alice],
-        is_strict = false);
+        signers = [rell.test.pubkeys.bob, rell.test.pubkeys.alice]);
     assert_equals(result, alice.auth_descriptor_id);
 }
 
@@ -56,8 +54,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_valid_auth_de
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
         account_id = alice.account.id,
-        signers = [rell.test.pubkeys.alice, rell.test.pubkeys.bob],
-        is_strict = false);
+        signers = [rell.test.pubkeys.alice, rell.test.pubkeys.bob]);
     assert_equals(result, alice.auth_descriptor_id);
 }
 
@@ -67,7 +64,6 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_null_when_fla
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
         account_id = alice.account.id,
-        signers = [rell.test.pubkeys.alice],
-        is_strict = false);
+        signers = [rell.test.pubkeys.alice]);
     assert_null(result);
 }

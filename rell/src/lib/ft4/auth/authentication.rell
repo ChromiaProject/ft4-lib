@@ -21,7 +21,7 @@ val ACCOUNT_ID_PLACEHOLDER = "{account_id}";
 val AUTH_DESCRIPTOR_ID_PLACEHOLDER = "{auth_descriptor_id}";
 val NONCE_PLACEHOLDER = "{nonce}";
 
-function authenticate(is_strict: boolean = true) {
+function authenticate() {
     val op = op_context.get_current_operation();
     require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
 
@@ -33,7 +33,7 @@ function authenticate(is_strict: boolean = true) {
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
     require(
-        get_first_allowed_auth_descriptor(op.name, op.args.to_gtv(), account.id, [auth_descriptor.id], is_strict),
+        get_first_allowed_auth_descriptor(op.name, op.args.to_gtv(), account.id, [auth_descriptor.id]),
         "The provided auth descriptor is not valid for this operation"
     );
     before_authenticate(account, auth_descriptor);
@@ -42,10 +42,10 @@ function authenticate(is_strict: boolean = true) {
 
     require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
 
-    val flags = get_auth_flags(op.name, is_strict);
+    val flags = get_auth_flags(op.name);
 
     when (previous_op.name) {
-        EVM_AUTH_OP -> _validate_evm_signature(op, previous_op, is_strict, flags, account, auth_descriptor);
+        EVM_AUTH_OP -> _validate_evm_signature(op, previous_op, flags, account, auth_descriptor);
         FT_AUTH_OP -> _validate_ft4_signature(flags, account, auth_descriptor);
         else -> require(false, "Invalid auth operation: %s".format(previous_op.name));
     };
@@ -58,23 +58,23 @@ function authenticate(is_strict: boolean = true) {
     return account;
 }
 
-function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, account_id: byte_array, signers: list<byte_array>, is_strict: boolean) {
+function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, account_id: byte_array, signers: list<byte_array>) {
     val ads = accounts.auth_descriptor_signer @* {
         .account_auth_descriptor.account.id == account_id,
         .id in signers
     } (.account_auth_descriptor);
 
-    val flags = get_auth_flags(op_name, is_strict);
+    val flags = get_auth_flags(op_name);
 
     val valid_ad_ids = ads @* { accounts.has_flags($, flags) } (.id);
 
-    return get_first_allowed_auth_descriptor(op_name, args, account_id, valid_ad_ids, is_strict);
+    return get_first_allowed_auth_descriptor(op_name, args, account_id, valid_ad_ids);
 }
 
-function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>, is_strict: boolean) {
+function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>) {
     if (ad_ids.size() == 0) return null;
 
-    val resolver = get_auth_handler(op_name, is_strict=false).resolver;
+    val resolver = get_auth_handler(op_name).resolver;
     if (resolver == null) return ad_ids[0];
   
     return resolver(args, account_id, ad_ids);
@@ -110,10 +110,10 @@ function extract_account_and_auth_descriptor(auth_args: list<gtv>): (byte_array,
 function try_fetch_auth_descriptor(accounts.account, auth_descriptor_id: byte_array): accounts.account_auth_descriptor? =
     accounts.account_auth_descriptor @? { .id == auth_descriptor_id, .account == account };
 
-function get_auth_flags(op_name: name, is_strict: boolean) = get_auth_handler(op_name, is_strict).flags;
+function get_auth_flags(op_name: name) = get_auth_handler(op_name).flags;
 
-function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boolean) {
-    val formatter = get_auth_handler(op_name, is_strict).message_formatter;
+function get_auth_message_template(op_name: name, op_args: gtv) {
+    val formatter = get_auth_handler(op_name).message_formatter;
 
     val message = if (formatter??) formatter(op_args) else generate_operation_auth_message(chain_context.blockchain_rid, gtx_operation(
         name = op_name,
@@ -126,12 +126,11 @@ function get_auth_message_template(op_name: name, op_args: gtv, is_strict: boole
 function _validate_evm_signature(
   op: gtx_operation,
   auth_op: gtx_operation,
-  is_strict: boolean,
   flags: list<text>,
   account: accounts.account,
   auth_descriptor: accounts.account_auth_descriptor
 ) {
-    val message_template = get_auth_message_template(op.name, op.args.to_gtv(), is_strict);
+    val message_template = get_auth_message_template(op.name, op.args.to_gtv());
     val validated_args = _validate_evm_arguments(auth_op.args, set(flags), account, auth_descriptor);
     val message = create_message_from_template(
         validated_args, 
@@ -248,7 +247,7 @@ function _validate_multiple_evm_addresses(message: text, signatures: list<signat
   */
 function verify_signers(ft_and_evm_signers: list<byte_array>) {
     val op = op_context.get_current_operation();
-    val message_template = get_auth_message_template(op.name, op.args.to_gtv(), true);
+    val message_template = get_auth_message_template(op.name, op.args.to_gtv());
 
     var message = message_template
         .replace(BLOCKCHAIN_RID_PLACEHOLDER, chain_context.blockchain_rid.to_hex().upper_case())

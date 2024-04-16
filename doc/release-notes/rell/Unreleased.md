@@ -11,6 +11,7 @@
 - Add field `transaction` to entity `applied_transfers`
 - Removed operation `ft4.register_account_evm_signatures` and use `ft4.evm_signatures` instead
 - Remove `ft4.delete_all_auth_descriptors_exclude` operation (replaced with `ft4.delete_all_auth_descriptors_except_main`).
+- Remove `is_strict` argument to `authenticate()` function. Now `auth_handlers` will always resolve to the handler with the most specific mount scope if no operation auth handler is found.
 
 ### Changed 🪙
 
