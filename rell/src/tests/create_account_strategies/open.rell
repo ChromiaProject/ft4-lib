@@ -58,7 +58,7 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
 }
 
 function test_account_can_be_registered_with_custom_operation() {
-    val name = "Alice (the neighbour)";
+    val name = "Alice (the neighbor)";
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
@@ -78,7 +78,7 @@ function test_account_can_be_registered_with_custom_operation() {
 }
 
 function test_account_can_be_registered_with_custom_operation_and_evm_signature() {
-    val name = "Alice (the neighbour)";
+    val name = "Alice (the neighbor)";
 
     val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
 
@@ -106,7 +106,7 @@ function test_account_can_be_registered_with_custom_operation_and_evm_signature(
 }
 
 function test_account_account_registration_fails_with_unknown_custom_operation_and_evm_signature() {
-    val name = "Alice (the neighbour)";
+    val name = "Alice (the neighbor)";
 
     val evm_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
 
