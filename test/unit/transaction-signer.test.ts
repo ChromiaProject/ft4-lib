@@ -1,6 +1,7 @@
 import {
   createFakeAuthDataService,
   createTestAuthDescriptor,
+  emptyOp,
   testAdFromRegistration,
 } from "@ft4-test/util";
 import {
@@ -22,6 +23,7 @@ import {
   evmAuth,
   toRawSignature,
 } from "@ft4/authentication";
+import { noopAuthDataService } from "@ft4/authentication/noop";
 import { Connection } from "@ft4/ft-session";
 import { EMPTY_SIGNATURE, signTransaction } from "@ft4/transaction-builder";
 import { evmSignatures } from "@ft4/transaction-builder/utils";
@@ -332,5 +334,35 @@ describe("Transaction Signer", () => {
       toRawSignature(mockSignature),
       EMPTY_SIGNATURE,
     ]);
+  });
+
+  it("Throws an error when encountering a malformed transaction", async () => {
+    const keyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+    const ad = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Account],
+      keyStore.address,
+    );
+    const authenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
+      noopAuthDataService,
+    );
+
+    const gtxTx = gtx.emptyGtx(blockchainRid);
+    gtxTx.signers = [];
+    gtxTx.signatures = [];
+    const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
+    gtxTx.operations = [evmAuthOp, evmAuthOp, evmAuthOp, emptyOp()].map(
+      (o) => ({ opName: o.name, args: o.args ?? [] }),
+    );
+
+    await expect(
+      signTransaction(connection, authenticator, gtxTx),
+    ).rejects.toStrictEqual(
+      new Error(
+        "Transaction is malformed. Expected regular operation but got auth operation",
+      ),
+    );
   });
 });

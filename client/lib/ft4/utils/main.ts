@@ -8,6 +8,7 @@ import {
   Queryable,
   RawGtv,
   RawGtx,
+  RellOperation,
   SignedTransaction,
   encryption,
   gtv,
@@ -47,6 +48,12 @@ export function getTransactionRid(tx: RawGtx): Buffer {
 
 export function isRawGtx(tx: GTX | RawGtx): tx is RawGtx {
   return Array.isArray(tx);
+}
+
+export function isRellOperation(
+  op: Operation | RellOperation,
+): op is RellOperation {
+  return (op as RellOperation).opName !== undefined;
 }
 
 export function getNonceIdForTxContext(

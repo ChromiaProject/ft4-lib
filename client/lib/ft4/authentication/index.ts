@@ -68,6 +68,7 @@ export {
   ftSigner,
   isFtKeyStore,
   isFtSigner,
+  FT_AUTH,
 } from "./ft";
 
 export { createNoopAuthenticator, noopAuthenticator } from "./noop";

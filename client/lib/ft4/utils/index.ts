@@ -23,6 +23,7 @@ export {
   getVersion,
   getAllAuthHandlers,
   loadOperationFromTransaction,
+  isRellOperation,
 } from "./main";
 
 export { firstAllowedAuthDescriptor, authHandlerForOperation } from "./queries";

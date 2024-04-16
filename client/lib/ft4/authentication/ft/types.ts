@@ -1,7 +1,7 @@
-import { KeyStore, Signer } from "@ft4/authentication";
+import { KeyStore } from "@ft4/authentication";
 import { GTX, RawGtx } from "postchain-client";
 
-export interface FtSigner extends Signer {
+export interface FtSigner {
   pubKey: Buffer;
 }
 

@@ -64,7 +64,7 @@ export function createMultiSigAuthDescriptorRegistration(
   flags: string[],
   signers: Buffer[],
   signaturesRequired: number,
-  rules: AuthDescriptorRules | null,
+  rules: AuthDescriptorRules | null = null,
 ): AuthDescriptorRegistration<MultiSig> {
   return {
     authType: AuthType.MultiSig,

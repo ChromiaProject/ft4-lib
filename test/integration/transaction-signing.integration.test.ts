@@ -5,8 +5,14 @@ import {
   testAdFromRegistration,
   useChromiaNode,
 } from "@ft4-test/util";
-import { AuthFlag } from "@ft4/accounts";
-import { addRateLimitPoints, registerAccountAdmin } from "@ft4/admin";
+import {
+  AuthFlag,
+  addAuthDescriptor,
+  createMultiSigAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+} from "@ft4/accounts";
+import { registerAccountAdmin } from "@ft4/admin";
 import {
   AuthDataService,
   createAuthenticator,
@@ -14,6 +20,8 @@ import {
   createFtKeyHandler,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
+  evmSigner,
+  ftSigner,
 } from "@ft4/authentication";
 import {
   Connection,
@@ -25,7 +33,7 @@ import { op } from "@ft4/utils";
 import { IClient, encryption, gtv, gtx } from "postchain-client";
 
 describe("Transaction Signing", () => {
-  let _connection: Connection;
+  let connection: Connection;
   let client: IClient;
   const getClient = useChromiaNode();
 
@@ -33,8 +41,8 @@ describe("Transaction Signing", () => {
 
   beforeAll(() => {
     client = getClient();
-    _connection = createConnection(client);
-    authDataService = createAuthDataService(_connection);
+    connection = createConnection(client);
+    authDataService = createAuthDataService(connection);
   });
 
   it("correctly signs a transaction with GTX signatures", async () => {
@@ -55,7 +63,7 @@ describe("Transaction Signing", () => {
       .build();
 
     const receipt = await client.sendTransaction(
-      await signTransaction(_connection, authenticator, gtx.deserialize(tx)),
+      await signTransaction(connection, authenticator, gtx.deserialize(tx)),
     );
     expect(receipt.status).toBe("confirmed");
   });
@@ -72,12 +80,6 @@ describe("Transaction Signing", () => {
 
     const accountId = ad.id;
     await registerAccountAdmin(client, adminUser().signatureProvider, ad);
-    await addRateLimitPoints(
-      client,
-      adminUser().signatureProvider,
-      accountId,
-      100,
-    );
 
     const authenticator = createAuthenticator(
       accountId,
@@ -90,7 +92,7 @@ describe("Transaction Signing", () => {
       .build();
 
     const receipt = await client.sendTransaction(
-      await signTransaction(_connection, authenticator, gtx.deserialize(tx)),
+      await signTransaction(connection, authenticator, gtx.deserialize(tx)),
     );
     expect(receipt.status).toBe("confirmed");
   });
@@ -116,19 +118,7 @@ describe("Transaction Signing", () => {
     const accountId2 = ad2.id;
 
     await registerAccountAdmin(client, adminUser().signatureProvider, ad1);
-    await addRateLimitPoints(
-      client,
-      adminUser().signatureProvider,
-      accountId1,
-      100,
-    );
     await registerAccountAdmin(client, adminUser().signatureProvider, ad2);
-    await addRateLimitPoints(
-      client,
-      adminUser().signatureProvider,
-      accountId2,
-      100,
-    );
 
     const evmAuthenticator = createAuthenticator(
       accountId1,
@@ -150,12 +140,232 @@ describe("Transaction Signing", () => {
       .build();
 
     const ftSignedTx = await signTransaction(
-      _connection,
+      connection,
       ftAuthenticator,
       gtx.deserialize(tx),
     );
 
     const receipt = await client.sendTransaction(ftSignedTx);
+    expect(receipt.status).toBe("confirmed");
+  });
+
+  it("correctly signs an evm multisig operation", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+    const keyPair3 = encryption.makeKeyPair();
+
+    const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
+    const ftKeyStore = createInMemoryFtKeyStore(keyPair3);
+
+    const originalAd = createMultiSigAuthDescriptorRegistration(
+      [...Object.values(AuthFlag)],
+      [evmKeyStore1.id, evmKeyStore2.id],
+      2,
+      null,
+    );
+
+    const accountId = deriveAuthDescriptorId(originalAd);
+
+    await registerAccountAdmin(
+      client,
+      adminUser().signatureProvider,
+      originalAd,
+    );
+
+    const adToAdd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      ftKeyStore.id,
+    );
+
+    const authDataService = createAuthDataService(connection);
+    const authenticator1 = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
+      authDataService,
+    );
+
+    const authenticator2 = createAuthenticator(
+      accountId,
+      [
+        createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore2),
+        createFtKeyHandler(testAdFromRegistration(adToAdd), ftKeyStore),
+      ],
+      authDataService,
+    );
+
+    const partiallySignedTx = await transactionBuilder(authenticator1, client)
+      .add(addAuthDescriptor(adToAdd), { signers: [ftSigner(ftKeyStore.id)] })
+      .build();
+    const evmSignedTx = await signTransaction(
+      connection,
+      authenticator2,
+      partiallySignedTx,
+    );
+
+    const receipt = await client.sendTransaction(evmSignedTx);
+    expect(receipt.status).toBe("confirmed");
+  });
+
+  it("Fails if some signatures is missing from main ad", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+    const keyPair3 = encryption.makeKeyPair();
+
+    const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
+    const ftKeyStore = createInMemoryFtKeyStore(keyPair3);
+
+    const originalAd = createMultiSigAuthDescriptorRegistration(
+      [...Object.values(AuthFlag)],
+      [evmKeyStore1.id, evmKeyStore2.id],
+      2,
+      null,
+    );
+
+    const accountId = deriveAuthDescriptorId(originalAd);
+
+    await registerAccountAdmin(
+      client,
+      adminUser().signatureProvider,
+      originalAd,
+    );
+
+    const adToAdd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      ftKeyStore.id,
+    );
+    const authDataService = createAuthDataService(connection);
+    const evmAuthenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
+      authDataService,
+    );
+    const ftAuthenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(testAdFromRegistration(originalAd), ftKeyStore)],
+      authDataService,
+    );
+    const partiallySignedTx = await transactionBuilder(evmAuthenticator, client)
+      .add(addAuthDescriptor(adToAdd), {
+        signers: [ftSigner(ftKeyStore.id)],
+        skipFtSigning: true,
+      })
+      .build();
+
+    const signedTx = await signTransaction(
+      connection,
+      ftAuthenticator,
+      partiallySignedTx,
+    );
+    await expect(client.sendTransaction(signedTx)).rejects.toThrow(
+      /failed: Minimum number of valid signatures not reached/,
+    );
+  });
+
+  it("can add a second evm ad to an account with evm master ad", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+
+    const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
+
+    const originalAd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Account],
+      evmKeyStore1.address,
+    );
+    const adToAdd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      evmKeyStore2.address,
+    );
+
+    await registerAccountAdmin(
+      client,
+      adminUser().signatureProvider,
+      originalAd,
+    );
+
+    const accountId = deriveAuthDescriptorId(originalAd);
+    const authDataService = createAuthDataService(connection);
+    const authenticator1 = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
+      authDataService,
+    );
+    const authenticator2 = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(adToAdd), evmKeyStore2)],
+      authDataService,
+    );
+
+    const unsignedTx = await transactionBuilder(authenticator1, client)
+      .add(addAuthDescriptor(adToAdd), {
+        signers: [evmSigner(evmKeyStore2.address)],
+      })
+      .build();
+
+    const signedTx = await signTransaction(
+      connection,
+      authenticator2,
+      unsignedTx,
+    );
+    const receipt = await client.sendTransaction(signedTx);
+    expect(receipt.status).toBe("confirmed");
+  });
+
+  it("can add a second evm ad to an account with ft master ad", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+
+    const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
+    const evmKeyStore = createInMemoryEvmKeyStore(keyPair2);
+
+    const originalAd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Account],
+      ftKeyStore.id,
+    );
+    const adToAdd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      evmKeyStore.id,
+    );
+
+    await registerAccountAdmin(
+      client,
+      adminUser().signatureProvider,
+      originalAd,
+    );
+
+    const accountId = deriveAuthDescriptorId(originalAd);
+    const authDataService = createAuthDataService(connection);
+    const authenticator1 = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(testAdFromRegistration(originalAd), ftKeyStore)],
+      authDataService,
+    );
+    const authenticator2 = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(adToAdd), evmKeyStore)],
+      authDataService,
+    );
+
+    const unsignedTx = await transactionBuilder(authenticator1, client)
+      .add(addAuthDescriptor(adToAdd), {
+        signers: [evmSigner(evmKeyStore.id)],
+        skipFtSigning: true,
+      })
+      .build();
+
+    const evmSignedTx = await signTransaction(
+      connection,
+      authenticator2,
+      unsignedTx,
+    );
+    const signedTx = await signTransaction(
+      connection,
+      authenticator1,
+      evmSignedTx,
+    );
+    const receipt = await client.sendTransaction(signedTx);
     expect(receipt.status).toBe("confirmed");
   });
 });

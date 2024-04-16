@@ -961,6 +961,121 @@ describe("Transaction Builder", () => {
       );
     });
 
+    it("can combine evm_signatures operation with ft_auth operation without signing", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const accountId = encryption.randomBytes(32);
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore], skipFtSigning: true })
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["ft4.ft_auth", [accountId, authDescriptor.id]],
+            ["empty_op", []],
+          ],
+          [keyStore.id],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([expectedTxWithoutSignatures[0], [EMPTY_SIGNATURE]]),
+      );
+    });
+
+    it("skips ft signing only on the specified operations", async () => {
+      const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const { keyStore: ftKeyStore2, authDescriptor: authDescriptor2 } =
+        createTestAuthDescriptor();
+      const accountId = encryption.randomBytes(32);
+      const { keyStore: keyStore3, authDescriptor: authDescriptor3 } =
+        createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore3.createKeyHandler(authDescriptor3)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const authenticator2 = createAuthenticator(
+        accountId,
+        [ftKeyStore2.createKeyHandler(authDescriptor2)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [ftKeyStore1], skipFtSigning: true })
+        .add(emptyOp(), { authenticator: authenticator2 })
+        .add(emptyOp())
+        .build();
+
+      const deserializedTx = gtx.deserialize(tx);
+      expect(deserializedTx.signatures![0].equals(EMPTY_SIGNATURE)).toBe(false); // Signed by keyStore
+      expect(deserializedTx.signatures![1].equals(EMPTY_SIGNATURE)).toBe(true); // Not signed by ftKeyStore1
+      expect(deserializedTx.signatures![2].equals(EMPTY_SIGNATURE)).toBe(false); // Signed by ftKeyStore2
+    });
+
+    it("skips ft signing on all the specified operations", async () => {
+      const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const ftKeyStore2 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const accountId = encryption.randomBytes(32);
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const authenticator2 = createAuthenticator(
+        accountId,
+        [ftKeyStore2.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [ftKeyStore1], skipFtSigning: true })
+        .add(emptyOp(), {
+          signers: [ftKeyStore2],
+          authenticator: authenticator2,
+          skipFtSigning: true,
+        })
+        .add(emptyOp(), { skipFtSigning: true })
+        .build();
+
+      const deserializedTx = gtx.deserialize(tx);
+      expect(deserializedTx.signatures![0].equals(EMPTY_SIGNATURE)).toBe(true);
+      expect(deserializedTx.signatures![1].equals(EMPTY_SIGNATURE)).toBe(true);
+      expect(deserializedTx.signatures![2].equals(EMPTY_SIGNATURE)).toBe(true);
+    });
+
     it("can combine evm_signatures operation with evm_auth operation", async () => {
       const blockchainRid = Buffer.alloc(32);
       const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());

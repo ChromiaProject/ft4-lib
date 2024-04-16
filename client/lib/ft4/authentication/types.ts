@@ -4,6 +4,8 @@ import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { GTX, Operation, RellOperation } from "postchain-client";
 import { LoginConfig } from "./login";
+import { EvmSigner } from "./evm";
+import { FtSigner } from "./ft";
 
 export class KeyHandlerError extends Error {
   constructor(msg?: string) {
@@ -58,9 +60,9 @@ export interface KeyHandler {
   getSigners(): Buffer[];
 }
 
-export interface Signer {}
+export type Signer = KeyStore | EvmSigner | FtSigner;
 
-export interface KeyStore extends Signer {
+export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
   isInteractive: boolean;

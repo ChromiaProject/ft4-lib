@@ -4,6 +4,7 @@ import {
   EVM_AUTH,
   EvmKeyStore,
   RawSignature,
+  isAuthOperation,
   isEvmKeyStore,
   isFtKeyStore,
 } from "@ft4/authentication";
@@ -19,6 +20,7 @@ import {
   gtx,
 } from "postchain-client";
 import { EVM_SIGNATURES, signOperation } from "./utils";
+import { compactArray } from "@ft4/utils";
 
 export async function signTransaction(
   _connection: Connection,
@@ -90,7 +92,8 @@ export async function signTransaction(
                 signatures[signerIndex] = await evmSign(
                   kh.keyStore as EvmKeyStore,
                   authenticator,
-                  getOpToAuth(gtxTx.operations, operationIndex),
+                  gtxTx.operations,
+                  getOpIndexToAuth(gtxTx.operations, operationIndex),
                 );
               }
             }),
@@ -120,11 +123,19 @@ export async function signTransaction(
 async function evmSign(
   keyStore: EvmKeyStore,
   authenticator: Authenticator,
-  op: RellOperation,
+  operations: RellOperation[],
+  opIndex: number,
 ): Promise<RawSignature> {
+  const op = operations[opIndex];
   const operation = { name: op.opName, args: op.args };
+  const authOp = operations[opIndex - 1];
+  const authOperation = { name: authOp.opName, args: authOp.args };
+
   const evmSignaturesOp = await signOperation(
-    [operation],
+    compactArray([
+      isAuthOperation(authOperation) ? authOperation : null,
+      operation,
+    ]),
     [keyStore],
     authenticator.authDataService,
   );
@@ -143,34 +154,42 @@ async function maybeSign(
     .filter((kh) => isEvmKeyStore(kh.keyStore))
     .map((kh) => kh.keyStore) as EvmKeyStore[];
 
-  const keyHandlerIndex = evmStores.findIndex((kh) =>
-    kh.address.equals(signer),
-  );
-  if (keyHandlerIndex === -1) return; // No KeyHandler available for this signer
+  const evmStoreIndex = evmStores.findIndex((kh) => kh.address.equals(signer));
+  if (evmStoreIndex === -1) return; // No KeyHandler available for this signer
   if (signatures.at(signerIndex) !== null) return; // This signer already signed
 
-  const opToAuth = getOpToAuth(operations, opIndex);
+  const opToAuthIndex = getOpIndexToAuth(operations, opIndex);
   signatures[signerIndex] = await evmSign(
-    evmStores[keyHandlerIndex],
+    evmStores[evmStoreIndex],
     authenticator,
-    opToAuth,
+    operations,
+    opToAuthIndex,
   );
 }
 
-function getOpToAuth(operations: RellOperation[], currentOpIndex: number) {
-  const noOpToAuthError = new Error(
-    "Transaction contains evm auth operations but no operation to authorize",
-  );
+function getOpIndexToAuth(
+  operations: RellOperation[],
+  currentOpIndex: number,
+): number {
+  const noOpToAuthError = (
+    message = "Transaction contains evm auth operations but no operation to authorize",
+  ) => new Error(message);
+  let opIndex = currentOpIndex + 1;
   const nextOp = operations.at(currentOpIndex + 1);
   if (!nextOp) {
-    throw noOpToAuthError;
+    throw noOpToAuthError();
   }
 
-  if (nextOp.opName === EVM_AUTH) {
+  if (isAuthOperation(nextOp)) {
     const nextNextOp = operations.at(currentOpIndex + 2);
-    if (nextNextOp) return nextNextOp;
-    throw noOpToAuthError;
+    opIndex = currentOpIndex + 2;
+    if (!nextNextOp) throw noOpToAuthError();
+    if (isAuthOperation(operations.at(opIndex)!)) {
+      throw noOpToAuthError(
+        "Transaction is malformed. Expected regular operation but got auth operation",
+      );
+    }
   }
 
-  return nextOp;
+  return opIndex;
 }

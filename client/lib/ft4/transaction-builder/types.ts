@@ -115,6 +115,7 @@ export type OperationConfig = {
   onAnchoredHandler?: OnAnchoredHandler;
   signers?: Signer[];
   targetBlockchainRid?: Buffer;
+  skipFtSigning?: boolean;
 };
 
 export type OperationContext = {
@@ -124,6 +125,7 @@ export type OperationContext = {
   targetBlockchainRid?: Buffer;
   opIndex?: number;
   signers?: Signer[];
+  skipFtSigning?: boolean;
 };
 
 export type OnAnchoredHandlerData = {

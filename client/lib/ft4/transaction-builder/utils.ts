@@ -103,7 +103,9 @@ export function evmSignatures(
     name: EVM_SIGNATURES,
     args: [
       signers.map(formatter.ensureBuffer),
-      signatures.map((signature) => signature && toRawSignature(signature)),
+      signatures.map((signature) =>
+        signature ? toRawSignature(signature) : null,
+      ),
     ],
   };
 }

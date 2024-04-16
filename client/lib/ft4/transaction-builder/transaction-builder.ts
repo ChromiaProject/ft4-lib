@@ -1,11 +1,11 @@
 import {
   Authenticator,
-  KeyHandler,
   FtKeyStore,
   FtSigner,
   isFtSigner,
   SigningError,
   isFtKeyStore,
+  ftSigner,
 } from "@ft4/authentication";
 import {
   BufferId,
@@ -83,6 +83,7 @@ export function transactionBuilder(
       onAnchoredHandler: config.onAnchoredHandler,
       signers: config.signers,
       targetBlockchainRid: config.targetBlockchainRid,
+      skipFtSigning: config.skipFtSigning,
     });
     return me;
   }
@@ -120,12 +121,11 @@ export function transactionBuilder(
     ctx: TxContext,
   ): Promise<[Operation[], FtSigner[]]> {
     const processedOperations: Operation[] = [];
-    const keyHandlers: KeyHandler[] = [];
     const ftSigners: FtSigner[] = [];
     let opIndex = 0;
 
     for (const opContext of opContexts) {
-      const { operation, authenticator, signers } = opContext;
+      const { operation, authenticator, signers, skipFtSigning } = opContext;
       if (
         !(await authenticator.authDataService.isOperationExposed(
           operation.name,
@@ -153,7 +153,6 @@ export function transactionBuilder(
           `No key handler registered to handle operation <${operation.name}>`,
         );
       }
-      keyHandlers.push(keyHandler);
 
       let ops: Operation[];
       try {
@@ -187,11 +186,19 @@ export function transactionBuilder(
       opContext.opIndex = opIndex - 1;
 
       if (isFtKeyStore(keyHandler.keyStore)) {
-        ftSigners.push(keyHandler.keyStore);
+        ftSigners.push(
+          skipFtSigning
+            ? ftSigner(keyHandler.keyStore.id)
+            : keyHandler.keyStore,
+        );
       }
 
-      if (signers != null) {
-        signers.filter(isFtSigner).forEach((store) => ftSigners.push(store));
+      if (signers) {
+        signers
+          .filter(isFtSigner)
+          .forEach((store) =>
+            ftSigners.push(skipFtSigning ? ftSigner(store.pubKey) : store),
+          );
       }
     }
 

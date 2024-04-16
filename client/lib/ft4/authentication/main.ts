@@ -5,8 +5,8 @@ import {
   createAuthDescriptorValidatorWithTxContext,
 } from "@ft4/accounts";
 import { Connection } from "@ft4/ft-session";
-import { BufferId, TxContext } from "@ft4/utils";
-import { Operation, formatter } from "postchain-client";
+import { BufferId, TxContext, isRellOperation } from "@ft4/utils";
+import { Operation, RellOperation, formatter } from "postchain-client";
 import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
 import { EVM_AUTH } from "./evm";
 import { FT_AUTH } from "./ft";
@@ -123,6 +123,7 @@ export async function getKeyHandlersForKeyStores(
   return allKeyHandlers;
 }
 
-export function isAuthOperation(operation: Operation): boolean {
-  return [EVM_AUTH, FT_AUTH].includes(operation.name);
+export function isAuthOperation(operation: Operation | RellOperation): boolean {
+  const name = isRellOperation(operation) ? operation.opName : operation.name;
+  return [EVM_AUTH, FT_AUTH].includes(name);
 }
