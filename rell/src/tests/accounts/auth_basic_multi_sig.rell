@@ -145,7 +145,7 @@ function create_auth_descriptor_M_1_pub(byte_array): acc.auth_descriptor {
         [
             ["A", "T"].to_gtv(),
             number_of_sigs.to_gtv(), 
-            [ byte_array.to_hex().to_gtv() ].to_gtv()
+            [ byte_array.to_gtv() ].to_gtv()
         ],
         rules = null.to_gtv());
 }
@@ -159,7 +159,7 @@ function create_auth_descriptor_M_2_pub(signer1: byte_array, signer2: byte_array
         [
             ["A", "T"].to_gtv(),
             required_signs.to_gtv(), 
-            [ signer1.to_hex().to_gtv(), signer2.to_hex().to_gtv()].to_gtv()
+            [ signer1.to_gtv(), signer2.to_gtv()].to_gtv()
         ],
         rules = null.to_gtv());
 }
@@ -173,7 +173,7 @@ function create_auth_descriptor_M_3_pub(signer1: byte_array, signer2: byte_array
         [
             ["A", "T"].to_gtv(),
             required_signs.to_gtv(), 
-            [ signer1.to_hex().to_gtv(), signer2.to_hex().to_gtv(), signer3.to_hex().to_gtv()].to_gtv()
+            [ signer1.to_gtv(), signer2.to_gtv(), signer3.to_gtv()].to_gtv()
         ],
         rules = null.to_gtv());
 }

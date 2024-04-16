@@ -242,7 +242,7 @@ function test_ft_auth_fails_if_key_invalid() {
     acc.auth_type.S,
     [
       ["A"].to_gtv(),
-      keypair.pub.to_hex().to_gtv()
+      keypair.pub.to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -262,7 +262,7 @@ function test_perform_ft_auth_transaction() {
     acc.auth_type.S,
     [
       ["A"].to_gtv(),
-      external_key.pub.to_hex().to_gtv()
+      external_key.pub.to_gtv()
     ],
     rules = null.to_gtv()
   );
