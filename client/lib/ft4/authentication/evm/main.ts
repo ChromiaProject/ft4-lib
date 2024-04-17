@@ -10,14 +10,14 @@ export const EVM_AUTH = "ft4.evm_auth";
 export function evmAuth(
   accountId: BufferId,
   authDescriptorId: BufferId,
-  signatures: Signature[],
+  signatures: (Signature | null)[],
 ): Operation {
   return {
     name: EVM_AUTH,
     args: [
       formatter.ensureBuffer(accountId),
       formatter.ensureBuffer(authDescriptorId),
-      signatures.map(toRawSignature),
+      signatures.map((s) => (s !== null ? toRawSignature(s) : null)),
     ],
   };
 }

@@ -170,7 +170,7 @@ function _validate_evm_arguments(
 ): accounts.evm_auth_args {
     require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
 
-    val signatures = list<signature>.from_gtv(auth_args[2]);
+    val signatures = list<signature?>.from_gtv(auth_args[2]);
 
     val has_all_flags = accounts.has_flags(auth_descriptor, list(required_flags));
     
@@ -211,7 +211,8 @@ function _recover_evm_address(message: text, signature) {
 function _evm_message_hash(message: text): byte_array =
     keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
 
-function _validate_evm_address(message: text, signature, accounts.account_auth_descriptor) {
+function _validate_evm_address(message: text, signature?, accounts.account_auth_descriptor) {
+    require(signature, "Signature cannot be null when using single sig");
     val recovered_address = _recover_evm_address(message, signature);
     val signer = accounts.auth_descriptor_signer @? {
         .account_auth_descriptor == account_auth_descriptor,
@@ -222,20 +223,28 @@ function _validate_evm_address(message: text, signature, accounts.account_auth_d
     return recovered_address;
 }
 
-function _validate_multiple_evm_addresses(message: text, signatures: list<signature>, accounts.account_auth_descriptor) {
+function _validate_multiple_evm_addresses(message: text, signatures: list<signature?>, accounts.account_auth_descriptor) {
     val recovered_keys = list<byte_array>();
+    val ad_args = accounts.multi_sig_args.from_bytes(account_auth_descriptor.args);
     for (i in range(signatures.size())) {
-        recovered_keys.add(
-            _validate_evm_address(
-                message,
-                signatures[i],
-                account_auth_descriptor
-            )
+        if (signatures[i] == null) continue;
+
+        val recovered_address = _validate_evm_address(
+            message,
+            signatures[i],
+            account_auth_descriptor
         );
+        require(
+            recovered_address == ad_args.signers[i],
+            "Expected signer at index <%d> to be <%s> but was: <%s>"
+                .format(i, ad_args.signers[i], recovered_address)
+        );
+        recovered_keys.add(recovered_address);
     }
     require(
-        recovered_keys.size() >= accounts.multi_sig_args.from_bytes(account_auth_descriptor.args).signatures_required, 
-        "Minimum number of valid signatures not reached"
+        recovered_keys.size() >= ad_args.signatures_required, 
+        "Minimum number of valid signatures not reached. Expected <%d>, found <%d>."
+            .format(ad_args.signatures_required, recovered_keys.size())
     );
     return recovered_keys;
 }
@@ -286,7 +295,7 @@ function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, messa
     }
 }
 
-function get_evm_signatures() {
+function get_evm_signatures(): (signers: list<byte_array>, signatures: list<signature>) {
     if (op_context.op_index == 0) return (signers = list<byte_array>(), signatures = list<signature>());
 
     val tx_operations = op_context.get_all_operations();
@@ -312,9 +321,18 @@ function get_evm_signatures() {
         "Number of evm signers <%d> is not equal to number of evm signatures <%d>".format(args.signers.size(), args.signatures.size())
     );
 
+    var signatures = list<signature>();
+    for (i in range(args.signatures.size())) {
+        val signature = require(
+            args.signatures[i],
+            "Missing signature for address <%s>.".format(args.signers[i])
+        );
+        signatures.add(signature);
+    }
+
     return (
         signers = args.signers,
-        signatures = args.signatures
+        signatures = signatures
     );
 }
 

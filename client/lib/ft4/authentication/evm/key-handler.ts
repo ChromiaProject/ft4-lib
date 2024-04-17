@@ -1,4 +1,4 @@
-import { AnyAuthDescriptor } from "@ft4/accounts";
+import { AnyAuthDescriptor, aggregateSigners } from "@ft4/accounts";
 import {
   AuthDataService,
   KeyHandler,
@@ -33,7 +33,7 @@ export function createEvmKeyHandler(
     ) =>
       authorize(
         accountId,
-        authDescriptor.id,
+        authDescriptor,
         operation,
         authDataService,
         context,
@@ -47,7 +47,7 @@ export function createEvmKeyHandler(
 
 async function authorize(
   accountId: BufferId,
-  authDescriptorId: BufferId,
+  authDescriptor: AnyAuthDescriptor,
   operation: Operation,
   authDataService: AuthDataService,
   context: TxContext,
@@ -59,7 +59,7 @@ async function authorize(
   const nonce = await getNonce(
     authDataService,
     accountId,
-    authDescriptorId,
+    authDescriptor.id,
     context,
   );
   /*
@@ -83,13 +83,18 @@ async function authorize(
     )
     .replace(
       AUTH_DESCRIPTOR_ID_PLACEHOLDER,
-      formatter.toString(formatter.ensureBuffer(authDescriptorId)),
+      formatter.toString(formatter.ensureBuffer(authDescriptor.id)),
     )
     .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
     .replace(NONCE_PLACEHOLDER, `${nonce}`);
 
-  const signature = await keyStore.signMessage(message);
-  return [evmAuth(accountId, authDescriptorId, [signature]), operation];
+  const signers = aggregateSigners(authDescriptor);
+  const signatures = await Promise.all(
+    signers.map((signer) =>
+      signer.equals(keyStore.address) ? keyStore.signMessage(message) : null,
+    ),
+  );
+  return [evmAuth(accountId, authDescriptor.id, signatures), operation];
 }
 
 async function getNonce(

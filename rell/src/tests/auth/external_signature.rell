@@ -2,6 +2,7 @@
 module;
 
 import ^^.assets.utils;
+import ^^^.lib.ft4.utils.{ make_auth_message };
 import auth: ^^^.lib.ft4.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import acc: ^^^.lib.ft4.accounts;
@@ -134,7 +135,7 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
     .op(auth_ext.evm_auth(auth_descriptor_id, auth_descriptor_id, [signature0, signature1]))
     .op(test_operations.test_auth.test_perform_large_transfer(1000, to_addr))
     .sign(rell.test.keypairs.alice.priv)
-    .run_must_fail("Minimum number of valid signatures not reached");
+    .run_must_fail("Minimum number of valid signatures not reached. Expected <3>, found <2>.");
 }
 
 function test_it_rejects_signatures_not_part_of_a_d() {
@@ -418,4 +419,22 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
       null
     ))
     .run_must_fail("Invalid signature");
+}
+
+function test_fails_if_evm_signatures_does_not_correspond_to_signers() {
+  val alice_address = crypto.eth_pubkey_to_address(rell.test.pubkeys.alice);
+  val bob_address = crypto.eth_pubkey_to_address(rell.test.pubkeys.bob);
+  val original_ad = utils.create_multisig_auth_descriptor(2, [alice_address, bob_address], ["A"]);
+  utils.operations.register_account_test(original_ad).run();
+  val account = acc.account @ {} ( @omit @sort_desc .rowid, $ ) limit 1;
+  
+  val message = make_auth_message("")
+    .replace("{blockchain_rid}", chain_context.blockchain_rid.to_hex())
+    .replace("{nonce}", "0");
+  val signature = evm_sign(message, rell.test.keypairs.alice.priv);
+
+  rell.test.tx()
+    .op(auth_ext.evm_auth(account.id, original_ad.hash(), [signature, signature]))
+    .op(test_operations.test_auth.test_authenticated_operation())
+    .run_must_fail("Expected signer at index <1> to be <%s> but was: <%s>".format(bob_address, alice_address));
 }

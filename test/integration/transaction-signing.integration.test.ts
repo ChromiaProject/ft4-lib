@@ -259,8 +259,78 @@ describe("Transaction Signing", () => {
       partiallySignedTx,
     );
     await expect(client.sendTransaction(signedTx)).rejects.toThrow(
-      /failed: Minimum number of valid signatures not reached/,
+      /failed: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
     );
+  });
+
+  it("succeeds if m of n signatures is provided", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+    const keyPair3 = encryption.makeKeyPair();
+    const keyPair4 = encryption.makeKeyPair();
+
+    const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
+    const evmKeyStore3 = createInMemoryEvmKeyStore(keyPair3);
+    const ftKeyStore = createInMemoryFtKeyStore(keyPair4);
+
+    const originalAd = createMultiSigAuthDescriptorRegistration(
+      [...Object.values(AuthFlag)],
+      [evmKeyStore1.id, evmKeyStore2.id, evmKeyStore3.id],
+      2,
+      null,
+    );
+
+    const accountId = deriveAuthDescriptorId(originalAd);
+
+    await registerAccountAdmin(
+      client,
+      adminUser().signatureProvider,
+      originalAd,
+    );
+
+    const adToAdd = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      ftKeyStore.id,
+    );
+    const authDataService = createAuthDataService(connection);
+    const evmAuthenticator1 = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore1)],
+      authDataService,
+    );
+    const evmAuthenticator2 = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(testAdFromRegistration(originalAd), evmKeyStore2)],
+      authDataService,
+    );
+    const ftAuthenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(testAdFromRegistration(adToAdd), ftKeyStore)],
+      authDataService,
+    );
+    const partiallySignedTx = await transactionBuilder(
+      evmAuthenticator1,
+      client,
+    )
+      .add(addAuthDescriptor(adToAdd), {
+        signers: [ftSigner(ftKeyStore.id)],
+        skipFtSigning: true,
+      })
+      .build();
+
+    const evmSignedTx = await signTransaction(
+      connection,
+      evmAuthenticator2,
+      partiallySignedTx,
+    );
+    const fullySignedTx = await signTransaction(
+      connection,
+      ftAuthenticator,
+      evmSignedTx,
+    );
+    const receipt = await client.sendTransaction(fullySignedTx);
+    expect(receipt.status).toBe("confirmed");
   });
 
   it("can add a second evm ad to an account with evm master ad", async () => {

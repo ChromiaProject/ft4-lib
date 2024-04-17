@@ -4,6 +4,7 @@ import {
 } from "@ft4-test/util";
 import {
   AuthFlag,
+  createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
 } from "@ft4/accounts";
@@ -264,6 +265,46 @@ describe("EVM key handler", () => {
         opName: "foo",
         args: [],
       },
+    ]);
+  });
+
+  it("populates signatures array with null for empty fields", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+    const keyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    const keyStore2 = createInMemoryEvmKeyStore(keyPair2);
+    const signature = { r: Buffer.from("r"), s: Buffer.from("s"), v: 27 };
+
+    const fakeKeyStore = {
+      ...keyStore1,
+      signMessage: jest.fn().mockResolvedValue(signature),
+    };
+
+    const ad = createMultiSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      [fakeKeyStore.address, keyStore2.address],
+      2,
+      null,
+    );
+    const adId = deriveAuthDescriptorId(ad);
+    const accountId = adId;
+    const authDataService = createFakeAuthDataService({
+      foo: { flags: ["T"], message: "" },
+    });
+
+    const evmKeyHandler = createEvmKeyHandler(
+      testAdFromRegistration(ad),
+      fakeKeyStore,
+    );
+    const ops = await evmKeyHandler.authorize(
+      accountId,
+      op("foo"),
+      {},
+      authDataService,
+    );
+    expect(ops).toStrictEqual([
+      evmAuth(accountId, adId, [signature, null]),
+      op("foo"),
     ]);
   });
 });

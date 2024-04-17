@@ -185,9 +185,24 @@ function test_authorizing_operation_with_evm_signatures_succeeds_when_evm_auth_o
 
     rell.test.tx()
         .op(auth_ext.evm_signatures([address], [signature]))
-        .op(auth_ext.evm_auth(rell.test.pubkeys.bob.hash(), rell.test.pubkeys.bob.hash(), list<auth.signature>())) // parameter values are not important for the test
+        .op(auth_ext.evm_auth(rell.test.pubkeys.bob.hash(), rell.test.pubkeys.bob.hash(), [])) // parameter values are not important for the test
         .op(op)
         .run();    
+}
+
+function test_authorizing_operation_with_evm_signatures_fails_when_evm_signature_is_missing() {
+    val address1 = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
+    val address2 = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
+
+    val op = auth_op.extra_signatures_op([address2, address1]);
+
+    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+
+    rell.test.tx()
+        .op(auth_ext.evm_signatures([address1, address2], [signature1, null]))
+        .op(op)
+        .run_must_fail("Missing signature for address <%s>".format(address2));        
 }
 
 // `verify_signers` expects that `evm_signatures` is preceding operation where `verify_signers` is called,
