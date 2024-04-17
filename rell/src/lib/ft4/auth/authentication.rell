@@ -282,7 +282,7 @@ function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, messa
     for (signer in ft_and_evm_signers) {
         if (signer.size() == EVM_ADDRESS_SIZE) require(signer in evm_signers, "Missing signature for address <%s>".format(signer));
         else if (signer.size() == FT_PUBKEY_SIZE) require(op_context.is_signer(signer), "Missing signature for public key <%s>".format(signer));
-        else require(false, "Unsupported signer <%d>".format(signer));
+        else require(false, "Unsupported signer <%s>".format(signer));
     }
 }
 
