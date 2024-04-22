@@ -71,10 +71,10 @@ pipelines:
             - docker
       - parallel:
         - step:
-            <<: *e2e-tests-anchor
-            trigger: manual
+              <<: *multichain-tests-anchor
+              trigger: manual
         - step:
-            <<: *multichain-tests-anchor
+            <<: *e2e-tests-anchor
             trigger: manual
   branches:
     ft4:
@@ -88,8 +88,10 @@ pipelines:
             - npm run deploy:latest
             - rm .chromia/config
     development:
-      - step: *e2e-tests-anchor
       - step: *multichain-tests-anchor
+      - step:
+          <<: *e2e-tests-anchor
+          trigger: manual
   custom:
     deploy-to-stable:
       - step:
