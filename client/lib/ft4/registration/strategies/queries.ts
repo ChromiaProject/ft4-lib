@@ -104,3 +104,10 @@ export function hasPendingCreateAccountTransferForStrategy(
     },
   };
 }
+
+export function enabledRegistrationStrategies(): QueryObject<string[]> {
+  return {
+    name: "ft4.get_enabled_registration_strategies",
+    args: {},
+  };
+}

@@ -34,6 +34,8 @@
 - Added `getMainAuthDescriptor` to `Account` interface.
 - Added `getAuthDescriptorById` to `Account` interface.
 
+- Added `enabledRegistrationStrategies` query.
+
 ### Fixed 🔧
 
 - Fix TS client build.

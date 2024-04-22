@@ -51,3 +51,10 @@ function test_account_registration_fails_when_mandatory_flags_missing_in_main_au
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[A]>");    
 }
+
+function test_get_enabled_registration_strategies() {
+    assert_equals(
+        strategies_ext.get_enabled_registration_strategies(),
+        set(["ft4.ras_open", "ft4.ras_transfer_open", "ft4.ras_transfer_fee", "ft4.ras_transfer_subscription"])
+    );
+}
