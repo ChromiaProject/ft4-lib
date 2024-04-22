@@ -19,7 +19,10 @@ describe("Test open strategy", () => {
     _connection = createConnection(client);
   });
 
-  it("can register account", async () => {
+  it("can register account and emits events", async () => {
+    const builtListener = jest.fn();
+    const sentListener = jest.fn();
+
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
@@ -32,9 +35,14 @@ describe("Test open strategy", () => {
       _connection.client,
       keyStore,
       registrationStrategy.open(authDescriptor),
-    );
+    )
+      .on("built", builtListener)
+      .on("sent", sentListener);
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+
+    expect(builtListener).toHaveBeenCalledTimes(1);
+    expect(sentListener).toHaveBeenCalledTimes(1);
 
     await logout(); // should be a no-op
   });
