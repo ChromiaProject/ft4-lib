@@ -1,14 +1,15 @@
 import { aggregateSigners } from "@ft4/accounts";
 import {
   Authenticator,
+  AuthDataService,
   EVM_AUTH,
   EvmKeyStore,
+  KeyStore,
   RawSignature,
   isAuthOperation,
   isEvmKeyStore,
   isFtKeyStore,
 } from "@ft4/authentication";
-import { Connection } from "@ft4/ft-session";
 import { EMPTY_SIGNATURE } from "@ft4/transaction-builder";
 import { Buffer } from "buffer";
 import {
@@ -23,25 +24,10 @@ import { EVM_SIGNATURES, signOperation } from "./utils";
 import { compactArray } from "@ft4/utils";
 
 export async function signTransaction(
-  _connection: Connection,
   authenticator: Authenticator,
   tx: GTX | RawGtx | SignedTransaction,
 ): Promise<SignedTransaction> {
-  const gtxTx = Buffer.isBuffer(tx)
-    ? gtx.deserialize(tx)
-    : Array.isArray(tx)
-      ? formatter.rawGtxToGtx(tx)
-      : tx;
-
-  if (!Array.isArray(gtxTx.signatures)) {
-    throw new Error("No signatures array");
-  }
-
-  if (gtxTx.signatures.length != gtxTx.signers.length) {
-    throw new Error(
-      `signatures.length != signers.length: ${gtxTx.signatures.length} != ${gtxTx.signers.length}`,
-    );
-  }
+  const gtxTx = ensureCorrectGTX(tx);
 
   await Promise.all(
     gtxTx.operations.map(async (op, operationIndex) => {
@@ -67,10 +53,11 @@ export async function signTransaction(
 
         await Promise.all(
           opSigners.map((signer, signerIndex) =>
-            maybeSign(
+            maybeEvmSign(
               signer,
               signerIndex,
-              authenticator,
+              authenticator.keyHandlers.map((kh) => kh.keyStore),
+              authenticator.authDataService,
               opSignatures,
               gtxTx.operations,
               operationIndex,
@@ -91,7 +78,7 @@ export async function signTransaction(
               if (signer.equals(kh.keyStore.id)) {
                 signatures[signerIndex] = await evmSign(
                   kh.keyStore as EvmKeyStore,
-                  authenticator,
+                  authenticator.authDataService,
                   gtxTx.operations,
                   getOpIndexToAuth(gtxTx.operations, operationIndex),
                 );
@@ -104,25 +91,89 @@ export async function signTransaction(
     }),
   );
 
-  for (let index = 0; index < gtxTx.signers.length; index++) {
-    const keyHandler = authenticator.keyHandlers.find(
-      (kh) =>
-        isFtKeyStore(kh.keyStore) &&
-        kh.keyStore.pubKey.equals(gtxTx.signers[index]),
-    );
-    if (keyHandler) {
-      if (gtxTx.signatures![index].equals(EMPTY_SIGNATURE)) {
-        gtxTx.signatures![index] = await keyHandler.sign(gtxTx);
-      }
-    }
-  }
+  await gtxSign(
+    gtxTx,
+    authenticator.keyHandlers.map((kh) => kh.keyStore),
+  );
 
   return gtx.serialize(gtxTx);
 }
 
+export async function signTransactionWithKeyStores(
+  keyStores: KeyStore[],
+  authDataService: AuthDataService,
+  tx: GTX | RawGtx | SignedTransaction,
+): Promise<SignedTransaction> {
+  const gtxTx = ensureCorrectGTX(tx);
+
+  await Promise.all(
+    gtxTx.operations.map(async (op, operationIndex) => {
+      if (
+        op.opName == EVM_SIGNATURES &&
+        gtxTx.signatures!.length > 0 &&
+        gtxTx.signatures!.some((sig) => !sig.equals(EMPTY_SIGNATURE))
+      ) {
+        throw new Error(
+          "Cannot add EVM signatures after GTX signature has been added",
+        );
+      }
+
+      if (op.opName === EVM_SIGNATURES) {
+        const opSigners = op.args[0] as Buffer[];
+        const opSignatures = op.args[1] as RawSignature[];
+
+        if (opSigners.length !== opSignatures.length) {
+          throw new Error(
+            "Signatures array need to be sparse array of same length as signers array",
+          );
+        }
+
+        await Promise.all(
+          opSigners.map((signer, signerIndex) =>
+            maybeEvmSign(
+              signer,
+              signerIndex,
+              keyStores,
+              authDataService,
+              opSignatures,
+              gtxTx.operations,
+              operationIndex,
+            ),
+          ),
+        );
+      }
+      return op;
+    }),
+  );
+
+  await gtxSign(gtxTx, keyStores);
+
+  return gtx.serialize(gtxTx);
+}
+
+function ensureCorrectGTX(tx: GTX | RawGtx | SignedTransaction): GTX {
+  const gtxTx = Buffer.isBuffer(tx)
+    ? gtx.deserialize(tx)
+    : Array.isArray(tx)
+      ? formatter.rawGtxToGtx(tx)
+      : tx;
+
+  if (!Array.isArray(gtxTx.signatures)) {
+    throw new Error("No signatures array");
+  }
+
+  if (gtxTx.signatures.length != gtxTx.signers.length) {
+    throw new Error(
+      `signatures.length != signers.length: ${gtxTx.signatures.length} != ${gtxTx.signers.length}`,
+    );
+  }
+
+  return gtxTx;
+}
+
 async function evmSign(
   keyStore: EvmKeyStore,
-  authenticator: Authenticator,
+  authDataService: AuthDataService,
   operations: RellOperation[],
   opIndex: number,
 ): Promise<RawSignature> {
@@ -137,31 +188,30 @@ async function evmSign(
       operation,
     ]),
     [keyStore],
-    authenticator.authDataService,
+    authDataService,
   );
   return evmSignaturesOp?.args![1]![0];
 }
 
-async function maybeSign(
+async function maybeEvmSign(
   signer: Buffer,
   signerIndex: number,
-  authenticator: Authenticator,
+  keyStores: KeyStore[],
+  authDataService: AuthDataService,
   signatures: RawSignature[],
   operations: RellOperation[],
   opIndex: number,
 ): Promise<void> {
-  const evmStores: EvmKeyStore[] = authenticator.keyHandlers
-    .filter((kh) => isEvmKeyStore(kh.keyStore))
-    .map((kh) => kh.keyStore) as EvmKeyStore[];
+  const evmStores = keyStores.filter(isEvmKeyStore);
 
-  const evmStoreIndex = evmStores.findIndex((kh) => kh.address.equals(signer));
+  const evmStoreIndex = evmStores.findIndex((ks) => ks.address.equals(signer));
   if (evmStoreIndex === -1) return; // No KeyHandler available for this signer
   if (signatures.at(signerIndex) !== null) return; // This signer already signed
 
   const opToAuthIndex = getOpIndexToAuth(operations, opIndex);
   signatures[signerIndex] = await evmSign(
     evmStores[evmStoreIndex],
-    authenticator,
+    authDataService,
     operations,
     opToAuthIndex,
   );
@@ -192,4 +242,19 @@ function getOpIndexToAuth(
   }
 
   return opIndex;
+}
+
+async function gtxSign(gtxTx: GTX, keyStores: KeyStore[]) {
+  const ftKeyStores = keyStores.filter(isFtKeyStore);
+
+  for (let index = 0; index < gtxTx.signers.length; index++) {
+    const keyStore = ftKeyStores.find((ks) =>
+      ks.pubKey.equals(gtxTx.signers[index]),
+    );
+    if (keyStore) {
+      if (gtxTx.signatures![index].equals(EMPTY_SIGNATURE)) {
+        gtxTx.signatures![index] = await keyStore.sign(gtxTx);
+      }
+    }
+  }
 }

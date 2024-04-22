@@ -38,6 +38,8 @@
 
 - Added `enabledRegistrationStrategies` query.
 
+- Added `signTransactionWithKeyStores` function.
+
 ### Fixed 🔧
 
 - Fix TS client build.

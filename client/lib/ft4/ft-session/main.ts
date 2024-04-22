@@ -159,7 +159,7 @@ export function createSession(
     callWithoutNop: (...operations: Operation[]) =>
       callWithoutNop(connection, authenticator, ...operations),
     sign: (tx: GTX | RawGtx | SignedTransaction) =>
-      signTransaction(connection, authenticator, tx),
+      signTransaction(authenticator, tx),
     signAndSend: (tx: GTX | RawGtx | SignedTransaction) =>
       signAndSendTransaction(connection, authenticator, tx),
     ...connection,
@@ -201,7 +201,7 @@ export async function signAndSendTransaction(
   authenticator: Authenticator,
   tx: GTX | RawGtx | SignedTransaction,
 ): Promise<TransactionReceipt> {
-  const signedTx = await signTransaction(connection, authenticator, tx);
+  const signedTx = await signTransaction(authenticator, tx);
   return connection.client.sendTransaction(signedTx);
 }
 
