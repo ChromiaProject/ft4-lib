@@ -15,6 +15,7 @@ import ^^.assets.utils;
 import test_op: ^^.operations;
 import auth: ^^.operations.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
+import test_utils: ^^^.lib.ft4.test.utils;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
 function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
@@ -35,7 +36,7 @@ function setup_account_with_rules(rules: gtv) {
 }
 
 function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
-  val bob_ad = utils.create_auth_descriptor(
+  val bob_ad = test_utils.create_auth_descriptor(
     rell.test.pubkeys.bob,
     ["A", "E"],
     rules
@@ -149,7 +150,7 @@ namespace test_basic_functionality {
     }
     val rules = accounts.serialize_rules(rule_list);
 
-    val bob_ad = utils.create_auth_descriptor(
+    val bob_ad = test_utils.create_auth_descriptor(
       rell.test.pubkeys.bob,
       ["A"],
       rules

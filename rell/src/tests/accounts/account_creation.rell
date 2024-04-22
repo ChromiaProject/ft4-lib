@@ -1,12 +1,12 @@
 @test module;
 
-import test_utils: ^^.assets.utils;
+import asset_utils: ^^.assets.utils;
 import test_op: ^^.operations;
 import ^.helpers;
 import ^^^.lib.ft4.accounts;
 import accounts_ext: ^^^.lib.ft4.accounts.external;
 import ^^^.lib.ft4.admin;
-import ft_utils: ^^^.lib.ft4.test.utils;
+import test_utils: ^^^.lib.ft4.test.utils;
 import auth: ^^.operations.auth;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import strategies_ext: lib.ft4.accounts.strategies.external;
@@ -19,7 +19,7 @@ function test_an_account_can_be_created() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   
   admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .run();
   
   assert_not_null(accounts.account @? { alice.pub.hash() });
@@ -29,7 +29,7 @@ function test_main_ad_is_registered() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   
   admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .run();
 
   val ad_id = auth_descriptor.hash();
@@ -43,7 +43,7 @@ function test_cannot_create_account_with_no_A_flag() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["T"]);
   
   admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[T]>");
 }
 
@@ -57,7 +57,7 @@ function test_cannot_create_account_with_expiring_ad() {
   );
   
   admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .sign(bob)
     .run_must_fail("Cannot create an account with a restricted auth descriptor");
 }
@@ -76,7 +76,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
     rules = null.to_gtv()
   );
 
-  test_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
+  asset_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
   
   assert_not_null(accounts.account @? { [alice.pub, bob.pub].hash() });;
 }
@@ -94,7 +94,7 @@ function test_an_invalid_descriptor_can_not_be_added() {
 
   assert_fails(
     "Operation 'lib.ft4.admin:register_account' failed",
-    test_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
+    asset_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
   );
 }
 
@@ -122,7 +122,7 @@ function test_duplicate_multisig_ad_can_not_be_used_when_creating_account() {
 function test_duplicate_multisig_ad_can_not_be_added_to_account() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .run();
 
   val auth_descriptor2 = accounts.auth_descriptor(
@@ -139,7 +139,7 @@ function test_duplicate_multisig_ad_can_not_be_added_to_account() {
   );
 
   rell.test.tx()
-      .op(ft_utils.ft_auth_operation_for(alice.pub))
+      .op(test_utils.ft_auth_operation_for(alice.pub))
       .op(accounts_ext.add_auth_descriptor(auth_descriptor2))
       .sign(alice)
       .sign(bob)
@@ -168,7 +168,7 @@ function test_create_account_auth_in_without_operation_in_genesis_block() {
 }
 
 function test_an_account_cannot_have_too_many_auth_descriptors() {
-  val acc_data = test_utils.register_alice();
+  val acc_data = asset_utils.register_alice();
 
   val auth_descriptors = [
     test_utils.create_auth_descriptor(alice.pub, ["2"]),
@@ -188,16 +188,16 @@ function test_an_account_cannot_have_too_many_auth_descriptors() {
   for (ad in auth_descriptors) {
     tx = tx
       .op(admin.add_rate_limit_points(acc_data.account.id, 1))
-      .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
+      .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
       .op(accounts_ext.add_auth_descriptor(ad));
   }
   tx
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .sign(rell.test.keypairs.alice)
     .run();
 
   rell.test.tx()
-    .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
+    .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
     .op(accounts_ext.add_auth_descriptor(one_too_many))
     .sign(rell.test.keypairs.alice)
     .run_must_fail("Max <10> auth descriptor count reached. Delete some before adding new ones.");
@@ -205,7 +205,7 @@ function test_an_account_cannot_have_too_many_auth_descriptors() {
 
 function test_create_account_with_auth_succeeds() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
-  
+
   test_op.function__create_account_with_auth(auth_descriptor).run();
 
   val account_id = accounts.get_account_id_from_signers([alice.pub]);
@@ -237,7 +237,7 @@ function test_create_account_with_auth_can_create_account_with_custom_id_when_us
 
 function test_create_account_with_auth_fails_if_mandatory_flag_missing() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A"]);
-  
+
   test_op.function__create_account_with_auth(auth_descriptor)
     .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[A]>");
 }

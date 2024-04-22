@@ -7,9 +7,10 @@ import acc: ^^^.lib.ft4.accounts;
 import test_op: ^^.operations.auth;
 import ^^^.lib.ft4.admin;
 import ^.rate_limit_helpers;
+import test_utils: lib.ft4.test.utils;
 
 function test_create_account_in_genesis_block() {
-  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
 
   admin.register_account(auth_descriptor)
       .sign(utils.admin_priv_key())
@@ -23,7 +24,7 @@ function test_create_account_in_genesis_block() {
 }
 
 function test_create_account_after_genesis_block() {
-  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
 
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 

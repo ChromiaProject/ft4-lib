@@ -8,6 +8,7 @@ import ^^^.lib.ft4.admin;
 import ^^^.lib.ft4.auth;
 import ^^^.lib.ft4.utils.{ derive_nonce };
 import ^^.operations;
+import test_utils: lib.ft4.test.utils;
 
 struct module_args {
     admin_priv_key: byte_array;
@@ -35,7 +36,7 @@ function evm_register_alice(flags: list<text> = ["A", "T"]) = create_evm_auth_te
 function evm_register_bob(flags: list<text> = ["A", "T"]) = create_evm_auth_test_account(rell.test.keypairs.bob, flags);
 
 function create_test_account(rell.test.keypair, permissions: list<text> = ["A", "T"]): account_data {
-    val auth_descriptor = create_auth_descriptor(keypair.pub, permissions);
+    val auth_descriptor = test_utils.create_auth_descriptor(keypair.pub, permissions);
     val auth_descriptor_id = auth_descriptor.hash();
 
     create_test_account_with_auth_descriptor(auth_descriptor, keypair);
@@ -64,7 +65,7 @@ function create_test_account_with_auth_descriptor(
 
 function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T"]): account_data {
     val address = crypto.eth_privkey_to_address(keypair.priv);
-    val auth_descriptor = create_auth_descriptor(address, flags);
+    val auth_descriptor = test_utils.create_auth_descriptor(address, flags);
     val auth_descriptor_id = auth_descriptor.hash();
 
     rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
@@ -82,38 +83,6 @@ function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T
         ft_auth = auth_ext.ft_auth(account.id, auth_descriptor_id, *),
         keypair = keypair
     );
-}
-
-function create_auth_descriptor(
-    signer: byte_array,
-    permissions: list<text> = ["T"],
-    rules: gtv = null.to_gtv()
-): acc.auth_descriptor {
-    return acc.auth_descriptor(
-            acc.auth_type.S,
-            [
-                set(permissions).to_gtv(),
-                signer.to_gtv()
-            ],
-            rules
-        );
-}
-
-function create_multisig_auth_descriptor(
-    signatures_required: integer,
-    signers: list<byte_array>,
-    permissions: list<text> = ["T"],
-    rules: gtv = null.to_gtv()
-): acc.auth_descriptor {
-    return acc.auth_descriptor(
-            acc.auth_type.M,
-            [
-                set(permissions).to_gtv(),
-                signatures_required.to_gtv(),
-                signers.to_gtv()
-            ],
-            rules
-        );
 }
 
 function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "", type: text = assets.ASSET_TYPE_FT4) {
@@ -248,44 +217,27 @@ function mint_to_account(account_data, assets.asset, amount: big_integer) {
         .run();
 }
 
-function create_auth_message(op: rell.test.op, template: text, account_data: account_data? = null) {
+function create_evm_auth_message(op: rell.test.op, template: text, account_data: account_data) {
     var message = template.replace(
         auth.BLOCKCHAIN_RID_PLACEHOLDER, 
         chain_context.blockchain_rid.to_hex().upper_case()
     );
 
-    if (account_data??) {
-        val ctr = acc.account_auth_descriptor @ {
-            account_data.account,
-            .id == account_data.auth_descriptor_id
-        }.ctr;
+    val ctr = acc.account_auth_descriptor @ {
+        account_data.account,
+        .id == account_data.auth_descriptor_id
+    }.ctr;
 
-        var nonce = derive_nonce(op.to_gtx_operation(), ctr);
+    var nonce = derive_nonce(op.to_gtx_operation(), ctr);
 
-        message = message
-            .replace(
-                auth.ACCOUNT_ID_PLACEHOLDER, 
-                account_data.account.id.to_hex().upper_case()
-            )
-            .replace(
-                auth.AUTH_DESCRIPTOR_ID_PLACEHOLDER, 
-                account_data.auth_descriptor_id.to_hex().upper_case()
-            )
-            .replace(auth.NONCE_PLACEHOLDER, nonce);
-    } else {
-        message = message.replace(auth.NONCE_PLACEHOLDER, derive_nonce(op.to_gtx_operation(), 0));
-    }
-
-    return message;
+    return message
+        .replace(
+            auth.ACCOUNT_ID_PLACEHOLDER,
+            account_data.account.id.to_hex().upper_case()
+        )
+        .replace(
+            auth.AUTH_DESCRIPTOR_ID_PLACEHOLDER,
+            account_data.auth_descriptor_id.to_hex().upper_case()
+        )
+        .replace(auth.NONCE_PLACEHOLDER, nonce);
 }
-
-function evm_sign(hash: byte_array, privkey: byte_array) {
-    val (r, s, rec_id) = crypto.eth_sign(hash, privkey);
-    return auth.signature(
-            r = r,
-            s = s,
-            v = 27 + rec_id
-        );
-}
-
-function evm_hex_address_from_pubkey(evm_pubkey: byte_array) = "0x" + crypto.eth_pubkey_to_address(evm_pubkey).to_hex();

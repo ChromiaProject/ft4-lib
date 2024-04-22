@@ -5,12 +5,13 @@ import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
 import strategies_ext: lib.ft4.accounts.strategies.external;
+import test_utils: lib.ft4.test.utils;
 
 import ^^.assets.utils;
 import ops: ^^.operations;
 
 function test_is_strategy_op_returns_true_when_receives_strategy_operation() {
-    val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice);
+    val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice);
     assert_true(strategies.is_strategy_op(open.ras_open(auth_descriptor).to_gtx_operation()));
 }
 

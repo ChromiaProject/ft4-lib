@@ -4,6 +4,7 @@ module;
 import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.assets;
 import ^^^^.lib.ft4.ft4_basic_dev.*;
+import test_utils: ^^^^.lib.ft4.test.utils;
 import strategies: ^^^^.lib.ft4.accounts.strategies;
 import strategies_ext: ^^^^.lib.ft4.accounts.strategies.external;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
@@ -43,7 +44,7 @@ function test_create_account_on_internal_transfer_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -129,7 +130,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     rell.test.tx()
-        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
@@ -171,7 +172,7 @@ function test_multiple_internal_transfers_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -219,7 +220,7 @@ function test_create_account_on_internal_transfer_success_with_any_asset() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.charlie, ["A", "T"])))
+        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.charlie, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
@@ -282,7 +283,7 @@ function test_create_account_on_crosschain_transfer_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -500,7 +501,7 @@ function test_multiple_crosschain_transfers_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies_ext.register_account())
         .sign(rell.test.keypairs.bob)
         .run();

@@ -193,7 +193,7 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
         ].to_gtv()
     );
     val op = ft4.assets_ext.transfer(bob.account.id, asset.id, 5);
-    val message = utils.create_auth_message(op, template, alice);
+    val message = utils.create_evm_auth_message(op, template, alice);
     val signature = evm_sign(message, alice.keypair.priv);
 
     rell.test.tx()
@@ -225,7 +225,7 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
         ].to_gtv()
     );
     val op = ft4.assets_ext.transfer(receiver_id, asset_id, amount);
-    val message = utils.create_auth_message(op, template, alice);
+    val message = utils.create_evm_auth_message(op, template, alice);
     val invalid_signature = evm_sign(message, bob.keypair.priv);
 
     rell.test.tx()
