@@ -91,7 +91,7 @@ describe("Rules", () => {
     const validator = createBaseAuthDescriptorValidator(
       createFakeAuthDescriptorValidationService({
         blockHeight: CURR_HEIGHT,
-        nonce: CURR_OP_COUNT,
+        authDescriptorCounter: CURR_OP_COUNT,
       }),
     );
 
@@ -130,7 +130,7 @@ describe("Rules", () => {
     const validator = createBaseAuthDescriptorValidator(
       createFakeAuthDescriptorValidationService({
         blockHeight: CURR_HEIGHT,
-        nonce: CURR_OP_COUNT,
+        authDescriptorCounter: CURR_OP_COUNT,
       }),
     );
 

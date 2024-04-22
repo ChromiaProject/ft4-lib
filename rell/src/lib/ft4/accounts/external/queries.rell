@@ -67,7 +67,7 @@ query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer?, pa
     );
 }
 
-query get_auth_descriptor_nonce(
+query get_auth_descriptor_counter(
     account_id: byte_array, 
     auth_descriptor_id: byte_array
 ) = accounts.account_auth_descriptor @? { 

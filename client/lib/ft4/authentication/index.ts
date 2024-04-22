@@ -80,4 +80,8 @@ export {
   isAuthOperation,
 } from "./main";
 
-export { nonce, authMessageTemplate, authFlags } from "./queries";
+export {
+  authDescriptorCounter,
+  authMessageTemplate,
+  authFlags,
+} from "./queries";

@@ -3,7 +3,11 @@ import {
   AuthDescriptorValidationService,
   AuthDescriptorValidator,
 } from "./types";
-import { getNonceIdForTxContext, BufferId, TxContext } from "@ft4/utils";
+import {
+  getAuthDescriptorCounterIdForTxContext,
+  BufferId,
+  TxContext,
+} from "@ft4/utils";
 import { AuthDataService } from "@ft4/authentication";
 
 export function createAuthDescriptorValidator(
@@ -31,19 +35,25 @@ function authDescriptorValidationServiceWithCache(
   authDataService: AuthDataService,
 ): AuthDescriptorValidationService {
   let height: number;
-  const nonces: {
+  const counters: {
     [accountId: string]: { [authDescriptorId: string]: number | null };
   } = {};
   return Object.freeze({
-    getNonce: async (accountId: BufferId, authDescriptorId: BufferId) => {
+    getAuthDescriptorCounter: async (
+      accountId: BufferId,
+      authDescriptorId: BufferId,
+    ) => {
       const accId = accountId.toString("hex");
       const adId = authDescriptorId.toString("hex");
-      let nonce = nonces[accId]?.[adId];
-      if (nonce !== undefined) return nonce;
-      nonce = await authDataService.getNonce(accountId, authDescriptorId);
-      nonces[accId] = nonces[accId] ?? {};
-      nonces[accId][adId] = nonce;
-      return nonce;
+      let counter = counters[accId]?.[adId];
+      if (counter !== undefined) return counter;
+      counter = await authDataService.getAuthDescriptorCounter(
+        accountId,
+        authDescriptorId,
+      );
+      counters[accId] = counters[accId] ?? {};
+      counters[accId][adId] = counter;
+      return counter;
     },
     getBlockHeight: async () => {
       if (height !== undefined) return height;
@@ -59,14 +69,23 @@ function authDescriptorValidationServiceWithCacheAndTxContext(
 ): AuthDescriptorValidationService {
   let height: number;
   return Object.freeze({
-    getNonce: async (accountId: BufferId, authDescriptorId: BufferId) => {
-      const nonceId = getNonceIdForTxContext(accountId, authDescriptorId);
-      let nonce = txContext[nonceId];
-      if (nonce === undefined) {
-        nonce = await authDataService.getNonce(accountId, authDescriptorId);
-        txContext[nonceId] = nonce;
+    getAuthDescriptorCounter: async (
+      accountId: BufferId,
+      authDescriptorId: BufferId,
+    ) => {
+      const counterId = getAuthDescriptorCounterIdForTxContext(
+        accountId,
+        authDescriptorId,
+      );
+      let counter = txContext[counterId];
+      if (counter === undefined) {
+        counter = await authDataService.getAuthDescriptorCounter(
+          accountId,
+          authDescriptorId,
+        );
+        txContext[counterId] = counter;
       }
-      return nonce;
+      return counter;
     },
     getBlockHeight: async () => {
       if (height !== undefined) return height;
@@ -80,7 +99,7 @@ function authDescriptorValidationService(
   authDataService: AuthDataService,
 ): AuthDescriptorValidationService {
   return Object.freeze({
-    getNonce: authDataService.getNonce,
+    getAuthDescriptorCounter: authDataService.getAuthDescriptorCounter,
     getBlockHeight: authDataService.connection.getBlockHeight,
   });
 }

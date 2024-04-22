@@ -15,7 +15,7 @@ import {
   evmAuth,
 } from "@ft4/authentication";
 import { transactionBuilder } from "@ft4/transaction-builder";
-import { op } from "@ft4/utils";
+import { deriveNonce, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { ethers } from "ethers";
 import { IClient, createStubClient, encryption, gtx } from "postchain-client";
@@ -78,7 +78,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("increments nonce", async () => {
+  it("increments local auth descriptor counter", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -98,10 +98,10 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
     const tx = await transactionBuilder(authenticator, client)
@@ -137,7 +137,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("resets nonce between transactions if transaction is not submitted", async () => {
+  it("resets local auth descriptor counter between transactions if transaction is not submitted", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -150,7 +150,7 @@ describe("EVM key handler", () => {
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
-    authService.getNonce = () => Promise.resolve(0);
+    authService.getAuthDescriptorCounter = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
       [keyStore.createKeyHandler(testAdFromRegistration(ad))],
@@ -158,10 +158,10 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
     await transactionBuilder(authenticator, client)
@@ -195,7 +195,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("resets nonce if user rejects metamask signature", async () => {
+  it("resets local auth descriptor counter if user rejects metamask signature", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -221,7 +221,7 @@ describe("EVM key handler", () => {
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
-    authService.getNonce = () => Promise.resolve(0);
+    authService.getAuthDescriptorCounter = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
       [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
@@ -236,10 +236,10 @@ describe("EVM key handler", () => {
     ).rejects.toThrow(Error);
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
     const tx2 = await transactionBuilder(authenticator, client)

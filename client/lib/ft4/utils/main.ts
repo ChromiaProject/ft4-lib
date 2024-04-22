@@ -11,6 +11,7 @@ import {
   RellOperation,
   SignedTransaction,
   encryption,
+  formatter,
   gtv,
   gtx,
 } from "postchain-client";
@@ -56,7 +57,7 @@ export function isRellOperation(
   return (op as RellOperation).opName !== undefined;
 }
 
-export function getNonceIdForTxContext(
+export function getAuthDescriptorCounterIdForTxContext(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ) {
@@ -122,4 +123,19 @@ export function loadOperationFromTransaction(
     name: operation[0],
     args: operation[1],
   };
+}
+
+export function deriveNonce(
+  blockchainRid: BufferId,
+  operation: Operation,
+  authDescriptorCounter: number,
+): string {
+  return formatter.toString(
+    gtv.gtvHash([
+      blockchainRid,
+      operation.name,
+      operation.args,
+      authDescriptorCounter,
+    ]),
+  );
 }

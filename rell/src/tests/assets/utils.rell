@@ -6,6 +6,7 @@ import auth_ext: ^^^.lib.ft4.auth.external;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
 import ^^^.lib.ft4.auth;
+import ^^^.lib.ft4.utils.{ derive_nonce };
 import ^^.operations;
 
 struct module_args {
@@ -249,17 +250,19 @@ function mint_to_account(account_data, assets.asset, amount: big_integer) {
         .run();
 }
 
-function create_auth_message(template: text, account_data: account_data? = null) {
+function create_auth_message(op: rell.test.op, template: text, account_data: account_data? = null) {
     var message = template.replace(
         auth.BLOCKCHAIN_RID_PLACEHOLDER, 
         chain_context.blockchain_rid.to_hex().upper_case()
     );
 
     if (account_data??) {
-        val nonce = acc.account_auth_descriptor @ {
+        val ctr = acc.account_auth_descriptor @ {
             account_data.account,
             .id == account_data.auth_descriptor_id
         }.ctr;
+
+        var nonce = derive_nonce(op.to_gtx_operation(), ctr);
 
         message = message
             .replace(
@@ -270,9 +273,9 @@ function create_auth_message(template: text, account_data: account_data? = null)
                 auth.AUTH_DESCRIPTOR_ID_PLACEHOLDER, 
                 account_data.auth_descriptor_id.to_hex().upper_case()
             )
-            .replace(auth.NONCE_PLACEHOLDER, nonce.to_text());
+            .replace(auth.NONCE_PLACEHOLDER, nonce);
     } else {
-        message = message.replace(auth.NONCE_PLACEHOLDER, "0");
+        message = message.replace(auth.NONCE_PLACEHOLDER, derive_nonce(op.to_gtx_operation(), 0));
     }
 
     return message;

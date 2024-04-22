@@ -5,7 +5,12 @@ import {
   KeyHandlerError,
   hasAuthDescriptorFlags,
 } from "@ft4/authentication";
-import { BufferId, TxContext, getNonceIdForTxContext } from "@ft4/utils";
+import {
+  BufferId,
+  TxContext,
+  deriveNonce,
+  getAuthDescriptorCounterIdForTxContext,
+} from "@ft4/utils";
 import { GTX, Operation, formatter } from "postchain-client";
 import {
   ACCOUNT_ID_PLACEHOLDER,
@@ -56,7 +61,7 @@ async function authorize(
   const messageTemplate =
     await authDataService.getAuthMessageTemplate(operation);
 
-  const nonce = await getNonce(
+  const counter = await getAuthDescriptorCounter(
     authDataService,
     accountId,
     authDescriptor.id,
@@ -69,9 +74,9 @@ async function authorize(
    * The second case shouldn't be reachable unless we allow the tx builder
    * to create an auth descriptor and use it in the same transaction.
    */
-  if (nonce === null) {
+  if (counter === null) {
     throw new KeyHandlerError(
-      "Invalid nonce. Was the auth descriptor too close to expiration?",
+      "Invalid auth descriptor counter. Was the auth descriptor too close to expiration?",
     );
   }
 
@@ -86,7 +91,7 @@ async function authorize(
       formatter.toString(formatter.ensureBuffer(authDescriptor.id)),
     )
     .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
-    .replace(NONCE_PLACEHOLDER, `${nonce}`);
+    .replace(NONCE_PLACEHOLDER, deriveNonce(blockchainRid, operation, counter));
 
   const signers = aggregateSigners(authDescriptor);
   const signatures = await Promise.all(
@@ -97,19 +102,22 @@ async function authorize(
   return [evmAuth(accountId, authDescriptor.id, signatures), operation];
 }
 
-async function getNonce(
+async function getAuthDescriptorCounter(
   authDataService: AuthDataService,
   accountId: BufferId,
   authDescriptorId: BufferId,
   context: TxContext,
 ) {
-  const nonceId = getNonceIdForTxContext(accountId, authDescriptorId);
-  if (context[nonceId] === undefined) {
-    context[nonceId] = await authDataService.getNonce(
+  const counterId = getAuthDescriptorCounterIdForTxContext(
+    accountId,
+    authDescriptorId,
+  );
+  if (context[counterId] === undefined) {
+    context[counterId] = await authDataService.getAuthDescriptorCounter(
       accountId,
       authDescriptorId,
     );
   }
 
-  return context[nonceId];
+  return context[counterId];
 }

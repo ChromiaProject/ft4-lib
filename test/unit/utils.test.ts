@@ -1,5 +1,5 @@
-import { loadOperationFromTransaction } from "@ft4/utils";
-import { RawGtx, gtv } from "postchain-client";
+import { deriveNonce, loadOperationFromTransaction, op } from "@ft4/utils";
+import { RawGtx, encryption, formatter, gtv } from "postchain-client";
 
 describe("Utils", () => {
   it("loads operation from raw transaction", async () => {
@@ -49,5 +49,23 @@ describe("Utils", () => {
       name: "do_something_else",
       args: [11, 22],
     });
+  });
+
+  it("correctly derives nonce", () => {
+    const blockchainRid = encryption.randomBytes(32);
+    const operation = op("foo");
+    const authDescriptorCounter = 0;
+    expect(
+      deriveNonce(blockchainRid, operation, authDescriptorCounter),
+    ).toEqual(
+      formatter.toString(
+        gtv.gtvHash([
+          blockchainRid,
+          operation.name,
+          operation.args,
+          authDescriptorCounter,
+        ]),
+      ),
+    );
   });
 });

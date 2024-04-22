@@ -2,7 +2,7 @@ import { Operation, QueryObject, RawGtv, formatter } from "postchain-client";
 import { Buffer } from "buffer";
 import { BufferId } from "@ft4/utils";
 
-export function nonce(
+export function authDescriptorCounter(
   accountId: BufferId,
   authDescriptorId: BufferId,
 ): QueryObject<
@@ -10,7 +10,7 @@ export function nonce(
   { account_id: Buffer; auth_descriptor_id: Buffer }
 > {
   return {
-    name: "ft4.get_auth_descriptor_nonce",
+    name: "ft4.get_auth_descriptor_counter",
     args: {
       account_id: formatter.ensureBuffer(accountId),
       auth_descriptor_id: formatter.ensureBuffer(authDescriptorId),

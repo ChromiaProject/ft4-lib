@@ -38,8 +38,8 @@ export function createAuthenticator(
         operation,
         txContext,
       ),
-    getNonce: (authDescriptorId: BufferId) =>
-      authDataService.getNonce(accountId, authDescriptorId),
+    getAuthDescriptorCounter: (authDescriptorId: BufferId) =>
+      authDataService.getAuthDescriptorCounter(accountId, authDescriptorId),
   });
 }
 

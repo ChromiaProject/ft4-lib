@@ -17,6 +17,15 @@ function make_auth_message(message: text) {
     return "Blockchain:\n{blockchain_rid}\n\n" + message + "\n\nNonce: {nonce}";
 }
 
+function derive_nonce(op: gtx_operation, nonce: integer) {
+    return (
+        chain_context.blockchain_rid, 
+        op.name, 
+        op.args, 
+        nonce
+    ).hash().to_hex().upper_case();
+}
+
 function latest_time() =
     if (op_context.exists and op_context.block_height > 0)
         op_context.last_block_time

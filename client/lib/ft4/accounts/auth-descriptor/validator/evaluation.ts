@@ -99,13 +99,13 @@ async function hasExpired(
     } else if (rule.variable === AuthDescriptorRuleVariable.BlockTime) {
       variable = Date.now();
     } else {
-      const nonce = await service.getNonce(
+      const counter = await service.getAuthDescriptorCounter(
         authDescriptor.accountId,
         authDescriptor.id,
       );
       // auth descriptor expired and was eliminated on rell side
-      if (nonce === null) return true;
-      variable = nonce;
+      if (counter === null) return true;
+      variable = counter;
     }
 
     if (

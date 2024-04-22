@@ -48,7 +48,7 @@ export type PaginatedEntity<T> = {
   nextCursor: OptionalPageCursor;
 };
 
-export type TxContext = { [nonceId: string]: number | null };
+export type TxContext = { [counterId: string]: number | null };
 
 export interface RellAppStructure {
   [modules: string]: Record<string, RellModuleStructure>;

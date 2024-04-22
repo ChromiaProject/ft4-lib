@@ -12,7 +12,7 @@ import {
   isEvmSigner,
   toRawSignature,
 } from "@ft4/authentication";
-import { BufferId } from "@ft4/utils";
+import { BufferId, deriveNonce } from "@ft4/utils";
 import { GTX, Operation, formatter, gtx } from "postchain-client";
 
 export const EMPTY_SIGNATURE = Buffer.alloc(64);
@@ -58,12 +58,13 @@ export async function signOperation(
   const messageTemplate =
     await authDataService.getAuthMessageTemplate(operationToAuthorize);
 
+  const blockchainRid = authDataService.getBlockchainRid();
   let message = messageTemplate
+    .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
     .replace(
-      BLOCKCHAIN_RID_PLACEHOLDER,
-      formatter.toString(authDataService.getBlockchainRid()),
-    )
-    .replace(NONCE_PLACEHOLDER, "0");
+      NONCE_PLACEHOLDER,
+      deriveNonce(blockchainRid, operationToAuthorize, 0),
+    );
 
   if (
     messageTemplate.includes(ACCOUNT_ID_PLACEHOLDER) ||

@@ -7,6 +7,7 @@ import ^^.auth.{ signature };
 import ^^.auth.external.{ get_auth_message_template };
 import ^^.accounts.{ evm_auth_args };
 import ^^.auth. { create_message_from_template, _evm_message_hash };
+import ^^.utils.{ derive_nonce };
 
 /*
  * Creates an ft_auth operation for a specific signer.
@@ -39,7 +40,7 @@ function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
         ),
         get_auth_message_template(op.name, op.args.to_gtv()),
         op.args,
-        descriptor.ctr
+        derive_nonce(op.to_gtx_operation(), descriptor.ctr)
     );
     val evm_signature = evm_sign(evm_message, evm_privkey);
     return auth_ext.evm_auth(descriptor.account.id, descriptor.id, [evm_signature]);

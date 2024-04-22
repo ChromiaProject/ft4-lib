@@ -38,7 +38,7 @@ export interface Authenticator {
     operation: Operation,
     txContext: TxContext,
   ): Promise<KeyHandler | null>;
-  getNonce(authDescriptorId: BufferId): Promise<number | null>;
+  getAuthDescriptorCounter(authDescriptorId: BufferId): Promise<number | null>;
 }
 
 export interface KeyHandler {
@@ -73,7 +73,7 @@ export interface AuthDataService {
   connection: Connection;
   isOperationExposed(operationName: string): Promise<boolean>;
   getAuthMessageTemplate(operation: Operation | RellOperation): Promise<string>;
-  getNonce(
+  getAuthDescriptorCounter(
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;

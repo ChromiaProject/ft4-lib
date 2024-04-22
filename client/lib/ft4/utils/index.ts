@@ -13,7 +13,7 @@ export { OperationNotExistError } from "./errors";
 
 export {
   createAndSignTransaction,
-  getNonceIdForTxContext,
+  getAuthDescriptorCounterIdForTxContext,
   getTransactionRid,
   isRawGtx,
   getConfig,
@@ -24,6 +24,7 @@ export {
   getAllAuthHandlers,
   loadOperationFromTransaction,
   isRellOperation,
+  deriveNonce,
 } from "./main";
 
 export { firstAllowedAuthDescriptor, authHandlerForOperation } from "./queries";

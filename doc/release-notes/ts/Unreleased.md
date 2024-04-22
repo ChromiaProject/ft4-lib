@@ -8,6 +8,7 @@
 - `registerAccount` has been renamed to `registerAccountAdmin`
 - Rename "signed" event to "built" in `crosschainTransfer` method
 - Remove function `registerAccountEvmSignatures`
+- Rename `nonce` query function to `authDescriptorCounter` and rename all the functions that call the query from `getNonce` to `getAuthDescriptorCounter`.
 
 ### Changed 🪙
 

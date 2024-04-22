@@ -19,7 +19,7 @@ import {
   createAuthenticator,
   createFtKeyHandler,
   createInMemoryFtKeyStore,
-  nonce,
+  authDescriptorCounter,
 } from "@ft4/authentication";
 import {
   Connection,
@@ -184,7 +184,9 @@ describe("Key store interactor", () => {
     ).resolves.not.toThrow();
 
     await expect(
-      session.client.query(nonce(account.id, deriveAuthDescriptorId(ad4))),
+      session.client.query(
+        authDescriptorCounter(account.id, deriveAuthDescriptorId(ad4)),
+      ),
     ).resolves.toBe(1);
   });
 

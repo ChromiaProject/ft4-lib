@@ -24,8 +24,10 @@ export const noopAuthDataService: AuthDataService = Object.freeze({
   connection: {} as Connection,
   isOperationExposed: (_operationName: string) => Promise.resolve(true),
   getAuthMessageTemplate: (_operation: Operation) => Promise.resolve(""),
-  getNonce: (_accountId: BufferId, _authDescriptorId: BufferId) =>
-    Promise.resolve(0),
+  getAuthDescriptorCounter: (
+    _accountId: BufferId,
+    _authDescriptorId: BufferId,
+  ) => Promise.resolve(0),
   getLoginConfig: (_name?: string) =>
     Promise.resolve({ flags: [], rules: null }),
   getBlockchainRid: () => Buffer.alloc(32),
@@ -46,7 +48,8 @@ export function createNoopAuthenticator(
     authDataService: authDataService ?? noopAuthDataService,
     getKeyHandlerForOperation: (_operation: Operation) =>
       Promise.resolve(noopKeyHandler),
-    getNonce: (_authDescriptorId: BufferId) => Promise.resolve(null),
+    getAuthDescriptorCounter: (_authDescriptorId: BufferId) =>
+      Promise.resolve(null),
   });
 }
 

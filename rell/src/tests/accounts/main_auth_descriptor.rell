@@ -49,7 +49,7 @@ function test_update_main_auth_descriptor_can_replace_evm_with_evm_auth_descript
     val auth_descriptor = utils.create_auth_descriptor(address2, ["A", "T"]);
 
     val op = accounts_ext.update_main_auth_descriptor(auth_descriptor);
-    val message = utils.create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()), alice);
+    val message = utils.create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()), alice);
 
     val signature1 = test_utils.evm_sign(message, alice.keypair.priv);
     val signature2 = test_utils.evm_sign(message, rell.test.keypairs.bob.priv);
@@ -73,7 +73,7 @@ function test_update_main_auth_descriptor_can_replace_evm_with_ft_auth_descripto
     val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"]);
 
     val op = accounts_ext.update_main_auth_descriptor(auth_descriptor);
-    val message = utils.create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()), alice);
+    val message = utils.create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()), alice);
 
     val signature = test_utils.evm_sign(message, alice.keypair.priv);
 
@@ -93,7 +93,7 @@ function test_update_main_auth_descriptor_can_replace_ft_with_evm_auth_descripto
     val auth_descriptor = utils.create_auth_descriptor(address, ["A", "T"]);
 
     val op = accounts_ext.update_main_auth_descriptor(auth_descriptor);
-    val message = utils.create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()), alice);
+    val message = utils.create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()), alice);
 
     val signature = test_utils.evm_sign(message, rell.test.keypairs.bob.priv);
 

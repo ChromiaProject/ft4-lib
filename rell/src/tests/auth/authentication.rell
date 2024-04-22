@@ -4,6 +4,7 @@ module;
 import ^^^.lib.ft4.test.utils. { evm_sign };
 import ^^.assets.utils;
 import auth_ext: ^^.extensions.auth.*;
+import ^^^.lib.ft4.utils.{ derive_nonce };
 import auth_pub: ^^^.lib.ft4.auth.external;
 import test_operations: ^^.operations;
 
@@ -32,10 +33,11 @@ function test_before_and_after_authenticate_extensions_are_called_with_ft_auth()
 function test_before_and_after_authenticate_extensions_are_called_with_evm_auth() {
     val alice = utils.evm_register_alice(["A", "E"]); // "E" flag is required by `test_empty_auth_message`
 
+    val op = test_operations.test_auth.test_empty_auth_message();
     val signature = evm_sign(
       "Blockchain:\n%s\n\n\n\nNonce: %s".format(
         chain_context.blockchain_rid.to_hex(),
-        "0"
+        derive_nonce(op.to_gtx_operation(), 0)
       ),
       alice.keypair.priv
     );
@@ -43,7 +45,7 @@ function test_before_and_after_authenticate_extensions_are_called_with_evm_auth(
     // Perform an authentication operation
     rell.test.tx()
         .op(auth_pub.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-        .op(test_operations.test_auth.test_empty_auth_message())
+        .op(op)
         .sign(rell.test.keypairs.alice)
         .run();
     

@@ -57,7 +57,7 @@ function test_authorizing_operation_with_single_evm_signature_succeeds() {
 
     val op = auth_op.extra_signatures_op([address]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -79,7 +79,7 @@ function test_authorizing_operation_with_evm_signature_fails_when_invalid_signat
 
     val op = auth_op.extra_signatures_op([aliceAddress]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val bobSignature = utils.evm_sign(message, bob.priv);
 
     rell.test.tx()
@@ -94,7 +94,7 @@ function test_authorizing_operation_with_many_evm_signatures_succeeds() {
 
     val op = auth_op.extra_signatures_op([address2, address1]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
     val signature2 = utils.evm_sign(message, rell.test.keypairs.bob.priv);
 
@@ -110,7 +110,7 @@ function test_authorizing_operation_fails_when_evm_signatures_provided_in_wrong_
 
     val op = auth_op.extra_signatures_op([address2, address1]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
     val signature2 = utils.evm_sign(message, rell.test.keypairs.bob.priv);
 
@@ -126,7 +126,7 @@ function test_authorizing_operation_succeeds_with_ft_and_evm_signatures() {
 
     val op = auth_op.extra_signatures_op([aliceAddress, bobPubkey]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val aliceSignature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -151,7 +151,7 @@ function test_authorizing_operation_with_evm_and_ft_signers_fails_when_ft_signat
 
     val op = auth_op.extra_signatures_op([aliceAddress, bobPubkey]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val aliceSignature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -165,7 +165,7 @@ function test_authorizing_operation_with_evm_signatures_succeeds_when_ft_auth_op
 
     val op = auth_op.extra_signatures_op([address]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -180,7 +180,7 @@ function test_authorizing_operation_with_evm_signatures_succeeds_when_evm_auth_o
 
     val op = auth_op.extra_signatures_op([address]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -196,7 +196,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_evm_signature
 
     val op = auth_op.extra_signatures_op([address2, address1]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -213,7 +213,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_invalid_opera
 
     val op = auth_op.extra_signatures_op([address]);
 
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -227,7 +227,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_operation_is_
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
     val op = auth_op.test_authenticated_operation();
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -240,7 +240,7 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
     val op = auth_op.test_authenticated_operation();
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -252,7 +252,7 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
     val op = auth_op.test_authenticated_operation();
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
@@ -265,7 +265,7 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
 
     val op = auth_op.test_authenticated_operation();
-    val message = create_auth_message(auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
+    val message = create_auth_message(op, auth_ext.get_auth_message_template(op.name, op.args.to_gtv()));
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()

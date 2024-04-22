@@ -56,7 +56,7 @@ import {
   createAuthenticator,
   getLoginConfig,
   login,
-  nonce,
+  authDescriptorCounter,
 } from "@ft4/authentication";
 import { ftEventEmitter } from "@ft4/events";
 import {
@@ -255,8 +255,10 @@ export function createAuthDataService(connection: Connection): AuthDataService {
     getAuthMessageTemplate: async (operation: Operation) => {
       return await connection.query(authMessageTemplate(operation));
     },
-    getNonce: async (accountId: BufferId, authDescriptorId: BufferId) =>
-      connection.query(nonce(accountId, authDescriptorId)),
+    getAuthDescriptorCounter: async (
+      accountId: BufferId,
+      authDescriptorId: BufferId,
+    ) => connection.query(authDescriptorCounter(accountId, authDescriptorId)),
     getLoginConfig: (configName?: string) =>
       getLoginConfig(connection, configName),
     getBlockchainRid: () =>

@@ -14,7 +14,7 @@ import {
   compactArray,
   getBlockchainApiUrls,
   getDirectoryClient,
-  getNonceIdForTxContext,
+  getAuthDescriptorCounterIdForTxContext,
   getSystemAnchoringChain,
   getTransactionRid,
 } from "@ft4/utils";
@@ -176,11 +176,11 @@ export function transactionBuilder(
       } catch (e) {
         throw new SigningError(`Unable to sign operation ${operation.name}`, e);
       }
-      const nonceId = getNonceIdForTxContext(
+      const counterId = getAuthDescriptorCounterIdForTxContext(
         authenticator.accountId,
         keyHandler.authDescriptor.id,
       );
-      ctx[nonceId] = (ctx[nonceId] ?? 0) + 1;
+      ctx[counterId] = (ctx[counterId] ?? 0) + 1;
       ops.forEach((op) => processedOperations.push(op));
       opIndex += ops.length;
       opContext.opIndex = opIndex - 1;

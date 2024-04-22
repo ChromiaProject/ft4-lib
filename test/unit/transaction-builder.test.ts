@@ -92,7 +92,7 @@ import {
   BlockAnchoringException,
   RawGtx,
 } from "postchain-client";
-import { nop, op } from "@ft4/utils";
+import { deriveNonce, nop, op } from "@ft4/utils";
 import { ethers } from "ethers";
 
 describe("Transaction Builder", () => {
@@ -173,7 +173,7 @@ describe("Transaction Builder", () => {
       keyHandlers: [keyHandlerMock],
       authDataService: createFakeAuthDataService({}),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
-      getNonce: jest.fn().mockReturnValue(0),
+      getAuthDescriptorCounter: jest.fn().mockReturnValue(0),
     };
     return {
       authenticatorMock,
@@ -1303,7 +1303,7 @@ describe("Transaction Builder", () => {
         })
         .build();
 
-      const message = `auth message with ${formatter.toString(blockchainRid)} 0`;
+      const message = `auth message with ${formatter.toString(blockchainRid)} ${deriveNonce(blockchainRid, emptyOp(), 0)}`;
 
       const expectedTx = gtv.encode([
         [

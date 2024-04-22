@@ -136,7 +136,7 @@ function _validate_evm_signature(
         validated_args, 
         message_template, 
         op.args, 
-        auth_descriptor.ctr
+        utils.derive_nonce(op, auth_descriptor.ctr)
     );
 
     if (auth_descriptor.auth_type == accounts.auth_type.S)
@@ -145,20 +145,15 @@ function _validate_evm_signature(
         _validate_multiple_evm_addresses(message, validated_args.signatures, auth_descriptor);
 }
 
-function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, ctr: integer): text {
+function create_message_from_template(accounts.evm_auth_args, message_template: text, args: list<gtv>, nonce: text): text {
     require(message_template.contains(NONCE_PLACEHOLDER), "Message template has to include '%s'".format(NONCE_PLACEHOLDER));
     require(message_template.contains(BLOCKCHAIN_RID_PLACEHOLDER), "Message template has to include '%s'".format(BLOCKCHAIN_RID_PLACEHOLDER));
     var message = message_template;
     
-    // TODO: check if this is still needed
-    for (i in range(args.size())) {
-        message = message.replace("{%d}".format(i), "%s".format(args[i]).replace("\"", ""));
-    }
-    
     return message
         .replace(ACCOUNT_ID_PLACEHOLDER, evm_auth_args.account.id.to_hex().upper_case())
         .replace(AUTH_DESCRIPTOR_ID_PLACEHOLDER, evm_auth_args.account_auth_descriptor.id.to_hex().upper_case())
-        .replace(NONCE_PLACEHOLDER, ctr.to_text().replace("\"", ""))
+        .replace(NONCE_PLACEHOLDER, nonce)
         .replace(BLOCKCHAIN_RID_PLACEHOLDER, chain_context.blockchain_rid.to_hex().upper_case());
 }
 
@@ -260,7 +255,7 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
 
     var message = message_template
         .replace(BLOCKCHAIN_RID_PLACEHOLDER, chain_context.blockchain_rid.to_hex().upper_case())
-        .replace(NONCE_PLACEHOLDER, "0");
+        .replace(NONCE_PLACEHOLDER, utils.derive_nonce(op, 0));
 
     if (message_template.contains(ACCOUNT_ID_PLACEHOLDER) or message_template.contains(AUTH_DESCRIPTOR_ID_PLACEHOLDER)) {
         val auth_details = require(
