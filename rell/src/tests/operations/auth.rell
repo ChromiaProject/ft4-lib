@@ -67,7 +67,7 @@ operation test_empty_auth_message() {
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
-  acc.add_auth_descriptor_to_account(account, desc);
+  acc.add_auth_descriptor(account, desc);
 }
 
 function test_perform_large_transfer_message(gtv) {

@@ -121,7 +121,7 @@ operation add_auth_descriptor(new_desc: accounts.auth_descriptor) {
     val account = auth.authenticate();
     val signers = accounts.get_signers(new_desc);
     auth.verify_signers(signers);
-    accounts.add_auth_descriptor_to_account(account, new_desc, false);
+    accounts.add_auth_descriptor(account, new_desc);
 }
 
 function update_main_auth_descriptor_message(gtv) {

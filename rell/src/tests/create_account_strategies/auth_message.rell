@@ -94,7 +94,7 @@ function test_register_account_message_with_multi_sig_auth_descriptors() {
         set(list<text>())
     );
 
-    val account_id = strategies.get_account_id_from_signers([
+    val account_id = accounts.get_account_id_from_signers([
         rell.test.keypairs.alice.pub,
         rell.test.keypairs.bob.pub
     ]);
@@ -196,7 +196,7 @@ function test_register_account_message_with_evm_multi_sig_auth_descriptors() {
         set(list<text>())
     );
 
-    val account_id = strategies.get_account_id_from_signers([
+    val account_id = accounts.get_account_id_from_signers([
         alice_address,
         bob_address
     ]);

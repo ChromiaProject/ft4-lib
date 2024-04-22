@@ -9,6 +9,7 @@ import {
   adminUser,
   createAccount,
   createTestAuthDescriptor,
+  getAccountIdFromAuthDescriptor,
   getSessionForAccount,
   singleSigUser as testUser,
   useChromiaNode,
@@ -84,18 +85,23 @@ describe("Test the account", () => {
   });
 
   it("finds main auth descriptor", async () => {
-    const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(AuthFlag.Account)
-      .build();
+    const { authDescriptor } = createTestAuthDescriptor(["A", "T"]);
 
-    const mainAd = await getAccountMainAuthDescriptor(_connection, account.id);
+    await registerAccountAdmin(
+      _connection.client,
+      adminUser().signatureProvider,
+      authDescriptor,
+    );
 
-    expect(mainAd.id.equals(account.id)).toBe(true);
+    const accountId = getAccountIdFromAuthDescriptor(authDescriptor);
+    const mainAd = await getAccountMainAuthDescriptor(_connection, accountId);
+
+    expect(mainAd.id).toEqual(authDescriptor.id);
   });
 
   it("can add new FT auth descriptor if has account edit rights", async () => {
     const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
@@ -108,7 +114,7 @@ describe("Test the account", () => {
 
   it("can add new EVM auth descriptor if has account edit rights", async () => {
     const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const evmKeyStore = createInMemoryEvmKeyStore(pcl.encryption.makeKeyPair());
@@ -124,7 +130,7 @@ describe("Test the account", () => {
 
   it("returns a session that is aware of the new auth descriptor", async () => {
     const account = await AccountBuilder.account(_connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
@@ -208,13 +214,13 @@ describe("Test the account", () => {
 
     await registerAccountAdmin(_connection.client, admin.signatureProvider, ad);
 
-    const adId = deriveAuthDescriptorId(ad);
-    const promise = addAuthDescriptorTo(_connection.client, adId, user1, {
+    const accountId = getAccountIdFromAuthDescriptor(ad);
+    const promise = addAuthDescriptorTo(_connection.client, accountId, user1, {
       signatureProvider: user3.signatureProvider,
       authDescriptor: user3.authDescriptor,
     });
     await expect(promise).rejects.toBeInstanceOf(Error);
-    const acc = await _connection.getAccountById(adId);
+    const acc = await _connection.getAccountById(accountId);
     expect((await acc!.getAuthDescriptors()).length).toBe(1);
   });
 
@@ -258,10 +264,16 @@ describe("Test the account", () => {
   });
 
   it("should return account by auth descriptor id", async () => {
-    const account = await AccountBuilder.account(_connection).build();
+    const { authDescriptor } = createTestAuthDescriptor(["A", "T"]);
+
+    await registerAccountAdmin(
+      _connection.client,
+      adminUser().signatureProvider,
+      authDescriptor,
+    );
 
     const accounts = await _connection.getAccountsByAuthDescriptorId(
-      account.id,
+      authDescriptor.id,
     );
 
     expect(accounts.data.length).toEqual(1);
@@ -323,17 +335,17 @@ describe("Test the account", () => {
     const keyPair = pcl.encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.pubKey,
       null,
     );
 
-    await createAccount(_connection.client, ad);
+    const accountId = await createAccount(_connection.client, ad);
 
     const session = await createKeyStoreInteractor(
       _connection.client,
       keyStore,
-    ).getSession(deriveAuthDescriptorId(ad));
+    ).getSession(accountId);
 
     const keyPair2 = pcl.encryption.makeKeyPair();
     const ad2 = createSingleSigAuthDescriptorRegistration(
@@ -348,7 +360,7 @@ describe("Test the account", () => {
 
     const data = await session.account.getAuthDescriptors();
     const authDesc = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.pubKey,
       null,
     );
@@ -356,15 +368,11 @@ describe("Test the account", () => {
   });
 
   it("has only one auth descriptor after calling deleteAllExceptMain", async () => {
-    const { keyPair, authDescriptor } = createTestAuthDescriptor(["A"]);
+    const { keyPair, authDescriptor } = createTestAuthDescriptor(["A", "T"]);
 
-    await createAccount(_connection.client, authDescriptor);
+    const accountId = await createAccount(_connection.client, authDescriptor);
 
-    const session = await getSessionForAccount(
-      _connection,
-      authDescriptor.id,
-      keyPair,
-    );
+    const session = await getSessionForAccount(_connection, accountId, keyPair);
 
     const { keyStore: keyStore2, authDescriptor: authDescriptor2 } =
       createTestAuthDescriptor(["A"]);
@@ -407,7 +415,9 @@ describe("Test the account", () => {
     );
     await _connection.client.sendTransaction(signed);
 
-    const account = await _connection.getAccountById(user.authDescriptor.id);
+    const account = await _connection.getAccountById(
+      user.authDescriptor.accountId,
+    );
 
     expect(account).not.toBeNull();
   });

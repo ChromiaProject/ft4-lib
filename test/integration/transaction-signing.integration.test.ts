@@ -2,6 +2,7 @@ import {
   adminUser,
   createTestAuthDescriptor,
   createTestAuthDescriptorWithSigner,
+  getAccountIdFromAuthDescriptor,
   testAdFromRegistration,
   useChromiaNode,
 } from "@ft4-test/util";
@@ -10,7 +11,6 @@ import {
   addAuthDescriptor,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
-  deriveAuthDescriptorId,
 } from "@ft4/accounts";
 import { registerAccountAdmin } from "@ft4/admin";
 import {
@@ -48,12 +48,13 @@ describe("Transaction Signing", () => {
   it("correctly signs a transaction with GTX signatures", async () => {
     const { keyPair, authDescriptor: ad } = createTestAuthDescriptor([
       AuthFlag.Account,
+      AuthFlag.Transfer,
     ]);
     await registerAccountAdmin(client, adminUser().signatureProvider, ad);
 
     const keyStore = createInMemoryFtKeyStore(keyPair);
     const authenticator = createAuthenticator(
-      ad.id,
+      getAccountIdFromAuthDescriptor(ad),
       [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
       authDataService,
     );
@@ -71,14 +72,15 @@ describe("Transaction Signing", () => {
   it("correctly signs a transaction with evm signatures", async () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
+    const accountId = gtv.gtvHash(keyStore.id);
+
     const ad = createTestAuthDescriptorWithSigner(
-      gtv.gtvHash(keyPair.pubKey),
+      accountId,
       keyStore.id,
       [...Object.values(AuthFlag)],
       null,
     );
 
-    const accountId = ad.id;
     await registerAccountAdmin(client, adminUser().signatureProvider, ad);
 
     const authenticator = createAuthenticator(
@@ -114,8 +116,8 @@ describe("Transaction Signing", () => {
       null,
     );
 
-    const accountId1 = ad1.id;
-    const accountId2 = ad2.id;
+    const accountId1 = getAccountIdFromAuthDescriptor(ad1);
+    const accountId2 = getAccountIdFromAuthDescriptor(ad2);
 
     await registerAccountAdmin(client, adminUser().signatureProvider, ad1);
     await registerAccountAdmin(client, adminUser().signatureProvider, ad2);
@@ -165,7 +167,7 @@ describe("Transaction Signing", () => {
       null,
     );
 
-    const accountId = deriveAuthDescriptorId(originalAd);
+    const accountId = getAccountIdFromAuthDescriptor(originalAd);
 
     await registerAccountAdmin(
       client,
@@ -223,7 +225,7 @@ describe("Transaction Signing", () => {
       null,
     );
 
-    const accountId = deriveAuthDescriptorId(originalAd);
+    const accountId = getAccountIdFromAuthDescriptor(originalAd);
 
     await registerAccountAdmin(
       client,
@@ -281,7 +283,7 @@ describe("Transaction Signing", () => {
       null,
     );
 
-    const accountId = deriveAuthDescriptorId(originalAd);
+    const accountId = getAccountIdFromAuthDescriptor(originalAd);
 
     await registerAccountAdmin(
       client,
@@ -341,7 +343,7 @@ describe("Transaction Signing", () => {
     const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
 
     const originalAd = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       evmKeyStore1.address,
     );
     const adToAdd = createSingleSigAuthDescriptorRegistration(
@@ -355,7 +357,7 @@ describe("Transaction Signing", () => {
       originalAd,
     );
 
-    const accountId = deriveAuthDescriptorId(originalAd);
+    const accountId = getAccountIdFromAuthDescriptor(originalAd);
     const authDataService = createAuthDataService(connection);
     const authenticator1 = createAuthenticator(
       accountId,
@@ -391,7 +393,7 @@ describe("Transaction Signing", () => {
     const evmKeyStore = createInMemoryEvmKeyStore(keyPair2);
 
     const originalAd = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       ftKeyStore.id,
     );
     const adToAdd = createSingleSigAuthDescriptorRegistration(
@@ -405,7 +407,7 @@ describe("Transaction Signing", () => {
       originalAd,
     );
 
-    const accountId = deriveAuthDescriptorId(originalAd);
+    const accountId = gtv.gtvHash(ftKeyStore.pubKey);
     const authDataService = createAuthDataService(connection);
     const authenticator1 = createAuthenticator(
       accountId,

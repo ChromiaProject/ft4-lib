@@ -24,7 +24,7 @@ describe("Main auth descriptor", () => {
 
   it("can be replaced with new main auth descriptor", async () => {
     const account = await AccountBuilder.account(connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const { keyStore, authDescriptor } = createTestAuthDescriptor();
@@ -60,7 +60,7 @@ describe("Main auth descriptor", () => {
 
   it("can initialize session with new main auth descriptor key", async () => {
     const account = await AccountBuilder.account(connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const { keyStore, authDescriptor: newAuthDescriptor } =
@@ -78,7 +78,7 @@ describe("Main auth descriptor", () => {
 
   it("can get main auth descriptor", async () => {
     const account = await AccountBuilder.account(connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const { keyStore, authDescriptor } = createTestAuthDescriptor();
@@ -90,7 +90,7 @@ describe("Main auth descriptor", () => {
 
   it("cannot be deleted with delete_auth_descriptor operation", async () => {
     const account = await AccountBuilder.account(connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
     const mainAuthDescriptor = await account.getMainAuthDescriptor();

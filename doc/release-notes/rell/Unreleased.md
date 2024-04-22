@@ -12,6 +12,10 @@
 - Removed operation `ft4.register_account_evm_signatures` and use `ft4.evm_signatures` instead
 - Remove `ft4.delete_all_auth_descriptors_exclude` operation (replaced with `ft4.delete_all_auth_descriptors_except_main`).
 - Remove `is_strict` argument to `authenticate()` function. Now `auth_handlers` will always resolve to the handler with the most specific mount scope if no operation auth handler is found.
+- Rename `add_auth_descriptor_to_account` function to `add_auth_descriptor`
+- Remove signature verification from `create_account_with_auth`. Signatures have to be checked separately with `verify_signers`.
+- Rename `_add_signer` to `add_signers`
+- `create_account_with_auth` creates account with id that is equal to hash of signers, instead of id of auth descriptor, if `account_id` argument is not set
 - Rename `ft4.get_auth_descriptor_nonce` to `ft4.get_auth_descriptor_counter`.
 
 ### Changed 🪙

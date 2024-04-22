@@ -20,7 +20,7 @@ function setup_account_with_many_ads() {
   val alice_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
   asset_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
-  val account = acc.account @ { alice_ad.hash() };
+  val account = acc.account @ { rell.test.keypairs.alice.pub.hash() };
   val bob_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
   val eve_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
   val trudy_ad = asset_utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
@@ -66,8 +66,10 @@ function test_items_have_the_correct_return_format() {
 }
 
 function test_get_accounts_by_signer_is_paginated() {
-  val account1 = asset_utils.create_test_account(rell.test.keypairs.alice, ["A"]);
-  val account2 = asset_utils.create_test_account(rell.test.keypairs.alice, ["A", "2"]);
+  val account1 = asset_utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val account2 = asset_utils.create_test_account(rell.test.keypairs.bob, ["A", "T"]);
+  
+  test_op.add_ad_to_account(account2.account, asset_utils.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
 
   val page1 = acc_external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, null);
   val page2 = acc_external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, page1.next_cursor);

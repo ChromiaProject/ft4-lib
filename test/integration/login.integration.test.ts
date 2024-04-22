@@ -49,7 +49,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -71,7 +71,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      ["A"],
+      ["A", "T"],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -89,7 +89,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -111,7 +111,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -146,7 +146,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -170,7 +170,7 @@ describe("Login", () => {
     );
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -206,7 +206,7 @@ describe("Login", () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
       null,
     );
@@ -242,7 +242,7 @@ describe("Login", () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
       null,
     );

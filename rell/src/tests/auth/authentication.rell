@@ -9,7 +9,7 @@ import auth_pub: ^^^.lib.ft4.auth.external;
 import test_operations: ^^.operations;
 
 function test_before_and_after_authenticate_extensions_are_called_with_ft_auth() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
     // Perform an authentication operation
     rell.test.tx()
@@ -31,7 +31,7 @@ function test_before_and_after_authenticate_extensions_are_called_with_ft_auth()
 }
 
 function test_before_and_after_authenticate_extensions_are_called_with_evm_auth() {
-    val alice = utils.evm_register_alice(["A", "E"]); // "E" flag is required by `test_empty_auth_message`
+    val alice = utils.evm_register_alice(["A", "T", "E"]); // "E" flag is required by `test_empty_auth_message`
 
     val op = test_operations.test_auth.test_empty_auth_message();
     val signature = evm_sign(

@@ -9,7 +9,7 @@ import ^^^.lib.ft4.admin;
 import ^.rate_limit_helpers;
 
 function test_create_account_in_genesis_block() {
-  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A"]);
+  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
 
   admin.register_account(auth_descriptor)
       .sign(utils.admin_priv_key())
@@ -23,7 +23,7 @@ function test_create_account_in_genesis_block() {
 }
 
 function test_create_account_after_genesis_block() {
-  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A"]);
+  val auth_descriptor = utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
 
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
@@ -41,7 +41,7 @@ function test_create_account_after_genesis_block() {
 function test_rate_limit_points_increased_after_authenticated_operation_and_time_passed() {
   rell.test.set_block_interval(10000); // set block interval to 10 seconds
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
   val rl_points_before = acc.rl_state @ { .account == alice.account } (.points);
   assert_equals(rl_points_before, 1);
@@ -62,7 +62,7 @@ function test_authenticated_operation_is_rate_limited() {
   assert_equals(acc.get_rate_limit_config().active, true);
   assert_equals(acc.get_rate_limit_config().points_at_account_creation, 1);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
   // Perform the transaction
   rell.test.tx()
@@ -100,7 +100,7 @@ function test_max_rate_limit_points() {
   assert_equals(acc.get_rate_limit_config().active, true);
   assert_equals(acc.get_rate_limit_config().points_at_account_creation, 1);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
   // Wait for long time to accumulate maximum amount of points
   for (_ in range(25)) {
@@ -153,7 +153,7 @@ function test_disable_rate_limit_for_account() {
   assert_equals(acc.get_rate_limit_config().active, true);
   assert_equals(acc.get_rate_limit_config().points_at_account_creation, 1);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
   rell.test.tx()
       .op(rate_limit_helpers.set_admin_account(alice.account))

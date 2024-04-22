@@ -335,7 +335,7 @@ function test_cannot_delete_all_ad_except_main_when_called_with_auth_descriptor_
 }
 
 function test_ad_can_delete_itself_without_account_flag() {
-  val account_data = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val account_data = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
   val ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["T"]);
   rell.test
     .tx(test_op.add_ad_to_account(account_data.account, ad))
@@ -360,7 +360,7 @@ function test_ad_can_delete_itself_without_account_flag() {
 }
 
 function test_the_remaining_ad_is_selected_when_calling_delete_all_auth_descriptors_exclude() {
-  val account_data = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+  val account_data = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
   val ad = utils.create_auth_descriptor(rell.test.keypairs.bob.pub, ["A"]);
   rell.test
     .tx(test_op.add_ad_to_account(account_data.account, ad))

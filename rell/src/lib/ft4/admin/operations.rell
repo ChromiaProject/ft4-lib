@@ -1,7 +1,7 @@
 
 operation register_account(accounts.auth_descriptor) {
     require_admin();
-    accounts.Unsafe.create_account_with_auth(auth_descriptor);
+    accounts.create_account_with_auth(auth_descriptor);
 }
 
 operation register_asset(name, symbol: text, decimals: integer, icon_url: text) {

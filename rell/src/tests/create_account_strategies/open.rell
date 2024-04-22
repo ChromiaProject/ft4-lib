@@ -186,13 +186,13 @@ function test_account_id_does_not_change_if_signers_provided_in_different_orders
     ];
 
     assert_equals(
-        strategies.get_account_id_from_signers(list1),
-        strategies.get_account_id_from_signers(list2)
+        accounts.get_account_id_from_signers(list1),
+        accounts.get_account_id_from_signers(list2)
     );
 
     assert_equals(
-        strategies.get_account_id_from_signers(list2),
-        strategies.get_account_id_from_signers(list3)
+        accounts.get_account_id_from_signers(list2),
+        accounts.get_account_id_from_signers(list3)
     );    
 }
 

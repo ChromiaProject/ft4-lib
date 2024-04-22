@@ -97,6 +97,7 @@ describe("Auth Descriptor Rule", () => {
   it("should delete all auth descriptors", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
       ["A"],
@@ -132,7 +133,7 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(accountId, [keyHandler], authDataService),
     );
 
     expect((await session.account.getAuthDescriptors()).length).toEqual(3);
@@ -149,8 +150,9 @@ describe("Auth Descriptor Rule", () => {
   it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
-    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A"]);
+    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A", "T"]);
 
     await createAccount(_connection.client, ad1);
     await createAccount(_connection.client, ad2);
@@ -170,9 +172,11 @@ describe("Auth Descriptor Rule", () => {
   it("should delete auth descriptor", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
 
     const accountId = await createAccount(_connection.client, ad1);
@@ -193,7 +197,7 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(accountId, [keyHandler], authDataService),
     );
     await session.account.deleteAuthDescriptor(ad2.id);
 

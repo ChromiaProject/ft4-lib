@@ -28,7 +28,7 @@ function test_it_returns_ad_id_selected_by_resolver_if_provided() {
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descriptor_id_when_flags_are_fullfilled() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]);
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
@@ -38,7 +38,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descript
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descriptor_id_when_extra_signers_are_passed() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]);
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
@@ -48,8 +48,8 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descript
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_valid_auth_descriptor_id() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]);
-    val bob = utils.create_test_account(rell.test.keypairs.bob, ["A"]);
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]);
+    val bob = utils.create_test_account(rell.test.keypairs.bob, ["A", "T"]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
@@ -59,7 +59,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_valid_auth_de
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_null_when_flags_are_not_fullfilled() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),

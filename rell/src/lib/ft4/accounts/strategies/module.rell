@@ -24,13 +24,6 @@ function register_account(): accounts.account {
     val strategy = get_strategy(strategy_name);
     val account_details = strategy.account_details(strategy_params);
 
-    val flags = set(accounts.get_flags(account_details.main));
-    val mandatory = accounts.get_auth_flags_config().mandatory;
-    require(
-        flags.contains_all(mandatory),
-        "Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
-    );
-
     var signers = accounts.get_signers(account_details.main);
     if (account_details.disposable??) {
         signers.add_all(accounts.get_signers(account_details.disposable!!));
@@ -43,15 +36,10 @@ function register_account(): accounts.account {
 
     before_register_account(account_id);
 
-    val account = create accounts.account(account_id);
-    val main = accounts.add_auth_descriptor_to_account(account, account_details.main, false);
-    create accounts.main_auth_descriptor(account, main);
-
+    val account = accounts.create_account_with_auth(account_details.main, account_id);
     if (account_details.disposable??) {
-        accounts.add_auth_descriptor_to_account(account, account_details.disposable!!, false);
+        accounts.add_auth_descriptor(account, account_details.disposable!!);
     }
-
-    accounts.create_rate_limiter_state_for_account(account);
 
     strategy.action(account, strategy_params);
 
@@ -63,12 +51,6 @@ function register_account(): accounts.account {
 @extendable function before_register_account(account_id: byte_array);
 
 @extendable function after_register_account(accounts.account);
-
-function get_account_id_from_signers(signers: list<byte_array>) {
-    require(signers.size() > 0, "Cannot derive account id. Signers list is empty");
-
-    return if (signers.size() == 1) signers[0].hash() else signers @* {} (@sort $).hash();
-}
 
 @extendable 
 function strategy(): map<name, _strategy>;

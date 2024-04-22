@@ -10,6 +10,7 @@ import ^^^.lib.ft4.test.utils. { evm_sign };
 import ^.utils;
 import auth_ext: ^^^.lib.ft4.auth.external;
 import test_utils: ^^^.lib.ft4.test.utils;
+import test_ops: ^^.operations;
 
 val too_big = assets.max_asset_amount + 1;
 
@@ -156,15 +157,17 @@ function test_transfer_when_just_enough_balance_will_delete_balance_entity() {
 }
 
 function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() {
-    val auth_descriptor = ft4.acc.single_sig_auth_descriptor(rell.test.keypairs.alice.pub, set(["A"]));
-    val alice = utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.alice, auth_descriptor);
+    val alice = utils.register_alice();
     val bob = utils.register_bob();
+
+    val auth_descriptor = ft4.acc.single_sig_auth_descriptor(rell.test.keypairs.alice.pub, set(list<text>()));
+    test_ops.add_ad_to_account(alice.account, auth_descriptor).run();
 
     val asset = utils.create_asset("test", "TEST", 1);
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(auth_ext.ft_auth(alice.account.id, auth_descriptor.hash()))
         .op(ft4.assets_ext.transfer(bob.account.id, asset.id, 1))
         .sign(alice.keypair)
         .run_must_fail("Some required flags [T] are missing on the (single sig) Auth Descriptor.");

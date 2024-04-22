@@ -1,8 +1,9 @@
-import { createAccount, useChromiaNode } from "@ft4-test/util";
 import {
-  createSingleSigAuthDescriptorRegistration,
-  deriveAuthDescriptorId,
-} from "@ft4/accounts";
+  createAccount,
+  getAccountIdFromAuthDescriptor,
+  useChromiaNode,
+} from "@ft4-test/util";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
 import {
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
@@ -23,14 +24,14 @@ describe("EVM key handler", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      ["A"],
+      ["A", "T"],
       keyStore.address,
       null,
     );
     await createAccount(client, ad);
 
     const session = await createKeyStoreInteractor(client, keyStore).getSession(
-      deriveAuthDescriptorId(ad),
+      getAccountIdFromAuthDescriptor(ad),
     );
 
     const keyPair2 = encryption.makeKeyPair();

@@ -78,11 +78,7 @@ entity rl_state {
 }
 
 
-function add_auth_descriptor_to_account(
-    account,
-    auth_descriptor,
-    safe: boolean = true
-): account_auth_descriptor {
+function add_auth_descriptor(account, auth_descriptor): account_auth_descriptor {
     require(
         (account_auth_descriptor @ { account } (@sum 1))  <
             AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND,
@@ -96,7 +92,8 @@ function add_auth_descriptor_to_account(
     validate_auth_descriptor_rules(auth_descriptor.rules);
 
     val account_auth_descriptor = create account_auth_descriptor (
-        account, id,
+        account, 
+        id,
         auth_descriptor.auth_type,
         args = auth_descriptor.args.to_gtv().to_bytes(),
         rules = auth_descriptor.rules.to_gtv().to_bytes(),
@@ -104,7 +101,7 @@ function add_auth_descriptor_to_account(
         ctr = 0
     );
 
-    _add_signer(account, auth_descriptor, account_auth_descriptor, safe);
+    add_signers(account, auth_descriptor, account_auth_descriptor);
     return account_auth_descriptor;
 }
 
@@ -113,7 +110,7 @@ function add_auth_descriptor_to_account(
  */
 function update_main_auth_descriptor(account, auth_descriptor) {
     delete_main_auth_descriptor(account);
-    val account_auth_descriptor = add_auth_descriptor_to_account(account, auth_descriptor, false);
+    val account_auth_descriptor = add_auth_descriptor(account, auth_descriptor);
     set_main_auth_descriptor(account, account_auth_descriptor);
 }
 
@@ -160,23 +157,25 @@ function delete_all_auth_descriptors_except_main(account) {
     };
 }
 
-function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = true);
-
-function _create_account_with_auth(auth_descriptor, safe: boolean = true): account {
+function create_account_with_auth(auth_descriptor, account_id: byte_array? = null): account {
     require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
     
     var flags = get_flags(auth_descriptor);
-    require("A" in flags, "The auth descriptor used to create an account must always have the 'A' flag");
+    val mandatory = get_auth_flags_config().mandatory;
+    require(
+        flags.contains_all(mandatory),
+        "Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
+    );
 
-    val id = auth_descriptor.hash();
-    val acc = create account (id);
+    val id = account_id ?: get_account_id_from_signers(get_signers(auth_descriptor));
+    val account = create account(id);
 
-    val main = add_auth_descriptor_to_account(acc, auth_descriptor, safe);
-    create main_auth_descriptor(acc, main);
+    val main = add_auth_descriptor(account, auth_descriptor);
+    create main_auth_descriptor(account, main);
 
-    create_rate_limiter_state_for_account(acc);
+    create_rate_limiter_state_for_account(account);
     
-    return acc;
+    return account;
 }
 
 function get_flags(auth_descriptor) {
@@ -194,22 +193,16 @@ function has_flags(account_auth_descriptor, required_flags: list<text>): boolean
     return flags.contains_all(required_flags);
 }
 
-function _add_signer(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
-    val signers = get_signers(auth_descriptor);
-    require(not safe or op_context.get_signers().size() >= signers.size(), "Too few transaction signers");
-    val auth_descriptor_signers = list<struct<auth_descriptor_signer>>();
-    for (signer in signers) {
-        require(not safe or op_context.is_signer(signer), "One signer in the Auth Desc didn't sign this transaction.");
-        auth_descriptor_signers.add(struct<auth_descriptor_signer>(account_auth_descriptor, id = signer));
-    }
-    create auth_descriptor_signer(auth_descriptor_signers);
-}
-
-function _add_evm_signer(account, auth_descriptor, account_auth_descriptor) {
+function add_signers(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
     create auth_descriptor_signer(
         get_signers(auth_descriptor) @* {}
             (struct<auth_descriptor_signer>(account_auth_descriptor, id = $))
     );
+}
+
+function get_account_id_from_signers(signers: list<byte_array>) {
+    require(signers.size() > 0, "Cannot derive account id. Signers list is empty");
+    return if (signers.size() == 1) signers[0].hash() else signers @* {} (@sort $).hash();
 }
 
 function auth_descriptor_by_id(account, id: byte_array) = require(
@@ -300,11 +293,6 @@ function validate_auth_descriptor_args(auth_descriptor) {
         S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
         M -> multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
     }
-}
-
-namespace Unsafe {
-    //WARNING: doesn't check that the account is being created by the owner(s)
-    function create_account_with_auth(auth_descriptor): account = _create_account_with_auth(auth_descriptor, safe = false);
 }
 
 function get_max_allowed_auth_descriptor_rules() = chain_context.args.auth_descriptor.max_rules;

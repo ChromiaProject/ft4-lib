@@ -1,7 +1,6 @@
 import {
   createAccount,
   createTestAuthDescriptor,
-  emptyOp,
   getSessionForAccount,
   rejectedOp,
   useChromiaNode,
@@ -12,7 +11,7 @@ import {
 } from "@ft4/accounts";
 import { Session, createConnection } from "@ft4/ft-session";
 import { AuthorizationError } from "@ft4/transaction-builder";
-import { nop } from "@ft4/utils";
+import { nop, op } from "@ft4/utils";
 import {
   ResponseStatus,
   SignedTransaction,
@@ -31,22 +30,18 @@ describe("transaction builder", () => {
     const connection = createConnection(client);
 
     const { keyPair, authDescriptor: _authDescriptor } =
-      createTestAuthDescriptor(["A"]);
+      createTestAuthDescriptor(["A", "T"]);
     authDescriptor = _authDescriptor;
 
-    await createAccount(connection.client, authDescriptor);
+    const accountId = await createAccount(connection.client, authDescriptor);
 
-    session = await getSessionForAccount(
-      connection,
-      authDescriptor.id,
-      keyPair,
-    );
+    session = await getSessionForAccount(connection, accountId, keyPair);
   });
 
   it("handles missing key handler in buildAndSend()", async () => {
     const promise = session
       .transactionBuilder()
-      .add(emptyOp())
+      .add(op("empty_op_with_auth_handler"))
       .add(nop())
       .buildAndSend();
 
@@ -56,7 +51,7 @@ describe("transaction builder", () => {
   it("handles missing key handler in buildAndSendWithAnchoring()", async () => {
     const promise = session
       .transactionBuilder()
-      .add(emptyOp())
+      .add(op("empty_op_with_auth_handler"))
       .add(nop())
       .buildAndSendWithAnchoring();
 

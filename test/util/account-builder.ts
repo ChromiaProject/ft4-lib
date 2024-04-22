@@ -7,7 +7,6 @@ import {
   addAuthDescriptor,
   createAuthenticatedAccount,
   createSingleSigAuthDescriptorRegistration,
-  deriveAuthDescriptorId,
 } from "@ft4/accounts";
 import { addRateLimitPoints, registerAccountAdmin } from "@ft4/admin";
 import { Asset, Balance, SupportedNumber, createAmount } from "@ft4/asset";
@@ -30,7 +29,11 @@ import {
   gtx,
   newSignatureProvider,
 } from "postchain-client";
-import { adminUser, testAdFromRegistration } from "./util";
+import {
+  adminUser,
+  getAccountIdFromAuthDescriptor,
+  testAdFromRegistration,
+} from "./util";
 
 export class AccountBuilder {
   private connection: Connection;
@@ -144,7 +147,7 @@ export class AccountBuilder {
       ad,
     );
     const account = await this.connection.getAccountById(
-      deriveAuthDescriptorId(ad),
+      getAccountIdFromAuthDescriptor(ad),
     );
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,
@@ -202,13 +205,16 @@ export class AccountBuilder {
   }
 
   private async addAuthDescriptorIfNeeded(
-    account: Account,
+    account: AuthenticatedAccount,
     managerSigProvider: SignatureProvider,
   ) {
     if (this.authDescInfo) {
       const tx = {
         operations: [
-          ftAuth(account.id, account.id),
+          ftAuth(
+            account.id,
+            account.authenticator.keyHandlers[0].authDescriptor.id,
+          ),
           addAuthDescriptor(this.authDescInfo.authDescriptor),
           nop(),
         ],

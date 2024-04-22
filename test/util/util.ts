@@ -8,6 +8,7 @@ import {
   MultiSig,
   SingleSig,
   addAuthDescriptor,
+  aggregateSigners,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
@@ -203,8 +204,9 @@ export async function addAuthDescriptorTo(
   );
 
   const tx = await transactionBuilder(authenticator, client)
-    .add(addAuthDescriptor(newUser.authDescriptor))
-    .addSigners(keyHandlerUser2.keyStore as FtKeyStore)
+    .add(addAuthDescriptor(newUser.authDescriptor), {
+      signers: [keyHandlerUser2.keyStore],
+    })
     .build();
   return client.sendTransaction(tx);
 }
@@ -220,7 +222,7 @@ export async function createAccount(
     ),
     adminUser().signatureProvider,
   );
-  return deriveAuthDescriptorId(descriptor);
+  return getAccountIdFromAuthDescriptor(descriptor);
 }
 
 export async function getSessionForAccount(
@@ -269,4 +271,13 @@ export function* asyncNumberGenerator(): Generator<Promise<number>> {
   while (true) {
     yield Promise.resolve(count++);
   }
+}
+
+export function getAccountIdFromAuthDescriptor(
+  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
+): Buffer {
+  const signers = aggregateSigners(authDescriptor);
+  return pclGtv.gtvHash(
+    signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
+  );
 }

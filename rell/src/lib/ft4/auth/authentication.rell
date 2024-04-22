@@ -180,10 +180,10 @@ function _validate_ft4_signature(
   auth_descriptor: accounts.account_auth_descriptor
 ) {
    	val result: utils.validation_result = accounts.check_auth_args(
-          		auth_descriptor.auth_type,
-          		auth_descriptor.args,
-                accounts.get_signers_from_encoded_auth_descriptor(auth_descriptor.auth_type, auth_descriptor.args),
-          		flags
+        auth_descriptor.auth_type,
+        auth_descriptor.args,
+        accounts.get_signers_from_encoded_auth_descriptor(auth_descriptor.auth_type, auth_descriptor.args),
+        flags
    	);
 
     require(result.valid, result.error!!); // Prints a precise error message.
