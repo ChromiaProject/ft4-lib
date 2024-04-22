@@ -48,7 +48,7 @@ function(sender: accounts.account, recipient_id: byte_array, assets.asset, amoun
     assets.Unsafe.transfer(sender, ensure_pool_account(chain_context.blockchain_rid), asset, amount);
 
     val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
-    create_on_transfer(sender_blockchain_rid, sender.id, recipient_id, asset, amount);
+    pool_assets(sender_blockchain_rid, sender.id, recipient_id, asset, amount);
 }
 
 @extend(assets.recall_on_internal_transfer)
@@ -71,7 +71,7 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id:
         amount
     );
 
-    create_on_transfer(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
+    pool_assets(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
 }
 
 @extend(crosschain.recall_on_crosschain_transfer)
@@ -86,31 +86,7 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, transfer_tx_r
     );
 }
 
-@extend(strategies.after_register_account)
-function(accounts.account) {
-    val pool_account = ensure_pool_account(chain_context.blockchain_rid);
-
-    for (account_creation_transfer in
-            account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending }) {
-        assets.Unsafe.transfer(
-            pool_account,
-            account,
-            account_creation_transfer.asset,
-            account_creation_transfer.amount);
-
-        account_creation_transfer.state = account_creation_state.done;
-        account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;
-        account_creation_transfer.final_op_index = op_context.op_index;
-    }
-}
-
-function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
-    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
-    return accounts.account @? { .id == pool_account_id }
-       ?: create accounts.account(id = pool_account_id);
-}
-
-function create_on_transfer(
+function pool_assets(
         sender_blockchain_rid: byte_array,
         sender_id: byte_array,
         recipient_id: byte_array,
@@ -139,11 +115,43 @@ function create_on_transfer(
     require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
         "This asset is already transferred");
 
-    create account_creation_transfer(
+    pool_assets_with_rules(sender_blockchain_rid, sender_id, recipient_id, asset, amount, rules);
+}
+
+function pool_assets_with_rules(
+        sender_blockchain_rid: byte_array,
+        sender_id: byte_array,
+        recipient_id: byte_array,
+        assets.asset,
+        amount: big_integer,
+        rules: map<text,rule>): account_creation_transfer {
+    return create account_creation_transfer(
         op_context.transaction, op_index = op_context.op_index,
         sender_blockchain_rid, sender_id, recipient_id, asset, amount,
         rules = rules.to_gtv().to_bytes(),
         timestamp = utils.latest_time());
+}
+
+@extend(strategies.after_register_account)
+function(accounts.account) {
+    collect_pooled_assets(account, account.id);
+}
+
+function collect_pooled_assets(accounts.account, recipient_id: byte_array) {
+    for (account_creation_transfer in
+            account_creation_transfer @* { recipient_id, .state == account_creation_state.pending }) {
+        val pool_account = ensure_pool_account(chain_context.blockchain_rid);
+
+        assets.Unsafe.transfer(
+            pool_account,
+            account,
+            account_creation_transfer.asset,
+            account_creation_transfer.amount);
+
+        account_creation_transfer.state = account_creation_state.done;
+        account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;
+        account_creation_transfer.final_op_index = op_context.op_index;
+    }
 }
 
 function do_transfer(accounts.account, strategy: text) {
@@ -208,6 +216,12 @@ function recall_transfer(
     account_creation_transfer.final_op_index = op_context.op_index;
 
     return (account_creation_transfer.asset, account_creation_transfer.amount);
+}
+
+function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
+    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
+    return accounts.account @? { .id == pool_account_id }
+       ?: create accounts.account(id = pool_account_id);
 }
 
 function ensure_fee_account(custom_account_id: byte_array?, blockchain_rid: byte_array): accounts.account {
