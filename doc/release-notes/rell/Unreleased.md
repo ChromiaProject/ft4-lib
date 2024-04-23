@@ -2,36 +2,8 @@
 
 ### Breaking 💔
 
-- added deadline field to init_transfer. The crosschain transfer will fail if applied after this timestamp. It can only be reverted.
-- `latest_time` is now in `utils` instead of `accounts`
-- Rename `_register_account()` function to `register_account()`
-- Requires Rell 0.13.10
-- Changed entity `ft4.crosschain.applied_transfers`
-- Changed entity `ft4.account_creation_transfer`
-- Add field `transaction` to entity `applied_transfers`
-- Removed operation `ft4.register_account_evm_signatures` and use `ft4.evm_signatures` instead
-- Remove `ft4.delete_all_auth_descriptors_exclude` operation (replaced with `ft4.delete_all_auth_descriptors_except_main`).
-- Remove `is_strict` argument to `authenticate()` function. Now `auth_handlers` will always resolve to the handler with the most specific mount scope if no operation auth handler is found.
-- Rename `add_auth_descriptor_to_account` function to `add_auth_descriptor`
-- Remove signature verification from `create_account_with_auth`. Signatures have to be checked separately with `verify_signers`.
-- Rename `_add_signer` to `add_signers`
-- `create_account_with_auth` creates account with id that is equal to hash of signers, instead of id of auth descriptor, if `account_id` argument is not set
-- Rename `ft4.get_auth_descriptor_nonce` to `ft4.get_auth_descriptor_counter`.
-- All module args, of FT4 submodules, in yml config have additional `core` component in module path, e.g. for `accounts` module, module args have to be defined under `lib.ft4.core.accounts` instead of `lib.ft4.accounts`.
-- Removed `ft4_basic` and `ft4_basic_dev` modules.
-
 ### Changed 🪙
-- Change internal structure of FT4 submodules, so that external modules get imported together with core modules, e.g. importing `lib.ft4.accounts` also imports corresponding operations and queries. However it's still possible to import `accounts` entities and functions without operations and queries, by importing `lib.ft4.core.accounts`.
 
 ### Added ✅
-
-- Possibility to revert uncompleted crosschain transfers after deadline has passed.
-- Possibility to recall unclaimed register account transfers after timeout has passed.
-- Added `ft4.delete_all_auth_descriptors_except_main` operation that deletes all auth descriptors except main.
-- Added `auth_flags` config to set mandatory and default auth flags.
-- Updated `ft4.get_register_account_message` to add register account operation parameters to auth message
-- Added `ft4.get_enabled_registration_strategies` query
-- New functions in `ft4.test.utils`
-- Added "lock" accounts support.
 
 ### Fixed 🔧
