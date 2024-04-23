@@ -1,28 +1,35 @@
-import { newSignatureProvider } from "postchain-client";
 import {
+  AccountBuilder,
+  createTestAuthDescriptor,
+  useChromiaNode,
+} from "@ft4-test/util";
+import {
+  AuthDescriptor,
   AuthFlag,
+  SingleSig,
   blockTime,
   createSingleSigAuthDescriptorRegistration,
+  deleteAuthDescriptor,
   deriveAuthDescriptorId,
   greaterThan,
   lessThan,
   opCount,
-} from "@ft4/accounts/auth-descriptor";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+} from "@ft4/accounts";
 import {
+  createAuthenticator,
+  createFtKeyHandler,
+  createInMemoryFtKeyStore,
+  authDescriptorCounter,
+} from "@ft4/authentication";
+import {
+  Connection,
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
-import AccountBuilder from "@ft4/util/account-builder";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+import { AuthorizationError } from "@ft4/transaction-builder";
 import { nop, op } from "@ft4/utils";
-import { nonce } from "@ft4/authentication/queries";
-import { AuthorizationError } from "@ft4/utils/transaction-builder";
-import { createAuthenticator, createFtKeyHandler } from "@ft4/authentication";
-import { createTestAuthDescriptor } from "@ft4/util/util";
-import { deleteAuthDescriptor } from "@ft4/accounts/account-operations";
+import { newSignatureProvider } from "postchain-client";
 
 let connection: Connection;
 
@@ -61,10 +68,10 @@ describe("Key store interactor", () => {
       .withSigner(keyPair2)
       .build();
 
-    await account1.addAuthDescriptor(
-      (await account2.getAuthDescriptors())[0],
-      keyStore2,
-    );
+    const authDescriptor = (
+      await account2.getAuthDescriptors()
+    )[0] as AuthDescriptor<SingleSig>;
+    await account1.addAuthDescriptor(authDescriptor, keyStore2);
 
     const accounts = await createKeyStoreInteractor(
       connection.client,
@@ -177,7 +184,9 @@ describe("Key store interactor", () => {
     ).resolves.not.toThrow();
 
     await expect(
-      session.client.query(nonce(account.id, deriveAuthDescriptorId(ad4))),
+      session.client.query(
+        authDescriptorCounter(account.id, deriveAuthDescriptorId(ad4)),
+      ),
     ).resolves.toBe(1);
   });
 

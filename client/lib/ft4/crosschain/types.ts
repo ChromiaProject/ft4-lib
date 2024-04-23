@@ -1,17 +1,19 @@
-import { Buffer } from "buffer";
-import { Operation, RawGtx } from "postchain-client";
 import { EventEmitter, Listener } from "@ft4/events";
-import { TransactionBuilder } from "@ft4/utils/transaction-builder";
 import { BufferId } from "@ft4/utils";
-import { SignedTransaction, TransactionReceipt } from "postchain-client";
-import { Connection } from "@ft4/index";
-import { Authenticator } from "@ft4/authentication/index";
+import { Buffer } from "buffer";
+import {
+  Operation,
+  RawGtx,
+  SignedTransaction,
+  TransactionReceipt,
+} from "postchain-client";
 
 export type GtvInitTransferArgs = [
   receiverId: Buffer,
   assetId: Buffer,
   amount: bigint,
   hops: Buffer[],
+  deadline: number,
 ];
 
 export type OrchestratorEvents = {
@@ -24,22 +26,16 @@ export type OrchestratorState = {
   currentHopIndex: number;
   path: Buffer[];
   tx?: RawGtx;
+  opIndex?: number;
   initialTx?: RawGtx;
+  initialOpIndex?: number;
 };
 
 export interface OrchestratorBase {
   state: OrchestratorState;
   eventEmitter: EventEmitter<OrchestratorEvents>;
   walkPath: () => Promise<void>;
-  getTransactionBuilderForChain: (
-    connection: Connection,
-    authenticator: Authenticator,
-    blockchainRid: Buffer,
-  ) => Promise<TransactionBuilder>;
-  performCompleteTransfer: (
-    tx: RawGtx,
-    transfer?: PendingTransfer,
-  ) => Promise<void>;
+  performCompleteTransfer: (tx: RawGtx, opIndex: number) => Promise<void>;
   createIccfProofOperation: (
     targetChainRid: Buffer,
     hopIndex: number,
@@ -54,19 +50,25 @@ export interface OrchestratorBase {
 
 export type ExternalOrchestratorBase = Omit<
   OrchestratorBase,
-  | "state"
-  | "walkPath"
-  | "getTransactionBuilderForChain"
-  | "performCompleteTransfer"
-  | "createIccfProofOperation"
+  "state" | "walkPath" | "performCompleteTransfer" | "createIccfProofOperation"
 >;
 
 export type Orchestrator = ExternalOrchestratorBase & {
-  transfer: () => Promise<void>;
+  transfer: () => Promise<TransferRef>;
 };
 
 export type ResumeOrchestrator = ExternalOrchestratorBase & {
   resumeTransfer: () => Promise<void>;
+};
+
+export type RevertOrchestrator = ExternalOrchestratorBase & {
+  revertTransfer: () => Promise<void>;
+  recallUnclaimedTransfer: () => Promise<void>;
+};
+
+export type TransferRef = {
+  tx: RawGtx;
+  opIndex: number;
 };
 
 export type PendingTransfer = {

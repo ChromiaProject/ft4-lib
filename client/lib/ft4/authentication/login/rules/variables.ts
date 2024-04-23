@@ -1,4 +1,4 @@
-import { RuleVariableValue } from "@ft4/accounts/auth-descriptor/rules";
+import { RuleVariableValue } from "@ft4/accounts";
 import {
   LoginConfigRelativeRuleVariable,
   LoginConfigRuleVariable,

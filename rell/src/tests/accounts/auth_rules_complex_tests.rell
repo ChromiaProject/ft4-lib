@@ -1,8 +1,9 @@
 @test
 module;
 
-import ^^^.lib.ft4.accounts;
-import ^^^.lib.ft4.accounts.{
+import lib.ft4.auth;
+import lib.ft4.accounts;
+import lib.ft4.accounts.{
   block_height,
   block_time,
   op_count,
@@ -13,8 +14,8 @@ import ^^^.lib.ft4.accounts.{
 };
 import ^^.assets.utils;
 import test_op: ^^.operations;
-import auth: ^^.operations.auth;
-import auth_ext: ^^^.lib.ft4.auth.external;
+import auth_op: ^^.operations.auth;
+import test_utils: ^^^.lib.ft4.test.utils;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
 function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
@@ -29,13 +30,13 @@ struct account_data {
 }
 
 function setup_account_with_rules(rules: gtv) {
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]);
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]);
 
   return add_expiring_auth_descriptor(alice.account, rules);
 }
 
 function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
-  val bob_ad = utils.create_auth_descriptor(
+  val bob_ad = test_utils.create_auth_descriptor(
     rell.test.pubkeys.bob,
     ["A", "E"],
     rules
@@ -47,8 +48,8 @@ function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
   
   return account_data(
     test_auth_ops = [
-      auth_ext.ft_auth(account.id, bob_ad_id),
-      auth.test_empty_auth_message()
+      auth.external.ft_auth(account.id, bob_ad_id),
+      auth_op.test_empty_auth_message()
     ],
     account = account,
     auth_descriptor_id = bob_ad_id,
@@ -63,9 +64,10 @@ function authenticate_account_signed_tx(account_data, times: integer = 1) {
 }
 
 function authenticate_alice(account_id: byte_array) {
+  val auth_descriptor_id = accounts.account_auth_descriptor @ { .account.id == account_id }.id limit 1;
   rell.test.tx(
-    auth_ext.ft_auth(account_id, account_id),
-    auth.test_empty_auth_message()
+    auth.external.ft_auth(account_id, auth_descriptor_id),
+    auth_op.test_empty_auth_message()
   ).sign(rell.test.keypairs.alice).run();
 }
 
@@ -134,7 +136,7 @@ namespace test_basic_functionality {
   }
 
   function test_cannot_setup_with_too_many_rules() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A"]);
+    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
     val rule_list = list<accounts.rule_expression>();
     for (i in range(accounts.get_max_allowed_auth_descriptor_rules())) {
@@ -148,7 +150,7 @@ namespace test_basic_functionality {
     }
     val rules = accounts.serialize_rules(rule_list);
 
-    val bob_ad = utils.create_auth_descriptor(
+    val bob_ad = test_utils.create_auth_descriptor(
       rell.test.pubkeys.bob,
       ["A"],
       rules
@@ -299,7 +301,7 @@ namespace test_deletion_after_expiration {
   }
 
   function test_delete_only_expired_auth_descriptors() {
-    val account = utils.create_test_account(rell.test.keypairs.alice, ["A", "E"]).account;
+    val account = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]).account;
     val acc_data_valid = [
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([

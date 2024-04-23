@@ -1,4 +1,4 @@
-import { enumValueFromString } from "@ft4/utils/enum-parser";
+import { enumValueFromString } from "@ft4/utils";
 import { serializeAuthType } from "./enum-parsers";
 import { isRawSingleSig, isSingleSigRegistration } from "./type-predicates";
 import {
@@ -14,11 +14,7 @@ import {
   RawSingleSig,
   RawMultiSig,
 } from "./types";
-import {
-  authDescriptorRuleMapper,
-  rulesFromGtv,
-  rulesToGtv,
-} from "./rules/gtv";
+import { authDescriptorRuleMapper, rulesFromGtv, rulesToGtv } from "./rules";
 
 export function mapSingleSigAuthDescriptor(
   ad: RawAuthDescriptor<RawSingleSig>,

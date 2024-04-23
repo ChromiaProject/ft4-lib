@@ -1,14 +1,25 @@
-import { GTX, Operation, formatter } from "postchain-client";
-import { EvmKeyStore, evmAuth } from ".";
-import { hasAuthDescriptorFlags } from "../ft/key-handler";
+import { AnyAuthDescriptor, aggregateSigners } from "@ft4/accounts";
 import {
   AuthDataService,
   KeyHandler,
   KeyHandlerError,
+  hasAuthDescriptorFlags,
 } from "@ft4/authentication";
-import { AnyAuthDescriptor } from "@ft4/accounts";
-import { BufferId, getNonceIdForTxContext } from "@ft4/utils";
-import { TxContext } from "@ft4/utils/types";
+import {
+  BufferId,
+  TxContext,
+  deriveNonce,
+  getAuthDescriptorCounterIdForTxContext,
+} from "@ft4/utils";
+import { GTX, Operation, formatter } from "postchain-client";
+import {
+  ACCOUNT_ID_PLACEHOLDER,
+  AUTH_DESCRIPTOR_ID_PLACEHOLDER,
+  BLOCKCHAIN_RID_PLACEHOLDER,
+  NONCE_PLACEHOLDER,
+  evmAuth,
+} from "./main";
+import { EvmKeyStore } from "./types";
 
 export function createEvmKeyHandler(
   authDescriptor: AnyAuthDescriptor,
@@ -27,7 +38,7 @@ export function createEvmKeyHandler(
     ) =>
       authorize(
         accountId,
-        authDescriptor.id,
+        authDescriptor,
         operation,
         authDataService,
         context,
@@ -41,7 +52,7 @@ export function createEvmKeyHandler(
 
 async function authorize(
   accountId: BufferId,
-  authDescriptorId: BufferId,
+  authDescriptor: AnyAuthDescriptor,
   operation: Operation,
   authDataService: AuthDataService,
   context: TxContext,
@@ -50,10 +61,10 @@ async function authorize(
   const messageTemplate =
     await authDataService.getAuthMessageTemplate(operation);
 
-  const nonce = await getNonce(
+  const counter = await getAuthDescriptorCounter(
     authDataService,
     accountId,
-    authDescriptorId,
+    authDescriptor.id,
     context,
   );
   /*
@@ -63,39 +74,50 @@ async function authorize(
    * The second case shouldn't be reachable unless we allow the tx builder
    * to create an auth descriptor and use it in the same transaction.
    */
-  if (nonce === null) {
+  if (counter === null) {
     throw new KeyHandlerError(
-      "Invalid nonce. Was the auth descriptor too close to expiration?",
+      "Invalid auth descriptor counter. Was the auth descriptor too close to expiration?",
     );
   }
 
   const blockchainRid = authDataService.getBlockchainRid();
   const message = messageTemplate
-    .replace("{account_id}", formatter.ensureBuffer(accountId).toString("hex"))
     .replace(
-      "{auth_descriptor_id}",
-      formatter.ensureBuffer(authDescriptorId).toString("hex"),
+      ACCOUNT_ID_PLACEHOLDER,
+      formatter.toString(formatter.ensureBuffer(accountId)),
     )
-    .replace("{blockchain_rid}", blockchainRid.toString("hex"))
-    .replace("{nonce}", `${nonce}`);
+    .replace(
+      AUTH_DESCRIPTOR_ID_PLACEHOLDER,
+      formatter.toString(formatter.ensureBuffer(authDescriptor.id)),
+    )
+    .replace(BLOCKCHAIN_RID_PLACEHOLDER, formatter.toString(blockchainRid))
+    .replace(NONCE_PLACEHOLDER, deriveNonce(blockchainRid, operation, counter));
 
-  const signature = await keyStore.signMessage(message);
-  return [evmAuth(accountId, authDescriptorId, [signature]), operation];
+  const signers = aggregateSigners(authDescriptor);
+  const signatures = await Promise.all(
+    signers.map((signer) =>
+      signer.equals(keyStore.address) ? keyStore.signMessage(message) : null,
+    ),
+  );
+  return [evmAuth(accountId, authDescriptor.id, signatures), operation];
 }
 
-async function getNonce(
+async function getAuthDescriptorCounter(
   authDataService: AuthDataService,
   accountId: BufferId,
   authDescriptorId: BufferId,
   context: TxContext,
 ) {
-  const nonceId = getNonceIdForTxContext(accountId, authDescriptorId);
-  if (context[nonceId] === undefined) {
-    context[nonceId] = await authDataService.getNonce(
+  const counterId = getAuthDescriptorCounterIdForTxContext(
+    accountId,
+    authDescriptorId,
+  );
+  if (context[counterId] === undefined) {
+    context[counterId] = await authDataService.getAuthDescriptorCounter(
       accountId,
       authDescriptorId,
     );
   }
 
-  return context[nonceId];
+  return context[counterId];
 }

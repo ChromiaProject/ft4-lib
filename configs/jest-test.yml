@@ -2,16 +2,16 @@ blockchains:
   ft4_jest_test:  # Name of the blockchain
     module: tests.client_test_app_module  # Entrypoint to the project
     moduleArgs:
-      lib.ft4.accounts:
+      lib.ft4.core.accounts:
         rate_limit:
           max_points: 10
           recovery_time: 5000
           points_at_account_creation: 2
 
-      lib.ft4.admin:
+      lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      lib.ft4.accounts.strategies.transfer:
+      lib.ft4.core.accounts.strategies.transfer:
         rules: 
           - sender_blockchain: "$"
             sender: "*"
@@ -28,13 +28,24 @@ blockchains:
               - "open"
               - "fee"
               - "subscription"
+          - sender_blockchain: "$"
+            sender: "*"
+            recipient: "*"
+            asset:
+              - name: timeout_asset
+                min_amount: 5L
+            timeout_days: 0
+            strategy:
+              - "open"
+              - "fee"
+              - "subscription"
 
-      lib.ft4.accounts.strategies.transfer.fee:
+      lib.ft4.core.accounts.strategies.transfer.fee:
         asset:
           name: transfer_fee_strategy_asset
           amount: 2L
 
-      lib.ft4.accounts.strategies.transfer.subscription:
+      lib.ft4.core.accounts.strategies.transfer.subscription:
         asset:
           name: transfer_subscription_strategy_asset
           amount: 2L
@@ -50,4 +61,4 @@ libs:
 compile:
   source: ../rell/src
   target: ../rell/out
-  rellVersion: 0.13.5
+  rellVersion: 0.13.10

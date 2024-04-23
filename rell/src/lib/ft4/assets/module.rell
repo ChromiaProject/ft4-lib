@@ -1,9 +1,2 @@
-@mount('ft4')
-module;
-
-import .external;
-import ^.accounts;
-import ^.assets;
-import ^.utils;
-import ^.crosschain;
-import ^.version;
+import ^.core.assets.*;
+import external: ^.external.assets;

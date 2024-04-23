@@ -2,17 +2,17 @@ blockchains:
   ft4_demo: #Name of the blockchain
     module: main #Entrypoint to the project
     moduleArgs:
-      lib.ft4.admin:
+      lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      lib.ft4.accounts.strategies.transfer: # placeholder
+      lib.ft4.core.accounts.strategies.transfer: # placeholder
         rules: 
           timeout_days: 10
 
 compile:
   source: ../rell/src
   target: ../rell/out
-  rellVersion: 0.13.5
+  rellVersion: 0.13.10
 
 libs:
   iccf:

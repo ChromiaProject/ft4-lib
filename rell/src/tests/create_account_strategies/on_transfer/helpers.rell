@@ -3,8 +3,8 @@ module;
 import ^^^^.lib.ft4.accounts;
 import ^^^^.lib.ft4.auth;
 
-operation create_system_account(id: byte_array) {
-    create accounts.account(id);
+operation create_system_account(id: byte_array, type: text) {
+    accounts.create_account_without_auth(id, type);
 }
 
 @extend(auth.auth_handler)

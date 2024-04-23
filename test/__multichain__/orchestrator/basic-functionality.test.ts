@@ -1,0 +1,69 @@
+import { createAmount } from "@ft4/asset";
+import { TestContext, setupTestEnvironment } from "./common-setup";
+import { adminUser } from "@ft4-test/util";
+import { registerCrosschainAsset } from "@ft4/admin";
+
+describe("Basic Functionality", () => {
+  const mintAmount = createAmount(100, 0);
+  let testContext: TestContext;
+
+  beforeEach(async () => {
+    testContext = await setupTestEnvironment("basic-functionality", mintAmount);
+  });
+
+  it("emits events", async () => {
+    const builtListener = jest.fn();
+    const initListener = jest.fn();
+    const hopListener = jest.fn();
+
+    const transferRef = await testContext.account0
+      .crosschainTransfer(
+        testContext.multichain2.rid,
+        testContext.account2.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      )
+      .on("built", builtListener)
+      .on("init", initListener)
+      .on("hop", hopListener);
+
+    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.opIndex).toBe(1);
+
+    expect(builtListener).toHaveBeenCalledTimes(1);
+    expect(initListener).toHaveBeenCalledTimes(1);
+    expect(hopListener).toHaveBeenCalledTimes(1);
+  });
+
+  it("executes multiple hops transfer", async () => {
+    const builtListener = jest.fn();
+    const initListener = jest.fn();
+    const hopListener = jest.fn();
+
+    await registerCrosschainAsset(
+      testContext.connection1.client, // Leaf
+      adminUser().signatureProvider,
+      testContext.sampleAsset,
+      testContext.multichain2.rid, // Branch
+    );
+
+    const transferRef = await testContext.account0
+      .crosschainTransfer(
+        // From root
+        testContext.multichain1.rid, // To branch
+        testContext.account1.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      )
+      .on("built", builtListener)
+      .on("init", initListener)
+      .on("hop", hopListener);
+
+    expect(transferRef.tx[0][0]).toEqual(testContext.account0.blockchainRid);
+    expect(transferRef.opIndex).toBe(1);
+
+    expect(builtListener).toHaveBeenCalledTimes(1);
+    expect(initListener).toHaveBeenCalledTimes(1);
+    expect(hopListener).toHaveBeenCalledTimes(2);
+  });
+});

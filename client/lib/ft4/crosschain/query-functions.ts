@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/index";
+import { Connection, OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import * as Query from "./queries";
 import { PendingTransfer, PendingTransferResponse } from "./types";
 import { Queryable, RawGtx, gtv } from "postchain-client";

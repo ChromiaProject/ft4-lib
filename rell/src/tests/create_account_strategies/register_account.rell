@@ -1,0 +1,60 @@
+@test
+module;
+
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.open;
+import test_utils: lib.ft4.test.utils;
+
+import ^^.assets.utils;
+import ops: ^^.operations;
+
+function test_is_strategy_op_returns_true_when_receives_strategy_operation() {
+    val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice);
+    assert_true(strategies.is_strategy_op(open.ras_open(auth_descriptor).to_gtx_operation()));
+}
+
+function test_is_strategy_op_returns_false_when_receives_non_strategy_operation() {
+    assert_false(strategies.is_strategy_op(ops.empty_op().to_gtx_operation()));
+}
+
+function test_registering_account_adds_main_auth_descriptor() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val main_auth_descriptor = accounts.main_auth_descriptor @ { 
+        .account.id == rell.test.keypairs.alice.pub.hash() 
+    } (
+        .auth_descriptor
+    );
+
+    assert_equals(main_auth_descriptor.id, auth_descriptor.hash());
+}
+
+function test_account_registration_fails_when_mandatory_flags_missing_in_main_auth_descriptor() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[A]>");    
+}
+
+function test_get_enabled_registration_strategies() {
+    assert_equals(
+        strategies.external.get_enabled_registration_strategies(),
+        set(["ft4.ras_open", "ft4.ras_transfer_open", "ft4.ras_transfer_fee", "ft4.ras_transfer_subscription"])
+    );
+}

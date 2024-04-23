@@ -1,28 +1,34 @@
-import { IClient, newSignatureProvider } from "postchain-client";
-import AccountBuilder from "../util/account-builder";
-import adminUser from "../util/admin_user";
-import testUser from "../util/test-user";
 import {
+  AccountBuilder,
   addAuthDescriptorTo,
+  adminUser,
   createAccount,
   createTestAuthDescriptor,
-} from "../util/util";
-import { AuthDescriptorRules, addRateLimitPoints } from "@ft4/index";
-import { lessOrEqual, opCount } from "@ft4/accounts";
-import { createAuthenticatedAccount } from "@ft4/accounts/account-op-functions";
-import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
-import { AuthenticatedAccount } from "@ft4/accounts/types";
-import { Asset } from "@ft4/asset/types";
-import { createAuthenticator } from "@ft4/authentication";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
+  getNewAsset,
+  singleSigUser as testUser,
+  useChromiaNode,
+} from "@ft4-test/util";
 import {
+  AuthDescriptorRules,
+  AuthenticatedAccount,
+  createAuthenticatedAccount,
+  deleteAllAuthDescriptorsExceptMain,
+  lessOrEqual,
+  opCount,
+} from "@ft4/accounts";
+import { addRateLimitPoints } from "@ft4/admin";
+import { Asset } from "@ft4/asset";
+import {
+  createAuthenticator,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
+import {
+  Connection,
   createAuthDataService,
   createConnection,
   createSession,
 } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
-import { getNewAsset } from "@ft4/util/blockchain-util";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+import { IClient, newSignatureProvider } from "postchain-client";
 
 let _connection: Connection;
 let asset: Asset;
@@ -91,6 +97,7 @@ describe("Auth Descriptor Rule", () => {
   it("should delete all auth descriptors", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor(
       ["A"],
@@ -126,14 +133,14 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(accountId, [keyHandler], authDataService),
     );
 
     expect((await session.account.getAuthDescriptors()).length).toEqual(3);
 
     const tx = await session
       .transactionBuilder()
-      .add(deleteAllAuthDescriptorsExclude(session.account.id, ad1.id))
+      .add(deleteAllAuthDescriptorsExceptMain())
       .build();
     await _connection.client.sendTransaction(tx);
 
@@ -143,8 +150,9 @@ describe("Auth Descriptor Rule", () => {
   it("should fail when deleting an auth descriptor which is not owned by the account", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
-    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A"]);
+    const { authDescriptor: ad2 } = createTestAuthDescriptor(["A", "T"]);
 
     await createAccount(_connection.client, ad1);
     await createAccount(_connection.client, ad2);
@@ -164,9 +172,11 @@ describe("Auth Descriptor Rule", () => {
   it("should delete auth descriptor", async () => {
     const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
     const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
       "A",
+      "T",
     ]);
 
     const accountId = await createAccount(_connection.client, ad1);
@@ -187,7 +197,7 @@ describe("Auth Descriptor Rule", () => {
 
     const session = createSession(
       _connection,
-      createAuthenticator(ad1.id, [keyHandler], authDataService),
+      createAuthenticator(accountId, [keyHandler], authDataService),
     );
     await session.account.deleteAuthDescriptor(ad2.id);
 

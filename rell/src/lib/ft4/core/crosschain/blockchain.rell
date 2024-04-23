@@ -1,0 +1,37 @@
+import ^.assets;
+import ^.accounts;
+
+val ACCOUNT_TYPE_BLOCKCHAIN = "FT4_BLOCKCHAIN";
+
+entity asset_origin {
+   key assets.asset;
+   origin_blockchain_rid: byte_array;
+}
+
+function is_blockchain(account_id: byte_array): boolean {
+   return accounts.account @? { .id == account_id, .type == ACCOUNT_TYPE_BLOCKCHAIN }??;
+}
+
+function ensure_blockchain_account(blockchain_rid: byte_array) =
+   accounts.ensure_account_without_auth(blockchain_rid, ACCOUNT_TYPE_BLOCKCHAIN);
+
+namespace Unsafe {
+    function register_crosschain_asset(
+        name,
+        symbol: text,
+        decimals: integer,
+        issuing_blockchain_rid: byte_array,
+        icon_url: text,
+        origin_blockchain_rid: byte_array
+    ): asset_origin {
+        require(origin_blockchain_rid.size() > 0, "origin_blockchain_rid cannot be empty");
+        val asset = assets.Unsafe.register_asset(
+                name,
+                symbol,
+                decimals,
+                issuing_blockchain_rid,
+                icon_url
+            );
+        return create asset_origin(asset, origin_blockchain_rid);
+    }
+}

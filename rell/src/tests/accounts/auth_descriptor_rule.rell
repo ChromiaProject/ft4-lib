@@ -1,8 +1,9 @@
 @test module;
 
 import acc: ^^^.lib.ft4.accounts;
-import test_utils: ^^.assets.utils;
+import asset_utils: ^^.assets.utils;
 import test_op: ^^.operations;
+import test_utils: ^^^.lib.ft4.test.utils;
 
 function test_too_many_account_descriptor_rules() {
   rules_test(acc.serialize_rules([
@@ -88,7 +89,7 @@ function test_active_and_invalid() {
 }
 
 function rules_test(rules: gtv) {
-  val account = test_utils.register_alice().account;
+  val account = asset_utils.register_alice().account;
   val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub, rules = rules);
   return rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob);
 }

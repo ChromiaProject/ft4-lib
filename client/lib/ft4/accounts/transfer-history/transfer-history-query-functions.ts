@@ -1,17 +1,17 @@
 import {
   transferDetails,
   transferDetailsByAsset,
-  RawTransferDetail,
   transferHistoryFromHeight,
 } from "./transfer-history-queries";
 import { Queryable } from "postchain-client";
-import { OptionalPageCursor } from "@ft4/types";
+import { OptionalPageCursor } from "@ft4/ft-session";
 import { retrievePaginatedEntity, BufferId } from "@ft4/utils";
 import {
   TransferDetail,
   TransferHistoryEntry,
   TransferHistoryEntryResponse,
-} from "@ft4/accounts";
+  RawTransferDetail,
+} from "./types";
 import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 
 export function getTransferDetails(

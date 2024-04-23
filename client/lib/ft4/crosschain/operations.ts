@@ -1,20 +1,18 @@
 import { Operation, RawGtx, formatter } from "postchain-client";
 import { Amount } from "@ft4/asset";
 import { op, BufferId } from "@ft4/utils";
-import { GtvInitTransferArgs } from "@ft4/crosschain/types";
-
-// Constant index for init_transfer operation, applicable when not using TransactionBuilder.
-export const OP_INDEX_INIT_TRANSFER = 1;
+import { GtvInitTransferArgs } from "./types";
 
 export function initTransfer(
   recipientId: BufferId,
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
+  deadline: number,
 ): Operation {
   return op(
     "ft4.crosschain.init_transfer",
-    ...getInitTransferArgs(recipientId, assetId, amount, hops),
+    ...getInitTransferArgs(recipientId, assetId, amount, hops, deadline),
   );
 }
 
@@ -23,21 +21,23 @@ export function getInitTransferArgs(
   assetId: BufferId,
   amount: Amount,
   hops: BufferId[],
+  deadline: number,
 ): GtvInitTransferArgs {
   return [
     formatter.ensureBuffer(receiverId),
     formatter.ensureBuffer(assetId),
     amount.value,
     hops.map(formatter.ensureBuffer),
+    deadline,
   ];
 }
 
 export function applyTransfer(
   initTransferTx: RawGtx,
+  initTransferOpIndex: number,
   tx: RawGtx,
+  operationIndex: number,
   targetChainIndex: number,
-  initTransferOpIndex: number = OP_INDEX_INIT_TRANSFER,
-  operationIndex: number = OP_INDEX_INIT_TRANSFER,
 ): Operation {
   return op(
     "ft4.crosschain.apply_transfer",
@@ -51,4 +51,64 @@ export function applyTransfer(
 
 export function completeTransfer(tx: RawGtx, opIndex: number): Operation {
   return op("ft4.crosschain.complete_transfer", tx, opIndex);
+}
+
+export function cancelTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+  tx: RawGtx,
+  operationIndex: number,
+  targetChainIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.cancel_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+    tx,
+    operationIndex,
+    targetChainIndex,
+  );
+}
+
+export function unapplyTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+  tx: RawGtx,
+  operationIndex: number,
+  targetChainIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.unapply_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+    tx,
+    operationIndex,
+    targetChainIndex,
+  );
+}
+
+export function revertTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+  tx: RawGtx,
+  operationIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.revert_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+    tx,
+    operationIndex,
+  );
+}
+
+export function recallUnclaimedTransfer(
+  initTransferTx: RawGtx,
+  initTransferOpIndex: number,
+): Operation {
+  return op(
+    "ft4.crosschain.recall_unclaimed_transfer",
+    initTransferTx,
+    initTransferOpIndex,
+  );
 }

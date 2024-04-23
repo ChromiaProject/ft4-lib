@@ -1,7 +1,6 @@
-import { Connection } from "@ft4/types";
-import { Config } from "@ft4/utils/types";
-import { createConnection } from "@ft4/ft-session";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+import { useChromiaNode } from "@ft4-test/util";
+import { Connection, createConnection } from "@ft4/ft-session";
+import { Config } from "@ft4/utils";
 
 let connection: Connection;
 
@@ -33,6 +32,6 @@ describe("Blockchain", () => {
   it("should provide ft4 rell-side version number", async () => {
     const info = await connection.getVersion();
 
-    expect(info).toEqual("0.6.0");
+    expect(info).toEqual("0.7.0");
   });
 });

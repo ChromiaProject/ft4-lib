@@ -1,4 +1,4 @@
-import { fetchBlockchains } from "./util/blockchain";
+import { fetchBlockchains } from "@ft4-test/util";
 
 describe("Multichain initialization", () => {
   test("multiple blockchains are hosted by the node", async () => {

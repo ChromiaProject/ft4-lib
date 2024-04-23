@@ -1,10 +1,4 @@
-import { RuleVariableValue } from "./operators";
-
-export enum AuthDescriptorRuleVariable {
-  BlockHeight = "block_height",
-  BlockTime = "block_time",
-  OpCount = "op_count",
-}
+import { AuthDescriptorRuleVariable, RuleVariableValue } from "./types";
 
 /**
  * Creates a block height rule variable object that can be passed

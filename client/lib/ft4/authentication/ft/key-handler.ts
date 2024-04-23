@@ -1,12 +1,13 @@
-import { GTX, Operation } from "postchain-client";
-import { FtKeyStore, ftAuth } from ".";
-import { AuthDataService, KeyHandler } from "..";
+import { AnyAuthDescriptor, aggregateSigners } from "@ft4/accounts";
 import {
-  AnyAuthDescriptor,
-  AnyAuthDescriptorRegistration,
-  aggregateSigners,
-} from "@ft4/accounts";
+  AuthDataService,
+  KeyHandler,
+  hasAuthDescriptorFlags,
+} from "@ft4/authentication";
 import { BufferId, TxContext } from "@ft4/utils";
+import { GTX, Operation } from "postchain-client";
+import { FtKeyStore } from "./types";
+import { ftAuth } from "./main";
 
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
@@ -34,13 +35,4 @@ async function authorize(
   operation: Operation,
 ): Promise<Operation[]> {
   return [ftAuth(accountId, authDescriptorId), operation];
-}
-
-export function hasAuthDescriptorFlags(
-  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
-  requiredFlags: string[],
-): boolean {
-  return requiredFlags.every((flag) =>
-    authDescriptor.args.flags.includes(flag),
-  );
 }

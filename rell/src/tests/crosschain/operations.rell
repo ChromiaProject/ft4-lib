@@ -1,17 +1,16 @@
 @test module;
 
-import ^^^.lib.ft4.assets;
+import lib.ft4.auth;
+import lib.ft4.assets;
+import xc: lib.ft4.crosschain;
 import ^^.assets.utils;
 import ^^.extensions;
-import ^^^.lib.ft4.test.utils. { evm_auth_operation_for };
-import auth_ext: ^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^.lib.ft4.crosschain.external;
-import xc: ^^^.lib.ft4.crosschain;
-import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
+import lib.ft4.test.utils. { evm_auth_operation_for };
+import admin_crosschain: lib.ft4.admin.crosschain;
 import iccf_op: ^^.operations.iccf_op;
 
 function test_register_crosschain_asset_works() {
-    admin_crosschain.register_crosschain_asset(
+    admin_crosschain.external.register_crosschain_asset(
             "name",
             "SYM",
             2,
@@ -24,7 +23,7 @@ function test_register_crosschain_asset_works() {
 }
 
 function test_register_crosschain_asset_validates_issuing_blockchain_rid() {
-    admin_crosschain.register_crosschain_asset(
+    admin_crosschain.external.register_crosschain_asset(
             "name",
             "SYM",
             2,
@@ -37,7 +36,7 @@ function test_register_crosschain_asset_validates_issuing_blockchain_rid() {
 }
 
 function test_register_crosschain_asset_validates_origin_blockchain_rid() {
-    admin_crosschain.register_crosschain_asset(
+    admin_crosschain.external.register_crosschain_asset(
             "name",
             "SYM",
             2,
@@ -55,8 +54,14 @@ function test_init_transfer_fails_when_amount_is_zero() {
     val asset_valid = utils.create_asset("validAsset", "va", 1);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 0L, [x"abcdef"]))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
+            bob.account.id,
+            asset_valid.id,
+            0L,
+            [x"abcdef"],
+            10000000000000
+        ))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Parameter amount: value must be non-zero positive, actual: %s".format(0));
 }
@@ -68,10 +73,38 @@ function test_init_transfer_fails_when_asset_is_invalid() {
     val asset_id_invalid = x"deadbeef";
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(bob.account.id, asset_id_invalid, 5L, [x"abcdef"]))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
+            bob.account.id,
+            asset_id_invalid,
+            5L,
+            [x"abcdef"],
+            10000000000000
+        ))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Asset not found");
+}
+
+// Test for valid asset and valid amount
+function test_init_transfer_fails_if_expired() {
+    val alice = utils.register_alice();
+    val bob = utils.register_bob();
+    val asset_valid = utils.create_asset("validAsset", "va", 1);
+
+    // Mint some asset to Alice's account for a valid test
+    utils.mint(alice.account, asset_valid, 10L);
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
+            bob.account.id,
+            asset_valid.id,
+            5L,
+            [x"abcdef"],
+            1
+        ))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("Parameter 'deadline' cannot be a past timestamp. Value: 1");
 }
 
 // Test for valid asset and valid amount
@@ -84,8 +117,14 @@ function test_init_transfer_succeeds_under_valid_conditions() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
+            bob.account.id,
+            asset_valid.id,
+            5L,
+            [x"abcdef"],
+            10000000000000
+        ))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
     
@@ -109,7 +148,13 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
 
     utils.mint(alice.account, asset_valid, 10L);
 
-    val op = xchain_ext.init_transfer(bob.account.id, asset_valid.id, 5L, [x"abcdef"]);
+    val op = xc.external.init_transfer(
+        recipient_id = bob.account.id,
+        asset_id = asset_valid.id,
+        amount = 5L,
+        hops = [x"abcdef"],
+        deadline = 10000000000000
+    );
 
     rell.test.tx()
         .op(evm_auth_operation_for(alice.keypair.priv, op))
@@ -131,12 +176,13 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -146,7 +192,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
     
@@ -167,6 +213,40 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     assert_true(extensions.crosschain_extensions_state.after_apply_transfer_is_final);
 }
 
+function test_apply_transfer_fails_if_expired() {
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+    val bob = utils.register_bob();
+
+    val source_blockchain_rid = x"abcdef";
+    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+
+    // Simulate an expired transaction and operation index
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset_valid.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 1
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("This transfer has expired at timestamp <1>. It can only be reverted.");
+}
+
 function test_apply_transfer_fails_when_applied_twice() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
@@ -180,12 +260,13 @@ function test_apply_transfer_fails_when_applied_twice() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -195,20 +276,20 @@ function test_apply_transfer_fails_when_applied_twice() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
         .run_must_fail(
             "Transaction <%s> transfer at index <1> has already been applied on this chain."
             .format(
-                tx.to_gtv().hash()
+                tx.body.to_gtv().hash()
             )
         ); // Should fail
 }
@@ -222,12 +303,13 @@ function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = alice.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
-                    hops = [x"abcdef"]
+                    hops = [x"abcdef"],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -239,12 +321,13 @@ function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
-                    hops = [x"abcdef"]
+                    hops = [x"abcdef"],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -253,7 +336,7 @@ function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.apply_transfer(wrong_tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(wrong_tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Invalid parameter. Previous hop tx must be equal to init transfer t");
 }
@@ -268,12 +351,13 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                auth_ext.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(x"".hash(), x"".hash()).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
-                    hops = hops
+                    hops = hops,
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -284,7 +368,7 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
         body = gtx_transaction_body(
             blockchain_rid = x"deadbeef",
             operations = [
-                xchain_ext.apply_transfer(
+                xc.external.apply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -300,9 +384,9 @@ function test_apply_transfer_fails_with_invalid_hop_index() {
     val hop_index = 100; // Invalid hop index
 
     rell.test.tx()
-        .op(xchain_ext.apply_transfer(init_tx, 1, apply_tx, 0, hop_index))
+        .op(xc.external.apply_transfer(init_tx, 1, apply_tx, 0, hop_index))
         .sign(rell.test.keypairs.alice)
-        .run_must_fail("Argument mismatch: init_args.hops size (%d) is greater than hop_index (%d)".format(hops.size(), hop_index));
+        .run_must_fail("Argument mismatch: init_transfer hops size (%d) is greater than hop_index (%d)".format(hops.size(), hop_index));
 }
 
 function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_on_transfer_strategy_is_not_enabled() {
@@ -318,12 +402,13 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id.hash(), sender_auth_descriptor_id.hash()).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id.hash(), sender_auth_descriptor_id.hash()).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bogus_recipient_id,
                     asset_id = asset_valid.id,
                     amount = 5L,
-                    hops = [chain_context.blockchain_rid]
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
                 ).to_gtx_operation()
             ],
             signers = []
@@ -333,7 +418,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Account <%s> does not exist and creating accounts on transfer is not enabled".format(bogus_recipient_id));
 }

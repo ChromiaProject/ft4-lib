@@ -1,37 +1,41 @@
-import { Buffer } from "buffer";
 import {
-  AuthFlag,
-  deriveAuthDescriptorId,
+  Account,
   AnyAuthDescriptorRegistration,
   AuthDescriptorRules,
+  AuthFlag,
+  AuthenticatedAccount,
+  addAuthDescriptor,
+  createAuthenticatedAccount,
   createSingleSigAuthDescriptorRegistration,
-} from "@ft4/accounts/auth-descriptor";
-import { Asset, Balance, SupportedNumber } from "@ft4/asset/types";
-import { Account, AuthenticatedAccount } from "@ft4/accounts/types";
+} from "@ft4/accounts";
+import { addRateLimitPoints, registerAccountAdmin } from "@ft4/admin";
+import { Asset, Balance, SupportedNumber, createAmount } from "@ft4/asset";
 import {
-  gtx,
+  createAuthenticator,
+  createInMemoryFtKeyStore,
+  ftAuth,
+} from "@ft4/authentication";
+import {
+  Connection,
+  createAuthDataService,
+  createConnection,
+} from "@ft4/ft-session";
+import { nop, op } from "@ft4/utils";
+import { Buffer } from "buffer";
+import {
   KeyPair,
-  newSignatureProvider,
   Operation,
   SignatureProvider,
+  gtx,
+  newSignatureProvider,
 } from "postchain-client";
-import admin from "./admin_user";
-import { createAmount } from "@ft4/asset/amount";
-import { createAuthenticatedAccount } from "@ft4/accounts/account-op-functions";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { createAuthenticator, ftAuth } from "@ft4/authentication";
-import { createAuthDataService, createConnection } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
 import {
-  addRateLimitPoints,
-  registerAccount,
-} from "@ft4/admin/admin-op-functions";
-import { nop } from "@ft4/utils";
-import { addAuthDescriptor } from "@ft4/accounts/account-operations";
-import { op } from "@ft4/index";
-import { testAdFromRegistration } from "./util";
+  adminUser,
+  getAccountIdFromAuthDescriptor,
+  testAdFromRegistration,
+} from "./util";
 
-class AccountBuilder {
+export class AccountBuilder {
   private connection: Connection;
   private balances: Balance[] = [];
   private rules: AuthDescriptorRules | null = null;
@@ -137,13 +141,13 @@ class AccountBuilder {
     managerSigProv = this.signer,
   ): Promise<AuthenticatedAccount> {
     const ad = this.getAccountManagerAuthDescriptor(managerSigProv);
-    await registerAccount(
+    await registerAccountAdmin(
       this.connection.client,
-      admin().signatureProvider,
+      adminUser().signatureProvider,
       ad,
     );
     const account = await this.connection.getAccountById(
-      deriveAuthDescriptorId(ad),
+      getAccountIdFromAuthDescriptor(ad),
     );
     const keyHandler = createInMemoryFtKeyStore(
       managerSigProv,
@@ -164,7 +168,7 @@ class AccountBuilder {
 
   private async addBalanceIfNeeded(account: Account) {
     if (this.balances.length) {
-      const adminSignatureProvider = admin().signatureProvider;
+      const adminSignatureProvider = adminUser().signatureProvider;
       const tx: { operations: Operation[]; signers: Buffer[] } = {
         operations: [],
         signers: [adminSignatureProvider.pubKey],
@@ -190,7 +194,7 @@ class AccountBuilder {
 
   private async addPointsIfNeeded(account: Account) {
     if (this.points > 0) {
-      const adminSignatureProvider = admin().signatureProvider;
+      const adminSignatureProvider = adminUser().signatureProvider;
       await addRateLimitPoints(
         this.connection.client,
         adminSignatureProvider,
@@ -201,13 +205,16 @@ class AccountBuilder {
   }
 
   private async addAuthDescriptorIfNeeded(
-    account: Account,
+    account: AuthenticatedAccount,
     managerSigProvider: SignatureProvider,
   ) {
     if (this.authDescInfo) {
       const tx = {
         operations: [
-          ftAuth(account.id, account.id),
+          ftAuth(
+            account.id,
+            account.authenticator.keyHandlers[0].authDescriptor.id,
+          ),
           addAuthDescriptor(this.authDescInfo.authDescriptor),
           nop(),
         ],

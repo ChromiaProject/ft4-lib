@@ -2,16 +2,16 @@ blockchains:
   hello:
     module: main
     moduleArgs:
-      lib.ft4.accounts:
+      lib.ft4.core.accounts:
         rate_limit:
           points_at_account_creation: 2
 
-      lib.ft4.admin:
+      lib.ft4.core.admin:
         admin_pubkey: x"02D44929DC9C5F9A4A35AA38329542373388514EE3E3C6360129ECFA555D43755D"
 
 
 compile:
-  rellVersion: 0.13.5
+  rellVersion: 0.13.10
 
 libs:
   ft4:

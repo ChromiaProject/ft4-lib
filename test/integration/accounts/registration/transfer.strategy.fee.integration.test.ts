@@ -1,22 +1,16 @@
-import { registerAccount } from "@ft4/accounts/registration";
+import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import { Asset, createAmountFromBalance } from "@ft4/asset";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
 import {
-  Connection,
-  createConnection,
-  createInMemoryFtKeyStore,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/index";
-import { Asset } from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { encryption } from "postchain-client";
-import { gtv } from "postchain-client";
-import { getNewAsset } from "@ft4/util/blockchain-util";
-import AccountBuilder from "@ft4/util/account-builder";
-import { pendingTransferStrategies } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { open } from "@ft4/accounts/registration/strategies/open/index";
-import { transferFee } from "@ft4/accounts/registration/strategies/transfer/fee/index";
-import { feeAssets } from "@ft4/accounts/registration/strategies/transfer/fee/queries";
-import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { createAmountFromBalance } from "@ft4/index";
+  allowedAssets,
+  feeAssets,
+  pendingTransferStrategies,
+  registerAccount,
+  registrationStrategy,
+} from "@ft4/registration";
+import { encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -73,9 +67,9 @@ describe("Test transfer with fee", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
-      transferFee(asset, authDescriptor),
+      registrationStrategy.transferFee(asset, authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -121,9 +115,9 @@ describe("Test transfer with fee", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
-      open(authDescriptor),
+      registrationStrategy.open(authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);

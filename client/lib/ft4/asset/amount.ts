@@ -1,31 +1,14 @@
-import { Amount, DecimalFormat, SupportedNumber } from "./types";
+import {
+  AmountDecimalsError,
+  AmountInputError,
+  AmountOutOfRangeError,
+} from "./error";
+import { Amount, DecimalFormat, RawAmount, SupportedNumber } from "./types";
 
-export type RawAmount = { value: bigint; decimals: number };
 type AnyAssetAmount = RawAmount | Amount;
 
 // (2^256)-1 = (2^(4*64))-1 = (16^64)-1
 export const MAX = BigInt("0x" + "f".repeat(64));
-
-export class AmountInputError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AmountInputError";
-  }
-}
-
-export class AmountOutOfRangeError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AmountOutOfRangeError";
-  }
-}
-
-export class AmountDecimalsError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AmountDecimalsError";
-  }
-}
 
 function buildAmountObject(amount: RawAmount): Amount {
   checkValueInRange(amount.value);
@@ -54,6 +37,12 @@ function buildAmountObject(amount: RawAmount): Amount {
       lte(amount, convertToRawAmount(other, amount.decimals)),
     eq: (other: SupportedNumber) =>
       eq(amount, convertToRawAmount(other, amount.decimals)),
+
+    equals: (other: SupportedNumber) =>
+      eq(amount, convertToRawAmount(other, amount.decimals)),
+
+    compare: (other: SupportedNumber) =>
+      compare(amount, convertToRawAmount(other, amount.decimals)),
 
     toString: () => stringify(amount),
     format: function (
@@ -408,6 +397,11 @@ function gte(amount: RawAmount, other: RawAmount): boolean {
 function lte(amount: AnyAssetAmount, other: RawAmount): boolean {
   requireSameDecimals(amount, other);
   return amount.value <= other.value;
+}
+
+function compare(amount: AnyAssetAmount, other: RawAmount): number {
+  requireSameDecimals(amount, other);
+  return amount.value < other.value ? -1 : amount.value > other.value ? 1 : 0;
 }
 
 function requireSameDecimals(amount: AnyAssetAmount, other: RawAmount): void {

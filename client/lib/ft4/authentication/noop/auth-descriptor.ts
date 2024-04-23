@@ -1,9 +1,5 @@
 import { Buffer } from "buffer";
-import {
-  AuthDescriptor,
-  AuthType,
-  SingleSig,
-} from "@ft4/accounts/auth-descriptor";
+import { AuthDescriptor, AuthType, SingleSig } from "@ft4/accounts";
 
 export const nullAuthDescriptor: AuthDescriptor<SingleSig> = Object.freeze({
   id: Buffer.alloc(32, 0),

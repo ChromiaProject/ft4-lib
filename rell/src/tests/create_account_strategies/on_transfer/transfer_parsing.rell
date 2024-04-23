@@ -346,7 +346,23 @@ function test_get_config_fails_when_mandatory_values_are_missing() {
     )].to_gtv_pretty();
 
     assert_fails(
-        "Key missing in Gtv dictionary: field 'lib.ft4.accounts.strategies.transfer:module_args_list_element.strategy'",
+        "Key missing in Gtv dictionary: field 'lib.ft4.core.accounts.strategies.transfer:module_args_list_element.strategy'",
+        create_on_transfer.get_config(rule_gtv_pretty, *)
+    );
+}
+
+function test_get_config_fails_when_timeout_days_is_negative() {
+    val rule_gtv_pretty = [(
+        timeout_days = -1,
+        sender_blockchain = ["012345"],
+        sender = "*",
+        recipient = "*",
+        asset = "*",
+        strategy = ["open"]
+    )].to_gtv_pretty();
+
+    assert_fails(
+        "timeout_days cannot be negative",
         create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }

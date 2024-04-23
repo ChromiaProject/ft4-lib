@@ -1,21 +1,29 @@
-import { newSignatureProvider } from "postchain-client";
+import {
+  AccountBuilder,
+  singleSigUser as TestUser,
+  adminUser,
+  createTestAuthDescriptor,
+  getAccountIdFromAuthDescriptor,
+  getNewAsset,
+  useChromiaNode,
+} from "@ft4-test/util";
 import {
   AuthFlag,
-  deriveAuthDescriptorId,
+  createAuthenticatedAccount,
   createMultiSigAuthDescriptorRegistration,
-} from "@ft4/accounts/auth-descriptor";
-import { createAmount } from "@ft4/asset/amount";
-import { Asset } from "@ft4/asset/types";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { createConnection, createKeyStoreInteractor } from "@ft4/ft-session";
-import AccountBuilder from "../util/account-builder";
-import adminUser from "../util/admin_user";
-import { getNewAsset } from "../util/blockchain-util";
-import TestUser from "../util/test-user";
-import { registerAccount } from "@ft4/admin/admin-op-functions";
-import { Connection } from "@ft4/types";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { IClient } from "postchain-client";
+} from "@ft4/accounts";
+import { registerAccountAdmin } from "@ft4/admin";
+import { Asset, createAmount } from "@ft4/asset";
+import {
+  createAuthenticator,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
+import {
+  Connection,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
+import { IClient, newSignatureProvider } from "postchain-client";
 
 let asset: Asset;
 let connection: Connection;
@@ -75,19 +83,35 @@ describe("Transfer", () => {
 
   it("should fail if auth descriptor doesn't have transfer rights", async () => {
     const account1 = await AccountBuilder.account(connection)
-      .withAuthFlags(AuthFlag.Account)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
 
+    // Add auth descriptor without T flag
+    const { authDescriptor, keyStore } = createTestAuthDescriptor([]);
+    await account1.addAuthDescriptor(authDescriptor, keyStore);
+    const authenticator = createAuthenticator(
+      account1.id,
+      [keyStore.createKeyHandler(authDescriptor)],
+      account1.authenticator.authDataService,
+    );
+    // Initialize account object to use only auth descriptor without T flag
+    const accountSessionWithoutTFlag = createAuthenticatedAccount(
+      connection,
+      authenticator,
+    );
+
     const account2 = await AccountBuilder.account(connection).build();
 
-    const promise = account1.transfer(
+    const promise = accountSessionWithoutTFlag.transfer(
       account2.id,
       asset.id,
       createAmount(10, asset.decimals),
     );
-    await expect(promise).rejects.toBeInstanceOf(Error);
+    await expect(promise).rejects.toThrow(
+      "No key handler registered to handle operation <ft4.transfer>",
+    );
   });
 
   it("should succeed if transferring tokens to a multisig account", async () => {
@@ -105,14 +129,14 @@ describe("Transfer", () => {
       2,
       null,
     );
-    await registerAccount(
+    await registerAccountAdmin(
       connection.client,
       admin.signatureProvider,
       authDescriptor,
     );
 
     const account2 = await createConnection(connection.client).getAccountById(
-      deriveAuthDescriptorId(authDescriptor),
+      getAccountIdFromAuthDescriptor(authDescriptor),
     );
 
     await account1.transfer(

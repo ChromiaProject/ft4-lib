@@ -1,5 +1,13 @@
 import { Buffer } from "buffer";
-import { Amount, Asset, AssetResponse } from "@ft4/asset/types";
+import { Amount, Asset, AssetResponse } from "@ft4/asset";
+
+export type RawTransferDetail = {
+  blockchain_rid: Buffer;
+  account_id: Buffer;
+  asset_id: Buffer;
+  delta: bigint;
+  is_input: number;
+};
 
 export class TransferHistoryError extends Error {
   constructor(msg?) {

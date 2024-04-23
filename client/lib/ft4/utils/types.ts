@@ -1,8 +1,10 @@
 import { TransactionReceipt } from "postchain-client";
-import { OptionalPageCursor, Session } from "@ft4/types";
+import { OptionalPageCursor, Session } from "@ft4/ft-session";
 import { Buffer } from "buffer";
 
 export type BufferId = string | Buffer;
+
+export type EnumLike = Record<string, string | number>;
 
 export type Config = {
   rateLimit: {
@@ -46,7 +48,7 @@ export type PaginatedEntity<T> = {
   nextCursor: OptionalPageCursor;
 };
 
-export type TxContext = { [nonceId: string]: number | null };
+export type TxContext = { [counterId: string]: number | null };
 
 export interface RellAppStructure {
   [modules: string]: Record<string, RellModuleStructure>;
@@ -72,3 +74,28 @@ export type TransactionCompletion<T = undefined> = T extends undefined
 export type TransactionSessionCompletion<T = undefined> = T extends undefined
   ? { receipt: TransactionReceipt; session: Session }
   : { receipt: TransactionReceipt; session: Session; data: T };
+
+export type DeepReadonly<T> = T extends (infer R)[]
+  ? DeepReadonlyArray<R>
+  : T extends object
+    ? DeepReadonlyObject<T>
+    : T;
+
+export interface DeepReadonlyArray<T> extends ReadonlyArray<DeepReadonly<T>> {}
+
+type DeepReadonlyObject<T> = {
+  readonly [P in keyof T]: DeepReadonly<T[P]>;
+};
+
+export type ConfigResponse = {
+  rate_limit: {
+    active: 0 | 1;
+    max_points: number;
+    recovery_time: number;
+    points_at_account_creation: number;
+  };
+  auth_descriptor: {
+    max_rules: number;
+    max_number_per_account: number;
+  };
+};

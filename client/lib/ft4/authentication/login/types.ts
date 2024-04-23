@@ -1,8 +1,8 @@
-import { Session } from "@ft4/index";
+import { Session } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
 import { LoginConfigRules } from "./rules";
-import { RawRules } from "@ft4/accounts/auth-descriptor/rules";
-import { LoginKeyStore } from "@ft4/authentication/login/stores/types";
+import { RawRules } from "@ft4/accounts";
+import { LoginKeyStore } from "./stores";
 
 export type LoginConfig = {
   flags: string[];

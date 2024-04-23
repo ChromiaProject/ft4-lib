@@ -1,12 +1,11 @@
 @test
 module;
-import ^^^.main.*;
+
+import lib.ft4.auth;
+import lib.ft4.admin;
+import lib.ft4.assets;
+import ft4_utils: lib.ft4.utils;
 import ^^.extensions.*;
-import ^^^.lib.ft4.ft4_basic_dev.*;
-import ^^^.lib.ft4.admin;
-import auth_ext: ^^^.lib.ft4.auth.external;
-import ^^^.lib.ft4.assets;
-import ft4_utils: ^^^.lib.ft4.utils;
 import ^.utils;
 import test_op: ^^.operations;
 
@@ -16,7 +15,7 @@ function test_mint() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     
@@ -28,13 +27,13 @@ function test_burn() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, 3L))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, 3L))
         .sign(alice.keypair)
         .run();
 
@@ -46,13 +45,13 @@ function test_burn_all() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
 
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, 10L))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, 10L))
         .sign(alice.keypair)
         .run();
 
@@ -64,7 +63,7 @@ function test_mint_fails_if_amount_is_too_high() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, too_big)
+    admin.external.mint(alice.account.id, asset.id, too_big)
         .sign(utils.admin_priv_key())
         .run_must_fail("Parameter amount: value must be lower than 2^256, actual: %d".format(too_big));
 }
@@ -73,7 +72,7 @@ function test_mint_fails_if_amount_is_too_low() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, 0)
+    admin.external.mint(alice.account.id, asset.id, 0)
         .sign(utils.admin_priv_key())
         .run_must_fail("Parameter amount: value must be non-zero positive, actual: %d".format(0));
 }
@@ -82,10 +81,10 @@ function test_mint_fails_if_supply_is_too_high() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, too_big-1)
+    admin.external.mint(alice.account.id, asset.id, too_big-1)
         .sign(utils.admin_priv_key())
         .run();
-    admin.mint(alice.account.id, asset.id, 1)
+    admin.external.mint(alice.account.id, asset.id, 1)
         .sign(utils.admin_priv_key())
         .run_must_fail("End total supply must be lower than 2^256");
 }
@@ -95,8 +94,8 @@ function test_burn_fails_if_amount_is_too_high() {
     val asset = utils.create_asset("test", "TST", 0);
     
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, too_big))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, too_big))
         .sign(alice.keypair)
         .run_must_fail("Parameter amount: value must be lower than 2^256, actual: %d".format(too_big));
 }
@@ -106,8 +105,8 @@ function test_burn_fails_if_amount_is_too_low() {
     val asset = utils.create_asset("test", "TST", 0);
     
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, 0))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, 0))
         .sign(alice.keypair)
         .run_must_fail("Parameter amount: value must be non-zero positive, actual: %d".format(0));
 }
@@ -116,12 +115,12 @@ function test_burn_fails_if_balance_is_too_low() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, 1)
+    admin.external.mint(alice.account.id, asset.id, 1)
         .sign(utils.admin_priv_key())
         .run();
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, 2))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, 2))
         .sign(alice.keypair)
         .run_must_fail("Insufficient balance");
 }
@@ -130,7 +129,7 @@ function test_before_mint_extensions_are_called() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     
@@ -143,7 +142,7 @@ function test_before_mint_extensions_are_called() {
 function test_after_mint_extensions_are_called() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset = utils.create_asset("test", "TST", 0);
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     
@@ -157,13 +156,13 @@ function test_before_burn_extensions_are_called() {
     val alice = utils.register_alice();
     val asset = utils.create_asset("test", "TST", 0);
     
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
     
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, 10L))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, 10L))
         .sign(alice.keypair)
         .run();
 
@@ -177,13 +176,13 @@ function test_after_burn_extensions_are_called() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset = utils.create_asset("test", "TST", 0);
 
-    admin.mint(alice.account.id, asset.id, 10L)
+    admin.external.mint(alice.account.id, asset.id, 10L)
         .sign(utils.admin_priv_key())
         .run();
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.burn(asset.id, 10L))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.burn(asset.id, 10L))
         .sign(alice.keypair)
         .run();
     
@@ -196,7 +195,7 @@ function test_after_burn_extensions_are_called() {
 function test_register_asset_with_invalid_icon_url() {
     val invalid_icon_url = "invalidurl";
 
-    admin.register_asset("test", "TST", 0, invalid_icon_url)
+    admin.external.register_asset("test", "TST", 0, invalid_icon_url)
         .sign(utils.admin_priv_key())
         .run_must_fail("Invalid URL for icon");
 }
@@ -204,7 +203,7 @@ function test_register_asset_with_invalid_icon_url() {
 function test_register_asset_with_valid_icon_url() {
     val valid_icon_url = "https://example.com/icon.png";
 
-    admin.register_asset("test", "TST", 0, valid_icon_url)
+    admin.external.register_asset("test", "TST", 0, valid_icon_url)
         .sign(utils.admin_priv_key())
         .run();
 
@@ -213,7 +212,7 @@ function test_register_asset_with_valid_icon_url() {
 }
 
 function test_register_asset_with_empty_icon_url() {
-    admin.register_asset("test", "TST", 0, "")
+    admin.external.register_asset("test", "TST", 0, "")
         .sign(utils.admin_priv_key())
         .run();
 
@@ -224,7 +223,7 @@ function test_register_asset_with_empty_icon_url() {
 function test_register_asset_with_ipfs_icon_url() {
     val ipfs_icon_url = "ipfs://example/ipfs/QmTtqW4D6dbnar8UX2sbgHNszxzKN7xX1gJGU1MzCX1TvY";
 
-    admin.register_asset("test", "TST", 0, ipfs_icon_url)
+    admin.external.register_asset("test", "TST", 0, ipfs_icon_url)
         .sign(utils.admin_priv_key())
         .run();
 
@@ -235,7 +234,7 @@ function test_register_asset_with_ipfs_icon_url() {
 function test_register_asset_with_long_icon_url() {
     val long_icon_url = "a".repeat(2049);
 
-    admin.register_asset("test", "TST", 0, long_icon_url)
+    admin.external.register_asset("test", "TST", 0, long_icon_url)
         .sign(utils.admin_priv_key())
         .run_must_fail("Invalid URL for icon");
 }
@@ -243,7 +242,7 @@ function test_register_asset_with_long_icon_url() {
 function test_register_asset_with_trimmed_icon_url() {
     val icon_url_with_spaces = "   https://example.com/icon.png   ";
 
-    admin.register_asset("test", "TST", 0, icon_url_with_spaces)
+    admin.external.register_asset("test", "TST", 0, icon_url_with_spaces)
         .sign(utils.admin_priv_key())
         .run();
 
@@ -274,12 +273,12 @@ function test_asset_balances_are_returned_in_correct_order() {
     val asset3 = utils.create_asset("test3", "TST3", 0);
     val asset4 = utils.create_asset("test4", "TST4", 0);
     
-    admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
-    admin.mint(alice.account.id, asset2.id, 10L).sign(utils.admin_priv_key()).run();
-    admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
-    admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset2.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
     
-    val balances = ft4.assets_ext.get_asset_balances(alice.account.id, 4, null).data;
+    val balances = assets.external.get_asset_balances(alice.account.id, 4, null).data;
 
     assert_equals(gtv_balance.from_gtv_pretty(balances[0]).asset.name, asset1.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances[1]).asset.name, asset2.name);
@@ -294,18 +293,18 @@ function test_asset_balances_are_paginated() {
     val asset3 = utils.create_asset("test3", "TST3", 0);
     val asset4 = utils.create_asset("test4", "TST4", 0);
     
-    admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
-    admin.mint(alice.account.id, asset2.id, 10L).sign(utils.admin_priv_key()).run();
-    admin.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
-    admin.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset2.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset3.id, 10L).sign(utils.admin_priv_key()).run();
+    admin.external.mint(alice.account.id, asset4.id, 10L).sign(utils.admin_priv_key()).run();
     
-    val balances_p1 = ft4.assets_ext.get_asset_balances(alice.account.id, 3, null);
+    val balances_p1 = assets.external.get_asset_balances(alice.account.id, 3, null);
 
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[0]).asset.name, asset1.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[1]).asset.name, asset2.name);
     assert_equals(gtv_balance.from_gtv_pretty(balances_p1.data[2]).asset.name, asset3.name);
 
-    val balances_p2 = ft4.assets_ext.get_asset_balances(alice.account.id, 3, balances_p1.next_cursor);
+    val balances_p2 = assets.external.get_asset_balances(alice.account.id, 3, balances_p1.next_cursor);
 
     assert_equals(gtv_balance.from_gtv_pretty(balances_p2.data[0]).asset.name, asset4.name);
 }
@@ -313,8 +312,8 @@ function test_asset_balances_are_paginated() {
 function test_paginated_asset_balances_have_correct_format() {
     val alice = utils.create_test_account(rell.test.keypairs.alice);
     val asset1 = utils.create_asset("test1", "TST1", 0);
-    admin.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
-    val result = ft4.assets_ext.get_asset_balances(alice.account.id, 1, null);
+    admin.external.mint(alice.account.id, asset1.id, 10L).sign(utils.admin_priv_key()).run();
+    val result = assets.external.get_asset_balances(alice.account.id, 1, null);
 
     assert_equals(result, ft4_utils.paged_result(     
         data = [
@@ -340,8 +339,8 @@ function test_assets_by_name_are_paginated() {
     rell.test.tx(test_op.register_asset("test1", "TST1", 0, "0".to_bytes(), "")).run();
     rell.test.tx(test_op.register_asset("test1", "TST2", 0, "1".to_bytes(), "")).run();
 
-    val page1 = ft4.assets_ext.get_assets_by_name("test1", 1, null);
-    val page2 = ft4.assets_ext.get_assets_by_name("test1", 1, page1.next_cursor);
+    val page1 = assets.external.get_assets_by_name("test1", 1, null);
+    val page2 = assets.external.get_assets_by_name("test1", 1, page1.next_cursor);
 
     val asset1 = assets.asset @ { .symbol == "TST1" }(
         id = asset.id,
@@ -376,7 +375,7 @@ function test_assets_are_returned_in_correct_order() {
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets = ft4.assets_ext.get_all_assets(3, null).data;
+    val assets = assets.external.get_all_assets(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(assets[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[1]).name, asset2.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets[2]).name, asset3.name);
@@ -387,16 +386,16 @@ function test_get_assets_by_type() {
     val asset2 = utils.create_asset("test2", "TST2", 0, type = "original");
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets1 = ft4.assets_ext.get_assets_by_type(assets.ASSET_TYPE_FT4, 10, null).data;
+    val assets1 = assets.external.get_assets_by_type(assets.ASSET_TYPE_FT4, 10, null).data;
     assert_equals(assets1.size(), 2);
     assert_equals(gtv_asset.from_gtv_pretty(assets1[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets1[1]).name, asset3.name);
 
-    val assets2 = ft4.assets_ext.get_assets_by_type("original", 10, null).data;
+    val assets2 = assets.external.get_assets_by_type("original", 10, null).data;
     assert_equals(assets2.size(), 1);
     assert_equals(gtv_asset.from_gtv_pretty(assets2[0]).name, asset2.name);
 
-    assert_true(ft4.assets_ext.get_assets_by_type("bogus", 10, null).data.empty());
+    assert_true(assets.external.get_assets_by_type("bogus", 10, null).data.empty());
 }
 
 function test_assets_are_paginated() {
@@ -404,19 +403,19 @@ function test_assets_are_paginated() {
     val asset2 = utils.create_asset("test2", "TST2", 0);
     val asset3 = utils.create_asset("test3", "TST3", 0);
 
-    val assets_p1 = ft4.assets_ext.get_all_assets(2, null);
+    val assets_p1 = assets.external.get_all_assets(2, null);
     assert_equals(assets_p1.data.size(), 2);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p1.data[0]).name, asset1.name);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p1.data[1]).name, asset2.name);
     
-    val assets_p2 = ft4.assets_ext.get_all_assets(2, assets_p1.next_cursor);
+    val assets_p2 = assets.external.get_all_assets(2, assets_p1.next_cursor);
     assert_equals(assets_p2.data.size(), 1);
     assert_equals(gtv_asset.from_gtv_pretty(assets_p2.data[0]).name, asset3.name);
 
 }
 function test_paginated_assets_have_correct_format() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
-    val all_assets = ft4.assets_ext.get_all_assets(3, null).data;
+    val all_assets = assets.external.get_all_assets(3, null).data;
     assert_equals(gtv_asset.from_gtv_pretty(all_assets[0]), gtv_asset(
         id = asset1.id,
         name = asset1.name,
@@ -431,7 +430,7 @@ function test_paginated_assets_have_correct_format() {
 function test_it_gets_asset_by_symbol() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
     val asset2 = utils.create_asset("test2", "TST2", 0);
-    val actual_asset = ft4.assets_ext.get_asset_by_symbol(asset1.symbol);
+    val actual_asset = assets.external.get_asset_by_symbol(asset1.symbol);
     
     assert_equals(
         actual_asset,

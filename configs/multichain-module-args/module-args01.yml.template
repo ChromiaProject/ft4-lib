@@ -1,4 +1,4 @@
-      lib.ft4.accounts.strategies.transfer:
+      lib.ft4.core.accounts.strategies.transfer:
         rules:
           - timeout_days: 10
             asset:
@@ -20,8 +20,17 @@
             sender_blockchain: {chain00_rid}
             sender: "X"
             recipient: "X"
-
-      lib.ft4.accounts.strategies.transfer.fee: 
+          - timeout_days: 0
+            asset:
+              - name: fee_strategy_timeout_test_asset_00
+                issuing_blockchain_rid: {chain00_rid}
+                min_amount: 1000000L
+            strategy:
+              - fee
+            sender_blockchain: {chain00_rid}
+            sender: "X"
+            recipient: "X"
+      lib.ft4.core.accounts.strategies.transfer.fee: 
           asset:
             - name: fee_strategy_test_asset_00
               issuing_blockchain_rid: {chain00_rid}
@@ -29,7 +38,10 @@
             - name: fee_strategy_missing_test_asset_00
               issuing_blockchain_rid: {chain00_rid}
               amount: 1000L
-      lib.ft4.accounts.strategies.transfer.subscription:
+            - name: fee_strategy_timeout_test_asset_00
+              issuing_blockchain_rid: {chain00_rid}
+              amount: 1000000L
+      lib.ft4.core.accounts.strategies.transfer.subscription:
           asset:
             - name: subscription_strategy_test_asset_00
               issuing_blockchain_rid: {chain00_rid}

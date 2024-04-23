@@ -6,9 +6,14 @@ import ^^^.lib.ft4.accounts;
  * Used to test account creation without op_context.
  */
 object init_object {
-    account_id: byte_array = accounts.Unsafe.create_account_with_auth(accounts.single_sig_auth_descriptor(
+    user_account_id: byte_array = accounts.create_account_with_auth(accounts.single_sig_auth_descriptor(
         // privkey: 5C57698E295F772504181202FDA07B53FA7F58B10D79208DF04999827C868005
         x"02A7AEF248B59F3FA02F2A81494993CDE3F6BEAD805C25F766CD7745215DDDEE17",
-        set(["A"]))
+        set(["A", "T"]))
+    ).id;
+
+    system_account_id: byte_array = accounts.create_account_without_auth(
+        chain_context.blockchain_rid,
+        "BLOCKCHAIN"
     ).id;
 }

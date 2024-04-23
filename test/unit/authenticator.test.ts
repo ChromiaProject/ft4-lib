@@ -1,20 +1,24 @@
-import { Buffer } from "buffer";
-import { encryption } from "postchain-client";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createTestAuthDescriptor } from "../util/util";
-import { AnyAuthDescriptor, AuthFlag } from "@ft4/accounts/auth-descriptor";
+import {
+  createFakeAuthDataService,
+  createTestAuthDescriptor,
+} from "@ft4-test/util";
+import { AnyAuthDescriptor, AuthFlag } from "@ft4/accounts";
 import {
   FtKeyStore,
   createAuthenticator,
   createEvmKeyHandler,
+  createFtKeyHandler,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
 } from "@ft4/authentication";
-import { createFtKeyHandler } from "@ft4/authentication/ft/key-handler";
+import {
+  Connection,
+  createAuthDataService,
+  createConnection,
+} from "@ft4/ft-session";
 import { op } from "@ft4/utils";
-import { Connection } from "@ft4/types";
-import { createAuthDataService, createConnection } from "@ft4/ft-session";
-import { createStubClient } from "postchain-client";
+import { Buffer } from "buffer";
+import { createStubClient, encryption } from "postchain-client";
 
 describe("Authenticator", () => {
   let connection: Connection;

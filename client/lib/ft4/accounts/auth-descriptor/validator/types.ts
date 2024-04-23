@@ -1,4 +1,4 @@
-import { AnyAuthDescriptor } from "../index";
+import { AnyAuthDescriptor } from "@ft4/accounts";
 import { BufferId } from "@ft4/utils";
 
 export type AuthDescriptorValidator = {
@@ -17,12 +17,12 @@ export interface AuthDescriptorValidationService {
   getBlockHeight: () => Promise<number>;
 
   /**
-   * Gets nonce for provided account and auth descriptor
+   * Gets auth descriptor counter for provided account and auth descriptor
    * @param accountId
    * @param authDescriptorId
-   * @returns auth descriptor nonce or null
+   * @returns auth descriptor counter or null
    */
-  getNonce: (
+  getAuthDescriptorCounter: (
     accountId: BufferId,
     authDescriptorId: BufferId,
   ) => Promise<number | null>;

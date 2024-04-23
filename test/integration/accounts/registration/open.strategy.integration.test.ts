@@ -1,15 +1,13 @@
-import { registerAccount } from "@ft4/accounts/registration";
-import { open } from "@ft4/accounts/registration/strategies/open";
 import {
-  Connection,
-  createConnection,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+  createInMemoryLoginKeyStore,
+} from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
+import { registrationStrategy, registerAccount } from "@ft4/registration";
+import { useChromiaNode } from "@ft4-test/util";
 import { encryption, gtv } from "postchain-client";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory/index";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
 
 let _connection: Connection;
 
@@ -21,7 +19,10 @@ describe("Test open strategy", () => {
     _connection = createConnection(client);
   });
 
-  it("can register account", async () => {
+  it("can register account and emits events", async () => {
+    const builtListener = jest.fn();
+    const sentListener = jest.fn();
+
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryFtKeyStore(keyPair);
 
@@ -31,12 +32,17 @@ describe("Test open strategy", () => {
     );
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
-      open(authDescriptor),
-    );
+      registrationStrategy.open(authDescriptor),
+    )
+      .on("built", builtListener)
+      .on("sent", sentListener);
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+
+    expect(builtListener).toHaveBeenCalledTimes(1);
+    expect(sentListener).toHaveBeenCalledTimes(1);
 
     await logout(); // should be a no-op
   });
@@ -53,9 +59,9 @@ describe("Test open strategy", () => {
     const loginKeyStore = createInMemoryLoginKeyStore();
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
-      open(authDescriptor, {
+      registrationStrategy.open(authDescriptor, {
         loginKeyStore,
         config: { flags: [], rules: null },
       }),
@@ -98,9 +104,9 @@ describe("Test open strategy", () => {
     const loginKeyStore = createInMemoryLoginKeyStore();
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
-      open(authDescriptor, {
+      registrationStrategy.open(authDescriptor, {
         loginKeyStore,
       }),
     );
@@ -140,9 +146,9 @@ describe("Test open strategy", () => {
     );
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
-      open(authDescriptor),
+      registrationStrategy.open(authDescriptor),
     );
 
     expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
@@ -162,9 +168,9 @@ describe("Test open strategy", () => {
     const loginKeyStore = createInMemoryLoginKeyStore();
 
     const { session, logout } = await registerAccount(
-      _connection,
+      _connection.client,
       keyStore,
-      open(authDescriptor, {
+      registrationStrategy.open(authDescriptor, {
         loginKeyStore,
         config: { flags: [], rules: null },
       }),

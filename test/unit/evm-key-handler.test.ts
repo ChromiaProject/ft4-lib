@@ -1,19 +1,24 @@
-import { Buffer } from "buffer";
-import { ethers } from "ethers";
-import { IClient, encryption, gtx } from "postchain-client";
+import {
+  createFakeAuthDataService,
+  testAdFromRegistration,
+} from "@ft4-test/util";
 import {
   AuthFlag,
+  createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
   deriveAuthDescriptorId,
-} from "@ft4/accounts/auth-descriptor";
-import { createAuthenticator } from "@ft4/authentication";
-import { createEvmKeyHandler, evmAuth } from "@ft4/authentication/evm";
-import { createInMemoryEvmKeyStore } from "@ft4/authentication/evm/key-stores/in-memory";
-import { op } from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
-import { createStubClient } from "postchain-client";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { testAdFromRegistration } from "../util/util";
+} from "@ft4/accounts";
+import {
+  createAuthenticator,
+  createEvmKeyHandler,
+  createInMemoryEvmKeyStore,
+  evmAuth,
+} from "@ft4/authentication";
+import { transactionBuilder } from "@ft4/transaction-builder";
+import { deriveNonce, op } from "@ft4/utils";
+import { Buffer } from "buffer";
+import { ethers } from "ethers";
+import { IClient, createStubClient, encryption, gtx } from "postchain-client";
 
 describe("EVM key handler", () => {
   let client: IClient;
@@ -73,7 +78,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("increments nonce", async () => {
+  it("increments local auth descriptor counter", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -93,10 +98,10 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
     const tx = await transactionBuilder(authenticator, client)
@@ -132,7 +137,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("resets nonce between transactions if transaction is not submitted", async () => {
+  it("resets local auth descriptor counter between transactions if transaction is not submitted", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -145,7 +150,7 @@ describe("EVM key handler", () => {
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
-    authService.getNonce = () => Promise.resolve(0);
+    authService.getAuthDescriptorCounter = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
       [keyStore.createKeyHandler(testAdFromRegistration(ad))],
@@ -153,10 +158,10 @@ describe("EVM key handler", () => {
     );
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
     await transactionBuilder(authenticator, client)
@@ -190,7 +195,7 @@ describe("EVM key handler", () => {
     ]);
   });
 
-  it("resets nonce if user rejects metamask signature", async () => {
+  it("resets local auth descriptor counter if user rejects metamask signature", async () => {
     const accountId = encryption.randomBytes(32);
     const keyPair = encryption.makeKeyPair();
     const message = "Sign this message with {nonce}";
@@ -216,7 +221,7 @@ describe("EVM key handler", () => {
     const authService = createFakeAuthDataService({
       foo: { flags: ["T"], message },
     });
-    authService.getNonce = () => Promise.resolve(0);
+    authService.getAuthDescriptorCounter = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
       [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
@@ -231,10 +236,10 @@ describe("EVM key handler", () => {
     ).rejects.toThrow(Error);
 
     const signature1 = await keyStore.signMessage(
-      message.replace("{nonce}", "0"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
     const signature2 = await keyStore.signMessage(
-      message.replace("{nonce}", "1"),
+      message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
     const tx2 = await transactionBuilder(authenticator, client)
@@ -260,6 +265,46 @@ describe("EVM key handler", () => {
         opName: "foo",
         args: [],
       },
+    ]);
+  });
+
+  it("populates signatures array with null for empty fields", async () => {
+    const keyPair1 = encryption.makeKeyPair();
+    const keyPair2 = encryption.makeKeyPair();
+    const keyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    const keyStore2 = createInMemoryEvmKeyStore(keyPair2);
+    const signature = { r: Buffer.from("r"), s: Buffer.from("s"), v: 27 };
+
+    const fakeKeyStore = {
+      ...keyStore1,
+      signMessage: jest.fn().mockResolvedValue(signature),
+    };
+
+    const ad = createMultiSigAuthDescriptorRegistration(
+      [AuthFlag.Transfer],
+      [fakeKeyStore.address, keyStore2.address],
+      2,
+      null,
+    );
+    const adId = deriveAuthDescriptorId(ad);
+    const accountId = adId;
+    const authDataService = createFakeAuthDataService({
+      foo: { flags: ["T"], message: "" },
+    });
+
+    const evmKeyHandler = createEvmKeyHandler(
+      testAdFromRegistration(ad),
+      fakeKeyStore,
+    );
+    const ops = await evmKeyHandler.authorize(
+      accountId,
+      op("foo"),
+      {},
+      authDataService,
+    );
+    expect(ops).toStrictEqual([
+      evmAuth(accountId, adId, [signature, null]),
+      op("foo"),
     ]);
   });
 });

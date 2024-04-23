@@ -2,9 +2,25 @@ export {
   isTransferApplied,
   getPendingTransfersForAccount,
   getAssetOriginById,
+  mapPendingTransfers,
+  getLastPendingTransferForAccount,
 } from "./query-functions";
-export { createOrchestrator } from "./orchestrator";
-export { initTransfer, applyTransfer, completeTransfer } from "./operations";
+
+export {
+  createOrchestrator,
+  createResumeOrchestrator,
+  createRevertOrchestrator,
+} from "./orchestrator";
+
+export {
+  initTransfer,
+  applyTransfer,
+  completeTransfer,
+  cancelTransfer,
+  unapplyTransfer,
+  revertTransfer,
+} from "./operations";
+
 export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";
@@ -15,6 +31,7 @@ export {
   GtvInitTransferArgs,
   PendingTransfer,
   PendingTransferResponse,
+  TransferRef,
 } from "./types";
 
 export {
@@ -25,4 +42,9 @@ export {
   ApplyTransferError,
 } from "./errors";
 
-export { crosschainTransfer, resumeCrosschainTransfer } from "./transfer";
+export {
+  crosschainTransfer,
+  resumeCrosschainTransfer,
+  revertCrosschainTransfer,
+  recallUnclaimedCrosschainTransfer,
+} from "./transfer";

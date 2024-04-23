@@ -1,0 +1,323 @@
+@test
+module;
+
+import lib.ft4.auth;
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.open;
+import lib.ft4.test.utils;
+
+import ops: ^^.operations;
+
+function test_register_account_message_with_only_main_auth_descriptor() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    val expected_message = 
+        "Blockchain: %s\n\n".format(chain_context.blockchain_rid) + 
+        "Please sign the message to register account\n\n" + 
+        "Account ID:\n" +
+        "%s\n\n".format(rell.test.keypairs.alice.pub.hash()) + 
+        "Operation:\n" + 
+        "ft4.register_account\n\n" + 
+        "Main:\n" + 
+        "Signer:\n" +
+        "%s\n\n".format(rell.test.keypairs.alice.pub) + 
+        "Flags:\n" + 
+        "%s\n".format(set(["A", "T"]));
+
+    val message = strategies.external.get_register_account_message(
+        open.ras_open(auth_descriptor, null).to_gtx_operation(), 
+        strategies.external.register_account().to_gtx_operation()
+    );
+    
+    assert_equals(message, expected_message);
+}
+
+function test_register_account_message_with_main_and_disposable_auth_descriptor() {
+    val main_auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.bob.pub,
+        set(list<text>())
+    );
+
+    val expected_message = 
+        "Blockchain: %s\n\n".format(chain_context.blockchain_rid) + 
+        "Please sign the message to register account\n\n" + 
+        "Account ID:\n" +
+        "%s\n\n".format(rell.test.keypairs.alice.pub.hash()) + 
+        "Operation:\n" + 
+        "ft4.register_account\n\n" + 
+        "Main:\n" + 
+        "Signer:\n" +
+        "%s\n\n".format(rell.test.keypairs.alice.pub) + 
+        "Flags:\n" + 
+        "%s\n\n\n".format(set(["A", "T"])) +
+        "Disposable:\n" +
+        "Signer:\n" +
+        "%s\n\n".format(rell.test.keypairs.bob.pub) + 
+        "Flags:\n" + 
+        "[]\n";
+
+    val message = strategies.external.get_register_account_message(
+        open.ras_open(main_auth_descriptor, disposable_auth_descriptor).to_gtx_operation(), 
+        strategies.external.register_account().to_gtx_operation()
+    );
+    
+    assert_equals(message, expected_message);    
+}
+
+function test_register_account_message_with_multi_sig_auth_descriptors() {
+    val main_auth_descriptor = accounts.multi_sig_auth_descriptor(
+        [
+            rell.test.keypairs.alice.pub,
+            rell.test.keypairs.bob.pub
+        ],
+        2,
+        set(["A", "T"])
+    );
+
+    val disposable_auth_descriptor = accounts.multi_sig_auth_descriptor(
+        [
+            rell.test.keypairs.eve.pub,
+            rell.test.keypairs.trudy.pub,
+            rell.test.keypairs.charlie.pub
+        ],
+        2,
+        set(list<text>())
+    );
+
+    val account_id = accounts.get_account_id_from_signers([
+        rell.test.keypairs.alice.pub,
+        rell.test.keypairs.bob.pub
+    ]);
+
+    val expected_message = 
+        "Blockchain: %s\n\n".format(chain_context.blockchain_rid) + 
+        "Please sign the message to register account\n\n" + 
+        "Account ID:\n" +
+        "%s\n\n".format(account_id) + 
+        "Operation:\n" + 
+        "ft4.register_account\n\n" + 
+        "Main:\n" + 
+        "Signers:\n" +
+        "%s\n".format(rell.test.keypairs.alice.pub) +
+        "%s\n\n".format(rell.test.keypairs.bob.pub) + 
+        "Required signatures: 2\n\n" +
+        "Flags:\n" + 
+        "%s\n\n".format(set(["A", "T"])) +
+        "Disposable:\n" +
+        "Signers:\n" +
+        "%s\n".format(rell.test.keypairs.eve.pub) +
+        "%s\n".format(rell.test.keypairs.trudy.pub) +
+        "%s\n\n".format(rell.test.keypairs.charlie.pub) + 
+        "Required signatures: 2\n\n" +
+        "Flags:\n" + 
+        "[]";
+
+    val message = strategies.external.get_register_account_message(
+        open.ras_open(main_auth_descriptor, disposable_auth_descriptor).to_gtx_operation(), 
+        strategies.external.register_account().to_gtx_operation()
+    );
+    
+    assert_equals(message, expected_message);        
+}
+
+function test_register_account_message_with_evm_main_and_disposable_auth_descriptor() {
+    val alice_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+    val bob_address = crypto.eth_pubkey_to_address(rell.test.keypairs.bob.pub);
+
+    val main_auth_descriptor = accounts.single_sig_auth_descriptor(
+        alice_address,
+        set(["A", "T"])
+    );
+
+    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(
+        bob_address,
+        set(list<text>())
+    );
+
+    val expected_message = 
+        "Blockchain: %s\n\n".format(chain_context.blockchain_rid) + 
+        "Please sign the message to register account\n\n" + 
+        "Account ID:\n" +
+        "%s\n\n".format(alice_address.hash()) + 
+        "Operation:\n" + 
+        "ft4.register_account\n\n" + 
+        "Main:\n" + 
+        "Signer:\n" +
+        "%s\n\n".format(alice_address) + 
+        "Flags:\n" + 
+        "%s\n\n\n".format(set(["A", "T"])) +
+        "Disposable:\n" +
+        "Signer:\n" +
+        "%s\n\n".format(bob_address) + 
+        "Flags:\n" + 
+        "[]\n";
+
+    val message = strategies.external.get_register_account_message(
+        open.ras_open(main_auth_descriptor, disposable_auth_descriptor).to_gtx_operation(), 
+        strategies.external.register_account().to_gtx_operation()
+    );
+    
+    assert_equals(message, expected_message);    
+}
+
+function test_register_account_message_with_evm_multi_sig_auth_descriptors() {
+    val alice_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+    val bob_address = crypto.eth_pubkey_to_address(rell.test.keypairs.bob.pub);
+    val eve_address = crypto.eth_pubkey_to_address(rell.test.keypairs.eve.pub);
+    val trudy_address = crypto.eth_pubkey_to_address(rell.test.keypairs.trudy.pub);
+    val charlie_address = crypto.eth_pubkey_to_address(rell.test.keypairs.charlie.pub);
+    
+    val main_auth_descriptor = accounts.multi_sig_auth_descriptor(
+        [
+            alice_address,
+            bob_address
+        ],
+        2,
+        set(["A", "T"])
+    );
+
+    val disposable_auth_descriptor = accounts.multi_sig_auth_descriptor(
+        [
+            eve_address,
+            trudy_address,
+            charlie_address
+        ],
+        3,
+        set(list<text>())
+    );
+
+    val account_id = accounts.get_account_id_from_signers([
+        alice_address,
+        bob_address
+    ]);
+
+    val expected_message = 
+        "Blockchain: %s\n\n".format(chain_context.blockchain_rid) + 
+        "Please sign the message to register account\n\n" + 
+        "Account ID:\n" +
+        "%s\n\n".format(account_id) + 
+        "Operation:\n" + 
+        "ft4.register_account\n\n" + 
+        "Main:\n" + 
+        "Signers:\n" +
+        "%s\n".format(alice_address) +
+        "%s\n\n".format(bob_address) + 
+        "Required signatures: 2\n\n" +
+        "Flags:\n" + 
+        "%s\n\n".format(set(["A", "T"])) +
+        "Disposable:\n" +
+        "Signers:\n" +
+        "%s\n".format(eve_address) +
+        "%s\n".format(trudy_address) +
+        "%s\n\n".format(charlie_address) + 
+        "Required signatures: 3\n\n" +
+        "Flags:\n" + 
+        "[]";
+
+    val message = strategies.external.get_register_account_message(
+        open.ras_open(main_auth_descriptor, disposable_auth_descriptor).to_gtx_operation(), 
+        strategies.external.register_account().to_gtx_operation()
+    );
+    
+    assert_equals(message, expected_message);        
+}
+
+function test_register_account_message_with_custom_register_account_operation() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    val expected_message = 
+        "Blockchain: %s\n\n".format(chain_context.blockchain_rid) + 
+        "Please sign the message to register account\n\n" + 
+        "Account ID:\n" +
+        "%s\n\n".format(rell.test.keypairs.alice.pub.hash()) + 
+        "Operation:\n" + 
+        "register_player\n\n" +
+        "Parameters:\n" +
+        "- \"Alice\"\n\n\n" + 
+        "Main:\n" + 
+        "Signer:\n" +
+        "%s\n\n".format(rell.test.keypairs.alice.pub) + 
+        "Flags:\n" + 
+        "%s\n".format(set(["A", "T"]));
+
+    val message = strategies.external.get_register_account_message(
+        open.ras_open(auth_descriptor, null).to_gtx_operation(), 
+        ops.register_player("Alice").to_gtx_operation()
+    );
+    
+    assert_equals(message, expected_message);
+}
+
+function test_custom_register_account_succeeds_with_evm_multi_sig_auth_descriptors() {
+    val alice_address = crypto.eth_pubkey_to_address(rell.test.keypairs.alice.pub);
+    val bob_address = crypto.eth_pubkey_to_address(rell.test.keypairs.bob.pub);
+    val eve_address = crypto.eth_pubkey_to_address(rell.test.keypairs.eve.pub);
+    val trudy_address = crypto.eth_pubkey_to_address(rell.test.keypairs.trudy.pub);
+    val charlie_address = crypto.eth_pubkey_to_address(rell.test.keypairs.charlie.pub);
+    
+    val main_auth_descriptor = accounts.multi_sig_auth_descriptor(
+        [
+            alice_address,
+            bob_address
+        ],
+        2,
+        set(["A", "T"])
+    );
+
+    val disposable_auth_descriptor = accounts.multi_sig_auth_descriptor(
+        [
+            eve_address,
+            trudy_address,
+            charlie_address
+        ],
+        3,
+        set(list<text>())
+    );
+
+    val open = open.ras_open(main_auth_descriptor, disposable_auth_descriptor);
+    val register_player = ops.register_player("Alice");
+
+    val message = strategies.external.get_register_account_message(
+        open.to_gtx_operation(), 
+        register_player.to_gtx_operation()
+    );
+
+    val alice_signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
+    val bob_signature = utils.evm_sign(message, rell.test.keypairs.bob.priv);
+    val eve_signature = utils.evm_sign(message, rell.test.keypairs.eve.priv);
+    val trudy_signature = utils.evm_sign(message, rell.test.keypairs.trudy.priv);
+    val charlie_signature = utils.evm_sign(message, rell.test.keypairs.charlie.priv);
+
+    rell.test.tx()
+        .op(auth.external.evm_signatures(
+            [
+                alice_address,
+                bob_address,
+                eve_address,
+                trudy_address,
+                charlie_address
+            ],
+            [
+                alice_signature,
+                bob_signature,
+                eve_signature,
+                trudy_signature,
+                charlie_signature
+            ])
+        )
+        .op(open)
+        .op(register_player)
+        .run();
+}

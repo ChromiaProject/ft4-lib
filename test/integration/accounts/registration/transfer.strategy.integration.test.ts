@@ -1,25 +1,16 @@
-import { registerAccount } from "@ft4/accounts/registration";
-import { transferOpen } from "@ft4/accounts/registration/strategies/transfer/open/index";
+import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
+import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { Connection, createConnection } from "@ft4/ft-session";
 import {
-  Connection,
-  createAmount,
-  createConnection,
-  createInMemoryFtKeyStore,
-  createSingleSigAuthDescriptorRegistration,
-} from "@ft4/index";
-import { Asset } from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { encryption } from "postchain-client";
-import { TxRejectedError } from "postchain-client";
-import { gtv } from "postchain-client";
-import { getNewAsset } from "@ft4/util/blockchain-util";
-import AccountBuilder from "@ft4/util/account-builder";
-import {
+  allowedAssets,
   hasPendingCreateAccountTransferForStrategy,
   pendingTransferStrategies,
-} from "@ft4/accounts/registration/strategies/transfer/queries";
-import { allowedAssets } from "@ft4/accounts/registration/strategies/transfer/queries";
-import { createAmountFromBalance } from "@ft4/index";
+  registerAccount,
+  registrationStrategy,
+} from "@ft4/registration";
+import { TxRejectedError, encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -38,7 +29,7 @@ describe("Test transfer strategy", () => {
     );
   });
 
-  it("can register account which receives transferred assets", async () => {
+  it("can register account which receives transferred assets, and it cannot be recalled", async () => {
     const keyPair = encryption.makeKeyPair();
     const recipientId = gtv.gtvHash(keyPair.pubKey);
 
@@ -57,7 +48,7 @@ describe("Test transfer strategy", () => {
     expect(rawAmount).toBeTruthy();
     const amount = createAmountFromBalance(rawAmount!, asset.decimals);
 
-    await account1.transfer(recipientId, asset.id, amount);
+    const { receipt } = await account1.transfer(recipientId, asset.id, amount);
 
     const strategies = await connection.query(
       pendingTransferStrategies(recipientId),
@@ -72,9 +63,9 @@ describe("Test transfer strategy", () => {
     );
 
     const { session } = await registerAccount(
-      connection,
+      connection.client,
       keyStore,
-      transferOpen(authDescriptor),
+      registrationStrategy.transferOpen(authDescriptor),
     );
 
     expect(session.account.id).toEqual(recipientId);
@@ -85,6 +76,10 @@ describe("Test transfer strategy", () => {
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
+
+    await expect(
+      account1.recallUnclaimedTransfer(receipt.transactionRid, 1),
+    ).rejects.toThrow("No pending transfer found");
   });
 
   it("can not register account without pending transfer", async () => {
@@ -97,7 +92,11 @@ describe("Test transfer strategy", () => {
     );
 
     await expect(
-      registerAccount(connection, keyStore, transferOpen(authDescriptor)),
+      registerAccount(
+        connection.client,
+        keyStore,
+        registrationStrategy.transferOpen(authDescriptor),
+      ),
     ).rejects.toThrow(TxRejectedError);
   });
 
@@ -146,7 +145,11 @@ describe("Test transfer strategy", () => {
       keyStore.id,
     );
 
-    await registerAccount(connection, keyStore, transferOpen(authDescriptor));
+    await registerAccount(
+      connection.client,
+      keyStore,
+      registrationStrategy.transferOpen(authDescriptor),
+    );
 
     const hasPendingAccountCreation = await connection.query(
       hasPendingCreateAccountTransferForStrategy(
@@ -160,5 +163,89 @@ describe("Test transfer strategy", () => {
     );
 
     expect(hasPendingAccountCreation).toBeFalsy();
+  });
+
+  it("can recall unclaimed transfer after timeout has passed", async () => {
+    const timeoutAsset = await getNewAsset(
+      connection.client,
+      "timeout_asset",
+      "TIMEOUT_ASSET",
+      5,
+    );
+
+    const keyPair = encryption.makeKeyPair();
+    const recipientId = gtv.gtvHash(keyPair.pubKey);
+
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(timeoutAsset, 200)
+      .withPoints(1)
+      .build();
+
+    const initialBalance = (await account1.getBalanceByAssetId(
+      timeoutAsset.id,
+    ))!.amount.value;
+
+    const _allowedAssets = (await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(timeoutAsset.id),
+    )?.min_amount;
+    expect(rawAmount).toBeTruthy();
+    const amount = createAmountFromBalance(rawAmount!, timeoutAsset.decimals);
+
+    const { receipt } = await account1.transfer(
+      recipientId,
+      timeoutAsset.id,
+      amount,
+    );
+
+    expect(
+      (await account1.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
+    ).toBe(initialBalance - rawAmount!);
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toContain("open");
+
+    await account1.recallUnclaimedTransfer(receipt.transactionRid, 1);
+
+    expect(
+      (await account1.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
+    ).toBe(initialBalance);
+    expect(
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toStrictEqual([]);
+  });
+
+  it("can not recall unclaimed transfer before timeout has passed", async () => {
+    const keyPair = encryption.makeKeyPair();
+    const recipientId = gtv.gtvHash(keyPair.pubKey);
+
+    const account1 = await AccountBuilder.account(connection)
+      .withBalance(asset, 200)
+      .withPoints(1)
+      .build();
+
+    const _allowedAssets = (await connection.query(
+      allowedAssets(connection.blockchainRid, account1.id, recipientId),
+    ))!;
+    expect(_allowedAssets).toBeTruthy();
+    const rawAmount = _allowedAssets.find((v) =>
+      v.asset_id.equals(asset.id),
+    )?.min_amount;
+    expect(rawAmount).toBeTruthy();
+    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
+
+    const { receipt } = await account1.transfer(recipientId, asset.id, amount);
+
+    const strategies = await connection.query(
+      pendingTransferStrategies(recipientId),
+    );
+    expect(strategies).toContain("open");
+
+    await expect(
+      account1.recallUnclaimedTransfer(receipt.transactionRid, 1),
+    ).rejects.toThrow("This transfer has not timed out yet");
   });
 });

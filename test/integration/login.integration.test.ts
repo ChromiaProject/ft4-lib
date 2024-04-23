@@ -1,34 +1,32 @@
+import { createAccount, getNewAsset, useChromiaNode } from "@ft4-test/util";
 import {
   AuthFlag,
+  aggregateSigners,
   and,
-  createKeyStoreInteractor,
-  minutes,
-  ttlLoginRule,
-} from "@ft4/index";
-import { createInMemoryEvmKeyStore } from "@ft4/authentication";
-import { Connection } from "@ft4/types";
-import { createAccount } from "../util/util";
-import { createAccountObject } from "@ft4/accounts/account-query-functions";
-import { createConnection } from "@ft4/ft-session";
-import { createAmount } from "@ft4/asset/amount";
-import { transfer } from "@ft4/accounts/account-operations";
-import { IClient, encryption, gtx } from "postchain-client";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { createInMemoryLoginKeyStore } from "@ft4/authentication/login/stores/in-memory";
-import {
   blockTime,
+  createAccountObject,
   createSingleSigAuthDescriptorRegistration,
   lessOrEqual,
   lessThan,
   opCount,
-} from "@ft4/accounts/auth-descriptor";
-import { aggregateSigners } from "@ft4/accounts";
-import { getNewAsset } from "@ft4/util/blockchain-util";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+  transfer,
+} from "@ft4/accounts";
+import { createAmount } from "@ft4/asset";
 import {
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
+  createInMemoryLoginKeyStore,
   mapLoginConfigRulesToAuthDescriptorRules,
+  minutes,
   relativeBlockHeight,
-} from "@ft4/authentication/login/rules";
+  ttlLoginRule,
+} from "@ft4/authentication";
+import {
+  Connection,
+  createConnection,
+  createKeyStoreInteractor,
+} from "@ft4/ft-session";
+import { IClient, encryption, gtx } from "postchain-client";
 
 describe("Login", () => {
   const getClient = useChromiaNode();
@@ -51,7 +49,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -73,7 +71,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      ["A"],
+      ["A", "T"],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -91,7 +89,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -113,7 +111,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -148,7 +146,7 @@ describe("Login", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
     );
     const accountId = await createAccount(client, ad);
@@ -172,7 +170,7 @@ describe("Login", () => {
     );
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -195,8 +193,8 @@ describe("Login", () => {
       .build();
 
     const disposableAuthHandler =
-      session.account.authenticator.keyHandlers.filter((keyHandler) =>
-        keyHandler.authDescriptor.id.compare(keyStore.address),
+      session.account.authenticator.keyHandlers.filter(
+        (keyHandler) => !keyHandler.authDescriptor.id.equals(keyStore.address),
       )[0];
 
     expect(gtx.deserialize(transaction).signers).toEqual(
@@ -208,7 +206,7 @@ describe("Login", () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
       null,
     );
@@ -244,7 +242,7 @@ describe("Login", () => {
     const keyPair1 = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair1);
     const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Account],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.id,
       null,
     );

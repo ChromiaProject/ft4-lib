@@ -1,8 +1,7 @@
 import { Operation, formatter } from "postchain-client";
-import { gtv } from "@ft4/accounts";
+import { gtv, AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { Amount, Asset } from "@ft4/asset";
 import { BufferId, op } from "@ft4/utils";
-import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
 
 export function registerAccount(
   authDescriptor: AnyAuthDescriptorRegistration,

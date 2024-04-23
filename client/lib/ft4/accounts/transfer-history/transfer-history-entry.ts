@@ -1,7 +1,6 @@
-import { TransferHistoryEntry, TransferHistoryEntryResponse } from "./types";
-import { createAmountFromBalance } from "@ft4/asset/amount";
+import { createAmountFromBalance, createAssetObject } from "@ft4/asset";
 import { formatter } from "postchain-client";
-import { createAssetObject } from "@ft4/asset/asset-query-functions";
+import { TransferHistoryEntry, TransferHistoryEntryResponse } from "./types";
 
 export function createTransferHistoryEntryFromResponse(
   responseEntry: TransferHistoryEntryResponse,

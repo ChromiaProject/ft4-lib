@@ -1,8 +1,8 @@
 module;
 
-import ^^^.main;
 import ^^.extensions;
 import ^^.operations;
-import ^^^.lib.ft4.crosschain.external;
-import ^^^.lib.ft4.prioritization.default;
-import ^^^.lib.ft4.accounts.strategies.open;
+import lib.ft4.crosschain;
+import lib.ft4.prioritization.default;
+import lib.ft4.accounts.strategies.open;
+import lib.ft4.accounts.linking;

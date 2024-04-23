@@ -1,3 +1,34 @@
+import {
+  AnyAuthDescriptor,
+  AnyAuthDescriptorRegistration,
+  AuthDescriptor,
+  AuthDescriptorRegistration,
+  AuthDescriptorRules,
+  AuthFlag,
+  AuthenticatedAccount,
+  MultiSig,
+  SingleSig,
+  addAuthDescriptor,
+  aggregateSigners,
+  createMultiSigAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
+  deriveAuthDescriptorId,
+  gtv,
+} from "@ft4/accounts";
+import {
+  FtKeyStore,
+  createAuthenticator,
+  createInMemoryFtKeyStore,
+} from "@ft4/authentication";
+import {
+  Connection,
+  Session,
+  createAuthDataService,
+  createConnection,
+  createKeyStoreInteractor,
+  createSession,
+} from "@ft4/ft-session";
+import { BufferId, op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import {
   IClient,
@@ -6,35 +37,13 @@ import {
   RellOperation,
   SignatureProvider,
   encryption,
+  formatter,
+  gtx,
   gtv as pclGtv,
 } from "postchain-client";
-import adminUser from "./admin_user";
-import { AuthDescriptorRules, Connection } from "@ft4/index";
-import { addAuthDescriptor } from "@ft4/accounts/account-operations";
-import {
-  createMultiSigAuthDescriptorRegistration,
-  createSingleSigAuthDescriptorRegistration,
-  deriveAuthDescriptorId,
-  gtv,
-} from "@ft4/accounts/auth-descriptor";
-import {
-  AnyAuthDescriptor,
-  AnyAuthDescriptorRegistration,
-  AuthDescriptor,
-  AuthDescriptorRegistration,
-  MultiSig,
-  SingleSig,
-} from "@ft4/accounts/auth-descriptor/types";
-import { FtKeyStore, createAuthenticator } from "@ft4/authentication";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import {
-  createAuthDataService,
-  createConnection,
-  createKeyStoreInteractor,
-} from "@ft4/ft-session";
-import { op } from "@ft4/utils";
-import { transactionBuilder } from "@ft4/utils/transaction-builder";
-import { BufferId } from "@ft4/utils/types";
+import { User } from "./test-user";
+import { transactionBuilder } from "@ft4/transaction-builder";
+import { Amount, Asset } from "@ft4/asset";
 
 function generateId(n: number): Buffer {
   return encryption.hash256(Buffer.from(`${n}`));
@@ -75,6 +84,30 @@ class LocalStorageMock implements Storage {
 
 export { LocalStorageMock, blockchainAccountId, generateId };
 
+export function adminUser(): User {
+  const keyPair = encryption.makeKeyPair(
+    process.env.TEST_ADMIN_1_PRIV ||
+      "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
+  );
+
+  const signatureProvider = gtx.newSignatureProvider(keyPair);
+  const singleSigAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+    [AuthFlag.Account, AuthFlag.Transfer],
+    signatureProvider.pubKey,
+    null,
+  );
+  return {
+    signatureProvider,
+    authDescriptor: testAdFromRegistration(singleSigAuthDescriptor),
+    keyStore: createInMemoryFtKeyStore(keyPair),
+  };
+}
+
+export const adminKeyPair = encryption.makeKeyPair(
+  process.env.TEST_ADMIN_1_PRIV ||
+    "00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE",
+);
+
 export function createTestAuthDescriptor(
   flags: string[] = [],
   rules: AuthDescriptorRules | null = null,
@@ -84,20 +117,35 @@ export function createTestAuthDescriptor(
   keyStore: FtKeyStore;
 } {
   const keyPair = encryption.makeKeyPair();
-  const ad = createSingleSigAuthDescriptorRegistration(
-    flags,
-    keyPair.pubKey,
-    rules,
-  );
   return {
     keyPair,
-    authDescriptor: {
-      ...ad,
-      id: deriveAuthDescriptorId(ad),
-      accountId: deriveAuthDescriptorId(ad),
-      created: new Date(0),
-    },
+    authDescriptor: createTestAuthDescriptorWithSigner(
+      pclGtv.gtvHash(keyPair.pubKey),
+      keyPair.pubKey,
+      flags,
+      rules,
+    ),
     keyStore: createInMemoryFtKeyStore(keyPair),
+  };
+}
+
+export function createTestAuthDescriptorWithSigner(
+  accountId: BufferId,
+  signer: BufferId,
+  flags: string[] = [],
+  rules: AuthDescriptorRules | null = null,
+): AuthDescriptor<SingleSig> {
+  const ad = createSingleSigAuthDescriptorRegistration(
+    flags,
+    formatter.ensureBuffer(signer),
+    rules,
+  );
+
+  return {
+    accountId: formatter.ensureBuffer(accountId),
+    id: deriveAuthDescriptorId(ad),
+    created: new Date(0),
+    ...ad,
   };
 }
 
@@ -160,8 +208,9 @@ export async function addAuthDescriptorTo(
   );
 
   const tx = await transactionBuilder(authenticator, client)
-    .add(addAuthDescriptor(newUser.authDescriptor))
-    .addSigners(keyHandlerUser2.keyStore as FtKeyStore)
+    .add(addAuthDescriptor(newUser.authDescriptor), {
+      signers: [keyHandlerUser2.keyStore],
+    })
     .build();
   return client.sendTransaction(tx);
 }
@@ -177,7 +226,7 @@ export async function createAccount(
     ),
     adminUser().signatureProvider,
   );
-  return deriveAuthDescriptorId(descriptor);
+  return getAccountIdFromAuthDescriptor(descriptor);
 }
 
 export async function getSessionForAccount(
@@ -192,6 +241,55 @@ export async function getSessionForAccount(
 
   return await getSession(accountId);
 }
+
+export function getSessionForAuthenticatedAccount(
+  account: AuthenticatedAccount,
+): Session {
+  return createSession(
+    account.authenticator.authDataService.connection,
+    account.authenticator,
+  );
+}
+
+/**
+ * Converts amount bigint to string so it can be used to compare Amount with jest
+ */
+export function comparableAmount(amount: Amount): string {
+  return amount.value.toString();
+}
+
+/**
+ * Converts asset's supply property from bigint to string so it can be used to compare Asset with jest
+ */
+export function comparableAsset(asset: Asset) {
+  return { ...asset, supply: asset.supply.toString() };
+}
+
+export function comparableObjectWithAmount(object: ObjectWithAmount) {
+  return { ...object, amount: comparableAmount(object.amount) };
+}
+
+/**
+ * Converts an object with asset and amount properties to use string instead of bigint
+ */
+export function comparableObjectWithAssetAndAmount(
+  object: ObjectWithAssetAndAmount,
+) {
+  return {
+    ...object,
+    asset: comparableAsset(object.asset),
+    amount: comparableAmount(object.amount),
+  };
+}
+
+export type ObjectWithAmount = {
+  amount: Amount;
+} & { [key: string]: any };
+
+export type ObjectWithAssetAndAmount = {
+  asset: Asset;
+  amount: Amount;
+} & { [key: string]: any };
 
 export function rellError(message: string) {
   return expect.objectContaining({
@@ -226,4 +324,21 @@ export function* asyncNumberGenerator(): Generator<Promise<number>> {
   while (true) {
     yield Promise.resolve(count++);
   }
+}
+
+export function getAccountIdFromAuthDescriptor(
+  authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
+): Buffer {
+  const signers = aggregateSigners(authDescriptor);
+  return pclGtv.gtvHash(
+    signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
+  );
+}
+
+export function lockAccountId(accountId: BufferId, lockType: string): Buffer {
+  return pclGtv.gtvHash([
+    formatter.ensureBuffer(accountId),
+    "FT4_LOCK",
+    lockType,
+  ]);
 }

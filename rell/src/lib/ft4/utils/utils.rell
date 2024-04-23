@@ -16,3 +16,26 @@ function invalid(error: text) = validation_result(false, error);
 function make_auth_message(message: text) {
     return "Blockchain:\n{blockchain_rid}\n\n" + message + "\n\nNonce: {nonce}";
 }
+
+function derive_nonce(op: gtx_operation, nonce: integer) {
+    return (
+        chain_context.blockchain_rid, 
+        op.name, 
+        op.args, 
+        nonce
+    ).hash().to_hex().upper_case();
+}
+
+function latest_time() =
+    if (op_context.exists and op_context.block_height > 0)
+        op_context.last_block_time
+    else
+        block @ {} (@max .timestamp) ?: 0;
+
+function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
+
+function is_text(gtv) = gtv.to_bytes()[0] == 162;
+
+function is_dict(gtv) = gtv.to_bytes()[0] == 164;
+
+function is_list(gtv) = gtv.to_bytes()[0] == 165;

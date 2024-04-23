@@ -1,3 +1,7 @@
+import { Buffer } from "buffer";
+
+const clusterAnchoringClient = "clusterAnchoringClient";
+
 jest.mock("postchain-client", () => {
   const originalModule = jest.requireActual("postchain-client");
 
@@ -5,72 +9,91 @@ jest.mock("postchain-client", () => {
     __esModule: true,
     ...originalModule,
     isBlockAnchored: jest.fn().mockResolvedValue(false),
-    getBlockAnchoringTransaction: jest.fn().mockResolvedValue(null),
-    getAnchoringClient: jest.fn(),
-    createClient: jest.fn(),
+    getBlockAnchoringTransaction: jest
+      .fn()
+      .mockRejectedValue(new originalModule.BlockAnchoringException()),
+    getAnchoringClient: jest.fn().mockResolvedValue(clusterAnchoringClient),
+    createClient: jest.fn(
+      (settings: NetworkSettings) => settings.nodeUrlPool![0],
+    ),
   };
 });
 
 jest.mock("@ft4/utils/directory-chain", () => {
-  const originalModule = jest.requireActual("@ft4/utils/directory-chain");
+  const originalModule = jest.requireActual("@ft4/utils");
 
   return {
     __esModule: true,
     ...originalModule,
-    getSystemAnchoringChain: jest.fn().mockResolvedValue(Buffer.from("")),
+    getDirectoryClient: jest.fn(),
+    getSystemAnchoringChain: jest.fn().mockResolvedValue(Buffer.from("AA")),
+    getBlockchainApiUrls: jest.fn((_client: IClient, blockchainRid: Buffer) => [
+      formatter.toString(blockchainRid),
+    ]),
   };
 });
 
-import { Buffer } from "buffer";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createTestAuthDescriptor, emptyOp } from "../util/util";
-import { transfer } from "@ft4/accounts/account-operations";
-import { AuthFlag, aggregateSigners } from "@ft4/accounts/auth-descriptor";
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor/types";
-import { registerAccount } from "@ft4/admin/admin-operations";
-import { createAmount } from "@ft4/asset/amount";
+import {
+  anchoredHandlerCallbackParameters,
+  createFakeAuthDataService,
+  createTestAuthDescriptor,
+  createTestAuthDescriptorWithSigner,
+  emptyOp,
+  testAdFromRegistration,
+} from "@ft4-test/util";
+import {
+  AnyAuthDescriptor,
+  AuthFlag,
+  aggregateSigners,
+  createSingleSigAuthDescriptorRegistration,
+  transfer,
+} from "@ft4/accounts";
+import { registerAccountAdminOp } from "@ft4/admin";
+import { createAmount } from "@ft4/asset";
 import {
   AuthDataService,
   Authenticator,
   FtKeyStore,
   KeyHandler,
+  SigningError,
   createAuthenticator,
+  evmSigner,
+  createEvmKeyHandler,
+  createFtKeyHandler,
+  createInMemoryEvmKeyStore,
+  createInMemoryFtKeyStore,
+  ftAuth,
+  noopAuthenticator,
+  ftSigner,
+  toRawSignature,
+  createNoopAuthenticator,
 } from "@ft4/authentication";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { nop } from "@ft4/utils";
 import {
+  AnchoringTimeoutError,
   AuthorizationError,
+  EMPTY_SIGNATURE,
   transactionBuilder,
-} from "@ft4/utils/transaction-builder";
-import { createNoopAuthenticator } from "@ft4/authentication/noop";
-import { anchoredHandlerCallbackParameters } from "../util/blockchain-util";
+} from "@ft4/transaction-builder";
 import {
   IClient,
-  isBlockAnchored,
   KeyPair,
+  NetworkSettings,
   Operation,
-  encryption,
-  gtx,
-} from "postchain-client";
-import { createStubClient } from "postchain-client";
-import { formatter } from "postchain-client";
-import { AnchoringTimeoutError } from "@ft4/utils/transaction-builder";
-import {
-  getBlockAnchoringTransaction,
+  gtv,
   SignedTransaction,
   TransactionReceipt,
   Web3PromiEvent,
+  createStubClient,
+  encryption,
+  formatter,
+  getBlockAnchoringTransaction,
+  gtx,
+  isBlockAnchored,
+  BlockAnchoringException,
+  RawGtx,
 } from "postchain-client";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts/auth-descriptor";
+import { deriveNonce, nop, op } from "@ft4/utils";
 import { ethers } from "ethers";
-import { createEvmKeyHandler } from "@ft4/authentication";
-import { testAdFromRegistration } from "../util/util";
-import { SigningError } from "@ft4/authentication";
-import {
-  createFtKeyHandler,
-  createInMemoryEvmKeyStore,
-} from "@ft4/authentication";
-import { op } from "@ft4/utils";
 
 describe("Transaction Builder", () => {
   let authenticator: Authenticator;
@@ -80,8 +103,11 @@ describe("Transaction Builder", () => {
   let keyHandler: KeyHandler;
   let authDataService: AuthDataService;
 
+  const emptyOpAuthMessage = "empty op auth message";
+
   const mockOperation: Operation = {
     name: "testOperation",
+    args: [],
   };
 
   function setupTestEnvironment(
@@ -136,7 +162,7 @@ describe("Transaction Builder", () => {
       satisfiesAuthRequirements: jest.fn(),
       authorize: jest
         .fn()
-        .mockImplementation((accountId, operation) =>
+        .mockImplementation((_accountId, operation) =>
           Promise.resolve([operation]),
         ),
       sign: keyStoreMock.sign,
@@ -147,7 +173,7 @@ describe("Transaction Builder", () => {
       keyHandlers: [keyHandlerMock],
       authDataService: createFakeAuthDataService({}),
       getKeyHandlerForOperation: jest.fn().mockReturnValue(keyHandlerMock),
-      getNonce: jest.fn().mockReturnValue(0),
+      getAuthDescriptorCounter: jest.fn().mockReturnValue(0),
     };
     return {
       authenticatorMock,
@@ -172,12 +198,17 @@ describe("Transaction Builder", () => {
     );
   });
 
-  it("builds an unsigned transaction", async () => {
+  it("builds and signs a transaction", async () => {
     const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
-    const tx = await transactionBuilder(authenticator, client)
-      .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)))
-      .buildUnsigned();
+    const tx = gtx.deserialize(
+      await transactionBuilder(authenticator, client)
+        .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)))
+        .build(),
+    );
 
+    expect(tx.blockchainRid).toStrictEqual(
+      formatter.toBuffer(client.config.blockchainRid),
+    );
     expect(tx.operations).toStrictEqual([
       {
         opName: "ft4.ft_auth",
@@ -185,36 +216,17 @@ describe("Transaction Builder", () => {
       },
       { opName: "ft4.transfer", args },
     ]);
-  });
-
-  it("signs the transaction on build", async () => {
-    const tx = await transactionBuilder(authenticator, client)
-      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)))
-      .build();
-
-    expect(gtx.deserialize(tx).signers).toStrictEqual(
-      aggregateSigners(authDescriptor),
-    );
-    expect(gtx.deserialize(tx).signatures).toBeDefined();
+    expect(tx.signers).toStrictEqual(aggregateSigners(authDescriptor));
+    expect(tx.signatures).toBeDefined();
   });
 
   it("can build transactions with a nop", async () => {
     const operation = nop();
-    const tx = await transactionBuilder(authenticator, client)
-      .add(operation)
-      .buildUnsigned();
+    const tx = gtx.deserialize(
+      await transactionBuilder(authenticator, client).add(operation).build(),
+    );
     const { name, args } = operation;
     expect(tx.operations).toStrictEqual([{ opName: name, args }]);
-  });
-
-  it("does not allow buildUnsigned() when there are onAnchoredHandlers", async () => {
-    const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
-      .buildUnsigned();
-    await expect(promise).rejects.toThrowError(Error);
   });
 
   it("does not sign transaction with only a nop on build", async () => {
@@ -228,39 +240,36 @@ describe("Transaction Builder", () => {
 
   it("does not allow build() when there are onAnchoredHandlers", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
+        onAnchoredHandler: (_data, _error) => null,
+      })
       .build();
-    await expect(promise).rejects.toThrowError(Error);
+    await expect(promise).rejects.toThrow(Error);
   });
 
   it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
+        onAnchoredHandler: (_data, _error) => null,
+      })
       .buildAndSend();
-    await expect(promise).rejects.toThrowError(Error);
+    await expect(promise).rejects.toThrow(Error);
   });
 
   it("does not allow buildAndSend() when there are onAnchoredHandlers", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(
-        transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)),
-        (_data, _error) => null,
-      )
+      .add(transfer(Buffer.alloc(32), Buffer.alloc(32), createAmount(10, 0)), {
+        onAnchoredHandler: (_data, _error) => null,
+      })
       .buildAndSend();
-    await expect(promise).rejects.toThrowError(Error);
+    await expect(promise).rejects.toThrow(Error);
   });
 
   it("throws an error if not sufficient permissions", async () => {
     const promise = transactionBuilder(authenticator, client)
-      .add(registerAccount(authDescriptor))
-      .buildUnsigned();
-    await expect(promise).rejects.toThrowError(AuthorizationError);
+      .add(registerAccountAdminOp(authDescriptor))
+      .build();
+    await expect(promise).rejects.toThrow(AuthorizationError);
   });
 
   it("uses additional signers provided", async () => {
@@ -277,7 +286,9 @@ describe("Transaction Builder", () => {
     const { authenticatorMock, keyHandlerMock, keyStoreMock, authDescriptor } =
       getMocks();
     await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(registerAccount(authDescriptor), authenticatorMock)
+      .add(registerAccountAdminOp(authDescriptor), {
+        authenticator: authenticatorMock,
+      })
       .build();
     expect(keyHandlerMock.authorize).toHaveBeenCalled();
     expect(keyStoreMock.sign).toHaveBeenCalled();
@@ -285,11 +296,13 @@ describe("Transaction Builder", () => {
 
   it("uses uses noop authenticator if authentication is not requested", async () => {
     const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
-    const tx = await transactionBuilder(authenticator, client)
-      .addWithoutAuthenticator(
-        transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
-      )
-      .buildUnsigned();
+    const tx = gtx.deserialize(
+      await transactionBuilder(authenticator, client)
+        .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)), {
+          authenticator: noopAuthenticator,
+        })
+        .build(),
+    );
 
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
@@ -346,12 +359,13 @@ describe("Transaction Builder", () => {
 
   it("can bypass authentication", async () => {
     const args = [Buffer.alloc(32), Buffer.alloc(32), BigInt(10)] as const;
-    const tx = await transactionBuilder(authenticator, client)
-      .addWithAuthenticator(
-        transfer(args[0], args[1], createAmount(args[2].toString(), 0)),
-        createNoopAuthenticator(createFakeAuthDataService({})),
-      )
-      .buildUnsigned();
+    const tx = gtx.deserialize(
+      await transactionBuilder(authenticator, client)
+        .add(transfer(args[0], args[1], createAmount(args[2].toString(), 0)), {
+          authenticator: noopAuthenticator,
+        })
+        .build(),
+    );
 
     expect(tx.operations).toStrictEqual([{ opName: "ft4.transfer", args }]);
   });
@@ -453,21 +467,19 @@ describe("Transaction Builder", () => {
 
   describe("block anchored handling", () => {
     it("calls registered handler when block is anchored in system anchoring chain", async () => {
-      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
-      (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
+      (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
+        txRid: formatter.toBuffer("CA"),
+      });
+      (isBlockAnchored as jest.Mock).mockResolvedValueOnce(true);
       const operation = nop();
-      const callback: jest.Mock<any, any, any> = jest.fn();
+      const callback: jest.Mock = jest.fn();
       let signedEvent: SignedTransaction | undefined = undefined;
       let confirmedEvent: TransactionReceipt | undefined = undefined;
-      const { tx, receipt } = await transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-        {
-          retryCount: 10,
-          waitTimeMs: 10,
-        },
-      )
-        .add(emptyOp(), callback)
+      const { tx, receipt } = await transactionBuilder(authenticator, client, {
+        retryCount: 10,
+        waitTimeMs: 10,
+      })
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(operation)
         .buildAndSendWithAnchoring()
         .on("built", (tx) => {
@@ -478,7 +490,15 @@ describe("Transaction Builder", () => {
         });
 
       expect(callback).toHaveBeenCalledWith(
-        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
+        anchoredHandlerCallbackParameters(
+          client,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            operation,
+          ],
+          1,
+        ),
         null,
       );
 
@@ -487,87 +507,125 @@ describe("Transaction Builder", () => {
     }, 5000);
 
     it("calls all registered handler when block is anchored in system anchoring chain", async () => {
-      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
-      (isBlockAnchored as jest.Mock).mockReturnValueOnce(true);
+      (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
+        txRid: formatter.toBuffer("CA"),
+      });
+      (isBlockAnchored as jest.Mock).mockResolvedValueOnce(true);
       const operation = nop();
-      const callback: jest.Mock<any, any, any> = jest.fn();
-      const callback2: jest.Mock<any, any, any> = jest.fn();
-      await transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-        {
-          retryCount: 10,
-          waitTimeMs: 10,
-        },
-      )
-        .add(emptyOp(), callback)
-        .add(emptyOp(), callback2)
+      const callback: jest.Mock = jest.fn();
+      const callback2: jest.Mock = jest.fn();
+      await transactionBuilder(authenticator, client, {
+        retryCount: 10,
+        waitTimeMs: 10,
+      })
+        .add(mockOperation, { onAnchoredHandler: callback })
+        .add(mockOperation, { onAnchoredHandler: callback2 })
         .add(operation)
         .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(
           client,
-          [emptyOp(), emptyOp(), operation],
-          0,
-          0,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            operation,
+          ],
+          1,
         ),
         null,
       );
       expect(callback2).toHaveBeenCalledWith(
         anchoredHandlerCallbackParameters(
           client,
-          [emptyOp(), emptyOp(), operation],
-          1,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            operation,
+          ],
+          3,
+        ),
+        null,
+      );
+    }, 5000);
+
+    it("calls callbacks even if block is not cluster anchored immediately", async () => {
+      (getBlockAnchoringTransaction as jest.Mock)
+        .mockRejectedValue(new BlockAnchoringException())
+        .mockResolvedValueOnce({ txRid: formatter.toBuffer("CA") });
+      (isBlockAnchored as jest.Mock).mockResolvedValueOnce(true);
+
+      const operation = nop();
+      const callback: jest.Mock = jest.fn();
+      await transactionBuilder(authenticator, client, {
+        retryCount: 10,
+        waitTimeMs: 10,
+      })
+        .add(mockOperation, { onAnchoredHandler: callback })
+        .add(operation)
+        .buildAndSendWithAnchoring();
+
+      expect(callback).toHaveBeenCalledWith(
+        anchoredHandlerCallbackParameters(
+          client,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            operation,
+          ],
           1,
         ),
         null,
       );
     }, 5000);
 
-    it("calls callbacks even if block is not anchored immediately", async () => {
-      (getBlockAnchoringTransaction as jest.Mock)
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce({});
+    it("calls callbacks even if block is not system anchored immediately", async () => {
+      (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
+        txRid: formatter.toBuffer("CA"),
+      });
       (isBlockAnchored as jest.Mock)
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(true);
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(true);
 
       const operation = nop();
-      const callback: jest.Mock<any, any, any> = jest.fn();
-      await transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-        {
-          retryCount: 10,
-          waitTimeMs: 10,
-        },
-      )
-        .add(emptyOp(), callback)
+      const callback: jest.Mock = jest.fn();
+      await transactionBuilder(authenticator, client, {
+        retryCount: 10,
+        waitTimeMs: 10,
+      })
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(operation)
         .buildAndSendWithAnchoring();
 
       expect(callback).toHaveBeenCalledWith(
-        anchoredHandlerCallbackParameters(client, [emptyOp(), operation], 0, 0),
+        anchoredHandlerCallbackParameters(
+          client,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            operation,
+          ],
+          1,
+        ),
         null,
       );
     }, 5000);
 
     it("calls callback with an error and reject the promise if polling for cluster anchoring times out", async () => {
       (getBlockAnchoringTransaction as jest.Mock)
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce(null);
+        .mockRejectedValue(new BlockAnchoringException())
+        .mockRejectedValue(new BlockAnchoringException());
 
-      const callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-        {
-          retryCount: 2,
-          waitTimeMs: 1,
-        },
-      )
-        .add(emptyOp(), callback)
+      const callback: jest.Mock = jest.fn();
+      const promise = transactionBuilder(authenticator, client, {
+        retryCount: 2,
+        waitTimeMs: 1,
+      })
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(nop())
         .buildAndSendWithAnchoring();
 
@@ -580,21 +638,19 @@ describe("Transaction Builder", () => {
     }, 5000);
 
     it("calls callback with an error and reject the promise if polling for system anchoring times out", async () => {
-      (getBlockAnchoringTransaction as jest.Mock).mockReturnValueOnce({});
+      (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
+        txRid: formatter.toBuffer("CA"),
+      });
       (isBlockAnchored as jest.Mock)
-        .mockReturnValueOnce(null)
-        .mockReturnValueOnce(null);
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
 
-      const callback: jest.Mock<any, any, any> = jest.fn();
-      const promise = transactionBuilder(
-        createNoopAuthenticator(createFakeAuthDataService({})),
-        client,
-        {
-          retryCount: 2,
-          waitTimeMs: 1,
-        },
-      )
-        .add(emptyOp(), callback)
+      const callback: jest.Mock = jest.fn();
+      const promise = transactionBuilder(authenticator, client, {
+        retryCount: 2,
+        waitTimeMs: 1,
+      })
+        .add(mockOperation, { onAnchoredHandler: callback })
         .add(nop())
         .buildAndSendWithAnchoring();
 
@@ -603,6 +659,770 @@ describe("Transaction Builder", () => {
       expect(callback).toHaveBeenCalledWith(
         null,
         expect.any(AnchoringTimeoutError),
+      );
+    }, 5000);
+
+    it("adds signer and signature when FtKeyStore provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const ftKeyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+
+      const tx = await transactionBuilder(noopAuthenticator, client)
+        .add(emptyOp(), {
+          signers: [ftKeyStore],
+          authenticator: noopAuthenticator,
+        })
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [blockchainRid, [["empty_op", []]], [ftKeyStore.id]],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [await ftKeyStore.sign(expectedTxWithoutSignatures)],
+        ]),
+      );
+    });
+
+    it("adds signer without signature when FtSigner provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const signer = ftSigner(encryption.makeKeyPair().pubKey);
+
+      const tx = await transactionBuilder(noopAuthenticator, client)
+        .add(emptyOp(), { signers: [signer] })
+        .build();
+
+      const expectedTx = gtv.encode([
+        [blockchainRid, [["empty_op", []]], [signer.pubKey]],
+        [EMPTY_SIGNATURE],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signers and signatures when FtSigners and FtKeyStores provided as signers", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const signer2 = ftSigner(encryption.makeKeyPair().pubKey);
+      const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const signer4 = ftSigner(encryption.makeKeyPair().pubKey);
+
+      const tx = await transactionBuilder(noopAuthenticator, client)
+        .add(emptyOp(), {
+          signers: [ftKeyStore1, signer2, ftKeyStore3, signer4],
+          authenticator: noopAuthenticator,
+        })
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [["empty_op", []]],
+          [ftKeyStore1.id, signer2.pubKey, ftKeyStore3.id, signer4.pubKey],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [
+            await ftKeyStore1.sign(expectedTxWithoutSignatures),
+            EMPTY_SIGNATURE,
+            await ftKeyStore3.sign(expectedTxWithoutSignatures),
+            EMPTY_SIGNATURE,
+          ],
+        ]),
+      );
+    });
+
+    it("adds signer and signature when EvmKeyStore provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore] })
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.id],
+                [
+                  toRawSignature(
+                    await evmKeyStore.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signer without signature when EvmSigner provided as a signer", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const signer = evmSigner(evmKeyStore.address);
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [signer], authenticator: noopAuthenticator })
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            ["ft4.evm_signatures", [[signer.address], [null]]],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signers and signatures when EvmSigners and EvmKeyStores provided as signers", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore3 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore4 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const signer2 = evmSigner(evmKeyStore2.id);
+      const signer4 = evmSigner(evmKeyStore4.id);
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          signers: [evmKeyStore1, signer2, evmKeyStore3, signer4],
+        })
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [
+                  evmKeyStore1.id,
+                  signer2.address,
+                  evmKeyStore3.id,
+                  signer4.address,
+                ],
+                [
+                  toRawSignature(
+                    await evmKeyStore1.signMessage(emptyOpAuthMessage),
+                  ),
+                  null,
+                  toRawSignature(
+                    await evmKeyStore3.signMessage(emptyOpAuthMessage),
+                  ),
+                  null,
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds signers and signatures when EvmKeyStore, EvmSigner, FtKeyStore and FtSigner provided as signers", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const ftKeyStore3 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const ftSigner4 = ftSigner(encryption.makeKeyPair().pubKey);
+      const evmSigner2 = evmSigner(evmKeyStore2.id);
+
+      const authenticator = createNoopAuthenticator(
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          signers: [evmKeyStore1, evmSigner2, ftKeyStore3, ftSigner4],
+        })
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore1.id, evmSigner2.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore1.signMessage(emptyOpAuthMessage),
+                  ),
+                  null,
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [ftKeyStore3.id, ftSigner4.pubKey],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [
+            await ftKeyStore3.sign(expectedTxWithoutSignatures),
+            EMPTY_SIGNATURE,
+          ],
+        ]),
+      );
+    });
+
+    it("can combine evm_signatures operation with ft_auth operation", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const accountId = encryption.randomBytes(32);
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore] })
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["ft4.ft_auth", [accountId, authDescriptor.id]],
+            ["empty_op", []],
+          ],
+          [keyStore.id],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [await keyStore.sign(expectedTxWithoutSignatures)],
+        ]),
+      );
+    });
+
+    it("can combine evm_signatures operation with ft_auth operation without signing", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const accountId = encryption.randomBytes(32);
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore], skipFtSigning: true })
+        .build();
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["ft4.ft_auth", [accountId, authDescriptor.id]],
+            ["empty_op", []],
+          ],
+          [keyStore.id],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([expectedTxWithoutSignatures[0], [EMPTY_SIGNATURE]]),
+      );
+    });
+
+    it("skips ft signing only on the specified operations", async () => {
+      const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const { keyStore: ftKeyStore2, authDescriptor: authDescriptor2 } =
+        createTestAuthDescriptor();
+      const accountId = encryption.randomBytes(32);
+      const { keyStore: keyStore3, authDescriptor: authDescriptor3 } =
+        createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore3.createKeyHandler(authDescriptor3)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const authenticator2 = createAuthenticator(
+        accountId,
+        [ftKeyStore2.createKeyHandler(authDescriptor2)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [ftKeyStore1], skipFtSigning: true })
+        .add(emptyOp(), { authenticator: authenticator2 })
+        .add(emptyOp())
+        .build();
+
+      const deserializedTx = gtx.deserialize(tx);
+      expect(deserializedTx.signatures![0].equals(EMPTY_SIGNATURE)).toBe(false); // Signed by keyStore
+      expect(deserializedTx.signatures![1].equals(EMPTY_SIGNATURE)).toBe(true); // Not signed by ftKeyStore1
+      expect(deserializedTx.signatures![2].equals(EMPTY_SIGNATURE)).toBe(false); // Signed by ftKeyStore2
+    });
+
+    it("skips ft signing on all the specified operations", async () => {
+      const ftKeyStore1 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const ftKeyStore2 = createInMemoryFtKeyStore(encryption.makeKeyPair());
+      const accountId = encryption.randomBytes(32);
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+      const authenticator2 = createAuthenticator(
+        accountId,
+        [ftKeyStore2.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [ftKeyStore1], skipFtSigning: true })
+        .add(emptyOp(), {
+          signers: [ftKeyStore2],
+          authenticator: authenticator2,
+          skipFtSigning: true,
+        })
+        .add(emptyOp(), { skipFtSigning: true })
+        .build();
+
+      const deserializedTx = gtx.deserialize(tx);
+      expect(deserializedTx.signatures![0].equals(EMPTY_SIGNATURE)).toBe(true);
+      expect(deserializedTx.signatures![1].equals(EMPTY_SIGNATURE)).toBe(true);
+      expect(deserializedTx.signatures![2].equals(EMPTY_SIGNATURE)).toBe(true);
+    });
+
+    it("can combine evm_signatures operation with evm_auth operation", async () => {
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const accountId = gtv.gtvHash(evmKeyStore1.id);
+      const authDescriptor = createTestAuthDescriptorWithSigner(
+        accountId,
+        evmKeyStore1.id,
+      );
+      const authenticator = createAuthenticator(
+        accountId,
+        [evmKeyStore1.createKeyHandler(authDescriptor)],
+        createFakeAuthDataService({
+          empty_op: { flags: [], message: emptyOpAuthMessage },
+        }),
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore2] })
+        .build();
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore2.address],
+                [
+                  toRawSignature(
+                    await evmKeyStore2.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            [
+              "ft4.evm_auth",
+              [
+                accountId,
+                authDescriptor.id,
+                [
+                  toRawSignature(
+                    await evmKeyStore1.signMessage(emptyOpAuthMessage),
+                  ),
+                ],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("throws error if account_id placeholder exists in auth message template but there is not auth operation", async () => {
+      const authMessageTemplate = "auth message with {account_id}";
+      const accountId = encryption.randomBytes(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(accountId, [], authDataService);
+
+      const promise = transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          authenticator: createNoopAuthenticator(authDataService),
+          signers: [evmKeyStore],
+        })
+        .build();
+
+      await expect(promise).rejects.toThrow(
+        "Unable to sign operation empty_op",
+      );
+    });
+
+    it("throws error if auth_descriptor_id placeholder exists in auth message template but there is not auth operation", async () => {
+      const authMessageTemplate = "auth message with {auth_descriptor_id}";
+      const accountId = encryption.randomBytes(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(accountId, [], authDataService);
+
+      const promise = transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          authenticator: createNoopAuthenticator(authDataService),
+          signers: [evmKeyStore],
+        })
+        .build();
+
+      await expect(promise).rejects.toThrow(
+        "Unable to sign operation empty_op",
+      );
+    });
+
+    it("adds evm_signatures when account_id and auth_descriptor_id placeholders exist in auth message template and there is ft auth operation", async () => {
+      const authMessageTemplate =
+        "auth message with {account_id} {auth_descriptor_id}";
+      const accountId = encryption.randomBytes(32);
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const { keyStore, authDescriptor } = createTestAuthDescriptor();
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(
+        accountId,
+        [keyStore.createKeyHandler(authDescriptor)],
+        authDataService,
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore] })
+        .build();
+
+      const message = `auth message with ${formatter.toString(accountId)} ${formatter.toString(authDescriptor.id)}`;
+
+      const expectedTxWithoutSignatures: RawGtx = [
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.id],
+                [toRawSignature(await evmKeyStore.signMessage(message))],
+              ],
+            ],
+            ["ft4.ft_auth", [accountId, authDescriptor.id]],
+            ["empty_op", []],
+          ],
+          [keyStore.id],
+        ],
+        [],
+      ];
+
+      expect(tx).toEqual(
+        gtv.encode([
+          expectedTxWithoutSignatures[0],
+          [await keyStore.sign(expectedTxWithoutSignatures)],
+        ]),
+      );
+    });
+
+    it("adds evm_signatures when account_id and auth_descriptor_id placeholders exist in auth message template and there is evm auth operation", async () => {
+      const authMessageTemplate =
+        "auth message with {account_id} {auth_descriptor_id}";
+      const accountId = encryption.randomBytes(32);
+      const blockchainRid = Buffer.alloc(32);
+      const evmKeyStore1 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const evmKeyStore2 = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+      const authDescriptor = createTestAuthDescriptorWithSigner(
+        accountId,
+        evmKeyStore1.id,
+      );
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(
+        accountId,
+        [evmKeyStore1.createKeyHandler(authDescriptor)],
+        authDataService,
+      );
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), { signers: [evmKeyStore2] })
+        .build();
+
+      const message = `auth message with ${formatter.toString(accountId)} ${formatter.toString(authDescriptor.id)}`;
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore2.id],
+                [toRawSignature(await evmKeyStore2.signMessage(message))],
+              ],
+            ],
+            [
+              "ft4.evm_auth",
+              [
+                accountId,
+                authDescriptor.id,
+                [toRawSignature(await evmKeyStore1.signMessage(message))],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("adds evm_signatures when nonce and blockchain_rid exist in auth message template but there is not auth operation", async () => {
+      const authMessageTemplate = "auth message with {blockchain_rid} {nonce}";
+      const blockchainRid = Buffer.alloc(32);
+      const accountId = encryption.randomBytes(32);
+      const evmKeyStore = createInMemoryEvmKeyStore(encryption.makeKeyPair());
+
+      const authDataService = createFakeAuthDataService({
+        empty_op: { flags: [], message: authMessageTemplate },
+      });
+      const authenticator = createAuthenticator(accountId, [], authDataService);
+
+      const tx = await transactionBuilder(authenticator, client)
+        .add(emptyOp(), {
+          authenticator: createNoopAuthenticator(authDataService),
+          signers: [evmKeyStore],
+        })
+        .build();
+
+      const message = `auth message with ${formatter.toString(blockchainRid)} ${deriveNonce(blockchainRid, emptyOp(), 0)}`;
+
+      const expectedTx = gtv.encode([
+        [
+          blockchainRid,
+          [
+            [
+              "ft4.evm_signatures",
+              [
+                [evmKeyStore.id],
+                [toRawSignature(await evmKeyStore.signMessage(message))],
+              ],
+            ],
+            ["empty_op", []],
+          ],
+          [],
+        ],
+        [],
+      ]);
+
+      expect(tx).toEqual(expectedTx);
+    });
+
+    it("calls registered handler when block is anchored target cluster", async () => {
+      const targetBlockchainRid1 = formatter.toBuffer("1111");
+      const targetBlockchainRid2 = formatter.toBuffer("2222");
+
+      (getBlockAnchoringTransaction as jest.Mock).mockResolvedValueOnce({
+        txRid: formatter.toBuffer("CA"),
+      });
+      (isBlockAnchored as jest.Mock)
+        .mockClear()
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(true);
+      const callback1: jest.Mock = jest.fn();
+      const callback2: jest.Mock = jest.fn();
+      const callback3: jest.Mock = jest.fn();
+      await transactionBuilder(authenticator, client, {
+        retryCount: 10,
+        waitTimeMs: 10,
+      })
+        .add(mockOperation, {
+          targetBlockchainRid: targetBlockchainRid1,
+          onAnchoredHandler: callback1,
+        })
+        .add(mockOperation, {
+          targetBlockchainRid: targetBlockchainRid2,
+          onAnchoredHandler: callback2,
+        })
+        .add(mockOperation, {
+          targetBlockchainRid: targetBlockchainRid2,
+          onAnchoredHandler: callback3,
+        })
+        .buildAndSendWithAnchoring();
+
+      expect(isBlockAnchored).toHaveBeenCalledTimes(3);
+      expect(isBlockAnchored).toHaveBeenNthCalledWith(
+        1,
+        clusterAnchoringClient,
+        undefined,
+        formatter.toBuffer("CA"),
+      );
+      expect(isBlockAnchored).toHaveBeenNthCalledWith(
+        2,
+        clusterAnchoringClient,
+        formatter.toString(targetBlockchainRid1),
+        formatter.toBuffer("CA"),
+      );
+      expect(isBlockAnchored).toHaveBeenNthCalledWith(
+        3,
+        clusterAnchoringClient,
+        formatter.toString(targetBlockchainRid2),
+        formatter.toBuffer("CA"),
+      );
+
+      expect(callback1).toHaveBeenCalledWith(
+        anchoredHandlerCallbackParameters(
+          client,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+          ],
+          1,
+        ),
+        null,
+      );
+      expect(callback2).toHaveBeenCalledWith(
+        anchoredHandlerCallbackParameters(
+          client,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+          ],
+          3,
+        ),
+        null,
+      );
+      expect(callback3).toHaveBeenCalledWith(
+        anchoredHandlerCallbackParameters(
+          client,
+          [
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+            ftAuth(authenticator.accountId, authDescriptor.id),
+            mockOperation,
+          ],
+          5,
+        ),
+        null,
       );
     }, 5000);
   });

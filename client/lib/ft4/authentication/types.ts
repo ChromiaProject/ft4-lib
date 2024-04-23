@@ -1,10 +1,11 @@
-import { AnyAuthDescriptor } from "@ft4/accounts/auth-descriptor";
-import { AuthHandler } from "@ft4/types";
-import { Connection } from "@ft4/index";
+import { AnyAuthDescriptor } from "@ft4/accounts";
+import { Connection } from "@ft4/ft-session";
 import { BufferId, TxContext } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { GTX, Operation } from "postchain-client";
+import { GTX, Operation, RellOperation } from "postchain-client";
 import { LoginConfig } from "./login";
+import { EvmSigner } from "./evm";
+import { FtSigner } from "./ft";
 
 export class KeyHandlerError extends Error {
   constructor(msg?: string) {
@@ -13,6 +14,11 @@ export class KeyHandlerError extends Error {
   }
 }
 
+export type AuthHandler = {
+  name: string;
+  flags: string[];
+  dynamic: boolean;
+};
 export class SigningError extends Error {
   originalError: Error;
 
@@ -32,7 +38,7 @@ export interface Authenticator {
     operation: Operation,
     txContext: TxContext,
   ): Promise<KeyHandler | null>;
-  getNonce(authDescriptorId: BufferId): Promise<number | null>;
+  getAuthDescriptorCounter(authDescriptorId: BufferId): Promise<number | null>;
 }
 
 export interface KeyHandler {
@@ -54,6 +60,8 @@ export interface KeyHandler {
   getSigners(): Buffer[];
 }
 
+export type Signer = KeyStore | EvmSigner | FtSigner;
+
 export interface KeyStore {
   id: Buffer;
   // when false, signing is performed without user interaction
@@ -64,8 +72,8 @@ export interface KeyStore {
 export interface AuthDataService {
   connection: Connection;
   isOperationExposed(operationName: string): Promise<boolean>;
-  getAuthMessageTemplate(operation: Operation): Promise<string>;
-  getNonce(
+  getAuthMessageTemplate(operation: Operation | RellOperation): Promise<string>;
+  getAuthDescriptorCounter(
     accountId: BufferId,
     authDescriptorId: BufferId,
   ): Promise<number | null>;

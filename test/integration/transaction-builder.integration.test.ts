@@ -1,20 +1,24 @@
-import { nop } from "@ft4/utils";
-import { emptyOp } from "../util/util";
-import { createConnection } from "@ft4/index";
-import { SignedTransaction } from "postchain-client";
-import { useChromiaNode } from "@ft4/util/chromia-node";
-import { createTestAuthDescriptor } from "../util/util";
-import { createAccount } from "../util/util";
-import { getSessionForAccount } from "../util/util";
-import { Session } from "@ft4/index";
-import { AuthorizationError } from "@ft4/utils/transaction-builder/index";
-import { deleteAllAuthDescriptorsExclude } from "@ft4/accounts/account-operations";
-import { AnyAuthDescriptor } from "@ft4/index";
-import { rejectedOp } from "../util/util";
-import { TxRejectedError } from "postchain-client";
-import { TransactionReceipt } from "postchain-client";
-import { ResponseStatus } from "postchain-client";
-import { SystemChainException } from "postchain-client";
+import {
+  createAccount,
+  createTestAuthDescriptor,
+  getSessionForAccount,
+  rejectedOp,
+  useChromiaNode,
+} from "@ft4-test/util";
+import {
+  AnyAuthDescriptor,
+  deleteAllAuthDescriptorsExceptMain,
+} from "@ft4/accounts";
+import { Session, createConnection } from "@ft4/ft-session";
+import { AuthorizationError } from "@ft4/transaction-builder";
+import { nop, op } from "@ft4/utils";
+import {
+  ResponseStatus,
+  SignedTransaction,
+  SystemChainException,
+  TransactionReceipt,
+  TxRejectedError,
+} from "postchain-client";
 
 describe("transaction builder", () => {
   let session: Session;
@@ -26,22 +30,18 @@ describe("transaction builder", () => {
     const connection = createConnection(client);
 
     const { keyPair, authDescriptor: _authDescriptor } =
-      createTestAuthDescriptor(["A"]);
+      createTestAuthDescriptor(["A", "T"]);
     authDescriptor = _authDescriptor;
 
-    await createAccount(connection.client, authDescriptor);
+    const accountId = await createAccount(connection.client, authDescriptor);
 
-    session = await getSessionForAccount(
-      connection,
-      authDescriptor.id,
-      keyPair,
-    );
+    session = await getSessionForAccount(connection, accountId, keyPair);
   });
 
   it("handles missing key handler in buildAndSend()", async () => {
     const promise = session
       .transactionBuilder()
-      .add(emptyOp())
+      .add(op("empty_op_with_auth_handler"))
       .add(nop())
       .buildAndSend();
 
@@ -51,7 +51,7 @@ describe("transaction builder", () => {
   it("handles missing key handler in buildAndSendWithAnchoring()", async () => {
     const promise = session
       .transactionBuilder()
-      .add(emptyOp())
+      .add(op("empty_op_with_auth_handler"))
       .add(nop())
       .buildAndSendWithAnchoring();
 
@@ -83,9 +83,7 @@ describe("transaction builder", () => {
     let sentEvent: Buffer | undefined = undefined;
     const { tx, receipt } = await session
       .transactionBuilder()
-      .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
-      )
+      .add(deleteAllAuthDescriptorsExceptMain())
       .add(nop())
       .buildAndSend()
       .on("built", (tx) => {
@@ -105,9 +103,7 @@ describe("transaction builder", () => {
     let confirmedEvent: TransactionReceipt | undefined = undefined;
     const promise = session
       .transactionBuilder()
-      .add(
-        deleteAllAuthDescriptorsExclude(session.account.id, authDescriptor.id),
-      )
+      .add(deleteAllAuthDescriptorsExceptMain())
       .add(nop())
       .buildAndSendWithAnchoring()
       .on("built", (tx) => {

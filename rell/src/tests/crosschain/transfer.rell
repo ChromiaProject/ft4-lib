@@ -1,8 +1,7 @@
 @test module;
 
-import xc: ^^^.lib.ft4.crosschain;
-import xc_ext: ^^^.lib.ft4.crosschain.external;
-import auth_ext: ^^^.lib.ft4.auth.external;
+import lib.ft4.auth;
+import xc: lib.ft4.crosschain;
 import ^^.assets.utils;
 
 function test_it_registers_a_pending_transaction_in_init_transfer() {
@@ -13,8 +12,8 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
   utils.mint(alice.account, asset, 1);
 
   rell.test.tx()
-    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
+    .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
     .sign(alice.keypair)
     .run();
 
@@ -32,14 +31,14 @@ function test_it_fetches_pending_transactions_for_the_specified_account() {
   utils.mint(bob.account, asset, 1);
 
   rell.test.tx()
-    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()]))
-    .op(auth_ext.ft_auth(bob.account.id, bob.auth_descriptor_id))
-    .op(xc_ext.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()]))
+    .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc.external.init_transfer(bob.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
+    .op(auth.external.ft_auth(bob.account.id, bob.auth_descriptor_id))
+    .op(xc.external.init_transfer(alice.account.id, asset.id, 1, ["1".to_bytes()], 10000000000000))
     .sign(alice.keypair, bob.keypair)
     .run();
 
-  assert_equals(xc_ext.get_pending_transfers_for_account(bob.account.id, 10, null).data.size(), 1);
+  assert_equals(xc.external.get_pending_transfers_for_account(bob.account.id, 10, null).data.size(), 1);
 }
 
 function test_get_pending_transfers_for_account_is_paginated() {
@@ -50,15 +49,15 @@ function test_get_pending_transfers_for_account_is_paginated() {
   utils.mint(alice.account, asset_valid, 10);
 
   rell.test.tx()
-    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"]))
-    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"]))
+    .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
+    .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc.external.init_transfer(bob.account.id, asset_valid.id, 1L, [x"abcdef"], 10000000000000))
     .sign(rell.test.keypairs.alice)
     .run();
 
-  val page1 = xc_ext.get_pending_transfers_for_account(alice.account.id, 1, null);
-  val page2 = xc_ext.get_pending_transfers_for_account(alice.account.id, 1, page1.next_cursor);
+  val page1 = xc.external.get_pending_transfers_for_account(alice.account.id, 1, null);
+  val page2 = xc.external.get_pending_transfers_for_account(alice.account.id, 1, page1.next_cursor);
 
   val pending_transfers = xc.pending_transfer @* {} (
     (
@@ -84,19 +83,19 @@ function test_it_fetches_pending_transfers_by_sender_asset_and_amount() {
   utils.mint(alice.account, asset, 3);
 
   rell.test.tx()
-    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(recipient1_id, asset.id, 1, [target_blockchain_rid]))
-    .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-    .op(xc_ext.init_transfer(recipient2_id, asset.id, 2, [target_blockchain_rid]))
+    .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc.external.init_transfer(recipient1_id, asset.id, 1, [target_blockchain_rid], 10000000000000))
+    .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+    .op(xc.external.init_transfer(recipient2_id, asset.id, 2, [target_blockchain_rid], 10000000000000))
     .sign(alice.keypair)
     .run();
 
-  assert_not_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient1_id, asset.id, 1));
-  assert_not_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient2_id, asset.id, 2));
-  assert_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient1_id, asset.id, 2));
-  assert_null(xc_ext.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient2_id, asset.id, 1));
+  assert_not_null(xc.external.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient1_id, asset.id, 1));
+  assert_not_null(xc.external.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient2_id, asset.id, 2));
+  assert_null(xc.external.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient1_id, asset.id, 2));
+  assert_null(xc.external.get_last_pending_transfer_for_account(alice.account.id, target_blockchain_rid, recipient2_id, asset.id, 1));
 }
 
 function test_returns_false_if_transfer_is_not_applied() {
-  assert_false(xc_ext.is_transfer_applied("0".to_bytes(), 0));
+  assert_false(xc.external.is_transfer_applied("0".to_bytes(), 0));
 }

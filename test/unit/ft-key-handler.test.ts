@@ -1,11 +1,12 @@
+import {
+  createFakeAuthDataService,
+  createTestAuthDescriptor,
+} from "@ft4-test/util";
+import { aggregateSigners } from "@ft4/accounts";
+import { createInMemoryFtKeyStore, ftAuth } from "@ft4/authentication";
+import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { RellOperation, encryption, gtx } from "postchain-client";
-import { aggregateSigners } from "@ft4/accounts";
-import { ftAuth } from "@ft4/authentication/ft";
-import { createInMemoryFtKeyStore } from "@ft4/authentication/ft/key-stores/in-memory";
-import { op } from "@ft4/utils";
-import { createFakeAuthDataService } from "../util/fake-auth-data-service";
-import { createTestAuthDescriptor } from "../util/util";
 
 describe("FT key handler", () => {
   it("should insert FT auth operation", async () => {

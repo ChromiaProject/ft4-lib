@@ -1,23 +1,21 @@
 @test
 module;
 
-import ^^^^.lib.ft4.accounts;
-import ^^^^.lib.ft4.assets;
-import ^^^^.lib.ft4.utils;
-import ^^^^.lib.ft4.ft4_basic_dev.*;
+import lib.ft4.auth;
+import lib.ft4.utils;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.transfer.subscription;
 import test_utils: ^^^^.lib.ft4.test.utils;
-import strategies: ^^^^.lib.ft4.accounts.strategies;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^^.lib.ft4.accounts.strategies.transfer.subscription;
 import asset_utils: ^^^.assets.utils;
-import auth_ext: ^^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^^.lib.ft4.crosschain.external;
 import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.tx()
-        .op(helpers.create_system_account(rell.test.pubkeys.charlie))
+        .op(helpers.create_system_account(rell.test.pubkeys.charlie, create_on_transfer.ACCOUNT_TYPE_FEE))
         .run();
     val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
 
@@ -36,8 +34,8 @@ function test_create_account_on_internal_transfer_with_subscription() {
     val subscription_amount = subscription_assets[asset.id];
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
         .run();
 
@@ -54,8 +52,8 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     var last_block_time = rell.test.last_block_time;
     rell.test.tx()
-        .op(subscription.ras_transfer_subscription(asset.id, asset_utils.create_auth_descriptor(rell.test.pubkeys.bob)))
-        .op(strategies.register_account())
+        .op(subscription.ras_transfer_subscription(asset.id, test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 

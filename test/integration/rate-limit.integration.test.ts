@@ -1,12 +1,13 @@
-import { IClient, Transaction } from "postchain-client";
-import { createConnection } from "@ft4/ft-session";
-import { Connection } from "@ft4/types";
-import AccountBuilder from "@ft4/util/account-builder";
-import TestUser, { User } from "@ft4/util/test-user";
-import { BufferId } from "@ft4/utils/types";
+import {
+  AccountBuilder,
+  singleSigUser as TestUser,
+  User,
+  useChromiaNode,
+} from "@ft4-test/util";
 import { ftAuth } from "@ft4/authentication";
-import { op } from "@ft4/index";
-import { useChromiaNode } from "@ft4/util/chromia-node";
+import { Connection, createConnection } from "@ft4/ft-session";
+import { BufferId, op } from "@ft4/utils";
+import { IClient, Transaction } from "postchain-client";
 
 jest.setTimeout(2000000);
 

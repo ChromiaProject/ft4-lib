@@ -22,7 +22,7 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
           .id == auth_descriptor_id,
           .account == account
     };
-    val signers = acc.get_signers(acc_auth_desc.auth_type, acc_auth_desc.args);
+    val signers = acc.get_signers_from_encoded_auth_descriptor(acc_auth_desc.auth_type, acc_auth_desc.args);
 
     val result = acc.check_auth_args(
        		acc_auth_desc.auth_type,
@@ -39,7 +39,7 @@ operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, requ
 }
 
 function test_authenticated_operation_message(gtv) {
-    return "{nonce}";
+    return "";
 }
 
 @extend(auth.auth_handler)
@@ -67,7 +67,7 @@ operation test_empty_auth_message() {
 }
 
 operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
-  acc.add_auth_descriptor_to_account(account, desc);
+  acc.add_auth_descriptor(account, desc);
 }
 
 function test_perform_large_transfer_message(gtv) {
@@ -101,4 +101,14 @@ function () = auth.add_auth_handler(
 );
 operation test_auth_with_resolver(ad_to_select: integer) {
   auth.authenticate();
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+  scope = rell.meta(extra_signatures_op).mount_name,
+  flags = []
+);
+
+operation extra_signatures_op(signers: list<byte_array>) {
+  auth.verify_signers(signers);
 }

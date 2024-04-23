@@ -1,14 +1,14 @@
 @test module;
 
-import test_utils: ^^.assets.utils;
+import asset_utils: ^^.assets.utils;
 import test_op: ^^.operations;
 import ^.helpers;
-import ^^^.lib.ft4.accounts;
-import accounts_ext: ^^^.lib.ft4.accounts.external;
-import ^^^.lib.ft4.admin;
-import ft_utils: ^^^.lib.ft4.test.utils;
+import lib.ft4.accounts;
+import lib.ft4.admin;
+import test_utils: ^^^.lib.ft4.test.utils;
 import auth: ^^.operations.auth;
-import auth_ext: ^^^.lib.ft4.auth.external;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.open;
 
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
@@ -16,19 +16,33 @@ val bob = rell.test.keypairs.bob;
 function test_an_account_can_be_created() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
   
-  admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
     .run();
   
-  assert_not_null(accounts.account @? { auth_descriptor.hash() });
+  assert_not_null(accounts.account @? { alice.pub.hash() });
+}
+
+function test_main_ad_is_registered() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+  
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
+    .run();
+
+  val ad_id = auth_descriptor.hash();
+  val acc = accounts.account @? { alice.pub.hash() };
+  
+  assert_not_null(acc);
+  assert_equals(accounts.main_auth_descriptor @ { acc } (.auth_descriptor.id), ad_id);
 }
 
 function test_cannot_create_account_with_no_A_flag() {
   val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["T"]);
   
-  admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
-    .run_must_fail("The auth descriptor used to create an account must always have the 'A' flag");
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
+    .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[T]>");
 }
 
 function test_cannot_create_account_with_expiring_ad() {
@@ -40,8 +54,8 @@ function test_cannot_create_account_with_expiring_ad() {
     ])
   );
   
-  admin.register_account(auth_descriptor)
-    .sign(test_utils.admin_priv_key())
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
     .sign(bob)
     .run_must_fail("Cannot create an account with a restricted auth descriptor");
 }
@@ -53,17 +67,16 @@ function test_multi_sig_auth_descriptor_can_be_added() {
         ["A", "T"].to_gtv(),
         0x2.to_gtv(),
         [
-          alice.pub.to_hex(),
-          bob.pub.to_hex()
+          alice.pub,
+          bob.pub
         ].to_gtv()
     ],
     rules = null.to_gtv()
   );
 
-  test_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
-
+  asset_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor);
   
-  assert_not_null(accounts.account @? { auth_descriptor.hash() });;
+  assert_not_null(accounts.account @? { [alice.pub, bob.pub].hash() });;
 }
 
 function test_an_invalid_descriptor_can_not_be_added() {
@@ -71,41 +84,130 @@ function test_an_invalid_descriptor_can_not_be_added() {
     accounts.auth_type.M,
     [
         ["T"].to_gtv(),
-        alice.pub.to_hex().to_gtv(),
-        bob.pub.to_hex().to_gtv()
+        alice.pub.to_gtv(),
+        bob.pub.to_gtv()
     ],
     rules = null.to_gtv()
   );
 
   assert_fails(
-    "Operation 'lib.ft4.admin:register_account' failed",
-    test_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
+    "Operation 'lib.ft4.external.admin:register_account' failed",
+    asset_utils._create_test_acc_from_auth_desc_multi_sig([alice, bob], auth_descriptor, *)
   );
 }
 
+function test_duplicate_multisig_ad_can_not_be_used_when_creating_account() {
+  val auth_descriptor = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["A", "T"].to_gtv(),
+        0x2.to_gtv(),
+        [
+          alice.pub,
+          alice.pub
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  rell.test.tx()
+      .op(open.ras_open(auth_descriptor))
+      .op(strategies.external.register_account())
+      .sign(alice)
+      .run_must_fail("duplicate key value violates unique constraint");
+}
+
+function test_duplicate_multisig_ad_can_not_be_added_to_account() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
+    .run();
+
+  val auth_descriptor2 = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        0x2.to_gtv(),
+        [
+          bob.pub,
+          bob.pub
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  rell.test.tx()
+      .op(test_utils.ft_auth_operation_for(alice.pub))
+      .op(accounts.external.add_auth_descriptor(auth_descriptor2))
+      .sign(alice)
+      .sign(bob)
+      .run_must_fail("duplicate key value violates unique constraint");
+}
+
+function test_create_account_without_auth_in_operation_in_genesis_block() {
+  val type = "FEE";  
+  val id = (type, chain_context.blockchain_rid).hash();
+  
+  test_op.register_account_without_auth_test(id, type).run();
+
+  assert_not_null(accounts.account @? { .id == id, .type == type});
+}
+
+function test_create_account_without_auth_in_operation_after_genesis_block() {  
+  val type = "POOL";  
+  val id = (type, chain_context.blockchain_rid).hash();
+  
+  rell.test.block().run();  
+  test_op.register_account_without_auth_test(id, type).run();
+
+  assert_not_null(accounts.account @? { .id == id, .type == type});
+}
+
+function test_create_account_without_auth_without_operation_in_genesis_block() {
+  val system_account_id = helpers.init_object.system_account_id;
+  assert_equals(
+    system_account_id, 
+    accounts.account @? { 
+      .id == chain_context.blockchain_rid, 
+      .type == "BLOCKCHAIN"
+    }.id
+  );
+}
+
+function test_create_duplicate_account_without_auth_fails() {
+  val type = "FEE";  
+  val id = (type, chain_context.blockchain_rid).hash();
+  
+  test_op.register_account_without_auth_test(id, type).run();
+  rell.test.tx()
+    .op(test_op.register_account_without_auth_test(id, type))
+    .nop()
+    .run_must_fail("duplicate key value violates unique constraint");
+}
+
 function test_create_account_with_auth_in_operation_in_genesis_block() {
-  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
   test_op.register_account_test(auth_descriptor)
       .run();
-  assert_equals(accounts.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), 0);
+  assert_equals(accounts.rl_state @ { .account.id == rell.test.pubkeys.alice.hash() } (.last_update), 0);
 }
 
 function test_create_account_with_auth_in_operation_after_genesis_block() {
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
-  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
+  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
   test_op.register_account_test(auth_descriptor)
       .run();
-  assert_equals(accounts.rl_state @ { .account.id == auth_descriptor.hash() } (.last_update), rell.test.DEFAULT_FIRST_BLOCK_TIME);
+  assert_equals(accounts.rl_state @ { .account.id == rell.test.pubkeys.alice.hash() } (.last_update), rell.test.DEFAULT_FIRST_BLOCK_TIME);
 }
 
 function test_create_account_auth_in_without_operation_in_genesis_block() {
-  val account_id = helpers.init_object.account_id;
+  val account_id = helpers.init_object.user_account_id;
   assert_equals(accounts.rl_state @ { .account.id == account_id } (.last_update), 0);
 }
 
 function test_an_account_cannot_have_too_many_auth_descriptors() {
-  val acc_data = test_utils.register_alice();
+  val acc_data = asset_utils.register_alice();
 
   val auth_descriptors = [
     test_utils.create_auth_descriptor(alice.pub, ["2"]),
@@ -124,18 +226,57 @@ function test_an_account_cannot_have_too_many_auth_descriptors() {
   var tx = rell.test.tx();
   for (ad in auth_descriptors) {
     tx = tx
-      .op(admin.add_rate_limit_points(acc_data.account.id, 1))
-      .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
-      .op(accounts_ext.add_auth_descriptor(ad));
+      .op(admin.external.add_rate_limit_points(acc_data.account.id, 1))
+      .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
+      .op(accounts.external.add_auth_descriptor(ad));
   }
   tx
-    .sign(test_utils.admin_priv_key())
+    .sign(asset_utils.admin_priv_key())
     .sign(rell.test.keypairs.alice)
     .run();
 
   rell.test.tx()
-    .op(ft_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
-    .op(accounts_ext.add_auth_descriptor(one_too_many))
+    .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.alice))
+    .op(accounts.external.add_auth_descriptor(one_too_many))
     .sign(rell.test.keypairs.alice)
     .run_must_fail("Max <10> auth descriptor count reached. Delete some before adding new ones.");
+}
+
+function test_create_account_with_auth_succeeds() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+
+  test_op.function__create_account_with_auth(auth_descriptor).run();
+
+  val account_id = accounts.get_account_id_from_signers([alice.pub]);
+  assert_not_null(accounts.account @? { .id == account_id });
+  assert_not_null(accounts.account_auth_descriptor @? { .account.id == account_id, .id == auth_descriptor.hash() });
+}
+
+function test_create_account_with_auth_can_create_account_with_custom_id_when_using_single_sig_auth_descriptor() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+
+  val custom_account_id = bob.pub.hash();
+  test_op.function__create_account_with_auth(auth_descriptor, custom_account_id).run();
+
+  assert_not_null(accounts.account @? { .id == custom_account_id });
+  assert_not_null(accounts.account_auth_descriptor @? { .account.id == custom_account_id, .id == auth_descriptor.hash() });
+  assert_null(accounts.account @? { .id == accounts.get_account_id_from_signers([alice.pub])});
+}
+
+function test_create_account_with_auth_can_create_account_with_custom_id_when_using_multi_sig_auth_descriptor() {
+  val auth_descriptor = test_utils.create_multisig_auth_descriptor(2, [alice.pub, bob.pub], ["A", "T"]);
+
+  val custom_account_id = rell.test.pubkeys.eve.hash();
+  test_op.function__create_account_with_auth(auth_descriptor, custom_account_id).run();
+
+  assert_not_null(accounts.account @? { .id == custom_account_id });
+  assert_not_null(accounts.account_auth_descriptor @? { .account.id == custom_account_id, .id == auth_descriptor.hash() });
+  assert_null(accounts.account @? { .id == accounts.get_account_id_from_signers([alice.pub, bob.pub])});
+}
+
+function test_create_account_with_auth_fails_if_mandatory_flag_missing() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A"]);
+
+  test_op.function__create_account_with_auth(auth_descriptor)
+    .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[A]>");
 }
