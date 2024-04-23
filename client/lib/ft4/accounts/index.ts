@@ -69,6 +69,7 @@ export { authDescriptorById } from "./queries";
 
 export {
   getById,
+  getByType,
   getBySigner,
   getByAuthDescriptorId,
   createAccountObject,

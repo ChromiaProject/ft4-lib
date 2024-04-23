@@ -7,6 +7,18 @@ import ^^^.assets;
 import ^^^.crosschain;
 import ^^^.utils;
 
+/**
+ * Constant that represents account type used to temporarily store assets of transfers 
+ * that have recipient_id that does not exist.
+ */
+val ACCOUNT_TYPE_POOL = "FT4_POOL";
+
+/**
+ * Constant that represent account type used to store fees charged during account registration.
+ * Currently used both for `fee` and `subscription` strategies.
+ */
+val ACCOUNT_TYPE_FEE = "FT4_FEE";
+
 struct module_args_list_element {
     sender_blockchain: gtv;
     sender: gtv;
@@ -219,17 +231,15 @@ function recall_transfer(
 }
 
 function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
-    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
-    return accounts.account @? { .id == pool_account_id }
-       ?: create accounts.account(id = pool_account_id);
+    val pool_account_id = (ACCOUNT_TYPE_POOL + chain_context.blockchain_rid).hash();
+    return accounts.ensure_account_without_auth(pool_account_id, ACCOUNT_TYPE_POOL);       
 }
 
 function ensure_fee_account(custom_account_id: byte_array?, blockchain_rid: byte_array): accounts.account {
     if (custom_account_id != null) {
         return accounts.Account(custom_account_id);
     } else {
-        val fee_account_id = ("FEE" + chain_context.blockchain_rid).hash();
-        return accounts.account @? { .id == fee_account_id }
-            ?: create accounts.account(id = fee_account_id);
+        val fee_account_id = (ACCOUNT_TYPE_FEE + chain_context.blockchain_rid).hash();
+        return accounts.ensure_account_without_auth(fee_account_id, ACCOUNT_TYPE_FEE);
     }
 }

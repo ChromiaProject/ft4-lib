@@ -65,8 +65,8 @@ namespace Unsafe {
         );
 
         val origin_blockchain_rid = asset_origin @? { asset } .origin_blockchain_rid;
-        val is_sender_blockchain = exists(blockchain_account @? { sender });
-        val is_recipient_blockchain = exists(blockchain_account @? { recipient });
+        val is_sender_blockchain =  sender.type == ACCOUNT_TYPE_BLOCKCHAIN;
+        val is_recipient_blockchain = recipient.type == ACCOUNT_TYPE_BLOCKCHAIN;
         
         if (
             not exists(origin_blockchain_rid)

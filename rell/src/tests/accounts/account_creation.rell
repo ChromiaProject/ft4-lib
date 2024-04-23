@@ -146,6 +146,47 @@ function test_duplicate_multisig_ad_can_not_be_added_to_account() {
       .run_must_fail("duplicate key value violates unique constraint");
 }
 
+function test_create_account_without_auth_in_operation_in_genesis_block() {
+  val type = "FEE";  
+  val id = (type, chain_context.blockchain_rid).hash();
+  
+  test_op.register_account_without_auth_test(id, type).run();
+
+  assert_not_null(accounts.account @? { .id == id, .type == type});
+}
+
+function test_create_account_without_auth_in_operation_after_genesis_block() {  
+  val type = "POOL";  
+  val id = (type, chain_context.blockchain_rid).hash();
+  
+  rell.test.block().run();  
+  test_op.register_account_without_auth_test(id, type).run();
+
+  assert_not_null(accounts.account @? { .id == id, .type == type});
+}
+
+function test_create_account_without_auth_without_operation_in_genesis_block() {
+  val system_account_id = helpers.init_object.system_account_id;
+  assert_equals(
+    system_account_id, 
+    accounts.account @? { 
+      .id == chain_context.blockchain_rid, 
+      .type == "BLOCKCHAIN"
+    }.id
+  );
+}
+
+function test_create_duplicate_account_without_auth_fails() {
+  val type = "FEE";  
+  val id = (type, chain_context.blockchain_rid).hash();
+  
+  test_op.register_account_without_auth_test(id, type).run();
+  rell.test.tx()
+    .op(test_op.register_account_without_auth_test(id, type))
+    .nop()
+    .run_must_fail("duplicate key value violates unique constraint");
+}
+
 function test_create_account_with_auth_in_operation_in_genesis_block() {
   val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
   test_op.register_account_test(auth_descriptor)
@@ -163,7 +204,7 @@ function test_create_account_with_auth_in_operation_after_genesis_block() {
 }
 
 function test_create_account_auth_in_without_operation_in_genesis_block() {
-  val account_id = helpers.init_object.account_id;
+  val account_id = helpers.init_object.user_account_id;
   assert_equals(accounts.rl_state @ { .account.id == account_id } (.last_update), 0);
 }
 

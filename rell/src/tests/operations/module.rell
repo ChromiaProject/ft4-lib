@@ -33,6 +33,10 @@ operation register_account_test(accounts.auth_descriptor) {
     accounts.create_account_with_auth(auth_descriptor);
 }
 
+operation register_account_without_auth_test(id: byte_array, type: text) {
+    accounts.create_account_without_auth(id, type);
+}
+
 operation empty_op() {}
 
 @extend(auth.auth_handler)

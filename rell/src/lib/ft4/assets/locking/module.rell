@@ -1,0 +1,8 @@
+@mount("ft4")
+module;
+
+import ^^.utils;
+import ^^.assets;
+import ^^.accounts;
+import ^^.accounts.linking;
+

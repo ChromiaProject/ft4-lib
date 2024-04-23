@@ -18,7 +18,7 @@ import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.tx()
-        .op(helpers.create_system_account(rell.test.pubkeys.charlie))
+        .op(helpers.create_system_account(rell.test.pubkeys.charlie, create_on_transfer.ACCOUNT_TYPE_FEE))
         .run();
     val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
 

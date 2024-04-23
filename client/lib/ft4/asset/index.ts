@@ -33,3 +33,12 @@ export {
   AmountOutOfRangeError,
   AmountDecimalsError,
 } from "./error";
+
+export {
+  getLockAccounts,
+  getLockAccountsWithNonZeroBalances,
+  getLockedAssetBalance,
+  getLockedAssetAggregatedBalance,
+  getLockedAssetBalances,
+  getLockedAssetAggregatedBalances,
+} from "./locking";

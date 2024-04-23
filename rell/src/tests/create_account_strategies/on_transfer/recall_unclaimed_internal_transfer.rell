@@ -35,7 +35,7 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
     assert_equals(account_creation_transfer_before.amount, amount);
     assert_equals(account_creation_transfer_before.state, transfer_strategy.account_creation_state.pending);
 
-    val pool_account_id = ("POOL" + chain_context.blockchain_rid).hash();
+    val pool_account_id = (transfer_strategy.ACCOUNT_TYPE_POOL + chain_context.blockchain_rid).hash();
     val pool_account = accounts.account @? { .id == pool_account_id };
     assert_not_null(pool_account);
     

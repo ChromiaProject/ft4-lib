@@ -171,6 +171,20 @@ export async function getByAuthDescriptorId(
   );
 }
 
+export async function getByType(
+  connection: Connection,
+  type: string,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Account>> {
+  return retrievePaginatedEntity<Account, Buffer>(
+    connection,
+    Query.accountsByType(type, limit, cursor),
+    (accounts) =>
+      accounts.map((account) => createAccountObject(connection, account)),
+  );
+}
+
 export async function isAuthDescriptorValid(
   queryable: Queryable,
   accountId: BufferId,

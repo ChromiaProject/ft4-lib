@@ -92,16 +92,7 @@ export async function getBalancesByAccountId(
 
 export function createBalanceObject(balance: BalanceResponse): Balance {
   return Object.freeze({
-    asset: {
-      id: balance.asset.id,
-      name: balance.asset.name,
-      symbol: balance.asset.symbol,
-      decimals: balance.asset.decimals,
-      blockchainRid: balance.asset.blockchain_rid,
-      iconUrl: balance.asset.icon_url,
-      type: balance.asset.type,
-      supply: balance.asset.supply,
-    },
+    asset: createAssetObject(balance.asset),
     amount: createAmountFromBalance(balance.amount, balance.asset.decimals),
   });
 }

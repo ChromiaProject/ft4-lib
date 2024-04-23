@@ -35,6 +35,12 @@ import ^.utils;
 import ^.version;
 import .external;
 
+/**
+ * Constant that represents account type for regular user accounts 
+ * created with `create_account_with_auth`.
+ */
+val ACCOUNT_TYPE_USER = "FT4_USER";
+
 enum auth_type {
     S, M,
 }
@@ -47,6 +53,7 @@ struct auth_descriptor {
 
 entity account {
     key id: byte_array;
+    index type: text;
 }
 
 entity main_auth_descriptor {
@@ -168,7 +175,7 @@ function create_account_with_auth(auth_descriptor, account_id: byte_array? = nul
     );
 
     val id = account_id ?: get_account_id_from_signers(get_signers(auth_descriptor));
-    val account = create account(id);
+    val account = create account(id, type = ACCOUNT_TYPE_USER);
 
     val main = add_auth_descriptor(account, auth_descriptor);
     create main_auth_descriptor(account, main);
@@ -176,6 +183,40 @@ function create_account_with_auth(auth_descriptor, account_id: byte_array? = nul
     create_rate_limiter_state_for_account(account);
     
     return account;
+}
+
+/**
+ * Creates an account without auth descriptor. Used to create different "system" account types,
+ * that cannot be directly accessed, e.g. POOL, FEE, BLOCKCHAIN, ... accounts.
+ * 
+ * @param account_id    account id
+ * @param type          account type specified as a free form text. Usually uppercase.
+ */
+function create_account_without_auth(account_id: byte_array, type: text): account {
+    return create account(
+        id = account_id,
+        type = type
+    );
+}
+
+/**
+ * Finds or creates an account of specific type.
+ *
+ * @param account_id    account id
+ * @param type          account type 
+ */
+function ensure_account_without_auth(account_id: byte_array, type: text): account {
+    val account = account @? { .id == account_id };
+    if (account??) {
+        require(
+            account.type == type,
+            "Found account <%s> of invalid type. Expected <%s>, found <%s>".format(account.id, type, account.type)
+        );
+
+        return account;
+    } else {
+        return create_account_without_auth(account_id, type);
+    }
 }
 
 function get_flags(auth_descriptor) {
@@ -286,6 +327,19 @@ function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer?, pa
             rowid=.rowid
         )
     ) limit utils.fetch_data_size(page_size);
+}
+
+function get_paginated_accounts_by_type(type: text, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return account @* {
+        .type == type,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = .id.to_gtv(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);    
 }
 
 function validate_auth_descriptor_args(auth_descriptor) {

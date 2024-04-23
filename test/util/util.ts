@@ -5,6 +5,7 @@ import {
   AuthDescriptorRegistration,
   AuthDescriptorRules,
   AuthFlag,
+  AuthenticatedAccount,
   MultiSig,
   SingleSig,
   addAuthDescriptor,
@@ -21,9 +22,11 @@ import {
 } from "@ft4/authentication";
 import {
   Connection,
+  Session,
   createAuthDataService,
   createConnection,
   createKeyStoreInteractor,
+  createSession,
 } from "@ft4/ft-session";
 import { BufferId, op } from "@ft4/utils";
 import { Buffer } from "buffer";
@@ -40,6 +43,7 @@ import {
 } from "postchain-client";
 import { User } from "./test-user";
 import { transactionBuilder } from "@ft4/transaction-builder";
+import { Amount, Asset } from "@ft4/asset";
 
 function generateId(n: number): Buffer {
   return encryption.hash256(Buffer.from(`${n}`));
@@ -238,6 +242,55 @@ export async function getSessionForAccount(
   return await getSession(accountId);
 }
 
+export function getSessionForAuthenticatedAccount(
+  account: AuthenticatedAccount,
+): Session {
+  return createSession(
+    account.authenticator.authDataService.connection,
+    account.authenticator,
+  );
+}
+
+/**
+ * Converts amount bigint to string so it can be used to compare Amount with jest
+ */
+export function comparableAmount(amount: Amount): string {
+  return amount.value.toString();
+}
+
+/**
+ * Converts asset's supply property from bigint to string so it can be used to compare Asset with jest
+ */
+export function comparableAsset(asset: Asset) {
+  return { ...asset, supply: asset.supply.toString() };
+}
+
+export function comparableObjectWithAmount(object: ObjectWithAmount) {
+  return { ...object, amount: comparableAmount(object.amount) };
+}
+
+/**
+ * Converts an object with asset and amount properties to use string instead of bigint
+ */
+export function comparableObjectWithAssetAndAmount(
+  object: ObjectWithAssetAndAmount,
+) {
+  return {
+    ...object,
+    asset: comparableAsset(object.asset),
+    amount: comparableAmount(object.amount),
+  };
+}
+
+export type ObjectWithAmount = {
+  amount: Amount;
+} & { [key: string]: any };
+
+export type ObjectWithAssetAndAmount = {
+  asset: Asset;
+  amount: Amount;
+} & { [key: string]: any };
+
 export function rellError(message: string) {
   return expect.objectContaining({
     shortReason: message,
@@ -280,4 +333,12 @@ export function getAccountIdFromAuthDescriptor(
   return pclGtv.gtvHash(
     signers.length === 1 ? signers[0] : signers.sort(Buffer.compare),
   );
+}
+
+export function lockAccountId(accountId: BufferId, lockType: string): Buffer {
+  return pclGtv.gtvHash([
+    formatter.ensureBuffer(accountId),
+    "FT4_LOCK",
+    lockType,
+  ]);
 }

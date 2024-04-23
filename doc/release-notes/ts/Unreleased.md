@@ -40,6 +40,15 @@
 
 - Added `signTransactionWithKeyStores` function.
 
+- Added functions to query "lock" accounts and asset balances locked in those accounts
+  - `getLockAccounts`
+  - `getLockAccountsWithNonZeroBalances`
+  - `getLockedAssetBalance`
+  - `getLockedAssetAggregatedBalance`
+  - `getLockedAssetBalances`
+  - `getLockedAssetAggregatedBalances`
+
+
 ### Fixed 🔧
 
 - Fix TS client build.

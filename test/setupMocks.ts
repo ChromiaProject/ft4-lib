@@ -41,6 +41,8 @@ jest.mock("@ft4/utils/exposed-operations", () => ({
         "empty_op",
         "empty_op_with_auth_handler",
         "rejected_op",
+        "lock_asset",
+        "unlock_asset",
         "ft4.admin.register_crosschain_asset",
         "ft4.crosschain.apply_transfer",
         "ft4.crosschain.init_transfer",

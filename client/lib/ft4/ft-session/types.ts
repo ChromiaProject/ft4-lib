@@ -52,6 +52,11 @@ export interface Connection extends Queryable {
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
+  getAccountsByType: (
+    type: string,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Account>>;
   getAuthDescriptorValidator: (useCache: boolean) => AuthDescriptorValidator;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;

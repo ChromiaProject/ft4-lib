@@ -1,4 +1,5 @@
 import {
+  TransactionWithReceipt,
   TransactionBuilderConfig,
   signTransaction,
   transactionBuilder,
@@ -35,6 +36,7 @@ import {
   createAuthenticatedAccount,
   getByAuthDescriptorId,
   getById,
+  getByType,
   getBySigner,
   getTransferDetails,
   getTransferDetailsByAsset,
@@ -65,7 +67,6 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
-import { TransactionWithReceipt } from "@ft4/transaction-builder/types";
 
 export async function createConnectionToBlockchainRid(
   oldConnection: Connection,
@@ -113,6 +114,11 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor?: OptionalPageCursor,
     ) => getByAuthDescriptorId(connection, id, limit, cursor),
+    getAccountsByType: (
+      type: string,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getByType(connection, type, limit, cursor),
     getAuthDescriptorValidator: (useCache: boolean) =>
       createAuthDescriptorValidator(
         createAuthDataService(connection),

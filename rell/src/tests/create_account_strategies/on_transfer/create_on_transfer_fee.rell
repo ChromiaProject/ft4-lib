@@ -17,7 +17,7 @@ import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_fee_success() {
-    helpers.create_system_account(rell.test.pubkeys.trudy).run();
+    helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
     val fee_account = accounts.Account(rell.test.pubkeys.trudy);
 
     val alice = utils.register_alice();
@@ -70,7 +70,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
 }
 
 function test_can_complete_pending_transfers_when_account_is_registered_with_direct_strategies() {
-    helpers.create_system_account(rell.test.pubkeys.trudy).run();
+    helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
     val fee_account = accounts.Account(rell.test.pubkeys.trudy);
 
     val alice = utils.register_alice();

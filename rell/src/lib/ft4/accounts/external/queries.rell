@@ -67,6 +67,13 @@ query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer?, pa
     );
 }
 
+query get_accounts_by_type(type: text, page_size: integer, page_cursor: text?) {
+    return utils.make_page(
+        accounts.get_paginated_accounts_by_type(type, page_size, page_cursor),
+        page_size
+    );
+}
+
 query get_auth_descriptor_counter(
     account_id: byte_array, 
     auth_descriptor_id: byte_array

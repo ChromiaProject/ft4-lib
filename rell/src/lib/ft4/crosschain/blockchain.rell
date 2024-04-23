@@ -1,40 +1,19 @@
 import ^.assets;
 import ^.accounts;
 
+val ACCOUNT_TYPE_BLOCKCHAIN = "FT4_BLOCKCHAIN";
+
 entity asset_origin {
    key assets.asset;
    origin_blockchain_rid: byte_array;
 }
 
-entity blockchain_account {
-    key accounts.account;
-}
-
 function is_blockchain(account_id: byte_array): boolean {
-   return blockchain_account @? { .account.id == account_id }??;
+   return accounts.account @? { .id == account_id, .type == ACCOUNT_TYPE_BLOCKCHAIN }??;
 }
 
-function ensure_blockchain_account(blockchain_rid: byte_array): accounts.account {
-   val acc = accounts.account @? { .id == blockchain_rid };
-   if (acc??) {
-      require(
-         exists(blockchain_account @? { acc }),
-         "The account already exists, but it's not a blockchain account"
-      );
-      return acc;
-   } else {
-      val bc_acc = create accounts.account (id = blockchain_rid);
-      create blockchain_account ( bc_acc );
-      return bc_acc;
-   }
-}
-
-function get_blockchain_account(blockchain_rid: byte_array): accounts.account {
-   return require(
-      accounts.account @? { blockchain_rid },
-      "Account not found"
-   );
-}
+function ensure_blockchain_account(blockchain_rid: byte_array) =
+   accounts.ensure_account_without_auth(blockchain_rid, ACCOUNT_TYPE_BLOCKCHAIN);
 
 namespace Unsafe {
     function register_crosschain_asset(

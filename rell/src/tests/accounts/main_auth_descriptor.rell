@@ -149,7 +149,7 @@ function test_delete_auth_descriptor_fails_for_main_auth_descriptor() {
         .run_must_fail("Cannot delete main auth descriptor");
 }
 
-function test_delete_auth_descriptors_for_signer_fails_for_main_auth_descriptor_key() {
+function test_delete_auth_descriptors_for_signer_fails_for_main_auth_descriptor_signer() {
     val alice = utils.register_alice();
 
     rell.test.tx()

@@ -71,6 +71,28 @@ export function accountsByAuthDescriptorId(
   };
 }
 
+export function accountsByType(
+  type: string,
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  Buffer[],
+  {
+    type: string;
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.get_accounts_by_type",
+    args: {
+      type,
+      page_size: limit,
+      page_cursor: cursor,
+    },
+  };
+}
+
 export function isAuthDescriptorValid(
   accountId: BufferId,
   authDescriptorId: BufferId,
