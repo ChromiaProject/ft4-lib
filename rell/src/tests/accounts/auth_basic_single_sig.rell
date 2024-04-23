@@ -3,8 +3,6 @@
 module;
 
 import ^^.assets.utils;
-import acc: ^^^.lib.ft4.accounts;
-import ^^^.lib.ft4.ft4_basic_dev.*;
 import test_operations: ^^.operations;
 
 /*

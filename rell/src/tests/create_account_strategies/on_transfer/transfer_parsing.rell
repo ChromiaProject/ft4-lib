@@ -346,7 +346,7 @@ function test_get_config_fails_when_mandatory_values_are_missing() {
     )].to_gtv_pretty();
 
     assert_fails(
-        "Key missing in Gtv dictionary: field 'lib.ft4.accounts.strategies.transfer:module_args_list_element.strategy'",
+        "Key missing in Gtv dictionary: field 'lib.ft4.core.accounts.strategies.transfer:module_args_list_element.strategy'",
         create_on_transfer.get_config(rule_gtv_pretty, *)
     );
 }

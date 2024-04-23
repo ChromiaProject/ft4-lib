@@ -1,13 +1,12 @@
 @test module;
 
+import lib.ft4.auth;
+import lib.ft4.admin;
+import lib.ft4.utils;
+import lib.ft4.assets;
+import lib.ft4.accounts;
 import assets_utils: ^^^.assets.utils;
-import ^^^^.lib.ft4.admin;
-import ^^^^.lib.ft4.assets;
-import assets_ext: ^^^^.lib.ft4.assets.external;
-import ^^^^.lib.ft4.accounts;
-import ^^^^.lib.ft4.utils;
 import ft_utils: ^^^^.lib.ft4.test.utils;
-import auth_ext: ^^^^.lib.ft4.auth.external;
 import transfer_strategy: ^^^^.lib.ft4.accounts.strategies.transfer;
 import test_utils: ^^^.utils.utils;
 
@@ -23,8 +22,8 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
     val amount = allowed_assets[asset.id];
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
         .run();
 
@@ -43,15 +42,15 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
     assert_equals(assets.get_asset_balance(alice.account, asset), 10L - amount);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets_ext.recall_unclaimed_transfer(tx_rid, 1))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.recall_unclaimed_transfer(tx_rid, 1))
         .sign(alice.keypair)
         .run_must_fail("This transfer has not timed out yet");
 
     run_block_after_timeout();
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets_ext.recall_unclaimed_transfer(tx_rid, 1))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.recall_unclaimed_transfer(tx_rid, 1))
         .nop()
         .sign(alice.keypair)
         .run();
@@ -63,8 +62,8 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout() {
     assert_equals(account_creation_transfer_after.state, transfer_strategy.account_creation_state.recalled);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets_ext.recall_unclaimed_transfer(tx_rid, 1))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.recall_unclaimed_transfer(tx_rid, 1))
         .nop()
         .sign(alice.keypair)
         .run_must_fail("No pending transfer found");

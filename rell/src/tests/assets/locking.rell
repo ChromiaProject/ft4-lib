@@ -9,8 +9,6 @@ import lib.ft4.admin;
 import lib.ft4.assets;
 import lib.ft4.assets.locking;
 import lib.ft4.accounts.linking;
-import assets_ext: lib.ft4.assets.external;
-import locking_ext: lib.ft4.assets.locking.external;
 
 function test_asset_is_locked() {
     val alice = test_utils.register_alice();
@@ -18,13 +16,13 @@ function test_asset_is_locked() {
     
     test_utils.mint(alice.account, asset, 10L);
 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
 
     op_locking.lock_asset("TYPE", alice.account.id, asset.id, 5L).run();
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 5L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 5L);
     
     val lock_account_id = locking.get_lock_account_id(alice.account, "TYPE");
-    assert_equals(assets_ext.get_asset_balance(lock_account_id, asset.id)!!.amount, 5L);
+    assert_equals(assets.external.get_asset_balance(lock_account_id, asset.id)!!.amount, 5L);
 }
 
 function test_unlocking_assets_transfers_them_back_to_main_account() {
@@ -35,23 +33,23 @@ function test_unlocking_assets_transfers_them_back_to_main_account() {
     
     val lock_account_id = locking.get_lock_account_id(alice.account, "STAKE");
 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
-    assert_true(empty(assets_ext.get_asset_balance(lock_account_id, asset.id)));
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
+    assert_true(empty(assets.external.get_asset_balance(lock_account_id, asset.id)));
 
     op_locking.lock_asset("STAKE", alice.account.id, asset.id, 9L).run();
 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 1L);
-    assert_equals(assets_ext.get_asset_balance(lock_account_id, asset.id)!!.amount, 9L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 1L);
+    assert_equals(assets.external.get_asset_balance(lock_account_id, asset.id)!!.amount, 9L);
 
     op_locking.unlock_asset("STAKE", alice.account.id, asset.id, 5L).run();
 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 6L);
-    assert_equals(assets_ext.get_asset_balance(lock_account_id, asset.id)!!.amount, 4L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 6L);
+    assert_equals(assets.external.get_asset_balance(lock_account_id, asset.id)!!.amount, 4L);
 
     op_locking.unlock_asset("STAKE", alice.account.id, asset.id, 4L).run();
 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
-    assert_true(empty(assets_ext.get_asset_balance(lock_account_id, asset.id)));    
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
+    assert_true(empty(assets.external.get_asset_balance(lock_account_id, asset.id)));    
 }
 
 function test_locked_asset_balances_can_be_fetched_when_one_asset_locked() {
@@ -60,13 +58,13 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_locked() {
     
     test_utils.mint(alice.account, asset, 10L);
 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 10L);
 
-    assert_true(empty(locking_ext.get_locked_asset_balances(alice.account.id).data));
+    assert_true(empty(locking.external.get_locked_asset_balances(alice.account.id).data));
 
     op_locking.lock_asset("LISTING", alice.account.id, asset.id, 5L).run();
 
-    val balances = locking_ext.get_locked_asset_balances(alice.account.id);
+    val balances = locking.external.get_locked_asset_balances(alice.account.id);
     assert_equals(
         balances.data,
         [
@@ -86,7 +84,7 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_locked() {
             ).to_gtv_pretty()
         ]
     );
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 5L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 5L);
 }
 
 function test_locked_asset_balance_increments_when_asset_consecutively_locked() {
@@ -98,7 +96,7 @@ function test_locked_asset_balance_increments_when_asset_consecutively_locked() 
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 5L).run();
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 3L).run();
 
-    val balances = locking_ext.get_locked_asset_balances(alice.account.id);
+    val balances = locking.external.get_locked_asset_balances(alice.account.id);
     assert_equals(
         balances.data,
         [
@@ -118,7 +116,7 @@ function test_locked_asset_balance_increments_when_asset_consecutively_locked() 
             ).to_gtv_pretty()
         ]
     );
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 2L);
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 2L);
 }
 
 function test_locked_asset_balances_can_be_fetched_when_one_asset_lock_to_two_different_lock_accounts() {
@@ -130,7 +128,7 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_lock_to_two_di
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 5L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 3L).run();
 
-    val balances = locking_ext.get_locked_asset_balances(alice.account.id);
+    val balances = locking.external.get_locked_asset_balances(alice.account.id);
     assert_equals(
         balances.data,
         [
@@ -164,7 +162,7 @@ function test_locked_asset_balances_can_be_fetched_when_one_asset_lock_to_two_di
             ).to_gtv_pretty()
         ]
     );
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset.id)!!.amount, 2L); 
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset.id)!!.amount, 2L); 
 }
 
 function test_locked_asset_balances_can_be_fetched_when_two_assets_locked() {
@@ -178,7 +176,7 @@ function test_locked_asset_balances_can_be_fetched_when_two_assets_locked() {
     op_locking.lock_asset("LOCK1", alice.account.id, asset1.id, 3L).run();
     op_locking.lock_asset("LOCK1", alice.account.id, asset2.id, 2L).run();
 
-    val balances = locking_ext.get_locked_asset_balances(alice.account.id);
+    val balances = locking.external.get_locked_asset_balances(alice.account.id);
     assert_equals(
         balances.data,
         [
@@ -212,8 +210,8 @@ function test_locked_asset_balances_can_be_fetched_when_two_assets_locked() {
             ).to_gtv_pretty()
         ]
     );
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset1.id)!!.amount, 7L); 
-    assert_equals(assets_ext.get_asset_balance(alice.account.id, asset2.id)!!.amount, 18L);         
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset1.id)!!.amount, 7L); 
+    assert_equals(assets.external.get_asset_balance(alice.account.id, asset2.id)!!.amount, 18L);         
 }
 
 function test_locked_asset_balances_can_be_filtered_by_lock_type() {
@@ -225,7 +223,7 @@ function test_locked_asset_balances_can_be_filtered_by_lock_type() {
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 5L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 3L).run();
 
-    val balances = locking_ext.get_locked_asset_balances(alice.account.id, ["LOCK2"]);
+    val balances = locking.external.get_locked_asset_balances(alice.account.id, ["LOCK2"]);
     assert_equals(
         balances.data,
         [
@@ -265,7 +263,7 @@ function test_locked_asset_balances_can_be_fetched_in_pages() {
     op_locking.lock_asset("LOCK2", alice.account.id, asset1.id, 60L).run();
     op_locking.lock_asset("LOCK1", alice.account.id, asset2.id, 80L).run();
 
-    val page1 = locking_ext.get_locked_asset_balances(alice.account.id, null, 2);
+    val page1 = locking.external.get_locked_asset_balances(alice.account.id, null, 2);
 
     assert_equals(
         page1.data,
@@ -283,7 +281,7 @@ function test_locked_asset_balances_can_be_fetched_in_pages() {
         ]
     );
 
-    val page2 = locking_ext.get_locked_asset_balances(alice.account.id, null, 2, page1.next_cursor);
+    val page2 = locking.external.get_locked_asset_balances(alice.account.id, null, 2, page1.next_cursor);
 
     assert_equals(
         page2,
@@ -314,7 +312,7 @@ function test_locked_asset_balances_can_be_aggregated_by_asset() {
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 3L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 2L).run();
 
-    val balances = locking_ext.get_locked_asset_aggregated_balances(alice.account.id);
+    val balances = locking.external.get_locked_asset_aggregated_balances(alice.account.id);
     assert_equals(
         balances.data,
         [
@@ -335,7 +333,7 @@ function test_locked_asset_balances_can_be_aggregated_by_asset_and_filtered_by_l
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 4L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 6L).run();
 
-    val balances = locking_ext.get_locked_asset_aggregated_balances(alice.account.id, ["LOCK2"]);
+    val balances = locking.external.get_locked_asset_aggregated_balances(alice.account.id, ["LOCK2"]);
     assert_equals(
         balances.data,
         [
@@ -364,7 +362,7 @@ function test_locked_asset_aggregated_balances_can_be_fetched_in_pages() {
     op_locking.lock_asset("LOCK3", alice.account.id, asset2.id, 18L).run();
     op_locking.lock_asset("LOCK3", alice.account.id, asset3.id, 27L).run();
 
-    val page1 = locking_ext.get_locked_asset_aggregated_balances(alice.account.id, null, 1);
+    val page1 = locking.external.get_locked_asset_aggregated_balances(alice.account.id, null, 1);
     assert_equals(
         page1.data,
         [
@@ -375,7 +373,7 @@ function test_locked_asset_aggregated_balances_can_be_fetched_in_pages() {
         ]
     );
 
-    val page2 = locking_ext.get_locked_asset_aggregated_balances(alice.account.id, null, 2, page1.next_cursor);
+    val page2 = locking.external.get_locked_asset_aggregated_balances(alice.account.id, null, 2, page1.next_cursor);
     assert_equals(
         page2,
         utils.paged_result(
@@ -403,7 +401,7 @@ function test_locked_asset_balance_can_be_fetched_for_specific_asset() {
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 3L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 4L).run();
 
-    val balances = locking_ext.get_locked_asset_balance(alice.account.id, asset.id);
+    val balances = locking.external.get_locked_asset_balance(alice.account.id, asset.id);
     assert_equals(
         balances.data,
         [
@@ -428,7 +426,7 @@ function test_locked_asset_balance_can_be_fetched_for_specific_asset_and_filtere
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 5L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 5L).run();
 
-    val balances = locking_ext.get_locked_asset_balance(alice.account.id, asset.id, ["LOCK2"]);
+    val balances = locking.external.get_locked_asset_balance(alice.account.id, asset.id, ["LOCK2"]);
     assert_equals(
         balances.data,
         [
@@ -451,7 +449,7 @@ function test_locked_asset_balance_can_be_fetched_in_pages() {
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 200L).run();
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 100L).run();
     
-    val page1 = locking_ext.get_locked_asset_balance(alice.account.id, asset.id, null, 2);
+    val page1 = locking.external.get_locked_asset_balance(alice.account.id, asset.id, null, 2);
 
     assert_equals(
         page1.data,
@@ -467,7 +465,7 @@ function test_locked_asset_balance_can_be_fetched_in_pages() {
         ]
     );
 
-    val page2 = locking_ext.get_locked_asset_balance(alice.account.id, asset.id, null, 1, page1.next_cursor);
+    val page2 = locking.external.get_locked_asset_balance(alice.account.id, asset.id, null, 1, page1.next_cursor);
     
     assert_equals(
         page2,
@@ -505,7 +503,7 @@ function test_locked_asset_balance_can_be_aggregated_for_specific_asset_when_loc
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 7L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 3L).run();
 
-    val balances = locking_ext.get_locked_asset_aggregated_balance(alice.account.id, asset.id, ["LOCK2"]);
+    val balances = locking.external.get_locked_asset_aggregated_balance(alice.account.id, asset.id, ["LOCK2"]);
     assert_equals(balances, 3L);
 }
 
@@ -526,13 +524,13 @@ function test_lock_accounts_with_balance_only_can_be_fetched() {
 
     test_utils.mint(alice.account, asset, 10L);
 
-    val lock_accounts_with_balances1 = locking_ext.get_lock_accounts_with_non_zero_balances(alice.account.id);        
+    val lock_accounts_with_balances1 = locking.external.get_lock_accounts_with_non_zero_balances(alice.account.id);        
     assert_true(empty(lock_accounts_with_balances1));
 
     op_locking.lock_asset("LOCK1", alice.account.id, asset.id, 1L).run();
     op_locking.lock_asset("LOCK2", alice.account.id, asset.id, 2L).run();
     
-    val lock_accounts_with_balances2 = locking_ext.get_lock_accounts_with_non_zero_balances(alice.account.id);
+    val lock_accounts_with_balances2 = locking.external.get_lock_accounts_with_non_zero_balances(alice.account.id);
     assert_equals(
         lock_accounts_with_balances2,
         [
@@ -549,7 +547,7 @@ function test_lock_accounts_with_balance_only_can_be_fetched() {
     
     op_locking.unlock_asset("LOCK2", alice.account.id, asset.id, 2L).run();
 
-    val lock_accounts_with_balances3 = locking_ext.get_lock_accounts_with_non_zero_balances(alice.account.id);
+    val lock_accounts_with_balances3 = locking.external.get_lock_accounts_with_non_zero_balances(alice.account.id);
     assert_equals(
         lock_accounts_with_balances3,
         [
@@ -562,6 +560,6 @@ function test_lock_accounts_with_balance_only_can_be_fetched() {
 
     op_locking.unlock_asset("LOCK1", alice.account.id, asset.id, 1L).run();
 
-    val lock_accounts_with_balances4 = locking_ext.get_lock_accounts_with_non_zero_balances(alice.account.id);
+    val lock_accounts_with_balances4 = locking.external.get_lock_accounts_with_non_zero_balances(alice.account.id);
     assert_true(empty(lock_accounts_with_balances4));
 }

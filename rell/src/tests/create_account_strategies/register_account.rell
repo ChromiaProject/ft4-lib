@@ -4,7 +4,6 @@ module;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
-import strategies_ext: lib.ft4.accounts.strategies.external;
 import test_utils: lib.ft4.test.utils;
 
 import ^^.assets.utils;
@@ -27,7 +26,7 @@ function test_registering_account_adds_main_auth_descriptor() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -48,14 +47,14 @@ function test_account_registration_fails_when_mandatory_flags_missing_in_main_au
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[A]>");    
 }
 
 function test_get_enabled_registration_strategies() {
     assert_equals(
-        strategies_ext.get_enabled_registration_strategies(),
+        strategies.external.get_enabled_registration_strategies(),
         set(["ft4.ras_open", "ft4.ras_transfer_open", "ft4.ras_transfer_fee", "ft4.ras_transfer_subscription"])
     );
 }

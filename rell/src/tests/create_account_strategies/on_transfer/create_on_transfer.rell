@@ -1,17 +1,15 @@
 @test
 module;
 
-import ^^^^.lib.ft4.accounts;
-import ^^^^.lib.ft4.assets;
-import ^^^^.lib.ft4.ft4_basic_dev.*;
-import test_utils: ^^^^.lib.ft4.test.utils;
-import strategies: ^^^^.lib.ft4.accounts.strategies;
-import strategies_ext: ^^^^.lib.ft4.accounts.strategies.external;
-import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^^.lib.ft4.accounts.strategies.transfer.open;
+import lib.ft4.auth;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import test_utils: lib.ft4.test.utils;
+import create_on_transfer: lib.ft4.accounts.strategies.transfer;
+import lib.ft4.accounts.strategies.transfer.open;
 import ^^^.assets.utils;
-import auth_ext: ^^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^^.lib.ft4.crosschain.external;
+import xc: lib.ft4.crosschain;
 import iccf_op: ^^^.operations.iccf_op;
 
 function test_create_account_on_internal_transfer_success() {
@@ -27,8 +25,8 @@ function test_create_account_on_internal_transfer_success() {
     val amount = min_amount;
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
         .run();
 
@@ -45,7 +43,7 @@ function test_create_account_on_internal_transfer_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -69,8 +67,8 @@ function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
     utils.mint_to_account(alice, asset, 10);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, 10L))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 10L))
         .sign(alice.keypair)
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <0x0000000000000000000000000000000000000000000000000000000000000000>"
@@ -91,14 +89,14 @@ function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
     val amount = min_amount;
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .nop()
         .sign(alice.keypair)
         .run();
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .nop()
         .sign(alice.keypair)
         .run_must_fail("This asset is already transferred");
@@ -117,8 +115,8 @@ function test_internal_transfer_fails_if_insufficient_amount_is_transferred() {
     val amount = min_amount - 1L;
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <%s> <TEST> from account <%s> of chain <0x0000000000000000000000000000000000000000000000000000000000000000>"
@@ -131,7 +129,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
 
     rell.test.tx()
         .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
 
@@ -151,14 +149,14 @@ function test_multiple_internal_transfers_success() {
     utils.mint_to_account(alice, asset2, 10);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset1.id, amount1))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset1.id, amount1))
         .sign(alice.keypair)
         .run();
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset2.id, amount2))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset2.id, amount2))
         .sign(alice.keypair)
         .run();
 
@@ -173,7 +171,7 @@ function test_multiple_internal_transfers_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -203,8 +201,8 @@ function test_create_account_on_internal_transfer_success_with_any_asset() {
     assert_equals(allowed_assets, null);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, 1L))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, 1L))
         .sign(alice.keypair)
         .run();
 
@@ -221,7 +219,7 @@ function test_create_account_on_internal_transfer_success_with_any_asset() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.charlie, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
 
@@ -252,8 +250,8 @@ function test_create_account_on_crosschain_transfer_success() {
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount,
@@ -268,7 +266,7 @@ function test_create_account_on_crosschain_transfer_success() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
@@ -284,7 +282,7 @@ function test_create_account_on_crosschain_transfer_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -311,8 +309,8 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset.id,
                     amount = 10L,
@@ -327,7 +325,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <%s>"
                 .format(recipient_id, sender_account_id, sender_blockchain_rid)
@@ -350,8 +348,8 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount,
@@ -368,8 +366,8 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount + 1,
@@ -384,13 +382,13 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx1, 1, tx1, 1, 0))
+        .op(xc.external.apply_transfer(tx1, 1, tx1, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx2, 1, tx2, 1, 0))
+        .op(xc.external.apply_transfer(tx2, 1, tx2, 1, 0))
         .nop()
         .run_must_fail("This asset is already transferred");
 }
@@ -411,8 +409,8 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset.id,
                     amount = amount,
@@ -427,7 +425,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <%s> <TEST> from account <%s> of chain <%s>"
                 .format(recipient_id, assets.format_amount_with_decimals(amount, asset.decimals), sender_account_id, sender_blockchain_rid)
@@ -450,8 +448,8 @@ function test_multiple_crosschain_transfers_success() {
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset1.id,
                     amount = amount1,
@@ -466,15 +464,15 @@ function test_multiple_crosschain_transfers_success() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx1, 1, tx1, 1, 0))
+        .op(xc.external.apply_transfer(tx1, 1, tx1, 1, 0))
         .run();
 
     val tx2 = gtx_transaction(
         body = gtx_transaction_body(
             blockchain_rid = sender_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset_id = asset2.id,
                     amount = amount2,
@@ -489,7 +487,7 @@ function test_multiple_crosschain_transfers_success() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx2, 1, tx2, 1, 0))
+        .op(xc.external.apply_transfer(tx2, 1, tx2, 1, 0))
         .run();
 
     assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset1), amount1);
@@ -502,7 +500,7 @@ function test_multiple_crosschain_transfers_success() {
 
     rell.test.tx()
         .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 

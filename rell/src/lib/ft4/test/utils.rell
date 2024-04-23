@@ -1,9 +1,8 @@
 @test
 module;
 
-import ^^.accounts;
-import auth_ext: ^^.auth.external;
 import ^^.auth;
+import ^^.accounts;
 import ^^.utils.{ derive_nonce };
 
 /**
@@ -16,7 +15,7 @@ function ft_auth_operation_for(signer: byte_array) {
         "No auth descriptor found for signer %s".format(signer)
     );
 
-    return auth_ext.ft_auth(descriptor.account.id, descriptor.id);
+    return auth.external.ft_auth(descriptor.account.id, descriptor.id);
 }
 
 /**
@@ -32,7 +31,7 @@ function evm_auth_operation_for(evm_privkey: byte_array, op: rell.test.op) {
     );
     val evm_message = create_evm_auth_message_for_account(op, descriptor, descriptor.ctr);
     val evm_signature = evm_sign(evm_message, evm_privkey);
-    return auth_ext.evm_auth(descriptor.account.id, descriptor.id, [evm_signature]);
+    return auth.external.evm_auth(descriptor.account.id, descriptor.id, [evm_signature]);
 }
 
 /**
@@ -43,7 +42,7 @@ function create_evm_auth_message_for_account(
         descriptor: accounts.account_auth_descriptor,
         ctr: integer = 0
 ) = auth.create_message_from_template(
-        accounts.evm_auth_args(
+        auth.evm_auth_args(
             account = descriptor.account,
             descriptor,
             signatures = []

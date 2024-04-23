@@ -6,8 +6,6 @@ import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
 import lib.ft4.test.utils. { evm_sign };
-import auth_ext: lib.ft4.auth.external;
-import strategies_ext: lib.ft4.accounts.strategies.external;
 
 import ^^.operations;
 
@@ -19,7 +17,7 @@ function test_account_can_be_registered_with_open_strategy() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -37,19 +35,19 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
     );
 
     val open = open.ras_open(auth_descriptor);
-    val register_account = strategies_ext.register_account();
+    val register_account = strategies.external.register_account();
 
     val message = strategies.get_register_account_message(
         open.to_gtx_operation(),
-        strategies_ext.register_account().to_gtx_operation()
+        strategies.external.register_account().to_gtx_operation()
     );
     
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([evm_address], [signature]))
+        .op(auth.external.evm_signatures([evm_address], [signature]))
         .op(open)
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .run();
 
     val account = accounts.account @? { .id == evm_address.hash() };
@@ -94,7 +92,7 @@ function test_account_can_be_registered_with_custom_operation_and_evm_signature(
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([evm_address], [signature]))
+        .op(auth.external.evm_signatures([evm_address], [signature]))
         .op(open)
         .op(register_player)
         .run();
@@ -122,7 +120,7 @@ function test_account_account_registration_fails_with_unknown_custom_operation_a
     val signature = evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([evm_address], [signature]))
+        .op(auth.external.evm_signatures([evm_address], [signature]))
         .op(open)
         .op(register_player2)
         .run_must_fail("Cannot authorize operation <register_player2> with evm_signatures");
@@ -136,7 +134,7 @@ function test_account_registration_fails_with_invalid_ft_signature() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor, null))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("Missing signature for public key <%s>".format(rell.test.pubkeys.alice));
 }
@@ -150,19 +148,19 @@ function test_account_registration_fails_with_invalid_evm_signature() {
     );
 
     val open = open.ras_open(auth_descriptor);
-    val register_account = strategies_ext.register_account();
+    val register_account = strategies.external.register_account();
 
     val message = strategies.get_register_account_message(
         open.to_gtx_operation(), 
-        strategies_ext.register_account().to_gtx_operation()
+        strategies.external.register_account().to_gtx_operation()
     );
     
     val signature = evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([evm_address], [signature]))
+        .op(auth.external.evm_signatures([evm_address], [signature]))
         .op(open)
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .run_must_fail("Invalid signature for address <%s>".format(evm_address));
 }
 
@@ -204,7 +202,7 @@ function test_account_registration_fails_when_account_already_exists() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor, null))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.alice)
         .run();
 
@@ -214,7 +212,7 @@ function test_account_registration_fails_when_account_already_exists() {
 
     rell.test.tx()
         .op(open.ras_open(auth_descriptor, null))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.alice)
         .nop()
         .run_must_fail("duplicate key value violates unique constraint");

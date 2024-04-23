@@ -1,6 +1,0 @@
-@mount('ft4')
-module;
-
-import ^^.strategies;
-import ^^^.accounts;
-import ^^^.auth;

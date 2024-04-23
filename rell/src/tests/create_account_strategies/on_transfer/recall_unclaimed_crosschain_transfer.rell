@@ -1,14 +1,14 @@
 @test module;
 
+import lib.ft4.auth;
+import lib.ft4.admin;
+import lib.ft4.utils;
+import lib.ft4.assets;
+import lib.ft4.accounts;
 import assets_utils: ^^^.assets.utils;
-import ^^^^.lib.ft4.admin;
-import ^^^^.lib.ft4.assets;
-import ^^^^.lib.ft4.accounts;
-import ^^^^.lib.ft4.utils;
 import iccf_op: ^^^.operations.iccf_op;
 import ft_utils: ^^^^.lib.ft4.test.utils;
-import auth_ext: ^^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^^.lib.ft4.crosschain.external;
+import xc: lib.ft4.crosschain;
 import transfer_strategy: ^^^^.lib.ft4.accounts.strategies.transfer;
 
 function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_without_apply() {
@@ -23,8 +23,8 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset.id,
                     5L,
@@ -38,7 +38,7 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
     );
 
     rell.test.tx()
-        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .op(xc.external.recall_unclaimed_transfer(init_tx, 1))
         .run_must_fail(
             "Transaction <%s> transfer at index <%s> has not been applied on this chain."
                 .format(init_tx.body.hash(), 1)
@@ -46,7 +46,7 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(init_tx, 1, init_tx, 1, 0))
+        .op(xc.external.apply_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run();
 
@@ -62,12 +62,12 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
     assert_equals(assets.get_asset_balance(pool_account, asset), 5L);
 
     rell.test.tx()
-        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .op(xc.external.recall_unclaimed_transfer(init_tx, 1))
         .run_must_fail("This transfer has not timed out yet");
 
     run_block_after_timeout();
     rell.test.tx()
-        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .op(xc.external.recall_unclaimed_transfer(init_tx, 1))
         .nop()
         .run();
 
@@ -77,7 +77,7 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
     assert_equals(account_creation_transfer_after.state, transfer_strategy.account_creation_state.recalled);
 
     rell.test.tx()
-        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .op(xc.external.recall_unclaimed_transfer(init_tx, 1))
         .nop()
         .run_must_fail(
             "Transaction <%s> transfer at index <%s> has already been recalled on this chain."
@@ -98,8 +98,8 @@ function test_can_not_reclaim_transfer_on_wrong_chain() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id,
                     asset.id,
                     5L,
@@ -113,7 +113,7 @@ function test_can_not_reclaim_transfer_on_wrong_chain() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.recall_unclaimed_transfer(init_tx, 1))
+        .op(xc.external.recall_unclaimed_transfer(init_tx, 1))
         .run_must_fail(
             "This transaction must happen on a chain with blockchain_rid %s".format(wrong_blockchain_rid)
         );

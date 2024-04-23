@@ -1,6 +1,6 @@
-import ^^.lib.ft4.assets;
-import ^^.lib.ft4.accounts;
-import ^^.lib.ft4.crosschain;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.crosschain;
 
 object crosschain_extensions_state {
     mutable is_before_init_transfer_called: boolean = false;

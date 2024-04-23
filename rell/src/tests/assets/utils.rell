@@ -1,11 +1,10 @@
 @test module;
 
+import lib.ft4.auth;
+import lib.ft4.admin;
+import lib.ft4.assets;
+import lib.ft4.accounts;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
-import acc: ^^^.lib.ft4.accounts;
-import auth_ext: ^^^.lib.ft4.auth.external;
-import ^^^.lib.ft4.assets;
-import ^^^.lib.ft4.admin;
-import ^^^.lib.ft4.auth;
 import ^^^.lib.ft4.utils.{ derive_nonce };
 import ^^.operations;
 import test_utils: lib.ft4.test.utils;
@@ -18,7 +17,7 @@ import ^^^.lib.ft4.auth;
 
 struct account_data {
     ft_auth: () -> rell.test.op;
-    acc.account;
+    accounts.account;
     auth_descriptor_id: byte_array;
     rell.test.keypair;
 }
@@ -40,12 +39,12 @@ function create_test_account(rell.test.keypair, permissions: list<text> = ["A", 
     val auth_descriptor_id = auth_descriptor.hash();
 
     create_test_account_with_auth_descriptor(auth_descriptor, keypair);
-    val account = acc.account @ { .id == keypair.pub.hash() };
+    val account = accounts.account @ { .id == keypair.pub.hash() };
 
     return account_data(
         account = account,
         auth_descriptor_id = auth_descriptor_id,
-        ft_auth = auth_ext.ft_auth(account.id, auth_descriptor_id, *),
+        ft_auth = auth.external.ft_auth(account.id, auth_descriptor_id, *),
         keypair = keypair
     );
 }
@@ -53,11 +52,11 @@ function create_test_account(rell.test.keypair, permissions: list<text> = ["A", 
 function admin_priv_key() = chain_context.args.admin_priv_key;
 
 function create_test_account_with_auth_descriptor(
-    acc.auth_descriptor,
+    accounts.auth_descriptor,
     user_keypair: rell.test.keypair
 ) {
     rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
-    admin.register_account(auth_descriptor)
+    admin.external.register_account(auth_descriptor)
         .sign(chain_context.args.admin_priv_key)
         .sign(user_keypair)
         .run();
@@ -73,20 +72,20 @@ function create_evm_auth_test_account(rell.test.keypair, flags: list<text> = ["T
         .sign(keypair)
         .run();
 
-    val account = acc.account_auth_descriptor @ {
+    val account = accounts.account_auth_descriptor @ {
         .id == auth_descriptor_id
     } ( .account );
 
     return account_data(
         account = account,
         auth_descriptor_id = auth_descriptor_id,
-        ft_auth = auth_ext.ft_auth(account.id, auth_descriptor_id, *),
+        ft_auth = auth.external.ft_auth(account.id, auth_descriptor_id, *),
         keypair = keypair
     );
 }
 
 function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "", type: text = assets.ASSET_TYPE_FT4) {
-    admin.register_asset_with_type(
+    admin.external.register_asset_with_type(
             name,
             symbol,
             decimals,
@@ -107,7 +106,7 @@ function create_crosschain_asset(
     icon_url: text,
     origin_blockchain_rid: byte_array
 ) {
-    admin_crosschain.register_crosschain_asset(
+    admin_crosschain.external.register_crosschain_asset(
             name,
             symbol,
             decimals,
@@ -121,8 +120,8 @@ function create_crosschain_asset(
     return assets.asset @ { .id == (name, issuing_blockchain_rid).hash() };
 }
 
-function mint(acc.account, assets.asset, amount: big_integer) {
-    admin.mint(
+function mint(accounts.account, assets.asset, amount: big_integer) {
+    admin.external.mint(
             account.id,
             asset.id,
             amount
@@ -132,7 +131,7 @@ function mint(acc.account, assets.asset, amount: big_integer) {
 }
 
 function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test.tx {
-    return admin.register_asset(
+    return admin.external.register_asset(
             name,
             symbol,
             decimals,
@@ -146,22 +145,22 @@ function create_asset_tx(name: text, symbol: text, decimals: integer): rell.test
  * 
  * returns "account_data"
  */
-function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_descriptor): account_data {
+function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, accounts.auth_descriptor): account_data {
     rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
-    admin.register_account(auth_descriptor)
+    admin.external.register_account(auth_descriptor)
         .sign(chain_context.args.admin_priv_key)
         .sign(keypair)
         .run();
 
     val auth_descriptor_id = auth_descriptor.hash();
-    val account = acc.account_auth_descriptor @ {
+    val account = accounts.account_auth_descriptor @ {
         .id == auth_descriptor_id
     } .account;
 
     return account_data(
         account,
         auth_descriptor_id,
-        ft_auth = auth_ext.ft_auth(account.id, auth_descriptor_id, *),
+        ft_auth = auth.external.ft_auth(account.id, auth_descriptor_id, *),
         keypair = keypair
     );
 }
@@ -171,9 +170,9 @@ function _create_test_acc_from_auth_desc_single_sig(rell.test.keypair, acc.auth_
  * 
  * returns "account_data"
  */
-function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, acc.auth_descriptor): account_data {
+function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>, accounts.auth_descriptor): account_data {
     rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
-    val op = admin.register_account(auth_descriptor);
+    val op = admin.external.register_account(auth_descriptor);
     val admin_keypair = rell.test.keypair(
             priv=chain_context.args.admin_priv_key,
             pub=crypto.privkey_to_pubkey(chain_context.args.admin_priv_key, true)
@@ -183,14 +182,14 @@ function _create_test_acc_from_auth_desc_multi_sig(keys: list<rell.test.keypair>
     tx.run();
 
     val auth_descriptor_id = auth_descriptor.hash();
-    val account = acc.account_auth_descriptor @ {
+    val account = accounts.account_auth_descriptor @ {
         .id == auth_descriptor_id
     } .account;
 
     return account_data(
         account,
         auth_descriptor_id,
-        ft_auth = auth_ext.ft_auth(account.id, auth_descriptor_id, *),
+        ft_auth = auth.external.ft_auth(account.id, auth_descriptor_id, *),
         keypair = keys[0] // Doesn't matter much which we use
     );
 }
@@ -212,7 +211,7 @@ function perform_large_transfer(rell.test.tx, amount: integer, to_address: text)
 }
 
 function mint_to_account(account_data, assets.asset, amount: big_integer) {
-    admin.mint(account_data.account.id, asset.id, amount)
+    admin.external.mint(account_data.account.id, asset.id, amount)
         .sign(admin_priv_key())
         .run();
 }
@@ -223,7 +222,7 @@ function create_evm_auth_message(op: rell.test.op, template: text, account_data:
         chain_context.blockchain_rid.to_hex().upper_case()
     );
 
-    val ctr = acc.account_auth_descriptor @ {
+    val ctr = accounts.account_auth_descriptor @ {
         account_data.account,
         .id == account_data.auth_descriptor_id
     }.ctr;

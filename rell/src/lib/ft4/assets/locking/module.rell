@@ -1,8 +1,2 @@
-@mount("ft4")
-module;
-
-import ^^.utils;
-import ^^.assets;
-import ^^.accounts;
-import ^^.accounts.linking;
-
+import ^^.core.assets.locking.*;
+import external: ^^.external.assets.locking;

@@ -1,10 +1,9 @@
 @test
 module;
 
+import lib.ft4.auth;
 import lib.ft4.test.utils;
 import lib.ft4.test.utils.{create_evm_auth_message};
-import lib.ft4.auth;
-import auth_ext: lib.ft4.auth.external;
 
 import auth_op: ^^.operations.auth;
 import ops: ^^.operations;
@@ -61,7 +60,7 @@ function test_authorizing_operation_with_single_evm_signature_succeeds() {
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
+        .op(auth.external.evm_signatures([address], [signature]))
         .op(op)
         .run();
 }
@@ -83,7 +82,7 @@ function test_authorizing_operation_with_evm_signature_fails_when_invalid_signat
     val bobSignature = utils.evm_sign(message, bob.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([aliceAddress], [bobSignature]))
+        .op(auth.external.evm_signatures([aliceAddress], [bobSignature]))
         .op(op)
         .run_must_fail("Invalid signature for address <%s>".format(aliceAddress));
 }
@@ -99,7 +98,7 @@ function test_authorizing_operation_with_many_evm_signatures_succeeds() {
     val signature2 = utils.evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address1, address2], [signature1, signature2]))
+        .op(auth.external.evm_signatures([address1, address2], [signature1, signature2]))
         .op(op)
         .run();    
 }
@@ -115,7 +114,7 @@ function test_authorizing_operation_fails_when_evm_signatures_provided_in_wrong_
     val signature2 = utils.evm_sign(message, rell.test.keypairs.bob.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address1, address2], [signature2, signature1]))
+        .op(auth.external.evm_signatures([address1, address2], [signature2, signature1]))
         .op(op)
         .run_must_fail("Invalid signature for address <%s>".format(address1));    
 }
@@ -130,7 +129,7 @@ function test_authorizing_operation_succeeds_with_ft_and_evm_signatures() {
     val aliceSignature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([aliceAddress], [aliceSignature]))
+        .op(auth.external.evm_signatures([aliceAddress], [aliceSignature]))
         .op(op)
         .sign(rell.test.keypairs.bob)
         .run();
@@ -155,7 +154,7 @@ function test_authorizing_operation_with_evm_and_ft_signers_fails_when_ft_signat
     val aliceSignature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([aliceAddress], [aliceSignature]))
+        .op(auth.external.evm_signatures([aliceAddress], [aliceSignature]))
         .op(op)
         .run_must_fail("Missing signature for public key <%s>".format(bobPubkey));
 }
@@ -169,8 +168,8 @@ function test_authorizing_operation_with_evm_signatures_succeeds_when_ft_auth_op
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
-        .op(auth_ext.ft_auth(rell.test.pubkeys.bob.hash(), rell.test.pubkeys.bob.hash())) // parameter values are not important for the test
+        .op(auth.external.evm_signatures([address], [signature]))
+        .op(auth.external.ft_auth(rell.test.pubkeys.bob.hash(), rell.test.pubkeys.bob.hash())) // parameter values are not important for the test
         .op(op)
         .run();    
 }
@@ -184,8 +183,8 @@ function test_authorizing_operation_with_evm_signatures_succeeds_when_evm_auth_o
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
-        .op(auth_ext.evm_auth(rell.test.pubkeys.bob.hash(), rell.test.pubkeys.bob.hash(), [])) // parameter values are not important for the test
+        .op(auth.external.evm_signatures([address], [signature]))
+        .op(auth.external.evm_auth(rell.test.pubkeys.bob.hash(), rell.test.pubkeys.bob.hash(), [])) // parameter values are not important for the test
         .op(op)
         .run();    
 }
@@ -200,7 +199,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_evm_signature
     val signature1 = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address1, address2], [signature1, null]))
+        .op(auth.external.evm_signatures([address1, address2], [signature1, null]))
         .op(op)
         .run_must_fail("Missing signature for address <%s>".format(address2));        
 }
@@ -217,7 +216,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_invalid_opera
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
+        .op(auth.external.evm_signatures([address], [signature]))
         .op(ops.empty_op())
         .op(op)
         .run_must_fail("Missing signature for address <%s>".format(address));    
@@ -231,7 +230,7 @@ function test_authorizing_operation_with_evm_signatures_fails_when_operation_is_
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
+        .op(auth.external.evm_signatures([address], [signature]))
         .op(op)
         .run_must_fail("Cannot authorize operation <%s> with evm_signatures".format(op.name));
 }
@@ -244,7 +243,7 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
+        .op(auth.external.evm_signatures([address], [signature]))
         .run_must_fail("Cannot find an operation to authorize with 'ft4.evm_signatures'");
 }
 
@@ -256,8 +255,8 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
-        .op(auth_ext.ft_auth(rell.test.pubkeys.alice.hash(), rell.test.pubkeys.alice.hash()))
+        .op(auth.external.evm_signatures([address], [signature]))
+        .op(auth.external.ft_auth(rell.test.pubkeys.alice.hash(), rell.test.pubkeys.alice.hash()))
         .run_must_fail("Cannot find an operation to authorize with 'ft4.evm_signatures'");
 }
 
@@ -269,7 +268,7 @@ function test_evm_signatures_throws_error_when_operation_to_authorize_is_missing
     val signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
 
     rell.test.tx()
-        .op(auth_ext.evm_signatures([address], [signature]))
-        .op(auth_ext.evm_auth(rell.test.pubkeys.alice.hash(), rell.test.pubkeys.alice.hash(), []))
+        .op(auth.external.evm_signatures([address], [signature]))
+        .op(auth.external.evm_auth(rell.test.pubkeys.alice.hash(), rell.test.pubkeys.alice.hash(), []))
         .run_must_fail("Cannot find an operation to authorize with 'ft4.evm_signatures'");
 }

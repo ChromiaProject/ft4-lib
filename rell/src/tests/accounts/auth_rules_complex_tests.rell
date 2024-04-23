@@ -1,8 +1,9 @@
 @test
 module;
 
-import ^^^.lib.ft4.accounts;
-import ^^^.lib.ft4.accounts.{
+import lib.ft4.auth;
+import lib.ft4.accounts;
+import lib.ft4.accounts.{
   block_height,
   block_time,
   op_count,
@@ -13,8 +14,7 @@ import ^^^.lib.ft4.accounts.{
 };
 import ^^.assets.utils;
 import test_op: ^^.operations;
-import auth: ^^.operations.auth;
-import auth_ext: ^^^.lib.ft4.auth.external;
+import auth_op: ^^.operations.auth;
 import test_utils: ^^^.lib.ft4.test.utils;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
@@ -48,8 +48,8 @@ function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
   
   return account_data(
     test_auth_ops = [
-      auth_ext.ft_auth(account.id, bob_ad_id),
-      auth.test_empty_auth_message()
+      auth.external.ft_auth(account.id, bob_ad_id),
+      auth_op.test_empty_auth_message()
     ],
     account = account,
     auth_descriptor_id = bob_ad_id,
@@ -66,8 +66,8 @@ function authenticate_account_signed_tx(account_data, times: integer = 1) {
 function authenticate_alice(account_id: byte_array) {
   val auth_descriptor_id = accounts.account_auth_descriptor @ { .account.id == account_id }.id limit 1;
   rell.test.tx(
-    auth_ext.ft_auth(account_id, auth_descriptor_id),
-    auth.test_empty_auth_message()
+    auth.external.ft_auth(account_id, auth_descriptor_id),
+    auth_op.test_empty_auth_message()
   ).sign(rell.test.keypairs.alice).run();
 }
 

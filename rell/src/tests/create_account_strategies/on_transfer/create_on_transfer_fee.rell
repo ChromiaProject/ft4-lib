@@ -1,18 +1,15 @@
 @test
 module;
 
-import ^^^^.lib.ft4.accounts;
-import ^^^^.lib.ft4.assets;
-import ^^^^.lib.ft4.ft4_basic_dev.*;
+import lib.ft4.auth;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.open;
+import lib.ft4.accounts.strategies.transfer.fee;
 import test_utils: ^^^^.lib.ft4.test.utils;
-import strategies: ^^^^.lib.ft4.accounts.strategies;
-import strategies_ext: ^^^^.lib.ft4.accounts.strategies.external;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^^.lib.ft4.accounts.strategies.transfer.fee;
-import ^^^^.lib.ft4.accounts.strategies.open;
 import ^^^.assets.utils;
-import auth_ext: ^^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^^.lib.ft4.crosschain.external;
 import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
@@ -35,8 +32,8 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     val fee_amount = fee_assets[asset.id];
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
         .run();
 
@@ -53,7 +50,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
 
     rell.test.tx()
         .op(fee.ras_transfer_fee(asset.id, test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 
@@ -85,8 +82,8 @@ function test_can_complete_pending_transfers_when_account_is_registered_with_dir
     val amount = min_amount;
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(ft4.assets_ext.transfer(recipient_id, asset.id, amount))
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
         .sign(alice.keypair)
         .run();
 
@@ -103,7 +100,7 @@ function test_can_complete_pending_transfers_when_account_is_registered_with_dir
 
     rell.test.tx()
         .op(open.ras_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
-        .op(strategies_ext.register_account())
+        .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
 

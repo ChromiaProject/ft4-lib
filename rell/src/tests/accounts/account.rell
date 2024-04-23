@@ -2,7 +2,6 @@
 
 import acc: ^^^.lib.ft4.accounts;
 import utils: ^^^.lib.ft4.utils;
-import acc_external: ^^^.lib.ft4.accounts.external;
 import asset_utils: ^^.assets.utils;
 import test_op: ^^.operations;
 import test_utils: ^^^.lib.ft4.test.utils;
@@ -40,7 +39,7 @@ function test_auth_descriptors_are_returned_in_correct_order() {
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
   val account = setup_account_with_many_ads();
-  val descriptors = acc_external.get_account_auth_descriptors(account.id);
+  val descriptors = acc.external.get_account_auth_descriptors(account.id);
 
   assert_equals(get_single_sig_args(descriptors[0].args).signer, rell.test.keypairs.alice.pub);
   assert_equals(get_single_sig_args(descriptors[1].args).signer, rell.test.keypairs.bob.pub);
@@ -50,7 +49,7 @@ function test_auth_descriptors_are_returned_in_correct_order() {
 
 function test_items_have_the_correct_return_format() {
   val account = setup_account_with_many_ads();
-  val descriptors = acc_external.get_account_auth_descriptors(account.id);
+  val descriptors = acc.external.get_account_auth_descriptors(account.id);
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
   val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
@@ -71,8 +70,8 @@ function test_get_accounts_by_signer_is_paginated() {
 
   test_op.add_ad_to_account(account2.account, test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
 
-  val page1 = acc_external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, null);
-  val page2 = acc_external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, page1.next_cursor);
+  val page1 = acc.external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, null);
+  val page2 = acc.external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, page1.next_cursor);
 
   assert_equals(page1.data.size(), 1);
   assert_equals(page1.data[0], account1.account.to_struct().to_gtv_pretty());
@@ -93,7 +92,7 @@ function test_accounts_by_ad_id_is_paginated() {
     .sign(rell.test.keypairs.alice)
     .run();
 
-  val accounts_p1 = acc_external.get_accounts_by_auth_descriptor_id(alice_ad.hash(), 2, null);
+  val accounts_p1 = acc.external.get_accounts_by_auth_descriptor_id(alice_ad.hash(), 2, null);
   assert_equals(
     accounts_p1, 
     utils.paged_result(
@@ -102,7 +101,7 @@ function test_accounts_by_ad_id_is_paginated() {
     )
   );
   
-  val accounts_p2 = acc_external.get_accounts_by_auth_descriptor_id(alice_ad.hash(), 2, accounts_p1.next_cursor);
+  val accounts_p2 = acc.external.get_accounts_by_auth_descriptor_id(alice_ad.hash(), 2, accounts_p1.next_cursor);
   assert_equals(byte_array.from_gtv_pretty(accounts_p2.data[0]), trudy.account.id);
   assert_equals(
     accounts_p2, 
@@ -114,7 +113,7 @@ function test_accounts_by_ad_id_is_paginated() {
 }
 
 function test_get_config() {
-  assert_equals(acc_external.get_config(), (
+  assert_equals(acc.external.get_config(), (
     rate_limit = acc.rate_limit_config(max_points = 5),
     auth_descriptor = acc.auth_descriptor_config(max_rules = 4)
   ));

@@ -1,11 +1,10 @@
 @test module;
 
-import ^^^.lib.ft4.assets;
+import lib.ft4.auth;
+import lib.ft4.assets;
 import test_utils: ^^.utils.utils;
 import ^^.assets.utils;
-import auth_ext: ^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^.lib.ft4.crosschain.external;
-import xc: ^^^.lib.ft4.crosschain;
+import xc: lib.ft4.crosschain;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import iccf_op: ^^.operations.iccf_op;
 
@@ -17,8 +16,8 @@ function test_can_complete_transfer() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             bob.account.id,
             asset_valid.id,
             5L,
@@ -34,7 +33,7 @@ function test_can_complete_transfer() {
         body = gtx_transaction_body(
             blockchain_rid = x"abcdef",
             operations = [
-                xchain_ext.apply_transfer(
+                xc.external.apply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -49,7 +48,7 @@ function test_can_complete_transfer() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(x"abcdef", apply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.complete_transfer(apply_tx, 0))
+        .op(xc.external.complete_transfer(apply_tx, 0))
         .run();
 }
 
@@ -61,8 +60,8 @@ function test_can_not_complete_transfer_without_proof() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             bob.account.id,
             asset_valid.id,
             5L,
@@ -78,7 +77,7 @@ function test_can_not_complete_transfer_without_proof() {
         body = gtx_transaction_body(
             blockchain_rid = x"abcdef",
             operations = [
-                xchain_ext.apply_transfer(
+                xc.external.apply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -92,6 +91,6 @@ function test_can_not_complete_transfer_without_proof() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.complete_transfer(apply_tx, 0))
+        .op(xc.external.complete_transfer(apply_tx, 0))
         .run_must_fail("No proof operation present for TX");
 }

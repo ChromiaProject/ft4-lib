@@ -1,16 +1,13 @@
 module;
 
-import ^^.main;
 import ^.extensions;
 import ^.extensions.auth_login;
 import ^.operations;
-import ^.operations.locking;
-import ^^.lib.ft4.crosschain.external;
-import ^^.lib.ft4.prioritization.default;
-import locking_ext: lib.ft4.assets.locking.external;
-import strategies_ext: ^^.lib.ft4.accounts.strategies.external;
-import ^^.lib.ft4.accounts.strategies.open;
-import ^^.lib.ft4.accounts.strategies.transfer;
-import transfer_open: ^^.lib.ft4.accounts.strategies.transfer.open;
-import transfer_fee: ^^.lib.ft4.accounts.strategies.transfer.fee;
-import transfer_subscription: ^^.lib.ft4.accounts.strategies.transfer.subscription;
+import locking_ops: ^.operations.locking;
+import lib.ft4.assets.locking;
+import lib.ft4.prioritization.default;
+import lib.ft4.accounts.strategies.open;
+import lib.ft4.accounts.strategies.transfer;
+import transfer_open: lib.ft4.accounts.strategies.transfer.open;
+import transfer_fee: lib.ft4.accounts.strategies.transfer.fee;
+import transfer_subscription: lib.ft4.accounts.strategies.transfer.subscription;

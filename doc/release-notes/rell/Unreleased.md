@@ -17,8 +17,11 @@
 - Rename `_add_signer` to `add_signers`
 - `create_account_with_auth` creates account with id that is equal to hash of signers, instead of id of auth descriptor, if `account_id` argument is not set
 - Rename `ft4.get_auth_descriptor_nonce` to `ft4.get_auth_descriptor_counter`.
+- All module args, of FT4 submodules, in yml config have additional `core` component in module path, e.g. for `accounts` module, module args have to be defined under `lib.ft4.core.accounts` instead of `lib.ft4.accounts`.
+- Removed `ft4_basic` and `ft4_basic_dev` modules.
 
 ### Changed 🪙
+- Change internal structure of FT4 submodules, so that external modules get imported together with core modules, e.g. importing `lib.ft4.accounts` also imports corresponding operations and queries. However it's still possible to import `accounts` entities and functions without operations and queries, by importing `lib.ft4.core.accounts`.
 
 ### Added ✅
 

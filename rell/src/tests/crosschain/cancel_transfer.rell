@@ -1,11 +1,10 @@
 @test module;
 
-import ^^^.lib.ft4.assets;
+import lib.ft4.auth;
+import lib.ft4.assets;
 import ^^.assets.utils;
 import ^^.extensions;
-import auth_ext: ^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^.lib.ft4.crosschain.external;
-import xc: ^^^.lib.ft4.crosschain;
+import xc: lib.ft4.crosschain;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import iccf_op: ^^.operations.iccf_op;
 import operations: ^^.operations;
@@ -23,8 +22,8 @@ function test_apply_transfer_fails_if_canceled() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -39,13 +38,13 @@ function test_apply_transfer_fails_if_canceled() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail(
             "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
@@ -66,8 +65,8 @@ function test_cancel_transfer_fails_if_applied() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -82,13 +81,13 @@ function test_cancel_transfer_fails_if_applied() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.apply_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail(
             "Transaction <%s> transfer at index <%s> has already been applied on this chain."
@@ -109,8 +108,8 @@ function test_can_cancel_with_proof_of_init_transfer_once_but_not_twice() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -125,13 +124,13 @@ function test_can_cancel_with_proof_of_init_transfer_once_but_not_twice() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, init_tx, 1, 0))
+        .op(xc.external.cancel_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, init_tx, 1, 0))
+        .op(xc.external.cancel_transfer(init_tx, 1, init_tx, 1, 0))
         .nop()
         .run_must_fail(
             "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
@@ -152,8 +151,8 @@ function test_can_cancel_with_proof_of_apply_transfer_one_but_not_twice() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -170,7 +169,7 @@ function test_can_cancel_with_proof_of_apply_transfer_one_but_not_twice() {
         body = gtx_transaction_body(
             blockchain_rid = intermediate_blockchain_rid,
             operations = [
-                xchain_ext.apply_transfer(
+                xc.external.apply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -185,13 +184,13 @@ function test_can_cancel_with_proof_of_apply_transfer_one_but_not_twice() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
+        .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
         .nop()
         .run();
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
+        .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
         .nop()
         .run_must_fail(
             "Transaction <%s> transfer at index <%s> has already been canceled on this chain."
@@ -212,8 +211,8 @@ function test_can_not_cancel_without_proof() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -227,7 +226,7 @@ function test_can_not_cancel_without_proof() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail("No proof operation present for TX");
 }
@@ -247,8 +246,8 @@ function test_can_not_cancel_before_expiry() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -263,7 +262,7 @@ function test_can_not_cancel_before_expiry() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(tx, 1, tx, 1, 0))
+        .op(xc.external.cancel_transfer(tx, 1, tx, 1, 0))
         .nop()
         .run_must_fail("This transfer has not yet expired. It can not be reverted before <%s>.".format(deadline));
 }
@@ -281,8 +280,8 @@ function test_can_not_cancel_with_wrong_op() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -308,7 +307,7 @@ function test_can_not_cancel_with_wrong_op() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(source_blockchain_rid, init_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, bogus_tx, 0, 0))
+        .op(xc.external.cancel_transfer(init_tx, 1, bogus_tx, 0, 0))
         .nop()
         .run_must_fail("Invalid parameter. Previous hop tx must be equal to init transfer tx");
 }
@@ -326,8 +325,8 @@ function test_can_not_cancel_with_invalid_hop_index() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -344,7 +343,7 @@ function test_can_not_cancel_with_invalid_hop_index() {
         body = gtx_transaction_body(
             blockchain_rid = intermediate_blockchain_rid,
             operations = [
-                xchain_ext.apply_transfer(
+                xc.external.apply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -359,7 +358,7 @@ function test_can_not_cancel_with_invalid_hop_index() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(intermediate_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 2))
+        .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 2))
         .nop()
         .run_must_fail("Argument mismatch: init_transfer hops size (2) is greater than hop_index (2)");
 }
@@ -378,8 +377,8 @@ function test_can_noy_cancel_with_proof_of_apply_transfer_on_wrong_chain() {
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth_ext.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = bob.account.id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -396,7 +395,7 @@ function test_can_noy_cancel_with_proof_of_apply_transfer_on_wrong_chain() {
         body = gtx_transaction_body(
             blockchain_rid = wrong_blockchain_rid,
             operations = [
-                xchain_ext.apply_transfer(
+                xc.external.apply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -411,7 +410,7 @@ function test_can_noy_cancel_with_proof_of_apply_transfer_on_wrong_chain() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(wrong_blockchain_rid, apply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
+        .op(xc.external.cancel_transfer(init_tx, 1, apply_tx, 0, 1))
         .nop()
         .run_must_fail(
             "Argument mismatch: init_transfer hops (%s) and tx blockchain_rid (%s) don't correspond"

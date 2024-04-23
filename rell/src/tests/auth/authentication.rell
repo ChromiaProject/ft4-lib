@@ -1,11 +1,11 @@
 @test
 module;
 
+import lib.ft4.auth;
 import ^^^.lib.ft4.test.utils. { evm_sign };
 import ^^.assets.utils;
 import auth_ext: ^^.extensions.auth.*;
 import ^^^.lib.ft4.utils.{ derive_nonce };
-import auth_pub: ^^^.lib.ft4.auth.external;
 import test_operations: ^^.operations;
 
 function test_before_and_after_authenticate_extensions_are_called_with_ft_auth() {
@@ -44,7 +44,7 @@ function test_before_and_after_authenticate_extensions_are_called_with_evm_auth(
 
     // Perform an authentication operation
     rell.test.tx()
-        .op(auth_pub.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+        .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
         .op(op)
         .sign(rell.test.keypairs.alice)
         .run();

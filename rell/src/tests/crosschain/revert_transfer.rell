@@ -1,13 +1,11 @@
 @test module;
 
-import ^^^.lib.ft4.assets;
+import lib.ft4.auth;
+import lib.ft4.assets;
+import xc: lib.ft4.crosschain;
 import test_utils: ^^.utils.utils;
 import ^^.assets.utils;
 import ^^.extensions;
-import auth_ext: ^^^.lib.ft4.auth.external;
-import xchain_ext: ^^^.lib.ft4.crosschain.external;
-import assets_ext: ^^^.lib.ft4.assets.external;
-import xc: ^^^.lib.ft4.crosschain;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import iccf_op: ^^.operations.iccf_op;
 import operations: ^^.operations;
@@ -22,8 +20,8 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -41,7 +39,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -56,7 +54,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
         .run();
 
@@ -64,11 +62,11 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
 
     val revert_tx_rid = test_utils.get_last_transaction().tx_rid;
 
-    val history = assets_ext.get_transfer_history(alice.account.id, assets.filter(null), null, null)!!.data;
+    val history = assets.external.get_transfer_history(alice.account.id, assets.filter(null), null, null)!!.data;
     val history_entry = map<text,gtv>.from_gtv(history[0]);
     assert_equals(history_entry["tx_rid"], revert_tx_rid.to_gtv());
     assert_equals(history_entry["op_index"], (1).to_gtv());
-    assert_equals(history_entry["operation_name"], rell.meta(xchain_ext.revert_transfer).mount_name.to_gtv());
+    assert_equals(history_entry["operation_name"], rell.meta(xc.external.revert_transfer).mount_name.to_gtv());
     assert_equals(history_entry["delta"], 5L.to_gtv());
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
@@ -89,12 +87,12 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
             is_input = true
         )
     ]);
-    assert_equals(assets_ext.get_transfer_details(revert_tx_rid, 1), expected);
-    assert_equals(assets_ext.get_transfer_details_by_asset(revert_tx_rid, 1, asset_valid.id), expected);
+    assert_equals(assets.external.get_transfer_details(revert_tx_rid, 1), expected);
+    assert_equals(assets.external.get_transfer_details_by_asset(revert_tx_rid, 1, asset_valid.id), expected);
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
         .run_must_fail("Transaction <%s> transfer at index <%s> has already been reverted on this chain."
                   .format(init_tx.body.hash(), 1));
@@ -111,8 +109,8 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -130,7 +128,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -147,7 +145,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
         body = gtx_transaction_body(
             blockchain_rid = intermediate_blockchain_rid,
             operations = [
-                xchain_ext.unapply_transfer(
+                xc.external.unapply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     last_tx = cancel_tx,
@@ -162,7 +160,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(intermediate_blockchain_rid, unapply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, unapply_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, unapply_tx, 0))
         .nop()
         .run();
 
@@ -170,11 +168,11 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
 
     val revert_tx_rid = test_utils.get_last_transaction().tx_rid;
 
-    val history = assets_ext.get_transfer_history(alice.account.id, assets.filter(null), null, null)!!.data;
+    val history = assets.external.get_transfer_history(alice.account.id, assets.filter(null), null, null)!!.data;
     val history_entry = map<text,gtv>.from_gtv(history[0]);
     assert_equals(history_entry["tx_rid"], revert_tx_rid.to_gtv());
     assert_equals(history_entry["op_index"], (1).to_gtv());
-    assert_equals(history_entry["operation_name"], rell.meta(xchain_ext.revert_transfer).mount_name.to_gtv());
+    assert_equals(history_entry["operation_name"], rell.meta(xc.external.revert_transfer).mount_name.to_gtv());
     assert_equals(history_entry["delta"], 5L.to_gtv());
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
@@ -195,12 +193,12 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
             is_input = true
         )
     ]);
-    assert_equals(assets_ext.get_transfer_details(revert_tx_rid, 1), expected);
-    assert_equals(assets_ext.get_transfer_details_by_asset(revert_tx_rid, 1, asset_valid.id), expected);
+    assert_equals(assets.external.get_transfer_details(revert_tx_rid, 1), expected);
+    assert_equals(assets.external.get_transfer_details_by_asset(revert_tx_rid, 1, asset_valid.id), expected);
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(intermediate_blockchain_rid, unapply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, unapply_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, unapply_tx, 0))
         .nop()
         .run_must_fail("Transaction <%s> transfer at index <%s> has already been reverted on this chain."
                   .format(init_tx.body.hash(), 1));
@@ -218,8 +216,8 @@ function test_can_not_revert_canceled_transfer_before_expiry() {
     val deadline = rell.test.last_block_time + rell.test.DEFAULT_BLOCK_INTERVAL * 2;
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -235,7 +233,7 @@ function test_can_not_revert_canceled_transfer_before_expiry() {
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -250,7 +248,7 @@ function test_can_not_revert_canceled_transfer_before_expiry() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
         .run_must_fail("This transfer has not yet expired. It can not be reverted before <%s>.".format(deadline));
 }
@@ -268,8 +266,8 @@ function test_can_not_revert_non_existing_transfer() {
         body = gtx_transaction_body(
             blockchain_rid = chain_context.blockchain_rid,
             operations = [
-                auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id).to_gtx_operation(),
-                xchain_ext.init_transfer(
+                auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
                     recipient_id = recipient_account_id,
                     asset_id = asset_valid.id,
                     amount = 5L,
@@ -286,7 +284,7 @@ function test_can_not_revert_non_existing_transfer() {
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -301,7 +299,7 @@ function test_can_not_revert_non_existing_transfer() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
         .run_must_fail("Cannot revert cross-chain transfer for transaction <%s> at index <%d>. init_transfer not found."
                   .format(init_tx.body.hash(), 1));
@@ -317,8 +315,8 @@ function test_can_not_revert_without_proof() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -334,7 +332,7 @@ function test_can_not_revert_without_proof() {
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -348,7 +346,7 @@ function test_can_not_revert_without_proof() {
     );
 
     rell.test.tx()
-        .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
         .run_must_fail("No proof operation present for TX");
 }
@@ -363,8 +361,8 @@ function test_can_not_revert_with_wrong_op() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -389,7 +387,7 @@ function test_can_not_revert_with_wrong_op() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(target_blockchain_rid, bogus_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, bogus_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, bogus_tx, 0))
         .nop()
         .run_must_fail("last_tx[last_op_index] must be ft4.crosschain.cancel_transfer, ft4.crosschain.unapply_transfer or ft4.crosschain.recall_unclaimed_transfer");
 }
@@ -405,8 +403,8 @@ function test_can_not_revert_transfer_canceled_on_wrong_chain() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -422,7 +420,7 @@ function test_can_not_revert_transfer_canceled_on_wrong_chain() {
         body = gtx_transaction_body(
             blockchain_rid = wrong_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -437,7 +435,7 @@ function test_can_not_revert_transfer_canceled_on_wrong_chain() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(wrong_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, cancel_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
         .run_must_fail(
             "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
@@ -457,8 +455,8 @@ function test_can_not_revert_transfer_unapplied_on_wrong_chain() {
     utils.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
-        .op(auth_ext.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(xchain_ext.init_transfer(
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(xc.external.init_transfer(
             recipient_account_id,
             asset_valid.id,
             5L,
@@ -474,7 +472,7 @@ function test_can_not_revert_transfer_unapplied_on_wrong_chain() {
         body = gtx_transaction_body(
             blockchain_rid = target_blockchain_rid,
             operations = [
-                xchain_ext.cancel_transfer(
+                xc.external.cancel_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     previous_hop_tx = init_tx,
@@ -491,7 +489,7 @@ function test_can_not_revert_transfer_unapplied_on_wrong_chain() {
         body = gtx_transaction_body(
             blockchain_rid = wrong_blockchain_rid,
             operations = [
-                xchain_ext.unapply_transfer(
+                xc.external.unapply_transfer(
                     init_transfer_tx = init_tx,
                     init_tx_op_index = 1,
                     last_tx = cancel_tx,
@@ -506,7 +504,7 @@ function test_can_not_revert_transfer_unapplied_on_wrong_chain() {
 
     rell.test.tx()
         .op(iccf_op.iccf_proof(wrong_blockchain_rid, unapply_tx.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xchain_ext.revert_transfer(init_tx, 1, unapply_tx, 0))
+        .op(xc.external.revert_transfer(init_tx, 1, unapply_tx, 0))
         .nop()
         .run_must_fail(
             "Argument mismatch: next hops (%s) and tx blockchain_rid (%s) don't correspond"
