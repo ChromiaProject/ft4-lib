@@ -15,4 +15,4 @@ export {
   signTransactionWithKeyStores,
 } from "./transaction-signer";
 
-export { EMPTY_SIGNATURE } from "./utils";
+export { EMPTY_SIGNATURE, evmSignatures } from "./utils";
