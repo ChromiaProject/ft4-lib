@@ -28,6 +28,11 @@ export { pendingTransfersForAccount } from "./queries";
 export {
   Orchestrator,
   OrchestratorEvents,
+  OrchestratorState,
+  ResumeOrchestrator,
+  RevertOrchestrator,
+  OrchestratorBase,
+  ExternalOrchestratorBase,
   GtvInitTransferArgs,
   PendingTransfer,
   PendingTransferResponse,

@@ -18,8 +18,8 @@ export interface AuthDescriptorValidationService {
 
   /**
    * Gets auth descriptor counter for provided account and auth descriptor
-   * @param accountId
-   * @param authDescriptorId
+   * @param accountId - The account id to get counter for
+   * @param authDescriptorId - The id of the auth descriptor to get counter for
    * @returns auth descriptor counter or null
    */
   getAuthDescriptorCounter: (

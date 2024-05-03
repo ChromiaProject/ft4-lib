@@ -3,9 +3,13 @@ import {
   AmountInputError,
   AmountOutOfRangeError,
 } from "./error";
-import { Amount, DecimalFormat, RawAmount, SupportedNumber } from "./types";
-
-type AnyAssetAmount = RawAmount | Amount;
+import {
+  Amount,
+  AnyAssetAmount,
+  DecimalFormat,
+  RawAmount,
+  SupportedNumber,
+} from "./types";
 
 // (2^256)-1 = (2^(4*64))-1 = (16^64)-1
 export const MAX = BigInt("0x" + "f".repeat(64));
@@ -109,9 +113,9 @@ export function createAmountFromBalance(
  * - When the decimals argument is incompatible with num.decimals.
  * - When the calculated value is out of range.
  *
- * @param {SupportedNumber} num - The input number to convert.
- * @param {number} [decimals] - The optional number of decimals to use for the conversion.
- * @returns {RawAmount} - The converted RawAmount.
+ * @param num - The input number to convert.
+ * @param decimals - The optional number of decimals to use for the conversion.
+ * @returns - The converted RawAmount.
  * @throws Will throw an error if the input number is not a base-10 number or the specified decimals is invalid.
  */
 export function convertToRawAmount(
@@ -200,7 +204,7 @@ export function checkValueInRange(val: bigint) {
  * numbers aren't precise in JS.
  *
  * @param amount - the amount to format
- * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -> 0.8)
+ * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -\> 0.8)
  *
  * @returns The amount as string
  */

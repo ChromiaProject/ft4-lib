@@ -12,8 +12,8 @@ import { BufferId, RequireTogether } from "@ft4/utils";
 export type TransactionBuilder = {
   /**
    * Adds an operation to include in the final transaction
-   * @param operation the operation to add to the transaction
-   * @param config a configuration object that will be used for this operation when building the transaction
+   * @param operation - the operation to add to the transaction
+   * @param config - a configuration object that will be used for this operation when building the transaction
    * @returns an instance of the transaction builder object
    */
   add: (operation: Operation, config?: OperationConfig) => TransactionBuilder;
@@ -21,7 +21,7 @@ export type TransactionBuilder = {
   /**
    * Add key stores that will also be included as signers to this transaction.
    * If `build` is called, the key stores will also be used to sign the transaction
-   * @param keyStores the key stores to use for signing
+   * @param keyStores - the key stores to use for signing
    * @returns an instance of the transaction builder object
    */
   addSigners: (...keyStores: FtKeyStore[]) => TransactionBuilder;
@@ -104,17 +104,17 @@ export type OnAnchoredHandler = ((
 
 /**
  * Configuration options for an operation.
- * @typedef {Object} OperationConfig
- * @property {Authenticator} [authenticator] - An optional authenticator instance used for the operation.
- * @property {OnAnchoredHandler} [onAnchoredHandler] - Callback function to be called when the transaction is anchored. If provided, `targetBlockchainRid` must also be provided.
- * @property {FtKeyStore[]} [signers] - An optional array of FtKeyStore instances that will be used to sign this operation.
- * @property {Buffer} [targetBlockchainRid] - Buffer representing the rid where this operation should be anchored. If provided, `onAnchoredHandler` must also be provided.
  */
 export type OperationConfig = {
+  /** An optional authenticator instance used for the operation. */
   authenticator?: Authenticator;
+  /** Callback function to be called when the transaction is anchored. If provided, `targetBlockchainRid` must also be provided. */
   onAnchoredHandler?: OnAnchoredHandler;
+  /** An optional array of FtKeyStore instances that will be used to sign this operation. */
   signers?: Signer[];
+  /** Buffer representing the rid where this operation should be anchored. If provided, `onAnchoredHandler` must also be provided. */
   targetBlockchainRid?: Buffer;
+  /** Determines wether operation should skip ft signing with the provided keys */
   skipFtSigning?: boolean;
 };
 
@@ -135,7 +135,7 @@ export type OnAnchoredHandlerData = {
   createProof: (blockchainRid: BufferId) => Promise<Operation>;
 };
 
-type ConfigOptions = {
+export type ConfigOptions = {
   retryCount?: number;
   waitTimeMs?: number;
 };

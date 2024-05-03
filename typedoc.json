@@ -1,0 +1,34 @@
+{
+  "entryPoints": [
+    "client/lib/ft4/*",
+  ],
+  "exclude": [
+    "client/lib/ft4/index.ts"
+  ],
+  "out": "doc/api/client",
+  "navigationLinks": {
+    "Chromia Docs": "https://docs.chromia.com"
+  },
+  "categorizeByGroup": true,
+  "includeVersion": true,
+  "disableSources": true,
+  "hideGenerator": true,
+  "excludeNotDocumented": false,
+  "validation": {
+    "notExported": true,
+    "invalidLink": false,
+    "notDocumented": true
+  },
+  "requiredToBeDocumented": [
+    "Enum",
+    "EnumMember",
+    "Function",
+    "Class",
+    "Interface",
+    "Property",
+    "Method",
+    "Accessor",
+    "TypeAlias"
+  ],
+  "treatWarningsAsErrors": false
+}

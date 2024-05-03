@@ -1,4 +1,5 @@
 export {
+  AnyAssetAmount,
   Amount,
   DecimalFormat,
   Asset,
@@ -35,6 +36,10 @@ export {
 } from "./error";
 
 export {
+  LockAccount,
+  LockedAmount,
+  LockedBalance,
+  LockedAggregatedBalance,
   getLockAccounts,
   getLockAccountsWithNonZeroBalances,
   getLockedAssetBalance,

@@ -3,7 +3,7 @@ import { AuthDescriptorRuleVariable, RuleVariableValue } from "./types";
 /**
  * Creates a block height rule variable object that can be passed
  * into a function that produces a rule
- * @param value the block height to use
+ * @param value - the block height to use
  * @returns rule variable value
  */
 export const blockHeight = (
@@ -16,7 +16,7 @@ export const blockHeight = (
 /**
  * Creates a block time rule variable object that can be passed
  * into a function that produces a rule
- * @param value the block time to use
+ * @param value - the block time to use
  * @returns rule variable value
  */
 export const blockTime = (
@@ -29,7 +29,7 @@ export const blockTime = (
 /**
  * Creates an operation count rule variable object that can be passed
  * into a function that produces a rule
- * @param value the operation count to use
+ * @param value - the operation count to use
  * @returns rule variable value
  */
 export const opCount = (

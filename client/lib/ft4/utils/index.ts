@@ -1,6 +1,7 @@
 export {
   BufferId,
   Config,
+  EnumLike,
   TxContext,
   EntityRetriever,
   PaginatedEntity,

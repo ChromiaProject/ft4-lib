@@ -4,11 +4,11 @@ import { PaginatedEntity } from "./types";
 
 /**
  *
- * @param queryable to use to make queries to blockchain
- * @param query the query to perform
- * @param dataMapper
- * @template T type of entity that will be returned (note: Type of a single entity, not a list)
- * @template V type of data returned from the blockchain
+ * @param queryable - to use to make queries to blockchain
+ * @param query - the query to perform
+ * @param dataMapper - function that transforms data from the type returned by backend to the type returned to caller
+ * @typeParam T - type of entity that will be returned (note: Type of a single entity, not a list)
+ * @typeParam V - type of data returned from the blockchain
  * @returns an object that contains a method to fetch a page from a paginated endpoint
  */
 export async function retrievePaginatedEntity<

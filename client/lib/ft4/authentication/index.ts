@@ -1,6 +1,8 @@
 export {
   LoginConfigComplexRule,
   LoginConfigRules,
+  LoginConfigRuleVariable,
+  LoginConfigRelativeRuleVariable,
   LoginConfigSimpleRule,
   LoginKeyStore,
   LoginOptions,

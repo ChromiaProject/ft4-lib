@@ -15,7 +15,12 @@ export function offNoOp(listener: Listener<[string]>) {
   ftEventEmitter.off("NoOp", listener);
 }
 
-export const EventHandlers = {
+export interface EventHandlers {
+  onNoOp(listener: Listener<[string]>): void;
+  offNoOp(listener: Listener<[string]>): void;
+}
+
+export const eventHandlers: EventHandlers = {
   onNoOp,
   offNoOp,
 };

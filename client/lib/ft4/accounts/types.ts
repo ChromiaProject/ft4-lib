@@ -133,10 +133,10 @@ export interface AuthenticatedAccount extends Account {
   /**
    * Perform a cross-chain transfer.
    *
-   * @param {BufferId} targetChainRid - RID of the target blockchain.
-   * @param {BufferId} recipientId - ID of the recipient.
-   * @param {BufferId} assetId - ID of the asset to be transferred.
-   * @param {Amount} amount - The amount to be transferred.
+   * @param targetChainRid - RID of the target blockchain.
+   * @param recipientId - ID of the recipient.
+   * @param assetId - ID of the asset to be transferred.
+   * @param amount - The amount to be transferred.
    *
    * Will emit events when the `init_transfer` transaction is built,
    * when `init_transfer` transaction is anchored,
@@ -161,7 +161,7 @@ export interface AuthenticatedAccount extends Account {
   /**
    * Resume a cross-chain transfer which was initiated but did not complete properly.
    *
-   * @param {TransferRef} pendingTransfer - The transfer to resume
+   * @param pendingTransfer - The transfer to resume
    *
    * Will emit event on each hop (containing blockchain RID).
    *
@@ -177,7 +177,7 @@ export interface AuthenticatedAccount extends Account {
   /**
    * Revert a cross-chain transfer which was initiated but did not complete properly.
    *
-   * @param {TransferRef} pendingTransfer - The transfer to revert
+   * @param pendingTransfer - The transfer to revert
    *
    * Will emit event on each hop (containing blockchain RID).
    *
@@ -194,7 +194,7 @@ export interface AuthenticatedAccount extends Account {
    * Recalls a cross-chain account creation transfer which was not claimed
    * before timeout.
    *
-   * @param {TransferRef} pendingTransfer - The transfer to recall
+   * @param pendingTransfer - The transfer to recall
    *
    * Will emit event on each hop (containing blockchain RID).
    *

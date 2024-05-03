@@ -63,7 +63,7 @@ export type RawSingleSig = readonly [flags: string[], signer: Buffer];
 
 // ======== Server side request model =========
 
-type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
+export type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
 export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
   readonly [auth_type: number, args: T, rules: RawRules | null];
 

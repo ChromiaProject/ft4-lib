@@ -45,6 +45,8 @@ export enum DecimalFormat {
 
 export type SupportedNumber = string | number | Amount;
 
+export type AnyAssetAmount = RawAmount | Amount;
+
 export interface Amount {
   value: bigint;
   decimals: number;
@@ -66,9 +68,9 @@ export interface Amount {
   /**
    * Can be used as compareFn with `Array.sort()`.
    *
-   * @param other  amount to compare with
+   * @param other - amount to compare with
    *
-   * @return 0 if other is equal to this
+   * @returns 0 if other is equal to this
    *         1 if other should come before this when sorted
    *        -1 if other should come after this when sorted
    */
