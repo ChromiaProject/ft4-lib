@@ -17,21 +17,36 @@ function ensure_blockchain_account(blockchain_rid: byte_array) =
 
 namespace Unsafe {
     function register_crosschain_asset(
+        asset_id: byte_array,
         name,
         symbol: text,
         decimals: integer,
         issuing_blockchain_rid: byte_array,
         icon_url: text,
+        type: text,        
+        uniqueness_resolver: byte_array,
         origin_blockchain_rid: byte_array
     ): asset_origin {
-        require(origin_blockchain_rid.size() > 0, "origin_blockchain_rid cannot be empty");
-        val asset = assets.Unsafe.register_asset(
-                name,
-                symbol,
-                decimals,
-                issuing_blockchain_rid,
-                icon_url
-            );
+        utils.validate_blockchain_rid(origin_blockchain_rid, "origin_blockchain_rid");
+        utils.validate_blockchain_rid(issuing_blockchain_rid, "issuing_blockchain_rid");
+        assets.validate_asset_id(asset_id);
+        assets.validate_asset_decimals(decimals);
+        assets.validate_asset_name(name);
+        assets.validate_asset_symbol(symbol);
+        assets.validate_asset_type(type);
+        assets.validate_asset_uniqueness_resolver(uniqueness_resolver);
+        
+        val asset = create assets.asset(
+            id = asset_id,
+            name,
+            symbol,
+            decimals,
+            issuing_blockchain_rid,
+            icon_url = assets.parse_icon_url(icon_url),
+            type = type,
+            total_supply = 0L,
+            uniqueness_resolver
+        );
         return create asset_origin(asset, origin_blockchain_rid);
     }
 }

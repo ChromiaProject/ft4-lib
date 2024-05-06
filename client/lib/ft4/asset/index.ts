@@ -8,6 +8,7 @@ export {
   RawAmount,
   AssetResponse,
   ASSET_TYPE_FT4,
+  CrosschainAssetRegistration,
 } from "./types";
 
 export {
@@ -23,9 +24,10 @@ export {
   getBalancesByAccountId,
   getAllAssets,
   getAssetById,
-  getAssetBySymbol,
+  getAssetsBySymbol,
   getAssetsByName,
   getAssetsByType,
+  getAssetDetailsForCrosschainRegistration,
 } from "./asset-query-functions";
 
 export {

@@ -60,7 +60,11 @@ export interface Connection extends Queryable {
   getAuthDescriptorValidator: (useCache: boolean) => AuthDescriptorValidator;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
-  getAssetBySymbol: (symbol: string) => Promise<Asset | null>;
+  getAssetsBySymbol: (
+    symbol: string,
+    limit?: number,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<Asset>>;
   getAssetsByName: (
     name: string,
     limit?: number,

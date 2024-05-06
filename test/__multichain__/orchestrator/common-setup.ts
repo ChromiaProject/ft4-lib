@@ -61,7 +61,7 @@ export async function setupTestEnvironment(
   await registerCrosschainAsset(
     connection2.client,
     adminUser().signatureProvider,
-    asset,
+    asset.id,
     multichain00.rid,
   );
 

@@ -44,7 +44,7 @@ import {
 import {
   getAllAssets,
   getAssetById,
-  getAssetBySymbol,
+  getAssetsBySymbol,
   getAssetsByName,
   getAssetsByType,
 } from "@ft4/asset";
@@ -73,17 +73,22 @@ export async function createConnectionToBlockchainRid(
   newBlockchainRid: BufferId,
 ): Promise<Connection> {
   return createConnection(
-    await createClient({
-      // assume same D1. Cross-chain doesn't work otherwise
-      directoryNodeUrlPool: oldConnection.client.config.endpointPool.map(
-        (ep) => ep.url,
-      ),
-      blockchainRid:
-        typeof newBlockchainRid == "string"
-          ? newBlockchainRid
-          : formatter.toString(newBlockchainRid),
-    }),
+    await createClientToBlockchain(oldConnection.client, newBlockchainRid),
   );
+}
+
+export async function createClientToBlockchain(
+  client: IClient,
+  blockchainRid: BufferId,
+): Promise<IClient> {
+  return await createClient({
+    // assume same D1. Cross-chain doesn't work otherwise
+    directoryNodeUrlPool: client.config.endpointPool.map((ep) => ep.url),
+    blockchainRid:
+      typeof blockchainRid == "string"
+        ? blockchainRid
+        : formatter.toString(blockchainRid),
+  });
 }
 
 export function createConnection(client: IClient): Connection {
@@ -126,7 +131,11 @@ export function createConnection(client: IClient): Connection {
       ),
 
     getAssetById: (id: BufferId) => getAssetById(connection, id),
-    getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),
+    getAssetsBySymbol: (
+      symbol: string,
+      limit?: number,
+      cursor?: OptionalPageCursor,
+    ) => getAssetsBySymbol(connection, symbol, limit, cursor),
     getAssetsByName: (
       name: string,
       limit?: number,

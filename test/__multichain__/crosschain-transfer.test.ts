@@ -34,7 +34,7 @@ describe("Crosschain transfer", () => {
     await registerCrosschainAsset(
       connection01.client,
       adminUser().signatureProvider,
-      asset00,
+      asset00.id,
       multichain00.rid,
     );
 

@@ -4,8 +4,9 @@ import {
   fetchBlockchains,
   generateId,
   getNewAsset,
+  mapAssetToCrosschainAssetRegistration,
+  registerCrosschainAsset,
 } from "@ft4-test/util";
-import { registerCrosschainAsset } from "@ft4/admin";
 import { PathfinderError, findPathToChainForAsset } from "@ft4/crosschain";
 import { Connection, createConnection } from "@ft4/ft-session";
 
@@ -29,10 +30,11 @@ describe("Pathfinder", () => {
       "pathfinder",
       "PATHFINDER",
     );
+
     await registerCrosschainAsset(
-      connections[1].client,
+      connections[1],
       adminUser().signatureProvider,
-      asset00,
+      mapAssetToCrosschainAssetRegistration(asset00),
       generateId(1),
     );
 

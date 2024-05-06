@@ -430,10 +430,11 @@ function test_paginated_assets_have_correct_format() {
 function test_it_gets_asset_by_symbol() {
     val asset1 = utils.create_asset("test1", "TST1", 0);
     val asset2 = utils.create_asset("test2", "TST2", 0);
-    val actual_asset = assets.external.get_asset_by_symbol(asset1.symbol);
+    val response = assets.external.get_assets_by_symbol(asset1.symbol, null, null);
     
+    assert_equals(response.data.size(), 1);    
     assert_equals(
-        actual_asset,
+        response.data[0],
         (
             id = asset1.id,
             name = "test1",
@@ -443,6 +444,6 @@ function test_it_gets_asset_by_symbol() {
             icon_url = "",
             type = assets.ASSET_TYPE_FT4,
             supply = 0L
-        )
+        ).to_gtv_pretty()
     );
 }

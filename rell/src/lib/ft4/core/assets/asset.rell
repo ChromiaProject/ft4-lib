@@ -3,13 +3,22 @@ val ASSET_TYPE_FT4 = "ft4";
 
 entity asset {
     key id: byte_array;
-    name;
-    key symbol: text;
+
+    name: text;
+    symbol: text;
     decimals: integer;
     issuing_blockchain_rid: byte_array;
-    icon_url: text;
+    mutable icon_url: text;
     type: text = ASSET_TYPE_FT4;
     mutable total_supply: big_integer;
+    uniqueness_resolver: byte_array = x"";
+
+    key issuing_blockchain_rid, name, uniqueness_resolver;
+    key issuing_blockchain_rid, symbol, uniqueness_resolver;
+
+    index name;
+    index symbol;
+    index type;
 }
 
 function Asset(id: byte_array) = require(
@@ -130,7 +139,7 @@ function format_amount_with_decimals(amount: big_integer, decimals: integer): te
     return amt;
 }
 
-function get_paginated_asset_balances_by_name(name, page_size: integer?, page_cursor: text?) {
+function get_paginated_assets_by_name(name, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
         .name == name,
@@ -143,6 +152,34 @@ function get_paginated_asset_balances_by_name(name, page_size: integer?, page_cu
     ) limit utils.fetch_data_size(page_size);
 }
 
+function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return asset @* {
+        .symbol == symbol,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (map_asset($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_asset_details_for_crosschain_registration(asset_id: byte_array) {
+    val asset = asset @? { .id == asset_id } (
+        id = .id,
+        name = .name,
+        symbol = .symbol,
+        decimals = .decimals,
+        blockchain_rid = .issuing_blockchain_rid,        
+        icon_url = .icon_url,
+        type = .type,
+        uniqueness_resolver = .uniqueness_resolver
+    );
+
+    return require(asset, "Asset <%s> not found.".format(asset_id));
+}
+
 function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
     require(
         value <= max_asset_amount, 
@@ -152,6 +189,40 @@ function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
         value > 0L, 
          "%s: value must be non-zero positive, actual: %d".format(name, value)
     );
+}
+
+function parse_icon_url(icon_url: text): text {
+    val trimmed_icon_url = icon_url.trim();
+    require(
+        (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
+        "Invalid URL for icon"
+    );
+    return trimmed_icon_url;
+}
+
+function validate_asset_decimals(decimals: big_integer) {
+    require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
+}
+
+function validate_asset_id(id: byte_array) {
+    require(id.size() == 32, "Invalid asset ID length <%d>, must be <32>".format(id.size()));
+}
+
+function validate_asset_name(name) {
+    require(name.size() <= 1024, "Asset name cannot be longer than 1024 characters");
+}
+
+function validate_asset_symbol(symbol: text) {
+    require(symbol.size() <= 1024, "Asset symbol cannot be longer than 1024 characters");
+}
+
+function validate_asset_type(type: text) {
+    require(type.size() > 0, "Asset type cannot be an empty string");
+    require(type.size() <= 1024, "Asset type cannot be longer than 1024 characters");
+}
+
+function validate_asset_uniqueness_resolver(res: byte_array) {
+    require(res.size() <= 1024, "Asset uniqueness resolver cannot be longer than 1024 characters");
 }
 
 namespace Unsafe {
@@ -209,17 +280,13 @@ namespace Unsafe {
         decimals: integer,
         blockchain_rid: byte_array,
         icon_url: text,
-        type: text = ASSET_TYPE_FT4): asset {
-
-        require(decimals >= 0 and decimals < 79, "Decimals must be between 0 and 78 (included)");
-
-        val trimmed_icon_url = icon_url.trim();
-        require(
-            (trimmed_icon_url == "") or (trimmed_icon_url.size() <= 2048 and trimmed_icon_url.matches('^\\S+:\\/\\/[^\\s$.?#].[^\\s]*$')),
-            "Invalid URL for icon"
-        );
-
-        require(blockchain_rid.size() > 0, "blockchain_rid cannot be empty");
+        type: text = ASSET_TYPE_FT4
+    ): asset {
+        utils.validate_blockchain_rid(blockchain_rid);
+        validate_asset_decimals(decimals);
+        validate_asset_name(name);
+        validate_asset_symbol(symbol);
+        validate_asset_type(type);
 
         val id = (name, blockchain_rid).hash();
         return create asset (
@@ -228,7 +295,7 @@ namespace Unsafe {
             symbol,
             decimals,
             issuing_blockchain_rid=blockchain_rid,
-            icon_url=trimmed_icon_url,
+            icon_url = parse_icon_url(icon_url),
             type=type,
             total_supply=0L
         );

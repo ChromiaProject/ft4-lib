@@ -3,6 +3,7 @@ export * from "./blockchain-util";
 export * from "./chromia-node";
 export * from "./fake-auth-data-service";
 export * from "./fake-auth-descriptor-validator";
+export * from "./crosschain";
 export * from "./test-user";
 export * from "./util";
 export * from "./types";

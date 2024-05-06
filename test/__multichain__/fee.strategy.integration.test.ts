@@ -3,9 +3,14 @@ import {
   createChromiaClientToMultichain,
   fetchBlockchains,
   getNewAsset,
+  mapAssetToCrosschainAssetRegistration,
+  registerCrosschainAsset,
 } from "@ft4-test/util";
 import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
-import { mint, registerCrosschainAsset } from "@ft4/admin";
+import {
+  mint,
+  registerCrosschainAsset as adminRegisterCrosschainAsset,
+} from "@ft4/admin";
 import {
   ASSET_TYPE_FT4,
   Asset,
@@ -88,28 +93,30 @@ describe("Fee account creation single step", () => {
       iconUrl: "https://missing.asset",
       type: ASSET_TYPE_FT4,
     };
-    await registerCrosschainAsset(
+    await adminRegisterCrosschainAsset(
       recipientConnection.client,
       adminUser().signatureProvider,
-      asset,
+      asset.id,
       multichain00.rid,
     );
-    await registerCrosschainAsset(
+    await adminRegisterCrosschainAsset(
       recipientConnection.client,
       adminUser().signatureProvider,
-      timeoutAsset,
+      timeoutAsset.id,
       multichain00.rid,
     );
+
     await registerCrosschainAsset(
-      recipientConnection.client,
+      recipientConnection,
       adminUser().signatureProvider,
-      nonExistentChain00Asset,
+      mapAssetToCrosschainAssetRegistration(nonExistentChain00Asset),
       multichain00.rid,
     );
-    await registerCrosschainAsset(
+
+    await adminRegisterCrosschainAsset(
       unrelatedConnection.client,
       adminUser().signatureProvider,
-      asset,
+      asset.id,
       multichain01.rid,
     );
   });

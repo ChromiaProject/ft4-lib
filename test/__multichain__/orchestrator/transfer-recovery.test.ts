@@ -59,7 +59,7 @@ describe("Orchestrator", () => {
     await registerCrosschainAsset(
       connection2.client,
       adminUser().signatureProvider,
-      asset,
+      asset.id,
       multichain00.rid,
     );
 
@@ -117,7 +117,7 @@ describe("Orchestrator", () => {
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
-      testContext.sampleAsset,
+      testContext.sampleAsset.id,
       testContext.multichain2.rid, // Branch
     );
 
