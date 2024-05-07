@@ -19,24 +19,58 @@ function test_is_strategy_op_returns_false_when_receives_non_strategy_operation(
 }
 
 function test_registering_account_adds_main_auth_descriptor() {
-    val auth_descriptor = accounts.single_sig_auth_descriptor(
-        rell.test.keypairs.alice.pub,
+    val main_auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.pubkeys.alice,
         set(["A", "T"])
     );
 
     rell.test.tx()
-        .op(open.ras_open(auth_descriptor))
+        .op(open.ras_open(main_auth_descriptor, null))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val main_auth_descriptor = accounts.main_auth_descriptor @ { 
-        .account.id == rell.test.keypairs.alice.pub.hash() 
-    } (
-        .auth_descriptor
+    val account = accounts.account @? { .id == rell.test.pubkeys.alice.hash() };
+    assert_not_null(account);
+
+    assert_equals(
+        accounts.main_auth_descriptor @ { account } (.auth_descriptor.id),
+        main_auth_descriptor.hash()
     );
 
-    assert_equals(main_auth_descriptor.id, auth_descriptor.hash());
+    assert_equals(
+        accounts.account_auth_descriptor @* { account } (.id),
+        [ main_auth_descriptor.hash() ]
+    );
+}
+
+function test_registering_account_adds_disposable_auth_descriptor() {
+    val main_auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.pubkeys.alice,
+        set(["A", "T"])
+    );
+
+    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(rell.test.pubkeys.bob, set(["T"]));
+
+    rell.test.tx()
+        .op(open.ras_open(main_auth_descriptor, disposable_auth_descriptor))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    val account = accounts.account @? { .id == rell.test.pubkeys.alice.hash() };
+    assert_not_null(account);
+
+    assert_equals(
+        accounts.main_auth_descriptor @ { account } (.auth_descriptor.id),
+        main_auth_descriptor.hash()
+    );
+
+    assert_equals(
+        accounts.account_auth_descriptor @* { account } (@sort .id),
+        [ main_auth_descriptor.hash(), disposable_auth_descriptor.hash() ].sorted()
+    );
 }
 
 function test_account_registration_fails_when_mandatory_flags_missing_in_main_auth_descriptor() {
