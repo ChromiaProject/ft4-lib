@@ -65,7 +65,7 @@ function test_multi_sig_auth_descriptor_can_be_added() {
     accounts.auth_type.M,
     [
         ["A", "T"].to_gtv(),
-        0x2.to_gtv(),
+        (2).to_gtv(),
         [
           alice.pub,
           bob.pub
@@ -101,7 +101,7 @@ function test_duplicate_multisig_ad_can_not_be_used_when_creating_account() {
     accounts.auth_type.M,
     [
         ["A", "T"].to_gtv(),
-        0x2.to_gtv(),
+        (2).to_gtv(),
         [
           alice.pub,
           alice.pub
@@ -127,7 +127,7 @@ function test_duplicate_multisig_ad_can_not_be_added_to_account() {
     accounts.auth_type.M,
     [
         ["T"].to_gtv(),
-        0x2.to_gtv(),
+        (2).to_gtv(),
         [
           bob.pub,
           bob.pub
@@ -142,6 +142,60 @@ function test_duplicate_multisig_ad_can_not_be_added_to_account() {
       .sign(alice)
       .sign(bob)
       .run_must_fail("duplicate key value violates unique constraint");
+}
+
+function test_multisig_ad_with_zero_required_can_not_be_added_to_account() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
+    .run();
+
+  val auth_descriptor2 = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        (0).to_gtv(),
+        [
+          alice.pub,
+          bob.pub
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  rell.test.tx()
+      .op(test_utils.ft_auth_operation_for(alice.pub))
+      .op(accounts.external.add_auth_descriptor(auth_descriptor2))
+      .sign(alice)
+      .sign(bob)
+      .run_must_fail("Required signatures must be positive");
+}
+
+function test_multisig_ad_with_too_many_required_can_not_be_added_to_account() {
+  val auth_descriptor = test_utils.create_auth_descriptor(alice.pub, ["A", "T"]);
+  admin.external.register_account(auth_descriptor)
+    .sign(asset_utils.admin_priv_key())
+    .run();
+
+  val auth_descriptor2 = accounts.auth_descriptor(
+    accounts.auth_type.M,
+    [
+        ["T"].to_gtv(),
+        (3).to_gtv(),
+        [
+          alice.pub,
+          bob.pub
+        ].to_gtv()
+    ],
+    rules = null.to_gtv()
+  );
+
+  rell.test.tx()
+      .op(test_utils.ft_auth_operation_for(alice.pub))
+      .op(accounts.external.add_auth_descriptor(auth_descriptor2))
+      .sign(alice)
+      .sign(bob)
+      .run_must_fail("Required signatures cannot be greater than number of signers");
 }
 
 function test_create_account_without_auth_in_operation_in_genesis_block() {
