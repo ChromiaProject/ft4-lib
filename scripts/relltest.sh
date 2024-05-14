@@ -63,7 +63,7 @@ if $docker; then
         -e POSTGRES_PASSWORD=postchain -p 5432:5432 -d postgres:14.9-alpine3.18 > /dev/null
 fi
 
-chr test -s configs/rell-test.yml --use-db $tests $additional_args
+chr test --use-db $tests $additional_args
 return_code=$?
 
 if $docker; then
