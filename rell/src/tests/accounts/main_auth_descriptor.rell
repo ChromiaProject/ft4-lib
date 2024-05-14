@@ -156,3 +156,31 @@ function test_delete_auth_descriptors_for_signer_fails_for_main_auth_descriptor_
         .sign(alice.keypair)
         .run_must_fail("Cannot delete main auth descriptor");
 }
+
+function test_update_main_auth_descriptor_fails_if_new_auth_descriptor_miss_mandatory_flags() {
+    val alice = utils.register_alice();
+    val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["T"]);
+
+    rell.test.tx()
+        .op(alice.ft_auth())
+        .op(accounts.external.update_main_auth_descriptor(auth_descriptor))
+        .sign(alice.keypair)
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("Some of mandatory flags <[A, T]> missing, found only <[T]>");
+}
+
+function test_update_main_auth_descriptor_fails_if_new_auth_descriptor_is_restricted() {
+    val alice = utils.register_alice();
+    val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"],
+        [
+            "and".to_gtv(),
+            accounts.rule_expression_to_gtv(accounts.rule_expression(accounts.rule_variable.op_count, accounts.rule_operator.lt, 5))
+        ].to_gtv());
+
+    rell.test.tx()
+        .op(alice.ft_auth())
+        .op(accounts.external.update_main_auth_descriptor(auth_descriptor))
+        .sign(alice.keypair)
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("Main auth descriptor cannot be restricted");
+}
