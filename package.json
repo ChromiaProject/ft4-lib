@@ -57,7 +57,7 @@
   "license": "Apache-2.0",
   "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
   "dependencies": {
-    "ethers": "^6.11.1"
+    "ethers": "^6.12.0"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.43.1",
