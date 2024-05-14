@@ -1,4 +1,4 @@
-import { registerAccount } from "./main";
+import { registerAccount, logoutSession } from "./main";
 import {
   allowedAssets,
   pendingTransferStrategies,
@@ -15,6 +15,8 @@ import {
   subscriptionDetails,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  fetchLoginDetails,
+  getLoginDetails,
 } from "./strategies";
 
 export interface RegistrationStrategy {
@@ -70,6 +72,9 @@ export {
   subscriptionDetails,
   transferSubscription,
   feeAssets,
+  fetchLoginDetails,
+  getLoginDetails,
+  logoutSession,
   subscriptionPeriodMillis,
   pendingTransferStrategies,
   registerAccount,

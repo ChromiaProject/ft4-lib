@@ -7,6 +7,7 @@ import {
   getKeyHandlersForKeyStores,
   isFtKeyStore,
   deleteDisposableAuthDescriptors,
+  LoginKeyStore,
 } from "@ft4/authentication";
 import { compactArray, createAndSignTransaction } from "@ft4/utils";
 import {
@@ -21,6 +22,7 @@ import { registerAccount as registerAccountOp } from "./operations";
 import { registerAccountMessage } from "./queries";
 import { Strategy } from "./types";
 import {
+  Session,
   createAuthDataService,
   createConnection,
   createSession,
@@ -144,24 +146,32 @@ export function registerAccount(
         resolve(
           Object.freeze({
             session,
-            logout: async () => {
-              if (disposableKeyStore) {
-                await deleteDisposableAuthDescriptors(
-                  connection,
-                  session.account,
-                  disposableKeyStore,
-                );
-              }
-              if (loginKeyStore) {
-                await loginKeyStore.clear(accountId);
-              }
-            },
+            logout: logoutSession(session, disposableKeyStore, loginKeyStore),
           }),
         );
       })
       .catch((reason) => reject(reason));
   });
   return promiEvent;
+}
+
+export function logoutSession(
+  session: Session,
+  disposableKeyStore: FtKeyStore | null,
+  loginKeyStore: LoginKeyStore | null,
+) {
+  return async () => {
+    if (disposableKeyStore) {
+      await deleteDisposableAuthDescriptors(
+        session,
+        session.account,
+        disposableKeyStore,
+      );
+    }
+    if (loginKeyStore) {
+      await loginKeyStore.clear(session.account.id);
+    }
+  };
 }
 
 async function evmSignaturesOperation(
