@@ -95,7 +95,7 @@
   "peerDependencies": {
     "buffer": "^5.x || ^6.x",
     "events": "^3.3.0",
-    "postchain-client": "^1.15.2"
+    "postchain-client": "^1.16.1"
   },
   "jest-junit": {
     "suiteName": "jest tests",
