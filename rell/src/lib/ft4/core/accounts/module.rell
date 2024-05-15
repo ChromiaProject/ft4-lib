@@ -113,6 +113,8 @@ function add_auth_descriptor(account, auth_descriptor): account_auth_descriptor 
  * Deletes old main auth descriptor and sets provided auth descriptor as main auth descriptor
  */
 function update_main_auth_descriptor(account, auth_descriptor) {
+    require(auth_descriptor.rules == GTV_NULL, "Main auth descriptor cannot be restricted");
+    require_mandatory_flags(auth_descriptor);
     delete_main_auth_descriptor(account);
     val account_auth_descriptor = add_auth_descriptor(account, auth_descriptor);
     set_main_auth_descriptor(account, account_auth_descriptor);
@@ -163,13 +165,7 @@ function delete_all_auth_descriptors_except_main(account) {
 
 function create_account_with_auth(auth_descriptor, account_id: byte_array? = null): account {
     require(auth_descriptor.rules == GTV_NULL, "Cannot create an account with a restricted auth descriptor");
-    
-    var flags = get_flags(auth_descriptor);
-    val mandatory = get_auth_flags_config().mandatory;
-    require(
-        flags.contains_all(mandatory),
-        "Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
-    );
+    require_mandatory_flags(auth_descriptor);
 
     val id = account_id ?: get_account_id_from_signers(get_signers(auth_descriptor));
     val account = create account(id, type = ACCOUNT_TYPE_USER);
@@ -180,6 +176,15 @@ function create_account_with_auth(auth_descriptor, account_id: byte_array? = nul
     create_rate_limiter_state_for_account(account);
     
     return account;
+}
+
+function require_mandatory_flags(auth_descriptor) {
+    var flags = get_flags(auth_descriptor);
+    val mandatory = get_auth_flags_config().mandatory;
+    require(
+        flags.contains_all(mandatory),
+        "Some of mandatory flags <%s> missing, found only <%s>".format(mandatory, flags)
+    );
 }
 
 /**

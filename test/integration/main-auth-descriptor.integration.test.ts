@@ -34,7 +34,7 @@ describe("Main auth descriptor", () => {
     );
 
     const { keyStore: mainKeyStore, authDescriptor: newMainAuthDescriptor } =
-      createTestAuthDescriptor();
+      createTestAuthDescriptor(["A", "T"]);
 
     const { session: sessionAfterUpdate } =
       await session.account.updateMainAuthDescriptor(
@@ -64,7 +64,7 @@ describe("Main auth descriptor", () => {
       .build();
 
     const { keyStore, authDescriptor: newAuthDescriptor } =
-      createTestAuthDescriptor();
+      createTestAuthDescriptor(["A", "T"]);
     await account.updateMainAuthDescriptor(newAuthDescriptor, keyStore);
 
     const { getSession } = createKeyStoreInteractor(client, keyStore);
@@ -81,7 +81,7 @@ describe("Main auth descriptor", () => {
       .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .build();
 
-    const { keyStore, authDescriptor } = createTestAuthDescriptor();
+    const { keyStore, authDescriptor } = createTestAuthDescriptor(["A", "T"]);
     await account.updateMainAuthDescriptor(authDescriptor, keyStore);
 
     const mainAuthDescriptor = await account.getMainAuthDescriptor();
