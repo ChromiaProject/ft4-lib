@@ -1,153 +1,157 @@
 blockchains:
-  ft4_rell_test:  # Name of the blockchain
-    module: tests.assets.app_module  # Entrypoint to the project
-    test:  # Not default
-      modules:  # List of the test modules in your project
+  ft4:
+    type: library
+    module: lib.ft4
+
+  ft4_rell_test:
+    module: tests.assets.app_module
+    moduleArgs:
+      lib.ft4:
+        query_max_page_size: 99
+
+      lib.ft4.core.accounts:
+        rate_limit:
+          max_points: 5
+          # Use default values for the other rate limit parameters
+        auth_descriptor:
+          max_rules: 4
+
+      lib.ft4.core.auth:
+        evm_signatures_authorized_operations:
+          - extra_signatures_op
+          - empty_op
+
+      lib.ft4.core.admin:
+        admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
+
+      tests.assets.utils:
+        admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
+    test:
+      modules:
         - tests.accounts
         - tests.assets        
         - tests.auth
         - tests.crosschain
         - tests.default_prioritization
         - tests.utils
-      moduleArgs:
-        lib.ft4:
-          query_max_page_size: 99
-
-        lib.ft4.core.accounts:
-          rate_limit:
-            max_points: 5
-            # Use default values for the other rate limit parameters
-          auth_descriptor:
-            max_rules: 4
-
-        lib.ft4.core.auth:
-          evm_signatures_authorized_operations:
-            - extra_signatures_op
-            - empty_op
-
-        lib.ft4.core.admin:
-          admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
-
-        tests.assets.utils:
-          admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
   ft4_rell_auth:  # Runs separate test chain to test auth extensions
-    module: tests.assets.app_module_2  # Entrypoint to the project
+    module: tests.assets.app_module_2
+    moduleArgs:
+      # Use default values for all rate limit parameters
+
+      lib.ft4.core.accounts:
+        auth_flags:
+          mandatory: A, B, C
+          default:
+            - A
+            - B
+
+      lib.ft4.core.admin:
+        admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
+
+      tests.assets.utils:
+        admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
     test:
       modules:
         - tests.auth_extensions
         - tests.auth_flags
-      moduleArgs:
-        # Use default values for all rate limit parameters
 
-        lib.ft4.core.accounts:
-          auth_flags:
-            mandatory: A, B, C
-            default:
-              - A
-              - B
+  ft4_rell_create_account_strategies:
+    module: tests.assets.app_module
+    moduleArgs:
+      # Use default values for all rate limit parameters
 
-        lib.ft4.core.admin:
-          admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
+      lib.ft4.core.admin:
+        admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-        tests.assets.utils:
-          admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
+      tests.assets.utils:
+        admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
-  ft4_rell_create_account_strategies:  # Runs separate test chain to test create account strategies
-    module: tests.assets.app_module  # Entrypoint to the project
+      lib.ft4.core.auth:
+        evm_signatures_authorized_operations:
+          - register_player
+
+      lib.ft4.core.accounts.strategies.transfer:
+        rules:
+          - sender_blockchain:
+              - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
+              - "$"
+            sender: X
+            recipient: X
+            asset: "*"
+            timeout_days: 10
+            strategy: "open"
+
+          - sender_blockchain: "$"
+            sender: "*"
+            recipient: x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5" # Alice
+            asset:
+              id: x"abcdef"
+              min_amount: 100000L
+            timeout_days: 60
+            strategy:
+             - "fee"
+             - "stake"
+
+          - sender_blockchain:
+              - x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+              - "$"
+            sender: "*"
+            recipient:
+              - x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8" # Bob
+            asset:
+              - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
+                min_amount: 5L
+              - name: test1 # issued by current blockchain
+                min_amount: 3L
+              - id: x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce" # "test" issued by other blockchain
+                min_amount: 5L
+              - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+                name: test1
+                min_amount: 7L
+            timeout_days: 60
+            strategy:
+              - "open"
+              - "fee"
+              - "subscription"
+
+          - sender_blockchain:
+              - "$"
+            sender: "*"
+            recipient: x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe" # Charlie
+            asset: "*"
+            timeout_days: 60
+            strategy:
+              - "open"
+
+      lib.ft4.core.accounts.strategies.transfer.fee:
+        asset:
+          - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
+            amount: 2L
+          - name: test1 # issued by current blockchain
+            amount: 1L
+          - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+            name: test1
+            amount: 3L
+        fee_account: x"023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1" # Trudy
+
+      lib.ft4.core.accounts.strategies.transfer.subscription:
+        asset:
+          - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
+            amount: 2L
+          - name: test1 # issued by current blockchain
+            amount: 1L
+          - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
+            name: test1
+            amount: 3L
+        subscription_period_days: 30
+        free_operations:
+          - free_operation
+        subscription_account: x"032c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991" # Charlie
     test:
       modules:
         - tests.create_account_strategies
-      moduleArgs:
-        # Use default values for all rate limit parameters
-
-        lib.ft4.core.admin:
-          admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
-
-        tests.assets.utils:
-          admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
-
-        lib.ft4.core.auth:
-          evm_signatures_authorized_operations:
-            - register_player
-
-        lib.ft4.core.accounts.strategies.transfer:
-          rules:
-            - sender_blockchain:
-                - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
-                - "$"
-              sender: X
-              recipient: X
-              asset: "*"
-              timeout_days: 10
-              strategy: "open"
-
-            - sender_blockchain: "$"
-              sender: "*"
-              recipient: x"7b1dda0d03d062460c745b459779e1dee9845a5eec6341a81f91c081c5cc89c5" # Alice
-              asset:
-                id: x"abcdef"
-                min_amount: 100000L
-              timeout_days: 60
-              strategy:
-               - "fee"
-               - "stake"
-
-            - sender_blockchain:
-                - x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
-                - "$"
-              sender: "*"
-              recipient:
-                - x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8" # Bob
-              asset:
-                - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
-                  min_amount: 5L
-                - name: test1 # issued by current blockchain
-                  min_amount: 3L
-                - id: x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce" # "test" issued by other blockchain
-                  min_amount: 5L
-                - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
-                  name: test1
-                  min_amount: 7L
-              timeout_days: 60
-              strategy:
-                - "open"
-                - "fee"
-                - "subscription"
-
-            - sender_blockchain:
-                - "$"
-              sender: "*"
-              recipient: x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe" # Charlie
-              asset: "*"
-              timeout_days: 60
-              strategy:
-                - "open"
-
-        lib.ft4.core.accounts.strategies.transfer.fee:
-          asset:
-            - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
-              amount: 2L
-            - name: test1 # issued by current blockchain
-              amount: 1L
-            - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
-              name: test1
-              amount: 3L
-          fee_account: x"023c72addb4fdf09af94f0c94d7fe92a386a7e70cf8a1d85916386bb2535c7b1b1" # Trudy
-
-        lib.ft4.core.accounts.strategies.transfer.subscription:
-          asset:
-            - id: x"b31ba66a11a28930d948c8f959cc306184096d1ee858542e765a139b3c79b1aa" # "test" issued by current blockchain
-              amount: 2L
-            - name: test1 # issued by current blockchain
-              amount: 1L
-            - issuing_blockchain_rid: x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb"
-              name: test1
-              amount: 3L
-          subscription_period_days: 30
-          free_operations:
-            - free_operation
-          subscription_account: x"032c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991" # Charlie
 
 libs:
   iccf:
@@ -157,7 +161,7 @@ libs:
     rid: x"1D567580C717B91D2F188A4D786DB1D41501086B155A68303661D25364314A4D"
 
 compile:
-  source: ./rell/src
+  source: rell/src
   rellVersion: 0.13.10
 
 test:

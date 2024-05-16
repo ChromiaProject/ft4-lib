@@ -56,6 +56,7 @@ pipelines:
           script:
             - ./install-chr-and-pmc.sh
             - chr install
+            - chr build
             - chr test --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
             - npm ci
             - npm run compile
@@ -82,7 +83,7 @@ pipelines:
           name: deploy:latest
           script:
             - ./install-chr-and-pmc.sh
-            - chr install -s configs/jest-test.yml
+            - chr install
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
@@ -98,7 +99,7 @@ pipelines:
           name: deploy:stable
           script:
             - ./install-chr-and-pmc.sh
-            - chr install -s configs/jest-test.yml
+            - chr install
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:stable
@@ -108,7 +109,7 @@ pipelines:
           name: deploy:latest
           script:
             - ./install-chr-and-pmc.sh
-            - chr install -s configs/jest-test.yml
+            - chr install
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest

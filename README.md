@@ -19,6 +19,7 @@ This repository contains the FT4 library and a comprehensive suite of tests writ
 ### Prerequisites
 
 - Node.js
+- [Chromia CLI](https://docs.chromia.com/getting-started/dev-setup/cli-installation)
 - Docker
 - [Optional] PostgreSQL for database sessions
 
@@ -30,6 +31,7 @@ Clone the repository and install the dependencies:
 git clone git@bitbucket.org:chromawallet/ft3-lib.git
 cd ft3-lib
 npm install
+chr install
 ```
 
 ## Build
