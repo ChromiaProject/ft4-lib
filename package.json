@@ -36,7 +36,7 @@
     "build:clean": "rimraf dist",
     "build:types": "tsc --project tsconfig.types.json && tsc-alias -p tsconfig.types.json",
     "build:esm": "tsc --project tsconfig.esm.json && tsc-alias --resolve-full-paths -p tsconfig.esm.json",
-    "build:umd": "tsc --project tsconfig.umd.json && tsc-alias -p tsconfig.umd.json",
+    "build:umd": "tsc --project tsconfig.umd.json && tsc-alias --resolve-full-paths -p tsconfig.umd.json",
     "build:cjs": "tsc --project tsconfig.cjs.json && tsc-alias -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "build": "npm run build:clean && npm run build:types && npm run build:esm && npm run build:umd && npm run build:cjs",
     "prepublishOnly": "npm run build",
