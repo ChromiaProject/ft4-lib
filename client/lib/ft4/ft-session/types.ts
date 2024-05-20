@@ -58,6 +58,7 @@ export interface Connection extends Queryable {
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Account>>;
   getAuthDescriptorValidator: (useCache: boolean) => AuthDescriptorValidator;
+  getEnabledRegistrationStrategies: () => Promise<string[]>;
 
   getAssetById: (assetId: BufferId) => Promise<Asset | null>;
   getAssetBySymbol: (symbol: string) => Promise<Asset | null>;

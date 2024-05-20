@@ -1,18 +1,17 @@
 import { useChromiaNode } from "@ft4-test/util";
-import { enabledRegistrationStrategies } from "@ft4/registration";
-import { IClient } from "postchain-client";
+import { Connection, createConnection } from "@ft4/ft-session";
 
-let client: IClient;
+let connection: Connection;
 
 describe("Test strategies", () => {
   const getClient = useChromiaNode();
 
   beforeAll(async () => {
-    client = getClient();
+    connection = createConnection(getClient());
   });
 
   it("can return list of enabled strategies", async () => {
-    const strategies = await client.query(enabledRegistrationStrategies());
+    const strategies = await connection.getEnabledRegistrationStrategies();
 
     expect(strategies).toEqual([
       "ft4.ras_open",

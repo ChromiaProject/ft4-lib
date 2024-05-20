@@ -6,4 +6,6 @@
 
 ### Added ✅
 
+- Add `getEnabledRegistrationStrategies` to `Connection` interface
+
 ### Fixed 🔧

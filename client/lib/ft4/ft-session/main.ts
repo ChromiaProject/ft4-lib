@@ -67,6 +67,7 @@ import {
   OptionalPageCursor,
   Session,
 } from "./types";
+import { getEnabledRegistrationStrategies } from "@ft4/registration";
 
 export async function createConnectionToBlockchainRid(
   oldConnection: Connection,
@@ -124,6 +125,8 @@ export function createConnection(client: IClient): Connection {
         createAuthDataService(connection),
         useCache,
       ),
+    getEnabledRegistrationStrategies: () =>
+      getEnabledRegistrationStrategies(connection),
 
     getAssetById: (id: BufferId) => getAssetById(connection, id),
     getAssetBySymbol: (symbol: string) => getAssetBySymbol(connection, symbol),

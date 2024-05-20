@@ -15,6 +15,7 @@ import {
   subscriptionDetails,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  getEnabledRegistrationStrategies,
   fetchLoginDetails,
   getLoginDetails,
 } from "./strategies";
@@ -81,6 +82,7 @@ export {
   subscriptionAssets,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  getEnabledRegistrationStrategies,
   registerAccountMessage,
   registerAccountOp,
   registrationStrategy,
