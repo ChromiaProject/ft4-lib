@@ -236,7 +236,7 @@ function has_flags(account_auth_descriptor, required_flags: list<text>): boolean
     return flags.contains_all(required_flags);
 }
 
-function add_signers(account, auth_descriptor, account_auth_descriptor, safe: boolean = true) {
+function add_signers(account, auth_descriptor, account_auth_descriptor) {
     create auth_descriptor_signer(
         get_signers(auth_descriptor) @* {}
             (struct<auth_descriptor_signer>(account_auth_descriptor, id = $))
