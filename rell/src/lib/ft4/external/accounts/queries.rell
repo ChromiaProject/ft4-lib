@@ -49,10 +49,6 @@ query get_account_by_id(id: byte_array) {
     return accounts.account @? { id } ( .id );
 }
 
-query get_account_by_auth_descriptor(accounts.auth_descriptor) {
-    return accounts.account @? { .id == auth_descriptor.hash() } ( .id );
-}
-
 query get_accounts_by_signer(id: byte_array, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         accounts.get_paginated_accounts_by_signer(id, page_size, page_cursor),
