@@ -2,17 +2,19 @@
 DOCKER=${DOCKER:-docker}
 
 usage() {
-    echo "Usage: $0 [OPTIONS]"
+    echo "Usage: npm run test:rell -- [OPTIONS]"
     echo
     echo "Options:"
-    echo "  -h, --help               Display this help message"
-    echo "  --no-docker              Skip Docker build"
-    echo "  -t, --tests=<tests>      Specify tests to run (e.g., -t=tests.accounts.auth_basic_single_sig:test_not_signed)"
+    echo "  -h, --help                          Display this help message"
+    echo "  --no-docker                         Skip Docker build"
+    echo "  -t, --tests=<tests>, --test=<test>  Specify tests to run (e.g., -t=tests.accounts.auth_basic_single_sig:test_not_signed)"
+    echo "  -bc, --blockchain=<blockchain>      Run tests for specified blockchain(s). Can only be a single chain if used with -m"
+    echo "  -m, --modules=<modules>             Run tests in this module(s) only. Must be the part of the specified modules or its"
+    echo "                                      submodules. Comma delimited, will default to all modules either under each selected"
+    echo "                                      blockchain or test. -bc must be specified for this flag to work properly"
     echo
     echo "Example:"
-    echo "  % $0 -t=tests.accounts.auth_basic_single_sig:test_not_signed"
-    echo
-    echo "Remember to run 'npm run stop-postchain:rell' after running tests."
+    echo "  % npm run test:rell -- -t=tests.accounts.auth_basic_single_sig:test_not_signed"
     exit 1
 }
 
@@ -25,7 +27,7 @@ forceexit(){
 exitfn () {
     trap "forceexit" 2
     echo; echo 'Stopping docker, hit Ctrl+C to force quit'
-    $DOCKER stop ft4_rell_test  > /dev/null 
+    $DOCKER stop ft4_rell_test > /dev/null
     $DOCKER rm ft4_rell_test > /dev/null
     exit 2
 }
@@ -42,19 +44,29 @@ while :; do
             usage
             ;;
         --no-docker)
-              echo 'skipping docker build'
-              docker=false
-              ;;
-        --tests=* | -t=*)
-              echo "Testing specified tests: ${1#*=}"
-              tests="--tests=${1#*=}"
-              ;;
+            echo 'skipping docker build'
+            docker=false
+            ;;
+        --tests=* | --test=*)
+            echo "Testing specified tests: ${1#*=}"
+            tests="--tests=${1#*=}"
+            ;;
+        --tests | --test | -t)
+            if [ "$2" ]; then
+                echo "Testing specified tests: $2"
+                tests="--tests=$2"
+                shift
+            else
+                echo 'ERROR: "--test" requires a non-empty option argument.'
+                exit 1
+            fi
+            ;;
         *)
+            [ -z "$1" ] && break 
             additional_args="$additional_args $1"
             ;;
     esac
     shift
-    [ -z "$1" ] && break
 done
 
 if $docker; then
@@ -67,7 +79,7 @@ chr test --use-db $tests $additional_args
 return_code=$?
 
 if $docker; then
-    $DOCKER stop ft4_rell_test  > /dev/null 
+    $DOCKER stop ft4_rell_test > /dev/null
     $DOCKER rm ft4_rell_test > /dev/null
 fi
 
