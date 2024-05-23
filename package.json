@@ -20,10 +20,11 @@
   "scripts": {
     "version:rell": "./scripts/version.sh",
     "test:js-coverage": "npx jest -maxWorkers=1 --testPathPattern=unit/ --coverage",
-    "test:js": "npx jest -maxWorkers=1 --testPathPattern=unit/",
+    "test:js-unit": "npx jest -maxWorkers=1 --testPathPattern=unit/",
     "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/",
     "test:rell": "./scripts/relltest.sh",
-    "test:multichain": "./scripts/multichain-jesttest.sh",
+    "test:js-multichain": "./scripts/multichain-jesttest.sh",
+    "test:js": "npm run test:js-unit && npm run test:js-integration && npm run test:js-multichain",
     "test:e2e": "./scripts/start-e2e-environment.sh --run-tests-interactive",
     "test:e2e:headless": "./scripts/start-e2e-environment.sh --run-tests-headless",
     "demo": "./scripts/start-e2e-environment.sh --wait-for-node",
