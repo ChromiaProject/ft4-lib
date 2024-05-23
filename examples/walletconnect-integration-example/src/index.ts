@@ -1,19 +1,16 @@
-import { Account, FlagsType, KeyStore, authDescriptor, createKeyStoreInteractor } from "@chromia/ft4"
+import { Account, AuthFlag, KeyStore, createGenericEvmKeyStore, createKeyStoreInteractor, createSingleSigAuthDescriptorRegistration, registerAccountAdmin } from "@chromia/ft4"
 import { createClient, encryption, newSignatureProvider } from "postchain-client"
-import { createGenericEvmKeyStore } from "../../../dist/client/lib/ft4"
-import { registerAccount } from "../../../dist/client/lib/ft4/admin/admin-op-functions"
-import { Address, signMessage, watchAccount } from "@wagmi/core"
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3Modal } from '@web3modal/html'
-import { configureChains, createConfig } from '@wagmi/core'
-import { arbitrum, mainnet, polygon } from '@wagmi/core/chains'
+import { Address, signMessage, watchAccount, configureChains, createConfig } from '@wagmi/core'
+import { arbitrum, mainnet, polygon } from '@wagmi/chains'
 
 const projectId = '7a27a19adcb9a590e19013d28780325b'
 const chains = [arbitrum, mainnet, polygon]
 let client = undefined;
 
 createClient({
-  nodeUrlPool: "http://localhost:7741",
+  nodeUrlPool: "http://localhost:7740",
   blockchainIid: 0
 }).then(c => {client = c});
 
@@ -69,7 +66,8 @@ async function login(account: { address: Address }) {
   // Create a keystore for holding the evm key
   const evmKeyStore: KeyStore = await createGenericEvmKeyStore({
     address: account.address,
-    signMessage: (msg) => signMessage({message: msg})
+    signMessage: (msg) => signMessage({message: msg}),
+    isInteractive: true,
   });
   
   // Wrap the keystore in an interactor, to be able to fetch accounts
@@ -79,15 +77,17 @@ async function login(account: { address: Address }) {
   // If we do not already have an account
   if (accounts.length === 0) {
     // Create an auth descriptor which is allowed to administrate the account
-    const descriptor = authDescriptor.create.singleSig.withArgs(
-      [FlagsType.Account],
+    const descriptor = createSingleSigAuthDescriptorRegistration(
+      [AuthFlag.Account, AuthFlag.Transfer],
       evmKeyStore.id,
-    ).andNoRules;
+      null,
+    );
   
     // Create an account using the auth descriptor
-    // Note: Here we are using the admin based creation methods,
-    // which in prod would allow people to spam your chain.
-    await registerAccount(
+    // Note: Here we are using the admin based creation methods.
+    // In production dapps, the register ccount strategy framework
+    // should be used. [add link to docs]
+    await registerAccountAdmin(
       client,
       newSignatureProvider(
         encryption.makeKeyPair(
