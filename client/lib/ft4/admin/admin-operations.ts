@@ -1,6 +1,6 @@
 import { Operation, formatter } from "postchain-client";
 import { gtv, AnyAuthDescriptorRegistration } from "@ft4/accounts";
-import { Amount, Asset } from "@ft4/asset";
+import { Amount, CrosschainAssetRegistration } from "@ft4/asset";
 import { BufferId, op } from "@ft4/utils";
 
 export function registerAccount(
@@ -46,16 +46,19 @@ export function mint(
 }
 
 export function registerCrosschainAsset(
-  asset: Asset,
+  asset: CrosschainAssetRegistration,
   originBlockchainRid: BufferId,
 ): Operation {
   return op(
     "ft4.admin.register_crosschain_asset",
+    asset.id,
     asset.name,
     asset.symbol,
     asset.decimals,
     asset.blockchainRid,
     asset.iconUrl,
+    asset.type,
+    asset.uniquenessResolver,
     formatter.ensureBuffer(originBlockchainRid),
   );
 }

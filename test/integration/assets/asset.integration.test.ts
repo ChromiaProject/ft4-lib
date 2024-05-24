@@ -2,6 +2,7 @@ import {
   adminKeyPair,
   adminUser,
   getNewAsset,
+  registerCrosschainAsset,
   useChromiaNode,
 } from "@ft4-test/util";
 import { registerAsset } from "@ft4/admin";
@@ -111,15 +112,61 @@ describe("Asset", () => {
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
 
-    const result = (await connection.getAssetBySymbol(assetSymbol))!;
+    const crosschainAssetId = formatter.ensureBuffer("12".repeat(32));
+    const crosschainAssetName = "Some asset";
+    const crosschainAssetSymbol = assetSymbol;
+    const crosschainAssetDecimals = 6;
+    const crosschainBlockchainRid = formatter.ensureBuffer("343434");
+    const crosschainIconUrl = "";
+    const crosschainAssetType = "FT4";
+    const crosschainRes = gtv.gtvHash([
+      crosschainAssetName,
+      crosschainBlockchainRid,
+    ]);
 
-    expect(result).toMatchObject({
+    await registerCrosschainAsset(
+      connection,
+      adminUser().signatureProvider,
+      {
+        id: crosschainAssetId,
+        name: crosschainAssetName,
+        symbol: crosschainAssetSymbol,
+        decimals: crosschainAssetDecimals,
+        blockchainRid: crosschainBlockchainRid,
+        iconUrl: crosschainIconUrl,
+        type: crosschainAssetType,
+        uniquenessResolver: crosschainRes,
+      },
+      formatter.ensureBuffer("989898"),
+    );
+
+    const page1 = await connection.getAssetsBySymbol(assetSymbol, 1);
+
+    expect(page1.data.length).toBe(1);
+    expect(page1.data[0]).toMatchObject({
       name: assetName,
       id: assetId,
       decimals: 3,
       blockchainRid,
       iconUrl,
     });
+
+    const page2 = await connection.getAssetsBySymbol(
+      assetSymbol,
+      1,
+      page1.nextCursor,
+    );
+    expect(page2.data.length).toBe(1);
+    expect(page2.data[0]).toMatchObject({
+      id: crosschainAssetId,
+      name: crosschainAssetName,
+      symbol: crosschainAssetSymbol,
+      blockchainRid: crosschainBlockchainRid,
+      iconUrl: crosschainIconUrl,
+      type: crosschainAssetType,
+    });
+
+    expect(page2.nextCursor).toBeNull();
   });
 
   it("should return all the assets registered", async () => {

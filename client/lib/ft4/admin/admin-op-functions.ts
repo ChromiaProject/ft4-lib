@@ -1,8 +1,13 @@
 import { AnyAuthDescriptorRegistration } from "@ft4/accounts";
-import { Amount, Asset, InvalidUrlError } from "@ft4/asset";
+import {
+  Amount,
+  InvalidUrlError,
+  getAssetDetailsForCrosschainRegistration,
+} from "@ft4/asset";
 import { BufferId, TransactionCompletion } from "@ft4/utils";
 import { IClient, SignatureProvider } from "postchain-client";
 import * as ops from "./admin-operations";
+import { createClientToBlockchain } from "@ft4/ft-session";
 
 /**
  * registers a new account on the blockchain
@@ -111,7 +116,7 @@ export async function mint(
  * @param chromiaClient - a client to connect to the blockchain
  * @param adminSignatureProvider - a signature provider with the keypair stored
  * in chromia.yml under `lib.ft4.core.admin`
- * @param asset - the asset to register
+ * @param assetId - id of the asset to register
  * @param originBlockchainRid - where this chain will get the asset from (might be different
  * from asset.issuingBrid)
  * @returns a TransactionReceipt object that allows to check the status of the
@@ -120,9 +125,17 @@ export async function mint(
 export async function registerCrosschainAsset(
   chromiaClient: IClient,
   adminSignatureProvider: SignatureProvider,
-  asset: Asset,
+  assetId: BufferId,
   originBlockchainRid: BufferId,
 ): Promise<TransactionCompletion> {
+  const originBlockchainClient = await createClientToBlockchain(
+    chromiaClient,
+    originBlockchainRid,
+  );
+  const asset = await getAssetDetailsForCrosschainRegistration(
+    originBlockchainClient,
+    assetId,
+  );
   return {
     receipt: await chromiaClient.signAndSendUniqueTransaction(
       ops.registerCrosschainAsset(asset, originBlockchainRid),

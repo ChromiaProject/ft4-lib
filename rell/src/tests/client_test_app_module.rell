@@ -5,6 +5,7 @@ import ^.extensions.auth_login;
 import ^.operations;
 import locking_ops: ^.operations.locking;
 import lib.ft4.assets.locking;
+import lib.ft4.admin.crosschain;
 import lib.ft4.prioritization.default;
 import lib.ft4.accounts.strategies.open;
 import lib.ft4.accounts.strategies.transfer;

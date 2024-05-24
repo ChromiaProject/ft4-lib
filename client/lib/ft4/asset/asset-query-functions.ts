@@ -3,11 +3,19 @@ import {
   assetById,
   balancesByAccountId,
   allAssets,
-  assetBySymbol,
+  assetsBySymbol,
   assetsByName,
   assetsByType,
+  assetDetailsForCrosschainRegistration,
 } from "./asset-queries";
-import { Asset, AssetResponse, Balance, BalanceResponse } from "./types";
+import {
+  Asset,
+  AssetResponse,
+  Balance,
+  BalanceResponse,
+  CrosschainAssetRegistration,
+  CrosschainAssetRegistrationResponse,
+} from "./types";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
@@ -21,12 +29,17 @@ export async function getAssetById(
   return response ? createAssetObject(response) : null;
 }
 
-export async function getAssetBySymbol(
+export async function getAssetsBySymbol(
   queryable: Queryable,
   symbol: string,
-): Promise<Asset | null> {
-  const response = await queryable.query(assetBySymbol(symbol));
-  return response ? createAssetObject(response) : null;
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
+): Promise<PaginatedEntity<Asset>> {
+  return retrievePaginatedEntity<Asset, AssetResponse>(
+    queryable,
+    assetsBySymbol(symbol, limit, cursor),
+    (assets) => assets.map(createAssetObject),
+  );
 }
 
 export function getAssetsByName(
@@ -34,7 +47,7 @@ export function getAssetsByName(
   name: string,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
-) {
+): Promise<PaginatedEntity<Asset>> {
   return retrievePaginatedEntity<Asset, AssetResponse>(
     queryable,
     assetsByName(name, limit, cursor),
@@ -65,6 +78,15 @@ export async function getAllAssets(
     allAssets(limit, cursor),
     (a) => a.map(createAssetObject),
   );
+}
+
+export function getAssetDetailsForCrosschainRegistration(
+  queryable: Queryable,
+  assetId: BufferId,
+): Promise<CrosschainAssetRegistration> {
+  return queryable
+    .query(assetDetailsForCrosschainRegistration(assetId))
+    .then(createCrosschainAssetRegistrationObject);
 }
 
 export async function getBalanceByAccountId(
@@ -107,5 +129,20 @@ export function createAssetObject(asset: AssetResponse): Asset {
     iconUrl: asset.icon_url,
     type: asset.type,
     supply: asset.supply,
+  });
+}
+
+export function createCrosschainAssetRegistrationObject(
+  asset: CrosschainAssetRegistrationResponse,
+): CrosschainAssetRegistration {
+  return Object.freeze({
+    id: asset.id,
+    name: asset.name,
+    symbol: asset.symbol,
+    decimals: asset.decimals,
+    blockchainRid: asset.blockchain_rid,
+    iconUrl: asset.icon_url,
+    type: asset.type,
+    uniquenessResolver: asset.uniqueness_resolver,
   });
 }
