@@ -10,4 +10,6 @@
 - Added `getAssetsBySymbol` to query list of all assets with the same symbol.
 - Added `getAssetDetailsForCrosschainRegistration`, used to fetch asset details when registering a crosschain asset.
 
+- Add `getEnabledRegistrationStrategies` to `Connection` interface
+
 ### Fixed 🔧

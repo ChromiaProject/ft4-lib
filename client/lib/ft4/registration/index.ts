@@ -15,6 +15,7 @@ import {
   subscriptionDetails,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  getEnabledRegistrationStrategies,
 } from "./strategies";
 
 const registrationStrategy = {
@@ -39,5 +40,6 @@ export {
   subscriptionAssets,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  getEnabledRegistrationStrategies,
   registrationStrategy,
 };
