@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2024-05-29
+
+### Breaking 💔
+- Removed `getAssetBySymbol` (replaced with `getAssetsBySymbol`).
+- Updated `registerCrosschainAsset` to accept asset id instead of asset object.
+
+### Changed 🪙
+
+- Upgrade postchain client to 1.16.1
+
+### Added ✅
+- Added `getAssetsBySymbol` to query list of all assets with the same symbol.
+- Added `getAssetDetailsForCrosschainRegistration`, used to fetch asset details when registering a crosschain asset.
+- Added `getTransferStrategyRules`, used to fetch transfer strategy rules configuration.
+- Added `getTransferStrategyRulesGroupedByStrategy`, used to fetch transfer strategy rules configuration grouped by strategies and assets.
+- Add `getEnabledRegistrationStrategies` to `Connection` interface
+- Exported `evmSignatures`, `registerAccountMessage`, `fetchLoginDetails`.
+
 ## [0.7.0] - 2024-04-23
 
 ### Breaking 💔

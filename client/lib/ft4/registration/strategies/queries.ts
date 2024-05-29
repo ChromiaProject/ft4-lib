@@ -1,6 +1,7 @@
 import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
+import { TransferStrategyRuleRaw } from "./types";
 
 export function allowedAssets(
   senderBlockchainRid: Buffer,
@@ -108,6 +109,16 @@ export function hasPendingCreateAccountTransferForStrategy(
 export function enabledRegistrationStrategies(): QueryObject<string[]> {
   return {
     name: "ft4.get_enabled_registration_strategies",
+    args: {},
+  };
+}
+
+/**
+ * Creates a query object for the `ft4.get_transfer_rules` query
+ */
+export function transferRules(): QueryObject<TransferStrategyRuleRaw[]> {
+  return {
+    name: "ft4.get_transfer_rules",
     args: {},
   };
 }

@@ -6,3 +6,5 @@ export * from "./query-functions";
 export * from "./transfer";
 export * from "./subscription";
 export * from "./operations";
+export * from "./types";
+export * from "./transfer-rules";

@@ -15,9 +15,14 @@ import {
   subscriptionDetails,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
-  getEnabledRegistrationStrategies,
+  getTransferStrategyRules,
+  getTransferStrategyRulesGroupedByStrategy,
+  TransferStrategyRule,
+  TransferStrategyRuleRaw,
+  TransferStrategyRuleAmount,
   fetchLoginDetails,
   getLoginDetails,
+  getEnabledRegistrationStrategies,
 } from "./strategies";
 
 export interface RegistrationStrategy {
@@ -82,8 +87,13 @@ export {
   subscriptionAssets,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
-  getEnabledRegistrationStrategies,
   registerAccountMessage,
   registerAccountOp,
+  getEnabledRegistrationStrategies,
   registrationStrategy,
+  getTransferStrategyRules,
+  getTransferStrategyRulesGroupedByStrategy,
+  TransferStrategyRule,
+  TransferStrategyRuleRaw,
+  TransferStrategyRuleAmount,
 };

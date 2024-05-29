@@ -1,4 +1,8 @@
-import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import {
+  AccountBuilder,
+  addNewAssetIfNeeded,
+  useChromiaNode,
+} from "@ft4-test/util";
 import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
 import { createInMemoryFtKeyStore } from "@ft4/authentication";
@@ -21,7 +25,7 @@ describe("Test transfer with fee", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(
+    asset = await addNewAssetIfNeeded(
       connection.client,
       "transfer_fee_strategy_asset",
       "TRANSFER_FEE_STRATEGY_ASSET",

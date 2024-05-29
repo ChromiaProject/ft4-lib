@@ -59,6 +59,25 @@ export async function getNewAsset(
   return asset;
 }
 
+export async function addNewAssetIfNeeded(
+  client: IClient,
+  name: string,
+  symbol: string,
+  decimals = 0,
+  iconUrl = "",
+): Promise<Asset> {
+  const id = gtv.gtvHash([
+    name,
+    formatter.ensureBuffer(client.config.blockchainRid),
+  ]);
+  const asset = await createConnection(client).getAssetById(id);
+  if (asset) {
+    return asset;
+  } else {
+    return await getNewAsset(client, name, symbol, decimals, iconUrl);
+  }
+}
+
 export function anchoredHandlerCallbackParameters(
   client: IClient,
   operations: Operation[],

@@ -12,13 +12,12 @@ import {
   StrategyError,
 } from "@ft4/registration";
 import { BufferId } from "@ft4/utils";
-import {
-  hasPendingCreateAccountTransferForStrategy,
-  subscriptionAssets,
-} from "./queries";
+import { hasPendingCreateAccountTransferForStrategy } from "./queries";
 import { fetchLoginDetails } from "./main";
 import { LoginDetails } from "./types";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
+import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
+import { formatter } from "postchain-client";
 
 export function subscription(
   senderBlockchainRid: BufferId,
@@ -47,11 +46,18 @@ export function subscription(
         targetConnection,
         senderBlockchainRid,
       );
-      const subscriptionAmounts =
-        await targetConnection.query(subscriptionAssets());
-      const amount = subscriptionAmounts.find((amt) =>
-        amt.asset_id.equals(subscriptionAsset.id),
-      )?.amount;
+
+      const transferRules =
+        await getTransferStrategyRulesGroupedByStrategy(targetConnection);
+      const subscriptionAssetTransferRules = transferRules
+        .get("subscription")
+        ?.get(formatter.toString(subscriptionAsset.id));
+      const amount = subscriptionAssetTransferRules?.reduce(
+        (prev, curr) => (prev > curr.minAmount ? curr.minAmount : prev),
+        subscriptionAssetTransferRules.length > 0
+          ? subscriptionAssetTransferRules[0].minAmount
+          : 0n,
+      );
 
       if (amount === undefined) {
         throw new StrategyError(
