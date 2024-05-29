@@ -28,6 +28,10 @@ const registrationStrategy = {
   transferFee,
 };
 
+import { registerAccountMessage } from "./queries";
+
+import { registerAccount as registerAccountOp } from "./operations";
+
 export { Strategy, RegistrationDetails, StrategyError } from "./types";
 
 export {
@@ -45,6 +49,8 @@ export {
   subscriptionAssets,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  registerAccountMessage,
+  registerAccountOp,
   getEnabledRegistrationStrategies,
   registrationStrategy,
 };
