@@ -12,6 +12,7 @@
 
 ### Added ✅
 - Added `get_assets_by_symbol` query to get all registered assets with the same symbol.
+- Added `get_transfer_rules` query to get transfer strategy rules configuration
 
 
 ### Fixed 🔧

@@ -1,4 +1,8 @@
-import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
+import {
+  AccountBuilder,
+  addNewAssetIfNeeded,
+  useChromiaNode,
+} from "@ft4-test/util";
 import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
 import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
 import { createInMemoryFtKeyStore } from "@ft4/authentication";
@@ -21,7 +25,7 @@ describe("Test transfer strategy", () => {
   beforeAll(async () => {
     const client = getClient();
     connection = createConnection(client);
-    asset = await getNewAsset(
+    asset = await addNewAssetIfNeeded(
       connection.client,
       "transfer_strategy_asset",
       "TRANSFER_STRATEGY_ASSET",
@@ -166,7 +170,7 @@ describe("Test transfer strategy", () => {
   });
 
   it("can recall unclaimed transfer after timeout has passed", async () => {
-    const timeoutAsset = await getNewAsset(
+    const timeoutAsset = await addNewAssetIfNeeded(
       connection.client,
       "timeout_asset",
       "TIMEOUT_ASSET",

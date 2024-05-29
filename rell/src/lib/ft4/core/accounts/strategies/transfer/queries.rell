@@ -58,4 +58,57 @@ query has_pending_create_account_transfer_for_strategy(
     }
 
     return false;
+}
+
+query get_transfer_rules() {
+    val rules = get_config();
+
+    val assets_cache = map<byte_array, map<name, assets.asset>>();
+
+    val mapped_rules = list<rule>();
+
+    for (rule in rules) {
+        val _assets = list<asset_limit>();
+        
+        for (asset in rule.asset_limits) {
+            if (asset.id != null) continue;
+
+            val name = asset.name!!;
+            val brid = asset.issuing_blockchain_rid!!;
+
+            var _asset = assets_cache.get_or_null(brid)?.get_or_null(name);
+            if (empty(_asset)) {
+                _asset = assets.asset @? { .name == name, .issuing_blockchain_rid == brid };
+                if (empty(_asset)) {
+                    continue;
+                }
+                if (not assets_cache.contains(brid)) {
+                    assets_cache[brid] = map<name, assets.asset>();
+                }
+                assets_cache[brid][name] = _asset!!;
+            }
+
+            _assets.add(
+                asset_limit(
+                    id = _asset.id,
+                    name = _asset.name,
+                    issuing_blockchain_rid = _asset.issuing_blockchain_rid,
+                    min_amount = asset.min_amount
+                )
+            );
+        }
+
+        mapped_rules.add(rule(
+            strategies = rule.strategies,
+            timeout_days = rule.timeout_days,
+            blockchains = rule.blockchains,
+            senders = rule.senders,
+            recipients = rule.recipients,
+            require_same_address = rule.require_same_address,
+            allow_all_assets = rule.allow_all_assets,
+            asset_limits = _assets
+        ));
+    }
+
+    return mapped_rules;
 } 
