@@ -5,6 +5,8 @@
 - Updated `register_crosschain_asset` operation and function. Added asset id, asset type and uniqueness resolver arguments.
 - Rename `get_paginated_asset_balances_by_name` function to `get_paginated_assets_by_name`
 
+- Removed query `ft4.get_account_by_auth_descriptor`
+
 ### Changed 🪙
 - Make `asset` entity `icon_url` attribute mutable.
 
