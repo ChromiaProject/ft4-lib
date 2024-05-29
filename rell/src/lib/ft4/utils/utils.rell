@@ -32,6 +32,12 @@ function latest_time() =
     else
         block @ {} (@max .timestamp) ?: 0;
 
+function validate_blockchain_rid(blockchain_rid: byte_array, descriptor: text = "blockchain_rid") {
+    //TODO: require blockchain_rid to be 32 bytes long
+    require(blockchain_rid.size() > 0, "%s cannot be empty".format(descriptor));
+    require(blockchain_rid.size() <= 32, "%s cannot be longer than 32 bytes".format(descriptor));
+}
+
 function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
 
 function is_text(gtv) = gtv.to_bytes()[0] == 162;

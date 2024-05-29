@@ -100,12 +100,13 @@ function test_multisig_external_signature() {
 function test_it_rejects_transactions_if_not_enough_signatures() {
   val alice_address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
   val bob_address = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
+  val charlie_address = crypto.eth_privkey_to_address(rell.test.keypairs.charlie.priv);
   val desc = accounts.auth_descriptor(
     accounts.auth_type.M,
     [
       set(["A", "T"]).to_gtv(),
       (3).to_gtv(),
-      [alice_address, bob_address].to_gtv()
+      [alice_address, bob_address, charlie_address].to_gtv()
     ],
     rules = null.to_gtv()
   );
@@ -131,7 +132,7 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
     rell.test.keypairs.bob.priv 
   );
 
-  val account_id = [alice_address, bob_address].hash();
+  val account_id = [alice_address, bob_address, charlie_address].hash();
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
     .op(auth.external.evm_auth(account_id, auth_descriptor_id, [signature0, signature1]))

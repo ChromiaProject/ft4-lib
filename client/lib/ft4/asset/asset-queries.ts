@@ -1,7 +1,11 @@
 import { QueryObject, formatter } from "postchain-client";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { AssetResponse, BalanceResponse } from "./types";
+import {
+  AssetResponse,
+  BalanceResponse,
+  CrosschainAssetRegistrationResponse,
+} from "./types";
 import { BufferId, PaginatedEntity } from "@ft4/utils";
 
 export function assetById(
@@ -15,12 +19,21 @@ export function assetById(
   };
 }
 
-export function assetBySymbol(
+export function assetsBySymbol(
   symbol: string,
-): QueryObject<AssetResponse, { symbol: string }> {
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  AssetResponse,
+  { symbol: string; page_size: OptionalLimit; page_cursor: OptionalPageCursor }
+> {
   return {
-    name: "ft4.get_asset_by_symbol",
-    args: { symbol },
+    name: "ft4.get_assets_by_symbol",
+    args: {
+      symbol,
+      page_size: limit,
+      page_cursor: cursor,
+    },
   };
 }
 
@@ -111,6 +124,17 @@ export function balancesByAccountId(
       account_id: formatter.ensureBuffer(accountId),
       page_size: limit,
       page_cursor: cursor,
+    },
+  };
+}
+
+export function assetDetailsForCrosschainRegistration(
+  assetId: BufferId,
+): QueryObject<CrosschainAssetRegistrationResponse, { asset_id: Buffer }> {
+  return {
+    name: "ft4.get_asset_details_for_crosschain_registration",
+    args: {
+      asset_id: formatter.ensureBuffer(assetId),
     },
   };
 }

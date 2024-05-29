@@ -1,5 +1,6 @@
 export {
   createConnectionToBlockchainRid,
+  createClientToBlockchain,
   createConnection,
   createSession,
   call,

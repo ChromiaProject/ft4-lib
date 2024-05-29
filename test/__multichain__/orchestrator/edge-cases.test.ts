@@ -1,9 +1,13 @@
-import { adminUser, getNewAsset } from "@ft4-test/util";
+import {
+  adminUser,
+  getNewAsset,
+  mapAssetToCrosschainAssetRegistration,
+  registerCrosschainAsset,
+} from "@ft4-test/util";
 import { ASSET_TYPE_FT4, Amount, Asset, createAmount } from "@ft4/asset";
 import { Buffer } from "buffer";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { FactoryError, PathfinderError } from "@ft4/crosschain";
-import { registerCrosschainAsset } from "@ft4/admin";
 
 describe("Edge Cases", () => {
   const mintAmount = createAmount(100, 0);
@@ -87,9 +91,9 @@ describe("Edge Cases", () => {
     );
 
     await registerCrosschainAsset(
-      testContext.connection2.client,
+      testContext.connection2,
       adminUser().signatureProvider,
-      asset,
+      mapAssetToCrosschainAssetRegistration(asset),
       Buffer.from("deadbeef", "hex"),
     );
 

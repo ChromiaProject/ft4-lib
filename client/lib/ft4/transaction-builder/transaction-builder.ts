@@ -29,6 +29,7 @@ import {
   SystemChainException,
   TransactionReceipt,
   Web3PromiEvent,
+  convertToRellOperation,
   createClient,
   createIccfProofTx,
   formatter,
@@ -107,10 +108,7 @@ export function transactionBuilder(
 
     return {
       blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
-      operations: operations.map((op) => ({
-        opName: op.name,
-        args: op.args ?? [],
-      })),
+      operations: convertToRellOperation(operations),
       signers: signers,
       signatures: [],
     };

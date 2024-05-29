@@ -1,4 +1,4 @@
-import { registerAccount } from "./main";
+import { registerAccount, logoutSession } from "./main";
 import {
   allowedAssets,
   pendingTransferStrategies,
@@ -15,6 +15,14 @@ import {
   subscriptionDetails,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  getTransferStrategyRules,
+  getTransferStrategyRulesGroupedByStrategy,
+  TransferStrategyRule,
+  TransferStrategyRuleRaw,
+  TransferStrategyRuleAmount,
+  fetchLoginDetails,
+  getLoginDetails,
+  getEnabledRegistrationStrategies,
 } from "./strategies";
 
 const registrationStrategy = {
@@ -25,6 +33,10 @@ const registrationStrategy = {
   transferFee,
 };
 
+import { registerAccountMessage } from "./queries";
+
+import { registerAccount as registerAccountOp } from "./operations";
+
 export { Strategy, RegistrationDetails, StrategyError } from "./types";
 
 export {
@@ -33,11 +45,22 @@ export {
   subscriptionDetails,
   transferSubscription,
   feeAssets,
+  fetchLoginDetails,
+  getLoginDetails,
+  logoutSession,
   subscriptionPeriodMillis,
   pendingTransferStrategies,
   registerAccount,
   subscriptionAssets,
   hasPendingCreateAccountTransferForStrategy,
   enabledRegistrationStrategies,
+  registerAccountMessage,
+  registerAccountOp,
+  getEnabledRegistrationStrategies,
   registrationStrategy,
+  getTransferStrategyRules,
+  getTransferStrategyRulesGroupedByStrategy,
+  TransferStrategyRule,
+  TransferStrategyRuleRaw,
+  TransferStrategyRuleAmount,
 };

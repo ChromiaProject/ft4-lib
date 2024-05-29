@@ -43,7 +43,7 @@ describe("Basic Functionality", () => {
     await registerCrosschainAsset(
       testContext.connection1.client, // Leaf
       adminUser().signatureProvider,
-      testContext.sampleAsset,
+      testContext.sampleAsset.id,
       testContext.multichain2.rid, // Branch
     );
 

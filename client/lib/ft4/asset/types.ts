@@ -25,6 +25,28 @@ export type AssetResponse = {
   supply: bigint;
 };
 
+export type CrosschainAssetRegistration = {
+  id: Buffer;
+  name: string;
+  symbol: string;
+  decimals: number;
+  blockchainRid: Buffer;
+  iconUrl: string;
+  type: string;
+  uniquenessResolver: Buffer;
+};
+
+export type CrosschainAssetRegistrationResponse = {
+  id: Buffer;
+  name: string;
+  symbol: string;
+  decimals: number;
+  blockchain_rid: Buffer;
+  icon_url: string;
+  type: string;
+  uniqueness_resolver: Buffer;
+};
+
 export type RawAmount = { value: bigint; decimals: number };
 
 export type Balance = {

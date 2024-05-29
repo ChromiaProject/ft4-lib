@@ -12,13 +12,12 @@ import {
   createKeyStoreInteractor,
 } from "@ft4/ft-session";
 import { BufferId } from "@ft4/utils";
-import {
-  feeAssets,
-  hasPendingCreateAccountTransferForStrategy,
-} from "./queries";
+import { hasPendingCreateAccountTransferForStrategy } from "./queries";
 import { fetchLoginDetails } from "./main";
 import { LoginDetails } from "./types";
 import { authDescriptorRegistrationToGtv } from "@ft4/accounts/auth-descriptor/gtv";
+import { getTransferStrategyRulesGroupedByStrategy } from "./transfer-rules";
+import { formatter } from "postchain-client";
 
 export function fee(
   senderBlockchainRid: BufferId,
@@ -48,10 +47,17 @@ export function fee(
         senderBlockchainRid,
       );
 
-      const feeAmounts = await targetConnection.query(feeAssets());
-      const amount = feeAmounts.find((amount) =>
-        amount.asset_id.equals(feeAsset.id),
-      )?.amount;
+      const transferRules =
+        await getTransferStrategyRulesGroupedByStrategy(targetConnection);
+      const feeAssetTransferRules = transferRules
+        .get("fee")
+        ?.get(formatter.toString(feeAsset.id));
+      const amount = feeAssetTransferRules?.reduce(
+        (prev, curr) => (prev > curr.minAmount ? curr.minAmount : prev),
+        feeAssetTransferRules.length > 0
+          ? feeAssetTransferRules[0].minAmount
+          : 0n,
+      );
 
       if (amount === undefined) {
         throw new StrategyError(
