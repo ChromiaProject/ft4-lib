@@ -14,6 +14,7 @@ export default {
         "json",
         "node"
     ],
+    "testEnvironment": "<rootDir>/jest.test-environment.ts",
     "setupFilesAfterEnv": [
         "<rootDir>/jest.setup.ts",
         "<rootDir>/test/setupMocks.ts"

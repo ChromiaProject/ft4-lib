@@ -35,6 +35,7 @@ e2e-tests: &e2e-tests-anchor
 
 multichain-tests: &multichain-tests-anchor
   max-time: 30
+  size: 2x
   name: Multichain tests
   caches:
     - node
@@ -48,35 +49,35 @@ multichain-tests: &multichain-tests-anchor
 pipelines:
   pull-requests:
     '**':
-      - step:
-          size: 2x
-          name: Unit & Integration Tests
-          caches:
-            - node
-          script:
-            - ./install-chr-and-pmc.sh
-            - chr install
-            - chr build
-            - chr test --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-            - npm ci
-            - npm run compile
-            - export JEST_JUNIT_OUTPUT_NAME=unit.xml
-            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-            - export TESTCONTAINERS_RYUK_DISABLED=true
-            - export JEST_JUNIT_OUTPUT_NAME=integration.xml
-            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-          artifacts:
-            - logs/**
-          services:
-            - postgres
-            - docker
       - parallel:
         - step:
-              <<: *multichain-tests-anchor
-              trigger: manual
+            size: 2x
+            name: Unit & Integration Tests
+            caches:
+              - node
+            script:
+              - ./install-chr-and-pmc.sh
+              - chr install
+              - chr build
+              - chr test --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+              - npm ci
+              - npm run compile
+              - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+              - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+              - export TESTCONTAINERS_RYUK_DISABLED=true
+              - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+              - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+            artifacts:
+              - logs/**
+            services:
+              - postgres
+              - docker 
         - step:
-            <<: *e2e-tests-anchor
-            trigger: manual
+              <<: *multichain-tests-anchor
+              trigger: automatic
+      - step:
+          <<: *e2e-tests-anchor
+          trigger: manual
   branches:
     ft4:
       - step:
