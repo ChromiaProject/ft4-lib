@@ -32,7 +32,7 @@ export default async function () {
 
   // Start a Chromia node container
   const container = await new GenericContainer(
-    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.19.1",
+    "registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.20.0",
   )
     .withNetwork(network)
     .withCopyDirectoriesToContainer([

@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# install chromia-cli-0.19.1-dist.tar.gz
+# install chromia-cli-0.20.0-dist.tar.gz
 mkdir -p /opt/chromaway/chr
-wget -nv -O - https://gitlab.com/chromaway/core-tools/chromia-cli/-/package_files/128293893/download | tar -C /opt/chromaway/chr -xz
+wget -nv -O - https://gitlab.com/chromaway/core-tools/chromia-cli/-/package_files/130815895/download | tar -C /opt/chromaway/chr -xz
 ln -s /opt/chromaway/chr/bin/chr /bin/chr
 
 # install management-console-3.21.7-dist.tar.gz
