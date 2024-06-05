@@ -37,7 +37,7 @@ import {
 } from "postchain-client";
 import { Connection, createConnection } from "@ft4/ft-session";
 import { Asset } from "@ft4/asset/types";
-import { findPathToChainForAsset } from "@ft4/crosschain/pathfinder";
+import { PathfinderError, findPathToChainForAsset } from "@ft4/crosschain";
 import { BufferId } from "@ft4/utils/types";
 
 createClientMock.mockImplementation(
@@ -210,6 +210,13 @@ describe("Pathfinder", () => {
       "1111",
       endingChainRid.toString("hex"),
     ]);
+  });
+
+  it("throws a pathfinder error when start and end chain is the same", async () => {
+    const asset = getMockAsset();
+    await expect(
+      findPathToChainForAsset(connection, asset, startingChainRid),
+    ).rejects.toBeInstanceOf(PathfinderError);
   });
 });
 

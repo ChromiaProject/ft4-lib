@@ -9,7 +9,7 @@ import { Buffer } from "buffer";
 import { RellOperation, encryption, gtx } from "postchain-client";
 
 describe("FT key handler", () => {
-  it("should insert FT auth operation", async () => {
+  it("inserts an FT auth operation", async () => {
     const accountId = encryption.randomBytes(32);
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
@@ -28,7 +28,7 @@ describe("FT key handler", () => {
     ]);
   });
 
-  it("should sign transaction", async () => {
+  it("signs a transaction with ft signatures", async () => {
     const { keyPair, authDescriptor } = createTestAuthDescriptor();
 
     const transaction = {

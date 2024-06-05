@@ -2,7 +2,7 @@ import { deriveNonce, loadOperationFromTransaction, op } from "@ft4/utils";
 import { RawGtx, encryption, formatter, gtv } from "postchain-client";
 
 describe("Utils", () => {
-  it("loads operation from raw transaction", async () => {
+  it("loads operation from raw transaction", () => {
     const tx: RawGtx = [
       [
         Buffer.alloc(64),
@@ -25,7 +25,7 @@ describe("Utils", () => {
     });
   });
 
-  it("loads operation from encoded transaction", async () => {
+  it("loads operation from encoded transaction", () => {
     const tx: RawGtx = [
       [
         Buffer.alloc(64),

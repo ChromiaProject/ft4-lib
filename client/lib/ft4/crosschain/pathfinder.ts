@@ -80,7 +80,7 @@ export async function findPathToChainForAsset(
       // we either match on the message to rethrow or let it through unhandled
       const nextHop = await getAssetOriginById(tmpConnection, asset.id);
 
-      if (nextHop === null) {
+      if (!nextHop) {
         throw new PathfinderError(
           `The asset is not a cross-chain asset on chain ${lastNode.toString(
             "hex",
