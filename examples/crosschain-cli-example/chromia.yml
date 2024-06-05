@@ -1,0 +1,35 @@
+blockchains:
+  chain1:
+    module: chain1
+
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
+
+  chain2:
+    module: chain2
+
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
+
+libs:
+  ft4:
+    registry: https://bitbucket.org/chromawallet/ft3-lib
+    path: rell/src/lib/ft4
+    tagOrBranch: v0.7.0r
+    rid: x"F7C207AA595ABD25FDE5C2C2E32ECD3768B480AD03D1F2341548FF4F37D9B7AF"
+    insecure: false
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.32.2
+    rid: x"1D567580C717B91D2F188A4D786DB1D41501086B155A68303661D25364314A4D"
+
+compile:
+  rellVersion: 0.13.10
+
+database:
+  schema: cross_chain_demo
