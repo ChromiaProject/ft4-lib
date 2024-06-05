@@ -53,10 +53,16 @@ describe("Asset amount", () => {
     ],
   ];
 
+  it.each(amounts)(
+    "has correct number of decimals when building instances",
+    (...numbers) => {
+      expect(numbers.map((num) => num.decimals)).toEqual([
+        1, 0, 5, 5, 1, 2, 0, 4, 3, 15, 1,
+      ]);
+    },
+  );
+
   it.each(amounts)("should correctly build instances", async (...numbers) => {
-    expect(numbers.map((num) => num.decimals)).toEqual([
-      1, 0, 5, 5, 1, 2, 0, 4, 3, 15, 1,
-    ]);
     expect(numbers.map((num) => num.value)).toEqual([
       BigInt(10),
       BigInt(-25),
@@ -70,6 +76,9 @@ describe("Asset amount", () => {
       BigInt("2" + "0".repeat(15)),
       BigInt(1600),
     ]);
+  });
+
+  it.each(amounts)("serializes amounts to correct values", (...numbers) => {
     expect(numbers.map((n) => stringify(n))).toEqual([
       "1",
       "-25",
@@ -85,7 +94,7 @@ describe("Asset amount", () => {
     ]);
   });
 
-  it("should fail building instances with wrong parameters", async () => {
+  it("fails building instances with wrong parameters", () => {
     expect(() => createAmount("something", 1)).toThrow(AmountInputError);
     expect(() => createAmount("1.4.5", 10)).toThrow(AmountInputError);
     expect(() => createAmount("0xaefdaf", 1)).toThrow(AmountInputError);
@@ -101,7 +110,7 @@ describe("Asset amount", () => {
     );
   });
 
-  it("should format correctly in fixedDecimal format", async () => {
+  it("formats correctly in fixedDecimal format", () => {
     const amounts = [
       createAmount(1234567890, 1),
       createAmount(12.123456789, 20),
@@ -157,7 +166,7 @@ describe("Asset amount", () => {
     ]);
   });
 
-  it("should format correctly in scientific format", async () => {
+  it("formats correctly in scientific format", () => {
     const amounts = [
       createAmount(1234567890, 1),
       createAmount(12.123456789, 20),
@@ -202,7 +211,7 @@ describe("Asset amount", () => {
     ).toEqual(["1.235e+9", "1.212e+1", "1.123e+10", "1e+0", "1e-11", "1e+10"]);
   });
 
-  it("should format correctly in mixed format", async () => {
+  it("formats correctly in mixed format", () => {
     const amounts = [
       createAmount(1234567890, 1),
       createAmount(12.123456789, 20),
@@ -238,7 +247,7 @@ describe("Asset amount", () => {
     ).toEqual(["1.2e+9", "12", "1.1e+10", "1", "1e-11", "1e+10"]);
   });
 
-  it("should add correctly", async () => {
+  it("adds correctly", () => {
     const first = createAmount(100, 0);
     const second = createAmount(10, 0);
     const secondNegative = createAmount(-10, 0);
@@ -255,7 +264,7 @@ describe("Asset amount", () => {
     expect(incompatible.toString()).toEqual("1000");
   });
 
-  it("should subtract correctly", async () => {
+  it("subtracts correctly", async () => {
     const first = createAmount(100, 10);
     const second = createAmount(10, 10);
     const secondNegative = createAmount(-10, 10);
@@ -272,7 +281,7 @@ describe("Asset amount", () => {
     expect(incompatible.toString()).toEqual("1000");
   });
 
-  it("should multiply correctly", async () => {
+  it("multiplies correctly", () => {
     const first = createAmount(100, 10);
     const firstNegative = createAmount(-100, 10);
 
@@ -284,7 +293,7 @@ describe("Asset amount", () => {
     expect(firstNegative.toString()).toEqual("-100");
   });
 
-  it("should divide correctly", async () => {
+  it("divides correctly", () => {
     const first = createAmount(100, 0);
     const firstNegative = createAmount(-100, 0);
 
@@ -299,7 +308,7 @@ describe("Asset amount", () => {
     expect(firstNegative.toString()).toEqual("-100");
   });
 
-  it("should throw when out of bounds (2^256)", async () => {
+  it("throws an error when out of bounds (2^256)", () => {
     const first = createAmount(1, 77);
     const firstNegative = createAmount(-1, 77);
 
@@ -313,7 +322,7 @@ describe("Asset amount", () => {
     expect(firstNegative.format(DecimalFormat.scientific, 1)).toEqual("-1e+0");
   });
 
-  it("should behave like integers", async () => {
+  it("behaves like integers when doing division", () => {
     const first = createAmount(1, 0);
     const firstNegative = createAmount(-1, 0);
     const second = createAmount(1, 3);
@@ -324,7 +333,7 @@ describe("Asset amount", () => {
     expect(secondNegative.dividedBy(3).times(4).toString()).toBe("-1.332");
   });
 
-  it("should compare properly with no decimals", async () => {
+  it("compares properly with no decimals", () => {
     const first = createAmount(1, 0);
     const firstCopy = createAmount("1", 0);
     const firstNegative = createAmount(-1, 0);
@@ -339,7 +348,7 @@ describe("Asset amount", () => {
     expect(first.equals(firstCopy)).toBe(true);
   });
 
-  it("should compare properly with decimals", async () => {
+  it("compares properly with decimals", () => {
     const second = createAmount(1, 3);
     const secondCopy = createAmount("1", 3);
     const third = createAmount(1.5, 3);
@@ -354,7 +363,7 @@ describe("Asset amount", () => {
     expect(second.equals(secondCopy)).toBe(true);
   });
 
-  it("should not compare different decimal amounts", async () => {
+  it("does not compare different decimal amounts", () => {
     const first = createAmount(1, 0);
     const second = createAmount(1, 3);
     expect(() => first.gt(second)).toThrow(AmountDecimalsError);
@@ -366,7 +375,7 @@ describe("Asset amount", () => {
     expect(() => first.compare(second)).toThrow(AmountDecimalsError);
   });
 
-  it("should sort with compare", async () => {
+  it("sorts with compare", () => {
     const first = createAmount(1, 0);
     const second = createAmount(2, 0);
     const third = createAmount(3, 0);
@@ -377,7 +386,7 @@ describe("Asset amount", () => {
     ]);
   });
 
-  it("should handle addition with different types correctly", async () => {
+  it("handles addition with different types correctly", () => {
     const amount = createAmount(10, 1);
     const otherNumber = 3;
     const otherString = "3";
@@ -386,7 +395,7 @@ describe("Asset amount", () => {
     expect(amount.plus(otherString).value).toEqual(BigInt(130)); // 13.0 represented as 130
   });
 
-  it("should handle comparison with different types correctly", async () => {
+  it("handles comparison with different types correctly", () => {
     const amount = createAmount(10, 1);
 
     const otherNumber = 15;
@@ -412,7 +421,7 @@ describe("Asset amount", () => {
     ];
 
     it.each(validTestCases)(
-      "should correctly convert %s to RawAmount",
+      "correctly convert %s to RawAmount",
       (input, decimals, expectedOutput) => {
         const rawAmount = convertToRawAmount(input, decimals);
         expect(rawAmount).toEqual(expectedOutput);
@@ -421,13 +430,13 @@ describe("Asset amount", () => {
 
     const invalidStringTestCases = ["abc", "10.1.2"];
     it.each(invalidStringTestCases)(
-      "should throw error for invalid string input '%s'",
+      "throws an error for invalid string input '%s'",
       async (num) => {
         expect(() => convertToRawAmount(num)).toThrow(AmountInputError);
       },
     );
 
-    it("should throw error for incompatible decimals", async () => {
+    it("throws an error for incompatible decimals", () => {
       expect(() => convertToRawAmount(BigInt(100), -3)).toThrow(
         AmountDecimalsError,
       );
@@ -435,7 +444,7 @@ describe("Asset amount", () => {
 
     const invalidDecimalsTestCases = [-1, 80, 1.5];
     it.each(invalidDecimalsTestCases)(
-      "should throw error for invalid decimals %s",
+      "throws an error for invalid decimals %s",
       async (decimals) => {
         expect(() => convertToRawAmount(100, decimals)).toThrow(
           AmountDecimalsError,
@@ -444,7 +453,7 @@ describe("Asset amount", () => {
     );
   });
 
-  it("should not export certain arithmetic functions", async () => {
+  it("does not export certain arithmetic functions", async () => {
     const myModule = await import("@ft4/asset/amount");
     const nonExportedFunctions = [
       "sum",
