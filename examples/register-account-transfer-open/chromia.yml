@@ -1,0 +1,49 @@
+blockchains:
+  chain1:
+    module: chain1
+
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
+
+  chain2:
+    module: chain2
+
+    moduleArgs:
+      lib.ft4.core.accounts.strategies.transfer:
+        rules:
+          - sender_blockchain: x"87C9CC394D851114C0C90DA2F97EC4CAB7D86A73D2480EBC76DF98340FD8CA18"
+            sender: "X"
+            recipient: "X"
+            asset:
+              issuing_blockchain_rid: x"87C9CC394D851114C0C90DA2F97EC4CAB7D86A73D2480EBC76DF98340FD8CA18"
+              name: "Test"
+              min_amount: 10000000L
+            timeout_days: 15
+            strategy: "open"    
+
+    config:
+      gtx:
+        modules:
+          - "net.postchain.d1.iccf.IccfGTXModule"
+
+libs:
+  ft4:
+    registry: https://bitbucket.org/chromawallet/ft3-lib
+    path: rell/src/lib/ft4
+    tagOrBranch: v0.8.0r
+    rid: x"B6AE6AC82AC735BFB9E4E412FFB76BF95380E94F371F5F6A14E71A3AA7D5FEF6"
+    insecure: false
+
+  iccf:
+    registry: https://gitlab.com/chromaway/core/directory-chain
+    path: src/iccf
+    tagOrBranch: 1.32.2
+    rid: x"1D567580C717B91D2F188A4D786DB1D41501086B155A68303661D25364314A4D"
+
+compile:
+  rellVersion: 0.13.12
+
+database:
+  schema: register_account_transfer_open

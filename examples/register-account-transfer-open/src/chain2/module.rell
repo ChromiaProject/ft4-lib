@@ -1,0 +1,18 @@
+import lib.ft4.auth;
+import lib.ft4.assets;
+import lib.ft4.crosschain;
+import lib.ft4.accounts.strategies.transfer.open;
+
+operation init(asset_id: byte_array, test_asset_issuing_chain: byte_array) {
+    crosschain.Unsafe.register_crosschain_asset(
+        asset_id,
+        "Test", 
+        "TST", 
+        6, 
+        test_asset_issuing_chain, 
+        "http://icon",
+        assets.ASSET_TYPE_FT4,
+        x"",
+        test_asset_issuing_chain
+    );
+}

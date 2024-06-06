@@ -1,0 +1,16 @@
+import lib.ft4.auth;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.crosschain;
+import lib.ft4.accounts.strategies;
+import lib.ft4.accounts.strategies.open;
+
+
+function get_or_create_test_asset() 
+    = assets.asset @? { .name == "Test", .issuing_blockchain_rid == chain_context.blockchain_rid }
+    ?: assets.Unsafe.register_asset("Test", "TST", 6, chain_context.blockchain_rid, "http://icon");
+
+operation custom_register_account() {
+    val account = strategies.register_account();
+    assets.Unsafe.mint(account, get_or_create_test_asset(), 100000000);
+}
