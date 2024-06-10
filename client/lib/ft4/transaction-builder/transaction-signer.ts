@@ -23,6 +23,21 @@ import {
 import { EVM_SIGNATURES, signOperation } from "./utils";
 import { compactArray } from "@ft4/utils";
 
+/**
+ * Signs a transaction using an authenticator. This function will add all the necessary missing
+ * signatures which the authenticator permits it to. I.e., both evm and ft signatures. For signers
+ * which the authenticator does not know how to sign, it will just ignore adding those signatures.
+ * It is important to notice however, that if this function is called to add additional evm signatures
+ * after ft signatures are added. An error will be thrown. If you want to sign the transactions with
+ * keystores instead of with an authenticator, see: {@link signTransactionWithKeyStores}
+ *
+ * @remarks all evm signatures have to be added before ft signatures can be added. Trying to add
+ * evm signatures after ft signatures are added will result in an error.
+ *
+ * @param authenticator - the authenticator to use when signing the transaction
+ * @param tx - the transaction to sign
+ * @returns the provided transaction with the appropriate signatures added
+ */
 export async function signTransaction(
   authenticator: Authenticator,
   tx: GTX | RawGtx | SignedTransaction,
@@ -99,6 +114,14 @@ export async function signTransaction(
   return gtx.serialize(gtxTx);
 }
 
+/**
+ * Same as {@link signTransaction} but accepts keystores instead of an authenticator. Useful if you need to sign
+ * a transaction that e.g., does not have access to auth descriptors. Such as when registering an account.
+ * @param keyStores - the keystores to use for signing
+ * @param authDataService - an auth data service instance to use when signing the transaction
+ * @param tx - the transaction to sign.
+ * @returns the signed transaction
+ */
 export async function signTransactionWithKeyStores(
   keyStores: KeyStore[],
   authDataService: AuthDataService,

@@ -5,6 +5,9 @@ import { Connection } from "@ft4/ft-session";
 import { RegistrationDetails, Strategy } from "@ft4/registration";
 import { fetchLoginDetails } from "./main";
 
+/**
+ * {@inheritDoc registration.RegistrationStrategy.transferFee}
+ */
 export function transferFee(
   feeAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,
@@ -39,6 +42,9 @@ export function transferFee(
   });
 }
 
+/**
+ * {@inheritDoc registration.RegistrationStrategy.transferOpen}
+ */
 export function transferOpen(
   authDescriptor: AnyAuthDescriptorRegistration,
   loginConfig: LoginConfigOptions | null = null,
@@ -71,6 +77,9 @@ export function transferOpen(
   });
 }
 
+/**
+ * {@inheritDoc registration.RegistrationStrategy.subscription}
+ */
 export function transferSubscription(
   subscriptionAsset: Asset,
   authDescriptor: AnyAuthDescriptorRegistration,

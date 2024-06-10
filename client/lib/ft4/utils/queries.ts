@@ -18,6 +18,11 @@ export function allAuthHandlers(): QueryObject<AuthHandler[]> {
   };
 }
 
+/**
+ * Fetches the auth handler for the specified operation, or null if there is no
+ * auth handler associated with this operation.
+ * @param opName - the name of the operation
+ */
 export function authHandlerForOperation(
   opName: string,
 ): QueryObject<AuthHandler | null, { op_name: string }> {
@@ -49,6 +54,14 @@ export function firstAllowedAuthDescriptorBySigners(
   };
 }
 
+/**
+ * Finds the first auth descriptor from a list of auth descriptors
+ * which will be allowed to perform the specified operation on the account.
+ * @param opName - the name of the operation to perform
+ * @param args - the args which will be passed to the operation
+ * @param accountId - the account with which the auth descriptor is associated
+ * @param ids - list of auth descriptor ids to select from
+ */
 export function firstAllowedAuthDescriptor(
   opName: string,
   args: RawGtv,

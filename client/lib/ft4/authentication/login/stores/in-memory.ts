@@ -2,6 +2,11 @@ import { LoginKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
 import { Buffer } from "buffer";
 import { KeyPair, encryption } from "postchain-client";
 
+/**
+ * Creates a `LoginKeyStore` which will only keep its keys in memory.
+ * Suitable for testing, or when logged in sessions should not be persisted
+ * across e.g., page reloads. Can be used outside of a browser context.
+ */
 export function createInMemoryLoginKeyStore(): LoginKeyStore {
   const accountIdKeyPairMap = new Map<string, KeyPair>();
 

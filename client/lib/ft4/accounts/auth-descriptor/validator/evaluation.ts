@@ -9,6 +9,11 @@ import {
   AuthDescriptorValidator,
 } from "./types";
 
+/**
+ * Creates a general `AuthDescriptorValidator` instance from a more specialized variant
+ * @param service - the specialized service to use
+ * @returns an `AuthDescriptorValidator` instance
+ */
 export function createBaseAuthDescriptorValidator(
   service: AuthDescriptorValidationService,
 ): AuthDescriptorValidator {
@@ -25,8 +30,8 @@ export function createBaseAuthDescriptorValidator(
  * have already all been triggered at least once.
  * An inactive auth descriptor will be active in the future, while an active one might
  * be active or have already expired. Use `hasExpired` to check for this case.
- * @param authDescriptor the auth descriptor to check
- * @param service an object used to fetch dynamic parameters from blockchain
+ * @param authDescriptor - the auth descriptor to check
+ * @param service - an object used to fetch dynamic parameters from blockchain
  * This allows caching.
  */
 async function isActive(
@@ -74,8 +79,8 @@ async function isActive(
 /**
  * Returns whether the given auth descriptor's rules have expired, that is whether it will
  * no longer ever be usable. Inactive descriptors never return true.
- * @param authDescriptor the auth descriptor to check
- * @param service an object used to fetch dynamic parameters from blockchain
+ * @param authDescriptor - the auth descriptor to check
+ * @param service - an object used to fetch dynamic parameters from blockchain
  * This allows caching.
  */
 async function hasExpired(

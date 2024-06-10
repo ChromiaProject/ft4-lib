@@ -64,6 +64,11 @@ export async function getRateLimit(
   });
 }
 
+/**
+ * Creates an instance of the `Account` interface
+ * @param connection - a connection to the blockchain where this account is registered
+ * @param accountId - the id of the account
+ */
 export function createAccountObject(
   connection: Connection,
   accountId: BufferId,
@@ -135,6 +140,12 @@ export function createAccountObject(
   });
 }
 
+/**
+ * Fetches an account by its id
+ * @param connection - the blockchain connection to use
+ * @param id - id of the account to fetch
+ * @returns the account with the specified id, or null if no such account exists
+ */
 export async function getById(
   connection: Connection,
   id: BufferId,
@@ -144,6 +155,13 @@ export async function getById(
   return accountId && createAccountObject(connection, accountId);
 }
 
+/**
+ * Fetches all accounts that the provided signer has access to as a paginated entity
+ * @param connection - the blockchain connection to use
+ * @param id - signer pubkey or evm address (without `0x`-prefix)
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export async function getBySigner(
   connection: Connection,
   id: BufferId,
@@ -158,6 +176,13 @@ export async function getBySigner(
   );
 }
 
+/**
+ * Fetches all accounts associated with the specified auth descriptor id as a paginated entity
+ * @param connection - the blockchain connection to use
+ * @param id - id of the auth descriptor to fetch associated accounts for
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export async function getByAuthDescriptorId(
   connection: Connection,
   id: BufferId,
@@ -171,6 +196,13 @@ export async function getByAuthDescriptorId(
   );
 }
 
+/**
+ * Fetches all accounts of a specific type as a paginated entity
+ * @param connection - the blockchain connection to use
+ * @param type - the type of account to fetch
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export async function getByType(
   connection: Connection,
   type: string,
@@ -229,6 +261,12 @@ export async function getAuthDescriptorById(
   return gtv.authDescriptorFromGtv(authDescriptor);
 }
 
+/**
+ * Fetches the main auth descriptor of an account
+ * @param queryable - the client to use to access the blockchain
+ * @param accountId - id of the account to fetch main auth descriptor for
+ * @remarks Throws an error if an account with the specified id does not exist
+ */
 export async function getAccountMainAuthDescriptor(
   queryable: Queryable,
   accountId: BufferId,

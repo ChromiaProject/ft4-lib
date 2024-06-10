@@ -155,11 +155,22 @@ export function registerAccount(
   return promiEvent;
 }
 
+/**
+ * Creates a function that can be used to log out a session,
+ * which it does by removing the disposable auth descriptor(s)
+ * associated with the account stored in the provided session.
+ * @param session - session to use for this action
+ * @param disposableKeyStore - the key store that holds the disposable key for this session
+ * @param loginKeyStore - the key store which holds all disposable keys
+ * @remarks This function is only suitable if the key to the disposable keystore is
+ * still available. If not, the admin will have to manually delete auth descriptors
+ * or wait until they expire.
+ */
 export function logoutSession(
   session: Session,
   disposableKeyStore: FtKeyStore | null,
   loginKeyStore: LoginKeyStore | null,
-) {
+): () => Promise<void> {
   return async () => {
     if (disposableKeyStore) {
       await deleteDisposableAuthDescriptors(

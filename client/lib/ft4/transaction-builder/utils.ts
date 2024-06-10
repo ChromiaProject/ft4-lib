@@ -96,6 +96,11 @@ export async function signOperation(
   return evmSignatures(addresses, signatures);
 }
 
+/**
+ * Creates an `evm_signatures` operation from the specified information
+ * @param signers - the signers to include
+ * @param signatures - the signatures to include
+ */
 export function evmSignatures(
   signers: BufferId[],
   signatures: (Signature | null)[],

@@ -39,6 +39,11 @@ export const noopAuthDataService: AuthDataService = Object.freeze({
   ) => Promise.resolve(null),
 });
 
+/**
+ * Creates a noop authenticator. I.e., an object that conforms to the `Authenticator` interface
+ * but whose operations has no effect.
+ * @param authDataService - optional mock auth data service. If not provided, a no op auth data service will be used
+ */
 export function createNoopAuthenticator(
   authDataService?: AuthDataService,
 ): Authenticator {

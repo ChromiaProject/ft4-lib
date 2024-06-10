@@ -15,8 +15,19 @@ export function offNoOp(listener: Listener<[string]>) {
   ftEventEmitter.off("NoOp", listener);
 }
 
+/**
+ * Groups noOp event handlers
+ */
 export interface EventHandlers {
+  /**
+   * Adds a listener that is invoked when a NoOp event is emitted
+   * @param listener - listener to add
+   */
   onNoOp(listener: Listener<[string]>): void;
+  /**
+   * Removes a listener that was added for receiving NoOp-events
+   * @param listener - listener to add
+   */
   offNoOp(listener: Listener<[string]>): void;
 }
 

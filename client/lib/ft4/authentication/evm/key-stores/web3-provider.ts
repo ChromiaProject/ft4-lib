@@ -9,8 +9,21 @@ import {
   signMessage,
 } from "@ft4/authentication";
 
+/**
+ * Interface that combines `Eip1193Provider` from `ethers` lib with `EventEmitter`
+ * functionality.
+ */
 export interface Eip1193Provider extends Eip1193ProviderEthers, EventEmitter {}
 
+/**
+ * Creates a keystore that wraps an external evm keystore, such as MetaMask.
+ * In a browser context where the user has the MetaMask browser extension installed
+ * and connected to the page, this could be used like:
+ * ```
+ * createWeb3ProviderEvmKeyStore(window.ethereum)
+ * ```
+ * @param externalProvider - interface to use when communicating with the external provider
+ */
 export async function createWeb3ProviderEvmKeyStore(
   externalProvider: Eip1193Provider,
 ): Promise<EvmKeyStore> {

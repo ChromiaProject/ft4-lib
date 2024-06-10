@@ -11,6 +11,12 @@ import { AuthDataService, Authenticator, KeyHandler, KeyStore } from "./types";
 import { EVM_AUTH } from "./evm";
 import { FT_AUTH } from "./ft";
 
+/**
+ * Checks if the provided auth descriptor has the specified flags.
+ * @param authDescriptor - auth descriptor-like object to check flags for
+ * @param requiredFlags - the flags to check for
+ * @returns true if the specified auth descriptor has all the specified flags, else false.
+ */
 export function hasAuthDescriptorFlags(
   authDescriptor: AnyAuthDescriptor | AnyAuthDescriptorRegistration,
   requiredFlags: string[],
@@ -20,6 +26,12 @@ export function hasAuthDescriptorFlags(
   );
 }
 
+/**
+ * Creates a new authenticator instance from the specified arguments
+ * @param accountBufferId - the id of the account for which this authenticator is valid
+ * @param keyHandlers - any key handlers that can be used to authenticate against this account
+ * @param authDataService - an auth data service that will be used when interacting with the account
+ */
 export function createAuthenticator(
   accountBufferId: BufferId,
   keyHandlers: KeyHandler[],
@@ -104,6 +116,13 @@ async function filterOutInvalidAndExpiredHandlers(
   return handlers.filter((_, index) => validHandlers[index]);
 }
 
+/**
+ * Converts a list of keystores into a list of key handlers
+ * @param connection - connection to the blockchain of interest
+ * @param accountId - the id of the account of which the key handlers should be valid
+ * @param keyStores - the key stores to convert to key handlers
+ * @returns a list of ket handlers
+ */
 export async function getKeyHandlersForKeyStores(
   connection: Connection,
   accountId: Buffer,
@@ -123,6 +142,11 @@ export async function getKeyHandlersForKeyStores(
   return allKeyHandlers;
 }
 
+/**
+ * Checks if the specified operation is an auth operation
+ * @param operation - the operation to check
+ * @returns true if the operation was an auth operation, else false
+ */
 export function isAuthOperation(operation: Operation | RellOperation): boolean {
   const name = isRellOperation(operation) ? operation.opName : operation.name;
   return [EVM_AUTH, FT_AUTH].includes(name);

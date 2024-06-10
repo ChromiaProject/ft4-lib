@@ -10,6 +10,12 @@ import { AnyAuthDescriptor } from "@ft4/accounts";
 import { FtKeyStore, createFtKeyHandler } from "@ft4/authentication";
 import { isRawGtx } from "@ft4/utils";
 
+/**
+ * Creates an FtKeyStore instance which will only keep the keys in memory. That is,
+ * if the app is restarted or reloaded, the keys will be gone. Good for testing or
+ * for keys that are ephemeral in nature.
+ * @param keyHolder - the object that holds the keys
+ */
 export function createInMemoryFtKeyStore(
   keyHolder: KeyPair | SignatureProvider,
 ): FtKeyStore {

@@ -21,6 +21,12 @@ import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
 import { createAmountFromBalance } from "./amount";
 import { Queryable } from "postchain-client";
 
+/**
+ * Retrieves asset information using its id
+ * @param queryable - object to use when querying the blockchain
+ * @param id - the id of the asset to fetch
+ * @returns The asset details, or null if no asset with the specified id was found
+ */
 export async function getAssetById(
   queryable: Queryable,
   id: BufferId,
@@ -29,6 +35,12 @@ export async function getAssetById(
   return response ? createAssetObject(response) : null;
 }
 
+/**
+ * Retrieves asset information using its symbol. As there can be multiple assets with the same symbol,
+ * the information is returned as a paginated entity.
+ * @param queryable - object to use when querying the blockchain
+ * @param symbol - the symbol of the asset to fetch
+ */
 export async function getAssetsBySymbol(
   queryable: Queryable,
   symbol: string,
@@ -42,6 +54,14 @@ export async function getAssetsBySymbol(
   );
 }
 
+/**
+ * Retrieves asset information using its name. As there can be multiple assets with the same name,
+ * the information is returned as a paginated entity.
+ * @param queryable - object to use when querying the blockchain
+ * @param name - the name of the asset to fetch
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export function getAssetsByName(
   queryable: Queryable,
   name: string,
@@ -55,6 +75,13 @@ export function getAssetsByName(
   );
 }
 
+/**
+ * Retrieves all assets of a specific type, e.g., `"ft4"`, as a paginated entity
+ * @param queryable - object to use when querying the blockchain
+ * @param type - the type of assets to return
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export async function getAssetsByType(
   queryable: Queryable,
   type: string,
@@ -68,6 +95,12 @@ export async function getAssetsByType(
   );
 }
 
+/**
+ * Retrieves all assets that are registered on a blockchain as a paginated entity
+ * @param queryable - object to use when querying the blockchain
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export async function getAllAssets(
   queryable: Queryable,
   limit: OptionalLimit = null,
@@ -80,15 +113,13 @@ export async function getAllAssets(
   );
 }
 
-export function getAssetDetailsForCrosschainRegistration(
-  queryable: Queryable,
-  assetId: BufferId,
-): Promise<CrosschainAssetRegistration> {
-  return queryable
-    .query(assetDetailsForCrosschainRegistration(assetId))
-    .then(createCrosschainAssetRegistrationObject);
-}
-
+/**
+ * Retrieves the balance of a specific asset on the provided account
+ * @param queryable - object to use when querying the blockchain
+ * @param accountId - the account on which to get the balance
+ * @param assetId - the asset for which to get the balance
+ * @returns The current account balance of the specified asset. Or null if account does not have the asset
+ */
 export async function getBalanceByAccountId(
   queryable: Queryable,
   accountId: BufferId,
@@ -99,6 +130,28 @@ export async function getBalanceByAccountId(
     .then((res) => (res !== null ? createBalanceObject(res) : res));
 }
 
+/**
+ * Fetches the details of a crosschain asset, i.e., an asset that was registered
+ * on this chain but which has a different issuing chain.
+ * @param queryable - object to use when querying the blockchain
+ * @param assetId - the id of the asset to fetch details for
+ */
+export async function getAssetDetailsForCrosschainRegistration(
+  queryable: Queryable,
+  assetId: BufferId,
+): Promise<CrosschainAssetRegistration> {
+  return queryable
+    .query(assetDetailsForCrosschainRegistration(assetId))
+    .then(createCrosschainAssetRegistrationObject);
+}
+
+/**
+ * Fetches all balances for a specified account as a paginated entity
+ * @param queryable - the client to use to query the blockchain
+ * @param accountId - the id of the account to fetch balances for
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export async function getBalancesByAccountId(
   queryable: Queryable,
   accountId: BufferId,
@@ -119,6 +172,11 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
   });
 }
 
+/**
+ * Converts an `AssetResponse` object, returned from the blockchain to an `Asset` object
+ * which can be used in the dApp
+ * @param asset - the object to convert
+ */
 export function createAssetObject(asset: AssetResponse): Asset {
   return Object.freeze({
     id: asset.id,
@@ -132,7 +190,7 @@ export function createAssetObject(asset: AssetResponse): Asset {
   });
 }
 
-export function createCrosschainAssetRegistrationObject(
+function createCrosschainAssetRegistrationObject(
   asset: CrosschainAssetRegistrationResponse,
 ): CrosschainAssetRegistration {
   return Object.freeze({

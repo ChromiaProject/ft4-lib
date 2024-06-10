@@ -16,6 +16,18 @@ import {
 } from "postchain-client";
 import { createRevertOrchestrator } from "@ft4/crosschain/orchestrator";
 
+/**
+ * Performs a cross chain transfer
+ * @param connection - connection to the source chain, i.e., where the assets should be transferred from
+ * @param authenticator - the authenticator used to authenticate the transfer
+ * @param targetChainRid - the rid of the target blockchain, i.e., where the assets will end up
+ * @param recipientId - the id of the account that will receive the assets
+ * @param assetId - the id of the asset to transfer
+ * @param amount - how much of the asset to transfer
+ * @param ttl - timeout of this transfer in days. If the transfer has not been completed within this timeout, it can be reverted
+ * @returns a promi-event that will emit once when transaction is signed, once when init_transfer has been sent on the source chain
+ * and once for each hop during the transfer. It will resolve once the transfer is completed.
+ */
 export function crosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
@@ -67,6 +79,14 @@ export function crosschainTransfer(
   return promiEvent;
 }
 
+/**
+ * Resumes a cross chain transfer that was started but not applied to the target chain yet. Which could happen
+ * if for example one intermediary were down or the client were disrupted before the transfer was completed.
+ * @param connection - connection to the source chain
+ * @param authenticator - authenticator that will be used when continuing the transfer. Should likely be the same authenticator which was used to initiate the transfer
+ * @param pendingTransfer - the transfer to resume. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
+ * @returns a promi-event that will emit once for each hop during the transfer. It will resolve once the transfer is completed.
+ */
 export function resumeCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
@@ -96,6 +116,16 @@ export function resumeCrosschainTransfer(
   return promiEvent;
 }
 
+/**
+ * Reverts a cross chain transfer that has timed out. I.e., returns the asset back to the sender account after the transfer
+ * failed to be completed before the timeout. If the transfer has reached its final destination but you want to recall it,
+ * use {@link crosschain.recallUnclaimedCrosschainTransfer | recallUnclaimedCrosschainTransfer}
+ * @remarks If this function is called before the transfer has timed out, the promise will be rejected
+ * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets are registered.
+ * @param authenticator - authenticator that will be used when reverting the transfer. Should likely be the same authenticator which was used to initiate the transfer
+ * @param pendingTransfer - the transfer to revert. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
+ * @returns a promi-event that will emit once for each hop during the revert. It will resolve once the transfer is completely reverted.
+ */
 export function revertCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,
@@ -125,6 +155,16 @@ export function revertCrosschainTransfer(
   return promiEvent;
 }
 
+/**
+ * Does almost the same thing as {@link crosschain.revertCrosschainTransfer | revertCrosschainTransfer} but while that function works on transfers that were not delivered to
+ * the target chain, this function is used if the assets were successfully delivered to the target chain but not claimed by an account. This will only happen when the target
+ * chain has create on transfer account registration strategy enabled and no one claims the target account in time.
+ * @remarks If this function is called before the transfer has timed out, the promise will be rejected
+ * @param connection - connection to the source chain. I.e., the chain where the account that originally sent the assets are registered.
+ * @param authenticator - authenticator that will be used when recalling the transfer. Should likely be the same authenticator which was used to initiate the transfer
+ * @param pendingTransfer - the transfer to recall. Can be acquired using {@link accounts.Account.getPendingCrosschainTransfers | getPendingCrosschainTransfers}
+ * @returns a promi-event that will emit once for each hop during the recall. It will resolve once the transfer is completely recalled.
+ */
 export function recallUnclaimedCrosschainTransfer(
   connection: Connection,
   authenticator: Authenticator,

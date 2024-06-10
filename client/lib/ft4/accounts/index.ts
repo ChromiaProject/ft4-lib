@@ -4,7 +4,6 @@ export {
   AuthDescriptorRuleVariable,
   AuthDescriptor,
   AuthDescriptorComplexRule,
-  AuthDescriptorError,
   AuthDescriptorRegistration,
   AuthDescriptorRules,
   AuthDescriptorSimpleRule,

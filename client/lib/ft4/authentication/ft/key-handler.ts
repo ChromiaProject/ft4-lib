@@ -9,6 +9,11 @@ import { GTX, Operation } from "postchain-client";
 import { FtKeyStore } from "./types";
 import { ftAuth } from "./main";
 
+/**
+ * Creates a new instance of a `KeyHandler` which wraps an Ft key.
+ * @param authDescriptor - the associated auth descriptor
+ * @param keyStore - the keystore that holds the key
+ */
 export function createFtKeyHandler(
   authDescriptor: AnyAuthDescriptor,
   keyStore: FtKeyStore,

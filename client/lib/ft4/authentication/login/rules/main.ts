@@ -93,20 +93,71 @@ function isSimpleRule(
   return (rule as LoginConfigComplexRule).rules === undefined;
 }
 
-/*
- * Allows the user to specify a ttl value like this:
- * weeks(1)+days(3)
- * None of these functions care in any way about leap seconds and any other time adjustments
- * This means that when you define an auth descriptor with a rule that makes it expire after
- * 1 day, it will expire after exactly 24h, even if there has been a leap second during that
- * day, which means it will be off by a second (e.g. starts at 14:00:00 and expires the next
- * day at 13:59:59).
+/**
+ * Returns a value that represents `m` minutes. Can also be combined with the other
+ * time functions in this module. For example:
+ * ```
+ * hours(2) + minutes(20) // Represents: "2 hours and 20 minutes"
+ * ```
+ * @param m - how many minutes to get
+ * @remarks this function does not care in any way about leap seconds and any other time
+ * adjustments. This means that when you define an auth descriptor with a rule that makes
+ * it expire after 1 minute, it will expire after exactly 60 seconds, even if there has been
+ * a leap second during that minute, which means it will be off by a second.
  */
 export const minutes = (m: number) => m * 60000;
+/**
+ * Returns a value that represents `h` hours. Can also be combined with the other
+ * time functions in this module. For example:
+ * ```
+ * hours(2) + minutes(20) // Represents: "2 hours and 20 minutes"
+ * ```
+ * @param h - how many hours to get
+ * @remarks this function does not care in any way about leap seconds and any other time
+ * adjustments. This means that when you define an auth descriptor with a rule that makes
+ * it expire after 1 hour, it will expire after exactly 60 * 60 seconds, even if there has been
+ * a leap second during that hour, which means it will be off by a second.
+ */
 export const hours = (h: number) => h * minutes(60);
+/**
+ * Returns a value that represents `d` days. Can also be combined with the other
+ * time functions in this module. For example:
+ * ```
+ * days(2) + hours(10) // Represents: "2 days and 10 hours" or "34 hours"
+ * ```
+ * @param d - how many days to get
+ * @remarks this function does not care in any way about leap seconds and any other time
+ * adjustments. This means that when you define an auth descriptor with a rule that makes
+ * it expire after 1 day, it will expire after exactly 24 hours, even if there has been
+ * a leap second during that day, which means it will be off by a second.
+ */
 export const days = (d: number) => d * hours(24);
+/**
+ * Returns a value that represents `w` weeks. Can also be combined with the other
+ * time functions in this module. For example:
+ * ```
+ * weeks(2) + days(3) // Represents: "2 weeks and 3 days"
+ * ```
+ * @param w - how weeks hours to get
+ * @remarks this function does not care in any way about leap seconds and any other time
+ * adjustments. This means that when you define an auth descriptor with a rule that makes
+ * it expire after 1 week, it will expire after exactly 24 * 7 hours, even if there has been
+ * a leap second during that week, which means it will be off by a second.
+ */
 export const weeks = (w: number) => w * days(7);
 
+/**
+ * Creates a login rule which represents "this rule will be valid for `ttl` seconds",
+ * where `ttl` is the input to the function. Goes great with the functions for representing
+ * time. E.g.,
+ * ```
+ * ttlLoginRule(30) // Valid for 30 seconds
+ * ttlLoginRule(minutes(10)) // Valid for 10 minutes
+ * ttlLoginRule(days(2)) // Valid for 2 days
+ * ...
+ * ```
+ * @param ttl - for how long (in seconds) the rule is valid.
+ */
 export function ttlLoginRule(ttl: number): LoginConfigSimpleRule {
   return {
     operator: RuleOperator.LessThan,

@@ -11,13 +11,6 @@ export enum AuthType {
   MultiSig = "M",
 }
 
-export class AuthDescriptorError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AuthDescriptorError";
-  }
-}
-
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
   accountId: Buffer;

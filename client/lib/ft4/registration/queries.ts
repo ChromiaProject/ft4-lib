@@ -1,5 +1,10 @@
 import { Operation, QueryObject, RawGtxOp } from "postchain-client";
 
+/**
+ * Creates a query object for the `get_register_account_message` query.
+ * @param strategyOperation - operation corresponding to the strategy that is being used to register the account
+ * @param registerAccountOperation - operation that will be used for registering the account
+ */
 export function registerAccountMessage(
   strategyOperation: Operation,
   registerAccountOperation: Operation,

@@ -77,6 +77,9 @@ export type TransactionBuilder = {
   session: IClient;
 };
 
+/**
+ * Thrown to indicate that there was an error when authorizing an operation.
+ */
 export class AuthorizationError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -84,6 +87,9 @@ export class AuthorizationError extends Error {
   }
 }
 
+/**
+ * Thrown when an operation was not anchored within the specified timeout period.
+ */
 export class AnchoringTimeoutError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -96,6 +102,11 @@ export type TransactionBuilderConfig = RequireTogether<
   "retryCount" | "waitTimeMs"
 >;
 
+/**
+ * Callback function that can be passed to the transaction builder.
+ * When passed, transaction builder will invoke it with `OnAnchoredHandlerData`
+ * once the transaction has been anchored on the anchoring chain.
+ */
 export type OnAnchoredHandler = ((
   data: OnAnchoredHandlerData,
   error: null,
@@ -132,6 +143,11 @@ export type OnAnchoredHandlerData = {
   operation: Operation;
   opIndex: number;
   tx: RawGtx;
+  /**
+   * Used to create a proof that this operation happened on this blockchain
+   * @param blockchainRid - the rid of the blockchain on which the produced proof will be validated
+   * @returns a proof that this operation happened on the blockchain.
+   */
   createProof: (blockchainRid: BufferId) => Promise<Operation>;
 };
 

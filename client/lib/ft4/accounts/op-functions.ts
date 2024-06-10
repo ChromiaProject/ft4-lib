@@ -39,6 +39,11 @@ import {
 import { Connection, call, createSession } from "@ft4/ft-session";
 import { revertCrosschainTransfer } from "@ft4/crosschain/transfer";
 
+/**
+ * Creates an authenticated account instance
+ * @param connection - the connection to the blockchain where this account is registered
+ * @param authenticator - authenticator which holds the keys for this account
+ */
 export function createAuthenticatedAccount(
   connection: Connection,
   authenticator: Authenticator,

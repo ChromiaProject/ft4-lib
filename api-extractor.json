@@ -4,6 +4,9 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
   "mainEntryPointFilePath": "dist/types/index.d.ts",
+  "compiler": {
+    "tsconfigFilePath": "./tsconfig.json"
+  },
   "bundledPackages": [],
 
   "apiReport": {
@@ -30,6 +33,12 @@
 
     "extractorMessageReporting": {
       "ae-missing-release-tag": {
+        "logLevel": "none"
+      },
+      "ae-unresolved-link": {
+        "logLevel": "none"
+      },
+      "ae-unresolved-inheritdoc-reference": {
         "logLevel": "none"
       },
       "default": {

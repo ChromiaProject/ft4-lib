@@ -1,4 +1,5 @@
 {
+  "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
     "client/lib/ft4/*",
   ],
@@ -14,21 +15,19 @@
   "disableSources": true,
   "hideGenerator": true,
   "excludeNotDocumented": false,
+  "useTsLinkResolution": true,
+  "excludeExternals": true,
   "validation": {
     "notExported": true,
-    "invalidLink": false,
+    "invalidLink": true,
     "notDocumented": true
   },
   "requiredToBeDocumented": [
-    "Enum",
-    "EnumMember",
     "Function",
     "Class",
     "Interface",
-    "Property",
     "Method",
-    "Accessor",
-    "TypeAlias"
+    "Accessor"
   ],
-  "treatWarningsAsErrors": false
+  "treatWarningsAsErrors": true
 }

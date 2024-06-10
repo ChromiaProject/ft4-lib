@@ -4,6 +4,12 @@ import { loginConfig } from "./queries";
 import { gtv } from "@ft4/accounts";
 import { loginConfigRuleMapper } from "./rules";
 
+/**
+ * Fetches a login config. Either the config with the provided name
+ * or, if omitted, the default config.
+ * @param queryable - the client to use to fetch the config
+ * @param configName - optional config name. If omitted, default config will be fetched
+ */
 export async function getLoginConfig(
   queryable: Queryable,
   configName?: string,

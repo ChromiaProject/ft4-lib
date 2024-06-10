@@ -15,6 +15,12 @@ export function assetOriginById(
   };
 }
 
+/**
+ * Creates a query object used to calling the `ft4.crosschain.get_pending_transfers_for_account` query
+ * @param accountId - id of the account to fetch queries for
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export function pendingTransfersForAccount(
   accountId: BufferId,
   limit: OptionalLimit,

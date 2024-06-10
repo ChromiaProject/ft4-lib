@@ -21,6 +21,11 @@ import {
 } from "./main";
 import { EvmKeyStore } from "./types";
 
+/**
+ * Creates a new instance of a `KeyHandler` which wraps an Evm key.
+ * @param authDescriptor - the associated auth descriptor
+ * @param keyStore - the keystore that holds the key
+ */
 export function createEvmKeyHandler(
   authDescriptor: AnyAuthDescriptor,
   keyStore: EvmKeyStore,

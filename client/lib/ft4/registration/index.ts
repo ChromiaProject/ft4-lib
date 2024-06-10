@@ -22,30 +22,81 @@ import {
   TransferStrategyRuleAmount,
   fetchLoginDetails,
   getLoginDetails,
+  LoginDetails,
   getEnabledRegistrationStrategies,
+  AllowListRaw,
+  AssetLimitRaw,
+  TransferStrategyRulePartial,
+  AssetLimit,
+  TransferSenderBlockchains,
+  TransferParticipants,
+  TransferParticipantSingle,
 } from "./strategies";
 
+/**
+ * Functions that can be used to register an account
+ */
 export interface RegistrationStrategy {
+  /**
+   * Registers an account using the open strategy
+   *
+   * @param authDescriptor - the auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
   open: (
     authDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
   ) => Strategy;
+
+  /**
+   * Registers an account using the fee strategy
+   * @param senderBlockchainRid - the blockchain rid from which the assets will be paid
+   * @param feeAsset - the asset that will be used to pay the fee
+   * @param authDescriptor - the auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
   fee: (
     senderBlockchainRid: BufferId,
     feeAsset: Asset,
     authDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
   ) => Strategy;
+
+  /**
+   * Registers an account using the subscription strategy
+   * @param senderBlockchainRid - the blockchain rid from which the assets will be paid
+   * @param subscriptionAsset - the asset that will be used to pay the subscription
+   * @param authDescriptor - the auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
   subscription: (
     senderBlockchainRid: BufferId,
     subscriptionAsset: Asset,
     authDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
   ) => Strategy;
+
+  /**
+   * Creates an account that previously had assets transferred to it, without paying a fee
+   * @param authDescriptor - the auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
   transferOpen: (
     authDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
   ) => Strategy;
+
+  /**
+   * Creates an account that previously had assets transferred to it, and paying a fee
+   * @param feeAsset - the asset in which to pay the fee. The asset needs to be present on the account
+   * @param authDescriptor - the auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
   transferFee: (
     feeAsset: Asset,
     authDescriptor: AnyAuthDescriptorRegistration,
@@ -73,6 +124,7 @@ import { BufferId } from "@ft4/utils";
 export { Strategy, RegistrationDetails, StrategyError } from "./types";
 
 export {
+  LoginDetails,
   allowedAssets,
   renewSubscription,
   subscriptionDetails,
@@ -96,4 +148,11 @@ export {
   TransferStrategyRule,
   TransferStrategyRuleRaw,
   TransferStrategyRuleAmount,
+  AllowListRaw,
+  AssetLimitRaw,
+  TransferStrategyRulePartial,
+  AssetLimit,
+  TransferSenderBlockchains,
+  TransferParticipants,
+  TransferParticipantSingle,
 };
