@@ -70,7 +70,7 @@ function create_rate_limiter_state_for_account(account) {
 
     val max_points = rl_config.max_points;
     val recovery_time = rl_config.recovery_time;
-    val points_at_start = rl_config.points_at_account_creation;
+    val points_at_start = min(rl_config.points_at_account_creation, rl_config.max_points);
     
     create rl_state(account, .points = points_at_start, .last_update = utils.latest_time(), recovery_time);
 }

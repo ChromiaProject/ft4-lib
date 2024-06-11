@@ -6,7 +6,7 @@ import lib.ft4.admin;
 import lib.ft4.accounts;
 import ^^.assets.utils;
 import test_op: ^^.operations.auth;
-import ^.rate_limit_helpers;
+import rlh: ^.rate_limit_helpers;
 import test_utils: lib.ft4.test.utils;
 
 function test_create_account_in_genesis_block() {
@@ -157,7 +157,7 @@ function test_disable_rate_limit_for_account() {
   val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
   rell.test.tx()
-      .op(rate_limit_helpers.set_admin_account(alice.account))
+      .op(rlh.set_admin_account(alice.account))
       .run();
 
   // Perform the transaction
@@ -175,4 +175,29 @@ function test_disable_rate_limit_for_account() {
       .nop()
       .sign(rell.test.keypairs.alice)
       .run();
+}
+
+function test_rate_limit_starting_points_too_high_is_handled_correctly() {
+  assert_equals(accounts.get_rate_limit_config().active, true);
+  assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+  assert_equals(accounts.get_rate_limit_config().max_points, 5);
+
+  utils.create_test_account_with_auth_descriptor(
+    accounts.auth_descriptor.from_bytes(
+      rlh.MISCONFIGURED_ACCOUNT.auth_descriptor_bytes
+    ),
+    rell.test.keypair(
+      priv = rlh.MISCONFIGURED_ACCOUNT.privkey,
+      pub = rlh.MISCONFIGURED_ACCOUNT.pubkey
+    )
+  );
+  
+  val misconfigured = accounts.account @ {
+    .id == rlh.get_misconfigured_account_id()
+  };
+  
+  val config = accounts.get_rate_limit_config_for_account(misconfigured);
+  val state = accounts.rl_state @ { misconfigured };
+  assert_equals(state.points, config.max_points);
+  assert_true(state.points < config.points_at_account_creation);
 }

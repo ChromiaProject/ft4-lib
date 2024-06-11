@@ -35,6 +35,16 @@ namespace Unsafe {
         assets.validate_asset_symbol(symbol);
         assets.validate_asset_type(type);
         assets.validate_asset_uniqueness_resolver(uniqueness_resolver);
+
+        require(
+            chain_context.blockchain_rid != origin_blockchain_rid,
+            "Asset origin cannot be the current chain."
+        );
+        require(
+            chain_context.blockchain_rid != issuing_blockchain_rid,
+            "Cannot register an asset that originated on this chain as a crosschain asset."
+        );
+
         
         val asset = create assets.asset(
             id = asset_id,
