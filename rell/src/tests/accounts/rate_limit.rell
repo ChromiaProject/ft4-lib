@@ -95,6 +95,30 @@ function test_authenticated_operation_is_rate_limited() {
       .run();
 }
 
+function test_max_admin_rate_limit_points() {
+  assert_equals(accounts.get_rate_limit_config().active, true);
+  assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+  assert_equals(accounts.get_rate_limit_config().max_points, 5);
+
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+
+  //give too many points to alice
+  admin.external.add_rate_limit_points(alice.account.id, 10)
+      .sign(utils.admin_priv_key())
+      .run();
+
+  // check that alice has max_points, not more
+  assert_equals(accounts.rl_state @ { alice.account } (.points), 5);
+}
+
+function test_admin_cant_give_negative_rate_limit_points() {
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+
+  admin.external.add_rate_limit_points(alice.account.id, -1)
+      .sign(utils.admin_priv_key())
+      .run_must_fail("Amount must be a positive integer.");
+}
+
 function test_max_rate_limit_points() {
   rell.test.set_block_interval(1000); // set block interval to 1 second
 
