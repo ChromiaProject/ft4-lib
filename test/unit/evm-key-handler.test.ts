@@ -27,18 +27,33 @@ describe("EVM key handler", () => {
     client = await createStubClient();
   });
 
-  it("should sign message", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const message = "Message to sign";
+  const keyPair = encryption.makeKeyPair(
+    "9b26feb211a3f9ef27b2f23bac7264e68f68916f6e32216396945db28011e00f",
+  );
+  const message = "Sign this message with {nonce}";
 
-    const walletSignedMessage = await new ethers.Wallet(
-      keyPair.privKey.toString("hex"),
-    ).signMessage(message);
-    const { r, s, v } = ethers.Signature.from(walletSignedMessage);
+  const accountId = encryption.randomBytes(32);
+  const keyStore = createInMemoryEvmKeyStore(keyPair);
+  const ad = createSingleSigAuthDescriptorRegistration(
+    [AuthFlag.Transfer],
+    keyStore.address,
+    null,
+  );
+  const authService = createFakeAuthDataService({
+    foo: { flags: ["T"], message },
+  });
+
+  it("signs a message", async () => {
+    const message = "Message to sign";
+    const rawSignature = Buffer.from(
+      "7adaca211cb044ebc4b3f8b9342438102102e50ad7850c13c78237145f8751374cbb38fd4e0a68da31ac51fcb2280316b58337561f322e717682699fd53958ff1b",
+      "hex",
+    );
+
     const expectedSignature = {
-      r: Buffer.from(r.slice(2), "hex"),
-      s: Buffer.from(s.slice(2), "hex"),
-      v,
+      r: rawSignature.subarray(0, 32),
+      s: rawSignature.subarray(32, 64),
+      v: 27,
     };
 
     const signedMessage =
@@ -48,14 +63,6 @@ describe("EVM key handler", () => {
   });
 
   it("should insert evm_auth operation", async () => {
-    const accountId = encryption.randomBytes(32);
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSigAuthDescriptorRegistration(
-      [],
-      keyStore.address,
-      null,
-    );
     const keyHandler = keyStore.createKeyHandler(testAdFromRegistration(ad));
     const authData = {
       flags: [],
@@ -79,18 +86,6 @@ describe("EVM key handler", () => {
   });
 
   it("increments local auth descriptor counter", async () => {
-    const accountId = encryption.randomBytes(32);
-    const keyPair = encryption.makeKeyPair();
-    const message = "Sign this message with {nonce}";
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Transfer],
-      keyStore.address,
-      null,
-    );
-    const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message },
-    });
     const authenticator = createAuthenticator(
       accountId,
       [keyStore.createKeyHandler(testAdFromRegistration(ad))],
@@ -138,18 +133,6 @@ describe("EVM key handler", () => {
   });
 
   it("resets local auth descriptor counter between transactions if transaction is not submitted", async () => {
-    const accountId = encryption.randomBytes(32);
-    const keyPair = encryption.makeKeyPair();
-    const message = "Sign this message with {nonce}";
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Transfer],
-      keyStore.address,
-      null,
-    );
-    const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message },
-    });
     authService.getAuthDescriptorCounter = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
@@ -196,16 +179,6 @@ describe("EVM key handler", () => {
   });
 
   it("resets local auth descriptor counter if user rejects metamask signature", async () => {
-    const accountId = encryption.randomBytes(32);
-    const keyPair = encryption.makeKeyPair();
-    const message = "Sign this message with {nonce}";
-    let keyStore = createInMemoryEvmKeyStore(keyPair);
-    const ad = createSingleSigAuthDescriptorRegistration(
-      [AuthFlag.Transfer],
-      keyStore.address,
-      null,
-    );
-
     // Rewire the keystore to let us fake a user rejection on first call
     const oldSignFunc = keyStore.signMessage;
     const signMessage = jest
@@ -216,15 +189,12 @@ describe("EVM key handler", () => {
         throw err;
       })
       .mockImplementation((msg: string) => oldSignFunc(msg));
-    keyStore = { ...keyStore, signMessage };
+    const mockKeyStore = { ...keyStore, signMessage };
 
-    const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message },
-    });
     authService.getAuthDescriptorCounter = () => Promise.resolve(0);
     const authenticator = createAuthenticator(
       accountId,
-      [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
+      [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
       authService,
     );
 
@@ -235,10 +205,10 @@ describe("EVM key handler", () => {
         .build(),
     ).rejects.toThrow(Error);
 
-    const signature1 = await keyStore.signMessage(
+    const signature1 = await mockKeyStore.signMessage(
       message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 0)),
     );
-    const signature2 = await keyStore.signMessage(
+    const signature2 = await mockKeyStore.signMessage(
       message.replace("{nonce}", deriveNonce(Buffer.alloc(32), op("foo"), 1)),
     );
 
