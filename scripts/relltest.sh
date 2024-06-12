@@ -18,15 +18,8 @@ usage() {
     exit 1
 }
 
-forceexit(){
-    echo
-    echo 'Remember to run "npm run stop-postchain:rell"!'
-    exit 2
-}
-
 exitfn () {
-    trap "forceexit" 2
-    echo; echo 'Stopping docker, hit Ctrl+C to force quit'
+    echo; echo 'Stopping docker...'
     $DOCKER stop ft4_rell_test > /dev/null
     $DOCKER rm ft4_rell_test > /dev/null
     exit 2

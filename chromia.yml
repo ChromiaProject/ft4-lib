@@ -171,7 +171,7 @@ docs:
   title: "FT4 Library"
   footerMessage: © 2024 Chromia
   additionalContent:
-    - rell-api-docs-header.md
+    - api-docs-header.md
   sourceLink:
     remoteUrl: https://bitbucket.org/chromawallet/ft3-lib/src/development/rell/src
     remoteLineSuffix: "#lines-"

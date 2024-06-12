@@ -17,6 +17,7 @@
   "excludeNotDocumented": false,
   "useTsLinkResolution": true,
   "excludeExternals": true,
+  "readme": "api-docs-header.md",
   "validation": {
     "notExported": true,
     "invalidLink": true,
