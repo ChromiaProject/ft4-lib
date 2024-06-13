@@ -32,7 +32,6 @@ export class SigningError extends Error {
 export interface Authenticator {
   accountId: Buffer;
   keyHandlers: KeyHandler[];
-  // TODO: check if authDataService can be removed
   authDataService: AuthDataService;
   getKeyHandlerForOperation(
     operation: Operation,

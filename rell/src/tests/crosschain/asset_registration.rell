@@ -6,8 +6,6 @@ import lib.ft4.admin.crosschain;
 
 import ^^.assets.utils;
 
-// TODO: Move crosschain asset registration tests from `tests/crosschain/operations` to here
-
 function test_can_fetch_crosschain_asset_registration_details() {
     val issuing_blockchain_rid = x"aa".repeat(32);
     val origin_blockchain_rid = x"bb".repeat(32);

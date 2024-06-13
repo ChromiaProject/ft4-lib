@@ -80,16 +80,11 @@ function check_auth_args(a_t: auth_type, args: byte_array, signers: list<byte_ar
     };
 }
 
-function get_signers_from_encoded_auth_descriptor(a_t: auth_type, args: byte_array): list<byte_array>{
-    var signers: list<byte_array>? = null;
-    if (a_t == auth_type.S){
-        signers = [single_sig_args.from_bytes(args).signer];
-    }
-    if (a_t == auth_type.M) {
-        signers = multi_sig_args.from_bytes(args).signers;
-    }
-    //TODO: add extendable callback for custom types
-    return require(signers, "Unknown auth_descriptor type"); // or return empty list?
+function get_signers_from_encoded_auth_descriptor(a_t: auth_type, args: byte_array): list<byte_array> {
+    return when (a_t) {
+        S -> [single_sig_args.from_bytes(args).signer];
+        M -> multi_sig_args.from_bytes(args).signers;
+    };
 }
 
 function get_signers(auth_descriptor)
