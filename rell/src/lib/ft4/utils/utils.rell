@@ -40,10 +40,30 @@ function validate_blockchain_rid(blockchain_rid: byte_array, descriptor: text = 
     );
 }
 
+
+/*
+ * Following list of functions are used to check type of object wrapped inside gtv (gtv is Chromia's ASN.1 based encoding).
+ * See below for how encoding is defined for different types:
+ * https://bitbucket.org/chromawallet/postchain-client/src/430bc34bf945905e4883af317f16bbb277102175/src/gtv/definition.ts#lines-8
+ * Depending on wrapped value type, first byte of serialized gtv will have one of following values:
+ * - byte_array  -> x"a1" (161)
+ * - text        -> x"a2" (162)
+ * - integer     -> x"a3" (163)
+ * - dict (map)  -> x"a4" (164)
+ * - list        -> x"a5" (165)
+ * - big_integer -> x"a6" (166)
+ *
+ * In the future these functions will be replaced with native Rell functions.
+ */ 
+
 function is_byte_array(gtv) = gtv.to_bytes()[0] == 161;
 
 function is_text(gtv) = gtv.to_bytes()[0] == 162;
 
+function is_integer(gtv) = gtv.to_bytes()[0] == 163;
+
 function is_dict(gtv) = gtv.to_bytes()[0] == 164;
 
 function is_list(gtv) = gtv.to_bytes()[0] == 165;
+
+function is_big_integer(gtv) = gtv.to_bytes()[0] == 166;

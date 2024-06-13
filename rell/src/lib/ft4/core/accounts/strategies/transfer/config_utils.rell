@@ -1,5 +1,16 @@
 val _CONFIG_ERROR_TEXT = "Error in moduleArgs (lib.ft4.core.accounts.strategy.transfer): ";
 
+/*
+ * Used in transfer strategy rules config to specify current chain
+ */
+val CURRENT_CHAIN_REF = "$";
+
+/*
+ * Used in transfer strategy rules to specify current user for 
+ * the scenario when transfer rule requires that sender and recipient is the same.
+ */
+val CURRENT_USER_REF = "X";
+
 struct allowlist {
     allow_all: boolean = false;
     allowed_values: list<byte_array> = [];
@@ -190,7 +201,7 @@ function parse_blockchain_single_value_from_gtv(gtv): (
         val input = text.from_gtv(gtv);
         if (input == "*") {
             allow_all = true;
-        } else if (input == "$") {
+        } else if (input == CURRENT_CHAIN_REF) {
             allowed_value = chain_context.blockchain_rid;
         } else {
             allowed_value = try_call(byte_array.from_hex(input, *));
