@@ -12,7 +12,7 @@ function test_get_config_reads_yml_correctly() {
             blockchains = create_on_transfer.allowlist(
                 allow_all = false,
                 allowed_values = [
-                    x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28",
+                    x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
                     chain_context.blockchain_rid
                 ]
             ),

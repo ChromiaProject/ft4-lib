@@ -15,8 +15,8 @@ function test_can_unapply_canceled_transfer_once_but_not_twice() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -89,9 +89,9 @@ function test_can_unapply_unapplied_transfer_once_but_not_twice() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val next_blockchain_rid = x"CCCC";
-    val target_blockchain_rid = x"DDDD";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val next_blockchain_rid = x"cc".repeat(32);
+    val target_blockchain_rid = x"dd".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -165,8 +165,8 @@ function test_can_not_unapply_canceled_transfer_before_expiry() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val deadline = rell.test.DEFAULT_FIRST_BLOCK_TIME + rell.test.DEFAULT_BLOCK_INTERVAL * 3;
@@ -226,8 +226,8 @@ function test_can_not_unapply_transfer_which_was_never_applied() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -281,8 +281,8 @@ function test_can_not_unapply_without_proof() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -339,8 +339,8 @@ function test_can_not_unapply_with_wrong_op() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -390,9 +390,9 @@ function test_can_not_unapply_transfer_canceled_on_wrong_chain() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
-    val wrong_blockchain_rid = x"FFFF";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
+    val wrong_blockchain_rid = x"ff".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -453,8 +453,8 @@ function test_can_not_unapply_transfer_canceled_with_wrong_apply_tx() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val target_blockchain_rid = x"CCCC";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val target_blockchain_rid = x"cc".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
@@ -527,10 +527,10 @@ function test_can_not_unapply_transfer_unapplied_on_wrong_chain() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"AAAA";
-    val next_blockchain_rid = x"CCCC";
-    val target_blockchain_rid = x"DDDD";
-    val wrong_blockchain_rid = x"FFFF";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val next_blockchain_rid = x"cc".repeat(32);
+    val target_blockchain_rid = x"dd".repeat(32);
+    val wrong_blockchain_rid = x"ff".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val init_tx = gtx_transaction(
