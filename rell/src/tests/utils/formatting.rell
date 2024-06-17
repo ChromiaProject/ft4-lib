@@ -1,0 +1,133 @@
+@test module;
+
+import ^^^.lib.ft4.utils.{ convert_gtv_to_text };
+/*
+ * All supported types
+ * - text
+ * - byte_array
+ * - dictionary
+ * - list
+ * - integer
+ * - decimal
+ * - big_integer
+ * - boolean
+*/
+
+function test_properly_formats_simple_types() {
+    /*
+     * testing these types:
+     * - text
+     * - byte_array
+     * - integer
+     * - decimal
+     * - big_integer
+     * - boolean
+    */
+    val gtvs = [
+        "text".to_gtv(),
+        x"0a1b2c".to_gtv(),
+        (3).to_gtv(),
+        (4.5).to_gtv(),
+        (12345L).to_gtv(),
+        true.to_gtv(),
+        false.to_gtv()
+    ];
+
+    val expected_outputs = [
+        "text",
+        "0A1B2C",
+        "3",
+        "4.5",
+        "12345L",
+        "1",
+        "0"
+    ];
+
+    for (i in range(gtvs.size())) {
+        assert_equals(
+            convert_gtv_to_text(gtvs[i]),
+            expected_outputs[i]
+        );
+    }
+}
+
+function test_properly_formats_simple_types_edge_cases() {
+    /*
+     * testing these types:
+     * - text with " in it
+     * - empty byte array
+     * - null
+    */
+    val gtvs = [
+        '"'.to_gtv(),
+        x"".to_gtv(),
+        null.to_gtv()
+    ];
+
+    val expected_outputs = [
+        '"',
+        "",
+        "null"
+    ];
+
+    for (i in range(gtvs.size())) {
+        assert_equals(
+            convert_gtv_to_text(gtvs[i]),
+            expected_outputs[i]
+        );
+    }
+}
+
+function test_properly_formats_collection_types() {
+    /*
+     * testing these types:
+     * - dictionary
+     * - list
+    */
+    val gtvs = [
+        ["a":"b", "c":"d"].to_gtv(),
+        ["1","2"].to_gtv()
+    ];
+
+    val expected_outputs = [
+        "{\n\ta: b,\n\tc: d\n  }",
+        "[\n\t1,\n\t2\n  ]"
+    ];
+
+    for (i in range(gtvs.size())) {
+        assert_equals(
+            convert_gtv_to_text(gtvs[i]),
+            expected_outputs[i]
+        );
+    }
+}
+
+function test_properly_formats_collection_types_edge_cases() {
+    /*
+     * testing these types:
+     * - empty dictionary
+     * - empty list
+     * - nested dictionary
+     * - nested list
+    */
+    val gtvs = [
+        map<text, text>().to_gtv(),
+        list<text>().to_gtv(),
+        ["a":["1":2],"b":["3":4]].to_gtv(),
+        [[1, 2], [3, 4]].to_gtv()
+    ];
+
+    val expected_outputs = [
+        "{ }",
+        "[ ]",
+        "{\n\ta: {\n\t\t1: 2\n\t},\n\tb: {\n\t\t3: 4\n\t}\n  }",
+        "[\n\t[\n\t\t1,\n\t\t2\n\t],\n\t[\n\t\t3,\n\t\t4\n\t]\n  ]"
+    ];
+
+    for (i in range(gtvs.size())) {
+        assert_equals(
+            convert_gtv_to_text(gtvs[i]),
+            expected_outputs[i]
+        );
+    }
+}
