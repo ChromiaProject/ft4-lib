@@ -111,8 +111,15 @@ main() {
 
   chr tx \
       -d local -bc "deploy02" -s $deployment_script \
-      ft4.admin.register_crosschain_asset TestAsset TST 6 $MULTICHAIN00_BRID \
+      ft4.admin.register_crosschain_asset \
+      $TEST_ASSET_BRID \
+      TestAsset \
+      TST \
+      6 \
+      $MULTICHAIN00_BRID \
       https://url-to-asset-icon \
+      FT4 \
+      "" \
       $MULTICHAIN00_BRID \
       --await \
       --secret $ADMIN_KEYPAIR_FILE
