@@ -193,7 +193,7 @@ function _recover_evm_address(message: text, signature) {
 }
 
 function _evm_message_hash(message: text): byte_array =
-    keccak256(("\u0019Ethereum Signed Message:\n" + message.size().to_text() + message).to_bytes());
+    keccak256(("\u0019Ethereum Signed Message:\n" + message.to_bytes().size().to_text() + message).to_bytes());
 
 function _validate_evm_address(message: text, signature?, accounts.account_auth_descriptor) {
     require(signature, "Signature cannot be null when using single sig");
