@@ -28,7 +28,7 @@ function test_fails_if_insufficient_permissions() {
 }
 
 function test_it_decorates_messages_with_blockchain_rid_and_nonce() {
-  val message = auth.external.get_auth_message_template("test_empty_auth_message", null.to_gtv());
+  val message = auth.external.get_auth_message_template("test_empty_auth_message", null);
   assert_true(message.contains("{blockchain_rid}"));
   assert_true(message.contains("{nonce}"));
 }

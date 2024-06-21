@@ -54,4 +54,21 @@ describe("Test auth data service", () => {
       rules: and(lessThan(relativeBlockHeight(5)), lessOrEqual(opCount(7))),
     });
   });
+
+  it("generates auth message template for operation with undefined arguments", async () => {
+    const authMessageTemplate = await _authDataService.getAuthMessageTemplate({
+      name: "foo",
+    });
+
+    const expectedMessageTemplate = `Blockchain:
+{blockchain_rid}
+
+Please sign the message to call
+operation:
+- foo
+
+Nonce: {nonce}`;
+
+    expect(authMessageTemplate).toEqual(expectedMessageTemplate);
+  });
 });
