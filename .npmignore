@@ -47,8 +47,6 @@ postchain/runtime
 /rell-changelog.md
 /scripts
 /doc
-/compile-changelog.sh
-/install-chr-and-pmc.sh
 
 # Cypress related files and directories
 /cypress

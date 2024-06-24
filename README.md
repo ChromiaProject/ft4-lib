@@ -125,7 +125,7 @@ npm run test:e2e:headless
 
 ## Changelog
 
-Update changelog in `doc/release-notes/`, then run `./compile-changelog.sh`
+Update changelog in `doc/release-notes/`, then run `./scripts/compile-changelog.sh`
 script to assemble `changelog.md` and `rell-changelog.md`. Do not update
 `changelog.md` or `rell-changelog.md` directly.
 
