@@ -1,0 +1,32 @@
+version: '3.3'
+
+services:
+  todo-list-example-postgres:
+    image: postgres:14.1-alpine
+    container_name: todo-list-example-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postchain
+      POSTGRES_USER: postchain
+      POSTGRES_PASSWORD: postchain
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5      
+
+  todo-list-example-postchain:
+    image: registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.20.0
+    container_name: todo-list-example-postchain
+    command: sh -c "chr install && chr node start --wipe"
+    ports:
+      - 7740:7740
+    depends_on:
+      todo-list-example-postgres:
+        condition: service_healthy
+    volumes:
+      - ./rell:/opt/chromaway/rell
+    working_dir: /opt/chromaway/rell
+    environment:
+      CHR_DB_URL: jdbc:postgresql://todo-list-example-postgres/postchain

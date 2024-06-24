@@ -1,0 +1,115 @@
+module;
+
+import lib.ft4.auth;
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies.open;
+
+entity task {
+  accounts.account;
+  description: text;
+  mutable completed: boolean = false;
+  creation_timestamp: timestamp = op_context.last_block_time;
+  mutable completion_timestamp: timestamp = 0;
+}
+
+function get_task_for_account_or_throw(rowid, accounts.account) = require(
+  task @? { rowid, account },
+  "Cannot find task with ID <%s> for account <%s>".format(rowid, account.id)
+);
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+  flags = []
+);
+
+// =========== Add task ===========
+
+operation add_task(description: text) {
+  val account = auth.authenticate();
+  create task(account, description);
+}
+
+
+// =========== Delete task ===========
+
+function delete_task_message(gtv) {
+  val props = struct<delete_task>.from_gtv(gtv);
+  val task = task @ { props.rowid };
+  return "Please sign the message to DELETE task:\n\n\"%s\"".format(task.description);
+}
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+  scope = rell.meta(delete_task).mount_name,
+  flags = [],
+  message = delete_task_message(*)
+);
+
+operation delete_task(rowid) {
+  val account = auth.authenticate();
+  val task = get_task_for_account_or_throw(rowid, account);
+  delete task;
+}
+
+
+// =========== Complete task ===========
+
+operation complete_task(rowid) {
+  val account = auth.authenticate();
+  val task = get_task_for_account_or_throw(rowid, account);
+  
+  update task(
+    .completion_timestamp = op_context.last_block_time,
+    .completed = true
+  );
+}
+
+
+// =========== Undo complete task ===========
+
+operation undo_complete_task(rowid) {
+  val account = auth.authenticate();
+  val task = get_task_for_account_or_throw(rowid, account);
+  require(task.completed, "Task <%s> is not completed".format(rowid));
+  
+  update task(
+    .completion_timestamp = 0,
+    .completed = false
+  );
+}
+
+
+// =========== Queries ===========
+
+query get_tasks(account_id: byte_array, include_completed: boolean) {
+  return task @* { 
+    .account.id == account_id,
+    if (include_completed) true else .completed == false
+  } (
+    rowid = .rowid,
+    description = .description,
+    completed = .completed,
+    creation_timestamp = .creation_timestamp,
+    completion_timestamp = .completion_timestamp
+  );
+}
+
+query get_task(account_id: byte_array, rowid) {
+  return task @ { .account.id == account_id, rowid } (
+    rowid = .rowid,
+    description = .description,
+    completed = .completed,
+    creation_timestamp = .creation_timestamp,
+    completion_timestamp = .completion_timestamp
+  ) limit 1;
+}
+
+query get_last_task(account_id: byte_array) {
+  return task @ { .account.id == account_id } (
+    @sort_desc rowid = .rowid,
+    description = .description,
+    completed = .completed,
+    creation_timestamp = .creation_timestamp,
+    completion_timestamp = .completion_timestamp
+  ) limit 1;
+}
