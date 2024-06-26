@@ -96,8 +96,8 @@ operation apply_transfer(
 
     require(
         init_transfer_details.args.deadline >= op_context.last_block_time,
-        "This transfer has expired at timestamp <%s>. It can only be reverted."
-            .format(init_transfer_details.args.deadline)
+        "This transfer has expired at timestamp <%s> (evaluated at timestamp <%s>). It can only be reverted."
+            .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
     val asset = assets.Asset(init_transfer_details.args.asset_id);
@@ -226,8 +226,8 @@ operation cancel_transfer(
 
     require(
         init_transfer_details.args.deadline < op_context.last_block_time,
-        "This transfer has not yet expired. It can not be reverted before <%s>."
-            .format(init_transfer_details.args.deadline)
+        "This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
+            .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
     create crosschain.canceled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
@@ -338,8 +338,8 @@ operation unapply_transfer(
 
     require(
         init_transfer_details.args.deadline < op_context.last_block_time,
-        "This transfer has not yet expired. It can not be reverted before <%s>."
-            .format(init_transfer_details.args.deadline)
+        "This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
+            .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
     iccf.require_valid_proof(
@@ -384,8 +384,8 @@ operation revert_transfer(
 
     require(
         init_transfer_details.args.deadline < op_context.last_block_time,
-        "This transfer has not yet expired. It can not be reverted before <%s>."
-            .format(init_transfer_details.args.deadline)
+        "This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>)."
+            .format(init_transfer_details.args.deadline, op_context.last_block_time)
     );
 
     val last_op = last_tx.body.operations[last_op_index];

@@ -684,8 +684,10 @@ describe("Fee account creation single step", () => {
       recipientId,
       timeoutAsset.id,
       feeAmount,
-      /*ttl=*/ 0,
+      /*ttl=*/ 2000,
     );
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     expect(await senderAccount.getBalanceByAssetId(timeoutAsset.id)).toBeNull();
     expect(

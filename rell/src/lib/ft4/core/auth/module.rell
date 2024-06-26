@@ -197,3 +197,17 @@ function require_evm_signatures_can_be_used() {
         "Cannot authorize operation <%s> with evm_signatures".format(op_to_authorize.name)
     );
 }
+
+function require_regular_next_operation() {
+    val all_operations = op_context.get_all_operations();
+    val this_op = op_context.get_all_operations()[op_context.op_index];
+    
+    require(
+        all_operations.size() > op_context.op_index + 1,
+        "<%s> must be followed by an operation to authorize".format(this_op.name)
+    );
+    
+    val next_op = all_operations[op_context.op_index + 1];
+    val prohibited_operations = ["nop", "timeb", "iccf_proof", "ft4.ft_auth", "ft4.evm_auth", "ft4.evm_signatures"];
+    require(not prohibited_operations.contains(next_op.name), "<%s> cannot authorize <%s>".format(this_op.name, next_op.name));
+}

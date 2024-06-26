@@ -256,7 +256,7 @@ function test_apply_transfer_fails_if_expired() {
         .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
-        .run_must_fail("This transfer has expired at timestamp <1>. It can only be reverted.");
+        .run_must_fail("This transfer has expired at timestamp <1> (evaluated at timestamp <%s>).".format(rell.test.last_block_time));
 }
 
 function test_apply_transfer_fails_when_applied_twice() {

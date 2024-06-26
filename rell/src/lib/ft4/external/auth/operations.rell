@@ -3,7 +3,9 @@ operation evm_auth(
     account_id: byte_array,
     auth_descriptor_id: byte_array,
     signatures: list<auth.signature?>
-) {}
+) {
+    auth.require_regular_next_operation();
+}
 
 operation evm_signatures(
     signers: list<byte_array>, 
@@ -15,4 +17,6 @@ operation evm_signatures(
 operation ft_auth(
     account_id: byte_array,
     auth_descriptor_id: byte_array
-) {}
+) {
+    auth.require_regular_next_operation();
+}
