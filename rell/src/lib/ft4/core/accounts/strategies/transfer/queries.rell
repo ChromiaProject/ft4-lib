@@ -50,7 +50,7 @@ query has_pending_create_account_transfer_for_strategy(
         if (
             is_blockchain_allowed(rule, sender_blockchain_rid) and
             is_sender_allowed(rule, sender_id) and
-            is_recipient_allowed(rule, sender_id, recipient_id) and
+            is_recipient_allowed(rule, recipient_id, sender_id) and
             is_asset_amount_allowed(rule, transfer.asset, amount)
         ) {
             return true;
