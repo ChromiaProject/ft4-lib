@@ -25,6 +25,8 @@ export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";
 
+export { hasCrosschainTransferExpired } from "./utils";
+
 export {
   Orchestrator,
   OrchestratorEvents,

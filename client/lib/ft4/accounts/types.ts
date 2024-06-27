@@ -1,6 +1,6 @@
 import { Amount, Balance } from "@ft4/asset";
 import { Authenticator, KeyStore } from "@ft4/authentication";
-import { OptionalPageCursor } from "@ft4/ft-session";
+import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import {
   BufferId,
   PaginatedEntity,
@@ -134,10 +134,14 @@ export interface Account {
 
   /**
    * Retrieves all pending (i.e., started but not yet completed) cross chain transfers initiated by this account.
+   *
+   * @param limit - maximum page size
+   * @param cursor - where the page should start
    */
-  getPendingCrosschainTransfers: () => Promise<
-    PaginatedEntity<PendingTransfer>
-  >;
+  getPendingCrosschainTransfers: (
+    limit?: OptionalLimit,
+    cursor?: OptionalPageCursor,
+  ) => Promise<PaginatedEntity<PendingTransfer>>;
   /**
    * Retrieves the most recent pending transfer which matches the specified arguments
    * @param targetBlockchainRid - the rid of the blockchain that the transfer was targeting

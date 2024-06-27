@@ -19,8 +19,9 @@ export async function getAssetOriginById(
 }
 
 /**
- * Fetches a list of pending transfers for the specified account. If there are many pending transfers,
- * the results will be limited according to the `limit` and `cursor` parameters.
+ * Fetches a list of pending transfers for the specified account. If there are many pending
+ * transfers, the results will be limited according to the `limit` and `cursor` parameters.
+ *
  * @param connection - the connection to use to query the blockchain
  * @param accountId - id of the account to fetch pending transfers for
  * @param limit - maximum page size
@@ -68,7 +69,9 @@ export async function getLastPendingTransferForAccount(
 }
 
 /**
- * Converts a list of `PendingTransferResponse` objects into a list of `PendingTransfer` objects
+ * Converts a list of `PendingTransferResponse` objects into a list of
+ * `PendingTransfer` objects
+ *
  * @param transfers - the transfers to convert
  */
 export function mapPendingTransfers(
