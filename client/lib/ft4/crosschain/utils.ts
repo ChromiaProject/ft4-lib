@@ -19,7 +19,7 @@ function extractExpirationTimeFromCrosschainTransfer(
  * const expiredTransfers = transfersPage.data.filter(hasCrosschainTransferExpired);
  * ```
  *
- * @param transfer The transfer to check
+ * @param transfer - The transfer to check
  * @returns whether the transfer has expired
  */
 export function hasCrosschainTransferExpired(
