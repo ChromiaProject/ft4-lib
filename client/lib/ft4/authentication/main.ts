@@ -92,7 +92,9 @@ async function getKeyHandlerForOperation(
   );
   if (!selectedAdId) return null;
   return (
-    keyHandlers.find((kh) => kh.authDescriptor.id.equals(selectedAdId)) ?? null
+    prioritizedKeyHandlers.find((kh) =>
+      kh.authDescriptor.id.equals(selectedAdId),
+    ) ?? null
   );
 }
 
