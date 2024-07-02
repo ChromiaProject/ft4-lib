@@ -145,3 +145,28 @@ function test_can_check_if_account_transfer_from_different_address_exists() {
         amount,
     ));
 }
+
+function test_an_error_is_thrown_when_no_suceeding_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(x"", auth_descriptor))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_transfer_fee> must be followed by a register account operation");
+}
+
+function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(x"", auth_descriptor))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_transfer_fee> operation must be followed by a register account operation, not <nop>");
+}

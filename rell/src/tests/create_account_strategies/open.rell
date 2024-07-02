@@ -232,3 +232,28 @@ function test_account_registration_fails_when_account_already_exists() {
         .nop()
         .run_must_fail("duplicate key value violates unique constraint");
 }
+
+function test_an_error_is_thrown_when_no_suceeding_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor, null))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_open> must be followed by a register account operation");
+}
+
+function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(open.ras_open(auth_descriptor, null))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_open> operation must be followed by a register account operation, not <nop>");
+}
