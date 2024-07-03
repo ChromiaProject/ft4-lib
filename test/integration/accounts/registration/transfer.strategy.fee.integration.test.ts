@@ -3,9 +3,13 @@ import {
   addNewAssetIfNeeded,
   useChromiaNode,
 } from "@ft4-test/util";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
-import { Asset, createAmountFromBalance } from "@ft4/asset";
-import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import {
+  AnyAuthDescriptorRegistration,
+  AuthenticatedAccount,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
+import { Amount, Asset, createAmountFromBalance } from "@ft4/asset";
+import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
 import { Connection, createConnection } from "@ft4/ft-session";
 import {
   allowedAssets,
@@ -33,42 +37,48 @@ describe("Test transfer with fee", () => {
     );
   });
 
-  it("can register account which receives transferred assets, minus fee", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const recipientId = gtv.gtvHash(keyPair.pubKey);
+  let recipientId: Buffer;
+  let account1: AuthenticatedAccount;
+  let amount: Amount;
+  let keyStore: FtKeyStore;
+  let authDescriptor: AnyAuthDescriptorRegistration;
 
-    const account1 = await AccountBuilder.account(connection)
+  beforeEach(async () => {
+    // Create a recipient
+    const keyPair = encryption.makeKeyPair();
+    recipientId = gtv.gtvHash(keyPair.pubKey);
+    keyStore = createInMemoryFtKeyStore(keyPair);
+    authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
+
+    // Create an account to send from
+    account1 = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
 
+    // Download a list of allowed assets
     const _allowedAssets = (await connection.query(
       allowedAssets(connection.blockchainRid, account1.id, recipientId),
     ))!;
-    expect(_allowedAssets).toBeTruthy();
+
+    // Get the amount to transfer
     const rawAmount = _allowedAssets.find((v) =>
       v.asset_id.equals(asset.id),
-    )?.min_amount;
-    expect(rawAmount).toBeTruthy();
-    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
+    )!.min_amount;
+    amount = createAmountFromBalance(rawAmount!, asset.decimals);
+  });
 
-    const _feeAssets = await connection.query(feeAssets());
-    const rawFee = _feeAssets.find((v) => v.asset_id.equals(asset.id))?.amount;
-    expect(rawFee).toBeTruthy();
-
+  it("can register account which receives transferred assets, minus fee", async () => {
+    // Perform the transfer that will create the recipients account
     await account1.transfer(recipientId, asset.id, amount);
 
     const strategies = await connection.query(
       pendingTransferStrategies(recipientId),
     );
     expect(strategies).toContain("fee");
-
-    const keyStore = createInMemoryFtKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
 
     const { session } = await registerAccount(
       connection.client,
@@ -77,6 +87,10 @@ describe("Test transfer with fee", () => {
     );
 
     expect(session.account.id).toEqual(recipientId);
+
+    const _feeAssets = await connection.query(feeAssets());
+    const rawFee = _feeAssets.find((v) => v.asset_id.equals(asset.id))?.amount;
+    expect(rawFee).toBeTruthy();
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
     expect(assetBalance1!.amount.value).toBe(amount.value - rawFee!);
@@ -87,36 +101,12 @@ describe("Test transfer with fee", () => {
   });
 
   it("can complete pending transfers when account is registered with direct strategies", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const recipientId = gtv.gtvHash(keyPair.pubKey);
-
-    const account1 = await AccountBuilder.account(connection)
-      .withBalance(asset, 200)
-      .withPoints(1)
-      .build();
-
-    const _allowedAssets = (await connection.query(
-      allowedAssets(connection.blockchainRid, account1.id, recipientId),
-    ))!;
-    expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find((v) =>
-      v.asset_id.equals(asset.id),
-    )?.min_amount;
-    expect(rawAmount).toBeTruthy();
-    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
-
+    // Perform the transfer that will create the recipients account
     await account1.transfer(recipientId, asset.id, amount);
 
     expect(
       (await connection.query(pendingTransferStrategies(recipientId))).length,
     ).toBeGreaterThan(0);
-
-    const keyStore = createInMemoryFtKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
 
     const { session } = await registerAccount(
       connection.client,
@@ -130,7 +120,7 @@ describe("Test transfer with fee", () => {
     expect(assetBalance1?.amount?.value).toBe(amount.value);
 
     expect(
-      (await connection.query(pendingTransferStrategies(recipientId))).length,
-    ).toEqual(0);
+      await connection.query(pendingTransferStrategies(recipientId)),
+    ).toStrictEqual([]);
   });
 });

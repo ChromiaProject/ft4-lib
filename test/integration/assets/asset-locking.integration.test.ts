@@ -9,6 +9,7 @@ import {
   useChromiaNode,
   lockAccountId,
 } from "@ft4-test/util";
+import { AuthenticatedAccount } from "@ft4/accounts";
 import {
   Asset,
   createAmount,
@@ -19,7 +20,7 @@ import {
   getLockAccounts,
   getLockAccountsWithNonZeroBalances,
 } from "@ft4/asset/";
-import { Connection, createConnection } from "@ft4/ft-session";
+import { Connection, Session, createConnection } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
 import { IClient } from "postchain-client";
 
@@ -38,37 +39,37 @@ describe("Asset locking", () => {
     connection = createConnection(client);
   });
 
-  it("can fetch lock accounts for specific account", async () => {
-    const account = await AccountBuilder.account(connection)
+  let account: AuthenticatedAccount;
+  let session: Session;
+  beforeEach(async () => {
+    account = await AccountBuilder.account(connection)
       .withBalance(asset1, createAmount(100, asset1.decimals))
       .withPoints(5)
       .build();
 
-    const session = getSessionForAuthenticatedAccount(account);
+    session = getSessionForAuthenticatedAccount(account);
+  });
 
+  async function lockAmounts(
+    account: AuthenticatedAccount,
+    asset: Asset,
+    amounts: number[],
+  ) {
     await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(40, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
+      ...amounts.map((amount, i) =>
+        op(
+          "lock_asset",
+          `LOCK${i + 1}`,
+          account.id,
+          asset.id,
+          createAmount(amount, asset.decimals).value,
+        ),
       ),
     );
+  }
+
+  it("can fetch lock accounts for specific account", async () => {
+    await lockAmounts(account, asset1, [40, 30, 30]);
 
     const lockAccounts = await getLockAccounts(connection, account.id);
 
@@ -88,35 +89,8 @@ describe("Asset locking", () => {
   });
 
   it("can fetch lock accounts with non-zero balances for specific account", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
-    const session = getSessionForAuthenticatedAccount(account);
-
+    await lockAmounts(account, asset1, [40, 30, 30]);
     await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(40, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
-      ),
       op(
         "unlock_asset",
         "LOCK2",
@@ -143,36 +117,7 @@ describe("Asset locking", () => {
   });
 
   it("can fetch locked asset balance for specific asset in pages", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(40, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [40, 30, 30]);
 
     const page1 = await getLockedAssetBalance(
       connection,
@@ -212,36 +157,7 @@ describe("Asset locking", () => {
   });
 
   it("can filter locked asset balance for asset by lock type", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(15, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(25, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(35, asset1.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [15, 25, 35]);
 
     const response = await getLockedAssetBalance(
       connection,
@@ -263,36 +179,7 @@ describe("Asset locking", () => {
   });
 
   it("can fetch locked asset aggregated balance for asset", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(5, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(10, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(15, asset1.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [5, 10, 15]);
 
     const amount = await getLockedAssetAggregatedBalance(
       connection,
@@ -306,36 +193,7 @@ describe("Asset locking", () => {
   });
 
   it("can filter locked asset aggregated balance for asset by lock type", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(5, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(10, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(15, asset1.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [5, 10, 15]);
 
     const amount = await getLockedAssetAggregatedBalance(
       connection,
@@ -350,39 +208,9 @@ describe("Asset locking", () => {
   });
 
   it("can fetch locked asset balances in pages", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
     // Get asset to load updated supply
     const asset = comparableAsset((await connection.getAssetById(asset1.id))!);
-
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(10, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(20, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK3",
-        account.id,
-        asset1.id,
-        createAmount(30, asset1.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [10, 20, 30]);
 
     const page1 = await getLockedAssetBalances(connection, account.id, null, 2);
 
@@ -418,31 +246,8 @@ describe("Asset locking", () => {
   });
 
   it("can filter locked asset balances by lock type", async () => {
-    const account = await AccountBuilder.account(connection)
-      .withBalance(asset1, createAmount(100, asset1.decimals))
-      .withPoints(5)
-      .build();
-
     const asset = comparableAsset((await connection.getAssetById(asset1.id))!);
-
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(40, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(60, asset1.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [40, 60]);
 
     const response = await getLockedAssetBalances(connection, account.id, [
       "LOCK2",
@@ -472,38 +277,8 @@ describe("Asset locking", () => {
       (await connection.getAssetById(asset2.id))!,
     );
 
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(10, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(20, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset2.id,
-        createAmount(30, asset2.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset2.id,
-        createAmount(40, asset2.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [10, 20]);
+    await lockAmounts(account, asset2, [30, 40]);
 
     const page1 = await getLockedAssetAggregatedBalances(
       connection,
@@ -550,38 +325,8 @@ describe("Asset locking", () => {
       (await connection.getAssetById(asset2.id))!,
     );
 
-    const session = getSessionForAuthenticatedAccount(account);
-
-    await session.call(
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset1.id,
-        createAmount(50, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset1.id,
-        createAmount(40, asset1.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK1",
-        account.id,
-        asset2.id,
-        createAmount(30, asset2.decimals).value,
-      ),
-      op(
-        "lock_asset",
-        "LOCK2",
-        account.id,
-        asset2.id,
-        createAmount(20, asset2.decimals).value,
-      ),
-    );
+    await lockAmounts(account, asset1, [50, 40]);
+    await lockAmounts(account, asset2, [30, 20]);
 
     const response = await getLockedAssetAggregatedBalances(
       connection,

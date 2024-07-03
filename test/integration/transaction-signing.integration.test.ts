@@ -15,6 +15,8 @@ import {
 import { registerAccountAdmin } from "@ft4/admin";
 import {
   AuthDataService,
+  EvmKeyStore,
+  FtKeyStore,
   createAuthenticator,
   createEvmKeyHandler,
   createFtKeyHandler,
@@ -34,7 +36,7 @@ import {
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import { op } from "@ft4/utils";
-import { IClient, encryption, gtv, gtx } from "postchain-client";
+import { IClient, KeyPair, encryption, gtv, gtx } from "postchain-client";
 
 describe("Transaction Signing", () => {
   let connection: Connection;
@@ -47,6 +49,26 @@ describe("Transaction Signing", () => {
     client = getClient();
     connection = createConnection(client);
     authDataService = createAuthDataService(connection);
+  });
+
+  let keyPair1: KeyPair;
+  let keyPair2: KeyPair;
+  let keyPair3: KeyPair;
+  let keyPair4: KeyPair;
+  let evmKeyStore1: EvmKeyStore;
+  let evmKeyStore2: EvmKeyStore;
+  let evmKeyStore3: EvmKeyStore;
+  let ftKeyStore: FtKeyStore;
+
+  beforeEach(async () => {
+    keyPair1 = encryption.makeKeyPair();
+    keyPair2 = encryption.makeKeyPair();
+    keyPair3 = encryption.makeKeyPair();
+    keyPair4 = encryption.makeKeyPair();
+    evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
+    evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
+    evmKeyStore3 = createInMemoryEvmKeyStore(keyPair3);
+    ftKeyStore = createInMemoryFtKeyStore(keyPair4);
   });
 
   describe("signTransaction()", () => {
@@ -81,17 +103,16 @@ describe("Transaction Signing", () => {
     });
 
     it("correctly signs a transaction with both GTX and evm signatures", async () => {
-      const keyPair = encryption.makeKeyPair();
-      const evmKeyStore = createInMemoryEvmKeyStore(keyPair);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair);
+      const evmKeyStore = createInMemoryEvmKeyStore(keyPair1);
+      const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
       const ad1 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair.pubKey),
+        gtv.gtvHash(keyPair1.pubKey),
         evmKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
       );
       const ad2 = createTestAuthDescriptorWithSigner(
-        gtv.gtvHash(keyPair.pubKey),
+        gtv.gtvHash(keyPair1.pubKey),
         ftKeyStore.id,
         [...Object.values(AuthFlag)],
         null,
@@ -134,14 +155,6 @@ describe("Transaction Signing", () => {
     });
 
     it("correctly signs an evm multisig operation", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-      const keyPair3 = encryption.makeKeyPair();
-
-      const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
-      const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair3);
-
       const originalAd = createMultiSigAuthDescriptorRegistration(
         [...Object.values(AuthFlag)],
         [evmKeyStore1.id, evmKeyStore2.id],
@@ -192,15 +205,7 @@ describe("Transaction Signing", () => {
       expect(receipt.status).toBe("confirmed");
     });
 
-    it("Fails if some signatures is missing from main ad", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-      const keyPair3 = encryption.makeKeyPair();
-
-      const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
-      const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair3);
-
+    it("Fails if some signatures are missing from main ad", async () => {
       const originalAd = createMultiSigAuthDescriptorRegistration(
         [...Object.values(AuthFlag)],
         [evmKeyStore1.id, evmKeyStore2.id],
@@ -252,16 +257,6 @@ describe("Transaction Signing", () => {
     });
 
     it("succeeds if m of n signatures is provided", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-      const keyPair3 = encryption.makeKeyPair();
-      const keyPair4 = encryption.makeKeyPair();
-
-      const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
-      const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
-      const evmKeyStore3 = createInMemoryEvmKeyStore(keyPair3);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair4);
-
       const originalAd = createMultiSigAuthDescriptorRegistration(
         [...Object.values(AuthFlag)],
         [evmKeyStore1.id, evmKeyStore2.id, evmKeyStore3.id],
@@ -319,12 +314,6 @@ describe("Transaction Signing", () => {
     });
 
     it("can add a second evm ad to an account with evm master ad", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-
-      const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
-      const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
-
       const originalAd = createSingleSigAuthDescriptorRegistration(
         [AuthFlag.Account, AuthFlag.Transfer],
         evmKeyStore1.address,
@@ -367,19 +356,13 @@ describe("Transaction Signing", () => {
     });
 
     it("can add a second evm ad to an account with ft master ad", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
-      const evmKeyStore = createInMemoryEvmKeyStore(keyPair2);
-
       const originalAd = createSingleSigAuthDescriptorRegistration(
         [AuthFlag.Account, AuthFlag.Transfer],
         ftKeyStore.id,
       );
       const adToAdd = createSingleSigAuthDescriptorRegistration(
         [AuthFlag.Transfer],
-        evmKeyStore.id,
+        evmKeyStore1.id,
       );
 
       await registerAccountAdmin(
@@ -397,13 +380,13 @@ describe("Transaction Signing", () => {
       );
       const authenticator2 = createAuthenticator(
         accountId,
-        [createEvmKeyHandler(testAdFromRegistration(adToAdd), evmKeyStore)],
+        [createEvmKeyHandler(testAdFromRegistration(adToAdd), evmKeyStore1)],
         authDataService,
       );
 
       const unsignedTx = await transactionBuilder(authenticator1, client)
         .add(addAuthDescriptor(adToAdd), {
-          signers: [evmSigner(evmKeyStore.id)],
+          signers: [evmSigner(evmKeyStore1.id)],
           skipFtSigning: true,
         })
         .build();
@@ -504,14 +487,6 @@ describe("Transaction Signing", () => {
     });
 
     it("Fails if some signatures is missing from main ad", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-      const keyPair3 = encryption.makeKeyPair();
-
-      const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
-      const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair3);
-
       const originalAd = createMultiSigAuthDescriptorRegistration(
         [...Object.values(AuthFlag)],
         [evmKeyStore1.id, evmKeyStore2.id],
@@ -560,12 +535,6 @@ describe("Transaction Signing", () => {
     });
 
     it("can add a second evm ad to an account with evm master ad", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-
-      const evmKeyStore1 = createInMemoryEvmKeyStore(keyPair1);
-      const evmKeyStore2 = createInMemoryEvmKeyStore(keyPair2);
-
       const originalAd = createSingleSigAuthDescriptorRegistration(
         [AuthFlag.Account, AuthFlag.Transfer],
         evmKeyStore1.address,
@@ -606,19 +575,13 @@ describe("Transaction Signing", () => {
     });
 
     it("can add a second evm ad to an account with ft master ad", async () => {
-      const keyPair1 = encryption.makeKeyPair();
-      const keyPair2 = encryption.makeKeyPair();
-
-      const ftKeyStore = createInMemoryFtKeyStore(keyPair1);
-      const evmKeyStore = createInMemoryEvmKeyStore(keyPair2);
-
       const originalAd = createSingleSigAuthDescriptorRegistration(
         [AuthFlag.Account, AuthFlag.Transfer],
         ftKeyStore.id,
       );
       const adToAdd = createSingleSigAuthDescriptorRegistration(
         [AuthFlag.Transfer],
-        evmKeyStore.id,
+        evmKeyStore1.id,
       );
 
       await registerAccountAdmin(
@@ -637,13 +600,13 @@ describe("Transaction Signing", () => {
 
       const unsignedTx = await transactionBuilder(authenticator1, client)
         .add(addAuthDescriptor(adToAdd), {
-          signers: [evmSigner(evmKeyStore.id)],
+          signers: [evmSigner(evmKeyStore1.id)],
           skipFtSigning: true,
         })
         .build();
 
       const evmSignedTx = await signTransactionWithKeyStores(
-        [evmKeyStore],
+        [evmKeyStore1],
         authDataService,
         unsignedTx,
       );

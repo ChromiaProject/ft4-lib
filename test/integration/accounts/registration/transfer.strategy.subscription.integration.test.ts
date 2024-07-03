@@ -3,9 +3,13 @@ import {
   addNewAssetIfNeeded,
   useChromiaNode,
 } from "@ft4-test/util";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import {
+  AnyAuthDescriptorRegistration,
+  AuthenticatedAccount,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
-import { createInMemoryFtKeyStore } from "@ft4/authentication";
+import { FtKeyStore, createInMemoryFtKeyStore } from "@ft4/authentication";
 import { Connection, createConnection } from "@ft4/ft-session";
 import {
   allowedAssets,
@@ -17,7 +21,7 @@ import {
   subscriptionPeriodMillis,
   transferSubscription,
 } from "@ft4/registration";
-import { encryption, gtv } from "postchain-client";
+import { QueryObject, encryption, gtv } from "postchain-client";
 
 let connection: Connection;
 let asset: Asset;
@@ -36,61 +40,118 @@ describe("Test transfer with subscription", () => {
     );
   });
 
-  it("can register account which receives transferred assets, minus subscription fee", async () => {
+  let recipientId: Buffer;
+  let senderAccount: AuthenticatedAccount;
+  let ftKeyStore: FtKeyStore;
+  let authDescriptorToRegister: AnyAuthDescriptorRegistration;
+  beforeEach(async () => {
     const keyPair = encryption.makeKeyPair();
-    const recipientId = gtv.gtvHash(keyPair.pubKey);
-
-    const account1 = await AccountBuilder.account(connection)
+    recipientId = gtv.gtvHash(keyPair.pubKey);
+    senderAccount = await AccountBuilder.account(connection)
       .withBalance(asset, 200)
       .withPoints(1)
       .build();
-
-    const _allowedAssets = (await connection.query(
-      allowedAssets(connection.blockchainRid, account1.id, recipientId),
-    ))!;
-    expect(_allowedAssets).toBeTruthy();
-    const rawAmount = _allowedAssets.find((v) =>
-      v.asset_id.equals(asset.id),
-    )?.min_amount;
-    expect(rawAmount).toBeTruthy();
-    const amount = createAmountFromBalance(rawAmount!, asset.decimals);
-
-    const _subscriptionAssets = await connection.query(subscriptionAssets());
-    const rawSubscriptionAmount = _subscriptionAssets.find((v) =>
-      v.asset_id.equals(asset.id),
-    )?.amount;
-    expect(rawSubscriptionAmount).toBeTruthy();
-
-    await account1.transfer(recipientId, asset.id, amount);
-
-    const strategies = await connection.query(
-      pendingTransferStrategies(recipientId),
-    );
-    expect(strategies).toContain("subscription");
-
-    const keyStore = createInMemoryFtKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+    ftKeyStore = createInMemoryFtKeyStore(keyPair);
+    authDescriptorToRegister = createSingleSigAuthDescriptorRegistration(
       ["A", "T"],
-      keyStore.id,
+      ftKeyStore.id,
     );
+  });
+
+  async function getDynamicAmount(asset: Asset, query: QueryObject<any, any>) {
+    const _allowedAssets = (await connection.query(query))!;
+
+    const _asset = _allowedAssets.find((v) => v.asset_id.equals(asset.id));
+
+    return createAmountFromBalance(
+      _asset.min_amount || _asset.amount,
+      asset.decimals,
+    );
+  }
+
+  it("can register account with subscription strategy", async () => {
+    const amount = await getDynamicAmount(
+      asset,
+      allowedAssets(connection.blockchainRid, senderAccount.id, recipientId),
+    );
+    await senderAccount.transfer(recipientId, asset.id, amount);
 
     const { session } = await registerAccount(
       connection.client,
-      keyStore,
-      transferSubscription(asset, authDescriptor),
+      ftKeyStore,
+      transferSubscription(asset, authDescriptorToRegister),
     );
 
     expect(session.account.id).toEqual(recipientId);
+  });
+
+  it("receives transferred assets, minus subscription fee when account is created", async () => {
+    const amount = await getDynamicAmount(
+      asset,
+      allowedAssets(connection.blockchainRid, senderAccount.id, recipientId),
+    );
+    const subscriptionAmount = await getDynamicAmount(
+      asset,
+      subscriptionAssets(),
+    );
+
+    await senderAccount.transfer(recipientId, asset.id, amount);
+
+    const { session } = await registerAccount(
+      connection.client,
+      ftKeyStore,
+      transferSubscription(asset, authDescriptorToRegister),
+    );
 
     const assetBalance1 = await session.account.getBalanceByAssetId(asset.id);
     expect(assetBalance1!.amount.value).toBe(
-      amount.value - rawSubscriptionAmount!,
+      amount.value - subscriptionAmount.value!,
     );
 
     expect(
       await connection.query(pendingTransferStrategies(recipientId)),
     ).toStrictEqual([]);
+  });
+
+  it("deduces subscription amount from account when subscription is renewed", async () => {
+    const amount = await getDynamicAmount(
+      asset,
+      allowedAssets(connection.blockchainRid, senderAccount.id, recipientId),
+    );
+    const subscriptionAmount = await getDynamicAmount(
+      asset,
+      subscriptionAssets(),
+    );
+
+    await senderAccount.transfer(recipientId, asset.id, amount);
+
+    const { session } = await registerAccount(
+      connection.client,
+      ftKeyStore,
+      transferSubscription(asset, authDescriptorToRegister),
+    );
+
+    await session.call(renewSubscription(null));
+
+    const assetBalance2 = await session.account.getBalanceByAssetId(asset.id);
+    expect(assetBalance2!.amount.value).toBe(
+      amount.value - 2n * subscriptionAmount.value!,
+    );
+  });
+
+  it("increases accumulated subscription amount when subscription is renewed", async () => {
+    const amount = await getDynamicAmount(
+      asset,
+      allowedAssets(connection.blockchainRid, senderAccount.id, recipientId),
+    );
+
+    await senderAccount.transfer(recipientId, asset.id, amount);
+
+    const { session } = await registerAccount(
+      connection.client,
+      ftKeyStore,
+      transferSubscription(asset, authDescriptorToRegister),
+    );
 
     const { last_payment: lastPayment1 } = await connection.query(
       subscriptionDetails(recipientId),
@@ -102,11 +163,6 @@ describe("Test transfer with subscription", () => {
     );
 
     await session.call(renewSubscription(null));
-
-    const assetBalance2 = await session.account.getBalanceByAssetId(asset.id);
-    expect(assetBalance2!.amount.value).toBe(
-      amount.value - 2n * rawSubscriptionAmount!,
-    );
 
     const { last_payment: lastPayment2 } = await connection.query(
       subscriptionDetails(recipientId),
