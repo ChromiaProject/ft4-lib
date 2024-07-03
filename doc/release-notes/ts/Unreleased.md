@@ -5,6 +5,7 @@
 - Updated `registerCrosschainAsset` to accept asset id instead of asset object.
 
 ### Changed 🪙
+- `Amount`'s `times` and `dividedBy` functions now accept `Amount` as argument as well.
 
 ### Added ✅
 - Added `getAssetsBySymbol` to query list of all assets with the same symbol.

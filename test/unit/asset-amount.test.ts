@@ -281,7 +281,7 @@ describe("Asset amount", () => {
     expect(incompatible.toString()).toEqual("1000");
   });
 
-  it("multiplies correctly", () => {
+  it("multiplies correctly with same decimals", () => {
     const first = createAmount(100, 10);
     const firstNegative = createAmount(-100, 10);
 
@@ -293,7 +293,22 @@ describe("Asset amount", () => {
     expect(firstNegative.toString()).toEqual("-100");
   });
 
-  it("divides correctly", () => {
+  it("multiplies correctly with different decimals", () => {
+    const first = createAmount(100, 10);
+    const second = createAmount(-2, 2);
+
+    const long = `-200.${"0".repeat(10)}`;
+    const short = "-200.00";
+
+    expect(first.times(second).toString(false)).toEqual(long);
+    expect(first.times(second, "max").toString(false)).toEqual(long);
+    expect(second.times(first).toString(false)).toEqual(short);
+    expect(second.times(first, "max").toString(false)).toEqual(long);
+    expect(first.times(second, 3).toString(false)).toEqual("-200.000");
+    expect(first.times(second, 0).toString(false)).toEqual("-200");
+  });
+
+  it("divides correctly with same decimals", () => {
     const first = createAmount(100, 0);
     const firstNegative = createAmount(-100, 0);
 
@@ -306,6 +321,22 @@ describe("Asset amount", () => {
     expect(() => firstNegative.dividedBy("0")).toThrow(AmountInputError);
     expect(first.toString()).toEqual("100");
     expect(firstNegative.toString()).toEqual("-100");
+  });
+
+  it("divides correctly with different decimals", () => {
+    const first = createAmount(8, 10);
+    const second = createAmount(-4, 2);
+
+    const longTwo = `-2.${"0".repeat(10)}`;
+    const longHalf = `-0.5${"0".repeat(9)}`;
+    const shortHalf = "-0.50";
+
+    expect(first.dividedBy(second).toString(false)).toEqual(longTwo);
+    expect(first.dividedBy(second, "max").toString(false)).toEqual(longTwo);
+    expect(second.dividedBy(first).toString(false)).toEqual(shortHalf);
+    expect(second.dividedBy(first, "max").toString(false)).toEqual(longHalf);
+    expect(first.dividedBy(second, 1).toString(false)).toEqual("-2.0");
+    expect(second.dividedBy(first, 0).toString(false)).toEqual("0");
   });
 
   it("throws an error when out of bounds (2^256)", () => {

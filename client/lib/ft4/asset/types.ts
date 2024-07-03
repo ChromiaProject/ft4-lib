@@ -93,17 +93,29 @@ export interface Amount {
    */
   minus: (other: SupportedNumber) => Amount;
   /**
-   * Produces a new amount which is the product of this amount and the specified value
+   * Produces a new amount which is the product of this amount and the specified value,
+   * optionally specifying the number of decimals the end result should have.
+   *
    * @param other - the value to multiply this amount with
+   * @param decimals - the number of decimals the end result should have, or "max" for
+   *                   the highest value between `this.decimals` and `other.decimals`,
+   *                   that is `Math.max(this.decimals, other.decimals)`.
+   *                   Defaults to `this.decimals`
    * @returns new amount with the value "this amount" * "other amount"
    */
-  times: (other: string | number) => Amount;
+  times: (other: SupportedNumber, decimals?: number | "max") => Amount;
   /**
-   * Produces a new amount which is the quotient of this amount and the specified value (divisor)
+   * Produces a new amount which is the quotient of this amount and the specified value (divisor),
+   * optionally specifying the number of decimals the end result should have.
+   *
    * @param other - the value to divide this amount with
+   * @param decimals - the number of decimals the end result should have, or "max" for
+   *                   the highest value between `this.decimals` and `other.decimals`,
+   *                   that is `Math.max(this.decimals, other.decimals)`.
+   *                   Defaults to `this.decimals`
    * @returns new amount with the value "this amount" / "other amount"
    */
-  dividedBy: (other: string | number) => Amount;
+  dividedBy: (other: SupportedNumber, decimals?: number | "max") => Amount;
 
   /**
    * Compares this amount with another value and returns true if this amount is **greater than** the other value
@@ -149,9 +161,14 @@ export interface Amount {
   compare: (other: SupportedNumber) => number;
 
   /**
-   * Returns a string representation of this amount object.
+   * To be used if you want the precise value, down to the last digit.
+   * It must return a string, as a Number could still be overflowed and floating point
+   * numbers aren't precise in JS.
+   *
+   * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -\> 0.8).
+   *                               Defaults to true.
    */
-  toString: () => string;
+  toString: (removeTrailingZeroes?: boolean) => string;
 
   /**
    * Returns the amount formatted as a readable string
