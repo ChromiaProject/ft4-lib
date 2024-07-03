@@ -119,6 +119,18 @@ blockchains:
           - sender_blockchain:
               - "$"
             sender: "*"
+            recipient:
+              - x"e7240d97ba8a49f146f3464f8193491f68bb48f55d85307fd1c5ea24e233bbd8" # Bob
+            asset:
+              - name: "filter_test"
+                min_amount: 5L
+            timeout_days: 60
+            strategy:
+              - "open"
+
+          - sender_blockchain:
+              - "$"
+            sender: "*"
             recipient: x"a088742ac287d9a2cd2efdbbdb75c4f7538cb390ebbb1e375669b170e5915bbe" # Charlie
             asset: "*"
             timeout_days: 60

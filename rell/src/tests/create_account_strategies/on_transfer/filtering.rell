@@ -1,0 +1,216 @@
+@test
+module;
+
+import lib.ft4.auth;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.accounts.strategies;
+import test_utils: lib.ft4.test.utils;
+import ft_utils: lib.ft4.utils;
+import create_on_transfer: lib.ft4.accounts.strategies.transfer;
+import lib.ft4.accounts.strategies.transfer.open;
+import ^^^.assets.utils;
+import xc: lib.ft4.crosschain;
+import iccf_op: ^^^.operations.iccf_op;
+
+function setup(skip_to_expiration: boolean = false) {
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = utils.create_asset("filter_test", "FILTER_TEST", 1);
+    utils.mint_to_account(alice, asset, 10);
+
+    val allowed_assets = map(
+        require(
+            create_on_transfer.get_allowed_assets(
+                chain_context.blockchain_rid,
+                sender.id,
+                recipient_id
+            )
+        )
+    );
+
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val first_tx = ft_utils.latest_time();
+    val after_expiration = first_tx + (ft_utils.MILLISECONDS_PER_DAY * 61); // 1 day after expiration
+    
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    if (skip_to_expiration) {
+        // set time to 1 day after the expiration
+        rell.test.set_next_block_time(after_expiration);
+        rell.test.block().run();
+    }
+
+    return recipient_id;
+}
+
+namespace valid {
+    // we should have open strategy in these entries:
+
+    // default (all included)
+    function test_no_filter_works() {
+        val recipient_id = setup();
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(recipient_id),
+            set(["open"])
+        );
+    }
+
+    // null filter (all included)
+    function test_null_filter_works() {
+        val recipient_id = setup();
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(recipient_id, null),
+            set(["open"])
+        );
+    }
+
+    // initialized filter with null 'state' parameter (all included)
+    function test_null_state_works() {
+        val recipient_id = setup();
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(null)
+                ),
+            set(["open"])
+        );
+    }
+
+    // filter set to only valid
+    function test_valid_filter_works() {
+        val recipient_id = setup();
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(
+                        state = [create_on_transfer.pending_transfer_expiration_state.valid]
+                    )
+                ),
+            set(["open"])
+        );
+    }
+
+    // filter set to valid and expired
+    function test_filter_all_works() {
+        val recipient_id = setup();
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(
+                        state = [
+                            create_on_transfer.pending_transfer_expiration_state.expired,
+                            create_on_transfer.pending_transfer_expiration_state.valid
+                        ]
+                    )
+                ),
+            set(["open"])
+        );
+    }
+
+    // We should not see open strategy in this entry
+
+    // filter set to expired only
+    function test_expired_filter_empty() {
+        val recipient_id = setup();
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(
+                        state = [create_on_transfer.pending_transfer_expiration_state.expired]
+                    )
+                ).size(),
+            0
+        );
+    }
+}
+
+namespace expired {
+    // we should have open strategy in these entries:
+
+    // default (all included)
+    function test_no_filter_works() {
+        val recipient_id = setup(skip_to_expiration = true);
+        assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(recipient_id),
+            set(["open"])
+        );
+    }
+
+    // null filter (all included)
+    function test_null_filter_works() {
+        val recipient_id = setup(skip_to_expiration = true);
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(recipient_id, null),
+            set(["open"])
+        );
+    }
+
+    // initialized filter with null 'state' parameter (all included)
+    function test_null_state_works() {
+        val recipient_id = setup(skip_to_expiration = true);
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(null)
+                ),
+            set(["open"])
+        );
+    }
+
+    // filter set to only expired
+    function test_valid_filter_works() {
+        val recipient_id = setup(skip_to_expiration = true);
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(
+                        state = [create_on_transfer.pending_transfer_expiration_state.expired]
+                    )
+                ),
+            set(["open"])
+        );
+    }
+
+    // filter set to valid and expired
+    function test_filter_all_works() {
+        val recipient_id = setup(skip_to_expiration = true);
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(
+                        state = [
+                            create_on_transfer.pending_transfer_expiration_state.expired,
+                            create_on_transfer.pending_transfer_expiration_state.valid
+                        ]
+                    )
+                ),
+            set(["open"])
+        );
+    }
+
+    // We should not see open strategy in this entry
+
+    // filter set to valid only
+    function test_valid_filter_empty() {
+        val recipient_id = setup(skip_to_expiration = true);
+        assert_equals(
+            create_on_transfer.get_pending_transfer_strategies(
+                    recipient_id,
+                    create_on_transfer.pending_transfer_filter(
+                        state = [create_on_transfer.pending_transfer_expiration_state.valid]
+                    )
+                ).size(),
+            0
+        );
+    }
+}

@@ -8,6 +8,7 @@ import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
 import { createInMemoryFtKeyStore } from "@ft4/authentication";
 import { Connection, createConnection } from "@ft4/ft-session";
 import {
+  PendingTransferExpirationState,
   allowedAssets,
   hasPendingCreateAccountTransferForStrategy,
   pendingTransferStrategies,
@@ -251,5 +252,180 @@ describe("Test transfer strategy", () => {
     await expect(
       account1.recallUnclaimedTransfer(receipt.transactionRid, 1),
     ).rejects.toThrow("This transfer has not timed out yet");
+  });
+
+  describe("filters transfers from pendingTransferStrategies", () => {
+    describe("filters valid transfers correctly", () => {
+      let recipientId: Buffer;
+
+      beforeAll(async () => {
+        const keyPair = encryption.makeKeyPair();
+        recipientId = gtv.gtvHash(keyPair.pubKey);
+
+        const account1 = await AccountBuilder.account(connection)
+          .withBalance(asset, 200)
+          .withPoints(1)
+          .build();
+
+        const _allowedAssets = (await connection.query(
+          allowedAssets(connection.blockchainRid, account1.id, recipientId),
+        ))!;
+        const rawAmount = _allowedAssets.find((v) =>
+          v.asset_id.equals(asset.id),
+        )?.min_amount;
+        const amount = createAmountFromBalance(rawAmount!, asset.decimals);
+
+        await account1.transfer(recipientId, asset.id, amount);
+      });
+
+      // The transfer SHOULD be found
+
+      it("finds valid with no filter", async () => {
+        expect(
+          await connection.query(pendingTransferStrategies(recipientId)),
+        ).toContain("open");
+      });
+
+      it("finds valid with empty filter", async () => {
+        expect(
+          await connection.query(pendingTransferStrategies(recipientId, {})),
+        ).toContain("open");
+      });
+
+      it("finds valid with null state", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, { state: null }),
+          ),
+        ).toContain("open");
+      });
+
+      it("finds valid with 'valid' filter", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, {
+              state: [PendingTransferExpirationState.Valid],
+            }),
+          ),
+        ).toContain("open");
+      });
+
+      it("finds valid with 'all' filter", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, {
+              state: [
+                PendingTransferExpirationState.Valid,
+                PendingTransferExpirationState.Expired,
+              ],
+            }),
+          ),
+        ).toContain("open");
+      });
+
+      // The transfer should NOT be found
+
+      it("does not find valid with 'expired' filter", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, {
+              state: [PendingTransferExpirationState.Expired],
+            }),
+          ),
+        ).toStrictEqual([]);
+      });
+    });
+
+    describe("filters expired transfers correctly", () => {
+      let recipientId: Buffer;
+
+      beforeAll(async () => {
+        const timeoutAsset = await addNewAssetIfNeeded(
+          connection.client,
+          "timeout_asset",
+          "TIMEOUT_ASSET",
+          5,
+        );
+
+        const keyPair = encryption.makeKeyPair();
+        recipientId = gtv.gtvHash(keyPair.pubKey);
+
+        const account1 = await AccountBuilder.account(connection)
+          .withBalance(timeoutAsset, 200)
+          .withPoints(2)
+          .build();
+
+        const _allowedAssets = (await connection.query(
+          allowedAssets(connection.blockchainRid, account1.id, recipientId),
+        ))!;
+
+        const rawAmountTimeout = _allowedAssets.find((v) =>
+          v.asset_id.equals(timeoutAsset.id),
+        )?.min_amount;
+        const amountTimeout = createAmountFromBalance(
+          rawAmountTimeout!,
+          timeoutAsset.decimals,
+        );
+
+        await account1.transfer(recipientId, timeoutAsset.id, amountTimeout);
+      });
+
+      // The transfer SHOULD be found
+
+      it("finds expired with no filter", async () => {
+        expect(
+          await connection.query(pendingTransferStrategies(recipientId)),
+        ).toContain("open");
+      });
+
+      it("finds expired with empty filter", async () => {
+        expect(
+          await connection.query(pendingTransferStrategies(recipientId, {})),
+        ).toContain("open");
+      });
+
+      it("finds expired with null state", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, { state: null }),
+          ),
+        ).toContain("open");
+      });
+
+      it("finds expired with 'expired' filter", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, {
+              state: [PendingTransferExpirationState.Expired],
+            }),
+          ),
+        ).toContain("open");
+      });
+
+      it("finds expired with 'all' filter", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, {
+              state: [
+                PendingTransferExpirationState.Valid,
+                PendingTransferExpirationState.Expired,
+              ],
+            }),
+          ),
+        ).toContain("open");
+      });
+
+      // The transfer should NOT be found
+
+      it("does not find expired with 'valid' filter", async () => {
+        expect(
+          await connection.query(
+            pendingTransferStrategies(recipientId, {
+              state: [PendingTransferExpirationState.Valid],
+            }),
+          ),
+        ).toStrictEqual([]);
+      });
+    });
   });
 });

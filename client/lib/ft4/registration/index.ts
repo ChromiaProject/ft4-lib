@@ -31,6 +31,7 @@ import {
   TransferSenderBlockchains,
   TransferParticipants,
   TransferParticipantSingle,
+  PendingTransferExpirationState,
 } from "./strategies";
 
 /**
@@ -155,4 +156,5 @@ export {
   TransferSenderBlockchains,
   TransferParticipants,
   TransferParticipantSingle,
+  PendingTransferExpirationState,
 };

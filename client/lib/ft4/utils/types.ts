@@ -105,3 +105,9 @@ export type ConfigResponse = {
     max_number_per_account: number;
   };
 };
+
+export type Filter<T extends Record<string, any>> =
+  | {
+      [K in keyof T]: Array<T[K]> | null;
+    }
+  | undefined;

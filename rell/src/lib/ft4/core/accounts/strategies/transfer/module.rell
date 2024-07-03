@@ -19,6 +19,15 @@ val ACCOUNT_TYPE_POOL = "FT4_POOL";
  */
 val ACCOUNT_TYPE_FEE = "FT4_FEE";
 
+enum pending_transfer_expiration_state {
+    expired,
+    valid
+}
+
+struct pending_transfer_filter {
+    state: list<pending_transfer_expiration_state>?;
+}
+
 struct module_args_list_element {
     sender_blockchain: gtv;
     sender: gtv;
@@ -197,6 +206,24 @@ function do_transfer(accounts.account, strategy: text) {
     require(enough_transferred, "Insufficient amount of asset transferred");
 }
 
+function has_create_transfer_timed_out(account_creation_transfer): boolean {
+    val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
+    val timeout = (rules.values() @ {} (@min .timeout_days))!! * utils.MILLISECONDS_PER_DAY;
+    val occurred_time = account_creation_transfer.timestamp;
+    val delta = (utils.latest_time() - occurred_time);
+    return delta > timeout;
+}
+
+// utility for get_pending_transfer_strategies
+function filter_account_creation_transfer(
+    account_creation_transfer,
+    states: list<pending_transfer_expiration_state>
+) {
+    return
+        has_create_transfer_timed_out(account_creation_transfer) == 
+        (not (pending_transfer_expiration_state.valid in states));
+}
+
 function recall_transfer(
     sender_blockchain_rid: byte_array,
     sender_id: byte_array,
@@ -216,12 +243,7 @@ function recall_transfer(
         "%d pending transfers found, should not happen".format(account_creation_transfers.size()));
     val account_creation_transfer = account_creation_transfers[0];
 
-    val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
-    val timeout = (rules.values() @ {} (@min .timeout_days))!! * utils.MILLISECONDS_PER_DAY;
-    val latest_time = utils.latest_time();
-    val occurred_time = account_creation_transfer.timestamp;
-    val delta = (latest_time - occurred_time);
-    require(delta > timeout, "This transfer has not timed out yet");
+    require(has_create_transfer_timed_out(account_creation_transfer), "This transfer has not timed out yet");
 
     account_creation_transfer.state = account_creation_state.recalled;
     account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;

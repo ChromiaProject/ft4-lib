@@ -1,7 +1,10 @@
-import { BufferId } from "@ft4/utils";
+import { Filter, BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
-import { TransferStrategyRuleRaw } from "./types";
+import {
+  PendingTransferExpirationState,
+  TransferStrategyRuleRaw,
+} from "./types";
 
 /**
  * Creates a query object for the `get_allowed_assets` - query
@@ -34,14 +37,23 @@ export function allowedAssets(
 /**
  * Creates a query object for the `get_pending_transfer_strategies` - query
  * @param recipientId - the account id of the recipient of the transfer. I.e., the account that will be created
+ * @param filter - optionally filter to only receive the transfer strategies which did not expire
  */
 export function pendingTransferStrategies(
   recipientId: Buffer,
-): QueryObject<string[], { recipient_id: Buffer }> {
+  filter?: Partial<Filter<{ state: PendingTransferExpirationState }>>,
+): QueryObject<
+  string[],
+  {
+    recipient_id: Buffer;
+    filter?: Filter<{ state: PendingTransferExpirationState }>;
+  }
+> {
   return {
     name: "ft4.get_pending_transfer_strategies",
     args: {
       recipient_id: recipientId,
+      filter: filter && { state: null, ...filter },
     },
   };
 }

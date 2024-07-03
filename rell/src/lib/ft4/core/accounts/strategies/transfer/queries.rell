@@ -14,11 +14,28 @@ query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_arra
     return allowed_assets;
 }
 
-query get_pending_transfer_strategies(recipient_id: byte_array): set<text> {
-    val strategies2 = account_creation_transfer @* { recipient_id, .state == account_creation_state.pending }
-        (map<text,rule>.from_gtv(gtv.from_bytes(.rules)).keys());
+query get_pending_transfer_strategies(recipient_id: byte_array, filter: pending_transfer_filter? = null): set<text> {
+    val strats = account_creation_transfer @* { recipient_id, .state == account_creation_state.pending };
+
+    var strategies_list = list<set<text>>();
     val strategies = set<text>();
-    for (s in strategies2) {
+
+    if (
+        filter == null or              // no filter object
+        filter.state == null or        // no filter for state
+        filter.state!!.contains_all(  // filter allows both valid and expired
+            pending_transfer_expiration_state.values()
+        )
+    ) {
+        strategies_list = strats @* {} (map<text,rule>.from_gtv(gtv.from_bytes(.rules)).keys());
+    }
+    else {
+        strategies_list = strats @* {
+            filter_account_creation_transfer($, filter.state!!)
+        } (map<text,rule>.from_gtv(gtv.from_bytes(.rules)).keys());
+    }
+
+    for (s in strategies_list) {
         strategies.add_all(s);
     }
     return strategies;

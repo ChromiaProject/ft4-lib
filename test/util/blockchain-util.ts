@@ -74,7 +74,27 @@ export async function addNewAssetIfNeeded(
   if (asset) {
     return asset;
   } else {
-    return await getNewAsset(client, name, symbol, decimals, iconUrl);
+    try {
+      return await getNewAsset(client, name, symbol, decimals, iconUrl);
+    } catch (e) {
+      // the asset was registered while this was running
+      console.log(
+        "Error during addNewAssetIfNeeded: has the asset been registered? " +
+          "Falling back to querying the registered asset",
+      );
+      // wait for the block to be committed
+      await new Promise((res) => {
+        setTimeout(res, 1000);
+      });
+      const newAsset = await createConnection(client).getAssetById(id);
+      if (!newAsset) {
+        throw `Something weird happened during asset registration.
+          Error: ${e}
+          newAsset: ${newAsset}
+          id: ${formatter.toString(id)}`;
+      }
+      return newAsset;
+    }
   }
 }
 

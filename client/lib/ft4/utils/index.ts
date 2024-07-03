@@ -8,6 +8,7 @@ export {
   RequireTogether,
   TransactionCompletion,
   TransactionSessionCompletion,
+  Filter,
 } from "./types";
 
 export { OperationNotExistError } from "./errors";
