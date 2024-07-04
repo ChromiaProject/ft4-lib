@@ -43,8 +43,8 @@ measure, as a Rell-based testing suite is in development.
 Clone the repository and install the dependencies:
 
 ```bash
-git clone git@bitbucket.org:chromawallet/ft3-lib.git
-cd ft3-lib
+git clone git@gitlab.com:chromaway/ft4-lib.git
+cd ft4-lib
 npm install
 chr install
 ```

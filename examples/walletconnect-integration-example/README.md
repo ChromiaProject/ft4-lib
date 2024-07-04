@@ -2,7 +2,7 @@ Basic project with no framework to showcase a possible integration with
 WalletConnect.
 
 To run the demo, run the following commands. All of them must be run in the base
-directory, which is `ft3-lib`.
+directory, which is `ft4-lib`.
 
 - start a postgres container:
 

@@ -1,7 +1,7 @@
 Basic svelte project to showcase a possible integration with EIP 1193 providers like Metamask.
 
 To run the demo, run the following commands. All of them must be run in the base directory, which is
-`ft3-lib`.
+`ft4-lib`.
 
 - start a postgres container:
 

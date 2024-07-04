@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2024-07-04
+
+### Changed 🪙
+- `Amount`'s `times` and `dividedBy` functions now accept `Amount` as argument as well.
+
+### Added ✅
+- Added `hasCrosschainTransferExpired` to check if a specific pending cross-chain transfer has expired.
+- Add `getEnabledRegistrationStrategies` to `Connection` interface
+- Added filter for `pendingTransferStrategies` to check expired or valid transfers only.
+- Added `Filter` type as a generic type to filter in queries.
+
 ## [0.8.0] - 2024-05-29
 
 ### Breaking 💔

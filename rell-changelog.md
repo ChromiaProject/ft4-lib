@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0r] - 2024-07-04
+
+### Added ✅
+- Added option to filter results in `get_pending_transfer_strategies` based on whether the transfer has expired.
+
+### Fixed 🔧
+- Fixed an issue in `get_auth_message_template` query, where query fails if gtv encoded null is provided as `args` value
+
 ## [0.8.0r] - 2024-05-29
 
 ### Breaking 💔

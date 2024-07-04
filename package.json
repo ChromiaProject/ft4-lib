@@ -44,7 +44,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/chromawallet/ft3-lib.git"
+    "url": "git+ssh://git@gitlab.com:chromaway/ft4-lib.git"
   },
   "lint-staged": {
     "*.ts": [
@@ -54,7 +54,7 @@
   },
   "author": "",
   "license": "Apache-2.0",
-  "homepage": "https://bitbucket.org/chromawallet/ft3-lib#readme",
+  "homepage": "https://gitlab.com/chromaway/ft4-lib",
   "dependencies": {
     "ethers": "^6.13.1"
   },
