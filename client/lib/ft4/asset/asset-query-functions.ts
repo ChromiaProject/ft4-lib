@@ -41,7 +41,7 @@ export async function getAssetById(
  * @param queryable - object to use when querying the blockchain
  * @param symbol - the symbol of the asset to fetch
  * @param limit - maximum page size
- * @param cursor - where the page should start*
+ * @param cursor - where the page should start
  */
 export async function getAssetsBySymbol(
   queryable: Queryable,
