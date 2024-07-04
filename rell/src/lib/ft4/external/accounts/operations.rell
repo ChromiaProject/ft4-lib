@@ -78,7 +78,7 @@ operation delete_auth_descriptors_for_signer(signer: byte_array) {
 }
 
 function delete_all_auth_descriptors_except_main_message(gtv) {
-    return "Please sign the message\nto delete all auth descriptors except main:\n%s\n\n from account:\n{account_id}";
+    return "Please sign the message\nto delete all auth descriptors except main\nfrom account:\n{account_id}";
 }
 
 function delete_all_auth_descriptors_except_main_resolver(args: gtv, account_id: byte_array, auth_descriptor_ids: list<byte_array>) {

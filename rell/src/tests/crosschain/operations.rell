@@ -180,7 +180,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"abcdef";
+    val source_blockchain_rid = x"aa".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
@@ -230,7 +230,7 @@ function test_apply_transfer_fails_if_expired() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"abcdef";
+    val source_blockchain_rid = x"aa".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate an expired transaction and operation index
@@ -264,7 +264,7 @@ function test_apply_transfer_fails_when_applied_twice() {
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bob = utils.register_bob();
 
-    val source_blockchain_rid = x"abcdef";
+    val source_blockchain_rid = x"aa".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
@@ -406,7 +406,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val bogus_recipient_id = "bogus".hash();
 
-    val source_blockchain_rid = x"abcdef";
+    val source_blockchain_rid = x"aa".repeat(32);
     val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index

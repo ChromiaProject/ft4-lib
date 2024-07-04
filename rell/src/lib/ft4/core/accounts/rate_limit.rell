@@ -50,11 +50,12 @@ function current_rate_limit_points(rate_limit_config, rl_state, current_timestam
 }
 
 function add_rate_limit_points(account, amount: integer) {
-    var state = require(
-        rl_state@?{account}, 
+    val state = require(
+        rl_state @? { account }, 
         "Rate limiter state not found for the account with ID: %s".format(account.id)
     );
-	state.points += amount;
+    val config = get_rate_limit_config_for_account(account);
+	state.points = min(state.points + amount, config.max_points);
 }
 
 function get_rate_limit_config(): rate_limit_config = chain_context.args.rate_limit;
@@ -70,7 +71,7 @@ function create_rate_limiter_state_for_account(account) {
 
     val max_points = rl_config.max_points;
     val recovery_time = rl_config.recovery_time;
-    val points_at_start = rl_config.points_at_account_creation;
+    val points_at_start = min(rl_config.points_at_account_creation, rl_config.max_points);
     
     create rl_state(account, .points = points_at_start, .last_update = utils.latest_time(), recovery_time);
 }

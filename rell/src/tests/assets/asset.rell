@@ -336,8 +336,10 @@ function test_paginated_asset_balances_have_correct_format() {
 }
 
 function test_assets_by_name_are_paginated() {
-    rell.test.tx(test_op.register_asset("test1", "TST1", 0, "0".to_bytes(), "")).run();
-    rell.test.tx(test_op.register_asset("test1", "TST2", 0, "1".to_bytes(), "")).run();
+    val blockchain_rid1 = x"aa".repeat(32);
+    val blockchain_rid2 = x"bb".repeat(32);
+    rell.test.tx(test_op.register_asset("test1", "TST1", 0, blockchain_rid1, "")).run();
+    rell.test.tx(test_op.register_asset("test1", "TST2", 0, blockchain_rid2, "")).run();
 
     val page1 = assets.external.get_assets_by_name("test1", 1, null);
     val page2 = assets.external.get_assets_by_name("test1", 1, page1.next_cursor);

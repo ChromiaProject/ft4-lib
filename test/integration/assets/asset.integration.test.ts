@@ -116,7 +116,7 @@ describe("Asset", () => {
     const crosschainAssetName = "Some asset";
     const crosschainAssetSymbol = assetSymbol;
     const crosschainAssetDecimals = 6;
-    const crosschainBlockchainRid = formatter.ensureBuffer("343434");
+    const crosschainBlockchainRid = formatter.ensureBuffer("34".repeat(32));
     const crosschainIconUrl = "";
     const crosschainAssetType = "FT4";
     const crosschainRes = gtv.gtvHash([
@@ -137,7 +137,7 @@ describe("Asset", () => {
         type: crosschainAssetType,
         uniquenessResolver: crosschainRes,
       },
-      formatter.ensureBuffer("989898"),
+      formatter.ensureBuffer("98".repeat(32)),
     );
 
     const page1 = await connection.getAssetsBySymbol(assetSymbol, 1);

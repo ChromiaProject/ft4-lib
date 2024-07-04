@@ -26,8 +26,6 @@ import ^^.prioritization.*;
         }
     }
 
-    // TODO consider tx_size for tx_cost_points
-
     if (tx_accounts.empty()) return no_account_priority_state(0.0);
     val account = tx_accounts[0]; // Use first account if there are multiple
 

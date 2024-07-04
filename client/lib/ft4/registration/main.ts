@@ -125,7 +125,6 @@ export function registerAccount(
         ]);
       })
       .then(([loginKeyStore, disposableKeyStore, keyStores, _]) => {
-        // TODO: update strategy to return account id and then use the value here
         const accountId = gtv.gtvHash(masterKeyStore.id);
 
         return Promise.all([

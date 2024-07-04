@@ -78,9 +78,7 @@ export async function login(
       loginKeyStore.id,
     );
     disposableKeyHandlers = disposableAuthDescriptors
-      // TODO: filter out expired auth descriptors
       .filter((authDescriptor) =>
-        // If
         hasAuthDescriptorFlags(authDescriptor, config.flags),
       )
       .map((authDescriptor) => loginKeyStore.createKeyHandler(authDescriptor));

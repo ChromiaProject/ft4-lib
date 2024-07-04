@@ -75,7 +75,7 @@ blockchains:
       lib.ft4.core.accounts.strategies.transfer:
         rules:
           - sender_blockchain:
-              - x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28"
+              - x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
               - "$"
             sender: X
             recipient: X

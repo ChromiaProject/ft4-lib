@@ -15,7 +15,7 @@ function test_can_reclaim_transfer_once_but_not_twice_and_not_before_timeout_or_
     val sender_account_id = rell.test.keypairs.alice.pub;
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
 
-    val source_blockchain_rid = x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28";
+    val source_blockchain_rid = x"aa".repeat(32);
     val recipient_id = rell.test.keypairs.alice.pub;
     val asset = assets_utils.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
     
@@ -89,8 +89,8 @@ function test_can_not_reclaim_transfer_on_wrong_chain() {
     val sender_account_id = rell.test.keypairs.alice.pub;
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
 
-    val source_blockchain_rid = x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28";
-    val wrong_blockchain_rid = x"FFFF";
+    val source_blockchain_rid = x"aa".repeat(32);
+    val wrong_blockchain_rid = x"ff".repeat(32);
     val recipient_id = rell.test.keypairs.alice.pub;
     val asset = assets_utils.create_crosschain_asset("test", "TEST", 10, source_blockchain_rid, "", source_blockchain_rid);
 

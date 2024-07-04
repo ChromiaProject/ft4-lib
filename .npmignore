@@ -48,6 +48,9 @@ postchain/runtime
 /scripts
 /doc
 
+compile-changelog.sh
+install-chr-and-pmc.sh
+
 # Cypress related files and directories
 /cypress
 cypress.config.ts

@@ -1,6 +1,10 @@
 @test module;
 
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
+import ^^^^.lib.ft4.accounts.strategies.transfer.{ 
+    CURRENT_CHAIN_REF, 
+    CURRENT_USER_REF 
+};
 
 function test_get_config_reads_yml_correctly() {
     val config = create_on_transfer.get_config();
@@ -12,7 +16,7 @@ function test_get_config_reads_yml_correctly() {
             blockchains = create_on_transfer.allowlist(
                 allow_all = false,
                 allowed_values = [
-                    x"08B02E0E14B634031FDF2ED3FD78E7410A5849CD28",
+                    x"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
                     chain_context.blockchain_rid
                 ]
             ),
@@ -152,7 +156,7 @@ function test_get_config_reads_yml_correctly() {
 function test_get_config_reads_dollar_sign_in_blockchain() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = ["012345", "$"],
+        sender_blockchain = ["012345", CURRENT_CHAIN_REF],
         sender = "*",
         recipient = "*",
         asset = "*",
@@ -190,8 +194,8 @@ function test_get_config_reads_dollar_sign_in_blockchain() {
 function test_get_config_fails_when_only_one_X() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
-        sender = "X",
+        sender_blockchain = CURRENT_CHAIN_REF,
+        sender = CURRENT_USER_REF,
         recipient = "*",
         asset = "*",
         strategy = ["open"]
@@ -206,7 +210,7 @@ function test_get_config_fails_when_only_one_X() {
 function test_get_config_fails_when_asterisk_alongside_others() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
+        sender_blockchain = CURRENT_CHAIN_REF,
         sender = ["*", "abcdef"],
         recipient = "*",
         asset = "*",
@@ -222,9 +226,9 @@ function test_get_config_fails_when_asterisk_alongside_others() {
 function test_get_config_fails_when_X_alongside_others() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
-        sender = ["X", "abcdef"],
-        recipient = "X",
+        sender_blockchain = CURRENT_CHAIN_REF,
+        sender = [CURRENT_USER_REF, "abcdef"],
+        recipient = CURRENT_USER_REF,
         asset = "*",
         strategy = ["open"]
     )].to_gtv_pretty();
@@ -238,7 +242,7 @@ function test_get_config_fails_when_X_alongside_others() {
 function test_get_config_fails_when_value_not_buffer_string_or_list() {
     var rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
+        sender_blockchain = CURRENT_CHAIN_REF,
         sender = (id = "abcdef"),
         recipient = "*",
         asset = "*",
@@ -268,7 +272,7 @@ function test_get_config_fails_when_value_not_buffer_string_or_list() {
 function test_get_config_fails_when_list_has_wrong_element_types() {
     var rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
+        sender_blockchain = CURRENT_CHAIN_REF,
         sender = ["012345".to_gtv(), (id = "abcdef").to_gtv_pretty()],
         recipient = "*",
         asset = "*",
@@ -297,8 +301,8 @@ function test_get_config_fails_when_list_has_wrong_element_types() {
 function test_get_config_fails_when_dollar_not_in_blockchains() {
     var rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
-        sender = "$",
+        sender_blockchain = CURRENT_CHAIN_REF,
+        sender = CURRENT_CHAIN_REF,
         recipient = "*",
         asset = "*",
         strategy = ["open"]
@@ -310,8 +314,8 @@ function test_get_config_fails_when_dollar_not_in_blockchains() {
     );
     rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
-        sender = ["$"],
+        sender_blockchain = CURRENT_CHAIN_REF,
+        sender = [CURRENT_CHAIN_REF],
         recipient = "*",
         asset = "*",
         strategy = ["open"]
@@ -326,7 +330,7 @@ function test_get_config_fails_when_dollar_not_in_blockchains() {
 function test_get_config_fails_when_X_in_blockchains() {
     var rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "X",
+        sender_blockchain = CURRENT_USER_REF,
         sender = "*",
         recipient = "*",
         asset = "*",
@@ -339,7 +343,7 @@ function test_get_config_fails_when_X_in_blockchains() {
     );
     rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = ["X"],
+        sender_blockchain = [CURRENT_USER_REF],
         sender = "*",
         recipient = "*",
         asset = "*",
@@ -355,10 +359,10 @@ function test_get_config_fails_when_X_in_blockchains() {
 function test_get_config_fails_when_assets_wrong_format() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
+        sender_blockchain = CURRENT_CHAIN_REF,
         sender = "*",
         recipient = "*",
-        asset = "X",
+        asset = CURRENT_USER_REF,
         strategy = ["open"]
     )].to_gtv_pretty();
 
@@ -371,10 +375,10 @@ function test_get_config_fails_when_assets_wrong_format() {
 function test_get_config_fails_when_mandatory_values_are_missing() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = "$",
+        sender_blockchain = CURRENT_CHAIN_REF,
         sender = "*",
         recipient = "*",
-        asset = "X"
+        asset = CURRENT_USER_REF
     )].to_gtv_pretty();
 
     assert_fails(

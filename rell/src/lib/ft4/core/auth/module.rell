@@ -120,7 +120,9 @@ function generate_operation_auth_message(blockchain_rid: byte_array, op: gtx_ope
         message = message + "\n\n";
         var arguments = "with arguments:\n";
         for (arg in op.args) {
-            arguments = arguments + "- %s\n".format(arg).replace("\"", "");
+            val argument_value = utils.convert_gtv_to_text(arg);
+
+            arguments = arguments + "- %s\n".format(argument_value);
         }
         message = message + arguments.sub(0, arguments.size() - 1);
     }
