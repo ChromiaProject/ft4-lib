@@ -33,7 +33,7 @@ describe("Asset balance", () => {
     asset2 = await getNewAsset(client, "asset_balance_2", "ASSET_BALANCE_2", 5);
   });
 
-  it("should be returned when queried by account id", async () => {
+  it("returns asset balances when queried by account id", async () => {
     const account = await AccountBuilder.account(connection)
       .withBalances([
         { amount: 10, asset: asset1 },
@@ -76,7 +76,7 @@ describe("Asset balance", () => {
     ]);
   });
 
-  it("should return balance for specific asset", async () => {
+  it("returns balance for specific asset", async () => {
     const account = await AccountBuilder.account(connection)
       .withBalances([
         { amount: 40, asset: asset1 },

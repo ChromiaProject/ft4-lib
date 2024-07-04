@@ -153,6 +153,11 @@ export function accountMainAuthDescriptor(accountId: BufferId): QueryObject<
   };
 }
 
+/**
+ * Creates a query object for `ft4.get_account_auth_descriptor_by_id`-query
+ * @param accountId - id of the account from which to get the auth descriptor
+ * @param id - the id of the auth descriptor to get
+ */
 export function authDescriptorById(
   accountId: BufferId,
   id: BufferId,

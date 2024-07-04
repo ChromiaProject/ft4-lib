@@ -71,3 +71,20 @@ function add_strategy(op: rell.meta, account_details: (gtv) -> account_details, 
     = [op.mount_name: _strategy(op, account_details, action ?: _no_action(*))];
 
 function _no_action(accounts.account, strategy_params: gtv) {}
+
+function require_register_account_next_operation() {
+    val all_operations = op_context.get_all_operations();
+    val this_op = op_context.get_all_operations()[op_context.op_index];
+    
+    require(
+        all_operations.size() > op_context.op_index + 1,
+        "<%s> must be followed by a register account operation".format(this_op.name)
+    );
+    
+    val next_op = all_operations[op_context.op_index + 1];
+
+    require(
+        auth.is_evm_signatures_authorized_operation(next_op.name),
+        "<%s> operation must be followed by a register account operation, not <%s>".format(this_op.name, next_op.name)
+    );
+}

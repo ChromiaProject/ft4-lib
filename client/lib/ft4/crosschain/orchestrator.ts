@@ -54,15 +54,14 @@ import {
 
 /**
  * Creates an orchestrator instance for managing cross-chain transfers.
- * @async
- * @param {Connection} connection - The connection.
- * @param {Authenticator} authenticator - The authenticator.
- * @param {BufferId} targetChainId - ID of the target blockchain.
- * @param {BufferId} recipientId - ID of the recipient.
- * @param {BufferId} assetId - ID of the asset to be transferred.
- * @param {Amount} amount - The amount to be transferred.
- * @param {number} ttl - The number of milliseconds after which the transaction can only be reverted.
- * @returns {Orchestrator} The orchestrator instance with functionalities like initiating transfers,
+ * @param connection - The connection.
+ * @param authenticator - The authenticator.
+ * @param targetChainId - ID of the target blockchain.
+ * @param recipientId - ID of the recipient.
+ * @param assetId - ID of the asset to be transferred.
+ * @param amount - The amount to be transferred.
+ * @param ttl - The number of milliseconds after which the transaction can only be reverted.
+ * @returns The orchestrator instance with functionalities like initiating transfers,
  * subscribing/unsubscribing to various transfer events.
  */
 export async function createOrchestrator(
@@ -157,9 +156,9 @@ export async function createOrchestrator(
 /**
  * Creates an orchestrator instance to handle resuming a transfer
  * which was initiated but did not complete properly
- * @param {Connection} connection - The connection.
- * @param {Authenticator} authenticator - The authenticator.
- * @param {TransferRef} pendingTransfer - The transfer to resume
+ * @param connection - The connection.
+ * @param authenticator - The authenticator.
+ * @param pendingTransfer - The transfer to resume
  * @returns The orchestrator instance which will be able to resume the transfer
  */
 export async function createResumeOrchestrator(
@@ -235,6 +234,14 @@ export async function createResumeOrchestrator(
   });
 }
 
+/**
+ * Creates an orchestrator instance to handle reverting a transfer that was started
+ * but did not reach its target chain withing the specified timeout.
+ * @param connection - a connection to the source chain
+ * @param authenticator - the authenticator to use when reverting the transfer
+ * @param pendingTransfer - the pending transfer to revert
+ * @returns The orchestrator instance which will be able to revert the transfer
+ */
 export async function createRevertOrchestrator(
   connection: Connection,
   authenticator: Authenticator,
@@ -516,11 +523,10 @@ async function createBaseOrchestrator(
 
   /**
    * Apply the transfer operation targeting a specific blockchain.
-   * @param {RawGtx} initTransferTx - The tx that was used to initialize the transfer
-   * @param {number} initTransferOpIndex - Op index of `initTransferTx`
-   * @param {Buffer} targetChainRid - The ID of the target blockchain.
-   * @param {number} hopIndex hop index
-   * @returns {Promise<void>}
+   * @param initTransferTx - The tx that was used to initialize the transfer
+   * @param initTransferOpIndex - Op index of `initTransferTx`
+   * @param targetChainRid - The ID of the target blockchain.
+   * @param hopIndex hop index
    */
   async function performApplyTransfer(
     initTransferTx: RawGtx,
@@ -609,9 +615,9 @@ async function createBaseOrchestrator(
   /**
    * Create ICCF proof for a specific blockchain.
    *
-   * @param {Buffer} targetChainRid - The ID of the target blockchain.
-   * @param {number} hopIndex - the hop index of the path where the transaction is anchored
-   * @returns {Promise<Operation>} The ICCF proof operation.
+   * @param targetChainRid - The ID of the target blockchain.
+   * @param hopIndex - the hop index of the path where the transaction is anchored
+   * @returns The ICCF proof operation.
    */
   async function createIccfProofOperation(
     targetChainRid: Buffer,
@@ -769,10 +775,10 @@ async function getAppliedTx(
 /**
  * Checks to see whether the specified transfer is already applied to
  * this blockchainRid.
- * @param connection the Connection
- * @param targetChainRid the blockchain rid of the chain to check
- * @param txRid the RID of the transaction containing the transfer
- * @param opIndex the index of the transfer in the transaction
+ * @param connection - the Connection
+ * @param targetChainRid - the blockchain rid of the chain to check
+ * @param txRid - the RID of the transaction containing the transfer
+ * @param opIndex - the index of the transfer in the transaction
  * @returns a promise that resolves to true if transfer is applied, otherwise resolves to false.
  */
 async function isAppliedOnBlockchainRid(

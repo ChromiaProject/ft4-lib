@@ -115,3 +115,58 @@ function test_can_complete_pending_transfers_when_account_is_registered_with_dir
         1
     );
 }
+
+function test_can_check_if_account_transfer_from_different_address_exists() {
+    helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
+    
+    val fee_account = accounts.Account(rell.test.pubkeys.trudy);
+    val alice = utils.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+    val asset = utils.create_asset("test", "TEST", 1);
+    
+    utils.mint_to_account(alice, asset, 10);
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+    
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    assert_true(create_on_transfer.has_pending_create_account_transfer_for_strategy(
+        "fee",
+        chain_context.blockchain_rid,
+        sender.id,
+        recipient_id,
+        asset.id,
+        amount,
+    ));
+}
+
+function test_an_error_is_thrown_when_no_suceeding_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(x"", auth_descriptor))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_transfer_fee> must be followed by a register account operation");
+}
+
+function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(x"", auth_descriptor))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_transfer_fee> operation must be followed by a register account operation, not <nop>");
+}

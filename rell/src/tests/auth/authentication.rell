@@ -7,6 +7,7 @@ import ^^.assets.utils;
 import auth_ext: ^^.extensions.auth.*;
 import ^^^.lib.ft4.utils.{ derive_nonce };
 import test_operations: ^^.operations;
+import ^^^.lib.ft4.utils.{ latest_time };
 
 function test_before_and_after_authenticate_extensions_are_called_with_ft_auth() {
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
@@ -59,4 +60,80 @@ function test_before_and_after_authenticate_extensions_are_called_with_evm_auth(
     assert_equals(auth_ext.auth_extensions_state.after_authenticate_auth_descriptor_id,
         auth_ext.auth_extensions_state.before_authenticate_auth_descriptor_id);
     assert_equals(auth_ext.auth_extensions_state.after_authenticate_auth_descriptor_ctr, 1);
+}
+
+function test_cannot_sign_only_ft_auth_op() {
+    val alice = utils.register_alice();
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ft_auth> must be followed by an operation to authorize");
+}
+
+function test_cannot_sign_only_evm_auth_op() {
+    val alice = utils.evm_register_alice();
+
+    val op = test_operations.test_auth.test_empty_auth_message();
+    val signature = evm_sign(
+      "Blockchain:\n%s\n\n\n\nNonce: %s".format(
+        chain_context.blockchain_rid.to_hex(),
+        derive_nonce(op.to_gtx_operation(), 0)
+      ),
+      alice.keypair.priv
+    );
+
+    rell.test.tx()
+        .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.evm_auth> must be followed by an operation to authorize");
+}
+
+function test_cannot_sign_invalid_ops_with_ft_auth() {
+    val alice = utils.register_alice();
+    val invalid_ops = [
+        rell.test.op("nop"),
+        gtx_operation(name = "timeb", args = [(latest_time()).to_gtv(), (latest_time() * 2).to_gtv()]).to_test_op(),
+        gtx_operation(name = "iccf_proof", args = [x"".to_gtv(), x"".to_gtv(), x"".to_gtv(), x"".to_gtv(), (0).to_gtv(), x"".to_gtv()]).to_test_op(),
+        gtx_operation(name = "ft4.ft_auth", args = [x"".to_gtv(), x"".to_gtv()]).to_test_op(),
+        gtx_operation(name = "ft4.evm_auth", args = [x"".to_gtv(), x"".to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
+        gtx_operation(name = "ft4.evm_signatures", args = [list<byte_array>().to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
+    ];
+
+
+    for (invalid_op in invalid_ops) {
+        rell.test.tx()
+            .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+            .op(invalid_op)
+            .sign(rell.test.keypairs.alice)
+            .run_must_fail("<ft4.ft_auth> cannot authorize <%s>".format(invalid_op.name));
+    }
+}
+
+function test_cannot_sign_invalid_ops_with_evm_auth() {
+    val alice = utils.evm_register_alice();
+    val invalid_ops = [
+        rell.test.op("nop"),
+        gtx_operation(name = "timeb", args = [(latest_time()).to_gtv(), (latest_time() * 2).to_gtv()]).to_test_op(),
+        gtx_operation(name = "iccf_proof", args = [x"".to_gtv(), x"".to_gtv(), x"".to_gtv(), x"".to_gtv(), (0).to_gtv(), x"".to_gtv()]).to_test_op(),
+        gtx_operation(name = "ft4.ft_auth", args = [x"".to_gtv(), x"".to_gtv()]).to_test_op(),
+        gtx_operation(name = "ft4.evm_auth", args = [x"".to_gtv(), x"".to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
+        gtx_operation(name = "ft4.evm_signatures", args = [list<byte_array>().to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
+    ];
+
+    for (invalid_op in invalid_ops) {
+        val op = test_operations.test_auth.test_empty_auth_message();
+        val signature = evm_sign(
+            "Blockchain:\n%s\n\n\n\nNonce: %s".format(
+                chain_context.blockchain_rid.to_hex(),
+                derive_nonce(op.to_gtx_operation(), 0)
+            ),
+            alice.keypair.priv
+        );
+
+        rell.test.tx()
+            .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
+            .op(invalid_op)
+            .sign(rell.test.keypairs.alice)
+            .run_must_fail("<ft4.evm_auth> cannot authorize <%s>".format(invalid_op.name));
+    }
 }

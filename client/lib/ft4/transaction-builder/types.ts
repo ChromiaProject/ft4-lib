@@ -12,8 +12,8 @@ import { BufferId, RequireTogether } from "@ft4/utils";
 export type TransactionBuilder = {
   /**
    * Adds an operation to include in the final transaction
-   * @param operation the operation to add to the transaction
-   * @param config a configuration object that will be used for this operation when building the transaction
+   * @param operation - the operation to add to the transaction
+   * @param config - a configuration object that will be used for this operation when building the transaction
    * @returns an instance of the transaction builder object
    */
   add: (operation: Operation, config?: OperationConfig) => TransactionBuilder;
@@ -21,7 +21,7 @@ export type TransactionBuilder = {
   /**
    * Add key stores that will also be included as signers to this transaction.
    * If `build` is called, the key stores will also be used to sign the transaction
-   * @param keyStores the key stores to use for signing
+   * @param keyStores - the key stores to use for signing
    * @returns an instance of the transaction builder object
    */
   addSigners: (...keyStores: FtKeyStore[]) => TransactionBuilder;
@@ -77,6 +77,9 @@ export type TransactionBuilder = {
   session: IClient;
 };
 
+/**
+ * Thrown to indicate that there was an error when authorizing an operation.
+ */
 export class AuthorizationError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -84,6 +87,9 @@ export class AuthorizationError extends Error {
   }
 }
 
+/**
+ * Thrown when an operation was not anchored within the specified timeout period.
+ */
 export class AnchoringTimeoutError extends Error {
   constructor(msg?: string) {
     super(msg);
@@ -96,6 +102,11 @@ export type TransactionBuilderConfig = RequireTogether<
   "retryCount" | "waitTimeMs"
 >;
 
+/**
+ * Callback function that can be passed to the transaction builder.
+ * When passed, transaction builder will invoke it with `OnAnchoredHandlerData`
+ * once the transaction has been anchored on the anchoring chain.
+ */
 export type OnAnchoredHandler = ((
   data: OnAnchoredHandlerData,
   error: null,
@@ -104,17 +115,17 @@ export type OnAnchoredHandler = ((
 
 /**
  * Configuration options for an operation.
- * @typedef {Object} OperationConfig
- * @property {Authenticator} [authenticator] - An optional authenticator instance used for the operation.
- * @property {OnAnchoredHandler} [onAnchoredHandler] - Callback function to be called when the transaction is anchored. If provided, `targetBlockchainRid` must also be provided.
- * @property {FtKeyStore[]} [signers] - An optional array of FtKeyStore instances that will be used to sign this operation.
- * @property {Buffer} [targetBlockchainRid] - Buffer representing the rid where this operation should be anchored. If provided, `onAnchoredHandler` must also be provided.
  */
 export type OperationConfig = {
+  /** An optional authenticator instance used for the operation. */
   authenticator?: Authenticator;
+  /** Callback function to be called when the transaction is anchored. If provided, `targetBlockchainRid` must also be provided. */
   onAnchoredHandler?: OnAnchoredHandler;
+  /** An optional array of FtKeyStore instances that will be used to sign this operation. */
   signers?: Signer[];
+  /** Buffer representing the rid where this operation should be anchored. If provided, `onAnchoredHandler` must also be provided. */
   targetBlockchainRid?: Buffer;
+  /** Determines wether operation should skip ft signing with the provided keys */
   skipFtSigning?: boolean;
 };
 
@@ -132,10 +143,15 @@ export type OnAnchoredHandlerData = {
   operation: Operation;
   opIndex: number;
   tx: RawGtx;
+  /**
+   * Used to create a proof that this operation happened on this blockchain
+   * @param blockchainRid - the rid of the blockchain on which the produced proof will be validated
+   * @returns a proof that this operation happened on the blockchain.
+   */
   createProof: (blockchainRid: BufferId) => Promise<Operation>;
 };
 
-type ConfigOptions = {
+export type ConfigOptions = {
   retryCount?: number;
   waitTimeMs?: number;
 };

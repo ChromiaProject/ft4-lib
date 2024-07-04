@@ -9,6 +9,7 @@ export * from "./ft-session";
 export * from "./utils";
 export * from "./events";
 export * from "./crosschain";
+export * from "./transaction-builder";
 
 export const ft = Object.freeze({
   setLogLevel: logger.setLogLevel,

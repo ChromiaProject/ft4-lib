@@ -24,6 +24,7 @@ multichain-postchain.log
 # Build Directories
 dist/
 build/
+doc/api
 
 # Rell Specific
 rell/target

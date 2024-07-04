@@ -37,6 +37,12 @@ export type ExternalWalletConnection = {
 };
 
 export type EntityRetriever<T> = {
+  /**
+   * Retrieves a page of the data
+   * @param limit - maximum number of entries in the returned page
+   * @param cursor - where the page starts
+   * @returns a page staring at cursor location and containing at most `limit` number of items.
+   */
   retrieve: (
     limit?: number,
     cursor?: OptionalPageCursor,
@@ -99,3 +105,9 @@ export type ConfigResponse = {
     max_number_per_account: number;
   };
 };
+
+export type Filter<T extends Record<string, any>> =
+  | {
+      [K in keyof T]: Array<T[K]> | null;
+    }
+  | undefined;

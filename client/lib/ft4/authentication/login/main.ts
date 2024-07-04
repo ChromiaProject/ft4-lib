@@ -28,6 +28,13 @@ import { mapLoginConfigRulesToAuthDescriptorRules } from "./rules";
 import { LoginKeyStore, createInMemoryLoginKeyStore } from "./stores";
 import { LoginConfigOptions, LoginOptions, SessionWithLogout } from "./types";
 
+/**
+ * Uses the provided keystore to log into the specified account
+ * @param connection - to interact with the blockchain that hosts the account
+ * @param keyStore - keystore used to sign into the account. Must be tied to an auth descriptor associated with the account
+ * @param loginOptions - what account to sign into and other options
+ * @returns the authorized session
+ */
 export async function login(
   connection: Connection,
   keyStore: KeyStore,
@@ -71,9 +78,7 @@ export async function login(
       loginKeyStore.id,
     );
     disposableKeyHandlers = disposableAuthDescriptors
-      // TODO: filter out expired auth descriptors
       .filter((authDescriptor) =>
-        // If
         hasAuthDescriptorFlags(authDescriptor, config.flags),
       )
       .map((authDescriptor) => loginKeyStore.createKeyHandler(authDescriptor));
@@ -121,10 +126,12 @@ export async function login(
   });
 }
 
-/*
+/**
  * Returns auth flags and rules provided as option to the `login` function,
  * or if they are not provided, the function uses config name to load login config from chain.
  * If configName is null or undefined too, then default login config will be loaded from chain.
+ * @param authDataService - the auth data service to use
+ * @param options - the options to use
  */
 export async function getConfigFromOptions(
   authDataService: AuthDataService,
@@ -207,6 +214,17 @@ async function addDisposableAuthDescriptor(
   };
 }
 
+/**
+ * Deletes all disposable auth descriptors of an account. Useful in many
+ * cases but perhaps especially so when the user has reached its maximum
+ * number of auth descriptors added to an account and no longer has access
+ * to the key to anyone of them. Such as when the disposable had a long
+ * timeout and the keys were only stored in memory.
+ * @param connection - the connection to use when calling the blockchain
+ * @param account - the account which to delete the auth descriptors from
+ * @param key - the key to the auth descriptor that will be used to delete
+ * the auth descriptors, probably the key to the main auth descriptor.
+ */
 export async function deleteDisposableAuthDescriptors(
   connection: Connection,
   account: AuthenticatedAccount,

@@ -31,20 +31,61 @@ export type OrchestratorState = {
   initialOpIndex?: number;
 };
 
+/**
+ * Basic functions that is used by all different Orchestrator types
+ */
 export interface OrchestratorBase {
   state: OrchestratorState;
   eventEmitter: EventEmitter<OrchestratorEvents>;
+  /**
+   * Applies a crosschain transaction to each intermediary chain between initial and target chain
+   */
   walkPath: () => Promise<void>;
+  /**
+   * Completes a crosschain transfer by applying the transaction on the target chain
+   * @param tx - the transaction to apply on the target chain
+   * @param opIndex - the index at which the transfer operation to apply is located in the transaction
+   */
   performCompleteTransfer: (tx: RawGtx, opIndex: number) => Promise<void>;
+  /**
+   * Creates a proof that the latest transaction hop was applied to the target chain
+   * @param targetChainRid - the rid of the blockchain that is to validate the proof
+   * @param hopIndex - the index at which the operation to create the proof for can be found
+   * @returns the proof operation
+   */
   createIccfProofOperation: (
     targetChainRid: Buffer,
     hopIndex: number,
   ) => Promise<Operation>;
+  /**
+   * Registers a listener that gets invoked when the transaction is signed
+   * @param listener - the listener to register
+   */
   onTransferSigned: (listener: Listener<[SignedTransaction]>) => void;
+  /**
+   * De-registers a listener that was previously registered for receiving events when transfer were signed
+   * @param listener - the listener to remove
+   */
   offTransferSigned: (listener: Listener<[SignedTransaction]>) => void;
+  /**
+   * Registers a listener that gets invoked when init transfer has been successfully submitted
+   * @param listener - the listener to register
+   */
   onTransferInit: (listener: Listener<[TransactionReceipt]>) => void;
+  /**
+   * De-registers a listener that was previously registered for receiving events when init transfer has been successfully submitted
+   * @param listener - the listener to remove
+   */
   offTransferInit: (listener: Listener<[TransactionReceipt]>) => void;
+  /**
+   * Registers a listener that gets invoked when a transfer hop is successfully completed
+   * @param listener - the listener to register
+   */
   onTransferHop: (listener: Listener<[BufferId]>) => void;
+  /**
+   * De-registers a listener that was previously registered for receiving events when a transfer hop is successfully completed
+   * @param listener - the listener to remove
+   */
   offTransferHop: (listener: Listener<[BufferId]>) => void;
 }
 
@@ -54,15 +95,29 @@ export type ExternalOrchestratorBase = Omit<
 >;
 
 export type Orchestrator = ExternalOrchestratorBase & {
+  /**
+   * Performs the transfer with the information that this Orchestrator was created with
+   * @returns a reference to the performed transfer
+   */
   transfer: () => Promise<TransferRef>;
 };
 
 export type ResumeOrchestrator = ExternalOrchestratorBase & {
+  /**
+   * Resumes the transfer with the information that this Orchestrator was created with
+   */
   resumeTransfer: () => Promise<void>;
 };
 
 export type RevertOrchestrator = ExternalOrchestratorBase & {
+  /**
+   * Reverts a transfer that was initiated but which did not reach its destination within the timeout period
+   */
   revertTransfer: () => Promise<void>;
+
+  /**
+   * Recall a transfer which reached the target chain, but which was not claimed by the recipient within the timeout period
+   */
   recallUnclaimedTransfer: () => Promise<void>;
 };
 

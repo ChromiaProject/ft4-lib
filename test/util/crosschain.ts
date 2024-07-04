@@ -15,7 +15,6 @@ import { SignatureProvider, formatter } from "postchain-client";
  * @param adminSignatureProvider signature provider for admin user
  * @param asset asset registration object with crosschain asset parameters
  * @param originBlockchainRid blockchain rid of the chain that will be used as the origin chain for crosschain transfers
- * @returns
  */
 export async function registerCrosschainAsset(
   connection: Connection,

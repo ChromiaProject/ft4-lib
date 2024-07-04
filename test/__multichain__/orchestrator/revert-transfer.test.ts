@@ -144,7 +144,7 @@ describe("Orchestrator", () => {
           testContext.sampleAsset.id,
           transferAmount,
           path,
-          Date.now(),
+          Date.now() + 10000,
         ),
         {
           targetBlockchainRid: path[0],

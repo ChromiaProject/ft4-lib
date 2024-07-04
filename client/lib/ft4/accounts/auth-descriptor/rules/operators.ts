@@ -7,9 +7,9 @@ import {
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
- * the "less than" (<) operation for the provided variable.
+ * the "less than" (\<) operation for the provided variable.
  * Example: lessThan(opCount(10))
- * @param variableValue the variable value to use
+ * @param variableValue - the variable value to use
  * @returns a rule variable
  */
 export const lessThan = <T extends string>(
@@ -18,9 +18,9 @@ export const lessThan = <T extends string>(
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
- * the "less than or equal" (<=) operation for the provided variable.
+ * the "less than or equal" (\<=) operation for the provided variable.
  * Example: lessOrEqual(opCount(10))
- * @param variableValue the variable value to use
+ * @param variableValue - the variable value to use
  * @returns a rule variable
  */
 export const lessOrEqual = <T extends string>(
@@ -31,7 +31,7 @@ export const lessOrEqual = <T extends string>(
  * Creates a rule variable that (can be passed to an auth descriptor) with
  * the "equal" (=) operation for the provided variable.
  * Example: equals(opCount(10))
- * @param variableValue the variable value to use
+ * @param variableValue - the variable value to use
  * @returns a rule variable
  */
 export const equals = <T extends string>(
@@ -40,9 +40,9 @@ export const equals = <T extends string>(
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
- * the "greater than" (>) operation for the provided variable.
+ * the "greater than" (\>) operation for the provided variable.
  * Example: greaterThan(opCount(10))
- * @param variableValue the variable value to use
+ * @param variableValue - the variable value to use
  * @returns a rule variable
  */
 export const greaterThan = <T extends string>(
@@ -51,9 +51,9 @@ export const greaterThan = <T extends string>(
 
 /**
  * Creates a rule variable that (can be passed to an auth descriptor) with
- * the "greater than or equal" (>=) operation for the provided variable.
+ * the "greater than or equal" (\>=) operation for the provided variable.
  * Example: greaterOrEqual(opCount(10))
- * @param variableValue the variable value to use
+ * @param variableValue - the variable value to use
  * @returns a rule variable
  */
 export const greaterOrEqual = <T extends string>(
@@ -75,7 +75,7 @@ export const greaterOrEqual = <T extends string>(
  *    lessThan(blockHeight(10)),
  *  )
  * ```
- * @param rules the rules to combine
+ * @param rules - the rules to combine
  * @returns a set of rules which will be evaluated together using the 'and' operator
  */
 export const and = <T extends string>(

@@ -11,13 +11,6 @@ export enum AuthType {
   MultiSig = "M",
 }
 
-export class AuthDescriptorError extends Error {
-  constructor(msg?: string) {
-    super(msg);
-    this.name = "AuthDescriptorError";
-  }
-}
-
 export type AuthDescriptor<T extends SingleSig | MultiSig> = {
   id: Buffer;
   accountId: Buffer;
@@ -63,7 +56,7 @@ export type RawSingleSig = readonly [flags: string[], signer: Buffer];
 
 // ======== Server side request model =========
 
-type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
+export type RawAuthDescriptorArgs = RawSingleSig | RawMultiSig;
 export type RawAuthDescriptorRegistration<T extends RawAuthDescriptorArgs> =
   readonly [auth_type: number, args: T, rules: RawRules | null];
 

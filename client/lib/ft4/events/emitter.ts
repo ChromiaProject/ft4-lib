@@ -1,5 +1,11 @@
 import { Listener } from "./types";
 
+/**
+ * Class that can handle event dispatching. Users can register
+ * event handlers for certain events and when the `emit()` function
+ * is called, this class will take care of invoking all of the event
+ * handlers that were registered for events of that type.
+ */
 export class EventEmitter<T extends Record<string, any[]>> {
   private events: Partial<Record<keyof T, Listener<T[keyof T]>[]>> = {};
 

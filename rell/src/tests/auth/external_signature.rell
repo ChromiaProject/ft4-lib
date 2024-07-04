@@ -28,7 +28,7 @@ function test_fails_if_insufficient_permissions() {
 }
 
 function test_it_decorates_messages_with_blockchain_rid_and_nonce() {
-  val message = auth.external.get_auth_message_template("test_empty_auth_message", null.to_gtv());
+  val message = auth.external.get_auth_message_template("test_empty_auth_message", null);
   assert_true(message.contains("{blockchain_rid}"));
   assert_true(message.contains("{nonce}"));
 }
@@ -454,4 +454,26 @@ function test_fails_if_evm_signatures_does_not_correspond_to_signers() {
     .op(auth.external.evm_auth(account.id, original_ad.hash(), [signature, signature]))
     .op(op)
     .run_must_fail("Expected signer at index <1> to be <%s> but was: <%s>".format(bob_address, alice_address));
+}
+
+function test_it_correctly_verifies_message_with_non_ascii_characters_signed_by_ethers() {
+  // Message signature is generated using ethers.js
+  // > const { utils, ethers } = require("ethers")
+  // > const wallet = new ethers.Wallet("2222222222222222222222222222222222222222222222222222222222222222")
+  // > ethers.Signature.from(await wallet.signMessage("👋🌎"))
+  // Signature { 
+  //  r: "0x4de541f92b06a96becb0acd0e4912d067d161cc7353f35157e69a0d1726df122", 
+  //  s: "0x0b4c13f9f8a9bf067bfb595fa2ec0ad0111b500c7616f6638c8f043c0885e14f", 
+  //  yParity: 1, 
+  //  networkV: null 
+  // }
+
+  val signature = auth.signature(
+    r = x"4de541f92b06a96becb0acd0e4912d067d161cc7353f35157e69a0d1726df122",
+    s = x"0b4c13f9f8a9bf067bfb595fa2ec0ad0111b500c7616f6638c8f043c0885e14f",
+    v = 28
+  );
+  
+  val address = crypto.eth_privkey_to_address(rell.test.keypairs.alice.priv);
+  assert_equals(auth._recover_evm_address("👋🌎", signature), address);
 }

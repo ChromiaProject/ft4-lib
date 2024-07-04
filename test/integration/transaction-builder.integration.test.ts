@@ -97,29 +97,41 @@ describe("transaction builder", () => {
     expect(sentEvent!.equals(receipt.transactionRid));
   }, 5000);
 
-  it("buildAndSendWithAnchoring() emits events, and rejects when directory chain is unavailable", async () => {
+  it("buildAndSendWithAnchoring() emits events", async () => {
     let builtEvent: SignedTransaction | undefined = undefined;
     let sentEvent: Buffer | undefined = undefined;
     let confirmedEvent: TransactionReceipt | undefined = undefined;
-    const promise = session
-      .transactionBuilder()
-      .add(deleteAllAuthDescriptorsExceptMain())
-      .add(nop())
-      .buildAndSendWithAnchoring()
-      .on("built", (tx) => {
-        builtEvent = tx;
-      })
-      .on("sent", (txRid) => {
-        sentEvent = txRid;
-      })
-      .on("confirmed", (receipt) => {
-        confirmedEvent = receipt;
-      });
-
-    await expect(promise).rejects.toThrow(SystemChainException);
+    try {
+      await session
+        .transactionBuilder()
+        .add(deleteAllAuthDescriptorsExceptMain())
+        .add(nop())
+        .buildAndSendWithAnchoring()
+        .on("built", (tx) => {
+          builtEvent = tx;
+        })
+        .on("sent", (txRid) => {
+          sentEvent = txRid;
+        })
+        .on("confirmed", (receipt) => {
+          confirmedEvent = receipt;
+        });
+    } catch (err) {
+      /* Ignore */
+    }
 
     expect(builtEvent).toBeTruthy();
     expect(sentEvent).toBeTruthy();
     expect(confirmedEvent!.status).toEqual(ResponseStatus.Confirmed);
+  }, 5000);
+
+  it("buildAndSendWithAnchoring() throws exception when system chain not available", async () => {
+    const promise = session
+      .transactionBuilder()
+      .add(deleteAllAuthDescriptorsExceptMain())
+      .add(nop())
+      .buildAndSendWithAnchoring();
+
+    await expect(promise).rejects.toThrow(SystemChainException);
   }, 5000);
 });

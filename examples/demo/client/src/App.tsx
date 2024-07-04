@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Buffer } from 'buffer';
 import { createClient } from 'postchain-client';
 import {
-    createAmount,
-    createKeyStoreInteractor,
-    createWeb3ProviderEvmKeyStore,
-    createLocalStorageLoginKeyStore,
-    createSessionStorageLoginKeyStore,
+  createAmount,
+  createKeyStoreInteractor,
+  createWeb3ProviderEvmKeyStore,
+  Account,
+  Asset,
+  Session,
+  createLocalStorageLoginKeyStore,
+  createSessionStorageLoginKeyStore,
+  ttlLoginRule,
+  days,
 } from '@chromia/ft4';
 
 import Alert from '@mui/material/Alert';
@@ -21,8 +26,9 @@ declare global {
 }
 
 const useSession = (storageType) => {
-  const [session, setSession] = useState(null);
-  const [accounts, setAccounts] = useState([]);
+  const [session, setSession] = useState<Session | null>(null);
+  const [logout, setLogout] = useState<(()=>Promise<void>) | null>(null);
+  const [accounts, setAccounts] = useState<Account[]>([]);
 
   useEffect(() => {
     const initializeSession = async () => {
@@ -34,7 +40,7 @@ const useSession = (storageType) => {
       });
 
       const store = await createWeb3ProviderEvmKeyStore(window.ethereum);
-      const { getAccounts, getLoginManager } = createKeyStoreInteractor(client, store);
+      const { getAccounts, login } = createKeyStoreInteractor(client, store);
 
       const accountsData = await getAccounts();
       setAccounts(accountsData);
@@ -48,17 +54,23 @@ const useSession = (storageType) => {
         ? createLocalStorageLoginKeyStore()
         : createSessionStorageLoginKeyStore();
 
-      const newSession = await getLoginManager(keyStore).login({
+      const { session: newSession, logout: newLogout} = await login({
         accountId: accountsData[0].id,
+        loginKeyStore: keyStore,
+        config: {
+          flags: [],
+          rules: ttlLoginRule(days(1)),
+        }
       });
 
       setSession(newSession);
+      setLogout(()=>newLogout);
     };
 
     initializeSession();
   }, [storageType]);
 
-  return { session, accounts };
+  return { session, accounts, logout };
 };
 
 function App() {
@@ -66,7 +78,7 @@ function App() {
   const storageType = queryParams.get('storageType') || 'session';
 
   const { session, accounts } = useSession(storageType);
-  const [assets, setAssets] = useState([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [receiverId, setReceiverId] = useState('');
   const [copied, setCopied] = useState(false);
   const [transferMsg, setTransferMsg] = useState({ success: false, message: '' });
@@ -96,16 +108,17 @@ function App() {
 
   const handleTransfer = async () => {
     try {
-      await session.account.transfer(receiverId, assets[0].id, createAmount(12, assets[0].decimals));
+      if (session === null) throw new Error('Session is not initialized');
+      await session.account.transfer(receiverId, assets[0].id, createAmount(1, assets[0].decimals));
       setTransferMsg({ success: true, message: "Transfer successful!" });
     } catch (error) {
-      setTransferMsg({ success: false, message: "Transfer failed!" });
+      setTransferMsg({ success: false, message: `Transfer failed! Reason: ${error}` });
     } finally {
       setOpen(true);
     }
   };
 
-  const handleClose = (_, reason: string) => {
+  const handleClose = (_, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
@@ -158,7 +171,7 @@ return (
         <Typography key={index} variant="h5" component="div" gutterBottom style={{ marginTop: '1rem' }}>
           <div>Asset</div>
           <div><strong>{asset.name}</strong></div>
-          <img src={asset.icon_url} alt={asset.name} style={{ height: '50px' }} />
+          <img src={asset.iconUrl} alt={asset.name} style={{ height: '50px' }} />
         </Typography>
       ))
     ) : (
@@ -176,7 +189,7 @@ return (
       <Button
         variant="contained"
         onClick={handleTransfer}
-        disabled={!receiverId || !assets.length}
+        disabled={!session || !receiverId || !assets.length}
         sx={{ fontSize: '1.2rem', padding: '0.8rem 1.6rem' }}
       >
         Transfer

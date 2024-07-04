@@ -114,17 +114,11 @@ function are_rules_active(rules: gtv): boolean {
 }
 
 function is_rule_active(rule: rule_expression): boolean {
-	when (rule.variable) {
-		rule_variable.block_height -> {
-			return is_block_height_rule_active(rule);
-		}
-		rule_variable.block_time -> {
-			return is_block_time_rule_active(rule);
-		}		
-		rule_variable.op_count -> {
-			return is_op_count_rule_active(rule);
-		}
-	}
+	return when (rule.variable) {
+		block_height -> is_block_height_rule_active(rule);
+		block_time -> is_block_time_rule_active(rule);
+		op_count -> true;
+	};
 }
 
 /*
@@ -189,7 +183,8 @@ function validate_auth_descriptor_rules(rules: gtv) {
 	if (rules_gtv[0] != "and".to_gtv()) {
 		validate_rule(rule_expression_from_gtv(rules_gtv.to_gtv()));
 	} else {
-		require(rules_gtv.size() <= chain_context.args.auth_descriptor.max_rules, "Too many rules");
+		// +1 keeps track of the "and"
+		require(rules_gtv.size() <= chain_context.args.auth_descriptor.max_rules + 1, "Too many rules");
 
 		for (gtv_rule in rules_gtv.sub(1)) {
 			validate_rule(rule_expression_from_gtv(gtv_rule));
@@ -280,16 +275,3 @@ function is_block_height_rule_active(r: rule_expression): boolean {
 		}
 	}
 }
-
-
-/****************************************************************************************
- *                                     op_count                                         *
- ****************************************************************************************/
- 
- function op_count_variable_initial_value(): gtv {
- 	return (1).to_gtv();
- }
- 
- function is_op_count_rule_active(rule: rule_expression): boolean {
- 	return true;
- }

@@ -1,4 +1,8 @@
 import {
+  EvmKeyStore,
+  FtKeyStore,
+  LoginConfigOptions,
+  LoginKeyStore,
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
   createInMemoryLoginKeyStore,
@@ -6,125 +10,115 @@ import {
 import { Connection, createConnection } from "@ft4/ft-session";
 import { registrationStrategy, registerAccount } from "@ft4/registration";
 import { useChromiaNode } from "@ft4-test/util";
-import { encryption, gtv } from "postchain-client";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import { KeyPair, encryption, gtv } from "postchain-client";
+import {
+  AnyAuthDescriptorRegistration,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
 
 let _connection: Connection;
 
 describe("Test open strategy", () => {
   const getClient = useChromiaNode();
 
+  let keyPair: KeyPair;
+  let ftKeyStore: FtKeyStore;
+  let evmKeyStore: EvmKeyStore;
+  let ftAuthDescriptor: AnyAuthDescriptorRegistration;
+  let evmAuthDescriptor: AnyAuthDescriptorRegistration;
+  let loginKeyStore: LoginKeyStore;
+
   beforeAll(async () => {
     const client = getClient();
     _connection = createConnection(client);
   });
 
-  it("can register account and emits events", async () => {
+  beforeEach(async () => {
+    keyPair = encryption.makeKeyPair();
+    ftKeyStore = createInMemoryFtKeyStore(keyPair);
+    evmKeyStore = createInMemoryEvmKeyStore(keyPair);
+
+    ftAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      ftKeyStore.id,
+    );
+    evmAuthDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      evmKeyStore.id,
+    );
+    loginKeyStore = createInMemoryLoginKeyStore();
+  });
+
+  it("can register account using open account strategy", async () => {
+    const { session } = await registerAccount(
+      _connection.client,
+      ftKeyStore,
+      registrationStrategy.open(ftAuthDescriptor),
+    );
+    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
+  });
+
+  it("emits events during registration", async () => {
     const builtListener = jest.fn();
     const sentListener = jest.fn();
 
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryFtKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
-
-    const { session, logout } = await registerAccount(
+    await registerAccount(
       _connection.client,
-      keyStore,
-      registrationStrategy.open(authDescriptor),
+      ftKeyStore,
+      registrationStrategy.open(ftAuthDescriptor),
     )
       .on("built", builtListener)
       .on("sent", sentListener);
 
-    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
-
     expect(builtListener).toHaveBeenCalledTimes(1);
     expect(sentListener).toHaveBeenCalledTimes(1);
-
-    await logout(); // should be a no-op
   });
 
-  it("can add disposable key during account registration", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryFtKeyStore(keyPair);
+  const configs: LoginConfigOptions[] = [
+    {
+      loginKeyStore: createInMemoryLoginKeyStore(),
+      config: { flags: [], rules: null },
+    },
+    {
+      loginKeyStore: createInMemoryLoginKeyStore(),
+    },
+  ];
+  it.each(configs)(
+    "can add disposable key with different configuration during account registration",
+    async (options) => {
+      const { session } = await registerAccount(
+        _connection.client,
+        ftKeyStore,
+        registrationStrategy.open(ftAuthDescriptor, options),
+      );
 
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
+      expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
 
-    const loginKeyStore = createInMemoryLoginKeyStore();
+      const disposableKeyStore = await options.loginKeyStore!.getKeyStore(
+        session.account.id,
+      );
+      expect(disposableKeyStore).toBeTruthy();
+      expect(
+        (
+          await session.account.getAuthDescriptorsBySigner(
+            disposableKeyStore!.pubKey,
+          )
+        ).length,
+      ).toEqual(1);
+    },
+  );
 
+  it("removes disposable key on logout", async () => {
     const { session, logout } = await registerAccount(
       _connection.client,
-      keyStore,
-      registrationStrategy.open(authDescriptor, {
-        loginKeyStore,
-        config: { flags: [], rules: null },
-      }),
-    );
-
-    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
-
-    const disposableKeyStore = await loginKeyStore.getKeyStore(
-      session.account.id,
-    );
-    expect(disposableKeyStore).toBeTruthy();
-    expect(
-      (
-        await session.account.getAuthDescriptorsBySigner(
-          disposableKeyStore!.pubKey,
-        )
-      ).length,
-    ).toEqual(1);
-
-    await logout();
-    expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
-    expect(
-      (
-        await session.account.getAuthDescriptorsBySigner(
-          disposableKeyStore!.pubKey,
-        )
-      ).length,
-    ).toEqual(0);
-  });
-
-  it("can add disposable key with default login config during account registration", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryFtKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
-
-    const loginKeyStore = createInMemoryLoginKeyStore();
-
-    const { session, logout } = await registerAccount(
-      _connection.client,
-      keyStore,
-      registrationStrategy.open(authDescriptor, {
+      ftKeyStore,
+      registrationStrategy.open(ftAuthDescriptor, {
         loginKeyStore,
       }),
     );
-
-    expect(session.account.id).toEqual(gtv.gtvHash(keyPair.pubKey));
-
     const disposableKeyStore = await loginKeyStore.getKeyStore(
       session.account.id,
     );
-    expect(disposableKeyStore).toBeTruthy();
-    expect(
-      (
-        await session.account.getAuthDescriptorsBySigner(
-          disposableKeyStore!.pubKey,
-        )
-      ).length,
-    ).toEqual(1);
-
     await logout();
     expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
     expect(
@@ -137,46 +131,24 @@ describe("Test open strategy", () => {
   });
 
   it("can register account with evm key store", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
-
-    const { session, logout } = await registerAccount(
+    const { session } = await registerAccount(
       _connection.client,
-      keyStore,
-      registrationStrategy.open(authDescriptor),
+      evmKeyStore,
+      registrationStrategy.open(evmAuthDescriptor),
     );
 
-    expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
-
-    await logout(); // should be a no-op
+    expect(session.account.id).toEqual(gtv.gtvHash(evmKeyStore.address));
   });
 
-  it("can register account with evm key store and add disposable key", async () => {
-    const keyPair = encryption.makeKeyPair();
-    const keyStore = createInMemoryEvmKeyStore(keyPair);
-
-    const authDescriptor = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
-      keyStore.id,
-    );
-
-    const loginKeyStore = createInMemoryLoginKeyStore();
-
-    const { session, logout } = await registerAccount(
+  it("can add disposable key to account registered with evm key", async () => {
+    const { session } = await registerAccount(
       _connection.client,
-      keyStore,
-      registrationStrategy.open(authDescriptor, {
+      evmKeyStore,
+      registrationStrategy.open(evmAuthDescriptor, {
         loginKeyStore,
         config: { flags: [], rules: null },
       }),
     );
-
-    expect(session.account.id).toEqual(gtv.gtvHash(keyStore.address));
 
     const disposableKeyStore = await loginKeyStore.getKeyStore(
       session.account.id,
@@ -189,15 +161,5 @@ describe("Test open strategy", () => {
         )
       ).length,
     ).toEqual(1);
-
-    await logout();
-    expect(await loginKeyStore.getKeyStore(session.account.id)).toBeNull();
-    expect(
-      (
-        await session.account.getAuthDescriptorsBySigner(
-          disposableKeyStore!.pubKey,
-        )
-      ).length,
-    ).toEqual(0);
   });
 });

@@ -19,7 +19,9 @@ operation ras_transfer_subscription(
    asset_id: byte_array,
    main: accounts.auth_descriptor,
    disposable: accounts.auth_descriptor? = null
-) {}
+) {
+    strategies.require_register_account_next_operation();
+}
 
 function account_details(gtv) {
     val params = struct<ras_transfer_subscription>.from_gtv(gtv);

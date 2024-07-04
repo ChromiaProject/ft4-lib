@@ -22,7 +22,7 @@ describe("Crosschain asset", () => {
     const name = "Test asset";
     const symbol = "TST";
     const decimals = 18;
-    const blockchainRid = formatter.ensureBuffer("0011223344");
+    const blockchainRid = formatter.ensureBuffer("aa".repeat(32));
     const iconUrl = "https://icon.url/1";
     const type = "FT4";
     const uniquenessResolver = formatter.ensureBuffer("098756");
@@ -40,7 +40,7 @@ describe("Crosschain asset", () => {
         type,
         uniquenessResolver,
       },
-      formatter.ensureBuffer("998877"),
+      formatter.ensureBuffer("bb".repeat(32)),
     );
 
     const asset = await getAssetDetailsForCrosschainRegistration(

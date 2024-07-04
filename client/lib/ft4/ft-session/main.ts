@@ -69,6 +69,13 @@ import {
 } from "./types";
 import { getEnabledRegistrationStrategies } from "@ft4/registration";
 
+/**
+ * Uses the provided connection to create a new connection to the specified blockchain rid.
+ * The new brid must be available in the cluster that the old connection is configured to use.
+ * @param oldConnection - a connection that can be used to fetch the new blockchain info
+ * @param newBlockchainRid - the rid of the blockchain to create connection for
+ * @returns Connection instance configured to use the specified blockchain
+ */
 export async function createConnectionToBlockchainRid(
   oldConnection: Connection,
   newBlockchainRid: BufferId,
@@ -78,6 +85,12 @@ export async function createConnectionToBlockchainRid(
   );
 }
 
+/**
+ * Uses the provided client to instantiate a new client which targets a
+ * different blockchain. Namely, the blockchain with the provided rid
+ * @param client - the original client
+ * @param blockchainRid - rid of the blockchain which the new client will target
+ */
 export async function createClientToBlockchain(
   client: IClient,
   blockchainRid: BufferId,
@@ -92,6 +105,10 @@ export async function createClientToBlockchain(
   });
 }
 
+/**
+ * Uses the specified client to create a Connection instance.
+ * @param client - the client to use for the connection
+ */
 export function createConnection(client: IClient): Connection {
   const connection: Connection = Object.freeze({
     client,
@@ -163,6 +180,11 @@ export function createConnection(client: IClient): Connection {
   return connection;
 }
 
+/**
+ * Uses the provided inputs to create a Session instance.
+ * @param connection - connection to use for this session
+ * @param authenticator - authenticator to use for this session
+ */
 export function createSession(
   connection: Connection,
   authenticator: Authenticator,
@@ -184,6 +206,17 @@ export function createSession(
   });
 }
 
+/**
+ * Builds and submits a transaction containing the specified operations
+ * in the specified order. Furthermore, this function will use the provided
+ * authenticator to correctly authenticate each operation in the transaction as
+ * necessary. It will also insert a nop operation at the end of the transaction.
+ * To prevent this behavior, see the function {@link callWithoutNop}.
+ * @param connection - connection to the blockchain which the transaction will be submitted
+ * @param authenticator - authenticator to use when authenticating the operations in the transaction
+ * @param operations - the operations to include in the transaction
+ * @returns promi-event which will emit once when transaction is built and once when it is sent. It will resolve to a transaction receipt.
+ */
 export function call(
   connection: Connection,
   authenticator: Authenticator,
@@ -198,6 +231,15 @@ export function call(
   return callWithoutNop(connection, authenticator, ...operations, nop());
 }
 
+/**
+ * Same as {@link call} but does not insert a nop at the end of the transaction.
+ * This means that subsequent calls to this operation with the same input might fail due to
+ * a transaction with the same rid already being in the tx history.
+ * @param connection - connection to the blockchain which the transaction will be submitted
+ * @param authenticator - authenticator to use when authenticating the operations in the transaction
+ * @param operations - the operations to include in the transaction
+ * @returns promi-event which will emit once when transaction is built and once when it is sent. It will resolve to a transaction receipt.
+ */
 export function callWithoutNop(
   connection: Connection,
   authenticator: Authenticator,
@@ -223,6 +265,10 @@ export async function signAndSendTransaction(
   return connection.client.sendTransaction(signedTx);
 }
 
+/**
+ * Creates an instance of `AuthDataService` object.
+ * @param connection - connection that the auth data service will use when interacting with the blockchain
+ */
 export function createAuthDataService(connection: Connection): AuthDataService {
   let exposedOperations: Set<string> | null = null;
   let authHandlers: { [key: string]: AuthHandler } | null = null;
@@ -284,6 +330,11 @@ export function createAuthDataService(connection: Connection): AuthDataService {
   });
 }
 
+/**
+ * Creates a `KeyStoreInteractor` instance.
+ * @param client - client that will be used to communicate with the blockchain
+ * @param keyStore - the keystore which this interactor will interact with
+ */
 export function createKeyStoreInteractor(
   client: IClient,
   keyStore: KeyStore,

@@ -24,7 +24,11 @@ function recall_on_crosschain_transfer(
     transfer_op_index: integer
 );
 
-function get_paginated_pending_transfers(account_id: byte_array, page_size: integer?, page_cursor: text?) {
+function get_paginated_pending_transfers(
+    account_id: byte_array,
+    page_size: integer?,
+    page_cursor: text?
+) {
     val after_rowid = utils.before_rowid(page_cursor);
 
     return pending_transfer @* {

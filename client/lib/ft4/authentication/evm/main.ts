@@ -7,6 +7,12 @@ import { Signer } from "@ft4/authentication";
 
 export const EVM_AUTH = "ft4.evm_auth";
 
+/**
+ * Creates a `ft4.evm_auth` operation object from the provided data
+ * @param accountId - the account id to authorize for
+ * @param authDescriptorId - the auth descriptor to authorize with
+ * @param signatures - signatures performed by the keys stored in the auth descriptor
+ */
 export function evmAuth(
   accountId: BufferId,
   authDescriptorId: BufferId,
@@ -22,6 +28,11 @@ export function evmAuth(
   };
 }
 
+/**
+ * Signs the provided message using the provided signer and produces a Signature object.
+ * @param message - the message to sign
+ * @param signer - the signer that will sign the message
+ */
 export async function signMessage(
   message: string,
   signer: ethers.Signer,
@@ -29,6 +40,10 @@ export async function signMessage(
   return sliceSignature(await signer.signMessage(message));
 }
 
+/**
+ * Accepts a signature, encoded as a string and converts it into a signature object.
+ * @param signature - the signature
+ */
 export function sliceSignature(signature: string): Signature {
   const { r, s, v } = ethers.Signature.from(signature);
   return {
@@ -38,21 +53,39 @@ export function sliceSignature(signature: string): Signature {
   };
 }
 
+/**
+ * Creates an `EvmSigner` instance from the specified address
+ * @param address - the address to convert to an `EvmSigner`
+ */
 export function evmSigner(address: BufferId): EvmSigner {
   return {
     address: formatter.ensureBuffer(address),
   };
 }
 
+/**
+ * Converts a typescript signature into a raw signature, which can be used to send to the blockchain
+ * @param signature - the signature to convert
+ */
 export function toRawSignature(signature: Signature): RawSignature {
   const { r, s, v } = signature;
   return [r, s, v];
 }
 
+/**
+ * Type assertion function that checks if the specified signer is an `EvmSigner`
+ * @param signer - the signer to check
+ * @returns true if the specified signer was an `EvmSigner`. Else false.
+ */
 export function isEvmSigner(signer: Signer): signer is EvmSigner {
   return (signer as EvmSigner).address !== undefined;
 }
 
+/**
+ * Type assertion function that checks if the specified signer is an `EvmKeyStore`
+ * @param keyStore - the signer to check
+ * @returns true if the specified signer was an `EvmKeyStore`. Else false.
+ */
 export function isEvmKeyStore(keyStore: Signer): keyStore is EvmKeyStore {
   return (
     isEvmSigner(keyStore) && (keyStore as EvmKeyStore).signMessage !== undefined

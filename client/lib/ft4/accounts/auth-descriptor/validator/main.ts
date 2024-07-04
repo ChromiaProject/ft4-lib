@@ -10,6 +10,12 @@ import {
 } from "@ft4/utils";
 import { AuthDataService } from "@ft4/authentication";
 
+/**
+ * Creates an `AuthDescriptorValidator` that can be used to validate auth descriptors
+ * @param authDataService - the auth data service to use
+ * @param useCache - wether the validator should store validation results between calls or if it should perform a new validation each time
+ * @returns an `AuthDescriptorValidator` instance
+ */
 export function createAuthDescriptorValidator(
   authDataService: AuthDataService,
   useCache: boolean,
@@ -20,6 +26,12 @@ export function createAuthDescriptorValidator(
   return createBaseAuthDescriptorValidator(service);
 }
 
+/**
+ * Creates an `AuthDescriptorValidator` that can be used to validate auth descriptors
+ * @param authDataService - the auth data service to use
+ * @param txContext - the context to use. Used to track counters without posting operations to the blockchain
+ * @returns an `AuthDescriptorValidator` instance
+ */
 export function createAuthDescriptorValidatorWithTxContext(
   authDataService: AuthDataService,
   txContext: TxContext,

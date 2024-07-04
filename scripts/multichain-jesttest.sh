@@ -3,6 +3,18 @@
 postgres=true
 while :; do
     case $1 in
+        --tests | --test | -t)
+            if [ "$2" ]; then
+                opt="$opt -t $2"
+                shift
+            else
+                echo 'ERROR: "--test" requires a non-empty option argument.'
+                exit 1
+            fi
+            ;;
+        --tests=* | --test=* | -t=*)
+            opt="$opt -t ${1#*=}"
+            ;;
         -f|--file)
             if [ "$2" ]; then
                 opt="$opt --runTestsByPath $2"
@@ -47,7 +59,6 @@ log "Running Jest tests..."
 
 NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
     --config=jest.config.multichain.js \
-    --maxWorkers=1 \
     --testPathPattern=__multichain__ \
     --verbose \
     $opt

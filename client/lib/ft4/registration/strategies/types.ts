@@ -61,3 +61,8 @@ export type TransferStrategyRule = TransferStrategyRulePartial & {
 export type TransferStrategyRuleAmount = TransferStrategyRulePartial & {
   minAmount: bigint;
 };
+
+export enum PendingTransferExpirationState {
+  Expired,
+  Valid,
+}

@@ -6,6 +6,8 @@ export {
   TransactionBuilder,
   TransactionBuilderConfig,
   TransactionWithReceipt,
+  OperationConfig,
+  ConfigOptions,
 } from "./types";
 
 export { transactionBuilder } from "./transaction-builder";

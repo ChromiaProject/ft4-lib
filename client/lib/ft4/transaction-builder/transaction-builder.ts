@@ -57,9 +57,9 @@ const defaultConfig: TransactionBuilderConfig = {
 
 /**
  * Creates a new TransactionBuilder instance
- * @param authenticator object that holds authentication information for the transaction
- * @param client object that holds connection info for the transaction
- * @param config optional configuration
+ * @param authenticator - object that holds authentication information for the transaction
+ * @param client - object that holds connection info for the transaction
+ * @param config - optional configuration
  * @returns a TransactionBuilder instance
  */
 export function transactionBuilder(

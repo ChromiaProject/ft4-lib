@@ -2,6 +2,10 @@ import { FetchAppStructureError } from "./errors";
 import { rellAppStructure } from "./queries";
 import { Queryable } from "postchain-client";
 
+/**
+ * Retrieves all the operations that are available on the blockchain.
+ * @param queryable - client to use for fetching the operations
+ */
 export async function fetchExposedOperations(
   queryable: Queryable,
 ): Promise<Set<string>> {

@@ -1,0 +1,22 @@
+import lib.ft4.auth;
+import lib.ft4.assets;
+import lib.ft4.crosschain;
+import lib.ft4.crosschain;
+import lib.ft4.accounts.strategies.open;
+
+@extend(auth.auth_handler)
+function () = auth.add_auth_handler(
+    flags = []
+);
+
+operation init(test_asset_issuing_chain: byte_array) {
+    val asset = assets.Unsafe.register_asset(
+        "Test", 
+        "TST", 
+        6, 
+        test_asset_issuing_chain, 
+        "http://icon"
+    );
+    
+    create crosschain.asset_origin(asset, test_asset_issuing_chain);
+}

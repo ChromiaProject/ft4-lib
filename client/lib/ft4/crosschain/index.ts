@@ -25,9 +25,16 @@ export { findPathToChainForAsset, PathfinderError } from "./pathfinder";
 
 export { pendingTransfersForAccount } from "./queries";
 
+export { hasCrosschainTransferExpired } from "./utils";
+
 export {
   Orchestrator,
   OrchestratorEvents,
+  OrchestratorState,
+  ResumeOrchestrator,
+  RevertOrchestrator,
+  OrchestratorBase,
+  ExternalOrchestratorBase,
   GtvInitTransferArgs,
   PendingTransfer,
   PendingTransferResponse,

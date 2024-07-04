@@ -1,12 +1,14 @@
 export {
   BufferId,
   Config,
+  EnumLike,
   TxContext,
   EntityRetriever,
   PaginatedEntity,
   RequireTogether,
   TransactionCompletion,
   TransactionSessionCompletion,
+  Filter,
 } from "./types";
 
 export { OperationNotExistError } from "./errors";

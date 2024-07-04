@@ -3,6 +3,10 @@ import { gtv, AnyAuthDescriptorRegistration } from "@ft4/accounts";
 import { Amount, CrosschainAssetRegistration } from "@ft4/asset";
 import { BufferId, op } from "@ft4/utils";
 
+/**
+ * Creates an operation object for the `ft4.admin.register_account`-operation
+ * @param authDescriptor - the auth descriptor data that will be the main auth descriptor of the account
+ */
 export function registerAccount(
   authDescriptor: AnyAuthDescriptorRegistration,
 ): Operation {

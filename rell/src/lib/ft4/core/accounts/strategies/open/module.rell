@@ -7,7 +7,9 @@ import ^^^^.core.accounts.strategies;
 operation ras_open(
     main: accounts.auth_descriptor,
     disposable: accounts.auth_descriptor? = null
-) {}
+) {
+    strategies.require_register_account_next_operation();
+}
 
 function account_details(gtv) {
     val params = struct<ras_open>.from_gtv(gtv);

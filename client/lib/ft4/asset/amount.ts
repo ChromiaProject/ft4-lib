@@ -3,9 +3,13 @@ import {
   AmountInputError,
   AmountOutOfRangeError,
 } from "./error";
-import { Amount, DecimalFormat, RawAmount, SupportedNumber } from "./types";
-
-type AnyAssetAmount = RawAmount | Amount;
+import {
+  Amount,
+  AnyAssetAmount,
+  DecimalFormat,
+  RawAmount,
+  SupportedNumber,
+} from "./types";
 
 // (2^256)-1 = (2^(4*64))-1 = (16^64)-1
 export const MAX = BigInt("0x" + "f".repeat(64));
@@ -22,10 +26,10 @@ function buildAmountObject(amount: RawAmount): Amount {
     minus: (other: SupportedNumber) =>
       sub(amount, convertToRawAmount(other, amount.decimals)),
 
-    times: (other: string | number) =>
-      mul(amount, convertToRawAmount(other, amount.decimals)),
-    dividedBy: (other: string | number) =>
-      div(amount, convertToRawAmount(other, amount.decimals)),
+    times: (other: SupportedNumber, decimals?: number | "max") =>
+      mul(amount, other, decimals),
+    dividedBy: (other: SupportedNumber, decimals?: number | "max") =>
+      div(amount, other, decimals),
 
     gt: (other: SupportedNumber) =>
       gt(amount, convertToRawAmount(other, amount.decimals)),
@@ -44,7 +48,8 @@ function buildAmountObject(amount: RawAmount): Amount {
     compare: (other: SupportedNumber) =>
       compare(amount, convertToRawAmount(other, amount.decimals)),
 
-    toString: () => stringify(amount),
+    toString: (removeTrailingZeroes?: boolean) =>
+      stringify(amount, removeTrailingZeroes),
     format: function (
       which: DecimalFormat,
       digits: number,
@@ -109,23 +114,16 @@ export function createAmountFromBalance(
  * - When the decimals argument is incompatible with num.decimals.
  * - When the calculated value is out of range.
  *
- * @param {SupportedNumber} num - The input number to convert.
- * @param {number} [decimals] - The optional number of decimals to use for the conversion.
- * @returns {RawAmount} - The converted RawAmount.
+ * @param num - The input number to convert.
+ * @param decimals - The optional number of decimals to use for the conversion.
+ * @returns - The converted RawAmount.
  * @throws Will throw an error if the input number is not a base-10 number or the specified decimals is invalid.
  */
 export function convertToRawAmount(
   num: SupportedNumber | bigint,
   decimals?: number,
 ): RawAmount {
-  if (
-    decimals !== undefined &&
-    (decimals < 0 || !Number.isInteger(decimals) || decimals > 78)
-  ) {
-    throw new AmountDecimalsError(
-      "Decimals must be an integer number between 0 and 78 (inclusive)",
-    );
-  }
+  if (decimals !== undefined) requireValidDecimals(decimals);
 
   let value: bigint;
   let amountDecimals = decimals ?? 0;
@@ -195,12 +193,11 @@ export function checkValueInRange(val: bigint) {
 }
 
 /**
- * To be used if you want the precise value. Can be formatted starting from here.
- * It must return a string, as a Number could still be overflowed and floating point
- * numbers aren't precise in JS.
+ * {@inheritDoc Amount.toString}
  *
  * @param amount - the amount to format
- * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -> 0.8)
+ * @param removeTrailingZeroes - if true, trailing zeroes will be removed (0.800 -\> 0.8).
+ *                               Defaults to true.
  *
  * @returns The amount as string
  */
@@ -354,24 +351,67 @@ function sub(amount: RawAmount, other: RawAmount): Amount {
   return buildAmountObject({ value: resultVal, decimals: amount.decimals });
 }
 
-function div(amount: RawAmount, other: RawAmount): Amount {
-  requireSameDecimals(amount, other);
-  if (other.value === BigInt(0)) {
+function resolveDecimals(
+  amount1: RawAmount,
+  amount2: RawAmount,
+  decimals?: number | "max",
+): number {
+  if (typeof decimals === "number") {
+    requireValidDecimals(decimals);
+    return decimals;
+  } else if (decimals === "max") {
+    return Math.max(amount1.decimals, amount2.decimals);
+  } else {
+    return amount1.decimals;
+  }
+}
+
+function mul(
+  amount: RawAmount,
+  other: SupportedNumber,
+  decimals?: number | "max",
+): Amount {
+  const o = convertToRawAmount(other);
+  const dec = resolveDecimals(amount, o, decimals);
+  const decimalShiftNeeded = dec - amount.decimals - o.decimals;
+
+  let resultVal: bigint;
+  if (decimalShiftNeeded >= 0) {
+    const factor = 10n ** BigInt(decimalShiftNeeded);
+    resultVal = amount.value * o.value * factor;
+  } else {
+    const factor = 10n ** BigInt(-decimalShiftNeeded);
+    resultVal = (amount.value * o.value) / factor;
+  }
+  return buildAmountObject({ value: resultVal, decimals: dec });
+}
+
+function div(
+  amount: RawAmount,
+  other: SupportedNumber,
+  decimals?: number | "max",
+): Amount {
+  const o = convertToRawAmount(other);
+  if (o.value === BigInt(0)) {
     throw new AmountInputError("AssetAmount: invalid divisor (0)");
   }
 
-  const factor = BigInt(10 ** amount.decimals);
-  const resultVal = (amount.value * factor) / other.value;
+  const dec = resolveDecimals(amount, o, decimals);
+  const decimalShiftNeeded = dec - amount.decimals + o.decimals;
 
-  return buildAmountObject({ value: resultVal, decimals: amount.decimals });
-}
+  let resultVal: bigint;
+  if (decimalShiftNeeded >= 0) {
+    const factor = 10n ** BigInt(decimalShiftNeeded);
+    resultVal = (amount.value * factor) / o.value;
+  } else {
+    const factor = 10n ** BigInt(-decimalShiftNeeded);
+    resultVal = amount.value / (o.value * factor);
+  }
 
-function mul(amount: RawAmount, other: RawAmount): Amount {
-  requireSameDecimals(amount, other);
-  const factor = BigInt(10 ** amount.decimals);
-  const resultVal = (amount.value * other.value) / factor;
-
-  return buildAmountObject({ value: resultVal, decimals: amount.decimals });
+  return buildAmountObject({
+    value: resultVal,
+    decimals: dec,
+  });
 }
 
 function eq(amount: RawAmount, other: RawAmount): boolean {
@@ -410,6 +450,14 @@ function requireSameDecimals(amount: AnyAssetAmount, other: RawAmount): void {
       "Cannot sum, subtract or compare two Amounts with different amount of " +
         `decimals: amount (${amount.decimals}), other ` +
         `(${other.decimals})`,
+    );
+  }
+}
+
+function requireValidDecimals(decimals: number) {
+  if (decimals < 0 || !Number.isInteger(decimals) || decimals > 78) {
+    throw new AmountDecimalsError(
+      "Decimals must be an integer number between 0 and 78 (inclusive)",
     );
   }
 }

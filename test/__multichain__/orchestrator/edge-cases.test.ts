@@ -8,6 +8,7 @@ import { ASSET_TYPE_FT4, Amount, Asset, createAmount } from "@ft4/asset";
 import { Buffer } from "buffer";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { FactoryError, PathfinderError } from "@ft4/crosschain";
+import { formatter } from "postchain-client";
 
 describe("Edge Cases", () => {
   const mintAmount = createAmount(100, 0);
@@ -94,7 +95,7 @@ describe("Edge Cases", () => {
       testContext.connection2,
       adminUser().signatureProvider,
       mapAssetToCrosschainAssetRegistration(asset),
-      Buffer.from("deadbeef", "hex"),
+      formatter.ensureBuffer("aa".repeat(32)),
     );
 
     await expect(testTransfer(undefined, asset)).rejects.toThrowError(

@@ -166,3 +166,28 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .sign(rell.test.keypairs.bob)
         .run();
 }
+
+function test_an_error_is_thrown_when_no_suceeding_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(subscription.ras_transfer_subscription(x"", auth_descriptor))
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_transfer_subscription> must be followed by a register account operation");
+}
+
+function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
+    val auth_descriptor = accounts.single_sig_auth_descriptor(
+        rell.test.keypairs.alice.pub,
+        set(["A", "T"])
+    );
+
+    rell.test.tx()
+        .op(subscription.ras_transfer_subscription(x"", auth_descriptor))
+        .nop()
+        .sign(rell.test.keypairs.alice)
+        .run_must_fail("<ft4.ras_transfer_subscription> operation must be followed by a register account operation, not <nop>");
+}

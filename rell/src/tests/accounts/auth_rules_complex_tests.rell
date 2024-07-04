@@ -139,7 +139,7 @@ namespace test_basic_functionality {
     val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
     val rule_list = list<accounts.rule_expression>();
-    for (i in range(accounts.get_max_allowed_auth_descriptor_rules())) {
+    for (i in range(accounts.get_max_allowed_auth_descriptor_rules() + 1)) {
       rule_list.add(
         accounts.rule_expression(
           accounts.rule_variable.block_height,

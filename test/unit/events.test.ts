@@ -1,4 +1,4 @@
-import { EventHandlers, Listener, ftEventEmitter } from "@ft4/events";
+import { eventHandlers, Listener, ftEventEmitter } from "@ft4/events";
 
 describe("EventEmitter functionality", () => {
   let listener: Listener<[string]>;
@@ -13,25 +13,25 @@ describe("EventEmitter functionality", () => {
   });
 
   it("should register an event listener", () => {
-    EventHandlers.onNoOp(listener);
+    eventHandlers.onNoOp(listener);
     expect(ftEventEmitter["events"]["NoOp"]).toContain(listener);
   });
 
   it("should call the event listener when the event is emitted", () => {
-    EventHandlers.onNoOp(listener);
+    eventHandlers.onNoOp(listener);
     ftEventEmitter.emit("NoOp", testData);
     expect(listener).toHaveBeenCalledWith(testData);
   });
 
   it("should remove the event listener", () => {
-    EventHandlers.onNoOp(listener);
-    EventHandlers.offNoOp(listener);
+    eventHandlers.onNoOp(listener);
+    eventHandlers.offNoOp(listener);
     expect(ftEventEmitter["events"]["NoOp"]).not.toContain(listener);
   });
 
   it("should not call the event listener after it's been removed", () => {
-    EventHandlers.onNoOp(listener);
-    EventHandlers.offNoOp(listener);
+    eventHandlers.onNoOp(listener);
+    eventHandlers.offNoOp(listener);
     ftEventEmitter.emit("NoOp", testData);
     expect(listener).not.toHaveBeenCalled();
   });

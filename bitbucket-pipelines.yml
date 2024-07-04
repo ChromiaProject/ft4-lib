@@ -3,6 +3,30 @@ image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.2
 options:
   max-time: 15
 
+unit-integration-tests: &unit-integration-tests-anchor
+  size: 2x
+  name: Unit & Integration Tests
+  caches:
+    - node
+  script:
+    - ./scripts/install-chr-and-pmc.sh
+    - chr install
+    - chr build
+    - chr test --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+    - npm ci
+    - npm run compile
+    - npm run generate:docs
+    - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+    - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+    - export TESTCONTAINERS_RYUK_DISABLED=true
+    - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+    - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+  artifacts:
+    - logs/**
+  services:
+    - postgres
+    - docker
+
 e2e-tests: &e2e-tests-anchor
     max-time: 15
     name: E2E Tests
@@ -19,7 +43,7 @@ e2e-tests: &e2e-tests-anchor
       - ln -s /opt/amazon-corretto-21.0.2.13.1-linux-x64/bin/java /usr/bin/java
       - java -version
 
-      - ./install-chr-and-pmc.sh
+      - ./scripts/install-chr-and-pmc.sh
 
       - export DISPLAY=:0.0
       - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
@@ -35,70 +59,116 @@ e2e-tests: &e2e-tests-anchor
 
 multichain-tests: &multichain-tests-anchor
   max-time: 30
+  size: 2x
   name: Multichain tests
   caches:
     - node
   services:
     - docker
   script:
-    - ./install-chr-and-pmc.sh
+    - ./scripts/install-chr-and-pmc.sh
     - npm ci
     - bash scripts/multichain-jesttest.sh
+
+update-docs: &update-docs-anchor
+  max-time: 15
+  name: Update docs
+  services:
+    - docker
+  script: 
+    - |
+      export DOCKER_BUILDKIT=1
+      GIT_EMAIL=`git config user.email`
+      GIT_NAME=`git config user.name`
+      git clone https://x-token-auth:$DOCS_REPO_API_TOKEN@bitbucket.org/chromawallet/chromia-docs.git docs-repo
+      
+      ./scripts/install-chr-and-pmc.sh
+      npm ci
+      npx typedoc --out docs-repo/static/pages/ft4-ts-client/client
+      chr install
+      chr build
+      chr generate docs-site --target docs-repo/static/pages/ft4-rell
+
+      VERSION=`npm pkg get version | tr -d '"'`
+      cd docs-repo
+
+      # Check if there are changes 
+      if [ `git status --porcelain | wc -l` -gt 0 ]; then
+        # Commit and push the changes
+        BRANCH=ft4-version-$VERSION
+
+        git config user.email $GIT_EMAIL
+        git config user.name $GIT_NAME
+
+        git checkout -b $BRANCH
+        git add .
+        git commit -m "Update ft4 api docs to version $VERSION"
+        
+        echo "Pushing the changes to remote"
+        git push origin $BRANCH
+        echo "Successfully pushed changes to remote"
+
+        echo "Opening a PR in docs repo"
+        HTTP_STATUS=$(curl -v \
+            --header 'Authorization: Bearer '"$DOCS_REPO_API_TOKEN" \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --data '{
+              "title": "BUILD_USER: Update ft4 api docs to version '"$VERSION"'",
+              "source": {"branch": {"name": "'"$BRANCH"'"}},
+              "destination": {"branch": {"name": "master"}},
+              "close_source_branch": true
+            }' \
+            --write-out '%{http_code}' \
+            --output response.txt \
+            "https://api.bitbucket.org/2.0/repositories/chromawallet/chromia-docs/pullrequests")
+        
+        if [ "$HTTP_STATUS" -ge 299 ]; then
+          echo "Failed to open PR with status <"$HTTP_STATUS"> and message:"
+          cat response.txt
+          exit 1
+        fi
+      else
+        echo "No changes to commit."
+      fi
 
 pipelines:
   pull-requests:
     '**':
-      - step:
-          size: 2x
-          name: Unit & Integration Tests
-          caches:
-            - node
-          script:
-            - ./install-chr-and-pmc.sh
-            - chr install -s configs/rell-test.yml
-            - chr test -s configs/rell-test.yml --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-            - npm ci
-            - npm run compile
-            - export JEST_JUNIT_OUTPUT_NAME=unit.xml
-            - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-            - export TESTCONTAINERS_RYUK_DISABLED=true
-            - export JEST_JUNIT_OUTPUT_NAME=integration.xml
-            - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-          artifacts:
-            - logs/**
-          services:
-            - postgres
-            - docker
       - parallel:
-        - step:
-              <<: *multichain-tests-anchor
-              trigger: manual
-        - step:
-            <<: *e2e-tests-anchor
-            trigger: manual
+        - step: *unit-integration-tests-anchor
+        - step: *multichain-tests-anchor
+      - step:
+          <<: *e2e-tests-anchor
+          trigger: manual
   branches:
     ft4:
       - step:
           name: deploy:latest
           script:
-            - ./install-chr-and-pmc.sh
-            - chr install -s configs/jest-test.yml
+            - ./scripts/install-chr-and-pmc.sh
+            - chr install
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest
             - rm .chromia/config
     development:
-      - step: *multichain-tests-anchor
-      - step:
-          <<: *e2e-tests-anchor
-          trigger: manual
+      - parallel:
+        - step: *unit-integration-tests-anchor
+        - step: *multichain-tests-anchor
+        - step:
+            <<: *e2e-tests-anchor
+            trigger: manual
+    master:
+      - step: *update-docs-anchor
+          
   custom:
     deploy-to-stable:
       - step:
           name: deploy:stable
           script:
-            - ./install-chr-and-pmc.sh
-            - chr install -s configs/jest-test.yml
+            - ./scripts/install-chr-and-pmc.sh
+            - chr install
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:stable
@@ -107,8 +177,8 @@ pipelines:
       - step:
           name: deploy:latest
           script:
-            - ./install-chr-and-pmc.sh
-            - chr install -s configs/jest-test.yml
+            - ./scripts/install-chr-and-pmc.sh
+            - chr install
             - mkdir .chromia
             - printf $DEPLOYMENT_KEYS > .chromia/config
             - npm run deploy:latest

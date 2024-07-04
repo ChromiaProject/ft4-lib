@@ -250,7 +250,7 @@ function test_can_not_revert_canceled_transfer_before_expiry() {
         .op(iccf_op.iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.revert_transfer(init_tx, 1, cancel_tx, 0))
         .nop()
-        .run_must_fail("This transfer has not yet expired. It can not be reverted before <%s>.".format(deadline));
+        .run_must_fail("This transfer has not yet expired. It can not be reverted before <%s> (evaluated at timestamp <%s>).".format(deadline, rell.test.last_block_time));
 }
 
 function test_can_not_revert_non_existing_transfer() {

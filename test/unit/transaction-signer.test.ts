@@ -1,11 +1,9 @@
 import {
   createFakeAuthDataService,
-  createTestAuthDescriptor,
   emptyOp,
   testAdFromRegistration,
 } from "@ft4-test/util";
 import {
-  AnyAuthDescriptor,
   AuthFlag,
   createMultiSigAuthDescriptorRegistration,
   createSingleSigAuthDescriptorRegistration,
@@ -32,178 +30,137 @@ import {
 import { evmSignatures } from "@ft4/transaction-builder/utils";
 import { nop } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { KeyPair, encryption, formatter, gtx } from "postchain-client";
+import { GTX, KeyPair, encryption, formatter, gtx } from "postchain-client";
 
 describe("Transaction Signer", () => {
   const blockchainRid = formatter.toBuffer("ABCD1234");
   let accountId: Buffer;
-  let authDescriptor: AnyAuthDescriptor;
   let keyPair: KeyPair;
-  let keyHandler: KeyHandler;
+  let ftKeyHandler: KeyHandler;
+  let evmKeyHandler: KeyHandler;
+  let ftAuthenticator: Authenticator;
+  let evmAuthenticator: Authenticator;
   let authDataService: AuthDataService;
-  let authenticator: Authenticator;
-
-  /*
-  const mockOperation: Operation = {
-    name: "testOperation",
-    args: [],
-  };
-   */
-
-  function setupTestEnvironment(
-    exposureLogicFn?: (operationName: string) => Promise<boolean>,
-  ) {
-    accountId = encryption.randomBytes(32);
-
-    const { keyPair: pair, authDescriptor: ad } = createTestAuthDescriptor([
-      AuthFlag.Transfer,
-    ]);
-    authDescriptor = ad;
-    keyPair = pair;
-
-    keyHandler =
-      createInMemoryFtKeyStore(keyPair).createKeyHandler(authDescriptor);
-
-    authDataService = createFakeAuthDataService(
-      {
-        ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
-        ["ft4.admin.register_account"]: {
-          flags: [AuthFlag.Account],
-          message: "",
-        },
-        ["testOperation"]: { flags: [], message: "" },
-      },
-      exposureLogicFn,
-    );
-
-    authenticator = createAuthenticator(accountId, [], authDataService);
-  }
+  let gtxTx: GTX;
 
   beforeEach(async () => {
-    setupTestEnvironment();
+    accountId = encryption.randomBytes(32);
+    keyPair = encryption.makeKeyPair();
+
+    const ftKeyStore = createInMemoryFtKeyStore(keyPair);
+    const evmKeyStore = createInMemoryEvmKeyStore(keyPair);
+    const ftAd = testAdFromRegistration(
+      createSingleSigAuthDescriptorRegistration(
+        [AuthFlag.Transfer],
+        ftKeyStore.pubKey,
+        null,
+      ),
+    );
+    const evmAd = testAdFromRegistration(
+      createSingleSigAuthDescriptorRegistration(
+        [AuthFlag.Transfer],
+        evmKeyStore.address,
+        null,
+      ),
+    );
+    ftAuthenticator = createAuthenticator(
+      accountId,
+      [createFtKeyHandler(ftAd, ftKeyStore)],
+      authDataService,
+    );
+    evmAuthenticator = createAuthenticator(
+      accountId,
+      [createEvmKeyHandler(ftAd, evmKeyStore)],
+      authDataService,
+    );
+    ftKeyHandler = createInMemoryFtKeyStore(keyPair).createKeyHandler(ftAd);
+    evmKeyHandler = createInMemoryEvmKeyStore(keyPair).createKeyHandler(evmAd);
+
+    authDataService = createFakeAuthDataService({
+      ["ft4.transfer"]: { flags: [AuthFlag.Transfer], message: "" },
+      ["ft4.admin.register_account"]: {
+        flags: [AuthFlag.Account],
+        message: "",
+      },
+      ["testOperation"]: { flags: [], message: "" },
+    });
+
+    gtxTx = gtx.emptyGtx(blockchainRid);
+    gtxTx.signatures = [];
+    gtxTx.signers = [];
   });
 
   describe("signTransaction()", () => {
     it("Can take a SignedTransaction", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signatures = [];
-
       expect(
         gtx.deserialize(
-          await signTransaction(authenticator, gtx.serialize(gtxTx)),
+          await signTransaction(ftAuthenticator, gtx.serialize(gtxTx)),
         ),
       ).toStrictEqual(gtxTx);
     });
 
     it("Can take a RawGtx", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signatures = [];
-
       expect(
         gtx.deserialize(
-          await signTransaction(authenticator, gtx.gtxToRawGtx(gtxTx)),
+          await signTransaction(ftAuthenticator, gtx.gtxToRawGtx(gtxTx)),
         ),
       ).toStrictEqual(gtxTx);
     });
 
     it("Can take a GTX", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signatures = [];
-
       expect(
-        gtx.deserialize(await signTransaction(authenticator, gtxTx)),
+        gtx.deserialize(await signTransaction(ftAuthenticator, gtxTx)),
       ).toStrictEqual(gtxTx);
     });
 
     it("Rejects transaction without signatures array", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-
-      await expect(signTransaction(authenticator, gtxTx)).rejects.toThrow(
-        "No signatures array",
-      );
+      await expect(
+        signTransaction(ftAuthenticator, gtx.emptyGtx(blockchainRid)),
+      ).rejects.toThrow("No signatures array");
     });
 
     it("Rejects transaction with signatures array of different length than signers array", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.signers = [keyPair.pubKey];
-      gtxTx.signatures = [];
 
-      await expect(signTransaction(authenticator, gtxTx)).rejects.toThrow(
+      await expect(signTransaction(ftAuthenticator, gtxTx)).rejects.toThrow(
         "signatures.length != signers.length: 0 != 1",
       );
     });
 
     it("Rejects transaction with existing GTX signatures when using EVM key stores", async () => {
-      const keyStore = createInMemoryEvmKeyStore(keyPair);
-      const ad = createSingleSigAuthDescriptorRegistration(
-        [AuthFlag.Transfer],
-        keyStore.address,
-        null,
-      );
-      const authenticator = createAuthenticator(
-        accountId,
-        [createEvmKeyHandler(testAdFromRegistration(ad), keyStore)],
-        authDataService,
-      );
-
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.operations = [
-        evmAuth(accountId, deriveAuthDescriptorId(ad), []),
+        evmAuth(accountId, evmKeyHandler.authDescriptor.id, []),
       ].map((o) => ({ opName: o.name, args: o.args! }));
       gtxTx.signers = [keyPair.pubKey];
-      gtxTx.signatures = [await keyHandler.sign(gtxTx)];
+      gtxTx.signatures = [await ftKeyHandler.sign(gtxTx)];
 
-      await expect(signTransaction(authenticator, gtxTx)).rejects.toThrow(
+      await expect(signTransaction(evmAuthenticator, gtxTx)).rejects.toThrow(
         "Cannot add EVM signatures after GTX signature has been added",
       );
     });
 
     it("Adds GTX signature", async () => {
-      const keyStore = createInMemoryFtKeyStore(keyPair);
-      const ad = createSingleSigAuthDescriptorRegistration(
-        [AuthFlag.Transfer],
-        keyStore.pubKey,
-        null,
-      );
-      const authenticator = createAuthenticator(
-        accountId,
-        [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
-        authDataService,
-      );
-
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.signers = [keyPair.pubKey];
       gtxTx.signatures = [EMPTY_SIGNATURE];
 
       expect(
-        gtx.deserialize(await signTransaction(authenticator, gtxTx)).signatures,
-      ).toStrictEqual([await keyHandler.sign(gtxTx)]);
+        gtx.deserialize(await signTransaction(ftAuthenticator, gtxTx))
+          .signatures,
+      ).toStrictEqual([await ftKeyHandler.sign(gtxTx)]);
     });
 
     it("Adds missing GTX signature", async () => {
-      const keyStore = createInMemoryFtKeyStore(keyPair);
-      const ad = createSingleSigAuthDescriptorRegistration(
-        [AuthFlag.Transfer],
-        keyStore.pubKey,
-        null,
-      );
-      const authenticator = createAuthenticator(
-        accountId,
-        [createFtKeyHandler(testAdFromRegistration(ad), keyStore)],
-        authDataService,
-      );
-
       const initialKeyPair = encryption.makeKeyPair();
 
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.signers = [initialKeyPair.pubKey, keyPair.pubKey];
       const initialSignature =
         await createInMemoryFtKeyStore(initialKeyPair).sign(gtxTx);
       gtxTx.signatures = [initialSignature, EMPTY_SIGNATURE];
 
       expect(
-        gtx.deserialize(await signTransaction(authenticator, gtxTx)).signatures,
-      ).toStrictEqual([initialSignature, await keyHandler.sign(gtxTx)]);
+        gtx.deserialize(await signTransaction(ftAuthenticator, gtxTx))
+          .signatures,
+      ).toStrictEqual([initialSignature, await ftKeyHandler.sign(gtxTx)]);
     });
 
     it("Adds missing EVM signature to evm_signatures", async () => {
@@ -227,9 +184,6 @@ describe("Transaction Signer", () => {
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
       );
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signers = [];
-      gtxTx.signatures = [];
       const evmSignaturesOp = evmSignatures([mockKeyStore.address], []);
       evmSignaturesOp.args![1] = [null];
       gtxTx.operations = [evmSignaturesOp, nop()].map((o) => ({
@@ -263,9 +217,6 @@ describe("Transaction Signer", () => {
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
       );
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signers = [];
-      gtxTx.signatures = [];
       const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
       evmAuthOp.args![2] = [null];
       gtxTx.operations = [evmAuthOp, nop()].map((o) => ({
@@ -309,7 +260,6 @@ describe("Transaction Signer", () => {
         [createEvmKeyHandler(testAdFromRegistration(ad), mockKeyStore)],
         mockAuthDataService,
       );
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
       evmAuthOp.args![2] = [
         EMPTY_SIGNATURE,
@@ -317,8 +267,6 @@ describe("Transaction Signer", () => {
         EMPTY_SIGNATURE,
         EMPTY_SIGNATURE,
       ];
-      gtxTx.signers = [];
-      gtxTx.signatures = [];
       gtxTx.operations = [evmAuthOp, nop()].map((o) => ({
         opName: o.name,
         args: o.args!,
@@ -345,9 +293,6 @@ describe("Transaction Signer", () => {
         noopAuthDataService,
       );
 
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signers = [];
-      gtxTx.signatures = [];
       const evmAuthOp = evmAuth(accountId, deriveAuthDescriptorId(ad), []);
       gtxTx.operations = [evmAuthOp, evmAuthOp, evmAuthOp, emptyOp()].map(
         (o) => ({ opName: o.name, args: o.args ?? [] }),
@@ -363,9 +308,6 @@ describe("Transaction Signer", () => {
 
   describe("signTransactionWithKeyStores()", () => {
     it("Can take a SignedTransaction", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signatures = [];
-
       expect(
         gtx.deserialize(
           await signTransactionWithKeyStores(
@@ -378,9 +320,6 @@ describe("Transaction Signer", () => {
     });
 
     it("Can take a RawGtx", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signatures = [];
-
       expect(
         gtx.deserialize(
           await signTransactionWithKeyStores(
@@ -393,9 +332,6 @@ describe("Transaction Signer", () => {
     });
 
     it("Can take a GTX", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signatures = [];
-
       expect(
         gtx.deserialize(
           await signTransactionWithKeyStores([], authDataService, gtxTx),
@@ -404,18 +340,17 @@ describe("Transaction Signer", () => {
     });
 
     it("Rejects transaction without signatures array", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-
       await expect(
-        signTransactionWithKeyStores([], authDataService, gtxTx),
+        signTransactionWithKeyStores(
+          [],
+          authDataService,
+          gtx.emptyGtx(blockchainRid),
+        ),
       ).rejects.toThrow("No signatures array");
     });
 
     it("Rejects transaction with signatures array of different length than signers array", async () => {
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.signers = [keyPair.pubKey];
-      gtxTx.signatures = [];
-
       await expect(
         signTransactionWithKeyStores([], authDataService, gtxTx),
       ).rejects.toThrow("signatures.length != signers.length: 0 != 1");
@@ -424,13 +359,12 @@ describe("Transaction Signer", () => {
     it("Rejects transaction with existing GTX signatures when using EVM key stores", async () => {
       const keyStore = createInMemoryEvmKeyStore(keyPair);
 
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.operations = [evmSignatures([], [])].map((o) => ({
         opName: o.name,
         args: o.args!,
       }));
       gtxTx.signers = [keyPair.pubKey];
-      gtxTx.signatures = [await keyHandler.sign(gtxTx)];
+      gtxTx.signatures = [await ftKeyHandler.sign(gtxTx)];
 
       await expect(
         signTransactionWithKeyStores([keyStore], authDataService, gtxTx),
@@ -440,29 +374,23 @@ describe("Transaction Signer", () => {
     });
 
     it("Adds GTX signature", async () => {
-      const keyStore = createInMemoryFtKeyStore(keyPair);
-
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.signers = [keyPair.pubKey];
       gtxTx.signatures = [EMPTY_SIGNATURE];
 
       expect(
         gtx.deserialize(
           await signTransactionWithKeyStores(
-            [keyStore],
+            [ftKeyHandler.keyStore],
             authDataService,
             gtxTx,
           ),
         ).signatures,
-      ).toStrictEqual([await keyHandler.sign(gtxTx)]);
+      ).toStrictEqual([await ftKeyHandler.sign(gtxTx)]);
     });
 
     it("Adds missing GTX signature", async () => {
-      const keyStore = createInMemoryFtKeyStore(keyPair);
-
       const initialKeyPair = encryption.makeKeyPair();
 
-      const gtxTx = gtx.emptyGtx(blockchainRid);
       gtxTx.signers = [initialKeyPair.pubKey, keyPair.pubKey];
       const initialSignature =
         await createInMemoryFtKeyStore(initialKeyPair).sign(gtxTx);
@@ -471,12 +399,12 @@ describe("Transaction Signer", () => {
       expect(
         gtx.deserialize(
           await signTransactionWithKeyStores(
-            [keyStore],
+            [ftKeyHandler.keyStore],
             authDataService,
             gtxTx,
           ),
         ).signatures,
-      ).toStrictEqual([initialSignature, await keyHandler.sign(gtxTx)]);
+      ).toStrictEqual([initialSignature, await ftKeyHandler.sign(gtxTx)]);
     });
 
     it("Adds missing EVM signature to evm_signatures", async () => {
@@ -490,9 +418,6 @@ describe("Transaction Signer", () => {
         ...authDataService,
         getAuthMessageTemplate: jest.fn().mockReturnValue(""),
       };
-      const gtxTx = gtx.emptyGtx(blockchainRid);
-      gtxTx.signers = [];
-      gtxTx.signatures = [];
       const evmSignaturesOp = evmSignatures([mockKeyStore.address], []);
       evmSignaturesOp.args![1] = [null];
       gtxTx.operations = [evmSignaturesOp, nop()].map((o) => ({

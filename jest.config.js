@@ -18,6 +18,7 @@ export default {
         "<rootDir>/jest.setup.ts",
         "<rootDir>/test/setupMocks.ts"
     ],
+    "testEnvironment": "<rootDir>/jest.test-environment.ts",
     "testPathIgnorePatterns": [
       "<rootDir>/test/__multichain__/"
     ],

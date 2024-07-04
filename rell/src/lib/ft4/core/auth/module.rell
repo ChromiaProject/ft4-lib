@@ -120,7 +120,9 @@ function generate_operation_auth_message(blockchain_rid: byte_array, op: gtx_ope
         message = message + "\n\n";
         var arguments = "with arguments:\n";
         for (arg in op.args) {
-            arguments = arguments + "- %s\n".format(arg).replace("\"", "");
+            val argument_value = utils.convert_gtv_to_text(arg);
+
+            arguments = arguments + "- %s\n".format(argument_value);
         }
         message = message + arguments.sub(0, arguments.size() - 1);
     }
@@ -196,4 +198,18 @@ function require_evm_signatures_can_be_used() {
         is_evm_signatures_authorized_operation(op_to_authorize.name),
         "Cannot authorize operation <%s> with evm_signatures".format(op_to_authorize.name)
     );
+}
+
+function require_regular_next_operation() {
+    val all_operations = op_context.get_all_operations();
+    val this_op = op_context.get_all_operations()[op_context.op_index];
+    
+    require(
+        all_operations.size() > op_context.op_index + 1,
+        "<%s> must be followed by an operation to authorize".format(this_op.name)
+    );
+    
+    val next_op = all_operations[op_context.op_index + 1];
+    val prohibited_operations = ["nop", "timeb", "iccf_proof", "ft4.ft_auth", "ft4.evm_auth", "ft4.evm_signatures"];
+    require(not prohibited_operations.contains(next_op.name), "<%s> cannot authorize <%s>".format(this_op.name, next_op.name));
 }

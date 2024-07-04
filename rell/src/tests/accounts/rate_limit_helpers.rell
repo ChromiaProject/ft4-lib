@@ -2,6 +2,24 @@ module;
 
 import ^^^.lib.ft4.accounts;
 
+// nothing about this account is misconfigured.
+// The account created with these values is going to misbehave
+// because of the subsequent `account_rate_limit_config` extension.
+object MISCONFIGURED_ACCOUNT {
+    pubkey: byte_array = x"039CF7CA604FB1D1D7BDDAD731E350D22AB18A97C106A42AA0D7FCF9524465A7C2";
+    privkey: byte_array = x"63BA783ECED7E92ADA692D24051580B8B7A45CEF72A045779859BFCDDF5592E9";
+    auth_descriptor_bytes: byte_array = (
+        accounts.auth_descriptor(
+            accounts.auth_type.S,
+            [
+                set(["A", "T"]).to_gtv(),
+                x"039CF7CA604FB1D1D7BDDAD731E350D22AB18A97C106A42AA0D7FCF9524465A7C2".to_gtv()
+            ],
+            null.to_gtv()
+        )
+    ).to_gtv().to_bytes();
+}
+
 entity admin_account {
     key accounts.account;
 }
@@ -10,8 +28,21 @@ operation set_admin_account(accounts.account) {
     create admin_account(account);
 }
 
+function get_misconfigured_account_id() {
+    return MISCONFIGURED_ACCOUNT.pubkey.hash();
+}
+
 @extend(accounts.account_rate_limit_config) function(accounts.account) =
     if (exists(admin_account @? { account }))
         accounts.rate_limit_config(active = false)
+    else
+        null;
+
+@extend(accounts.account_rate_limit_config) function(accounts.account) =
+    if (account.id == get_misconfigured_account_id())
+        accounts.rate_limit_config(
+            max_points = 10,
+            points_at_account_creation = 15
+        )
     else
         null;

@@ -47,12 +47,12 @@ describe("Asset", () => {
     connection = createConnection(client);
   });
 
-  it("should be successfully registered", async () => {
+  it("successfully registers an asset", async () => {
     const asset = await getNewAsset(client, "asset_1", "ASSET_1");
     expect(asset).not.toBeNull();
   });
 
-  it("should be returned when queried by name", async () => {
+  it("returns an asset when queried by name", async () => {
     const assetName = "asset_query";
     const asset = await getNewAsset(client, assetName, assetName.toUpperCase());
 
@@ -83,7 +83,7 @@ describe("Asset", () => {
     expect(expectedAssets2[0].name).toEqual(assetName);
   });
 
-  it("should be returned when queried by id", async () => {
+  it("returns an asset when queried by id", async () => {
     const assetName = "asset_id";
     const assetSymbol = "ASSET_ID";
     const blockchainRid = Buffer.from(
@@ -101,7 +101,7 @@ describe("Asset", () => {
     expect(expectedAsset!.blockchainRid).toEqual(blockchainRid);
   });
 
-  it("is returned when queried by symbol", async () => {
+  it("returns an asset when queried by symbol", async () => {
     const assetName = "asset_symbol";
     const assetSymbol = "ASSET_SYMBOL";
     const blockchainRid = Buffer.from(
@@ -116,7 +116,7 @@ describe("Asset", () => {
     const crosschainAssetName = "Some asset";
     const crosschainAssetSymbol = assetSymbol;
     const crosschainAssetDecimals = 6;
-    const crosschainBlockchainRid = formatter.ensureBuffer("343434");
+    const crosschainBlockchainRid = formatter.ensureBuffer("34".repeat(32));
     const crosschainIconUrl = "";
     const crosschainAssetType = "FT4";
     const crosschainRes = gtv.gtvHash([
@@ -137,7 +137,7 @@ describe("Asset", () => {
         type: crosschainAssetType,
         uniquenessResolver: crosschainRes,
       },
-      formatter.ensureBuffer("989898"),
+      formatter.ensureBuffer("98".repeat(32)),
     );
 
     const page1 = await connection.getAssetsBySymbol(assetSymbol, 1);
@@ -169,7 +169,7 @@ describe("Asset", () => {
     expect(page2.nextCursor).toBeNull();
   });
 
-  it("should return all the assets registered", async () => {
+  it("returns all the assets registered when calling getAllAssets()", async () => {
     const asset1 = await getNewAsset(client, "asset_2", "ASSET_2");
     const asset2 = await getNewAsset(client, "asset_3", "ASSET_3");
     const asset3 = await getNewAsset(client, "asset_4", "ASSET_4");
@@ -195,7 +195,7 @@ describe("Asset", () => {
     expect(page2.length).toBe(1);
   });
 
-  it("should successfully register with valid icon URL", async () => {
+  it("successfully registers an asset with valid icon URL", async () => {
     const validUrl = "https://example.com/icon.png";
     const asset = await getNewAsset(
       client,
@@ -209,7 +209,7 @@ describe("Asset", () => {
   });
 
   // Update after adding new admin functions
-  it("should fail to register with invalid icon URL", async () => {
+  it("fails to register an asset with invalid icon URL", async () => {
     const wrapper = async () =>
       registerAsset(
         client,
@@ -223,7 +223,7 @@ describe("Asset", () => {
     await expect(wrapper()).rejects.toThrow(InvalidUrlError);
   });
 
-  it("should successfully register without providing icon URL", async () => {
+  it("successfully registers an asset without providing icon URL", async () => {
     const asset = await getNewAsset(client, "Test Asset 3", "TST3", 0, "");
     expect(asset).not.toBeNull();
   });

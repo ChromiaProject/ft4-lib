@@ -6,7 +6,7 @@ import lib.ft4.admin;
 import lib.ft4.accounts;
 import ^^.assets.utils;
 import test_op: ^^.operations.auth;
-import ^.rate_limit_helpers;
+import rlh: ^.rate_limit_helpers;
 import test_utils: lib.ft4.test.utils;
 
 function test_create_account_in_genesis_block() {
@@ -95,6 +95,30 @@ function test_authenticated_operation_is_rate_limited() {
       .run();
 }
 
+function test_max_admin_rate_limit_points() {
+  assert_equals(accounts.get_rate_limit_config().active, true);
+  assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+  assert_equals(accounts.get_rate_limit_config().max_points, 5);
+
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+
+  //give too many points to alice
+  admin.external.add_rate_limit_points(alice.account.id, 10)
+      .sign(utils.admin_priv_key())
+      .run();
+
+  // check that alice has max_points, not more
+  assert_equals(accounts.rl_state @ { alice.account } (.points), 5);
+}
+
+function test_admin_cant_give_negative_rate_limit_points() {
+  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+
+  admin.external.add_rate_limit_points(alice.account.id, -1)
+      .sign(utils.admin_priv_key())
+      .run_must_fail("Amount must be a positive integer.");
+}
+
 function test_max_rate_limit_points() {
   rell.test.set_block_interval(1000); // set block interval to 1 second
 
@@ -157,7 +181,7 @@ function test_disable_rate_limit_for_account() {
   val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
 
   rell.test.tx()
-      .op(rate_limit_helpers.set_admin_account(alice.account))
+      .op(rlh.set_admin_account(alice.account))
       .run();
 
   // Perform the transaction
@@ -175,4 +199,29 @@ function test_disable_rate_limit_for_account() {
       .nop()
       .sign(rell.test.keypairs.alice)
       .run();
+}
+
+function test_rate_limit_starting_points_too_high_is_handled_correctly() {
+  assert_equals(accounts.get_rate_limit_config().active, true);
+  assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
+  assert_equals(accounts.get_rate_limit_config().max_points, 5);
+
+  utils.create_test_account_with_auth_descriptor(
+    accounts.auth_descriptor.from_bytes(
+      rlh.MISCONFIGURED_ACCOUNT.auth_descriptor_bytes
+    ),
+    rell.test.keypair(
+      priv = rlh.MISCONFIGURED_ACCOUNT.privkey,
+      pub = rlh.MISCONFIGURED_ACCOUNT.pubkey
+    )
+  );
+  
+  val misconfigured = accounts.account @ {
+    .id == rlh.get_misconfigured_account_id()
+  };
+  
+  val config = accounts.get_rate_limit_config_for_account(misconfigured);
+  val state = accounts.rl_state @ { misconfigured };
+  assert_equals(state.points, config.max_points);
+  assert_true(state.points < config.points_at_account_creation);
 }

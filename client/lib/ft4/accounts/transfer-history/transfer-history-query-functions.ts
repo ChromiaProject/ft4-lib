@@ -14,6 +14,13 @@ import {
 } from "./types";
 import { createTransferHistoryEntryFromResponse } from "./transfer-history-entry";
 
+/**
+ * Retrieves the details of a transfer
+ * @param connection - connection to the blockchain where the transfer was made
+ * @param txRid - the id of the transaction in which the transfer was made
+ * @param opIndex - the index of the transfer operation within the transaction
+ * @returns Details about the transfer
+ */
 export function getTransferDetails(
   connection: Queryable,
   txRid: BufferId,
@@ -24,6 +31,14 @@ export function getTransferDetails(
     .then((tds) => tds.map(createTransferDetail));
 }
 
+/**
+ * Retrieves details of a transfer but only the details that was made with a specific asset
+ * @param connection - connection to the blockchain where the transfer was made
+ * @param txRid - the id of the transaction in which the transfer was made
+ * @param opIndex - the index of the transfer operation within the transaction
+ * @param assetId - the asset id for which to return details
+ * @returns The transfer details
+ */
 export function getTransferDetailsByAsset(
   connection: Queryable,
   txRid: BufferId,
@@ -45,6 +60,14 @@ function createTransferDetail(td: RawTransferDetail) {
   });
 }
 
+/**
+ * Gets the transfer history of an asset from a given height as a paginated entity
+ * @param connection - the connection to use when querying the blockchain
+ * @param height - which block height to get transfer history from
+ * @param assetId - the id of the asset to get transfer history for
+ * @param limit - maximum page size
+ * @param cursor - where the page should start
+ */
 export function getTransferHistoryFromHeight(
   connection: Queryable,
   height: number,

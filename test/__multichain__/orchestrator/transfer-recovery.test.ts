@@ -96,11 +96,6 @@ describe("Orchestrator", () => {
     await account0.resumeCrosschainTransfer(pendingTransfers.data[0]);
 
     const balance = await account2.getBalanceByAssetId(asset.id);
-    Object.assign(BigInt.prototype, {
-      toJSON: function () {
-        return this.toString();
-      },
-    });
     expect(JSON.stringify(balance)).toStrictEqual(
       JSON.stringify({ asset, amount }),
     );
@@ -186,11 +181,6 @@ describe("Orchestrator", () => {
     const balance = await testContext.account1.getBalanceByAssetId(
       testContext.sampleAsset.id,
     );
-    Object.assign(BigInt.prototype, {
-      toJSON: function () {
-        return this.toString();
-      },
-    });
     expect(JSON.stringify(balance)).toStrictEqual(
       JSON.stringify({ asset: testContext.sampleAsset, amount }),
     );

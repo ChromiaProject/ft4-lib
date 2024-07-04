@@ -2,9 +2,16 @@ import {
   createFakeAuthDataService,
   createTestAuthDescriptor,
 } from "@ft4-test/util";
-import { AnyAuthDescriptor, AuthFlag } from "@ft4/accounts";
 import {
+  AnyAuthDescriptor,
+  AuthDescriptor,
+  AuthFlag,
+  SingleSig,
+} from "@ft4/accounts";
+import {
+  AuthDataService,
   FtKeyStore,
+  KeyHandler,
   createAuthenticator,
   createEvmKeyHandler,
   createFtKeyHandler,
@@ -18,13 +25,49 @@ import {
 } from "@ft4/ft-session";
 import { op } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { createStubClient, encryption } from "postchain-client";
+import { KeyPair, createStubClient, encryption } from "postchain-client";
+
+type ConnectionWithoutQuery = Omit<Connection, "query">;
+type MockedQuery = {
+  query: jest.Mock;
+};
+
+type MockedConnection = ConnectionWithoutQuery & MockedQuery;
 
 describe("Authenticator", () => {
-  let connection: Connection;
+  let connection: MockedConnection;
 
-  beforeAll(async () => {
-    connection = createConnection(await createStubClient());
+  let keyPair1: KeyPair;
+  let keyPair2: KeyPair;
+  let authDescriptor1: AuthDescriptor<SingleSig>;
+  let authDescriptor2: AuthDescriptor<SingleSig>;
+  let ftKeyHandler1: KeyHandler;
+  let ftKeyHandler2: KeyHandler;
+  let authDataService: AuthDataService;
+  beforeEach(async () => {
+    connection = {
+      ...createConnection(await createStubClient()),
+      query: jest.fn(),
+    };
+    const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
+      "A",
+    ]);
+    const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
+      "T",
+    ]);
+    keyPair1 = kp1;
+    keyPair2 = kp2;
+    authDescriptor1 = ad1;
+    authDescriptor2 = ad2;
+    ftKeyHandler1 = createFtKeyHandler(
+      authDescriptor1,
+      createInMemoryFtKeyStore(keyPair1),
+    );
+    ftKeyHandler2 = createFtKeyHandler(
+      authDescriptor2,
+      createInMemoryFtKeyStore(keyPair2),
+    );
+    authDataService = createAuthDataService(connection);
   });
 
   it("uses non-interactive key store if both non-interactive and interactive auth handlers satisfy auth requirements", async () => {
@@ -85,34 +128,14 @@ describe("Authenticator", () => {
 
   describe("getAllowedAuthHandler", () => {
     it("downloads all auth handlers", () => {
-      connection = {
-        ...connection,
-        query: jest.fn().mockReturnValueOnce([
-          {
-            name: "foo",
-            flags: ["T"],
-            dynamic: false,
-          },
-        ]),
-      };
-
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "A",
-      ]);
-      const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
-        "T",
+      connection.query.mockReturnValueOnce([
+        { name: "foo", flags: ["T"], dynamic: false },
       ]);
 
-      const keyHandlers = [
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
-        createFtKeyHandler(ad2, createInMemoryFtKeyStore(kp2)),
-      ];
-
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
-        keyHandlers,
-        service,
+        [ftKeyHandler1, ftKeyHandler2],
+        authDataService,
       );
 
       authenticator.getKeyHandlerForOperation(op("foo"), {});
@@ -120,34 +143,14 @@ describe("Authenticator", () => {
     });
 
     it("returns null if no matching auth handler", async () => {
-      connection = {
-        ...connection,
-        query: jest.fn().mockReturnValueOnce([
-          {
-            name: "foo",
-            flags: ["T"],
-            dynamic: false,
-          },
-        ]),
-      };
-
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "A",
-      ]);
-      const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
-        "T",
+      connection.query.mockReturnValueOnce([
+        { name: "foo", flags: ["T"], dynamic: false },
       ]);
 
-      const keyHandlers = [
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
-        createFtKeyHandler(ad2, createInMemoryFtKeyStore(kp2)),
-      ];
-
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
-        keyHandlers,
-        service,
+        [ftKeyHandler1, ftKeyHandler2],
+        authDataService,
       );
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("does not exist"),
@@ -157,186 +160,95 @@ describe("Authenticator", () => {
     });
 
     it("returns key handler selected by backend", async () => {
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "A",
-      ]);
-      const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
-        "T",
-      ]);
+      connection.query
+        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: false }])
+        .mockReturnValueOnce(ftKeyHandler2.authDescriptor.id);
 
-      const keyHandlers = [
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
-        createFtKeyHandler(ad2, createInMemoryFtKeyStore(kp2)),
-      ];
-
-      connection = {
-        ...connection,
-        query: jest
-          .fn()
-          .mockReturnValueOnce([
-            {
-              name: "foo",
-              flags: ["T"],
-              dynamic: false,
-            },
-          ])
-          .mockReturnValueOnce(keyHandlers[1].authDescriptor.id),
-      };
-
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
-        keyHandlers,
-        service,
+        [ftKeyHandler1, ftKeyHandler2],
+        authDataService,
       );
       const selectedHandler = await authenticator.getKeyHandlerForOperation(
         op("foo"),
         {},
       );
-      expect(selectedHandler).toStrictEqual(keyHandlers[1]);
+      expect(selectedHandler).toStrictEqual(ftKeyHandler2);
     });
 
     it("only submits auth descriptors with matching flags", async () => {
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "A",
-      ]);
-      const { keyPair: kp2, authDescriptor: ad2 } = createTestAuthDescriptor([
-        "T",
-      ]);
+      connection.query
+        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: true }])
+        .mockReturnValueOnce(ftKeyHandler2.authDescriptor.id);
 
-      const keyHandlers = [
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
-        createFtKeyHandler(ad2, createInMemoryFtKeyStore(kp2)),
-      ];
-
-      connection = {
-        ...connection,
-        query: jest
-          .fn()
-          .mockReturnValueOnce([
-            {
-              name: "foo",
-              flags: ["T"],
-              dynamic: true,
-            },
-          ])
-          .mockReturnValueOnce(keyHandlers[1].authDescriptor.id),
-      };
-
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
-        keyHandlers,
-        service,
+        [ftKeyHandler1, ftKeyHandler2],
+        authDataService,
       );
       await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(
         (connection.query as jest.Mock).mock.calls[1][0].args.ad_ids[0],
-      ).toStrictEqual(keyHandlers[1].authDescriptor.id);
+      ).toStrictEqual(ftKeyHandler2.authDescriptor.id);
     });
 
     it("does not call backend if auth handler is not dynamic", async () => {
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "T",
-      ]);
+      connection.query
+        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: false }])
+        .mockReturnValueOnce(ftKeyHandler1.authDescriptor.id);
 
-      const keyHandlers = [
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
-      ];
-
-      connection = {
-        ...connection,
-        query: jest
-          .fn()
-          .mockReturnValueOnce([
-            {
-              name: "foo",
-              flags: ["T"],
-              dynamic: false,
-            },
-          ])
-          .mockReturnValueOnce(keyHandlers[0].authDescriptor.id),
-      };
-
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
-        keyHandlers,
-        service,
+        [ftKeyHandler1],
+        authDataService,
       );
       await authenticator.getKeyHandlerForOperation(op("foo"), {});
       expect(connection.query).toHaveBeenCalledTimes(1);
     });
 
     it("it prefers non interactive keyhandlers", async () => {
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "T",
-      ]);
-
+      const evmKeyHandler = createEvmKeyHandler(authDescriptor2, {
+        ...createInMemoryEvmKeyStore(keyPair2),
+        isInteractive: true,
+      });
       const keyHandlers = [
-        createEvmKeyHandler(ad1, createInMemoryEvmKeyStore(kp1)),
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
+        evmKeyHandler,
+        createFtKeyHandler(authDescriptor2, createInMemoryFtKeyStore(keyPair2)),
       ];
 
-      connection = {
-        ...connection,
-        query: jest
-          .fn()
-          .mockReturnValueOnce([
-            {
-              name: "foo",
-              flags: ["T"],
-              dynamic: true,
-            },
-          ])
-          .mockReturnValueOnce(keyHandlers[1].authDescriptor.id),
-      };
+      connection.query
+        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: true }])
+        .mockReturnValueOnce(keyHandlers[1].authDescriptor.id);
 
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
         keyHandlers,
-        service,
+        authDataService,
       );
-      await authenticator.getKeyHandlerForOperation(op("foo"), {});
-      expect(
-        (connection.query as jest.Mock).mock.calls[1][0].args.ad_ids[0],
-      ).toStrictEqual(keyHandlers[1].authDescriptor.id);
+      const selectedKeyHandler = await authenticator.getKeyHandlerForOperation(
+        op("foo"),
+        {},
+      );
+      expect(selectedKeyHandler).toStrictEqual(keyHandlers[1]);
     });
 
     it("it calls backend to resolve scope if no handler is found", async () => {
-      const { keyPair: kp1, authDescriptor: ad1 } = createTestAuthDescriptor([
-        "T",
-      ]);
-
       const keyHandlers = [
-        createEvmKeyHandler(ad1, createInMemoryEvmKeyStore(kp1)),
-        createFtKeyHandler(ad1, createInMemoryFtKeyStore(kp1)),
+        createEvmKeyHandler(
+          authDescriptor1,
+          createInMemoryEvmKeyStore(keyPair1),
+        ),
+        createFtKeyHandler(authDescriptor1, createInMemoryFtKeyStore(keyPair1)),
       ];
 
-      connection = {
-        ...connection,
-        query: jest
-          .fn()
-          .mockReturnValueOnce([
-            {
-              name: "foo",
-              flags: ["T"],
-              dynamic: true,
-            },
-          ])
-          .mockReturnValueOnce({
-            name: "app",
-            flags: ["A", "T"],
-            dynamic: true,
-          }),
-      };
+      connection.query
+        .mockReturnValueOnce([{ name: "foo", flags: ["T"], dynamic: true }])
+        .mockReturnValueOnce({ name: "app", flags: ["A", "T"], dynamic: true });
 
-      const service = createAuthDataService(connection);
       const authenticator = createAuthenticator(
         Buffer.alloc(0),
         keyHandlers,
-        service,
+        authDataService,
       );
       await authenticator.getKeyHandlerForOperation(op("foo2"), {});
       expect(

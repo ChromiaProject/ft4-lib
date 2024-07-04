@@ -7,6 +7,11 @@ import {
   createClient,
 } from "postchain-client";
 
+/**
+ * Creates an IClient instance configured to run against the directory chain available
+ * at the target url.
+ * @param nodeUrlPool - the url to the cluster
+ */
 export async function getDirectoryClient(
   nodeUrlPool: string[],
 ): Promise<IClient> {
@@ -16,6 +21,10 @@ export async function getDirectoryClient(
   });
 }
 
+/**
+ * Gets the blockchain rid of the system anchoring chain at the current cluster
+ * @param directoryClient - client configured to the directory chain of which to get anchoring chain for
+ */
 export async function getSystemAnchoringChain(
   directoryClient: Queryable,
 ): Promise<Buffer> {
@@ -32,6 +41,11 @@ function systemAnchoringChain(): QueryObject<Buffer> {
   };
 }
 
+/**
+ * Retrieves the api urls that is available on for this blockchain
+ * @param directoryClient - client configured to the directory chain of the cluster
+ * @param blockchainRid - the blockchain rid of which to get urls for
+ */
 export async function getBlockchainApiUrls(
   directoryClient: Queryable,
   blockchainRid: Buffer,

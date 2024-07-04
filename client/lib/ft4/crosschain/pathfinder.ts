@@ -5,6 +5,9 @@ import { Buffer } from "buffer";
 import { BlockchainUrlUndefinedException, formatter } from "postchain-client";
 import { getAssetOriginById } from "./query-functions";
 
+/**
+ * Thrown to indicate that there was an error finding the path to a specific chain for a specific asset.
+ */
 export class PathfinderError extends Error {
   constructor(msg?) {
     super(msg);
@@ -12,6 +15,14 @@ export class PathfinderError extends Error {
   }
 }
 
+/**
+ * Computes the path, that is a list of intermediate chains, to a specific chain from a source chain.
+ * @param connection - connection which will be used to derive the source chain.
+ * @param asset - the asset to find the path for
+ * @param blockchainRid - the target blockchain rid
+ * @param maxPathLength - optional parameter to specify a maximum length of the resulting path. If the computed path is longer than this value, an error will be thrown. Default value is 100.
+ * @returns a list of blockchain rids which represents the path from the source to the target for the specified asset.
+ */
 export async function findPathToChainForAsset(
   connection: Connection,
   asset: Asset,
@@ -80,7 +91,7 @@ export async function findPathToChainForAsset(
       // we either match on the message to rethrow or let it through unhandled
       const nextHop = await getAssetOriginById(tmpConnection, asset.id);
 
-      if (nextHop === null) {
+      if (!nextHop) {
         throw new PathfinderError(
           `The asset is not a cross-chain asset on chain ${lastNode.toString(
             "hex",

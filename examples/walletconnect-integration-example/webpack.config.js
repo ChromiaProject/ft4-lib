@@ -59,6 +59,7 @@ module.exports = env => ({
     }),
     new webpack.ProvidePlugin({
       Buffer: ['buffer', 'Buffer'],
+      process: 'process/browser.js'
     }),
   ]
 });

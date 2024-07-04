@@ -5,7 +5,7 @@ import lib.ft4.accounts;
 
 
 /*
- * Config is defined in rell-test.yml => module: tests.assets.app_module_2
+ * Config is defined in chromia.yml => module: tests.assets.app_module_2
  */ 
 function test_loading_auth_flags_from_config_succeeds() {
     assert_equals(

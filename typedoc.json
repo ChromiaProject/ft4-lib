@@ -1,0 +1,34 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "client/lib/ft4/*",
+  ],
+  "exclude": [
+    "client/lib/ft4/index.ts"
+  ],
+  "out": "doc/api/client",
+  "navigationLinks": {
+    "Chromia Docs": "https://docs.chromia.com"
+  },
+  "categorizeByGroup": true,
+  "includeVersion": true,
+  "disableSources": true,
+  "hideGenerator": true,
+  "excludeNotDocumented": false,
+  "useTsLinkResolution": true,
+  "excludeExternals": true,
+  "readme": "api-docs-header.md",
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": true
+  },
+  "requiredToBeDocumented": [
+    "Function",
+    "Class",
+    "Interface",
+    "Method",
+    "Accessor"
+  ],
+  "treatWarningsAsErrors": true
+}

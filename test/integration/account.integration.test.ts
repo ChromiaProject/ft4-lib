@@ -187,7 +187,7 @@ describe("Test the account", () => {
     expect((await account.getAuthDescriptors()).length).toBe(3);
   });
 
-  it("should fail if only one signature provided", async () => {
+  it("fails if only one signature provided when 2 is required", async () => {
     const user1 = testUser();
     const user2 = testUser();
     const registration = createSingleSigAuthDescriptorRegistration(
@@ -224,7 +224,7 @@ describe("Test the account", () => {
     expect((await acc!.getAuthDescriptors()).length).toBe(1);
   });
 
-  it("should be returned when queried by signer", async () => {
+  it("returns account when queried by signer", async () => {
     const user = testUser();
 
     await AccountBuilder.account(_connection)
@@ -238,7 +238,7 @@ describe("Test the account", () => {
     expect(accounts.data.length).toEqual(1);
   });
 
-  it("should return two accounts when public key is used in two accounts", async () => {
+  it("returns two accounts when public key is used in two accounts", async () => {
     const keyPair1 = pcl.encryption.makeKeyPair();
 
     await Promise.all([
@@ -255,7 +255,7 @@ describe("Test the account", () => {
     expect(accounts.data.length).toEqual(2);
   });
 
-  it("should return account by id", async () => {
+  it("returns account by id", async () => {
     const account = await AccountBuilder.account(_connection).build();
 
     const foundAccount = await _connection.getAccountById(account.id);
@@ -263,7 +263,7 @@ describe("Test the account", () => {
     expect(account.id).toEqual(foundAccount!.id);
   });
 
-  it("should return account by auth descriptor id", async () => {
+  it("Returns account by auth descriptor id", async () => {
     const { authDescriptor } = createTestAuthDescriptor(["A", "T"]);
 
     await registerAccountAdmin(
@@ -439,7 +439,7 @@ describe("Test the account", () => {
     expect((await acc.getAuthDescriptors()).length).toBe(1);
   });
 
-  it("auth descriptor with admin flag deletes other", async () => {
+  it("is not possible for descriptor without admin flag to delete other auth descriptors", async () => {
     const user1 = testUser();
     const user2 = testUser();
     const user3 = testUser();
@@ -479,7 +479,7 @@ describe("Test the account", () => {
     expect((await acc2.getAuthDescriptors()).length).toBe(3);
   });
 
-  it("removes auth descriptor from new authenticator", async () => {
+  it("also removes auth descriptor from new authenticator when it is deleted from an account", async () => {
     const user1 = testUser();
     const user2 = testUser();
 

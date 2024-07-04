@@ -6,10 +6,9 @@ import lib.ft4.admin.crosschain;
 
 import ^^.assets.utils;
 
-// TODO: Move crosschain asset registration tests from `tests/crosschain/operations` to here
-
 function test_can_fetch_crosschain_asset_registration_details() {
-    val issuing_blockchain_rid = x"abcdef";
+    val issuing_blockchain_rid = x"aa".repeat(32);
+    val origin_blockchain_rid = x"bb".repeat(32);
     val asset_id = ("Test asset", issuing_blockchain_rid).hash();
     crosschain.external.register_crosschain_asset(
         id = asset_id,
@@ -20,7 +19,7 @@ function test_can_fetch_crosschain_asset_registration_details() {
         icon_url = "https://filehub.chromia.com/project/collection/1",
         type = assets.ASSET_TYPE_FT4,
         uniqueness_resolver = x"aabbccdd",
-        origin_blockchain_rid = x"00112233"
+        origin_blockchain_rid = origin_blockchain_rid
     )
         .sign(utils.admin_priv_key())
         .run();
@@ -159,8 +158,9 @@ function test_crosschain_asset_registration_fails_when_asset_uniqueness_resolver
     .run_must_fail("Asset uniqueness resolver cannot be longer than 1024 characters");    
 }
 
-function test_crosschain_asset_registration_fails_when_asset_issuing_blockchain_rid_is_longer_than_1024_bytes() {
-    val issuing_blockchain_rid = x"aa".repeat(1025);
+function test_crosschain_asset_registration_fails_when_asset_issuing_blockchain_rid_is_longer_than_32_bytes() {
+    val issuing_blockchain_rid = x"aa".repeat(33);
+    val origin_blockchain_rid = x"bb".hash();
     val asset_id = ("Test asset", issuing_blockchain_rid).hash();
     crosschain.external.register_crosschain_asset(
         id = asset_id,
@@ -171,13 +171,31 @@ function test_crosschain_asset_registration_fails_when_asset_issuing_blockchain_
         icon_url = "https://filehub.chromia.com/project/collection/1",
         type = assets.ASSET_TYPE_FT4,
         uniqueness_resolver = x"aabbccdd",
-        origin_blockchain_rid = x"00112233"
+        origin_blockchain_rid = origin_blockchain_rid
     )
     .sign(utils.admin_priv_key())
-    .run_must_fail("issuing_blockchain_rid cannot be longer than 32 bytes");
+    .run_must_fail("issuing_blockchain_rid <%s> has invalid length. Expected <32> bytes, found <33>".format(issuing_blockchain_rid));
 }
 
-function test_crosschain_asset_registration_fails_when_asset_origin_blockchain_rid_is_longer_than_1024_bytes() {
+function test_crosschain_asset_registration_fails_when_asset_origin_blockchain_rid_is_longer_than_32_bytes() {
+    val id = ("name", x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F").hash();
+    val origin_blockchain_rid = x"cc".repeat(33);
+    crosschain.external.register_crosschain_asset(
+        id = id,
+        name = "name",
+        symbol = "SYM",
+        decimals = 2,
+        issuing_blockchain_rid = x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F",
+        icon_url = "",
+        type = assets.ASSET_TYPE_FT4,
+        uniqueness_resolver = x"",
+        origin_blockchain_rid = origin_blockchain_rid
+    )
+    .sign(utils.admin_priv_key())
+    .run_must_fail("origin_blockchain_rid <%s> has invalid length. Expected <32> bytes, found <33>".format(origin_blockchain_rid));    
+}
+
+function test_crosschain_asset_registration_fails_when_asset_origin_blockchain_rid_is_current_rid() {
     val id = ("name", x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F").hash();
     crosschain.external.register_crosschain_asset(
         id = id,
@@ -188,8 +206,25 @@ function test_crosschain_asset_registration_fails_when_asset_origin_blockchain_r
         icon_url = "",
         type = assets.ASSET_TYPE_FT4,
         uniqueness_resolver = x"",
-        origin_blockchain_rid = x"cc".repeat(1025)
+        origin_blockchain_rid = chain_context.blockchain_rid
     )
     .sign(utils.admin_priv_key())
-    .run_must_fail("origin_blockchain_rid cannot be longer than 32 bytes");    
+    .run_must_fail("Asset origin cannot be the current chain.");    
+}
+
+function test_crosschain_asset_registration_fails_when_asset_issuer_is_this_blockchain() {
+    val id = ("name", x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F").hash();
+    crosschain.external.register_crosschain_asset(
+        id = id,
+        name = "name",
+        symbol = "SYM",
+        decimals = 2,
+        issuing_blockchain_rid = chain_context.blockchain_rid,
+        icon_url = "",
+        type = assets.ASSET_TYPE_FT4,
+        uniqueness_resolver = x"",
+        origin_blockchain_rid = x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F"
+    )
+    .sign(utils.admin_priv_key())
+    .run_must_fail("Cannot register an asset that originated on this chain as a crosschain asset.");    
 }

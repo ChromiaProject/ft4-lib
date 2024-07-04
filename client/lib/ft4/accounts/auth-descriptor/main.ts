@@ -22,7 +22,7 @@ function hashAuthDescriptor(ad: RawAnyAuthDescriptorRegistration) {
 /**
  * Computes the resulting auth descriptor id for the data
  * in an auth descriptor registration.
- * @param authDescriptor registration to compute id for
+ * @param authDescriptor - registration to compute id for
  * @returns auth descriptor id as Buffer
  */
 export function deriveAuthDescriptorId(
@@ -38,8 +38,9 @@ export function deriveAuthDescriptorId(
 
 /**
  * Creates a registration for a single signature auth descriptor
- * @param args the arguments to the auth descriptor registration
- * @param rule any rules to be included in the registration
+ * @param flags - the flags that this auth descriptor will have
+ * @param signer - the signer that will sign this auth descriptor
+ * @param rules - any rules to be included in the registration
  * @returns the created registration
  */
 export function createSingleSigAuthDescriptorRegistration(
@@ -56,8 +57,10 @@ export function createSingleSigAuthDescriptorRegistration(
 
 /**
  * Creates a registration for a multi signature auth descriptor
- * @param args the arguments to the auth descriptor registration
- * @param rule any rules to be included in the registration
+ * @param flags - the flags that this auth descriptor will have
+ * @param signers - the signers that will sign this auth descriptor
+ * @param signaturesRequired - how many signatures is required to perform an operation
+ * @param rules - any rules to be included in the registration
  * @returns the created registration
  */
 export function createMultiSigAuthDescriptorRegistration(
@@ -76,7 +79,7 @@ export function createMultiSigAuthDescriptorRegistration(
 /**
  * Utility method that accepts an array of any kind of auth descriptor/auth descriptor registration
  * and returns an array of all of the signers represented by the provided objects.
- * @param authDescriptors the auth descriptors(registrations) over which to aggregate signers
+ * @param authDescriptors - the auth descriptors(registrations) over which to aggregate signers
  * @returns a list of all of the composing signers
  */
 export function aggregateSigners(
