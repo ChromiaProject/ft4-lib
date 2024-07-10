@@ -111,10 +111,7 @@ workflow:
       changes:
         - "*"
       when: always
-
-default2:
-  rules:
-    - if: $CI_COMMIT_BRANCH == "development"
-      when: manual
-    - if: $CI_COMMIT_BRANCH == "ft4"
-      when: manual
+    # - if: $CI_COMMIT_BRANCH == "development"
+    #   when: manual
+    # - if: $CI_COMMIT_BRANCH == "ft4"
+    #   when: manual
