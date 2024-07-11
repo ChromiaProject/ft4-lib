@@ -23,6 +23,7 @@ cache:
     - node_modules/
 
 services:
+  - docker
   - name: postgres
     alias: postgres
     variables:
