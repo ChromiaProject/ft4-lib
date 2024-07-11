@@ -10,7 +10,7 @@ variables:
 
 default:
   tags:
-    - ft_test
+    - gitlab-org
 
 before_script:
   - apt update && apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd java-common curl
