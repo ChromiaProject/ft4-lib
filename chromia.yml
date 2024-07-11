@@ -179,6 +179,15 @@ compile:
 test:
   failOnError: false
 
+database:
+  password: postchain
+  username: postchain
+  database: postchain
+  host: postgres:5432
+  logSqlErrors: true
+  schema: dapp_metadata
+  driver: org.postgresql.Driver
+
 docs:
   title: "FT4 Library"
   footerMessage: © 2024 Chromia
