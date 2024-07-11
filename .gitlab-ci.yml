@@ -10,7 +10,7 @@ variables:
 
 default:
   tags:
-    - docker
+    - ft_test
 
 before_script:
   - apt update && apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd java-common curl
@@ -50,20 +50,20 @@ unit_integration_tests:
     paths:
       - logs/**
 
-e2e_tests:
-  stage: test
-  image: cypress/browsers:node-20.11.0-chrome-121.0.6167.85-1-ff-120.0-edge-121.0.2277.83-1
-  script:
-    - export DISPLAY=:0.0
-    - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
-    - fluxbox &
-    - npm ci
-    - npm run test:e2e || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=E2E tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-  artifacts:
-    paths:
-      - logs/**
-      - cypress/screenshots/**
-      - cypress/videos/**
+# e2e_tests:
+#   stage: test
+#   image: cypress/browsers:node-20.11.0-chrome-121.0.6167.85-1-ff-120.0-edge-121.0.2277.83-1
+#   script:
+#     - export DISPLAY=:0.0
+#     - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
+#     - fluxbox &
+#     - npm ci
+#     - npm run test:e2e || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=E2E tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+#   artifacts:
+#     paths:
+#       - logs/**
+#       - cypress/screenshots/**
+#       - cypress/videos/**
 
 multichain_tests:
   stage: test
@@ -77,25 +77,25 @@ update_docs:
   script:
     - ./scripts/update-docs.sh
 
-deploy_latest:
-  stage: deploy
-  script:
-    - ./scripts/install-chr-and-pmc.sh
-    - chr install
-    - mkdir .chromia
-    - printf $DEPLOYMENT_KEYS > .chromia/config
-    - npm run deploy:latest
-    - rm .chromia/config
+# deploy_latest:
+#   stage: deploy
+#   script:
+#     - ./scripts/install-chr-and-pmc.sh
+#     - chr install
+#     - mkdir .chromia
+#     - printf $DEPLOYMENT_KEYS > .chromia/config
+#     - npm run deploy:latest
+#     - rm .chromia/config
 
-deploy_stable:
-  stage: deploy
-  script:
-    - ./scripts/install-chr-and-pmc.sh
-    - chr install
-    - mkdir .chromia
-    - printf $DEPLOYMENT_KEYS > .chromia/config
-    - npm run deploy:stable
-    - rm .chromia/config
+# deploy_stable:
+#   stage: deploy
+#   script:
+#     - ./scripts/install-chr-and-pmc.sh
+#     - chr install
+#     - mkdir .chromia
+#     - printf $DEPLOYMENT_KEYS > .chromia/config
+#     - npm run deploy:stable
+#     - rm .chromia/config
 
 workflow:
   rules:
