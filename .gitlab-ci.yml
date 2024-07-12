@@ -10,7 +10,7 @@ variables:
 
 default:
   tags:
-    - gitlab-org
+    - gitlab-org-docker
 
 # before_script:
 #   - apt update && apt install -y gnupg software-properties-common lsof fluxbox xvfb netcat-openbsd java-common curl
