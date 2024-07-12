@@ -86,6 +86,7 @@ multichain_tests:
   script:
     - ./scripts/install-chr-and-pmc.sh
     - npm ci
+    - service docker start
     - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh
 
 update_docs:
