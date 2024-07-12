@@ -1,4 +1,6 @@
-image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.2.0@sha256:c04590bf5702e3e3071ac3bae28ad4e1129ac7239e1bfd655451f718807ca1fd
+# image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.2.0@sha256:c04590bf5702e3e3071ac3bae28ad4e1129ac7239e1bfd655451f718807ca1fd
+
+image: gitlab/dind
 
 stages:
   - build
@@ -68,7 +70,7 @@ unit_integration_tests:
 
 multichain_tests:
   services:
-    - docker
+    - docker:dind
   stage: test
   script:
     - ./scripts/install-chr-and-pmc.sh
