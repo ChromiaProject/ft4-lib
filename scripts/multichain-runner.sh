@@ -216,7 +216,7 @@ run_main_logic() {
 
     $DOCKER run --privileged \
         --name $DOCKER_NODE_NAME \
-        -d docker:dind
+        -d docker:dind \
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
