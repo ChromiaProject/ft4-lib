@@ -24,11 +24,13 @@ export async function createChromiaClientToMultichain(
   });
 }
 
-export async function createChromiaClient(nodeUrl?: string, iid = 1) {
+export async function createChromiaClient(nodeUrl?: string, iid = 0) {
+  console.log("NODE URL: ", nodeUrl);
   const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
   return createClient({
     nodeUrlPool: url,
     blockchainIid: iid,
+    blockchainRid: undefined,
   });
 }
 
