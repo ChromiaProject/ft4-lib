@@ -16,7 +16,7 @@ DEPENDENCIES_PATH="rell/dep"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
-DOCKER=${DOCKER:-docker}
+DOCKER=${DOCKER:-docker:dind}
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
@@ -216,7 +216,6 @@ run_main_logic() {
 
     $DOCKER run --privileged \
         --name $DOCKER_NODE_NAME \
-        -d docker:dind \
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
