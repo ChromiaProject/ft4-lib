@@ -34,6 +34,7 @@ cache:
     - node_modules/
 
 services:
+  - docker
   - name: postgres
     alias: postgres
     variables:
@@ -80,13 +81,10 @@ unit_integration_tests:
 #       - cypress/videos/**
 
 multichain_tests:
-  services:
-    - docker
   stage: test
   script:
     - ./scripts/install-chr-and-pmc.sh
     - npm ci
-    - service docker start
     - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh
 
 update_docs:
