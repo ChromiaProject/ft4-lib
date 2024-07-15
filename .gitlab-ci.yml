@@ -9,6 +9,9 @@ stages:
 
 variables:
   MAX_TIME: "15"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
 
 default:
   tags:
@@ -34,7 +37,7 @@ cache:
     - node_modules/
 
 services:
-  - docker
+  - docker:dind
   - name: postgres
     alias: postgres
     variables:
@@ -83,6 +86,7 @@ unit_integration_tests:
 multichain_tests:
   stage: test
   script:
+    - docker info
     - ./scripts/install-chr-and-pmc.sh
     - npm ci
     - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh
