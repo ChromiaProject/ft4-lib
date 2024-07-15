@@ -75,7 +75,8 @@ export default async function () {
   console.log(
     "NODE URL BEING READ:################################################",
   );
-  fs.readFileSync("node-url.txt", "utf8");
+  const filerfead = fs.readFileSync("node-url.txt", "utf8");
+  console.log(filerfead);
 
   console.log(`...started node on ${url}`);
 
