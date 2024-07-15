@@ -7,9 +7,20 @@ stages:
   - test
   - deploy
 
+services:
+  - name: docker:dind
+    alias: thedockerhost  
+  - name: postgres
+    alias: postgres
+    variables:
+      POSTGRES_DB: "postchain"
+      POSTGRES_USER: "postchain"
+      POSTGRES_PASSWORD: "postchain"
+      POSTGRES_INITDB_ARGS: "--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8"  
+
 variables:
   MAX_TIME: "15"
-  DOCKER_HOST: tcp://docker:2375
+  DOCKER_HOST: tcp://thedockerhost:2375
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
@@ -35,16 +46,6 @@ default:
 cache:
   paths:
     - node_modules/
-
-services:
-  - docker:dind
-  - name: postgres
-    alias: postgres
-    variables:
-      POSTGRES_DB: "postchain"
-      POSTGRES_USER: "postchain"
-      POSTGRES_PASSWORD: "postchain"
-      POSTGRES_INITDB_ARGS: "--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8"
 
 unit_integration_tests:
   stage: test
