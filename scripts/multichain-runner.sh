@@ -235,7 +235,7 @@ run_main_logic() {
     while [ -z "$BRID" ] && [ $retry_count -lt 100 ]; do
       # Attempt to fetch the value
       BRID=$(curl -s http://localhost:7740/brid/iid_0)
-      
+      debug $BRID
       # Increment retry counter
       ((retry_count++))
       

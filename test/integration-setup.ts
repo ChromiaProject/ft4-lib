@@ -2,6 +2,7 @@ import { GenericContainer, Network, Wait } from "testcontainers";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { cwd } from "process";
 import { writeFile, unlink, open, mkdir } from "node:fs/promises";
+import * as fs from "fs";
 
 export default async function () {
   console.log("Starting node...");
@@ -71,6 +72,10 @@ export default async function () {
   const url = "http://localhost:" + container.getMappedPort(7740);
 
   await writeFile("node-url.txt", url, { encoding: "utf8" });
+  console.log(
+    "NODE URL BEING READ:################################################",
+  );
+  fs.readFileSync("node-url.txt", "utf8");
 
   console.log(`...started node on ${url}`);
 

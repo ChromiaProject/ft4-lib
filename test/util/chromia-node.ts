@@ -7,6 +7,7 @@ export function useChromiaNode() {
 
   beforeAll(async () => {
     const url = await readFile("node-url.txt", { encoding: "utf8" });
+    console.log("READING FILE URL################", url);
     client = await createChromiaClient(url);
   });
 
