@@ -16,7 +16,7 @@ DEPENDENCIES_PATH="rell/dep"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
-DOCKER=${DOCKER:-docker:dind}
+DOCKER=${DOCKER:-docker}
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
