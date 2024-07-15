@@ -232,7 +232,7 @@ run_main_logic() {
     retry_count=0
 
     # Loop until BRID receives a non-empty value or until 10 tries
-    while [ -z "$BRID" ] && [ $retry_count -lt 1000 ]; do
+    while [ -z "$BRID" ] && [ $retry_count -lt 100 ]; do
       # Attempt to fetch the value
       BRID=$(curl -s http://localhost:7740/brid/iid_0)
       
@@ -245,6 +245,10 @@ run_main_logic() {
         sleep 1
       fi
     done
+
+    log "DISIRKA#$###############"
+    cat ./multichain-postchain.log
+
 
     log "Got manager chain BRID: $BRID"
     export MULTICHAIN_D1_BRID=$BRID
