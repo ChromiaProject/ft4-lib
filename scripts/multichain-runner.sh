@@ -158,6 +158,7 @@ run_main_logic() {
           --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
           -d postgres:14.9-alpine3.18 > /dev/null
     fi
+    $DOCKER run --rm --link $DOCKER_POSTGRES_NAME:docker docker info
 
     debug "Creating PMC config..."
 
@@ -229,7 +230,7 @@ run_main_logic() {
         run-node 
         # run-node > ./multichain-postchain.log &
 
-    docker run --rm --link $DOCKER_NODE_NAME:docker docker info
+    $DOCKER run --rm --link $DOCKER_NODE_NAME:docker docker info
     debug "Fetching manager chain BRID..."
     BRID=""
     retry_count=0
