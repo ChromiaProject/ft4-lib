@@ -9,7 +9,7 @@ export function useChromiaNode() {
   beforeAll(async () => {
     const url = await readFile("node-url.txt", { encoding: "utf8" });
     console.log("READING FILE URL################", url);
-    const response = await fetch(`${url}/brid/iid_0`);
+    const response = await fetch(`http://${url}/brid/iid_0`);
     // const data = await response;
     console.log("RESPONSE DATA:_", response);
     client = await createChromiaClient(url);
