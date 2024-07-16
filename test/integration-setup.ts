@@ -72,7 +72,7 @@ export default async function () {
   let url = "http://localhost:" + container.getMappedPort(7740);
   const temp = container.getHost();
   console.log("host: ##############", temp);
-  url = temp + container.getMappedPort(7740);
+  url = temp + ":" + container.getMappedPort(7740);
 
   await writeFile("node-url.txt", url, { encoding: "utf8" });
   console.log(

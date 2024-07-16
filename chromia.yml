@@ -185,7 +185,7 @@ database:
   database: postchain
   host: postgres:5432
   logSqlErrors: true
-  schema: dapp_metadata
+  schema: ft4_tests
   driver: org.postgresql.Driver
 
 docs:

@@ -51,6 +51,15 @@ blockchains:
           amount: 2L
         subscription_period_days: 30
 
+# database:
+#   password: postchain
+#   username: postchain
+#   database: postchain
+#   host: postgres:5432
+#   logSqlErrors: true
+#   schema: multichain_tests
+#   driver: org.postgresql.Driver        
+
 libs:
   iccf:
     registry: https://gitlab.com/chromaway/core/directory-chain
