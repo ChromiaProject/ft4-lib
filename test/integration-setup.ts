@@ -2,7 +2,6 @@ import { GenericContainer, Network, Wait } from "testcontainers";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { cwd } from "process";
 import { writeFile, unlink, open, mkdir } from "node:fs/promises";
-import * as fs from "fs";
 
 export default async function () {
   console.log("Starting node...");
@@ -69,18 +68,10 @@ export default async function () {
     })
     .start();
 
-  let url = "http://localhost:" + container.getMappedPort(7740);
-  const temp = container.getHost();
-  console.log("host: ##############", temp);
-  url = temp + ":" + container.getMappedPort(7740);
+  // const url = "http://localhost:" + container.getMappedPort(7740);  //bitbucket
+  const url = `http://${container.getHost()}:${container.getMappedPort(7740)}`; //gitlab
 
   await writeFile("node-url.txt", url, { encoding: "utf8" });
-  console.log(
-    "NODE URL BEING READ:################################################",
-  );
-  const filerfead = fs.readFileSync("node-url.txt", "utf8");
-  console.log(filerfead);
-
   console.log(`...started node on ${url}`);
 
   globalThis.__POSTGRES__ = postgres;
