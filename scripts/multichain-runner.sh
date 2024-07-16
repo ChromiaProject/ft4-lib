@@ -17,6 +17,7 @@ PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
 DOCKER=${DOCKER:-docker}
+# DOCKER=${docker:dind}
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
@@ -226,7 +227,8 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node > ./multichain-postchain.log &
+        run-node 
+        # run-node > ./multichain-postchain.log &
 
     docker run --rm --link $DOCKER_NODE_NAME:docker docker info
     debug "Fetching manager chain BRID..."
