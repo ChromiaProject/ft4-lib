@@ -156,6 +156,7 @@ run_main_logic() {
           -e POSTGRES_USER=postchain \
           -p $POSTGRES_PORT:5432 \
           --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
+        #   -d postgres:14.9-alpine3.18 > /dev/null
           -d postgres:14.9-alpine3.18 > /dev/null
     fi
     $DOCKER run --rm --link $DOCKER_POSTGRES_NAME:docker $DOCKER info
@@ -230,7 +231,7 @@ run_main_logic() {
         run-node 
         # run-node > ./multichain-postchain.log &
 
-    $DOCKER run --rm --link $DOCKER_NODE_NAME:docker docker info
+    $DOCKER run --rm --link $DOCKER_NODE_NAME:docker $DOCKER info
     debug "Fetching manager chain BRID..."
     BRID=""
     retry_count=0
