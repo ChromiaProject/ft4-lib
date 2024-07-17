@@ -16,7 +16,8 @@ DEPENDENCIES_PATH="rell/dep"
 PMC_CONFIG="$BASE_CONFIG_DIR/.pmc/config"
 PMC_CONFIG_TEMPLATE="$BASE_CONFIG_DIR/pmc-config.template"
 
-DOCKER=${DOCKER:-docker}
+# DOCKER=${DOCKER:-docker}
+DOCKER=docker
 DOCKER_POSTGRES_NAME='ft4-multichain-test-postgres'
 DOCKER_NODE_NAME='ft4-multichain-test-node'
 
@@ -159,7 +160,7 @@ run_main_logic() {
           -d postgres:14.9-alpine3.18
         #   -d postgres:14.9-alpine3.18 > /dev/null
     fi
-    $DOCKER run --rm --link $DOCKER_POSTGRES_NAME:docker $DOCKER info
+    
 
     debug "Creating PMC config..."
 
@@ -231,7 +232,6 @@ run_main_logic() {
         run-node 
         # run-node > ./multichain-postchain.log &
 
-    $DOCKER run --rm --link $DOCKER_NODE_NAME:docker $DOCKER info
     debug "Fetching manager chain BRID..."
     BRID=""
     retry_count=0
