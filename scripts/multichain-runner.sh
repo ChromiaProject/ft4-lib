@@ -157,7 +157,7 @@ run_main_logic() {
           -p $POSTGRES_PORT:5432 \
           --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
         #   -d postgres:14.9-alpine3.18 > /dev/null
-          -d postgres:14.9-alpine3.18 > /dev/null
+          -d postgres:14.9-alpine3.18
     fi
     $DOCKER run --rm --link $DOCKER_POSTGRES_NAME:docker $DOCKER info
 
