@@ -158,7 +158,7 @@ run_main_logic() {
           --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
           -d postgres:14.9-alpine3.18 > /dev/null
     fi
-    $DOCKER run --rm --link $DOCKER_POSTGRES_NAME:docker docker info
+    $DOCKER run --rm --link $DOCKER_POSTGRES_NAME:docker $DOCKER info
 
     debug "Creating PMC config..."
 
@@ -214,7 +214,7 @@ run_main_logic() {
     done
 
     log "Running node container..."
-
+    $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run --privileged \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
