@@ -153,6 +153,7 @@ run_main_logic() {
       log "Running Postgres container..."
       $DOCKER run \
           --name $DOCKER_POSTGRES_NAME \
+          --network test_network \
           -e POSTGRES_PASSWORD=postchain \
           -e POSTGRES_USER=postchain \
           -p $POSTGRES_PORT:5432 \
@@ -162,6 +163,7 @@ run_main_logic() {
     fi
 
     docker ps
+    docker inspect $DOCKER_POSTGRES_NAME
     
 
     debug "Creating PMC config..."
@@ -221,6 +223,7 @@ run_main_logic() {
     $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run --privileged \
         --name $DOCKER_NODE_NAME \
+        --network test_network \
         --restart unless-stopped \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
@@ -233,6 +236,8 @@ run_main_logic() {
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
         run-node 
         # run-node > ./multichain-postchain.log &
+
+    docker ps    
 
     debug "Fetching manager chain BRID..."
     BRID=""
