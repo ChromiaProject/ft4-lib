@@ -244,12 +244,13 @@ run_main_logic() {
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
+    #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
       BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
       debug $BRID
-      if [ $retry_count -gt 300 ]; then
+    #   if [ $retry_count -gt 300 ]; then
         docker ps  
         docker inspect $DOCKER_NODE_NAME
-      fi
+    #   fi
       # Increment retry counter
       ((retry_count++))
       
