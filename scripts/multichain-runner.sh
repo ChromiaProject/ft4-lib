@@ -160,8 +160,7 @@ run_main_logic() {
           -e POSTGRES_USER=postchain \
           -p $POSTGRES_PORT:5432 \
           --tmpfs=/pgtmpfs:size=1000m -e PGDATA=/pgtmpfs \
-          -d postgres:14.9-alpine3.18
-        #   -d postgres:14.9-alpine3.18 > /dev/null
+          -d postgres:14.9-alpine3.18 > /dev/null
     fi
 
     docker ps
@@ -236,8 +235,7 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node 
-        # run-node > ./multichain-postchain.log &
+        run-node > ./multichain-postchain.log &
 
     docker ps    
 
@@ -246,7 +244,7 @@ run_main_logic() {
     retry_count=0
 
     # Loop until BRID receives a non-empty value or until 10 tries
-    while [ -z "$BRID" ] && [ $retry_count -lt 100 ]; do
+    while [ -z "$BRID" ] && [ $retry_count -lt 1000 ]; do
       # Attempt to fetch the value
       BRID=$(curl -s http://localhost:7740/brid/iid_0)
       debug $BRID
