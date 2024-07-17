@@ -245,8 +245,11 @@ run_main_logic() {
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
     #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
-      BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
+      BRID=$(curl http://172.19.0.3:7740/brid/iid_0)
+      TEMP=$(curl http://ft4-multichain-test-node:7740/brid/iid_0)
       debug $BRID
+      echo "TEMP!!!!!!!!!!!!!!!"
+      debug $TEMP
     #   if [ $retry_count -gt 300 ]; then
         docker ps  
         docker inspect $DOCKER_NODE_NAME
