@@ -238,6 +238,7 @@ run_main_logic() {
         run-node > ./multichain-postchain.log &
 
     docker ps    
+    docker inspect $DOCKER_NODE_NAME
 
     debug "Fetching manager chain BRID..."
     BRID=""
@@ -257,10 +258,6 @@ run_main_logic() {
         sleep 1
       fi
     done
-
-    log "DISIRKA#$###############"
-    cat ./multichain-postchain.log
-
 
     log "Got manager chain BRID: $BRID"
     export MULTICHAIN_D1_BRID=$BRID
