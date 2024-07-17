@@ -160,6 +160,8 @@ run_main_logic() {
           -d postgres:14.9-alpine3.18
         #   -d postgres:14.9-alpine3.18 > /dev/null
     fi
+
+    docker ps
     
 
     debug "Creating PMC config..."
