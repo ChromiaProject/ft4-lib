@@ -237,18 +237,19 @@ run_main_logic() {
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
         run-node > ./multichain-postchain.log &
 
-    docker ps    
-    docker inspect $DOCKER_NODE_NAME
-
     debug "Fetching manager chain BRID..."
     BRID=""
     retry_count=0
 
     # Loop until BRID receives a non-empty value or until 10 tries
-    while [ -z "$BRID" ] && [ $retry_count -lt 1000 ]; do
+    while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
       BRID=$(curl -s http://localhost:7740/brid/iid_0)
       debug $BRID
+      if [ $retry_count -gt 300 ]; then
+        docker ps  
+        docker inspect $DOCKER_NODE_NAME
+      fi
       # Increment retry counter
       ((retry_count++))
       
