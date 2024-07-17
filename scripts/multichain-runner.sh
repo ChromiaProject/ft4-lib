@@ -149,6 +149,8 @@ run_main_logic() {
         exit 1
     fi
 
+    docker network create -d bridge test_network
+
     if $postgres; then
       log "Running Postgres container..."
       $DOCKER run \
