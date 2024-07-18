@@ -246,7 +246,7 @@ run_main_logic() {
       # Attempt to fetch the value
     #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
     #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
-      BRID=$(curl -s http://ft4-multichain-test-node:7740/brid/iid_0)
+      BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
       debug $BRID
     #   echo "TEMP!!!!!!!!!!!!!!!"
     #   debug $TEMP
