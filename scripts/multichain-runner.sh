@@ -221,7 +221,7 @@ run_main_logic() {
     done
 
     log "Running node container..."
-    $DOCKER -H $DOCKER_HOST network create -d bridge localnet
+    # $DOCKER -H $DOCKER_HOST network create -d bridge localnet
     $DOCKER run --privileged \
         --name $DOCKER_NODE_NAME \
         --network test_network \
@@ -238,7 +238,7 @@ run_main_logic() {
         run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
-    BRID="111111111"
+    BRID=""
     retry_count=0
 
     # Loop until BRID receives a non-empty value or until 10 tries
@@ -248,6 +248,7 @@ run_main_logic() {
       BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
     #   BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
       debug $BRID
+      
     #   echo "TEMP!!!!!!!!!!!!!!!"
     #   debug $TEMP
     #   if [ $retry_count -gt 300 ]; then
