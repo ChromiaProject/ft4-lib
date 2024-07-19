@@ -233,9 +233,10 @@ run_main_logic() {
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
         -p $NODE_PORT:9870/tcp \
-        -p $API_PORT:7740/tcp \
+        -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node > ./multichain-postchain.log &
+        run-node
+        # run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
@@ -245,7 +246,7 @@ run_main_logic() {
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
     #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
-      BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
+      BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
     #   BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
       debug $BRID
       
@@ -254,6 +255,7 @@ run_main_logic() {
     #   if [ $retry_count -gt 300 ]; then
         docker ps  
         docker inspect $DOCKER_NODE_NAME
+        tail ./multichain-postchain.log
     #   fi
       # Increment retry counter
       ((retry_count++))
