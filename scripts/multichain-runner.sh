@@ -149,13 +149,14 @@ run_main_logic() {
         exit 1
     fi
 
-    # docker network create -d bridge test_network
-    # --network test_network \
+    docker network create -d bridge test_network
+    
 
     if $postgres; then
       log "Running Postgres container..."
       $DOCKER run \
-          --name $DOCKER_POSTGRES_NAME \          
+          --name $DOCKER_POSTGRES_NAME \
+          --network test_network \          
           -e POSTGRES_PASSWORD=postchain \
           -e POSTGRES_USER=postchain \
           -p $POSTGRES_PORT:5432 \
