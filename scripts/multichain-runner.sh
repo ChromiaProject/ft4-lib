@@ -235,8 +235,7 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node
-        # run-node > ./multichain-postchain.log &
+        run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
@@ -245,9 +244,16 @@ run_main_logic() {
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
-    #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
-      BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
+      BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
+    #   BRID=$(curl -v http://127.0.0.1:7740/brid/iid_0)
     #   BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
+    #   BRID=$(curl -s http://localhost:7740/brid/iid_0)
+      echo "prvi"
+      curl -v http://127.0.0.1:7740/brid/iid_0
+      echo "drugi"
+      curl -v http://172.19.0.3:7740/brid/iid_0
+      echo "treci"
+      curl -v http://localhost:7740/brid/iid_0
       debug $BRID
       
     #   echo "TEMP!!!!!!!!!!!!!!!"
@@ -255,6 +261,7 @@ run_main_logic() {
     #   if [ $retry_count -gt 300 ]; then
         docker ps  
         docker inspect $DOCKER_NODE_NAME
+        echo "tail###################"
         tail ./multichain-postchain.log
     #   fi
       # Increment retry counter
