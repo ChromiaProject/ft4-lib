@@ -273,6 +273,8 @@ run_main_logic() {
         -cfg $PMC_CONFIG
 
     sleep 1
+    cat $PMC_CONFIG
+    sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
     debug "Verifying the network"
     VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
