@@ -247,13 +247,13 @@ run_main_logic() {
     #   BRID=$(curl -v http://127.0.0.1:7740/brid/iid_0)
     #   BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
       BRID=$(curl -s http://localhost:7740/brid/iid_0)
+      debug $BRID
       echo "prvi"
       curl -v http://127.0.0.1:7740/brid/iid_0
       echo "drugi"
       curl -v http://172.18.0.3:7740/brid/iid_0
       echo "treci"
       curl -v http://localhost:7740/brid/iid_0
-      debug $BRID
       
     #   echo "TEMP!!!!!!!!!!!!!!!"
     #   debug $TEMP
