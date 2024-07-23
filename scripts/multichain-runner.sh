@@ -233,7 +233,7 @@ run_main_logic() {
         -e POSTCHAIN_CONFIG=/config/config.0.properties \
         -e POSTCHAIN_BLOCKCHAIN_CONFIG=/build/manager.xml \
         -p $NODE_PORT:9870/tcp \
-        --publish 127:0.0.1:$API_PORT:7740/tcp \
+        -p 127.0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
         run-node > ./multichain-postchain.log &
 
