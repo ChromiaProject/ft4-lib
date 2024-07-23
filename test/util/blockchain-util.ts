@@ -144,6 +144,8 @@ export async function fetchBlockchains(
   >("get_blockchains", {
     include_inactive: false,
   });
+  console.log("DIRKABOG#################################");
+  console.log(result);
 
   const blockchains: { [key: string]: Blockchain } = {};
   result.forEach((blockchain) => {
