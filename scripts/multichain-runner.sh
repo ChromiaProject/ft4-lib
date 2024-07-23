@@ -261,6 +261,10 @@ run_main_logic() {
 
     debug "Saving manager chain BRID to PMC config"
     pmc config --file $PMC_CONFIG --set brid="$BRID"
+    debug "PMC CONFIG##################:"
+    cat $PMC_CONFIG
+    sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
+    cat $PMC_CONFIG
 
     log "Initializing the network..."
     pmc network initialize \
