@@ -150,9 +150,6 @@ run_main_logic() {
         exit 1
     fi
 
-    # docker network create -d bridge test_network
-    # --network test_network \
-
     if $postgres; then
       log "Running Postgres container..."
       $DOCKER run \
@@ -164,9 +161,8 @@ run_main_logic() {
           -d postgres:14.9-alpine3.18 > /dev/null
     fi
 
-    docker ps
-    docker inspect $DOCKER_POSTGRES_NAME
-    
+    # docker ps
+    # docker inspect $DOCKER_POSTGRES_NAME    
 
     debug "Creating PMC config..."
 
@@ -246,7 +242,7 @@ run_main_logic() {
       # Attempt to fetch the value
       BRID=$(curl -s http://thedockerhost:7740/brid/iid_0)
 
-      debug $BRID
+      
       # Increment retry counter
       ((retry_count++))      
       # Wait for the correct BRID
@@ -263,8 +259,8 @@ run_main_logic() {
     pmc config --file $PMC_CONFIG --set brid="$BRID"
     debug "PMC CONFIG##################:"
     cat $PMC_CONFIG
-    sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
-    cat $PMC_CONFIG
+    # sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
+    # cat $PMC_CONFIG
 
     log "Initializing the network..."
     pmc network initialize \
@@ -274,7 +270,7 @@ run_main_logic() {
 
     sleep 1
     cat $PMC_CONFIG
-    sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
+    # sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
     debug "Verifying the network"
     VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
