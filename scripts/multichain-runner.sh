@@ -262,15 +262,6 @@ run_main_logic() {
     debug "Saving manager chain BRID to PMC config"
     pmc config --file $PMC_CONFIG --set brid="$BRID"
 
-    cat $PMC_CONFIG
-    debug "SYSTEM ANCHORING##############################"
-    cat $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml
-    debug "CLUSTER ANCHORING#############################"
-    cat $DEPENDENCIES_PATH/directory-chain/build/cluster_anchoring.xml
-    sed -i -e 's/localhost/thedockerhost/g' $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml
-    debug "SYSTEM ANCHORING##############################2"
-    cat $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml
-
     log "Initializing the network..."
     pmc network initialize \
         --system-anchoring-config $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml \
