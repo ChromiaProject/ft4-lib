@@ -5,7 +5,8 @@ LOG_LEVEL=${LOG_LEVEL:-"DEBUG"}
 NUM_BLOCKCHAINS=3
 POSTGRES_PORT=5432
 NODE_PORT=9870
-API_PORT=7740
+# API_PORT=7740
+API_PORT=80
 
 CHROMIA_NODE_VERSION='3.16.0'
 DIRECTORY_CHAIN_VERSION='1.28.0'
@@ -246,14 +247,15 @@ run_main_logic() {
     #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
     #   BRID=$(curl -v http://127.0.0.1:7740/brid/iid_0)
     #   BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
-      BRID=$(curl -s http://localhost:7740/brid/iid_0)
+    #   BRID=$(curl -s http://localhost:7740/brid/iid_0)
+      BRID=$(curl -s http://localhost:80/brid/iid_0)
       debug $BRID
-      echo "prvi"
-      curl -v http://127.0.0.1:7740/brid/iid_0
-      echo "drugi"
-      curl -v http://172.18.0.3:7740/brid/iid_0
+    #   echo "prvi"
+    #   curl -v http://127.0.0.1:7740/brid/iid_0
+    #   echo "drugi"
+    #   curl -v http://172.18.0.3:7740/brid/iid_0
       echo "treci"
-      curl -v http://localhost:7740/brid/iid_0
+      curl -v http://localhost:80/brid/iid_0
       
     #   echo "TEMP!!!!!!!!!!!!!!!"
     #   debug $TEMP
