@@ -235,8 +235,7 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         --publish 127:0.0.1:$API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node
-        # run-node > ./multichain-postchain.log &
+        run-node > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
