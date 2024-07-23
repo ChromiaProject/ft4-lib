@@ -244,30 +244,11 @@ run_main_logic() {
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
-    #   BRID=$(curl -s http://172.19.0.3:7740/brid/iid_0)
-    #   BRID=$(curl -v http://127.0.0.1:7740/brid/iid_0)
-    #   BRID=$(curl -s http://127.0.0.1:7740/brid/iid_0)
       BRID=$(curl -s http://thedockerhost:7740/brid/iid_0)
-    #   BRID=$(curl -s http://localhost:80/brid/iid_0)
+
       debug $BRID
-    #   echo "prvi"
-    #   curl -v http://127.0.0.1:7740/brid/iid_0
-    #   echo "drugi"
-    #   curl -v http://172.18.0.3:7740/brid/iid_0
-      echo "treci"
-      curl -v http://thedockerhost:7740/brid/iid_0
-      
-    #   echo "TEMP!!!!!!!!!!!!!!!"
-    #   debug $TEMP
-    #   if [ $retry_count -gt 300 ]; then
-        docker ps  
-        docker inspect $DOCKER_NODE_NAME
-        echo "tail###################"
-        tail ./multichain-postchain.log
-    #   fi
       # Increment retry counter
-      ((retry_count++))
-      
+      ((retry_count++))      
       # Wait for the correct BRID
       if [ ${#BRID} -ne 64 ]; then
         BRID=""
@@ -280,6 +261,15 @@ run_main_logic() {
 
     debug "Saving manager chain BRID to PMC config"
     pmc config --file $PMC_CONFIG --set brid="$BRID"
+
+    cat $PMC_CONFIG
+    debug "SYSTEM ANCHORING##############################"
+    cat $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml
+    debug "CLUSTER ANCHORING#############################"
+    cat $DEPENDENCIES_PATH/directory-chain/build/cluster_anchoring.xml
+    sed -i -e 's/localhost/thedockerhost/g' $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml
+    debug "SYSTEM ANCHORING##############################2"
+    cat $DEPENDENCIES_PATH/directory-chain/build/system_anchoring.xml
 
     log "Initializing the network..."
     pmc network initialize \
