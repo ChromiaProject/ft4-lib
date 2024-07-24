@@ -33,6 +33,7 @@ export function registerAsset(
   decimals: number,
   iconUrl: string,
 ): Operation {
+  console.log("registerAsset11111111111");
   return op("ft4.admin.register_asset", name, symbol, decimals, iconUrl);
 }
 
