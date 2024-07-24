@@ -18,8 +18,9 @@ export async function createChromiaClientToMultichain(
   nodeUrl?: string,
 ) {
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
-  const url =
-    nodeUrl || process.env.TEST_NODE_URL || "http://thedockerhost:7740";
+
+  const url = nodeUrl || "http://thedockerhost:7740";
+  console.log("URL##########: ", url);
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
@@ -144,8 +145,6 @@ export async function fetchBlockchains(
   >("get_blockchains", {
     include_inactive: false,
   });
-  console.log("DIRKABOG#################################");
-  console.log(result);
 
   const blockchains: { [key: string]: Blockchain } = {};
   result.forEach((blockchain) => {
