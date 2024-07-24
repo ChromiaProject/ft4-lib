@@ -50,25 +50,30 @@ let unrelatedConnection: Connection;
 
 describe("Fee account creation single step", () => {
   beforeAll(async () => {
+    console.log("ooneeeeeee");
     const { multichain00, multichain01, multichain02 } =
       await fetchBlockchains();
+    console.log("twopooooooooooo");
     senderConnection = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
+    console.log("threeeeeeee");
     recipientConnection = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
+    console.log("4");
     unrelatedConnection = createConnection(
       await createChromiaClientToMultichain(multichain02.rid),
     );
-
+    console.log("5");
+    console.log("oone");
     asset = await getNewAsset(
       senderConnection.client,
       "fee_strategy_test_asset_00",
       "FEE_STRATEGY_TEST_ASSET_00",
       5,
     );
-
+    console.log("two");
     timeoutAsset = await getNewAsset(
       senderConnection.client,
       "fee_strategy_timeout_test_asset_00",
@@ -82,7 +87,7 @@ describe("Fee account creation single step", () => {
       "fee_strategy_missing_test_asset_00",
       multichain00.rid,
     ]);
-
+    console.log("THREE");
     nonExistentChain00Asset = {
       id: missingAssetId,
       name: "fee_strategy_missing_test_asset_00",
