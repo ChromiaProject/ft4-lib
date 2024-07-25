@@ -40,6 +40,7 @@ import {
 import { nop } from "@ft4/utils/index";
 import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
 import { transactionBuilder } from "@ft4/transaction-builder/index";
+import { rellAppStructure } from "@ft4/utils/queries";
 
 let asset: Asset;
 let timeoutAsset: Asset;
@@ -67,6 +68,8 @@ describe("Fee account creation single step", () => {
     );
     console.log("5");
     console.log("oone");
+    console.log(await rellAppStructure);
+
     asset = await getNewAsset(
       senderConnection.client,
       "fee_strategy_test_asset_00",

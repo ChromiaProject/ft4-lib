@@ -21,7 +21,7 @@ export async function createChromiaClientToMultichain(
 
   const url = nodeUrl || "http://thedockerhost:7740";
   console.log("BRIDDDDDDDDDD!!!!!!!!!!");
-  console.log(blockchainRid);
+  console.log(blockchainRid.toString("hex"));
   return createClient({
     directoryNodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
