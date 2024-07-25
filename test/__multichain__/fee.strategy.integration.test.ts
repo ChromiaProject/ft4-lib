@@ -68,7 +68,8 @@ describe("Fee account creation single step", () => {
     );
     console.log("5");
     console.log("oone");
-    console.log(await rellAppStructure);
+    const temp = await rellAppStructure();
+    console.log(temp);
 
     asset = await getNewAsset(
       senderConnection.client,
