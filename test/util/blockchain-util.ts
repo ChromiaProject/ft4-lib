@@ -147,11 +147,14 @@ export async function fetchBlockchains(
     include_inactive: false,
   });
   console.log("GET ANCHORING CHAIN");
-  console.log(result);
+  // console.log(result);
 
   const blockchains: { [key: string]: Blockchain } = {};
   result.forEach((blockchain) => {
     blockchains[blockchain.name] = blockchain;
+
+    console.log(blockchain.name);
+    console.log(blockchain.rid.toString("hex"));
   });
   blockchainsCache = blockchains;
   return blockchains;

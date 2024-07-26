@@ -34,6 +34,16 @@ describe("Crosschain transfer", () => {
     });
 
     const temp = await getSystemAnchoringChain(client);
+    const clusterAnchorString =
+      "93 02 b8 dc c6 16 d9 89 b9 39 0b 17 52 b6 a9 4e bd 8a 18 c8 a6 15 c0 94 e9 06 8b 4d a7 65 d5 c1".replace(
+        " ",
+        "",
+      );
+    const clusterAnchor = await createClient({
+      nodeUrlPool: "http://thedockerhost:7740",
+      blockchainRid: clusterAnchorString,
+    });
+
     console.log("LIKE A GLOVE##################");
     console.log(temp);
     const clientAnchor = await createClient({
@@ -42,9 +52,13 @@ describe("Crosschain transfer", () => {
     });
 
     const tempBlock = await clientAnchor.getLatestBlock();
+    const tempBlock2 = await clusterAnchor.getLatestBlock();
     console.log("TEMP BLOCK##################");
     console.log(tempBlock);
     console.log("LIKE A GLOVE##################");
+    console.log("TEMP BLOCK2222##################");
+    console.log(tempBlock2);
+    console.log("LIKE A GLOVE222##################");
 
     const asset00 = await getNewAsset(
       connection00.client,
@@ -92,6 +106,11 @@ describe("Crosschain transfer", () => {
           "inside handler##############",
           await clientAnchor.getLatestBlock(),
         );
+        console.log(
+          "cluster:###########",
+          await clusterAnchor.getLatestBlock(),
+        );
+
         if (error) {
           reject(error);
           return;
