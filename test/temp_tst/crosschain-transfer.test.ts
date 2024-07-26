@@ -13,10 +13,12 @@ import { applyTransfer, initTransfer } from "@ft4/crosschain";
 import { createConnection } from "@ft4/ft-session";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { BufferId } from "@ft4/utils";
-import { Operation, RawGtx } from "postchain-client";
+import { getSystemAnchoringChain } from "@ft4/utils/directory-chain";
+import { Operation, RawGtx, createClient } from "postchain-client";
 
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
+    console.log("entry 1");
     const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
@@ -25,6 +27,24 @@ describe("Crosschain transfer", () => {
     const connection01 = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
+
+    const client = await createClient({
+      nodeUrlPool: "http://thedockerhost:7740",
+      blockchainIid: 0,
+    });
+
+    const temp = await getSystemAnchoringChain(client);
+    console.log("LIKE A GLOVE##################");
+    console.log(temp);
+    const clientAnchor = await createClient({
+      nodeUrlPool: "http://thedockerhost:7740",
+      blockchainRid: temp.toString("hex"),
+    });
+
+    const tempBlock = await clientAnchor.getLatestBlock();
+    console.log("TEMP BLOCK##################");
+    console.log(tempBlock);
+    console.log("LIKE A GLOVE##################");
 
     const asset00 = await getNewAsset(
       connection00.client,
@@ -68,6 +88,10 @@ describe("Crosschain transfer", () => {
         } | null,
         error: Error | null,
       ) => {
+        console.log(
+          "inside handler##############",
+          await clientAnchor.getLatestBlock(),
+        );
         if (error) {
           reject(error);
           return;
