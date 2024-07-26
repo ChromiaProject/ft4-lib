@@ -70,25 +70,14 @@ describe("Fee account creation single step", () => {
     senderConnection = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
-    console.log("threeeeeeee");
+
     recipientConnection = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
-    console.log("4");
+
     unrelatedConnection = createConnection(
       await createChromiaClientToMultichain(multichain02.rid),
     );
-    console.log("5");
-    console.log("oone");
-    // const temp1 = await senderConnection.client.query<
-    //   Blockchain[],
-    //   { include_inactive: boolean }
-    // >("rell.get_app_structure");
-    // const temp2 = await recipientConnection.client.query(rellAppStructure());
-    // const temp3 = await unrelatedConnection.client.query(rellAppStructure());
-    // console.log(temp1);
-    // console.log(temp2);
-    // console.log(temp3);
 
     asset = await getNewAsset(
       senderConnection.client,
