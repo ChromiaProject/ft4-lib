@@ -20,8 +20,6 @@ export async function createChromiaClientToMultichain(
   // const url = nodeUrl || process.env.TEST_NODE_URL || "http://127.0.0.1:7740";
 
   const url = nodeUrl || "http://thedockerhost:7740";
-  console.log("BRIDDDDDDDDDD!!!!!!!!!!");
-  console.log(blockchainRid.toString("hex"));
   return createClient({
     // directoryNodeUrlPool: url,
     nodeUrlPool: url,
@@ -46,7 +44,6 @@ export async function getNewAsset(
   iconUrl = "",
 ): Promise<Asset> {
   const adminSignatureProvider = adminUser().signatureProvider;
-  console.log("getnewasset1");
   await registerAsset(
     client,
     adminSignatureProvider,
@@ -55,14 +52,11 @@ export async function getNewAsset(
     decimals,
     iconUrl,
   );
-  console.log("getnewasset2");
   const id = gtv.gtvHash([
     name,
     formatter.ensureBuffer(client.config.blockchainRid),
   ]);
-  console.log("getnewasset3");
   const asset = await createConnection(client).getAssetById(id);
-  console.log("getnewasset4");
   if (!asset) {
     throw new Error("Unable to fetch the new asset");
   }

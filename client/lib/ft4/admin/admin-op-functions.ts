@@ -77,8 +77,6 @@ export async function registerAsset(
   iconUrl: string,
 ): Promise<TransactionCompletion> {
   assertValidUrl(iconUrl);
-  console.log("registerAsset11");
-  console.log(chromiaClient);
   return {
     receipt: await chromiaClient.signAndSendUniqueTransaction(
       ops.registerAsset(name, symbol, decimals, iconUrl),

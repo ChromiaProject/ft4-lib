@@ -57,20 +57,18 @@ let unrelatedConnection: Connection;
 
 describe("Fee account creation single step", () => {
   beforeAll(async () => {
-    console.log("ooneeeeeee");
     const { multichain00, multichain01, multichain02 } =
       await fetchBlockchains();
-    console.log("twopooooooooooo");
-    const tempClient = await createChromiaClientToMultichain(multichain00.rid);
-    const temp = await tempClient.query<
-      Blockchain[],
-      { include_inactive: boolean }
-    >("rell.get_app_structure");
-    console.log("STRUCTUREEEEEEEEEEEEEEEEEEEEEEEEE");
-    console.log(temp);
+    // console.log("twopooooooooooo");
+    // const tempClient = await createChromiaClientToMultichain(multichain00.rid);
+    // const temp = await tempClient.query<
+    //   Blockchain[],
+    //   { include_inactive: boolean }
+    // >("rell.get_app_structure");
+    // console.log("STRUCTUREEEEEEEEEEEEEEEEEEEEEEEEE");
+    // console.log(temp);
     senderConnection = createConnection(
-      // await createChromiaClientToMultichain(multichain00.rid),
-      tempClient,
+      await createChromiaClientToMultichain(multichain00.rid),
     );
     console.log("threeeeeeee");
     recipientConnection = createConnection(
