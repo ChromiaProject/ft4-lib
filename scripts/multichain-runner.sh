@@ -237,6 +237,11 @@ run_main_logic() {
     BRID=""
     retry_count=0
 
+    # while ; do
+    #  tail ./multichain-postchain.log
+    #  sleep 10
+    # done & 
+
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
@@ -303,9 +308,13 @@ run_main_logic() {
 
         export_var="MULTICHAIN${chain_num}_BRID"
         export $export_var="$MULTICHAIN_DAPP_BRID"
+        
+       
 
         debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
     done
+
+    tail -10000 ./multichain-postchain.log
 }
 
 forceexit() {
