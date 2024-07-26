@@ -140,19 +140,6 @@ export async function fetchBlockchains(
     blockchainIid: 0,
   });
 
-  // const client2 = await createClient({
-  //   nodeUrlPool: "http://thedockerhost:7740",
-  //   blockchainRid:
-  //     "a115380c08ea554b3e39afacee4c6a7e6d4d6d26974493a4ad102a48f0584951",
-  // });
-
-  // const temp = await client2.query<Blockchain[], { include_inactive: boolean }>(
-  //   "rell.get_app_structure",
-  // );
-
-  // console.log("GET_APP_STRUCT FIRST");
-  // console.log(temp);
-
   const result = await client.query<
     Blockchain[],
     { include_inactive: boolean }
