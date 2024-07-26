@@ -40,7 +40,6 @@ import {
 import { nop } from "@ft4/utils/index";
 import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
 import { transactionBuilder } from "@ft4/transaction-builder/index";
-import { rellAppStructure } from "@ft4/utils/queries";
 
 export type Blockchain = {
   name: string;
@@ -83,15 +82,15 @@ describe("Fee account creation single step", () => {
     );
     console.log("5");
     console.log("oone");
-    const temp1 = await senderConnection.client.query<
-      Blockchain[],
-      { include_inactive: boolean }
-    >("rell.get_app_structure");
-    const temp2 = await recipientConnection.client.query(rellAppStructure());
-    const temp3 = await unrelatedConnection.client.query(rellAppStructure());
-    console.log(temp1);
-    console.log(temp2);
-    console.log(temp3);
+    // const temp1 = await senderConnection.client.query<
+    //   Blockchain[],
+    //   { include_inactive: boolean }
+    // >("rell.get_app_structure");
+    // const temp2 = await recipientConnection.client.query(rellAppStructure());
+    // const temp3 = await unrelatedConnection.client.query(rellAppStructure());
+    // console.log(temp1);
+    // console.log(temp2);
+    // console.log(temp3);
 
     asset = await getNewAsset(
       senderConnection.client,
