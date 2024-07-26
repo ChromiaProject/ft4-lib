@@ -23,7 +23,8 @@ export async function createChromiaClientToMultichain(
   console.log("BRIDDDDDDDDDD!!!!!!!!!!");
   console.log(blockchainRid.toString("hex"));
   return createClient({
-    directoryNodeUrlPool: url,
+    // directoryNodeUrlPool: url,
+    nodeUrlPool: url,
     blockchainRid: blockchainRid.toString("hex"),
   });
 }
