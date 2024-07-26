@@ -42,6 +42,13 @@ import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
 import { transactionBuilder } from "@ft4/transaction-builder/index";
 import { rellAppStructure } from "@ft4/utils/queries";
 
+export type Blockchain = {
+  name: string;
+  rid: Buffer;
+  state: string;
+  system: number;
+};
+
 let asset: Asset;
 let timeoutAsset: Asset;
 let nonExistentChain00Asset: Asset;
@@ -55,8 +62,16 @@ describe("Fee account creation single step", () => {
     const { multichain00, multichain01, multichain02 } =
       await fetchBlockchains();
     console.log("twopooooooooooo");
+    const tempClient = await createChromiaClientToMultichain(multichain00.rid);
+    const temp = await tempClient.query<
+      Blockchain[],
+      { include_inactive: boolean }
+    >("rell.get_app_structure");
+    console.log("STRUCTUREEEEEEEEEEEEEEEEEEEEEEEEE");
+    console.log(temp);
     senderConnection = createConnection(
-      await createChromiaClientToMultichain(multichain00.rid),
+      // await createChromiaClientToMultichain(multichain00.rid),
+      tempClient,
     );
     console.log("threeeeeeee");
     recipientConnection = createConnection(
@@ -68,7 +83,10 @@ describe("Fee account creation single step", () => {
     );
     console.log("5");
     console.log("oone");
-    const temp1 = await senderConnection.client.query(rellAppStructure());
+    const temp1 = await senderConnection.client.query<
+      Blockchain[],
+      { include_inactive: boolean }
+    >("rell.get_app_structure");
     const temp2 = await recipientConnection.client.query(rellAppStructure());
     const temp3 = await unrelatedConnection.client.query(rellAppStructure());
     console.log(temp1);
