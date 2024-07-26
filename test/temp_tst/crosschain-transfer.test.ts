@@ -34,7 +34,11 @@ describe("Crosschain transfer", () => {
     });
 
     const temp = await getSystemAnchoringChain(client);
-
+    // const clusterAnchorString =
+    //   "93 02 b8 dc c6 16 d9 89 b9 39 0b 17 52 b6 a9 4e bd 8a 18 c8 a6 15 c0 94 e9 06 8b 4d a7 65 d5 c1".replace(
+    //     " ",
+    //     "",
+    //   );
     const clusterAnchorString =
       "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
     const clusterAnchor = await createClient({

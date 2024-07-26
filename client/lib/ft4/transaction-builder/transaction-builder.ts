@@ -51,8 +51,8 @@ import {
 import { EMPTY_SIGNATURE, signOperation } from "./utils";
 
 const defaultConfig: TransactionBuilderConfig = {
-  retryCount: 10,
-  waitTimeMs: 1000,
+  retryCount: 50,
+  waitTimeMs: 4000,
 };
 
 /**
