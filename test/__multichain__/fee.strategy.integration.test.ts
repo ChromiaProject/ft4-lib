@@ -85,7 +85,7 @@ describe("Fee account creation single step", () => {
       "FEE_STRATEGY_TEST_ASSET_00",
       5,
     );
-    console.log("two");
+
     timeoutAsset = await getNewAsset(
       senderConnection.client,
       "fee_strategy_timeout_test_asset_00",
@@ -99,7 +99,6 @@ describe("Fee account creation single step", () => {
       "fee_strategy_missing_test_asset_00",
       multichain00.rid,
     ]);
-    console.log("THREE");
     nonExistentChain00Asset = {
       id: missingAssetId,
       name: "fee_strategy_missing_test_asset_00",
