@@ -276,15 +276,21 @@ run_main_logic() {
     sleep 1
     cat $PMC_CONFIG
     # sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
-    # debug "Verifying the network"
-    # VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
-    # if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
-    #     err "Verification failed. Exiting."
-    #     exit 1
-    # fi
+    debug "CHROMIA_CONFIG"
+    echo $CHROMIA_CONFIG
+    export CHROMIA_CONFIG="thedockerhost:7740"
+    echo $CHROMIA_CONFIG
 
-    # log "Network verified successfully."
+    debug "Verifying the network"
+    VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
+
+    if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
+        err "Verification failed. Exiting."
+        exit 1
+    fi
+
+    log "Network verified successfully."
 
     debug "Adding container for the multichain test blockchains"
     pmc container add \
