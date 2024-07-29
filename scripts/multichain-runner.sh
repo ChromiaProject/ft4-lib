@@ -302,9 +302,9 @@ run_main_logic() {
     log "Building and adding blockchains to the container..."
     for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do  
+        include_brids $chain_num
         debug "MULTICHAIN CONFIG $chain_num"
         cat rell/out/ft4_multichain_test_$chain_num.xml
-        include_brids $chain_num
         MULTICHAIN_DAPP_BRID=$(
             pmc blockchain add \
                 --quiet \
