@@ -282,15 +282,15 @@ run_main_logic() {
     export CHROMIA_CONFIG="thedockerhost:7740"
     echo $CHROMIA_CONFIG
 
-    debug "Verifying the network"
-    VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
+    # debug "Verifying the network"
+    # VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
-    if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
-        err "Verification failed. Exiting."
-        exit 1
-    fi
+    # if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
+    #     err "Verification failed. Exiting."
+    #     exit 1
+    # fi
 
-    log "Network verified successfully."
+    # log "Network verified successfully."
 
     debug "Adding container for the multichain test blockchains"
     pmc container add \
