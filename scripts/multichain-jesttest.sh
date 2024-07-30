@@ -55,6 +55,9 @@ done
 
 source ./scripts/multichain-runner.sh
 
+log "sleep20"
+sleep 20
+
 log "TESTING ANCHOR..."
 
 node test_anchor.js

@@ -41,6 +41,7 @@
     }
 
     const lastAnchoredBlock = _lastAnchoredBlock.args[1][1].toString("hex");
+    console.log(`last anchored block: ${lastAnchoredBlock}`)
 
     const latestBlock = await fetch(`${nodeUrl}/blocks/${dappBrid}?limit=1&txs=true`)
     console.log(`Latest block height ${(await latestBlock.json())[0].height}`);
@@ -49,4 +50,10 @@
     
     const response2 = await fetch(`${nodeUrl}/blocks/${dappBrid}/${lastAnchoredBlock}?txs=true`);
     const dappBlock = await response2.json();
+    console.log(`dapp block reposnse: ${dappBlock}`) 
     console.log(`Latest anchored block height ${dappBlock.height}`);
+
+
+    const allBlocksResponse = await fetch(`${nodeUrl}/blocks/${dappBrid}?limit=20&txs=true`);
+    const blocks = await allBlocksResponse.json();
+    blocks.forEach(({ rid }) => console.log(rid));
