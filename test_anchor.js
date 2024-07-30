@@ -7,10 +7,10 @@
     const clusterAnchoringBrid = "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
     const dappBrid = "A115380C08EA554B3E39AFACEE4C6A7E6D4D6D26974493A4AD102A48F0584951";
 
-    const response = await fetch(`${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=1&txs=true`);
+    const response = await fetch(`${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=10&txs=true`);
     const json = await response.json();
 
-    const txs = json[0].transactions;
+    const txs = json.reduce((allTransactions, block) => [...allTransactions, ...block.transactions], []);
 
     let anchorBlockHeaderOps = [];
 
@@ -24,13 +24,23 @@
         throw new Error("Didn't find __anchor_block_header operation in last block");
     }
 
+    console.log("------------- Anchored chains:");
+    anchorBlockHeaderOps.forEach(({ args }) => {
+        const headerInfo = args[1];
+
+        console.log(`Blockchain ${headerInfo[0].toString("hex")}, block ${headerInfo[1].toString("hex")}`)
+    });
+
     const _lastAnchoredBlock = anchorBlockHeaderOps.find(({ args }) => {
         const headerInfo = args[1];
         return headerInfo[0].equals(Buffer.from(dappBrid, "hex"));
     });
 
+    if (!_lastAnchoredBlock) {
+        throw new Error(`Cannot find anchoring transaction for chain `)
+    }
+
     const lastAnchoredBlock = _lastAnchoredBlock.args[1][1].toString("hex");
-    console.log(lastAnchoredBlock);
 
     const response2 = await fetch(`${nodeUrl}/blocks/${dappBrid}/${lastAnchoredBlock}?txs=true`);
     const dappBlock = await response2.json();
