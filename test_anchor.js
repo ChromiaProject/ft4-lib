@@ -5,7 +5,7 @@
     // const dappBrid = "26A19C5A0762ED363A5824657C1DCE364548EDD8AB0BDA1E22D5B69A169E2FD3";
     const nodeUrl = "http://thedockerhost:7740";
     const clusterAnchoringBrid = "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
-    const dappBrid = "A115380C08EA554B3E39AFACEE4C6A7E6D4D6D26974493A4AD102A48F0584951";
+    const dappBrid = "BDC5C54EB3D17BCFD5DF6CE08EE3C51C270A5DE5608B306250FE792953DA3465";
 
     const response = await fetch(`${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=30&txs=true`);
     const json = await response.json();
