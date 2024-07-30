@@ -55,6 +55,10 @@ done
 
 source ./scripts/multichain-runner.sh
 
+log "TESTING ANCHOR..."
+
+node test_anchor.js
+
 log "Running Jest tests..."
 
 NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
