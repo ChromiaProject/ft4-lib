@@ -42,8 +42,11 @@
 
     const lastAnchoredBlock = _lastAnchoredBlock.args[1][1].toString("hex");
 
+    const latestBlock = await fetch(`${nodeUrl}/blocks/${dappBrid}?limit=1&txs=true`)
+    console.log(`Latest block height ${(await latestBlock.json())[0].height}`);
+    const latestBlock22 = await fetch(`${"http://localhost:7740"}/blocks/${dappBrid}?limit=1&txs=true`)
+    console.log(`Latest222222 block height ${(await latestBlock22.json())[0].height}`);
+    
     const response2 = await fetch(`${nodeUrl}/blocks/${dappBrid}/${lastAnchoredBlock}?txs=true`);
     const dappBlock = await response2.json();
     console.log(`Latest anchored block height ${dappBlock.height}`);
-    const latestBlock = await fetch(`${nodeUrl}/blocks/${dappBrid}?limit=1&txs=true`)
-    console.log(`Latest block height ${(await latestBlock.json())[0].height}`);
