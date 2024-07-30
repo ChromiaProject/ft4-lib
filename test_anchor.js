@@ -7,7 +7,7 @@
     const clusterAnchoringBrid = "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
     const dappBrid = "A115380C08EA554B3E39AFACEE4C6A7E6D4D6D26974493A4AD102A48F0584951";
 
-    const response = await fetch(`${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=10&txs=true`);
+    const response = await fetch(`${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=30&txs=true`);
     const json = await response.json();
 
     const txs = json.reduce((allTransactions, block) => [...allTransactions, ...block.transactions], []);
