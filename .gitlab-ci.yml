@@ -26,7 +26,8 @@ variables:
 
 default:
   tags:
-    - gitlab-org-docker
+    # - gitlab-org-docker
+    - ft4-pipeline-docker
 
 # before_script:
 #   - apt-get update
