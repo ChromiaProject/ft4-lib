@@ -29,7 +29,8 @@ describe("Crosschain transfer", () => {
     );
 
     const client = await createClient({
-      nodeUrlPool: "http://thedockerhost:7740",
+      // nodeUrlPool: "http://thedockerhost:7740",
+      nodeUrlPool: "http://docker:7740",
       blockchainIid: 0,
     });
 
@@ -42,14 +43,16 @@ describe("Crosschain transfer", () => {
     const clusterAnchorString =
       "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
     const clusterAnchor = await createClient({
-      nodeUrlPool: "http://thedockerhost:7740",
+      // nodeUrlPool: "http://thedockerhost:7740",
+      nodeUrlPool: "http://docker:7740",
       blockchainRid: clusterAnchorString,
     });
 
     console.log("LIKE A GLOVE##################");
     console.log(temp);
     const clientAnchor = await createClient({
-      nodeUrlPool: "http://thedockerhost:7740",
+      // nodeUrlPool: "http://thedockerhost:7740",
+      nodeUrlPool: "http://docker:7740",
       blockchainRid: temp.toString("hex"),
     });
 

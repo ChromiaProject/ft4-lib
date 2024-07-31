@@ -3,7 +3,8 @@
     // const nodeUrl = "https://chromia-mainnet.w3coins.io:7740";
     // const clusterAnchoringBrid = "2A09134C0C30CE906E6DB5CC82B551AB7A9B1EEA8168A87F14DD4FEFE02CF74D";
     // const dappBrid = "26A19C5A0762ED363A5824657C1DCE364548EDD8AB0BDA1E22D5B69A169E2FD3";
-    const nodeUrl = "http://thedockerhost:7740";
+    const nodeUrl = "http://docker:7740";
+    // const nodeUrl = "http://thedockerhost:7740";
     const clusterAnchoringBrid = "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
     const dappBrid = "BDC5C54EB3D17BCFD5DF6CE08EE3C51C270A5DE5608B306250FE792953DA3465";
 

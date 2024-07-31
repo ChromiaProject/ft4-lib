@@ -9,7 +9,8 @@ stages:
 
 services:
   - name: docker:dind
-    alias: thedockerhost  
+    # alias: thedockerhost  
+    command: ["--tls=false"]
   - name: postgres
     alias: postgres
     variables:
@@ -20,8 +21,8 @@ services:
 
 variables:
   MAX_TIME: "15"
-  DOCKER_HOST: tcp://thedockerhost:2375
-  DOCKER_DRIVER: overlay2
+  # DOCKER_HOST: tcp://thedockerhost:2375
+  # DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
 default:

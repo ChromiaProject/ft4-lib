@@ -245,7 +245,8 @@ run_main_logic() {
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
-      BRID=$(curl -s http://thedockerhost:7740/brid/iid_0)
+    #   BRID=$(curl -s http://thedockerhost:7740/brid/iid_0)
+      BRID=$(curl -s http://docker:7740/brid/iid_0)
 
       
       # Increment retry counter
@@ -279,7 +280,8 @@ run_main_logic() {
 
     debug "CHROMIA_CONFIG"
     echo $CHROMIA_CONFIG
-    export CHROMIA_CONFIG="thedockerhost:7740"
+    # export CHROMIA_CONFIG="thedockerhost:7740"
+    export CHROMIA_CONFIG="docker:7740"
     echo $CHROMIA_CONFIG
 
     # debug "Verifying the network"
