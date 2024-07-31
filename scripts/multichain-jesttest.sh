@@ -66,8 +66,8 @@ log "Running Jest tests..."
 
 NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
     --config=jest.config.multichain.js \
-    --testPathPattern=__multichain__ \
+    --testPathPattern=temp_tst \
     --verbose \
     $opt
 
-    # --testPathPattern=temp_tst \
+    # --testPathPattern=__multichain__ \
