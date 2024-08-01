@@ -19,13 +19,13 @@ import { Operation, RawGtx } from "postchain-client";
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
     console.log("entry 1");
-    const { multichain01, multichain02 } = await fetchBlockchains();
+    const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
-      await createChromiaClientToMultichain(multichain01.rid),
+      await createChromiaClientToMultichain(multichain00.rid),
     );
     const connection01 = createConnection(
-      await createChromiaClientToMultichain(multichain02.rid),
+      await createChromiaClientToMultichain(multichain01.rid),
     );
 
     // const client = await createClient({
@@ -98,7 +98,7 @@ describe("Crosschain transfer", () => {
       account01.id,
       asset00.id,
       createAmount(100, asset00.decimals),
-      [multichain01.rid],
+      [multichain00.rid],
       10000000000000,
     );
 
@@ -121,7 +121,7 @@ describe("Crosschain transfer", () => {
           reject(new Error("No data provided"));
           return;
         }
-        const iccfProofOperation = await data.createProof(multichain01.rid);
+        const iccfProofOperation = await data.createProof(multichain00.rid);
         try {
           await transactionBuilder(account00.authenticator, connection01.client)
             .add(iccfProofOperation, {
@@ -166,13 +166,13 @@ describe("Crosschain transfer", () => {
       entry.opIndex,
     );
     expect(transferDetails.length).toEqual(2);
-    expect(transferDetails[0].blockchainRid).toEqual(multichain01.rid);
-    // expect(transferDetails[0].blockchainRid).toEqual(multichain00.rid);
+    // expect(transferDetails[0].blockchainRid).toEqual(multichain01.rid);
+    expect(transferDetails[0].blockchainRid).toEqual(multichain00.rid);
     expect(transferDetails[0].accountId).toEqual(account00.id);
     expect(transferDetails[0].assetId).toEqual(asset00.id);
     expect(transferDetails[0].delta).toEqual(100n);
     expect(transferDetails[0].isInput).toEqual(true);
-    expect(transferDetails[1].blockchainRid).toEqual(multichain02.rid);
+    expect(transferDetails[1].blockchainRid).toEqual(multichain01.rid);
     expect(transferDetails[1].assetId).toEqual(asset00.id);
     expect(transferDetails[1].delta).toEqual(100n);
     expect(transferDetails[1].isInput).toEqual(false);
