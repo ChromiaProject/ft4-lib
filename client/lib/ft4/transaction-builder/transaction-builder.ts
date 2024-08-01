@@ -328,12 +328,16 @@ export function transactionBuilder(
     tx: SignedTransaction,
     txRid: Buffer,
   ): Promise<boolean> {
+    console.error("HANDLER ANCHORING#############");
+
     const operationsWithHandlers = _operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
 
     const clusterAnchorTxRid = await waitUntilClusterAnchored(txRid);
-
+    console.error("HANDLER ANCHORING2#############");
+    console.log(client.config.endpointPool);
+    console.log(client.config.endpointPool.map((ep) => ep.url));
     if (
       clusterAnchorTxRid &&
       (await waitUntilAnchoredInChain(
@@ -344,6 +348,7 @@ export function transactionBuilder(
         clusterAnchorTxRid,
       ))
     ) {
+      console.error("HANDLER ANCHORING3#############");
       const rawTx = gtv.decode(tx) as RawGtx;
       const createProof = createCreateProof(rawTx);
 
@@ -524,6 +529,7 @@ export function transactionBuilder(
       | undefined,
   ) {
     if (data) {
+      console.error("invoke on anchoring handler##########");
       const { rawTx, createProof } = data;
       operationsWithHandlers.forEach((op: OperationContext) => {
         if (!op.onAnchoredHandler) return;
