@@ -207,7 +207,7 @@ async function getAncoredBlocks() {
   // [DEBUG] Added multichain02 with BRID: 10363A7B3973DA956ED4FA3D8A35ADD3A661E519744059DC3BC582C7D9C5C2BC
 
   const response = await fetch(
-    `${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=30&txs=true`,
+    `${nodeUrl}/blocks/${clusterAnchoringBrid}?limit=100&txs=true`,
   );
   const json = await response.json();
 
@@ -237,7 +237,7 @@ async function getAncoredBlocks() {
   console.log("------------- Anchored chains:");
   anchorBlockHeaderOps.forEach(({ args }) => {
     const headerInfo = args[1];
-
+    if (!headerInfo[0].equals(Buffer.from(dappBrid, "hex"))) return;
     console.log(
       `Blockchain ${headerInfo[0].toString("hex")}, block ${headerInfo[1].toString("hex")}`,
     );
