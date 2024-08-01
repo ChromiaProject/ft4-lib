@@ -404,10 +404,13 @@ export function transactionBuilder(
     txRid: Buffer,
   ): Promise<Buffer | null> {
     if (_clusterAnchoringClient === undefined) {
+      console.log("WAIT UNTIL CLUSTER ANCHORED");
+      console.log("BRID: ", client.config.blockchainRid);
       _clusterAnchoringClient = await getAnchoringClient(
         await ensureDirectoryClient(),
         client.config.blockchainRid,
       );
+      console.log(_clusterAnchoringClient);
     }
 
     for (let i = 0; i < config.retryCount; ++i) {
@@ -497,6 +500,8 @@ export function transactionBuilder(
         client.config.endpointPool.map((ep) => ep.url),
       );
     }
+    console.log("RETURNING DIRECTORY CLIENT: ");
+    console.log(_directoryClient);
     return _directoryClient;
   }
 
