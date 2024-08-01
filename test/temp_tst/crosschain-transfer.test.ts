@@ -142,6 +142,19 @@ describe("Crosschain transfer", () => {
 
       tb.add(initOperation, { onAnchoredHandler })
         .buildAndSendWithAnchoring()
+        .on("confirmed", (receipt) => {
+          console.log("TRANSACTION INIT::::::::::::::::::");
+          console.log(receipt.transactionRid);
+          fetch(
+            `/transactions/${multichain00.rid.toString("hex")}/${receipt.transactionRid.toString("hex")}`,
+          ).then((res) => {
+            res
+              .json()
+              .then((jsonresp) =>
+                console.log("JSON RESPONSE#########", jsonresp),
+              );
+          });
+        })
         .then((res) => {
           transferTransactionRid = res.receipt.transactionRid;
         });
@@ -187,7 +200,7 @@ async function getAncoredBlocks() {
     "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
   // const dappBrid = "BDC5C54EB3D17BCFD5DF6CE08EE3C51C270A5DE5608B306250FE792953DA3465";
   const dappBrid =
-    "BDC5C54EB3D17BCFD5DF6CE08EE3C51C270A5DE5608B306250FE792953DA3465";
+    "A115380C08EA554B3E39AFACEE4C6A7E6D4D6D26974493A4AD102A48F0584951";
 
   // [DEBUG] Added multichain00 with BRID: A115380C08EA554B3E39AFACEE4C6A7E6D4D6D26974493A4AD102A48F0584951
   // [DEBUG] Added multichain01 with BRID: BDC5C54EB3D17BCFD5DF6CE08EE3C51C270A5DE5608B306250FE792953DA3465
@@ -206,7 +219,7 @@ async function getAncoredBlocks() {
   let anchorBlockHeaderOps: any = [];
 
   for (const tx of txs) {
-    console.log("transaction: ", tx);
+    // console.log("transaction: ", tx);
     const decodedTx = gtx.deserialize(Buffer.from(tx.data, "hex"));
     const ops = decodedTx.operations;
     anchorBlockHeaderOps = [
