@@ -55,8 +55,8 @@ done
 
 source ./scripts/multichain-runner.sh
 
-log "sleep20"
-sleep 20
+log "sleep100"
+sleep 100
 
 log "TESTING ANCHOR..."
 

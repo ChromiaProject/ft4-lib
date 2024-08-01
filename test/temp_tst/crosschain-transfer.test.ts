@@ -74,7 +74,7 @@ describe("Crosschain transfer", () => {
       connection01.client,
       adminUser().signatureProvider,
       asset00.id,
-      multichain01.rid,
+      multichain00.rid,
     );
     // await registerCrosschainAsset(
     //   connection01.client,
@@ -98,7 +98,7 @@ describe("Crosschain transfer", () => {
       account01.id,
       asset00.id,
       createAmount(100, asset00.decimals),
-      [multichain00.rid],
+      [multichain01.rid],
       10000000000000,
     );
 
@@ -121,7 +121,7 @@ describe("Crosschain transfer", () => {
           reject(new Error("No data provided"));
           return;
         }
-        const iccfProofOperation = await data.createProof(multichain00.rid);
+        const iccfProofOperation = await data.createProof(multichain01.rid);
         try {
           await transactionBuilder(account00.authenticator, connection01.client)
             .add(iccfProofOperation, {
