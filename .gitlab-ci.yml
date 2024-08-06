@@ -30,8 +30,8 @@ variables:
 default:
   tags:
     # - gitlab-org-docker
-    # - ft4-pipeline-docker
-    - ft4-kanta
+    - ft4-pipeline-docker
+    # - ft4-kanta
 
 # before_script:
 #   - apt-get update
