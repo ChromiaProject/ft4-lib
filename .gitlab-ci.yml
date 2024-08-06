@@ -24,13 +24,13 @@ variables:
   # DOCKER_HOST: tcp://thedockerhost:2375
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
-  # DOCKER_TLS_VERIFY: ""
+  DOCKER_TLS_VERIFY: ""
   DOCKER_TLS_CERTDIR: ""
 
 default:
   tags:
-    # - gitlab-org-docker
-    - ft4-pipeline-docker
+    - gitlab-org-docker
+    # - ft4-pipeline-docker
     # - ft4-kanta
 
 # before_script:
