@@ -29,7 +29,8 @@ variables:
 
 default:
   tags:
-    - gitlab-org-docker
+    # - gitlab-org-docker
+    - saas-linux-large-amd64
     # - ft4-pipeline-docker
     # - ft4-kanta
 
