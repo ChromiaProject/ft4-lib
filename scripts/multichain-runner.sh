@@ -197,8 +197,11 @@ run_main_logic() {
         fi
     fi
 
-    export GENESIS_HOST_NAME=docker
-    export GENESIS_API_URL=docker:7740
+    # export GENESIS_HOST_NAME=docker
+    # export GENESIS_API_URL=docker:7740
+
+    sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
+    cat $DEPENDENCIES_PATH/directory-chain/chromia.yml
 
     
 
@@ -239,7 +242,7 @@ run_main_logic() {
         run-node > ./multichain-postchain.log &
 
     log "verify variables"
-    env
+    # env
     pmc node info -pk 0350fe40766bc0ce8d08b3f5b810e49a8352fdd458606bd5fafe5acdcdc8ff3f57
 
     debug "Fetching manager chain BRID..."
