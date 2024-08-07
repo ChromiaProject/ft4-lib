@@ -197,6 +197,12 @@ run_main_logic() {
         fi
     fi
 
+    export GENESIS_HOST_NAME=docker
+    export GENESIS_API_URL=docker:7740
+
+    log "verify variables"
+    pmc node info -pk 0350fe40766bc0ce8d08b3f5b810e49a8352fdd458606bd5fafe5acdcdc8ff3f57
+
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
 
