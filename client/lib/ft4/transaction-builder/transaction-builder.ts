@@ -529,7 +529,6 @@ export function transactionBuilder(
       | undefined,
   ) {
     if (data) {
-      console.error("invoke on anchoring handler##########");
       const { rawTx, createProof } = data;
       operationsWithHandlers.forEach((op: OperationContext) => {
         if (!op.onAnchoredHandler) return;
