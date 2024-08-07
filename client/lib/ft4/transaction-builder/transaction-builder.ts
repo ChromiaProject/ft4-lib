@@ -328,14 +328,14 @@ export function transactionBuilder(
     tx: SignedTransaction,
     txRid: Buffer,
   ): Promise<boolean> {
-    console.error("HANDLER ANCHORING#############");
+    console.log("HANDLER ANCHORING#############");
 
     const operationsWithHandlers = _operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
 
     const clusterAnchorTxRid = await waitUntilClusterAnchored(txRid);
-    console.error("HANDLER ANCHORING2#############");
+    console.log("HANDLER ANCHORING2#############");
     console.log(client.config.endpointPool);
     console.log(client.config.endpointPool.map((ep) => ep.url));
     if (
@@ -348,7 +348,7 @@ export function transactionBuilder(
         clusterAnchorTxRid,
       ))
     ) {
-      console.error("HANDLER ANCHORING3#############");
+      console.log("HANDLER ANCHORING3#############");
       const rawTx = gtv.decode(tx) as RawGtx;
       const createProof = createCreateProof(rawTx);
 

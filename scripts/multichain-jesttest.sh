@@ -55,19 +55,19 @@ done
 
 source ./scripts/multichain-runner.sh
 
-log "sleep100"
-sleep 100
+# log "sleep20"
+# sleep 20
 
-log "TESTING ANCHOR..."
+# log "TESTING ANCHOR..."
 
-node test_anchor.js
+# node test_anchor.js
 
 log "Running Jest tests..."
 
 NODE_OPTIONS='--stack-trace-limit=100' JEST_JUNIT_OUTPUT_NAME="multichain.xml" npx jest \
     --config=jest.config.multichain.js \
-    --testPathPattern=temp_tst \
+    --testPathPattern=__multichain__ \
     --verbose \
     $opt
 
-    # --testPathPattern=__multichain__ \
+    # --testPathPattern=temp_tst \
