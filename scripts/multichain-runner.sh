@@ -200,8 +200,7 @@ run_main_logic() {
     export GENESIS_HOST_NAME=docker
     export GENESIS_API_URL=docker:7740
 
-    log "verify variables"
-    pmc node info -pk 0350fe40766bc0ce8d08b3f5b810e49a8352fdd458606bd5fafe5acdcdc8ff3f57
+    
 
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
@@ -238,6 +237,10 @@ run_main_logic() {
         -p $API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
         run-node > ./multichain-postchain.log &
+
+    log "verify variables"
+    env
+    pmc node info -pk 0350fe40766bc0ce8d08b3f5b810e49a8352fdd458606bd5fafe5acdcdc8ff3f57
 
     debug "Fetching manager chain BRID..."
     BRID=""
