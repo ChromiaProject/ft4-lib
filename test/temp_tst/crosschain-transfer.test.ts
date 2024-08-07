@@ -18,7 +18,6 @@ import { Operation, RawGtx, gtx } from "postchain-client";
 
 describe("Crosschain transfer", () => {
   test("transfers successfully with one hop", async () => {
-    console.log("entry 1");
     const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
@@ -27,43 +26,6 @@ describe("Crosschain transfer", () => {
     const connection01 = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
-
-    // const client = await createClient({
-    //   // nodeUrlPool: "http://thedockerhost:7740",
-    //   nodeUrlPool: "http://docker:7740",
-    //   blockchainIid: 0,
-    // });
-
-    // const temp = await getSystemAnchoringChain(client);
-    // const clusterAnchorString =
-    //   "93 02 b8 dc c6 16 d9 89 b9 39 0b 17 52 b6 a9 4e bd 8a 18 c8 a6 15 c0 94 e9 06 8b 4d a7 65 d5 c1".replace(
-    //     " ",
-    //     "",
-    //   );
-    // const clusterAnchorString =
-    //   "9302b8dcc616d989b9390b1752b6a94ebd8a18c8a615c094e9068b4da765d5c1";
-    // const clusterAnchor = await createClient({
-    //   // nodeUrlPool: "http://thedockerhost:7740",
-    //   nodeUrlPool: "http://docker:7740",
-    //   blockchainRid: clusterAnchorString,
-    // });
-
-    // console.log("LIKE A GLOVE##################");
-    // console.log(temp);
-    // const clientAnchor = await createClient({
-    //   // nodeUrlPool: "http://thedockerhost:7740",
-    //   nodeUrlPool: "http://docker:7740",
-    //   blockchainRid: temp.toString("hex"),
-    // });
-
-    // const tempBlock = await clientAnchor.getLatestBlock();
-    // const tempBlock2 = await clusterAnchor.getLatestBlock();
-    // console.log("TEMP BLOCK##################");
-    // console.log(tempBlock);
-    // console.log("LIKE A GLOVE##################");
-    // console.log("TEMP BLOCK2222##################");
-    // console.log(tempBlock2);
-    // console.log("LIKE A GLOVE222##################");
 
     const asset00 = await getNewAsset(
       connection00.client,
@@ -76,13 +38,6 @@ describe("Crosschain transfer", () => {
       asset00.id,
       multichain00.rid,
     );
-    // await registerCrosschainAsset(
-    //   connection01.client,
-    //   adminUser().signatureProvider,
-    //   asset00.id,
-    //   multichain00.rid,
-    // );
-
     const account00 = await AccountBuilder.account(connection00)
       .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
       .withBalance(asset00, createAmount(100, asset00.decimals))

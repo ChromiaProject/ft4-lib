@@ -328,16 +328,11 @@ export function transactionBuilder(
     tx: SignedTransaction,
     txRid: Buffer,
   ): Promise<boolean> {
-    console.log("HANDLER ANCHORING#############");
-
     const operationsWithHandlers = _operations.filter(
       (op: OperationContext) => !!op.onAnchoredHandler,
     );
 
     const clusterAnchorTxRid = await waitUntilClusterAnchored(txRid);
-    console.log("HANDLER ANCHORING2#############");
-    console.log(client.config.endpointPool);
-    console.log(client.config.endpointPool.map((ep) => ep.url));
     if (
       clusterAnchorTxRid &&
       (await waitUntilAnchoredInChain(
@@ -348,7 +343,6 @@ export function transactionBuilder(
         clusterAnchorTxRid,
       ))
     ) {
-      console.log("HANDLER ANCHORING3#############");
       const rawTx = gtv.decode(tx) as RawGtx;
       const createProof = createCreateProof(rawTx);
 
@@ -409,13 +403,10 @@ export function transactionBuilder(
     txRid: Buffer,
   ): Promise<Buffer | null> {
     if (_clusterAnchoringClient === undefined) {
-      console.log("WAIT UNTIL CLUSTER ANCHORED");
-      console.log("BRID: ", client.config.blockchainRid);
       _clusterAnchoringClient = await getAnchoringClient(
         await ensureDirectoryClient(),
         client.config.blockchainRid,
       );
-      console.log(_clusterAnchoringClient);
     }
 
     for (let i = 0; i < config.retryCount; ++i) {
@@ -505,8 +496,6 @@ export function transactionBuilder(
         client.config.endpointPool.map((ep) => ep.url),
       );
     }
-    console.log("RETURNING DIRECTORY CLIENT: ");
-    console.log(_directoryClient);
     return _directoryClient;
   }
 
