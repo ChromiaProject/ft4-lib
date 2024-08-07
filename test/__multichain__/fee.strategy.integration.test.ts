@@ -20,10 +20,9 @@ import {
 import {
   createInMemoryFtKeyStore,
   days,
-  // noopAuthenticator,
+  noopAuthenticator,
 } from "@ft4/authentication";
-// import { initTransfer, crosschainTransfer } from "@ft4/crosschain";
-import { initTransfer } from "@ft4/crosschain";
+import { initTransfer, crosschainTransfer } from "@ft4/crosschain";
 import { Connection, createConnection } from "@ft4/ft-session";
 import {
   allowedAssets,
@@ -34,20 +33,13 @@ import {
 } from "@ft4/registration";
 import {
   encryption,
-  // formatter,
+  formatter,
   gtv,
   newSignatureProvider,
 } from "postchain-client";
-// import { nop } from "@ft4/utils/index";
-// import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
-// import { transactionBuilder } from "@ft4/transaction-builder/index";
-
-export type Blockchain = {
-  name: string;
-  rid: Buffer;
-  state: string;
-  system: number;
-};
+import { nop } from "@ft4/utils/index";
+import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
+import { transactionBuilder } from "@ft4/transaction-builder/index";
 
 let asset: Asset;
 let timeoutAsset: Asset;
@@ -63,11 +55,9 @@ describe("Fee account creation single step", () => {
     senderConnection = createConnection(
       await createChromiaClientToMultichain(multichain00.rid),
     );
-
     recipientConnection = createConnection(
       await createChromiaClientToMultichain(multichain01.rid),
     );
-
     unrelatedConnection = createConnection(
       await createChromiaClientToMultichain(multichain02.rid),
     );
@@ -92,6 +82,7 @@ describe("Fee account creation single step", () => {
       "fee_strategy_missing_test_asset_00",
       multichain00.rid,
     ]);
+
     nonExistentChain00Asset = {
       id: missingAssetId,
       name: "fee_strategy_missing_test_asset_00",
@@ -653,75 +644,75 @@ describe("Fee account creation single step", () => {
     );
   });
 
-  // it("can recall completed crosschain transfer if account is not registered after timeout, but not twice", async () => {
-  //   const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
-  //   const authDescriptor = createSingleSigAuthDescriptorRegistration(
-  //     ["A", "T"],
-  //     keyStore.id,
-  //   );
+  it("can recall completed crosschain transfer if account is not registered after timeout, but not twice", async () => {
+    const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+    const authDescriptor = createSingleSigAuthDescriptorRegistration(
+      ["A", "T"],
+      keyStore.id,
+    );
 
-  //   const senderSession = (
-  //     await registerAccount(
-  //       senderConnection.client,
-  //       keyStore,
-  //       registrationStrategy.open(authDescriptor),
-  //     )
-  //   ).session;
-  //   const senderAccount = senderSession.account;
+    const senderSession = (
+      await registerAccount(
+        senderConnection.client,
+        keyStore,
+        registrationStrategy.open(authDescriptor),
+      )
+    ).session;
+    const senderAccount = senderSession.account;
 
-  //   const feeAmounts = await recipientConnection.query(feeAssets());
-  //   const amount = feeAmounts.find((amt) =>
-  //     amt.asset_id.equals(timeoutAsset.id),
-  //   )!.amount;
+    const feeAmounts = await recipientConnection.query(feeAssets());
+    const amount = feeAmounts.find((amt) =>
+      amt.asset_id.equals(timeoutAsset.id),
+    )!.amount;
 
-  //   const feeAmount = createAmountFromBalance(amount, timeoutAsset.decimals);
-  //   await mint(
-  //     senderConnection.client,
-  //     adminUser().signatureProvider,
-  //     senderAccount.id,
-  //     timeoutAsset.id,
-  //     feeAmount,
-  //   );
+    const feeAmount = createAmountFromBalance(amount, timeoutAsset.decimals);
+    await mint(
+      senderConnection.client,
+      adminUser().signatureProvider,
+      senderAccount.id,
+      timeoutAsset.id,
+      feeAmount,
+    );
 
-  //   const recipientId = gtv.gtvHash(keyStore.id);
-  //   expect(senderAccount.id).toEqual(recipientId);
+    const recipientId = gtv.gtvHash(keyStore.id);
+    expect(senderAccount.id).toEqual(recipientId);
 
-  //   const transferRef = await crosschainTransfer(
-  //     senderConnection,
-  //     senderAccount.authenticator,
-  //     recipientConnection.blockchainRid,
-  //     recipientId,
-  //     timeoutAsset.id,
-  //     feeAmount,
-  //     /*ttl=*/ 5000,
-  //   );
+    const transferRef = await crosschainTransfer(
+      senderConnection,
+      senderAccount.authenticator,
+      recipientConnection.blockchainRid,
+      recipientId,
+      timeoutAsset.id,
+      feeAmount,
+      /*ttl=*/ 5000,
+    );
 
-  //   await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
-  //   expect(await senderAccount.getBalanceByAssetId(timeoutAsset.id)).toBeNull();
-  //   expect(
-  //     await recipientConnection.query(pendingTransferStrategies(recipientId)),
-  //   ).toContain("fee");
+    expect(await senderAccount.getBalanceByAssetId(timeoutAsset.id)).toBeNull();
+    expect(
+      await recipientConnection.query(pendingTransferStrategies(recipientId)),
+    ).toContain("fee");
 
-  //   await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
+    await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
 
-  //   expect(
-  //     (await senderAccount.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
-  //   ).toBe(amount);
-  //   expect(
-  //     (await recipientConnection.query(pendingTransferStrategies(recipientId)))
-  //       .length,
-  //   ).toBe(0);
+    expect(
+      (await senderAccount.getBalanceByAssetId(timeoutAsset.id))!.amount.value,
+    ).toBe(amount);
+    expect(
+      (await recipientConnection.query(pendingTransferStrategies(recipientId)))
+        .length,
+    ).toBe(0);
 
-  //   await expect(
-  //     transactionBuilder(noopAuthenticator, recipientConnection.client)
-  //       .add(recallUnclaimedTransfer(transferRef.tx, transferRef.opIndex), {
-  //         authenticator: noopAuthenticator,
-  //       })
-  //       .add(nop())
-  //       .buildAndSend(),
-  //   ).rejects.toThrow(
-  //     `Transaction <0x${formatter.toString(gtv.gtvHash(transferRef.tx[0])).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
-  //   );
-  // });
+    await expect(
+      transactionBuilder(noopAuthenticator, recipientConnection.client)
+        .add(recallUnclaimedTransfer(transferRef.tx, transferRef.opIndex), {
+          authenticator: noopAuthenticator,
+        })
+        .add(nop())
+        .buildAndSend(),
+    ).rejects.toThrow(
+      `Transaction <0x${formatter.toString(gtv.gtvHash(transferRef.tx[0])).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
+    );
+  });
 });
