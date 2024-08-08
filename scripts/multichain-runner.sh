@@ -201,9 +201,7 @@ run_main_logic() {
     # export GENESIS_API_URL=docker:7740
 
     sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
-    cat $DEPENDENCIES_PATH/directory-chain/chromia.yml
-
-    
+       
 
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
@@ -245,18 +243,12 @@ run_main_logic() {
     BRID=""
     retry_count=0
 
-    # while ; do
-    #  tail ./multichain-postchain.log
-    #  sleep 10
-    # done & 
 
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
-    #   BRID=$(curl -s http://thedockerhost:7740/brid/iid_0)
       BRID=$(curl -s http://docker:7740/brid/iid_0)
 
-      
       # Increment retry counter
       ((retry_count++))      
       # Wait for the correct BRID
@@ -271,10 +263,6 @@ run_main_logic() {
 
     debug "Saving manager chain BRID to PMC config"
     pmc config --file $PMC_CONFIG --set brid="$BRID"
-    debug "PMC CONFIG##################:"
-    cat $PMC_CONFIG
-    # sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
-    # cat $PMC_CONFIG
 
     log "Initializing the network..."
     pmc network initialize \
@@ -283,24 +271,16 @@ run_main_logic() {
         -cfg $PMC_CONFIG
 
     sleep 1
-    cat $PMC_CONFIG
-    # sed -i -e 's/localhost/thedockerhost/g' $PMC_CONFIG
 
-    debug "CHROMIA_CONFIG"
-    echo $CHROMIA_CONFIG
-    # export CHROMIA_CONFIG="thedockerhost:7740"
-    export CHROMIA_CONFIG="docker:7740"
-    echo $CHROMIA_CONFIG
+    debug "Verifying the network"
+    VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
 
-    # debug "Verifying the network"
-    # VERIFY_OUTPUT=$(pmc network verify -cfg $PMC_CONFIG)
+    if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
+        err "Verification failed. Exiting."
+        exit 1
+    fi
 
-    # if [[ ! "$VERIFY_OUTPUT" =~ "OK" || "$VERIFY_OUTPUT" =~ "null" ]]; then
-    #     err "Verification failed. Exiting."
-    #     exit 1
-    # fi
-
-    # log "Network verified successfully."
+    log "Network verified successfully."
 
     debug "Adding container for the multichain test blockchains"
     pmc container add \
@@ -313,8 +293,6 @@ run_main_logic() {
     for chain_num in $(bash scripts/chain-numbers.sh $NUM_BLOCKCHAINS)
     do  
         include_brids $chain_num
-        # debug "MULTICHAIN CONFIG $chain_num"
-        # cat rell/out/ft4_multichain_test_$chain_num.xml
         MULTICHAIN_DAPP_BRID=$(
             pmc blockchain add \
                 --quiet \
@@ -331,8 +309,6 @@ run_main_logic() {
 
         debug "Added multichain$chain_num with BRID: $MULTICHAIN_DAPP_BRID"
     done
-
-    tail -10000 ./multichain-postchain.log
 }
 
 forceexit() {
