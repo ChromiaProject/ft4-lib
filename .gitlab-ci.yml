@@ -9,7 +9,6 @@ stages:
 
 services:
   - name: docker:dind
-    # alias: thedockerhost  
     command: ["--tls=false"]
   - name: postgres
     alias: postgres
@@ -21,7 +20,6 @@ services:
 
 variables:
   MAX_TIME: "15"
-  # DOCKER_HOST: tcp://thedockerhost:2375
   DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_VERIFY: ""
@@ -98,10 +96,10 @@ multichain_tests:
     - npm ci
     - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh
 
-update_docs:
-  stage: deploy
-  script:
-    - ./scripts/update-docs.sh
+# update_docs:
+#   stage: deploy
+#   script:
+#     - ./scripts/update-docs.sh
 
 # deploy_latest:
 #   stage: deploy
