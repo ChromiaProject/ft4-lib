@@ -10,7 +10,7 @@ import { AuthFlag, AuthenticatedAccount } from "@ft4/accounts";
 import { mint, registerCrosschainAsset } from "@ft4/admin";
 import { Asset, createAmount } from "@ft4/asset";
 import {
-  // applyTransfer,
+  applyTransfer,
   findPathToChainForAsset,
   initTransfer,
 } from "@ft4/crosschain";
@@ -21,11 +21,11 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-// import { setupTestEnvironment } from "./common-setup";
-// import {
-//   OnAnchoredHandlerData,
-//   transactionBuilder,
-// } from "@ft4/transaction-builder";
+import { setupTestEnvironment } from "./common-setup";
+import {
+  OnAnchoredHandlerData,
+  transactionBuilder,
+} from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication/index";
 import { nop } from "@ft4/utils/index";
 
@@ -115,97 +115,97 @@ describe("Orchestrator", () => {
     );
   });
 
-  // it("reverts a transfer that was applied to intermediary but not completed", async () => {
-  //   const testContext = await setupTestEnvironment(
-  //     "revert-transfer",
-  //     mintAmount,
-  //   );
+  it("reverts a transfer that was applied to intermediary but not completed", async () => {
+    const testContext = await setupTestEnvironment(
+      "revert-transfer",
+      mintAmount,
+    );
 
-  //   // Register a crosschain asset
-  //   await registerCrosschainAsset(
-  //     testContext.connection1.client, // Leaf
-  //     adminUser().signatureProvider,
-  //     testContext.sampleAsset.id,
-  //     testContext.multichain2.rid, // Branch
-  //   );
+    // Register a crosschain asset
+    await registerCrosschainAsset(
+      testContext.connection1.client, // Leaf
+      adminUser().signatureProvider,
+      testContext.sampleAsset.id,
+      testContext.multichain2.rid, // Branch
+    );
 
-  //   // Submit init transfer on source chain
-  //   const path = await findPathToChainForAsset(
-  //     testContext.session0,
-  //     testContext.sampleAsset,
-  //     testContext.multichain1.rid,
-  //   );
-  //   const state = {} as any;
-  //   await testContext.session0
-  //     .transactionBuilder()
-  //     .add(
-  //       initTransfer(
-  //         testContext.account1.id,
-  //         testContext.sampleAsset.id,
-  //         transferAmount,
-  //         path,
-  //         Date.now() + 10000,
-  //       ),
-  //       {
-  //         targetBlockchainRid: path[0],
-  //         onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-  //           state.tx = data?.tx;
-  //           state.initialOpIndex = data?.opIndex;
-  //           state.initialTx = data?.tx;
-  //           state.opIndex = data?.opIndex;
-  //           state.proof = data?.createProof(path[0]);
-  //         },
-  //       },
-  //     )
-  //     .buildAndSendWithAnchoring();
+    // Submit init transfer on source chain
+    const path = await findPathToChainForAsset(
+      testContext.session0,
+      testContext.sampleAsset,
+      testContext.multichain1.rid,
+    );
+    const state = {} as any;
+    await testContext.session0
+      .transactionBuilder()
+      .add(
+        initTransfer(
+          testContext.account1.id,
+          testContext.sampleAsset.id,
+          transferAmount,
+          path,
+          Date.now() + 10000,
+        ),
+        {
+          targetBlockchainRid: path[0],
+          onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
+            state.tx = data?.tx;
+            state.initialOpIndex = data?.opIndex;
+            state.initialTx = data?.tx;
+            state.opIndex = data?.opIndex;
+            state.proof = data?.createProof(path[0]);
+          },
+        },
+      )
+      .buildAndSendWithAnchoring();
 
-  //   state.proof = await state.proof;
+    state.proof = await state.proof;
 
-  //   // Perform apply transfer on intermediary
-  //   await transactionBuilder(
-  //     testContext.account0.authenticator,
-  //     testContext.connection2.client,
-  //   )
-  //     .add(state.proof, { authenticator: noopAuthenticator })
-  //     .add(
-  //       applyTransfer(
-  //         state.initialTx!,
-  //         state.initialOpIndex!,
-  //         state.tx!,
-  //         state.opIndex!,
-  //         0,
-  //       ),
-  //       {
-  //         authenticator: noopAuthenticator,
-  //         targetBlockchainRid: connection0.blockchainRid,
-  //         onAnchoredHandler: () => {},
-  //       },
-  //     )
-  //     .buildAndSendWithAnchoring();
+    // Perform apply transfer on intermediary
+    await transactionBuilder(
+      testContext.account0.authenticator,
+      testContext.connection2.client,
+    )
+      .add(state.proof, { authenticator: noopAuthenticator })
+      .add(
+        applyTransfer(
+          state.initialTx!,
+          state.initialOpIndex!,
+          state.tx!,
+          state.opIndex!,
+          0,
+        ),
+        {
+          authenticator: noopAuthenticator,
+          targetBlockchainRid: connection0.blockchainRid,
+          onAnchoredHandler: () => {},
+        },
+      )
+      .buildAndSendWithAnchoring();
 
-  //   // Force block building to get past deadline
-  //   await testContext.session1
-  //     .transactionBuilder()
-  //     .add(emptyOp(), { authenticator: noopAuthenticator })
-  //     .add(nop(), { authenticator: noopAuthenticator })
-  //     .buildAndSend();
+    // Force block building to get past deadline
+    await testContext.session1
+      .transactionBuilder()
+      .add(emptyOp(), { authenticator: noopAuthenticator })
+      .add(nop(), { authenticator: noopAuthenticator })
+      .buildAndSend();
 
-  //   const pendingTransfers =
-  //     await testContext.account0.getPendingCrosschainTransfers();
-  //   await testContext.account0.revertCrosschainTransfer(
-  //     pendingTransfers.data[0],
-  //   );
+    const pendingTransfers =
+      await testContext.account0.getPendingCrosschainTransfers();
+    await testContext.account0.revertCrosschainTransfer(
+      pendingTransfers.data[0],
+    );
 
-  //   const balance0 = await account0.getBalanceByAssetId(asset.id);
-  //   expect(balance0!.amount.value).toEqual(mintAmount.value);
+    const balance0 = await account0.getBalanceByAssetId(asset.id);
+    expect(balance0!.amount.value).toEqual(mintAmount.value);
 
-  //   const balance1 = await testContext.account1.getBalanceByAssetId(
-  //     testContext.sampleAsset.id,
-  //   );
-  //   expect(balance1).toBeNull();
+    const balance1 = await testContext.account1.getBalanceByAssetId(
+      testContext.sampleAsset.id,
+    );
+    expect(balance1).toBeNull();
 
-  //   expect(
-  //     (await testContext.account0.getPendingCrosschainTransfers()).data,
-  //   ).toHaveLength(0);
-  // });
+    expect(
+      (await testContext.account0.getPendingCrosschainTransfers()).data,
+    ).toHaveLength(0);
+  });
 });
