@@ -112,3 +112,6 @@ function () = auth.add_auth_handler(
 operation extra_signatures_op(signers: list<byte_array>) {
   auth.verify_signers(signers);
 }
+
+// This op cannot be called after an auth op, used to test blacklist.
+operation unauthable_op() {}

@@ -252,7 +252,7 @@ describe("Transaction Signing", () => {
       );
       expect(signedTx).not.toEqual(partiallySignedTx);
       await expect(client.sendTransaction(signedTx)).rejects.toThrow(
-        /failed: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
+        /failed: INSUFFICIENT SIGNERS: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
       );
     });
 
@@ -530,7 +530,7 @@ describe("Transaction Signing", () => {
       expect(signedTx).not.toEqual(partiallySignedTx);
 
       await expect(client.sendTransaction(signedTx)).rejects.toThrow(
-        /failed: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
+        /failed: INSUFFICIENT SIGNERS: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
       );
     });
 

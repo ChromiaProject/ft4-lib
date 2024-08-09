@@ -1,52 +1,146 @@
 /**
- * This function can be extended by users to add custom logic before authentication.
+ * This function can be extended by users to add custom logic before the authentication of
+ * an operation.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param account                   the account that is calling the operation
+ * @param account_auth_descriptor   the auth descriptor that is authenticating as account
  */
 @extendable
 function before_authenticate(accounts.account, accounts.account_auth_descriptor);
 
 /**
- * This function can be extended by users to add custom logic after authentication.
+ * This function can be extended by users to add custom logic after the authentication of
+ * an operation.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param account                   the account that is calling the operation
+ * @param account_auth_descriptor   the auth descriptor that has authenticated as account
  */
 @extendable
 function after_authenticate(accounts.account, accounts.account_auth_descriptor?);
 
+/** name of the operation used to authorize through EVM signatures */
 val EVM_AUTH_OP = "ft4.evm_auth";
+/** name of the operation used to authorize through FT signatures */
 val FT_AUTH_OP = "ft4.ft_auth";
 
+/** size of a byte_array representing an EVM address, in bytes */
 val EVM_ADDRESS_SIZE = 20;
+/** size of a byte_array representing an FT pubkey, in bytes */
 val FT_PUBKEY_SIZE = 33;
 
+/** tag used in auth message construction which will be replaced with blockchain RID */
 val BLOCKCHAIN_RID_PLACEHOLDER = "{blockchain_rid}";
+/**
+ * tag used in auth message construction which will be replaced with the authorizing account ID
+ */
 val ACCOUNT_ID_PLACEHOLDER = "{account_id}";
+/**
+ * tag used in auth message construction which will be replaced with the authenticating
+ * auth descriptor ID
+ */
 val AUTH_DESCRIPTOR_ID_PLACEHOLDER = "{auth_descriptor_id}";
+/** tag used in auth message construction which will be replaced with the unique nonce */
 val NONCE_PLACEHOLDER = "{nonce}";
 
+/**
+ * Verifies that:
+ * 1. the transaction is properly signed
+ * 2. the signer(s) is allowed to call that operation in the name of an account
+ * 3. the account is not currently rate limited
+ * 
+ * For point 2, auth flags of the auth descriptor that signed the operation are checked.
+ * 
+ * This function expects to find an auth operation before the one we're currently in. That
+ * operation receives as parameters the account the user wants to access, and the auth
+ * descriptor that allows them to access it.
+ * 
+ * Given that information, this function checks that the requirements for the current operation
+ * (found in the `_auth_handler`) are satisfied. 
+ * 
+ * Can only be called from an operation.
+ * 
+ * The code of this function can be expanded by the developers by extending either of
+ * `before_authenticate` and `after_authenticate`.
+ * 
+ * Throws `"MISSING AUTH OP"` if there is no previous operation in the transaction, or it is
+ * not an auth operation.
+ * 
+ * Throws `"INVALID AUTH DESCRIPTOR"` if the authenticating auth descriptor is not accepted by
+ * the `_auth_handler`'s `resolver`.
+ * 
+ * Throws `"EXPIRED AUTH DESCRIPTOR"` if the auth descriptor used to authenticate has expired.
+ * 
+ * Throws when the user is for some reason not allowed to call this operation. The most common
+ * reasons include:
+ * - the account the user wants to access does not exist
+ * - the auth descriptor that the user uses to authenticate does not exist, or it is not
+ *   attached to the account that is being accessed
+ * - the account does not have enough rate limit points
+ * - the rules for the auth descriptor cannot be parsed
+ * - the requirements for the operation cannot be found
+ * - the auth descriptor does not give the user sufficient permissions given the operation's
+ *   requirements
+ * - any additional requirement added by extending the `before_authenticate` and
+ *   `after_authenticate` functions is infringed.
+ * - any part of the `_auth_handler` is broken (the message is improperly formatted, or either
+ *   of the two functions found in the `message_formatter` or `resolver` fields throw)
+ * 
+ * @see core.accounts.rl_state for more information on rate limiting
+ * 
+ * @see external.auth.evm_auth for evm authorization
+ * 
+ * @see external.auth.ft_auth for FT authorization
+ * 
+ * @see is_auth_op for more information on what operations are auth operations
+ * 
+ * @see _auth_handler for more information on the requirements a user must meet to be able to
+ * call a certain operation
+ * 
+ * @returns the account the user authenticated as
+ */
 function authenticate() {
     val op = op_context.get_current_operation();
-    require(op_context.op_index > 0, "Expected at least two operations, make sure that you included auth operation.");
+    require(
+        op_context.op_index > 0,
+        "MISSING AUTH OP: Expected at least two operations, make sure that you included auth operation."
+    );
 
     val previous_op = op_context.get_all_operations()[op_context.op_index - 1];
     require(
         is_auth_op(previous_op),
-        "Error authorizing operation. Incorrect auth operation %s".format(previous_op.name)
+        "MISSING AUTH OP: Error authorizing operation. Incorrect auth operation %s"
+            .format(previous_op.name)
     );
 
     val (account, auth_descriptor) = fetch_account_and_auth_descriptor(previous_op.args);
     require(
-        get_first_allowed_auth_descriptor(op.name, op.args.to_gtv(), account.id, [auth_descriptor.id]),
-        "The provided auth descriptor is not valid for this operation"
+        get_first_allowed_auth_descriptor(
+            op.name,
+            op.args.to_gtv(),
+            account.id,
+            [auth_descriptor.id]
+        ),
+        "INVALID AUTH DESCRIPTOR: The provided auth descriptor is not valid for this operation"
     );
     before_authenticate(account, auth_descriptor);
 
     accounts.rate_limit(account);
 
-    require(not accounts.have_violating_rules(auth_descriptor), "The rules for this auth descriptor have been violated");
+    require(
+        not accounts.have_violating_rules(auth_descriptor),
+        "EXPIRED AUTH DESCRIPTOR: The rules for this auth descriptor have been violated"
+    );
 
     val flags = get_auth_flags(op.name);
 
     when (previous_op.name) {
         EVM_AUTH_OP -> _validate_evm_signature(op, previous_op, flags, account, auth_descriptor);
         FT_AUTH_OP -> _validate_ft4_signature(flags, account, auth_descriptor);
+        // never thrown, as the second `require` prevents it.
         else -> require(false, "Invalid auth operation: %s".format(previous_op.name));
     };
 
@@ -58,6 +152,23 @@ function authenticate() {
     return account;
 }
 
+/**
+ * Like `get_first_allowed_auth_descriptor`, but instead of accepting a list of auth descriptors
+ * it takes a list of `accounts.auth_descriptor_signer` IDs.
+ * The list of auth descriptors to check will be the list of all the auth descriptors these
+ * signers participate in, provided that they can be used for authenticating this operation
+ * (i.e., they have the necessary flags to allow them).
+ * 
+ * Throws if the auth handler for this operation is not found or its resolver is a function
+ * that throws.
+ * 
+ * @see _auth_handler for more information on auth flags
+ * 
+ * @param op_name       the name of the operation to call
+ * @param args          the arguments for the operation
+ * @param account_id    the account that will call the operation
+ * @param signers       the list of signers that can be used for authenticating
+ */
 function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, account_id: byte_array, signers: list<byte_array>) {
     val ads = accounts.auth_descriptor_signer @* {
         .account_auth_descriptor.account.id == account_id,
@@ -71,6 +182,28 @@ function get_first_allowed_auth_descriptor_by_signers(op_name: name, args: gtv, 
     return get_first_allowed_auth_descriptor(op_name, args, account_id, valid_ad_ids);
 }
 
+/**
+ * Calculates the best auth descriptor to use for the given account when calling the given
+ * operation with the given arguments. It assumes that the auth descriptors have all the
+ * required auth flags.
+ * 
+ * If the operation has an auth handler with a resolver function, it will be used to decide
+ * which auth descriptor to return. Otherwise, the first auth descriptor on the list will be
+ * returned.
+ * 
+ * If no auth descriptor is returned but `ad_ids` is not empty, the auth handler resolver
+ * function is to blame.
+ * 
+ * Throws if the auth handler for this operation is not found or its resolver is a function
+ * that throws.
+ * 
+ * @see _auth_handler for more information on auth handlers
+ * 
+ * @param op_name       the name of the operation to call
+ * @param args          the arguments for the operation
+ * @param account_id    the account that will call the operation
+ * @param ad_ids        the list of auth descriptors that can be used for authenticating
+ */
 function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id: byte_array, ad_ids: list<byte_array>) {
     if (ad_ids.size() == 0) return null;
 
@@ -80,27 +213,73 @@ function get_first_allowed_auth_descriptor(op_name: name, args: gtv, account_id:
     return resolver(args, account_id, ad_ids);
 }
 
+/**
+ * Extracts the account and `account_auth_descriptor` from the args of the auth operation,
+ * which is one of the operations supported by `is_auth_op`.
+ * 
+ * Throws if the account referred to in `auth_args` does not exist
+ * 
+ * Throws `"MISSING AUTH DESCRIPTOR"` if the auth descriptor referred to in `auth_args` is not
+ * associated with the account id specified in auth args or does not exist altogether.
+ * 
+ * @param auth_args     the arguments passed to the auth operation.
+ */
 function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.account, accounts.account_auth_descriptor) {
     val (account_id, auth_descriptor_id) = extract_account_and_auth_descriptor(auth_args);
     val account = accounts.Account(account_id);
     val auth_descriptor = require(
         try_fetch_auth_descriptor(account, auth_descriptor_id),
-        "Auth descriptor '%s' not found for account '%s'".format(auth_descriptor_id, account_id)
+        "MISSING AUTH DESCRIPTOR: Auth descriptor '%s' not found for account '%s'"
+            .format(auth_descriptor_id, account_id)
     );
     return (account, auth_descriptor);
 }
 
+/**
+ * Extracts the account ID and auth descriptor ID from the args of the auth operation,
+ * which are the operations supported by `is_auth_op`
+ * 
+ * @param auth_args     the arguments that were passed to the auth operation.
+ * 
+ * @returns a tuple containing `(account_id, auth_descriptor_id)`
+ */
 function extract_account_and_auth_descriptor(auth_args: list<gtv>): (byte_array, byte_array) {
     val account_id = byte_array.from_gtv(auth_args[0]);
     val auth_descriptor_id = byte_array.from_gtv(auth_args[1]);
     return (account_id, auth_descriptor_id);
 }
 
+/**
+ * Retrieves an `account_auth_descriptor` given the account it's associated with and the
+ * ID of the auth descriptor itself. Returns null if not found.
+ * 
+ * @param account               the account the auth descriptor is associated with
+ * @param auth_descriptor_id    the ID of the auth descriptor to retrieve
+ */
 function try_fetch_auth_descriptor(accounts.account, auth_descriptor_id: byte_array): accounts.account_auth_descriptor? =
     accounts.account_auth_descriptor @? { .id == auth_descriptor_id, .account == account };
 
+/**
+ * Returns the flags needed to call a certain operation.
+ * 
+ * Throws if the auth handler for `op_name` cannot be found.
+ * 
+ * @see _auth_handler for more information on auth flags
+ * 
+ * @param op_name   the name of the operation to authorize
+ */
 function get_auth_flags(op_name: name) = get_auth_handler(op_name).flags;
 
+/**
+ * Returns the auth message template that is needed to authorize a certain operation, given its
+ * arguments. It will either use the one defined in `auth_handler.message_formatter`, or create
+ * a default one from the args if the former does not exist.
+ * 
+ * Throws if the auth handler for `op_name` cannot be found.
+ * 
+ * @param op_name   the name of the operation to authorize
+ * @param op_args   the arguments passed to the operation
+ */
 function get_auth_message_template(op_name: name, op_args: gtv?) {
     val formatter = get_auth_handler(op_name).message_formatter;
 
@@ -114,6 +293,24 @@ function get_auth_message_template(op_name: name, op_args: gtv?) {
     return utils.make_auth_message(message);
 }
 
+/**
+ * Verifies that the signature found in the `evm_auth` operation is valid to authorize the
+ * operation being called.
+ * 
+ * Throws if the signature cannot be validated. The most common reasons include:
+ * - the auth handler for `op` is not found
+ * - the signer is not registered in the auth descriptor
+ * - too few signers signed the operation, in case of a multisig auth descriptor
+ * - the signer signed the wrong message
+ * - the auth descriptor does not give sufficient permissions for the operation that is being
+ *   called
+ * 
+ * @param op                the operation being called
+ * @param auth_op           the `evm_auth` operation that is authorizing this operation
+ * @param flags             the flags required by the operation
+ * @param account           the account the user authenticated as
+ * @param auth_descriptor   the auth descriptor that is authorizing this operation
+ */
 function _validate_evm_signature(
   op: gtx_operation,
   auth_op: gtx_operation,
@@ -136,9 +333,29 @@ function _validate_evm_signature(
         _validate_multiple_evm_addresses(message, validated_args.signatures, auth_descriptor);
 }
 
+/**
+ * Creates the message that should be signed on an EVM wallet to approve the given operation.
+ * 
+ * Throws `"MISCONFIGURED MESSAGE"` if the template doesn't have a nonce placeholder or
+ * a blockchain RID placeholder, both of which should be added to the template in advance by
+ * `utils.make_auth_message`
+ * 
+ * @param evm_auth_args     the arguments for the `evm_auth` operation
+ * @param message_template  the template for this operation's message
+ * @param args              the arguments to this operation
+ * @param nonce             the nonce that should be included to prevent replay attacks
+ */
 function create_message_from_template(evm_auth_args, message_template: text, args: list<gtv>, nonce: text): text {
-    require(message_template.contains(NONCE_PLACEHOLDER), "Message template has to include '%s'".format(NONCE_PLACEHOLDER));
-    require(message_template.contains(BLOCKCHAIN_RID_PLACEHOLDER), "Message template has to include '%s'".format(BLOCKCHAIN_RID_PLACEHOLDER));
+    require(
+        message_template.contains(NONCE_PLACEHOLDER),
+        "MISCONFIGURED MESSAGE: Message template has to include '%s'"
+            .format(NONCE_PLACEHOLDER)
+    );
+    require(
+        message_template.contains(BLOCKCHAIN_RID_PLACEHOLDER),
+        "MISCONFIGURED MESSAGE: Message template has to include '%s'"
+            .format(BLOCKCHAIN_RID_PLACEHOLDER)
+    );
     var message = message_template;
     
     return message
@@ -148,23 +365,61 @@ function create_message_from_template(evm_auth_args, message_template: text, arg
         .replace(BLOCKCHAIN_RID_PLACEHOLDER, chain_context.blockchain_rid.to_hex().upper_case());
 }
 
+/**
+ * Verifies that the arguments passed to the `evm_auth` operation are valid.
+ * 
+ * Throws `"INPUT ERROR"` if the param passed in `auth_args` has any number of elements other
+ * than three.
+ * 
+ * Throws `"UNAUTHORIZED ACCESS"` if the auth descriptor does not have the necessary flags to
+ * authorize this operation.
+ * 
+ * @param auth_args         the arguments passed to `evm_auth`
+ * @param required_flags    the flags that this operation requires
+ * @param account           the account that the user authenticated as
+ * @param auth_descriptor   the auth descriptor the user is authorizing with
+ * 
+ * @returns an object containing the validated arguments for `evm_auth`
+ */
 function _validate_evm_arguments(
   auth_args: list<gtv>,
   required_flags: set<text>,
   account: accounts.account, 
   auth_descriptor: accounts.account_auth_descriptor
 ): evm_auth_args {
-    require(auth_args.size() == 3, "Incorrect number of arguments to auth operation");
+    require(
+        auth_args.size() == 3,
+        "INPUT ERROR: Incorrect number of arguments to auth operation"
+    );
 
     val signatures = list<signature?>.from_gtv(auth_args[2]);
 
     val has_all_flags = accounts.has_flags(auth_descriptor, list(required_flags));
     
-    require(has_all_flags, "The auth descriptor does not have the required permissions");
+    require(
+        has_all_flags,
+        "UNAUTHORIZED ACCESS: The auth descriptor does not have the required permissions"
+    );
 
     return evm_auth_args(account, auth_descriptor, signatures);
 }
 
+/**
+ * Verifies that the signature found in the `ft_auth` operation is valid to authorize the
+ * operation being called.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws if the signature cannot be validated. Common reasons include:
+ * - the signers of the auth descriptor did not sign this transaction
+ * - too few signers signed the operation, in case of a multisig auth descriptor
+ * - the auth descriptor does not give sufficient permissions for the operation that is being
+ *   called
+ * 
+ * @param flags             the flags required by the operation
+ * @param account           the account the user authenticated as
+ * @param auth_descriptor   the auth descriptor that is authorizing this operation
+ */
 function _validate_ft4_signature(
   flags: list<text>,
   account: accounts.account,
@@ -180,8 +435,16 @@ function _validate_ft4_signature(
     require(result.valid, result.error!!); // Prints a precise error message.
 }
 
+/**
+ * Given the message and signature, extracts the evm address that signed it.
+ * 
+ * Throws `"INPUT ERROR"` if message is empty.
+ * 
+ * @param message       the message that was signed
+ * @param signature     the EVM signature of the message
+ */
 function _recover_evm_address(message: text, signature) {
-    require(message != "", "Empty messages are not allowed");
+    require(message != "", "INPUT ERROR: Empty messages are not allowed");
 
     val msg_hash = _evm_message_hash(message);
     val evm_pubkey = crypto.eth_ecrecover(
@@ -194,21 +457,73 @@ function _recover_evm_address(message: text, signature) {
     return crypto.eth_pubkey_to_address(evm_pubkey);
 }
 
+/**
+ * Given a message, a valid EVM signature will add some information to it prior to hashing it
+ * and cryptographically signing.
+ * This function returns the hash of the message as per the EVM signature specifications in
+ * EIP-191.
+ * 
+ * @param message   the message to sign
+ */
 function _evm_message_hash(message: text): byte_array =
     keccak256(("\u0019Ethereum Signed Message:\n" + message.to_bytes().size().to_text() + message).to_bytes());
 
+/**
+ * Verifies that the signer of a certain message is the signer of the single-sig auth
+ * descriptor used to authorize this operation.
+ * 
+ * Throws `"INPUT ERROR"` if the signature is null
+ * 
+ * Throws `"INVALID SIGNATURE"` when the signature verification fails. This might happen if:
+ * - the message signer is not the one associated with the auth descriptor
+ * - the message that was signed does not correspond to the one passed in the `message` parameter
+ * 
+ * Throws if the message is empty
+ * 
+ * @param message                   the message that was signed
+ * @param signature                 the signature received. If null, it will throw
+ * @param account_auth_descriptor   the auth descriptor that authorized this operation
+ * 
+ * @returns the EVM address that signed the operation's message
+ */
 function _validate_evm_address(message: text, signature?, accounts.account_auth_descriptor) {
-    require(signature, "Signature cannot be null when using single sig");
+    require(
+        signature,
+        "INPUT ERROR: Signature cannot be null when using single sig"
+    );
     val recovered_address = _recover_evm_address(message, signature);
     val signer = accounts.auth_descriptor_signer @? {
         .account_auth_descriptor == account_auth_descriptor,
         .id == recovered_address
     };
-    require(signer, "Invalid signature on message: \n%s".format(message));
+    require(signer, "INVALID SIGNATURE: Invalid signature on message: \n%s".format(message));
 
     return recovered_address;
 }
 
+/**
+ * Verifies that the message has been authorized by the multi-sig auth descriptor.
+ * This implies that the signatures list contains enough signatures to reach the minimum
+ * amount of signatures required, and that all signatures are from valid signers from the
+ * auth descriptors
+ * 
+ * Throws `"MISMATCHED SIGNER"` if a signature is found to be out of place. They must be
+ * in the same order they were registered in when the auth descriptor was first created.
+ * 
+ * Throws `"INSUFFICIENT SIGNERS"` if the number of valid signatures was below the signature
+ * required threshold.
+ * 
+ * Throws if a signer signed the wrong message, or if the message is empty.
+ * 
+ * @param message                   the message that was signed
+ * @param signatures                the signatures received, in the order the signers are
+ *                                  found on the auth descriptor. Any signers that didn't
+ *                                  sign this message can have their signature set to null.
+ * @param account_auth_descriptor   the auth descriptor that authorized this operation
+ * 
+ * @returns the EVM addresses that signed the operation's message, in the same order as the
+ * signatures were provided, with null signatures omitted
+ */
 function _validate_multiple_evm_addresses(message: text, signatures: list<signature?>, accounts.account_auth_descriptor) {
     val recovered_keys = list<byte_array>();
     val ad_args = accounts.multi_sig_args.from_bytes(account_auth_descriptor.args);
@@ -222,24 +537,43 @@ function _validate_multiple_evm_addresses(message: text, signatures: list<signat
         );
         require(
             recovered_address == ad_args.signers[i],
-            "Expected signer at index <%d> to be <%s> but was: <%s>"
+            "MISMATCHED SIGNER: Expected signer at index <%d> to be <%s> but was: <%s>"
                 .format(i, ad_args.signers[i], recovered_address)
         );
         recovered_keys.add(recovered_address);
     }
     require(
         recovered_keys.size() >= ad_args.signatures_required, 
-        "Minimum number of valid signatures not reached. Expected <%d>, found <%d>."
+        "INSUFFICIENT SIGNERS: Minimum number of valid signatures not reached. Expected <%d>, found <%d>."
             .format(ad_args.signatures_required, recovered_keys.size())
     );
     return recovered_keys;
 }
 
 /**
-  * Verifies whether provided list of signers have signed the operation/transaction.
-  * FT (GTX) signers are checked against GTX `signers` and `signatures` fields, while 
-  * EVM signers are checked against signers and signatures provided in `ft4.evm_signatures` operation.
-  */
+ * Verifies whether provided list of signers have signed the operation/transaction.
+ * FT (GTX) signers are checked against GTX `signers` and `signatures` fields, while 
+ * EVM signers are checked against signers and signatures provided in
+ * `external.auth.evm_signatures` operation.
+ * Only used when the signers are not part of an auth descriptor, for example when an auth
+ * descriptor is being registered.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"MISSING AUTH OP"` when no auth operation is found to be preceding the current one
+ * but the message template requires the account and/or auth descriptor ID that would be found
+ * there.
+ * 
+ * Throws if the auth handler for the current operation cannot be found.
+ * 
+ * Throws if the signers cannot be verified. Common cases are:
+ * - the EVM signers and signatures in `evm_signers` are in different order
+ * - some EVM signers have not signed the message, or any of them have signed a wrong message
+ * - some FT signers did not sign the transaction
+ * - the message for the EVM signers was empty
+ * 
+ * @param ft_and_evm_signers    the signers that are expected to be found.
+ */
 function verify_signers(ft_and_evm_signers: list<byte_array>) {
     val op = op_context.get_current_operation();
     val message_template = get_auth_message_template(op.name, op.args.to_gtv());
@@ -251,7 +585,7 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
     if (message_template.contains(ACCOUNT_ID_PLACEHOLDER) or message_template.contains(AUTH_DESCRIPTOR_ID_PLACEHOLDER)) {
         val auth_details = require(
             get_auth_details_from_auth_operation(),
-            "Cannot extract auth details. Auth operation not found"
+            "MISSING AUTH OP: Cannot extract auth details. Auth operation not found"
         );
         
         message = message
@@ -262,25 +596,68 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
     verify_signers_with_message(ft_and_evm_signers, message);
 }
 
+/**
+ * Does what `verify_signers` does, but receives the message as a parameter.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"MISMATCHED SIGNATURES"` if any of the signers and signatures on the `evm_signatures`
+ * operation don't match in the exact order they're found.
+ * 
+ * Throws `"MISSING SIGNATURE"` if:
+ * - an EVM signer is specified but the signature is not found in the `evm_signatures` operation.
+ * - an FT signer is specified but the signature is not found in the signers of the transaction.
+ * 
+ * Throws `"UNSUPPORTED SIGNER"` if a signer passed is neither an EVM nor an FT signer,
+ * which means the byte array length is different from `EVM_ADDRESS_SIZE` and `FT_PUBKEY_SIZE`
+ * 
+ * Throws if the message is empty.
+ * 
+ * Throws if any signatures in `evm_signatures` is null or missing, or if there's extra
+ * signatures in the operation.
+ * 
+ * @param ft_and_evm_signers    the signers that are expected to be found.
+ * @param message               the message that was signed.
+ */
 function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, message: text) {
     val (signers, signatures) = get_evm_signatures();
     for (i in range(signatures.size())) {
         val signer = signers[i];
         require(
             signer == _recover_evm_address(message, signatures[i]),
-            "Invalid signature for address <%s>".format(signer)
+            "MISMATCHED SIGNATURES: Invalid signature for address <%s>".format(signer)
         );
     }
 
     val evm_signers = set(signers);
 
     for (signer in ft_and_evm_signers) {
-        if (signer.size() == EVM_ADDRESS_SIZE) require(signer in evm_signers, "Missing signature for address <%s>".format(signer));
-        else if (signer.size() == FT_PUBKEY_SIZE) require(op_context.is_signer(signer), "Missing signature for public key <%s>".format(signer));
-        else require(false, "Unsupported signer <%s>".format(signer));
+        if (signer.size() == EVM_ADDRESS_SIZE) {
+            require(
+                signer in evm_signers,
+                "MISSING SIGNATURE: Missing signature for address <%s>".format(signer)
+            );
+        } else if (signer.size() == FT_PUBKEY_SIZE) {
+            require(
+                op_context.is_signer(signer),
+                "MISSING SIGNATURE: Missing signature for public key <%s>".format(signer)
+            );
+        }
+        else require(false, "UNSUPPORTED SIGNER: Unsupported signer <%s>".format(signer));
     }
 }
 
+/**
+ * Retrieves the signers and signatures from the `evm_signatures` operation. Returns empty
+ * lists if the operation is not found.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"MISMATCHED SIGNATURES"` if the length of the two lists is mismatched
+ * in the `evm_signatures` operation.
+ * 
+ * Throws `"NULL EVM SIGNATURE"` if any signature is null.
+ */
 function get_evm_signatures(): (signers: list<byte_array>, signatures: list<signature>) {
     if (op_context.op_index == 0) return (signers = list<byte_array>(), signatures = list<signature>());
 
@@ -304,14 +681,14 @@ function get_evm_signatures(): (signers: list<byte_array>, signatures: list<sign
 
     require(
         args.signers.size() == args.signatures.size(),
-        "Number of evm signers <%d> is not equal to number of evm signatures <%d>".format(args.signers.size(), args.signatures.size())
+        "MISMATCHED EVM SIGNATURES LISTS: Number of evm signers <%d> is not equal to number of evm signatures <%d>".format(args.signers.size(), args.signatures.size())
     );
 
     var signatures = list<signature>();
     for (i in range(args.signatures.size())) {
         val signature = require(
             args.signatures[i],
-            "Missing signature for address <%s>.".format(args.signers[i])
+            "NULL EVM SIGNATURE: Missing signature for address <%s>.".format(args.signers[i])
         );
         signatures.add(signature);
     }
@@ -322,16 +699,54 @@ function get_evm_signatures(): (signers: list<byte_array>, signatures: list<sign
     );
 }
 
+/**
+ * Extracts the account ID passed to the auth operation, which is any operation supported by
+ * `is_auth_op`.
+ * 
+ * Throws `"INVALID AUTH OP"` if the operation passed is not an auth operation
+ * 
+ * Throws `"INVALID AUTH ARGS"` if the auth operation passed has no arguments
+ * 
+ * @param auth_op   the operation to extract the ID from
+ */
 function extract_account_id(auth_op: gtx_operation): byte_array {
-    require(is_auth_op(auth_op), "Operation %s is not an auth operation".format(auth_op.name));
-    require(auth_op.args.size() >= 1, "Invalid auth op, insufficient number of args: %s".format(auth_op.args.size()));
+    require(
+        is_auth_op(auth_op),
+        "INVALID AUTH OP: Operation %s is not an auth operation".format(auth_op.name)
+    );
+    require(
+        auth_op.args.size() >= 1,
+        "INVALID AUTH ARGS: Invalid auth op, insufficient number of args: %s"
+            .format(auth_op.args.size())
+    );
     return byte_array.from_gtv(auth_op.args[0]);
 }
 
+/**
+ * Verifies whether the operation passed is an auth operation, that is one of:
+ * - `EVM_AUTH_OP`
+ * - `FT_AUTH_OP`
+ * 
+ * @param op    the operation to check
+ */
 function is_auth_op(op: gtx_operation) = op.name in [EVM_AUTH_OP, FT_AUTH_OP];
 
+/**
+ * Verifies whether the operation passed is `evm_signatures`
+ * 
+ * @see external.auth.evm_signatures for information on the operation
+ * 
+ * @param op    the operation to check
+ */
 function is_evm_signatures_op(op: gtx_operation) = op.name == "ft4.evm_signatures";
 
+/**
+ * Retrieves the account and auth descriptor ID from the auth operation that precedes the
+ * current operation, if any. Returns null if no operation precedes the current one, or it
+ * is not an auth operation.
+ *     
+ * Can only be called from an operation.
+ */
 function get_auth_details_from_auth_operation() {
     if (op_context.op_index == 0) return null;
     val op = op_context.get_all_operations()[op_context.op_index-1];

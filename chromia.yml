@@ -17,6 +17,8 @@ blockchains:
           max_rules: 4
 
       lib.ft4.core.auth:
+        auth_op_blacklisted_operations:
+          - unauthable_op
         evm_signatures_authorized_operations:
           - extra_signatures_op
           - empty_op
@@ -29,7 +31,7 @@ blockchains:
     test:
       modules:
         - tests.accounts
-        - tests.assets        
+        - tests.assets
         - tests.auth
         - tests.crosschain
         - tests.default_prioritization

@@ -1,14 +1,68 @@
-
+/** The name of the default login configuration. This will be used when none is specified */
 val DEFAULT_LOGIN_CONFIG_NAME = "default";
 
+/**
+ * This struct represents default auth descriptor configurations that can be used by the client
+ * to create credentials that can access the account. These configurations can be defined by
+ * the dapp developer by extending the `login_config` function.
+ * 
+ * When a user tries to log into a dapp, a login auth descriptor will be created using one of
+ * these configurations, and the signer will be stored in such a way that allows the client to
+ * sign all transactions it's allowed to without asking for user confirmation.
+ * 
+ * Using this feature allows the client to provide a better user experience, since the client
+ * will be allowed to call what the dapp considers non-sensitive operations.
+ * 
+ * Proper configuration is required to avoid allowing sensitive operations to be called by the
+ * login keypairs that are accessible to the client.
+ */
 struct _login_config {
+    /**
+     * What auth flags the login auth descriptor will have.
+     * 
+     * @see _auth_handler for a description of auth flags.
+     */
     flags: list<text>;
+    /**
+     * What expiration rules the auth descriptor will have
+     * 
+     * @see core.accounts.rule_expression for a description of expiration rules.
+     */
     rules: gtv? = null;
 }
 
+/**
+ * This function can be extended by users to add custom login configurations.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @see _login_config for more information about login configurations.
+ * 
+ * @see add_login_config for an example implementation of this extension.
+ * 
+ * @see external.auth.get_login_config for a way to retrieve a specific `_login_config`
+ * 
+ * @returns a map of `<name, _login_config>` - the name allows the users to pick one of the
+ * configs
+ */
 @extendable
 function login_config(): map<name, _login_config>;
 
+/**
+ * Utility function to help extend the `login_config` function.
+ * 
+ * Example usage:
+ * ```
+ * @extend(auth.login_config)
+ * function () = add_login_config(name, flags, rules);
+ * ```
+ * 
+ * @see _login_config for more information about login configurations.
+ * 
+ * @param name      the name of the login configuration
+ * @param flags     the flags to add to the login auth descriptor
+ * @param rules     the expiration rules the login auth descriptor will have
+ */
 function add_login_config(
     name = DEFAULT_LOGIN_CONFIG_NAME,
     flags: list<text>,
@@ -17,6 +71,14 @@ function add_login_config(
     return [name: _login_config(flags, rules)];
 }
 
+/**
+ * Converts a `rule_expression` to a gtv config that can be used inside an auth descriptor's
+ * `rules` field.
+ * 
+ * @see core.accounts.rule_expression for more information on auth descriptor rules.
+ * 
+ * @param rule  the rule to convert
+ */
 function map_rule(rule: rule_expression): gtv {
     return [
         rule.operator.name.to_gtv(),
@@ -25,10 +87,25 @@ function map_rule(rule: rule_expression): gtv {
     ].to_gtv();
 }
 
+/**
+ * Alias for `map_rule`
+ * 
+ * @param rule  the rule to convert
+ */
 function login_simple_rule(rule: rule_expression) = map_rule(rule);
 
+/**
+ * Converts a list of `rule_expression` to a complex rule that can be used inside an auth
+ * descriptor's `rules` field
+ * 
+ * Throws `"EMPTY RULES"` if the `rules_list` is empty
+ * 
+ * @see core.accounts.rule_expression for more information on auth descriptor rules.
+ * 
+ * @param rules_list    the list of rules to convert
+ */
 function login_rules(rules_list: list<rule_expression>): gtv {
-    require(rules_list.size() > 0, "Empty login rules list");
+    require(rules_list.size() > 0, "EMPTY RULES: Empty login rules list");
 
     if (rules_list.size() == 1) return map_rule(rules_list[0]);
     
@@ -39,6 +116,12 @@ function login_rules(rules_list: list<rule_expression>): gtv {
     return rules.to_gtv();
 }
 
+/**
+ * Creates a time-to-live rule, which makes the auth descriptor expire after a certain
+ * amount of time since its creation.
+ * 
+ * @param millis    the amount of time in milliseconds the auth descriptor should last
+ */
 function ttl(millis: integer): gtv {
     return map_rule(
         rule_expression(
@@ -49,14 +132,44 @@ function ttl(millis: integer): gtv {
     );
 }
 
+/**
+ * Similar to `accounts.rule_variable`, but it adds two more variables that only make sense
+ * in the context of login auth descriptors:
+ * - `relative_block_time` is the difference in timestamp between the auth descriptor creation
+ *   and its expiration
+ * - `relative_block_height` is the difference in block number between the auth descriptor
+ *   creation and its expiration
+ * 
+ * These two variables are not useful for normal auth descriptors, as those are created at
+ * the same time of definition.
+ * In the case of login auth descriptors, the definition happens during the dapp development,
+ * while they're created anytime a user logs in. This allows the developer to define rules
+ * like a time to live for the login sessions.
+ * 
+ * @see core.accounts.rule_variable for more information on rule variables
+ * 
+ * @see core.accounts.rule_expression for more information on expiration rules
+ */
 enum rule_variable {
+    /** The height (number) of the block we're currently in  */
     block_height,
+    /** The timestamp of the last accepted block */
     block_time,
+    /** The number of operations the auth descriptor performed */
     op_count,
+    /**
+     * The difference in block height between the one we're currently in and the creation of
+     * the auth descriptor
+     */
     relative_block_height,
+    /**
+     * The difference in timestamp between the last block before the one we're currently in
+     * and the creation of the auth descriptor.
+     */
     relative_block_time
 }
 
+/** @see core.accounts.rule_operator */
 enum rule_operator {
     lt,
     le,
@@ -65,12 +178,14 @@ enum rule_operator {
     gt
 }
 
+/** @see core.accounts.rule_expression */
 struct rule_expression {
 	operator: rule_operator;
 	variable: rule_variable;
 	value: integer;
 }
 
+/** @see core.accounts.rule_parameters */
 struct rule_parameters {
 	variable: rule_variable;
 	value: integer;
@@ -80,18 +195,21 @@ struct rule_parameters {
  * Operator functions
  */
 
+/** @see core.accounts.greater_than */
 function greater_than(rule_parameters) = rule_expression(
     rule_parameters.variable,
     rule_operator.gt,
     rule_parameters.value
 );
 
+/** @see core.accounts.greater_or_equal */
 function greater_or_equal(rule_parameters) = rule_expression(
     rule_parameters.variable,
     rule_operator.ge,
     rule_parameters.value
 );
 
+/** @see core.accounts.equals */
 function equals(rule_parameters): rule_expression {
     return rule_expression(
         rule_parameters.variable,
@@ -100,12 +218,14 @@ function equals(rule_parameters): rule_expression {
     );
 }
 
+/** @see core.accounts.less_than */
 function less_than(rule_parameters) = rule_expression(
     rule_parameters.variable,
     rule_operator.lt,
     rule_parameters.value
 );
 
+/** @see core.accounts.less_or_equal */
 function less_or_equal(rule_parameters) = rule_expression(
     rule_parameters.variable,
     rule_operator.le,
@@ -116,26 +236,43 @@ function less_or_equal(rule_parameters) = rule_expression(
  * Rule variable functions
  */
 
+/** @see core.accounts.block_height */
 function block_height(integer) = rule_parameters(
     rule_variable.block_height,
     integer
 );
 
+/** @see core.accounts.block_time */
 function block_time(integer) = rule_parameters(
     rule_variable.block_time,
     integer
 );
 
+/** @see core.accounts.op_count */
 function op_count(integer) = rule_parameters(
     rule_variable.op_count,
     integer
 );
 
+/**
+ * Same as `accounts.block_height`, but using the relative rule variable.
+ * 
+ * @see rule_variable for info on the relative rules
+ * 
+ * @see core.accounts.block_height for info on this group of functions
+ */
 function relative_block_height(integer) = rule_parameters(
     rule_variable.relative_block_height,
     integer
 );
 
+/**
+ * Same as `accounts.block_time`, but using the relative rule variable.
+ * 
+ * @see rule_variable for info on the relative rules
+ * 
+ * @see core.accounts.block_time for info on this group of functions
+ */
 function relative_block_time(integer) = rule_parameters(
     rule_variable.relative_block_time,
     integer

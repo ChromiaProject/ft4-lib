@@ -118,6 +118,7 @@ function test_cannot_sign_invalid_ops_with_evm_auth() {
         gtx_operation(name = "ft4.ft_auth", args = [x"".to_gtv(), x"".to_gtv()]).to_test_op(),
         gtx_operation(name = "ft4.evm_auth", args = [x"".to_gtv(), x"".to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
         gtx_operation(name = "ft4.evm_signatures", args = [list<byte_array>().to_gtv(), list<auth.signature>().to_gtv()]).to_test_op(),
+        gtx_operation(name = "unauthable_op", args = []).to_test_op(),
     ];
 
     for (invalid_op in invalid_ops) {
