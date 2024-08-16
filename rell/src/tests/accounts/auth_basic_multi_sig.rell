@@ -105,7 +105,7 @@ function test_multi_sig_wrong_required_flags() {
         .sign(rell.test.keypairs.bob)
         .run();
 
-    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [X] are missing on the (multi sig) Auth Descriptor.");
+    assert_equals(test_operations.test_auth.test_error.msg, "MISSING FLAGS: Some required flags [X] are missing on the (multi sig) Auth Descriptor.");
 }
 
 // ----- util -----

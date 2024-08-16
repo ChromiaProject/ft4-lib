@@ -1,3 +1,9 @@
+/**
+ * Takes a list of `rule_expression`s and returns the gtv representation that can be used
+ * inside of auth descriptors.
+ * 
+ * @param rules the list of rules that should be serialized, empty for no rules.
+ */
 function serialize_rules(rules: list<rule_expression>): gtv {
 	if (rules.size() == 0) {
 		return GTV_NULL;
@@ -13,12 +19,31 @@ function serialize_rules(rules: list<rule_expression>): gtv {
 	return rules_gtv.to_gtv();
 }
 
+/**
+ * Takes a single `rule_expression` and returns the gtv representation that can be used
+ * inside of auth descriptors.
+ * 
+ * @param rule_expression the rule that should be serialized
+ */
 function rule_expression_to_gtv(rule_expression): gtv = [
         rule_expression.operator.name.to_gtv(),
         rule_expression.variable.name.to_gtv(),
         rule_expression.value.to_gtv()
     ].to_gtv();
 
+/**
+ * Takes a GTV representation of one rule, and converts it into a single `rule_expression`
+ * 
+ * Throws `"INVALID RULE"` if the first component of the gtv can't be mapped into a
+ * `rule_operator` value or the second one can't be mapped into a `rule_variable` value.
+ * 
+ * Throws if `gtv` is not the GTV representation of a rule, for example:
+ * - it is not a `list`
+ * - the first two components are not `text`s
+ * - the last component is not an integer
+ * 
+ * @param gtv the rule that should be deserialized
+ */
 function rule_expression_from_gtv(gtv) {
 	val components = list<gtv>.from_gtv(gtv);
 	val operator_name = text.from_gtv(components[0]);
@@ -27,12 +52,12 @@ function rule_expression_from_gtv(gtv) {
 
 	val operator = require(
 			rule_operator.values() @? { .name == operator_name },
-			"Unknown rule operator %s".format(operator_name)
+			"INVALID RULE: Unknown rule operator %s".format(operator_name)
 	);
 
 	val variable = require(
 			rule_variable.values() @? { .name == variable_name },
-			"Unknown rule variable %s".format(variable_name)
+			"INVALID RULE: Unknown rule variable %s".format(variable_name)
 	);
 
 	return rule_expression(
@@ -42,6 +67,19 @@ function rule_expression_from_gtv(gtv) {
 	);
 }
 
+/**
+ * Takes a gtv representation of rules, and converts them into a list of `rule_expression`s
+ * 
+ * Throws if `gtv_rules` contains any entry that is not the GTV representation of a rule.
+ * Common scenarios are if any element of the `list<gtv>`:
+ * - is not a `list` itself
+ * - has components which are not, in this exact order:
+ *   - an element of `rule_operator`
+ *   - an element of `rule_variable`
+ *   - an integer value
+ * 
+ * @param gtv_rules the rules that should be deserialized
+ */
 function map_rule_expressions_from_gtv(gtv_rules: list<gtv>) {
 	val rules = list<rule_expression>();
 	for (rule in gtv_rules) {
@@ -50,9 +88,36 @@ function map_rule_expressions_from_gtv(gtv_rules: list<gtv>) {
 	return rules;
 }
 
+/**
+ * Checks if any rules of the given auth descriptor are violated.
+ * 
+ * Throws when the rules cannot be parsed, that is, when the `rules` field does not contain
+ * any of the acceptable values.
+ * 
+ * Can only be called from an operation.
+ * 
+ * @see rule_expression for an explanation of rule violation
+ * 
+ * @see account_auth_descriptor.rules for the list of acceptable values
+ * 
+ * @param auth_descriptor the `account_auth_descriptor` to check
+ */
 function have_violating_rules(auth_descriptor: account_auth_descriptor) =
 	are_rules_violating(gtv.from_bytes(auth_descriptor.rules), load_variables(auth_descriptor.ctr));
 
+/**
+ * Loads the current value of all possible variables that can appear in an auth descriptor
+ * rule. This function thus loads:
+ * - the number of operations the auth descriptor has performed, including the one we're
+ *   currently validating for (`op_count`);
+ * - the block height of the block being built (`block_height`);
+ * - the timestamp of the last block (`block_time`).
+ * 
+ * Can only be called from an operation.
+ * 
+ * @param op_count	the number of operations the auth descriptor has performed, as stored in
+ * 					the `ctr` property.
+ */
 function load_variables(op_count: integer): map<text, gtv> {
 	val variables = map<text, gtv>();
 	variables[rule_variable.op_count.name] = (op_count + 1).to_gtv();
@@ -61,6 +126,20 @@ function load_variables(op_count: integer): map<text, gtv> {
 	return variables;
 }
 
+/**
+ * Checks whether any of the rules in the gtv are violated currently.
+ * 
+ * Throws `"INVALID RULE"` if the gtv does not start with "and", implying it's a simple rule,
+ * but the length is not 3 (operator, variable and value).
+ * 
+ * @see rule_expression for an explanation of rule violation
+ * 
+ * @see account_auth_descriptor.rules to understand the conditions under which this function
+ * throws.
+ * 
+ * @param rules		the gtv rules to check.
+ * @param variables	the state to check the rules against.
+ */
 function are_rules_violating(rules: gtv, variables: map<text, gtv>): boolean {
 	if (rules == GTV_NULL) {
 		return false;
@@ -69,10 +148,11 @@ function are_rules_violating(rules: gtv, variables: map<text, gtv>): boolean {
 	val rules_gtv = list<gtv>.from_gtv(rules);
 
 	if (rules_gtv[0] != "and".to_gtv()) {
+		// This error will be caught on the next line as well, but like this we can give a better error message
 		require(
 			rules_gtv.size() == 3,
-			"Expected a single rule expression, but got something else"
-		); // This error will be caught on the next line as well, but like this we can give a better error message
+			"INVALID RULE: Expected a single rule expression, but got something else"
+		);
 
 		return is_rule_violated(rule_expression_from_gtv(rules_gtv.to_gtv()), variables);
 	}
@@ -80,10 +160,28 @@ function are_rules_violating(rules: gtv, variables: map<text, gtv>): boolean {
 	return are_and_rules_violated(map_rule_expressions_from_gtv(rules_gtv.sub(1)), variables);
 }
 
+/**
+ * Detects whether a rule expression is violated.
+ * 
+ * @see rule_expression for an explanation of rule violation
+ * 
+ * @param rule		the rule to check.
+ * @param variables	the state to check the rules against.
+ * 
+ * @returns true if the rule is violated, false otherwise.
+ */
 function is_rule_violated(rule: rule_expression, variables: map<text, gtv>): boolean {
 	return not evaluate_int_variable_rule(rule, variables);
 }
 
+/**
+ * Detects whether any of a list of rule expressions is violated.
+ * 
+ * @see rule_expression for an explanation of rule violation
+ * 
+ * @param rules		the rules to check.
+ * @param variables	the state to check the rules against.
+ */
 function are_and_rules_violated(rules: list<rule_expression>, variables: map<text, gtv>): boolean {
 	for (rule in rules) {
 		if (is_rule_violated(rule, variables)) {
@@ -93,8 +191,37 @@ function are_and_rules_violated(rules: list<rule_expression>, variables: map<tex
 	return false;
 }
 
+/**
+ * Checks whether all the rules of the auth descriptor are active.
+ * 
+ * Can only be called in an operation.
+ * 
+ * An inactive rule cannot be valid, and it cannot have expired yet. This allows skipping
+ * some checks.
+ * 
+ * Throws when `rules` is not the valid GTV representation of a rule.
+ * 
+ * @see rule_expression for a definition of validity, expiration and activity.
+ * 
+ * @see account_auth_descriptor.rules for the list of valid GTV representations of rules.
+ * 
+ * @param account_auth_descriptor	the descriptor to check
+ */
 function is_active(account_auth_descriptor) = are_rules_active(gtv.from_bytes(account_auth_descriptor.rules));
 
+/**
+ * Checks whether all the rules in the gtv are active.
+ * 
+ * Can only be called in an operation.
+ * 
+ * Throws when `rules` is not the valid GTV representation of a rule.
+ * 
+ * @see rule_expression for a definition of validity.
+ * 
+ * @see account_auth_descriptor.rules for the list of valid GTV representations of rules.
+ * 
+ * @param rules	the gtv rules to check
+ */
 function are_rules_active(rules: gtv): boolean {
 	if (rules == GTV_NULL) {
 		return true;
@@ -113,6 +240,15 @@ function are_rules_active(rules: gtv): boolean {
 	return is_rule_active(rule_expression_from_gtv(gtv_rules.to_gtv()));
 }
 
+/**
+ * Checks whether the rule expression is active.
+ * 
+ * Can only be called in an operation.
+ * 
+ * @see rule_expression for a definition of validity.
+ * 
+ * @param rule	the rule expression to check
+ */
 function is_rule_active(rule: rule_expression): boolean {
 	return when (rule.variable) {
 		block_height -> is_block_height_rule_active(rule);
@@ -125,6 +261,14 @@ function is_rule_active(rule: rule_expression): boolean {
  *  Variables
  */
 
+/**
+ * Checks whether the rule is valid.
+ * 
+ * @see rule_expression for a definition of validity.
+ * 
+ * @param rule		the rule expression to check
+ * @param variables	the state to check the rules against
+ */
 function evaluate_int_variable_rule(
 	rule: rule_expression,
 	variables: map<text, gtv>
@@ -153,7 +297,13 @@ function evaluate_int_variable_rule(
 		}
 	}
 }
- 
+
+/**
+ * Extracts the required variable value from the state
+ * 
+ * @param variable	the variable to extract
+ * @param variables	the state to extract the variable value from
+ */
 function variable_value(
 	variable: rule_variable,
 	variables: map<text, gtv>
@@ -171,8 +321,26 @@ function variable_value(
 	}
 }
 
-/*
- * Analyze the rules before assigning them to an authenticator descriptor
+/**
+ * Analyze the rules before assigning them to an auth descriptor, to check that they haven't
+ * already expired and that the values are sensible.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"INVALID RULES"` when there are more than the `max_rules` configured in the
+ * `chromia.yml` file.
+ * 
+ * Throws `"EXPIRED"` when the rule set has expired.
+ * 
+ * Throws when `rules` is not the valid GTV representation of a rule.
+ * 
+ * @see rule_expression for a definition of active and expired rules.
+ * 
+ * @see validate_rule for a definition of sensible values.
+ * 
+ * @see account_auth_descriptor.rules for the list of valid GTV representations of rules.
+ * 
+ * @param rules 	the rules to analyze
  */
 function validate_auth_descriptor_rules(rules: gtv) {
  	if (rules == GTV_NULL) {
@@ -184,35 +352,74 @@ function validate_auth_descriptor_rules(rules: gtv) {
 		validate_rule(rule_expression_from_gtv(rules_gtv.to_gtv()));
 	} else {
 		// +1 keeps track of the "and"
-		require(rules_gtv.size() <= chain_context.args.auth_descriptor.max_rules + 1, "Too many rules");
+		require(
+			rules_gtv.size() <= chain_context.args.auth_descriptor.max_rules + 1,
+			"INVALID RULES: Too many rules"
+		);
 
 		for (gtv_rule in rules_gtv.sub(1)) {
 			validate_rule(rule_expression_from_gtv(gtv_rule));
 		}
 	}
 
-	require((not are_rules_active(rules)) or (not are_rules_violating(rules, load_variables(op_count = 0))),
-		"Active and invalid rules detected");
+	require(
+		(not are_rules_active(rules)) or 
+		(not are_rules_violating(rules, load_variables(op_count = 0))),
+		"EXPIRED: Active and invalid rules detected"
+	);
 }
 
+/**
+ * Checks that the rule is sensible. This means that the rule does not expect:
+ * - block height or timestamp to be negative
+ * - `op_count` to be zero or negative
+ * 
+ * It also rejects `op_count` rules with operators that are not `lt` or `le`.
+ * 
+ * Throws `"INVALID RULE"` if:
+ * - the rule variable is `block_height` and the value is less than 0
+ * - the rule variable is `block_time` and the value is less than 0
+ * - the rule variable is `block_height` and the operator is neither of `lt` and `le`
+ * - the rule variable is `op_count` but the requirement would never be satisfied, i.e.:
+ *   - `op_count`, `lt`, any value below two
+ *   - `op_count`, `le`, any value below one
+ * 
+ * The first authentication attempt will be checked against an `op_count` value of 1, not 0.
+ * 
+ * @param rule	the rule to check
+ */
 function validate_rule(rule: rule_expression) {
 	when (rule.variable) {
 		rule_variable.block_height -> {
-			require(rule.value >= 0, "rule variable block_height must be a non-negative value");
+			require(
+				rule.value >= 0,
+				"INVALID RULE: rule variable block_height must be a non-negative value"
+			);
 		}
 		rule_variable.block_time -> {
-			require(rule.value >= 0, "rule variable block_time must be a non-negative value");
+			require(
+				rule.value >= 0,
+				"INVALID RULE: rule variable block_time must be a non-negative value"
+			);
 		}
 		rule_variable.op_count -> {
 			when (rule.operator) {
-				rule_operator.lt -> require(rule.value > 1, "rule variable op_count must be a positive value greater than 1");
-				rule_operator.le -> require(rule.value > 0, "rule variable op_count must be a positive value");
-				else -> require(false, "rule variable op_count must be lt or le");
+				rule_operator.lt -> require(rule.value > 1, "INVALID RULE: rule variable op_count must be a positive value greater than 1");
+				rule_operator.le -> require(rule.value > 0, "INVALID RULE: rule variable op_count must be a positive value");
+				else -> require(false, "INVALID RULE: rule variable op_count must be lt or le");
 			}
 		}
 	}
 }
 
+/**
+ * Updates the counter of the auth descriptor, which should always be increased by one
+ * when the auth descriptor is used to sign an operation
+ * 
+ * Can only be called from an operation.
+ * 
+ * @param desc	the auth descriptor to update
+ */
 function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
 	desc.ctr += 1;
 	return desc;
@@ -222,6 +429,21 @@ function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
  * auth descriptor cleanup
  */
 
+/**
+ * Deletes all expired auth descriptors associated with an account.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws if the rules to any of the auth descriptors associated with the account have invalid
+ * rules.
+ * 
+ * Throws if the main auth descriptor for the account has expired. This should never happen,
+ * as main auth descriptors with rules cannot be added via FT4.
+ * 
+ * @see account_auth_descriptor.rules for the list of valid GTV representations of rules.
+ * 
+ * @param account	the account to clean up
+ */
 function delete_expired_auth_descriptors(account) {
 	val auth_descriptors = account_auth_descriptor @* { account };
 
@@ -241,6 +463,16 @@ function delete_expired_auth_descriptors(account) {
  *                                     block_time                                       *
  ****************************************************************************************/
 
+/**
+ * Whether the rule, which is expected to have a `block_time` variable, is active.
+ * It does not check whether the rule variable is `block_time`.
+ * 
+ * Can only be called from an operation.
+ * 
+ * @see rule_expression for a description of active rules.
+ * 
+ * @param r	the rule to check.
+ */
 function is_block_time_rule_active(r: rule_expression): boolean {
 	when (r.operator) {
 		rule_operator.gt -> {
@@ -261,6 +493,16 @@ function is_block_time_rule_active(r: rule_expression): boolean {
  *                                  block_height                                        *
  ****************************************************************************************/
 
+/**
+ * Whether the rule, which is expected to have a `block_height` variable, is active.
+ * It does not check whether the rule variable is `block_height`.
+ * 
+ * Can only be called from an operation.
+ * 
+ * @see rule_expression for a description of active rules.
+ * 
+ * @param r	the rule to check.
+ */
 function is_block_height_rule_active(r: rule_expression): boolean {
 	when (r.operator) {
 		rule_operator.gt -> {

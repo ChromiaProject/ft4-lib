@@ -3,11 +3,27 @@
  *
  * @param account  the account
  *
- * @return rate limit configuration for the account, or `null` to use default config from blockchain configuration.
+ * @returns rate limit configuration for the account, or `null` to use the default
+ * config from blockchain configuration.
  */
 @extendable
 function account_rate_limit_config(account): rate_limit_config? = null;
 
+/**
+ * Rate limit an account, i.e. verify that the account is only sending up to as
+ * many operations as are allowed in its rl_state.
+ * By default, the rl_state corresponds to the configuration found in the `chromia.yml` file.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"RATE LIMITED"` if the account has exceeded the rate limit.
+ * 
+ * Throws `"MISSING RATE LIMITER STATE"` if the account does not have an `rl_state`. This
+ * should generally never happen for user accounts, unless the `rl_state` entity has manually
+ * been deleted.
+ * 
+ * @param account   the account to rate limit
+ */
 function rate_limit(account) {
     val rl_config = get_rate_limit_config_for_account(account);
 
@@ -17,7 +33,7 @@ function rate_limit(account) {
     val recovery_time = rl_config.recovery_time;
     val stat = require(
         rl_state@?{account} (.points, .last_update), 
-        "Rate limiter state not found for the account with ID: %s".format(account.id)
+        "MISSING RATE LIMITER STATE: Rate limiter state not found for the account with ID: %s".format(account.id)
     );
     val delta = utils.latest_time() - stat.last_update;
     var got_points = 0;
@@ -33,7 +49,7 @@ function rate_limit(account) {
         }
     }
     
-    require(stat.points + got_points > 0, "Insufficient rate limiter points");
+    require(stat.points + got_points > 0, "RATE LIMITED: Insufficient rate limiter points");
     
     update rl_state @ { account } (
         .points += got_points - 1,
@@ -41,6 +57,14 @@ function rate_limit(account) {
     );
 }
 
+/**
+ * Returns how many rate limit points are available to a certain rl_state given
+ * the current time.
+ * 
+ * @param rate_limit_config     the configuration of the chain, extracted from the `chromia.yml`
+ * @param rl_state              the state for the account to check
+ * @param current_timestamp     the timestamp at which the checking is done
+ */
 function current_rate_limit_points(rate_limit_config, rl_state, current_timestamp: timestamp) {
     val delta = current_timestamp - rl_state.last_update;
     return if (delta > rate_limit_config.recovery_time)
@@ -49,23 +73,59 @@ function current_rate_limit_points(rate_limit_config, rl_state, current_timestam
         rl_state.points;
 }
 
+/**
+ * Adds rate limit points to an account to allow calling more operations in a short amount
+ * of time. Rate limit points never exceed the config value for `max_points`.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"MISSING RATE LIMITER STATE"` if the account does not have an `rl_state`. This
+ * should generally never happen for user accounts, unless the `rl_state` entity has manually
+ * been deleted.
+ * 
+ * @see `core.accounts.account_rate_limit_config` to set up a different limit for
+ * `max_points`
+ *
+ * @param account   the account to add points to
+ * @param amount    the number of points to add
+ */
 function add_rate_limit_points(account, amount: integer) {
     val state = require(
         rl_state @? { account }, 
-        "Rate limiter state not found for the account with ID: %s".format(account.id)
+        "MISSING RATE LIMITER STATE: Rate limiter state not found for the account with ID: %s".format(account.id)
     );
     val config = get_rate_limit_config_for_account(account);
 	state.points = min(state.points + amount, config.max_points);
 }
 
+/**
+ * Returns the rate limit config extracted from the `chromia.yml`.
+ */
 function get_rate_limit_config(): rate_limit_config = chain_context.args.rate_limit;
 
+/**
+ * Retrieves the rate limit config to apply to a specific account. Defaults to the value
+ * in the `chromia.yml` if:
+ * - rate limit is inactive on the chain
+ * - no special configuration has been added for this account.
+ *
+ * @see account_rate_limit_config allows adding special configs for account.
+ * 
+ * @param account   the account for which to retrieve the config
+ */
 function get_rate_limit_config_for_account(account): rate_limit_config =
     if (chain_context.args.rate_limit.active == false)
         chain_context.args.rate_limit
     else
         account_rate_limit_config(account) ?: chain_context.args.rate_limit;
 
+/**
+ * Creates a rate limiter state entity (`rl_state`) for the specified account
+ * 
+ * Can only be called from an operation.
+ * 
+ * @param account   the account to create the `rl_state` for
+ */
 function create_rate_limiter_state_for_account(account) {
     val rl_config = get_rate_limit_config_for_account(account);
 

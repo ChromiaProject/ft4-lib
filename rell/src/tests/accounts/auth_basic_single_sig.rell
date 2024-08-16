@@ -37,7 +37,7 @@ function test_invalid_required_flags() {
         .sign(rell.test.keypairs.alice)
         .run();
     
-    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [X] are missing on the (single sig) Auth Descriptor.");
+    assert_equals(test_operations.test_auth.test_error.msg, "MISSING FLAGS: Some required flags [X] are missing on the (single sig) Auth Descriptor.");
 }
 
 function test_invalid_single_signer() {
@@ -48,7 +48,7 @@ function test_invalid_single_signer() {
         .sign(rell.test.keypairs.bob) // <---- We sign with wrong user "Bob"
         .run();
     
-    assert_equals(test_operations.test_auth.test_error.msg, "The auth descriptor signer did not sign the transaction.");
+    assert_equals(test_operations.test_auth.test_error.msg, "MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
 }
 
 function test_not_signed() {
@@ -58,5 +58,5 @@ function test_not_signed() {
         .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
         .run(); // <--- No signing at all
 
-    assert_equals(test_operations.test_auth.test_error.msg, "The auth descriptor signer did not sign the transaction.");
+    assert_equals(test_operations.test_auth.test_error.msg, "MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
 }

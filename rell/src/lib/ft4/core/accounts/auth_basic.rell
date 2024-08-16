@@ -1,24 +1,71 @@
 
+/**
+ * What the `args` property of an `account_auth descriptor` entity or `auth_descriptor` struct
+ * must contain if it represents a single-sig auth descriptor
+ */
 struct single_sig_args {
+    /**
+     * Set of flags, which is used to determine if the auth descriptor can be used to
+     * authenticate an operation or not
+     */
     flags: set<text>;
+    /**
+     * When authorizing an operation with this auth descriptor, it should be signed by
+     * the public key or EVM address (without `0x`) in this field.
+     */
     signer: byte_array;
 }
 
+/**
+ * What the `args` property of an `account_auth descriptor` entity or `auth_descriptor` struct
+ * must contain if it represents a multi-sig auth descriptor
+ */
 struct multi_sig_args {
+    /**
+     * Set of flags, which is used to determine if the auth descriptor can be used to
+     * authenticate an operation or not
+     */
     flags: set<text>;
+    /**
+     * When authorizing an operation with this auth descriptor, it should be signed by
+     * at least this number of signers from the `signers` field
+     */
     signatures_required: integer;
+    /**
+     * When authorizing an operation with this auth descriptor, it should be signed by
+     * some or all of the public keys or EVM addresses (without `0x`) in this field.
+     */
     signers: list<byte_array>;
 }
 
-/*
- * Returns VALID if valid.
+/**
+ * Checks that the single signature auth descriptor has all the requirements to authorize an
+ * operation.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Gives invalid result `"SIGNERS ERROR"` if `signers` has zero or more than one elements.
+ * 
+ * Gives invalid result `"MISSING SIGNATURE"` if the signer did not sign the
+ * operation that called this function.
+ * 
+ * Gives invalid result `"MISSING FLAGS"` if the `single_sig_args` does not contain
+ * all required flags.
+ * 
+ * @param args              The args for this auth descriptor. Expected to be a gtv encoded version
+ *                          of the `single_sig_args` struct.
+ * @param signers           The signer for this auth descriptor. Expected to be a list containing
+ *                          exactly one pubkey or EVM address (without `0x`)
+ * @param required_flags    The flags it must have for the operation that needs to be authorized.
+ * 
+ * @returns `utils.VALID` if valid, `utils.invalid` otherwise.
  */
 function check_single_sig_auth(args: byte_array, signers: list<byte_array>, required_flags: list<text>): utils.validation_result {
     if(signers.size() > 1) {
-        return utils.invalid("Single sig Auth Descriptor must have only one signer.");
+        return utils.invalid("SIGNERS ERROR: Single sig Auth Descriptor must have only one signer.");
     }
     if (signers.size() < 1) {
-        return utils.invalid("Single sig Auth Descriptor's signer list is empty.");
+        return utils.invalid("SIGNERS ERROR: Single sig Auth Descriptor's signer list is empty.");
     }
 
     val ss_args = single_sig_args.from_bytes(args);
@@ -26,20 +73,43 @@ function check_single_sig_auth(args: byte_array, signers: list<byte_array>, requ
         if (op_context.is_signer(signers[0])) {
             return utils.VALID;
         } else {
-            return utils.invalid("The auth descriptor signer did not sign the transaction.");
+            return utils.invalid("MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
         }
     } else {
-        return utils.invalid("Some required flags " + required_flags.to_text() + " are missing on the (single sig) Auth Descriptor.");
+        return utils.invalid(
+            "MISSING FLAGS: Some required flags " + required_flags.to_text() + 
+            " are missing on the (single sig) Auth Descriptor."
+        );
     }
 }
 
-/*
- * Returns VALID if valid.
+/**
+ * Checks that the multi-sig auth descriptor has all the requirements to authorize an
+ * operation.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Gives invalid result `"NOT ENOUGH SIGNATURES"` if not enough signers signed the
+ * operation that called this function.
+ * 
+ * Gives invalid result `"MISSING FLAGS"` if the `multi_sig_args` does not contain
+ * all required flags.
+ * 
+ * @param args              The args for this auth descriptor. Expected to be a gtv encoded version
+ *                          of the `multi_sig_args` struct.
+ * @param signers           The signers for this auth descriptor. Expected to be a list containing
+ *                          one or more pubkeys and/or EVM addresses (without `0x`)
+ * @param required_flags    The flags it must have for the operation that needs to be authorized.
+ * 
+ * @returns `utils.VALID` if valid, `utils.invalid` otherwise.
  */
 function check_multi_sig_auth(args: byte_array, signers: list<byte_array>, required_flags: list<text>): utils.validation_result {
     val multi_sign_args = multi_sig_args.from_bytes(args);
     if (not (check_required_flags(multi_sign_args.flags, required_flags))) {
-       return utils.invalid("Some required flags " + required_flags.to_text() + " are missing on the (multi sig) Auth Descriptor.");
+        return utils.invalid(
+            "MISSING FLAGS: Some required flags " + required_flags.to_text() +
+            " are missing on the (multi sig) Auth Descriptor."
+        );
     }
     var num_sign = multi_sign_args.signatures_required;
     for(s in signers) {
@@ -50,18 +120,28 @@ function check_multi_sig_auth(args: byte_array, signers: list<byte_array>, requi
             }
         }
     }
-    return utils.invalid("Transaction must be signed by at least " + multi_sign_args.signatures_required + " signers in the Auth Descriptor.");
+    return utils.invalid(
+        "NOT ENOUGH SIGNATURES: Transaction must be signed by at least " +
+        multi_sign_args.signatures_required + " signers in the Auth Descriptor."
+    );
 }
 
-/*
- * Returns false if any of the required flags are missing from the "flags" set.
+/**
+ * Checks that the set of flags contains all the required flags, which means the auth
+ * descriptor has the authorization necessary to call the operation.
+ * 
+ * @param flags             the auth descriptor flags
+ * @param required_flags    the required flags
  */
 function check_required_flags(flags: set<text>, required_flags: list<text>): boolean {
     return flags.contains_all(required_flags);
 }
 
-/*
- * Returns the set of flags found in the "args" parameter.
+/**
+ * Extracts the set of flags found in the "args" parameter.
+ * 
+ * @param a_t   the auth type
+ * @param args  the auth descriptor args
  */
 function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
     return when (a_t) {
@@ -70,8 +150,23 @@ function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
     };
 }
 
-/*
- * Returns VALID if authentication arguments are valid.
+/**
+ * Checks that the multi-sig auth descriptor has all the requirements to authorize an
+ * operation.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Gives invalid results when the signatures cannot be validated, i.e.:
+ * - `signers` is 0 or more than one, but the auth type is `auth_type.S`
+ * - the single sig signer did not sign
+ * - not enough multisig signers signed
+ * - the flags of the auth descriptors do not contain all `required_flags`
+ * 
+ * @param args              The args for this auth descriptor.
+ * @param signers           The signers for this auth descriptor.
+ * @param required_flags    The flags it must have for the operation that needs to be authorized.
+ * 
+ * @returns `utils.VALID` if valid, `utils.invalid` otherwise.
  */
 function check_auth_args(a_t: auth_type, args: byte_array, signers: list<byte_array>, required_flags: list<text>): utils.validation_result {
     return when (a_t) {
@@ -80,6 +175,14 @@ function check_auth_args(a_t: auth_type, args: byte_array, signers: list<byte_ar
     };
 }
 
+/**
+ * Extracts the signer list from an auth descriptor's `args`
+ * 
+ * @param a_t   the auth type
+ * @param args  the auth descriptor args
+ * 
+ * @returns a list of signers. If the auth descriptor was single-sig, it will have one element.
+ */
 function get_signers_from_encoded_auth_descriptor(a_t: auth_type, args: byte_array): list<byte_array> {
     return when (a_t) {
         S -> [single_sig_args.from_bytes(args).signer];
@@ -87,6 +190,13 @@ function get_signers_from_encoded_auth_descriptor(a_t: auth_type, args: byte_arr
     };
 }
 
+/**
+ * Extracts the signer list from an auth descriptor
+ * 
+ * @param auth_descriptor   the auth descriptor to extract the signers from
+ * 
+ * @returns a list of signers. If the auth descriptor was single-sig, it will have one element.
+ */
 function get_signers(auth_descriptor)
     = when (auth_descriptor.auth_type) {
         S -> [single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).signer];
