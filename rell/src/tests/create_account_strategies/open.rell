@@ -5,7 +5,7 @@ import lib.ft4.auth;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
-import lib.ft4.test.utils. { evm_sign };
+import lib.ft4.test.core. { evm_sign };
 
 import ^^.operations;
 

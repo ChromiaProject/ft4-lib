@@ -26,7 +26,7 @@ async function registerAssetWithCustomBlockchainRid(
   const txn = {
     operations: [
       op(
-        "register_asset",
+        "ft4.test.register_asset",
         assetName,
         assetName + "_" + formatter.toString(blockchainRid),
         decimals,

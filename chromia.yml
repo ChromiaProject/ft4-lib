@@ -26,7 +26,7 @@ blockchains:
       lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      tests.assets.utils:
+      lib.ft4.test.core.auth:
         admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
     test:
       modules:
@@ -52,7 +52,7 @@ blockchains:
       lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      tests.assets.utils:
+      lib.ft4.test.core.auth:
         admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
     test:
       modules:
@@ -67,7 +67,7 @@ blockchains:
       lib.ft4.core.admin:
         admin_pubkey: x"02C4049F9550DCFF6003347BB3944DF2AA2D6EF5202C22834284B085C56DE8C6DD"
 
-      tests.assets.utils:
+      lib.ft4.test.core.auth:
         admin_priv_key: x"00CED79962D1150BF844CACB76310D4746C4426558A7FD9C827B30203DACC4CE"
 
       lib.ft4.core.auth:

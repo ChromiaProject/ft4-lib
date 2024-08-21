@@ -1,8 +1,9 @@
 @test module;
 
-import ^^.assets.utils;
 import default_prioritization: ^^^.lib.ft4.prioritization.default;
 import ^^^.lib.ft4.accounts;
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
 
 function test_rate_limit_config() {
     assert_equals(accounts.get_rate_limit_config().active, true);
@@ -30,20 +31,23 @@ function test_no_authenticated_operations() {
 }
 
 function test_one_authenticated_operation() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
+    
+    test_op.consume_point(alice.account.id).run();
+    
+    val operations = alice.ft_auth(
+        gtx_operation(name="foo", args=list<gtv>()).to_test_op()
+    ) @* {} ( $.to_gtx_operation() );
 
     val priority_state = default_prioritization.priority_check_v1(
         gtx_transaction_body(
             blockchain_rid = chain_context.blockchain_rid,
-            operations = [
-                alice.ft_auth().to_gtx_operation(),
-                gtx_operation("foo", list<gtv>())
-            ],
+            operations = operations,
             signers = list<gtv>()
         ),
         tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
-        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 1000
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 5001
     );
 
     assert_equals(priority_state.account_id, alice.account.id);
@@ -53,22 +57,30 @@ function test_one_authenticated_operation() {
 }
 
 function test_two_authenticated_operations() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
+    test_op.consume_point(alice.account.id).run();
+    
+    val operations = list<gtx_operation>();
+    operations.add_all(
+        alice.ft_auth(
+            gtx_operation(name="foo", args=list<gtv>()).to_test_op()
+        ) @* {} ( $.to_gtx_operation() )
+    );
+    operations.add_all(
+        alice.ft_auth(
+            gtx_operation(name="bar", args=list<gtv>()).to_test_op()
+        ) @* {} ( $.to_gtx_operation() )
+    );
 
     val priority_state = default_prioritization.priority_check_v1(
         gtx_transaction_body(
             blockchain_rid = chain_context.blockchain_rid,
-            operations = [
-                alice.ft_auth().to_gtx_operation(),
-                gtx_operation("foo", list<gtv>()),
-                alice.ft_auth().to_gtx_operation(),
-                gtx_operation("bar", list<gtv>())
-            ],
+            operations = operations,
             signers = list<gtv>()
         ),
         tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
-        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 1000
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 5001
     );
 
     assert_equals(priority_state.account_id, alice.account.id);
@@ -78,20 +90,23 @@ function test_two_authenticated_operations() {
 }
 
 function test_increase_current_points_with_time() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
+
+    test_op.consume_point(alice.account.id).run();
+
+    val operations = alice.ft_auth(
+        gtx_operation(name="foo", args=list<gtv>()).to_test_op()
+    ) @* {} ( $.to_gtx_operation() );
 
     val priority_state = default_prioritization.priority_check_v1(
         gtx_transaction_body(
             blockchain_rid = chain_context.blockchain_rid,
-            operations = [
-                alice.ft_auth().to_gtx_operation(),
-                gtx_operation("foo", list<gtv>())
-            ],
+            operations = operations,
             signers = list<gtv>()
         ),
         tx_size = 0,
         tx_enter_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME,
-        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 5001
+        current_timestamp = rell.test.DEFAULT_FIRST_BLOCK_TIME + 10001
     );
 
     assert_equals(priority_state.account_id, alice.account.id);
@@ -101,15 +116,15 @@ function test_increase_current_points_with_time() {
 }
 
 function test_increase_current_points_with_time_up_to_max() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
+    val operations = alice.ft_auth(
+        gtx_operation(name="foo", args=list<gtv>()).to_test_op()
+    ) @* {} ( $.to_gtx_operation() );
 
     val priority_state = default_prioritization.priority_check_v1(
         gtx_transaction_body(
             blockchain_rid = chain_context.blockchain_rid,
-            operations = [
-                alice.ft_auth().to_gtx_operation(),
-                gtx_operation("foo", list<gtv>())
-            ],
+            operations = operations,
             signers = list<gtv>()
         ),
         tx_size = 0,

@@ -12,10 +12,9 @@ import lib.ft4.accounts.{
   greater_than,
   greater_or_equal
 };
-import ^^.assets.utils;
-import test_op: ^^.operations;
+import test_op: lib.ft4.test.operations;
 import auth_op: ^^.operations.auth;
-import test_utils: ^^^.lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
 function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
@@ -30,13 +29,13 @@ struct account_data {
 }
 
 function setup_account_with_rules(rules: gtv) {
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T", "E"]);
 
   return add_expiring_auth_descriptor(alice.account, rules);
 }
 
 function add_expiring_auth_descriptor(accounts.account, rules: gtv) {
-  val bob_ad = test_utils.create_auth_descriptor(
+  val bob_ad = test.create_auth_descriptor(
     rell.test.pubkeys.bob,
     ["A", "E"],
     rules
@@ -136,7 +135,7 @@ namespace test_basic_functionality {
   }
 
   function test_cannot_setup_with_too_many_rules() {
-    val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
 
     val rule_list = list<accounts.rule_expression>();
     for (i in range(accounts.get_max_allowed_auth_descriptor_rules() + 1)) {
@@ -150,7 +149,7 @@ namespace test_basic_functionality {
     }
     val rules = accounts.serialize_rules(rule_list);
 
-    val bob_ad = test_utils.create_auth_descriptor(
+    val bob_ad = test.create_auth_descriptor(
       rell.test.pubkeys.bob,
       ["A"],
       rules
@@ -301,7 +300,7 @@ namespace test_deletion_after_expiration {
   }
 
   function test_delete_only_expired_auth_descriptors() {
-    val account = utils.create_test_account(rell.test.keypairs.alice, ["A", "T", "E"]).account;
+    val account = test.register_account_open(rell.test.keypairs.alice, ["A", "T", "E"]).account;
     val acc_data_valid = [
       add_expiring_auth_descriptor(account, 
         accounts.serialize_rules([

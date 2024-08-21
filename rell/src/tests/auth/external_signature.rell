@@ -3,23 +3,23 @@ module;
 
 import lib.ft4.auth;
 import lib.ft4.accounts;
-import ^^.assets.utils;
 import ^^^.lib.ft4.utils.{ make_auth_message, derive_nonce };
-import ^^^.lib.ft4.test.utils. { evm_sign, evm_auth_operation_for, create_multisig_auth_descriptor };
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
 import test_operations: ^^.operations;
 
 val to_addr = "0xba1691c407f14bccaf6ddc08c4626d462640962ab37b7356aea2e43d104fe96a";
 
 function test_operation_without_auth_operation() {
-  utils.register_alice();
+  test.register_alice();
   rell.test.tx()
     .op(test_operations.test_auth.test_empty_auth_message())
     .run_must_fail("Expected at least two operations");
 }
 
 function test_fails_if_insufficient_permissions() {
-  val external_auth_data = utils.evm_register_alice();
-  val signature = evm_sign("", external_auth_data.keypair.priv);
+  val external_auth_data = test.register_alice_evm();
+  val signature = test.evm_sign("", external_auth_data.keypair.priv);
 
   rell.test.tx()
     .op(auth.external.evm_auth(external_auth_data.account.id, external_auth_data.auth_descriptor_id, [signature]))
@@ -34,21 +34,21 @@ function test_it_decorates_messages_with_blockchain_rid_and_nonce() {
 }
 
 function test_it_rejects_wrong_evm_signatures() {
-  val external_auth_data = utils.evm_register_alice(["A", "T"]);
-  val wrong_signature = evm_sign("abc", external_auth_data.keypair.priv);
+  val external_auth_data = test.register_alice_evm(["A", "T"]);
+  val wrong_signature = test.evm_sign("abc", external_auth_data.keypair.priv);
   
   rell.test.tx()
     .op(auth.external.evm_auth(external_auth_data.account.id, external_auth_data.auth_descriptor_id, [wrong_signature]))
-    .op(test_operations.test_auth.test_authenticated_operation())
+    .op(test_op.authenticated_operation())
     .sign(rell.test.keypairs.alice)
     .run_must_fail("Invalid signature");
 }
 
 function test_perform_evm_auth_transaction() {
-  val external_auth_data = utils.evm_register_alice(["A", "T"]);
+  val external_auth_data = test.register_alice_evm(["A", "T"]);
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
-    .op(evm_auth_operation_for(external_auth_data.keypair.priv, op))
+    .op(test.evm_auth_operation_for(external_auth_data.keypair.priv, op))
     .op(op)
     .sign(rell.test.keypairs.alice.priv)
     .run();
@@ -67,11 +67,11 @@ function test_multisig_external_signature() {
     rules = null.to_gtv()
   );
 
-  utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
+  test.register_account_with_auth_descriptor(desc, rell.test.keypairs.bob);
 
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
 
-  val signature0 = evm_sign(
+  val signature0 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -79,7 +79,7 @@ function test_multisig_external_signature() {
     ),
     rell.test.keypairs.alice.priv
   );
-  val signature1 = evm_sign(
+  val signature1 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -111,11 +111,11 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
     rules = null.to_gtv()
   );
 
-  utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
+  test.register_account_with_auth_descriptor(desc, rell.test.keypairs.bob);
 
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
 
-  val signature0 = evm_sign(
+  val signature0 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -123,7 +123,7 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
     ),
     rell.test.keypairs.alice.priv
   );
-  val signature1 = evm_sign(
+  val signature1 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -153,11 +153,11 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     rules = null.to_gtv()
   );
 
-  utils._create_test_acc_from_auth_desc_single_sig(rell.test.keypairs.bob, desc);
+  test.register_account_with_auth_descriptor(desc, rell.test.keypairs.bob);
 
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
 
-  val signature0 = evm_sign(
+  val signature0 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -165,7 +165,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
     ),
     rell.test.keypairs.alice.priv
   );
-  val signature1 = evm_sign(
+  val signature1 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -184,10 +184,10 @@ function test_it_rejects_signatures_not_part_of_a_d() {
 }
 
 function test_works_with_correct_ctr() {
-  val external_auth_data = utils.evm_register_alice(["A", "T"]);
+  val external_auth_data = test.register_alice_evm(["A", "T"]);
   val op1 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val op2 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
-  val signature0 = evm_sign(
+  val signature0 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -195,7 +195,7 @@ function test_works_with_correct_ctr() {
     ),
     external_auth_data.keypair.priv
   );
-  val signature1 = evm_sign(
+  val signature1 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -214,12 +214,12 @@ function test_works_with_correct_ctr() {
 }
 
 function test_rejects_wrong_ctr() {
-  val external_auth_data = utils.evm_register_alice(["A", "T"]);
+  val external_auth_data = test.register_alice_evm(["A", "T"]);
   val op1 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val op2 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val op3 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
 
-  val signature0 = evm_sign(
+  val signature0 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -227,7 +227,7 @@ function test_rejects_wrong_ctr() {
     ),
     external_auth_data.keypair.priv
   );
-  val signature1 = evm_sign(
+  val signature1 = test.evm_sign(
     "Blockchain:\n%s\n\nDo you want to send 1000 CHR to %s?\n\nNonce: %s".format(
       chain_context.blockchain_rid.to_hex(),
       to_addr,
@@ -261,7 +261,7 @@ function test_ft_auth_fails_if_key_invalid() {
     ],
     rules = null.to_gtv()
   );
-  utils._create_test_acc_from_auth_desc_single_sig(keypair, desc);
+  test.register_account_with_auth_descriptor(desc, keypair);
 
   val auth_descriptor_id = desc.hash();
   rell.test.tx()
@@ -282,7 +282,7 @@ function test_perform_ft_auth_transaction() {
     rules = null.to_gtv()
   );
 
-  utils.create_test_account_with_auth_descriptor(auth_descriptor, external_key);
+  test.register_account_with_auth_descriptor(auth_descriptor, external_key);
 
   val auth_descriptor_id = auth_descriptor.hash();
   rell.test.tx()
@@ -392,21 +392,10 @@ function test_auth_message_is_correctly_generated_with_null_argument_value() {
 }
 
 function test_operation_without_auth_message_template_can_be_evm_authenticated() {
-  val alice = utils.evm_register_alice();
+  val alice = test.register_alice_evm();
 
-  var message = "Blockchain:\n{blockchain_rid}\n\nPlease sign the message to call\noperation:\n- operation_without_auth_message_template\n\nwith arguments:\n";
-  message = message + "- 10\n- 100L\n- 1000.1\n- 0\n- ABCDEF\n- text value\n- null\n\nNonce: {nonce}";
-
-  val op = test_operations.operation_without_auth_message_template(
-    10,
-    100L,
-    1000.1,
-    false,
-    x"abcdef",
-    "text value",
-    null
-  );
-  val signature = evm_sign(utils.create_evm_auth_message(op, message, alice), alice.keypair.priv);
+  val op = test_operations.operation_without_auth_message_template();
+  val signature = test.evm_sign(test.create_evm_auth_message(op, alice), alice.keypair.priv);
 
   rell.test.tx()
     .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
@@ -416,23 +405,15 @@ function test_operation_without_auth_message_template_can_be_evm_authenticated()
 }
 
 function test_evm_authenticated_operation_without_message_template_fails_if_signature_is_based_on_invalid_message() {
-  val alice = utils.evm_register_alice();
+  val alice = test.register_alice_evm();
 
-  val op = test_operations.operation_without_auth_message_template(
-    10,
-    100L,
-    1000.1,
-    false,
-    x"abcdef",
-    "text value",
-    null
-  );
-  var message = "Invalid message template. Nonce: {nonce}";
-  val signature = evm_sign(utils.create_evm_auth_message(op, message, alice), alice.keypair.priv);
+  val op = test_operations.operation_with_invalid_auth_message_template();
+  var message = "Invalid message template. Nonce: {nonce}".replace(auth.NONCE_PLACEHOLDER, derive_nonce(op.to_gtx_operation(), 0));
+  
+  val signature = test.evm_sign(message, alice.keypair.priv);
 
   rell.test.tx()
     .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-    // Operation internally calls authenticate but doesn't pass auth message template
     .op(op)
     .run_must_fail("Invalid signature");
 }
@@ -440,15 +421,15 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
 function test_fails_if_evm_signatures_does_not_correspond_to_signers() {
   val alice_address = crypto.eth_pubkey_to_address(rell.test.pubkeys.alice);
   val bob_address = crypto.eth_pubkey_to_address(rell.test.pubkeys.bob);
-  val original_ad = create_multisig_auth_descriptor(2, [alice_address, bob_address], ["A", "T"]);
-  utils.operations.register_account_test(original_ad).run();
+  val original_ad = test.create_multisig_auth_descriptor(2, [alice_address, bob_address], ["A", "T"]);
+  test.register_account_with_multisig_auth_descriptor(original_ad, [rell.test.keypairs.alice, rell.test.keypairs.bob]);
   val account = accounts.account @ {} ( @omit @sort_desc .rowid, $ ) limit 1;
   
-  val op = test_operations.test_auth.test_authenticated_operation();
+  val op = test_op.authenticated_operation();
   val message = make_auth_message("")
     .replace("{blockchain_rid}", chain_context.blockchain_rid.to_hex())
     .replace("{nonce}", derive_nonce(op.to_gtx_operation(), 0));
-  val signature = evm_sign(message, rell.test.keypairs.alice.priv);
+  val signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
 
   rell.test.tx()
     .op(auth.external.evm_auth(account.id, original_ad.hash(), [signature, signature]))

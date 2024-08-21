@@ -5,7 +5,7 @@ import lib.ft4.auth;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
-import lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 
 import ops: ^^.operations;
 
@@ -294,11 +294,11 @@ function test_custom_register_account_succeeds_with_evm_multi_sig_auth_descripto
         register_player.to_gtx_operation()
     );
 
-    val alice_signature = utils.evm_sign(message, rell.test.keypairs.alice.priv);
-    val bob_signature = utils.evm_sign(message, rell.test.keypairs.bob.priv);
-    val eve_signature = utils.evm_sign(message, rell.test.keypairs.eve.priv);
-    val trudy_signature = utils.evm_sign(message, rell.test.keypairs.trudy.priv);
-    val charlie_signature = utils.evm_sign(message, rell.test.keypairs.charlie.priv);
+    val alice_signature = test.evm_sign(message, rell.test.keypairs.alice.priv);
+    val bob_signature = test.evm_sign(message, rell.test.keypairs.bob.priv);
+    val eve_signature = test.evm_sign(message, rell.test.keypairs.eve.priv);
+    val trudy_signature = test.evm_sign(message, rell.test.keypairs.trudy.priv);
+    val charlie_signature = test.evm_sign(message, rell.test.keypairs.charlie.priv);
 
     rell.test.tx()
         .op(auth.external.evm_signatures(

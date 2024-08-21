@@ -7,15 +7,14 @@ import lib.ft4.utils;
 import lib.ft4.accounts;
 
 import ^^.extensions.*;
-import test_util: ^^.utils.utils;
-import test_utils: ^.utils;
+import test: lib.ft4.test.core;
 
 function test_history() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 5);
-    test_utils.mint(alice.account, asset, 1);
+    val asset = test.create_asset("test", "t", 5);
+    test.mint(alice.account, asset, 1);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -44,12 +43,12 @@ function test_history() {
 }
 
 function test_history_pagination() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 0);
+    val asset = test.create_asset("test", "t", 0);
 
-    test_utils.mint(alice.account, asset, 6L); //adds one entry to the history
+    test.mint(alice.account, asset, 6L); //adds one entry to the history
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -121,12 +120,12 @@ function test_history_pagination() {
 }
 
 function test_history_filtering() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 0);
+    val asset = test.create_asset("test", "t", 0);
 
-    test_utils.mint(alice.account, asset, 5L);
+    test.mint(alice.account, asset, 5L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -142,12 +141,12 @@ function test_history_filtering() {
 }
 
 function test_transfer_history_entry() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 0);
+    val asset = test.create_asset("test", "t", 0);
 
-    test_utils.mint(alice.account, asset, 5L);
+    test.mint(alice.account, asset, 5L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -185,12 +184,12 @@ function test_transfer_history_entry() {
 }
 
 function test_transfer_history_operation_name() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 0);
+    val asset = test.create_asset("test", "t", 0);
 
-    test_utils.mint(alice.account, asset, 5L);
+    test.mint(alice.account, asset, 5L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -208,13 +207,13 @@ function test_transfer_history_operation_name() {
 }
 
 function test_transfer_details() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 5);
-    test_utils.mint(alice.account, asset, 1);
+    val asset = test.create_asset("test", "t", 5);
+    test.mint(alice.account, asset, 1);
 
-    val asset2 = test_utils.create_asset("test2", "t2", 5);
+    val asset2 = test.create_asset("test2", "t2", 5);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -222,7 +221,7 @@ function test_transfer_details() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val tx_rid = test_util.get_last_transaction().tx_rid;
+    val tx_rid = test.get_last_transaction().tx_rid;
 
     val expected = set([
         assets.transfer_detail(
@@ -247,11 +246,11 @@ function test_transfer_details() {
 }
 
 function test_history_by_asset() {
-    val alice = test_utils.register_alice();
-    val bob = test_utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = test_utils.create_asset("test", "t", 5);
-    test_utils.mint(alice.account, asset, 1);
+    val asset = test.create_asset("test", "t", 5);
+    test.mint(alice.account, asset, 1);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -260,7 +259,7 @@ function test_history_by_asset() {
         .run();
 
     val start_cursor = utils.encode_cursor(utils.page_cursor());
-    val response = assets.external.get_transfer_history_from_height(5, asset.id, 10, start_cursor);
+    val response = assets.external.get_transfer_history_from_height(3, asset.id, 10, start_cursor);
     val expected_data = assets.extract_data_from_transfer_history_list(
             assets.transfer_history_entry @* {
                 asset

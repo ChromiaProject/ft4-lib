@@ -2,18 +2,18 @@
 
 import lib.ft4.auth;
 import lib.ft4.assets;
-import test_utils: ^^.utils.utils;
-import ^^.assets.utils;
 import xc: lib.ft4.crosschain;
 import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
-import iccf_op: ^^.operations.iccf_op;
+import test_op: lib.ft4.test.operations;
+import test: lib.ft4.test.core;
+import ^^.operations.iccf_op.{ iccf_proof };
 
 function test_can_complete_transfer() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    utils.mint(alice.account, asset_valid, 10L);
+    test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -27,7 +27,7 @@ function test_can_complete_transfer() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val init_tx = gtx_transaction.from_bytes(test_utils.get_last_transaction().tx_data);
+    val init_tx = gtx_transaction.from_bytes(test.get_last_transaction().tx_data);
 
     val apply_tx = gtx_transaction(
         body = gtx_transaction_body(
@@ -47,17 +47,17 @@ function test_can_complete_transfer() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(x"abcdef", apply_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(x"abcdef", apply_tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.complete_transfer(apply_tx, 0))
         .run();
 }
 
 function test_can_not_complete_transfer_without_proof() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    utils.mint(alice.account, asset_valid, 10L);
+    test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -71,7 +71,7 @@ function test_can_not_complete_transfer_without_proof() {
         .sign(rell.test.keypairs.alice)
         .run();
 
-    val init_tx = gtx_transaction.from_bytes(test_utils.get_last_transaction().tx_data);
+    val init_tx = gtx_transaction.from_bytes(test.get_last_transaction().tx_data);
 
     val apply_tx = gtx_transaction(
         body = gtx_transaction_body(

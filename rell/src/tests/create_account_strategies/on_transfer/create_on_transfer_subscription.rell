@@ -7,10 +7,8 @@ import lib.ft4.assets;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.transfer.subscription;
-import test_utils: ^^^^.lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
-import asset_utils: ^^^.assets.utils;
-import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_subscription() {
@@ -19,12 +17,12 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
     val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
 
-    val alice = asset_utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = asset_utils.create_asset("test", "TEST", 1);
-    asset_utils.mint_to_account(alice, asset, 20);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 20);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -52,7 +50,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     var last_block_time = rell.test.last_block_time;
     rell.test.tx()
-        .op(subscription.ras_transfer_subscription(asset.id, test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -75,14 +73,14 @@ function test_create_account_on_internal_transfer_with_subscription() {
     ));
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.regular_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.free_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
@@ -93,14 +91,14 @@ function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.block().run();
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.regular_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
         .run_must_fail("Subscription has expired");
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.free_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
@@ -110,7 +108,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     last_block_time = rell.test.last_block_time;
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(subscription.renew_subscription(null))
         .nop()
         .sign(rell.test.keypairs.bob)
@@ -124,14 +122,14 @@ function test_create_account_on_internal_transfer_with_subscription() {
     ));
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.regular_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.free_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
@@ -142,14 +140,14 @@ function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.block().run();
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.regular_operation())
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(subscription.renew_subscription(asset.id))
         .nop()
         .sign(rell.test.keypairs.bob)
@@ -160,7 +158,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
     rell.test.block().run();
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(rell.test.pubkeys.bob))
+        .op(test.ft_auth_operation_for(rell.test.pubkeys.bob))
         .op(helpers.regular_operation())
         .nop()
         .sign(rell.test.keypairs.bob)

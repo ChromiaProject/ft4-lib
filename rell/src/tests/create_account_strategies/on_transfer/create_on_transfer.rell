@@ -5,20 +5,20 @@ import lib.ft4.auth;
 import lib.ft4.assets;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
-import test_utils: lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 import create_on_transfer: lib.ft4.accounts.strategies.transfer;
 import lib.ft4.accounts.strategies.transfer.open;
-import ^^^.assets.utils;
 import xc: lib.ft4.crosschain;
-import iccf_op: ^^^.operations.iccf_op;
+import test_op: lib.ft4.test.operations;
+import ^^^.operations.iccf_op.{ iccf_proof };
 
 function test_create_account_on_internal_transfer_success() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -42,7 +42,7 @@ function test_create_account_on_internal_transfer_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -59,12 +59,12 @@ function test_create_account_on_internal_transfer_success() {
 }
 
 function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("bogus", "BOGUS", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("bogus", "BOGUS", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -77,12 +77,12 @@ function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
 }
 
 function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 20);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 20);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -103,12 +103,12 @@ function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
 }
 
 function test_internal_transfer_fails_if_insufficient_amount_is_transferred() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -128,7 +128,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
@@ -137,16 +137,16 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
 }
 
 function test_multiple_internal_transfers_success() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset1 = utils.create_asset("test", "TEST", 1);
-    val asset2 = utils.create_asset("test1", "TEST1", 1);
+    val asset1 = test.create_asset("test", "TEST", 1);
+    val asset2 = test.create_asset("test1", "TEST1", 1);
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, alice.account.id, recipient_id)));
     val amount1 = allowed_assets[asset1.id];
     val amount2 = allowed_assets[asset2.id];
-    utils.mint_to_account(alice, asset1, 10);
-    utils.mint_to_account(alice, asset2, 10);
+    test.mint(alice.account, asset1, 10);
+    test.mint(alice.account, asset2, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -170,7 +170,7 @@ function test_multiple_internal_transfers_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -190,12 +190,12 @@ function test_multiple_internal_transfers_success() {
 }
 
 function test_create_account_on_internal_transfer_success_with_any_asset() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.charlie.hash();
 
-    val asset = utils.create_asset("whatever", "WHATEVER", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("whatever", "WHATEVER", 1);
+    test.mint(alice.account, asset, 10);
 
     val allowed_assets = create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id);
     assert_equals(allowed_assets, null);
@@ -218,7 +218,7 @@ function test_create_account_on_internal_transfer_success_with_any_asset() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.charlie, ["A", "T"])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.charlie, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
@@ -240,7 +240,7 @@ function test_create_account_on_crosschain_transfer_success() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = test.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -265,7 +265,7 @@ function test_create_account_on_crosschain_transfer_success() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run();
 
@@ -281,7 +281,7 @@ function test_create_account_on_crosschain_transfer_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -303,7 +303,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("bogus", "BOGUS", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = test.create_crosschain_asset("bogus", "BOGUS", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val tx = gtx_transaction(
         body = gtx_transaction_body(
@@ -324,7 +324,7 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <%s>"
@@ -338,7 +338,7 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = test.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -381,13 +381,13 @@ function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx1, 1, tx1, 1, 0))
         .nop()
         .run();
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx2, 1, tx2, 1, 0))
         .nop()
         .run_must_fail("This asset is already transferred");
@@ -399,7 +399,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset = test.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -424,7 +424,7 @@ function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() 
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .run_must_fail(
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <%s> <TEST> from account <%s> of chain <%s>"
@@ -438,8 +438,8 @@ function test_multiple_crosschain_transfers_success() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset1 = utils.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
-    val asset2 = utils.create_crosschain_asset("test1", "TEST1", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset1 = test.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+    val asset2 = test.create_crosschain_asset("test1", "TEST1", 1, sender_blockchain_rid, "", sender_blockchain_rid);
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
     val amount1 = allowed_assets[asset1.id];
     val amount2 = allowed_assets[asset2.id];
@@ -463,7 +463,7 @@ function test_multiple_crosschain_transfers_success() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx1, 1, tx1, 1, 0))
         .run();
 
@@ -486,7 +486,7 @@ function test_multiple_crosschain_transfers_success() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx2, 1, tx2, 1, 0))
         .run();
 
@@ -499,7 +499,7 @@ function test_multiple_crosschain_transfers_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();

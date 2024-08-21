@@ -4,18 +4,17 @@ module;
 import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
-import test_utils: lib.ft4.test.utils;
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
 
-import ^^.assets.utils;
-import ops: ^^.operations;
 
 function test_is_strategy_op_returns_true_when_receives_strategy_operation() {
-    val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.alice);
     assert_true(strategies.is_strategy_op(open.ras_open(auth_descriptor).to_gtx_operation()));
 }
 
 function test_is_strategy_op_returns_false_when_receives_non_strategy_operation() {
-    assert_false(strategies.is_strategy_op(ops.empty_op().to_gtx_operation()));
+    assert_false(strategies.is_strategy_op(test_op.empty_op().to_gtx_operation()));
 }
 
 function test_registering_account_adds_main_auth_descriptor() {

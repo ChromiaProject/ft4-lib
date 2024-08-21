@@ -88,3 +88,8 @@ function require_register_account_next_operation() {
         "<%s> operation must be followed by a register account operation, not <%s>".format(this_op.name, next_op.name)
     );
 }
+
+function get_account_id_for_strategy(strategy_op: gtx_operation) {
+    val strategy = get_strategy(strategy_op.name);
+    return strategy.account_details(strategy_op.args.to_gtv()).account_id;
+}

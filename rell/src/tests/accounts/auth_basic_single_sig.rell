@@ -2,61 +2,52 @@
 @test
 module;
 
-import ^^.assets.utils;
-import test_operations: ^^.operations;
-
-/*
- * We aim to unit test the basic authentication rules (e.g. the number of signatures and required flags).
- *
- * Note: 
- * Ideally this should be simple unit tests, but since we have "op_context.is_signer()" inside the auth logic,
- * the code must come from a signed transaction, so we added a new method for this in the "dev_op_auth.rell" file.
- * We also have to go the roundabout way of storing the returned error message in a global object "dev_error".
- */
-
-function required_flags() = ["T"];  
-
-function test_happy_valid() {
-    val alice = utils.register_alice();
-
-    rell.test.tx()
-        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
-        .sign(rell.test.keypairs.alice)
-        .run();
-    
-    assert_equals(test_operations.test_auth.test_error.msg, "valid");
-}
+import accounts_ext: lib.ft4.external.accounts;
+import test: lib.ft4.test.core;
+import test_op: lib.ft4.test.operations;
 
 function test_invalid_required_flags() {
-    val alice = utils.register_alice();
-
-    val bad_required_flags = ["X"]; // <---- Default test Auth Desc doesn't have "X"!!
+    val ad = test.create_auth_descriptor(
+        rell.test.keypairs.bob.pub,
+        ["X"],
+    );
+    val account_data = test.register_alice();
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, bad_required_flags))
+        .op(account_data.ft_auth(accounts_ext.add_auth_descriptor(ad)))
         .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
         .run();
-    
-    assert_equals(test_operations.test_auth.test_error.msg, "MISSING FLAGS: Some required flags [X] are missing on the (single sig) Auth Descriptor.");
+
+    rell.test.tx()
+        .op(test.ft_auth_operation_for(rell.test.keypairs.bob.pub))
+        .op(test_op.authenticated_operation())
+        .sign(rell.test.keypairs.alice)
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("MISSING FLAGS: Some required flags [A] are missing on the (single sig) Auth Descriptor.");
 }
 
 function test_invalid_single_signer() {
-    val alice = utils.register_alice();
+    val ad = test.create_auth_descriptor(
+        rell.test.keypairs.bob.pub,
+        ["A, T"],
+    );
+    val account_data = test.register_alice();
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
-        .sign(rell.test.keypairs.bob) // <---- We sign with wrong user "Bob"
-        .run();
-    
-    assert_equals(test_operations.test_auth.test_error.msg, "MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
+        .op(account_data.ft_auth(accounts_ext.add_auth_descriptor(ad)))
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
 }
 
 function test_not_signed() {
-    val alice = utils.register_alice();
+    val ad = test.create_auth_descriptor(
+        rell.test.keypairs.bob.pub,
+        ["A, T"],
+    );
+    val account_data = test.register_alice();
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
-        .run(); // <--- No signing at all
-
-    assert_equals(test_operations.test_auth.test_error.msg, "MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
+        .op(account_data.ft_auth(accounts_ext.add_auth_descriptor(ad)))
+        .run_must_fail("MISSING SIGNATURE: The auth descriptor signer did not sign the transaction.");
 }

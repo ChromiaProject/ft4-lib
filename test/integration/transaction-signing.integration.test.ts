@@ -87,7 +87,7 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(authenticator, client)
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"), {
           skipFtSigning: true,
         })
         .build();
@@ -137,8 +137,8 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
-        .add(op("test_authenticated_operation"))
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"))
+        .add(op("ft4.test.authenticated_operation"), {
           authenticator: ftAuthenticator,
           skipFtSigning: true,
         })
@@ -416,7 +416,7 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(authenticator, client)
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"), {
           skipFtSigning: true,
         })
         .build();
@@ -468,8 +468,8 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
-        .add(op("test_authenticated_operation"))
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"))
+        .add(op("ft4.test.authenticated_operation"), {
           authenticator: ftAuthenticator,
           skipFtSigning: true,
         })

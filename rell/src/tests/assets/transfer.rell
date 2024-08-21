@@ -4,26 +4,22 @@ module;
 import lib.ft4.auth;
 import lib.ft4.assets;
 import lib.ft4.accounts;
-import lib.ft4.test.utils. { evm_sign };
-
-import test_utils: lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 import ^^.extensions.*;
-import ^.utils;
-import test_ops: ^^.operations;
+import test_op: lib.ft4.test.operations;
 
 val too_big = assets.max_asset_amount + 1;
 
 function test_before_transfer_extension_is_called() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "t", 1);
+    val asset = test.create_asset("test", "t", 1);
 
-    utils.mint(alice.account, asset, 1);
+    test.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(alice.ft_auth())
-        .op(assets.external.transfer(bob.account.id, asset.id, 1L))
+        .op(alice.ft_auth(assets.external.transfer(bob.account.id, asset.id, 1L)))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -35,16 +31,15 @@ function test_before_transfer_extension_is_called() {
 }
 
 function test_after_transfer_extension_is_called() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "t", 1);
+    val asset = test.create_asset("test", "t", 1);
 
-    utils.mint(alice.account, asset, 1);
+    test.mint(alice.account, asset, 1);
 
     rell.test.tx()
-        .op(alice.ft_auth())
-        .op(assets.external.transfer(bob.account.id, asset.id, 1L))
+        .op(alice.ft_auth(assets.external.transfer(bob.account.id, asset.id, 1L)))
         .sign(rell.test.keypairs.alice)
         .run();
     
@@ -56,7 +51,7 @@ function test_after_transfer_extension_is_called() {
 }
 
 function test_correct_auth_message_is_used() {
-    val asset = utils.create_asset("test", "TEST", 1);
+    val asset = test.create_asset("test", "TEST", 1);
     val args = struct<assets.external.transfer>(
         receiver_id=x"abcd",
         asset_id=asset.id,
@@ -67,25 +62,25 @@ function test_correct_auth_message_is_used() {
 }
 
 function test_transfer_fails_when_insufficient_balance() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
-        .op(test_utils.ft_auth_operation_for(alice.keypair.pub))
+        .op(test.ft_auth_operation_for(alice.keypair.pub))
         .op(assets.external.transfer(bob.account.id, asset.id, 11))
         .sign(alice.keypair)
         .run_must_fail("Balance is too low");
 }
 
 function test_transfer_fails_when_amount_is_negative() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -95,10 +90,10 @@ function test_transfer_fails_when_amount_is_negative() {
 }
 
 function test_transfer_fails_when_amount_is_too_high() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "TEST", 1);
+    val asset = test.create_asset("test", "TEST", 1);
 
     val tx = rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -108,10 +103,10 @@ function test_transfer_fails_when_amount_is_too_high() {
 }
 
 function test_transfer_fails_when_sender_is_same_as_receiver() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -121,11 +116,11 @@ function test_transfer_fails_when_sender_is_same_as_receiver() {
 }
 
 function test_transfer_succeeds_when_more_than_enough_balance() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -138,11 +133,11 @@ function test_transfer_succeeds_when_more_than_enough_balance() {
 }
 
 function test_transfer_when_just_enough_balance_will_delete_balance_entity() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -156,14 +151,14 @@ function test_transfer_when_just_enough_balance_will_delete_balance_entity() {
 }
 
 function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(rell.test.keypairs.alice.pub, set(list<text>()));
-    test_ops.add_ad_to_account(alice.account, auth_descriptor).run();
+    test_op.add_ad_to_account(alice.account, auth_descriptor).run();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, auth_descriptor.hash()))
@@ -173,31 +168,16 @@ function test_transfer_fails_when_auth_descriptor_does_not_have_transfer_flag() 
 }
 
 function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
-    val alice = utils.evm_register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice_evm();
+    val bob = test.register_bob();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 15);
-
-    val receiver_id = bob.account.id;
-    val asset_id = asset.id;
-    val amount = 5L;
-
-    val template = auth.external.get_auth_message_template(
-        "ft4.transfer", 
-        [
-            receiver_id.to_gtv(), 
-            asset_id.to_gtv(), 
-            amount.to_gtv()
-        ].to_gtv()
-    );
-    val op = assets.external.transfer(bob.account.id, asset.id, 5);
-    val message = utils.create_evm_auth_message(op, template, alice);
-    val signature = evm_sign(message, alice.keypair.priv);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 15);
 
     rell.test.tx()
-        .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [signature]))
-        .op(op)
+        .op(alice.evm_auth(
+            assets.external.transfer(bob.account.id, asset.id, 5)
+        ))
         .run();
 
     assert_equals(assets.get_asset_balance(alice.account, asset), 10);
@@ -205,27 +185,17 @@ function test_evm_authenticated_transfer_succeeds_when_enough_balance() {
 }
 
 function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_sender() {
-    val alice = utils.evm_register_alice();
-    val bob = utils.evm_register_bob();
+    val alice = test.register_alice_evm();
+    val bob = test.register_bob_evm();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 15);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 15);
 
-    val receiver_id = bob.account.id;
-    val asset_id = asset.id;
-    val amount = 10L;
 
-    val template = auth.external.get_auth_message_template(
-        "ft4.transfer", 
-        [
-            receiver_id.to_gtv(), 
-            asset_id.to_gtv(), 
-            amount.to_gtv()
-        ].to_gtv()
-    );
-    val op = assets.external.transfer(receiver_id, asset_id, amount);
-    val message = utils.create_evm_auth_message(op, template, alice);
-    val invalid_signature = evm_sign(message, bob.keypair.priv);
+    val op = assets.external.transfer(bob.account.id, asset.id, 10L);
+    
+    val message = test.create_evm_auth_message(op, alice);
+    val invalid_signature = test.evm_sign(message, bob.keypair.priv);
 
     rell.test.tx()
         .op(auth.external.evm_auth(alice.account.id, alice.auth_descriptor_id, [invalid_signature]))
@@ -234,11 +204,11 @@ function test_evm_authenticated_transfer_fails_when_signature_is_not_created_by_
 }
 
 function test_transfer_fails_when_recipient_id_does_not_exists_and_create_on_transfer_strategy_is_not_enabled() {
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val bogus_recipient_id = "bogus".hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))

@@ -4,3 +4,6 @@ query get_register_account_message(
 ) = strategies.get_register_account_message(strategy_operation, register_account_operation);
 
 query get_enabled_registration_strategies(): set<text> = strategies.strategy().keys();
+
+query get_account_id_for_strategy(strategy_operation: gtx_operation) 
+    = strategies.get_account_id_for_strategy(strategy_operation);

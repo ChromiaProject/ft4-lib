@@ -4,16 +4,15 @@ module;
 import lib.ft4.auth;
 import lib.ft4.admin;
 import lib.ft4.accounts;
-import ^^.assets.utils;
-import test_op: ^^.operations.auth;
+import test_op: lib.ft4.test.operations;
 import rlh: ^.rate_limit_helpers;
-import test_utils: lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 
 function test_create_account_in_genesis_block() {
-  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
+  val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
 
   admin.external.register_account(auth_descriptor)
-      .sign(utils.admin_priv_key())
+      .sign(test.admin_priv_key())
       .run();
 
     val account = accounts.account_auth_descriptor @ {
@@ -24,12 +23,12 @@ function test_create_account_in_genesis_block() {
 }
 
 function test_create_account_after_genesis_block() {
-  val auth_descriptor = test_utils.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
+  val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.alice, ["A", "T"]);
 
   rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
   admin.external.register_account(auth_descriptor)
-      .sign(utils.admin_priv_key())
+      .sign(test.admin_priv_key())
       .run();
 
     val account = accounts.account_auth_descriptor @ {
@@ -41,15 +40,17 @@ function test_create_account_after_genesis_block() {
 
 function test_rate_limit_points_increased_after_authenticated_operation_and_time_passed() {
   rell.test.set_block_interval(10000); // set block interval to 10 seconds
+  rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
+
 
   val rl_points_before = accounts.rl_state @ { .account == alice.account } (.points);
   assert_equals(rl_points_before, 1);
 
   rell.test.tx()
       .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation())
+      .op(test_op.authenticated_operation())
       .sign(rell.test.keypairs.alice)
       .run();
 
@@ -59,16 +60,17 @@ function test_rate_limit_points_increased_after_authenticated_operation_and_time
 
 function test_authenticated_operation_is_rate_limited() {
   rell.test.set_block_interval(1000); // set block interval to 1 second
+  rell.test.block().run(); // build genesis block to be able to use op_context.last_block_time afterwards
 
   assert_equals(accounts.get_rate_limit_config().active, true);
   assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
 
   // Perform the transaction
   rell.test.tx()
       .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation())
+      .op(test_op.authenticated_operation())
       .nop()
       .sign(rell.test.keypairs.alice)
       .run();
@@ -76,7 +78,7 @@ function test_authenticated_operation_is_rate_limited() {
   // Attempt to perform the transaction again quickly
   rell.test.tx()
       .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation())
+      .op(test_op.authenticated_operation())
       .nop()
       .sign(rell.test.keypairs.alice)
       .run_must_fail("Insufficient rate limiter points");
@@ -89,7 +91,7 @@ function test_authenticated_operation_is_rate_limited() {
   // Perform the transaction after a while
   rell.test.tx()
       .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation())
+      .op(test_op.authenticated_operation())
       .nop()
       .sign(rell.test.keypairs.alice)
       .run();
@@ -100,11 +102,11 @@ function test_max_admin_rate_limit_points() {
   assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
   assert_equals(accounts.get_rate_limit_config().max_points, 5);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
 
   //give too many points to alice
   admin.external.add_rate_limit_points(alice.account.id, 10)
-      .sign(utils.admin_priv_key())
+      .sign(test.admin_priv_key())
       .run();
 
   // check that alice has max_points, not more
@@ -112,10 +114,10 @@ function test_max_admin_rate_limit_points() {
 }
 
 function test_admin_cant_give_negative_rate_limit_points() {
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
 
   admin.external.add_rate_limit_points(alice.account.id, -1)
-      .sign(utils.admin_priv_key())
+      .sign(test.admin_priv_key())
       .run_must_fail("Amount must be a positive integer.");
 }
 
@@ -125,7 +127,7 @@ function test_max_rate_limit_points() {
   assert_equals(accounts.get_rate_limit_config().active, true);
   assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
 
   // Wait for long time to accumulate maximum amount of points
   for (_ in range(25)) {
@@ -135,15 +137,15 @@ function test_max_rate_limit_points() {
   // Perform the transaction multiple times after a long time
   rell.test.tx()
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .nop()
      .sign(rell.test.keypairs.alice)
      .run();
@@ -156,17 +158,17 @@ function test_max_rate_limit_points() {
   // Cannot get more than 5 points
   rell.test.tx()
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-     .op(test_op.test_authenticated_operation())
+     .op(test_op.authenticated_operation())
      .nop()
      .sign(rell.test.keypairs.alice)
      .run_must_fail("Insufficient rate limiter points");
@@ -178,7 +180,7 @@ function test_disable_rate_limit_for_account() {
   assert_equals(accounts.get_rate_limit_config().active, true);
   assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
 
-  val alice = utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
+  val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
 
   rell.test.tx()
       .op(rlh.set_admin_account(alice.account))
@@ -187,7 +189,7 @@ function test_disable_rate_limit_for_account() {
   // Perform the transaction
   rell.test.tx()
       .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation())
+      .op(test_op.authenticated_operation())
       .nop()
       .sign(rell.test.keypairs.alice)
       .run();
@@ -195,7 +197,7 @@ function test_disable_rate_limit_for_account() {
   // Attempt to perform the transaction again quickly
   rell.test.tx()
       .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-      .op(test_op.test_authenticated_operation())
+      .op(test_op.authenticated_operation())
       .nop()
       .sign(rell.test.keypairs.alice)
       .run();
@@ -206,7 +208,7 @@ function test_rate_limit_starting_points_too_high_is_handled_correctly() {
   assert_equals(accounts.get_rate_limit_config().points_at_account_creation, 1);
   assert_equals(accounts.get_rate_limit_config().max_points, 5);
 
-  utils.create_test_account_with_auth_descriptor(
+  test.register_account_with_auth_descriptor(
     accounts.auth_descriptor.from_bytes(
       rlh.MISCONFIGURED_ACCOUNT.auth_descriptor_bytes
     ),
