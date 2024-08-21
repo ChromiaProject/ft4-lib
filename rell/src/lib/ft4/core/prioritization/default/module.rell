@@ -4,8 +4,52 @@ import ^^.auth;
 import ^^.accounts;
 import ^^.prioritization.*;
 
+/**
+ * An implementation of the priority check which can be used by default, if no complex
+ * priority check is required. This function simply gives a value in the range [0, 1] (inclusive)
+ * for the `priority` value to all transactions. If this function is being used, and other
+ * `priority_check` extensions are defined, returning values above 1 will give a priority that
+ * is always higher than anything returned from this function.
+ * 
+ * The `priority` value will be the ratio of current account rate limiter points over the
+ * max points, meaning that any account that has been recently active will have lower priority
+ * for as long as it takes for their rate limiter points to replenish.
+ * 
+ * The account information returned in the `account_id` and `account_points` are naively
+ * taken from the account that appears in the first auth_operation of this transaction.
+ * 
+ * The `tx_cost_points` is naively assumed to be the number of auth operations found in the
+ * transaction, regardless of what account is being authenticated.
+ * 
+ * There are scenarios in which the above values cannot be returned. In these cases, the return
+ * value from this function is:
+ * - `no_op_priority_state()` (lowest priority) if:
+ *   - no auth operation is found
+ *   - an auth operation is found, but the account or auth descriptor it points to do not
+ *     exist.
+ * - `no_account_priority_state(1.0)` (highest priority, no account information) if:
+ *   - the account has no rate limiter state associated
+ *   - the chain has rate limiting disabled
+ *   - the account has been freed of rate limiting constraints through custom rate limit configs
+ * 
+ * @throws if the transaction has an auth operation, but its parameters are incorrect (either
+ * because of incorrect type or because of missing parameters). The transaction will fail,
+ * however.
+ * 
+ * @see core.accounts.get_rate_limit_config_for_account for information on custom rate limit
+ * configs
+ * 
+ * @see core.accounts.rate_limit_config for information on rate limit points and configs
+ * 
+ * @see core.auth.is_auth_op for information on auth operations
+ * 
+ * @param tx_body             the transaction
+ * @param tx_size             size of the transaction in bytes
+ * @param tx_enter_timestamp  when the transaction entered the queue
+ * @param current_timestamp   the current timestamp
+ */
 @extend(priority_check) function(tx_body: gtx_transaction_body, tx_size: integer, tx_enter_timestamp: timestamp, current_timestamp: timestamp): priority_state_v1 {
-    val auth_ops = tx_body.operations @* { .name in [auth.EVM_AUTH_OP, auth.FT_AUTH_OP] };
+    val auth_ops = tx_body.operations @* { auth.is_auth_op($) == true };
 
     val tx_accounts = list<accounts.account>();
     for (auth_op in auth_ops) {
@@ -26,7 +70,7 @@ import ^^.prioritization.*;
         }
     }
 
-    if (tx_accounts.empty()) return no_account_priority_state(0.0);
+    if (tx_accounts.empty()) return no_op_priority_state();
     val account = tx_accounts[0]; // Use first account if there are multiple
 
     val rl_config = accounts.get_rate_limit_config_for_account(account);
