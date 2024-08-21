@@ -1,6 +1,29 @@
+/**
+ * Extendable function that defines whether on-chain transfers towards an account that doesn't
+ * exist should be allowed. False by default, can be set to true to allow account registration
+ * on transfer.
+ * 
+ * Developers should not generally extend this function, as it is handled by the account
+ * registration module. Importing the corresponding module should be enough.
+ * 
+ * However, if a custom transfer strategy is going to be implemented, this function could be
+ * extended to allow it to work.
+ */
 @extendable
 function is_create_on_internal_transfer_enabled(): boolean = false;
 
+/**
+ * Extendable function that defines how to create an account when an on-chain transfer to a
+ * non-existing account happens.
+ * 
+ * Developers should not generally extend this function, as it is handled by the account
+ * registration module. Importing the corresponding module should be enough.
+ * 
+ * @param sender        the account that initiated the transfer
+ * @param recipient_id  the non-existing account that received the transfer
+ * @param asset         the asset that was transferred
+ * @param amount        the amount that was transferred
+ */
 @extendable
 function create_on_internal_transfer(
    sender: accounts.account,
@@ -9,6 +32,17 @@ function create_on_internal_transfer(
    amount: big_integer
 );
 
+/**
+ * Extendable function that defines how to recall a transfer that was erroneusly made
+ * toward to a non-existing account, if that account should not be registered.
+ * 
+ * Developers should not generally extend this function, as it is handled by the account
+ * registration module. Importing the corresponding module should be enough.
+ * 
+ * @param sender              the account that initiated the transfer
+ * @param transfer_tx_rid     the transaction where the transfer happened
+ * @param transfer_op_index   the operation in which the transfer happened
+ */
 @extendable
 function recall_on_internal_transfer(
    sender: accounts.account,
@@ -17,21 +51,62 @@ function recall_on_internal_transfer(
 );
 
 namespace Unsafe {
-
+   /**
+    * Transfers tokens to a certain recipient. If the recipient exists, a normal transfer
+    * will take place. Otherwise, if account creation on transfer is enabled, the account
+    * creation procedure will be started.
+    * Marked as Unsafe because it does not check whether the account authorized the transfer.
+    * 
+    * Throws if the required assets cannot be transferred. Common cases include:
+    * - the amount to transfer is not in the accepted range (0, 2^256) (exclusive)
+    * - some conditions added in development through transfer extensions (`before_transfer` or
+    *   `after_transfer`) aren't met
+    * - the sender account's balance is lower than `amount`
+    * 
+    * Throws `"INVALID RECIPIENT"` if the recipient does not exist and
+    * `is_create_on_internal_transfer_enabled` returns false.
+    * 
+    * Can only be called from operations.
+    * 
+    * @param sender        the account that started the transfer
+    * @param recipient_id  the account that should receive the transfer or be created
+    * @param asset         the asset that should be sent
+    * @param amount        the amount to transfer
+    */
    function transfer_to_recipient_id(sender: accounts.account, recipient_id: byte_array, asset, amount: big_integer) {
       val recipient = accounts.account @? { .id == recipient_id };
       if (recipient != null) {
           transfer(sender, recipient, asset, amount);
       } else {
           require(is_create_on_internal_transfer_enabled(),
-              "Account <%s> does not exist and creating accounts on transfer is not enabled".format(recipient_id));
+              "INVALID RECIPIENT: Account <%s> does not exist and creating accounts on transfer is not enabled".format(recipient_id));
           create_on_internal_transfer(sender, recipient_id, asset, amount);
       }
    }
 
+   /**
+    * Transfers tokens to an existing account.
+    * Marked as Unsafe because it does not check whether the account authorized the transfer.
+    * 
+    * Throws if the required assets cannot be transferred. Common cases include:
+    * - the amount to transfer is not in the accepted range (0, 2^256) (exclusive)
+    * - some conditions added in development through transfer extensions (`before_transfer` or
+    *   `after_transfer`) aren't met
+    * - the sender account's balance is lower than `amount`
+    * 
+    * Throws `"SELF TRANSFER"` if `from` equals `to`
+    * 
+    * Can only be called from operations.
+    * 
+    * @param from    the account that started the transfer
+    * @param to      the account that should receive the transfer
+    * @param asset   the asset that should be sent
+    * @param amount  the amount to transfer
+    */
    function transfer(from: accounts.account, to: accounts.account, asset, amount: big_integer) {
       require_zero_exclusive_asset_amount_limits(amount, "Parameter amount");
-      require(from != to, "Sender and receiver have to be different");
+      // should be recipient here ----------------------↴
+      require(from != to, "SELF TRANSFER: Sender and receiver have to be different");
 
       before_transfer(from, to, asset, amount);
 
@@ -56,8 +131,19 @@ namespace Unsafe {
       after_transfer(from, to, asset, amount);
    }
 
+   /**
+    * Allows recalling a transfer that was sent to a non-existing account and was not used
+    * to create the account.
+    * 
+    * Throws `"RECALL INACTIVE"` if `is_create_on_internal_transfer_enabled` returns false.
+    * 
+    * Throws when any extension of `recall_on_internal_transfer` throws.
+    */
    function recall_unclaimed_transfer(accounts.account, transfer_tx_rid: byte_array, transfer_op_index: integer) {
-      require(is_create_on_internal_transfer_enabled(), "Creating accounts on transfer is not enabled");
+      require(
+         is_create_on_internal_transfer_enabled(),
+         "RECALL INACTIVE: Creating accounts on transfer is not enabled"
+      );
       recall_on_internal_transfer(account, transfer_tx_rid, transfer_op_index);
    }
 }
