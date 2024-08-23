@@ -32,7 +32,7 @@ import ^^.prioritization.*;
  *   - the chain has rate limiting disabled
  *   - the account has been freed of rate limiting constraints through custom rate limit configs
  * 
- * @throws if the transaction has an auth operation, but its parameters are incorrect (either
+ * Throws if the transaction has an auth operation, but its parameters are incorrect (either
  * because of incorrect type or because of missing parameters). The transaction will fail,
  * however.
  * 

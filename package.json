@@ -40,7 +40,7 @@
     "build": "npm run build:clean && npm run build:types && npm run build:esm && npm run build:umd && npm run build:cjs",
     "prepublishOnly": "npm run build",
     "prepare": "husky install",
-    "generate:docs-rell": "chr generate docs-site --target doc/api/rell",
+    "generate:docs-rell": "chr generate docs-site --target doc/api/rell -s doc/docs-chromia.yml",
     "generate:docs-ts": "npm run build && (api-extractor run || true) && rimraf temp && npx typedoc || exit 1",
     "generate:docs": "npm run generate:docs-rell && npm run generate:docs-ts"
   },

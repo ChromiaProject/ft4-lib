@@ -1,7 +1,7 @@
 
 /**
  *
- * @return `null` if all assets are allowed
+ * @returns `null` if all assets are allowed
  */
 query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array):
         list<(asset_id: byte_array, min_amount: big_integer)>? {

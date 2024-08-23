@@ -61,7 +61,7 @@ query priority_check_v1(tx_body: gtx_transaction_body, tx_size: integer, tx_ente
  * If this function throws, it will be interpreted as a value of `no_op_priority_state()`
  * as well
  * 
- * @throws if any extension of this function throws.
+ * Throws if any extension of this function throws.
  * 
  * @param tx_body             the transaction
  * @param tx_size             size of the transaction in bytes
