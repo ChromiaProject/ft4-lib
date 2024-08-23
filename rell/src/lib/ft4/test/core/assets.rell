@@ -1,7 +1,10 @@
+@test module;
+
 import lib.ft4.admin;
 import lib.ft4.assets;
 import lib.ft4.accounts;
-import crosschain_admin: ^^^^.lib.ft4.admin.crosschain;
+import crosschain_admin: lib.ft4.admin.crosschain;
+import ^.auth.{ admin_priv_key };
 
 /**
  * Registers a new asset on the blockchain with the provided info. The newly created asset entity

@@ -1,7 +1,7 @@
 @mount('ft4.test')
 module;
 
-import ^.operations.asset.*;
+import ^.operations.assets.*;
 import ^.operations.auth.*;
 
 /**

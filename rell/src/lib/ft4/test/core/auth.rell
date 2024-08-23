@@ -1,5 +1,4 @@
-@test
-module;
+@test module;
 
 import ^^^.auth;
 import ^^^.admin;

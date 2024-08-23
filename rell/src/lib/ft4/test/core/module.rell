@@ -1,13 +1,14 @@
 @test module;
 
-import ^.core.accounts.*;
-import ^.core.auth.*;
+import .accounts.*;
+import .auth.*;
+import .assets.*;
 
 /**
  * Returns the transaction that was stored in the latest block that was built.
  * 
  * Note: this function would typically fail as there could potentially be many
- * transactions witin a single block. However, since this function is only
+ * transactions within a single block. However, since this function is only
  * available in a test context, where there is an implicit one to one mapping
  * between blocks and transactions, it works as advertised.
  */
