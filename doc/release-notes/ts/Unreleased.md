@@ -7,3 +7,5 @@
 ### Added ✅
 
 ### Fixed 🔧
+
+- authentication loop when used with new wagmi version
