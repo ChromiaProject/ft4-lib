@@ -4,6 +4,17 @@ module;
 import ^^^^.core.accounts;
 import ^^^^.core.accounts.strategies;
 
+/**
+ * The operation that defines the open strategy. The open strategy will allow anybody to
+ * register an account by simply sending a transaction that uses it.
+ * In most cases, this is not something that is desirable for production dapps, as it will
+ * expose the dapp to spam account creation. 
+ * 
+ * @see core.accounts.strategies._strategy for information on how to create such a transaction.
+ * 
+ * @param main          the main auth descriptor for the account that will be registered
+ * @param disposable    optionally, the disposable auth descriptor for the same account
+ */
 operation ras_open(
     main: accounts.auth_descriptor,
     disposable: accounts.auth_descriptor? = null
@@ -11,6 +22,12 @@ operation ras_open(
     strategies.require_register_account_next_operation();
 }
 
+/**
+ * Calculates the account details for the account that will be registered using the
+ * `ft4.ras_open` strategy.
+ * 
+ * @param gtv   the parameters for the `ras_open` operation, GTV-encoded
+ */
 function account_details(gtv) {
     val params = struct<ras_open>.from_gtv(gtv);
     val signers = accounts.get_signers(params.main);

@@ -572,6 +572,9 @@ function _validate_multiple_evm_addresses(message: text, signatures: list<signat
  * - some FT signers did not sign the transaction
  * - the message for the EVM signers was empty
  * 
+ * @see verify_signers_with_message if you need to verify that these signers signed a different
+ * message than the one defined in the `auth_handler` for the current operation
+ * 
  * @param ft_and_evm_signers    the signers that are expected to be found.
  */
 function verify_signers(ft_and_evm_signers: list<byte_array>) {
@@ -597,7 +600,8 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
 }
 
 /**
- * Does what `verify_signers` does, but receives the message as a parameter.
+ * Does what `verify_signers` does, but receives the message as a parameter instead of using
+ * the auth message of the current operation.
  * 
  * Can only be called from an operation.
  * 
@@ -614,7 +618,10 @@ function verify_signers(ft_and_evm_signers: list<byte_array>) {
  * Throws if the message is empty.
  * 
  * Throws if any signatures in `evm_signatures` is null or missing, or if there's extra
- * signatures in the operation.
+ * signatures in that operation.
+ * 
+ * @see verify_signers if the message that must be signed is the one defined in the
+ * `auth_handler` for the current operation
  * 
  * @param ft_and_evm_signers    the signers that are expected to be found.
  * @param message               the message that was signed.

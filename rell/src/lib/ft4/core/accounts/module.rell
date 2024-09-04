@@ -184,11 +184,11 @@ entity rl_state {
 
 /**
  * Adds an auth descriptor to an account.
+ * 
+ * Can only be called from an operation.
  *
  * Throws `"TOO MANY AUTH DESCRIPTORS"` if the account already has
  * `AUTH_DESCRIPTORS_PER_ACCOUNT_UPPER_BOUND` number of auth descriptors registered to it.
- * 
- * Can only be called from an operation.
  *
  * Throws if `auth_descriptor`'s `args` field is invalid. Common cases include:
  * - if a multi-sig auth descriptor's `required_signatures` is 0 or less
