@@ -85,7 +85,7 @@ describe("Login", () => {
   it("added disposable auth descriptor expires in 30 minutes", async () => {
     await createKeyStoreInteractor(connection.client, evmKeyStore).login({
       accountId: account.id,
-      config: { flags: ["T"], rules: ttlLoginRule(minutes(30)) },
+      config: { flags: [AuthFlag.Transfer], rules: ttlLoginRule(minutes(30)) },
     });
     const expectedExpiration = Date.now() + 1800000; // 30 min from now
 
@@ -115,7 +115,7 @@ describe("Login", () => {
 
     await createKeyStoreInteractor(connection.client, evmKeyStore).login({
       accountId: account.id,
-      config: { flags: ["T"], rules },
+      config: { flags: [AuthFlag.Transfer], rules },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin[1].rules).toEqual(expectedRules);
@@ -124,7 +124,7 @@ describe("Login", () => {
   it("added disposable auth descriptor can have no rules", async () => {
     await createKeyStoreInteractor(connection.client, evmKeyStore).login({
       accountId: account.id,
-      config: { flags: ["T"], rules: null },
+      config: { flags: [AuthFlag.Transfer], rules: null },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin[1].rules).toEqual(null);

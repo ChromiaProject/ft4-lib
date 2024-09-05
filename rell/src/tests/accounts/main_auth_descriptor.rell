@@ -7,7 +7,7 @@ import test: lib.ft4.test.core;
 
 function test_update_main_auth_descriptor_can_replace_ft_with_ft_auth_descriptor() {
     val alice = test.register_alice();
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     val current_main_auth_descriptor = accounts.main_auth_descriptor @ { alice.account } .auth_descriptor;
     assert_equals(current_main_auth_descriptor.id, alice.auth_descriptor_id);
@@ -26,7 +26,7 @@ function test_update_main_auth_descriptor_can_replace_ft_with_ft_auth_descriptor
 
 function test_update_main_auth_descriptor_deletes_old_main_auth_descriptor() {
     val alice = test.register_alice();
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     rell.test.tx()
         .op(alice.ft_auth(
@@ -44,7 +44,7 @@ function test_update_main_auth_descriptor_can_replace_evm_with_evm_auth_descript
     val alice = test.register_alice_evm();
     val address1 = crypto.eth_privkey_to_address(alice.keypair.priv); 
     val address2 = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
-    val auth_descriptor = test.create_auth_descriptor(address2, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(address2, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     val op = accounts.external.update_main_auth_descriptor(auth_descriptor);
     val message = test.create_evm_auth_message(op, alice);
@@ -68,7 +68,7 @@ function test_update_main_auth_descriptor_can_replace_evm_with_evm_auth_descript
 function test_update_main_auth_descriptor_can_replace_evm_with_ft_auth_descriptor() {
     val alice = test.register_alice_evm();
     val address = crypto.eth_privkey_to_address(alice.keypair.priv); 
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     val op = accounts.external.update_main_auth_descriptor(auth_descriptor);
     val message = test.create_evm_auth_message(op, alice);
@@ -88,7 +88,7 @@ function test_update_main_auth_descriptor_can_replace_evm_with_ft_auth_descripto
 function test_update_main_auth_descriptor_can_replace_ft_with_evm_auth_descriptor() {
     val alice = test.register_alice();
     val address = crypto.eth_privkey_to_address(rell.test.keypairs.bob.priv);
-    val auth_descriptor = test.create_auth_descriptor(address, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(address, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     val op = accounts.external.update_main_auth_descriptor(auth_descriptor);
     val message = test.create_evm_auth_message(op, test.evm_account_data(
@@ -116,7 +116,7 @@ function test_update_main_auth_descriptor_can_replace_ft_with_evm_auth_descripto
 
 function test_update_main_auth_descriptor_fails_when_new_main_auth_descriptor_does_not_sign_transaction() {
     val alice = test.register_alice();
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     val current_main_auth_descriptor = accounts.main_auth_descriptor @ { alice.account } .auth_descriptor;
     assert_equals(current_main_auth_descriptor.id, alice.auth_descriptor_id);
@@ -131,7 +131,7 @@ function test_update_main_auth_descriptor_fails_when_new_main_auth_descriptor_do
 
 function test_update_main_auth_descriptor_fails_when_current_main_auth_descriptor_does_not_sign_transaction() {
     val alice = test.register_alice();
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"]);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     val current_main_auth_descriptor = accounts.main_auth_descriptor @ { alice.account } .auth_descriptor;
     assert_equals(current_main_auth_descriptor.id, alice.auth_descriptor_id);
@@ -164,7 +164,7 @@ function test_delete_auth_descriptors_for_signer_fails_for_main_auth_descriptor_
 
 function test_update_main_auth_descriptor_fails_if_new_auth_descriptor_miss_mandatory_flags() {
     val alice = test.register_alice();
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["T"]);
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_TRANSFER]);
 
     rell.test.tx()
         .op(alice.ft_auth(accounts.external.update_main_auth_descriptor(auth_descriptor)))
@@ -175,7 +175,7 @@ function test_update_main_auth_descriptor_fails_if_new_auth_descriptor_miss_mand
 
 function test_update_main_auth_descriptor_fails_if_new_auth_descriptor_is_restricted() {
     val alice = test.register_alice();
-    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"],
+    val auth_descriptor = test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
         [
             "and".to_gtv(),
             accounts.rule_expression_to_gtv(accounts.rule_expression(accounts.rule_variable.op_count, accounts.rule_operator.lt, 5))

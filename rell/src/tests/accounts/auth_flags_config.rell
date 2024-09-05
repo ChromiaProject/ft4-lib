@@ -62,14 +62,14 @@ function test_parsing_gtv_encoded_list_of_integers_as_auth_flags_fails() {
 function test_get_auth_flags_config_returns_mandatory_flags_as_default_flags_when_default_flags_omitted() {
     val flags_config = accounts.get_raw_auth_flags_config();
     
-    assert_equals(flags_config.mandatory, ["A", "T"].to_gtv());
+    assert_equals(flags_config.mandatory, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER].to_gtv());
     assert_null(flags_config.default);
     
     assert_equals(
         accounts.get_auth_flags_config(),
         (
-            mandatory = ["A", "T"],
-            default = ["A", "T"]
+            mandatory = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
+            default = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]
         )
     );
 }

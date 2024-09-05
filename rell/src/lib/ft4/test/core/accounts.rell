@@ -12,12 +12,12 @@ import test_auth: ^.auth;
  * This function does not make any database calls.
  * 
  * @param signer        publc key part of the keypair which will be used to sign this auth descriptor
- * @param permissions   list of strings, representing permissions that this auth descriptor will get. Defaults to `["T"]`
+ * @param permissions   list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_TRANSFER]`
  * @param rules         gtv encoded list of rules that this auth descriptor will have. Defaults to `null`
  */
 function create_auth_descriptor(
     signer: byte_array,
-    permissions: list<text> = ["T"],
+    permissions: list<text> = [accounts.AUTH_FLAG_TRANSFER],
     rules: gtv = null.to_gtv()
 ) = accounts.auth_descriptor(
         accounts.auth_type.S,
@@ -36,13 +36,13 @@ function create_auth_descriptor(
  *                              when authorizing with this auth descriptor.
  * 
  * @param signers               publc key part of the keypairs which will be allowed to sign this auth descriptor
- * @param permissions           list of strings, representing permissions that this auth descriptor will get. Defaults to `["T"]`
+ * @param permissions           list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_TRANSFER]`
  * @param rules                 gtv encoded list of rules that this auth descriptor will have. Defaults to `null`
  */
 function create_multisig_auth_descriptor(
     signatures_required: integer,
     signers: list<byte_array>,
-    permissions: list<text> = ["T"],
+    permissions: list<text> = [accounts.AUTH_FLAG_TRANSFER],
     rules: gtv = null.to_gtv()
 ) = accounts.auth_descriptor(
         accounts.auth_type.M,
@@ -310,12 +310,12 @@ struct evm_account_data {
  * with the provided flags array as permissions.
  * 
  * @param keypair               the keypair that will have access to the account
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_account_open(
     rell.test.keypair,
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account(
@@ -330,11 +330,11 @@ function register_account_open(
 /**
  * Registers an account using the keypair `rell.test.keypairs.alice` using ft signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_alice(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open(rell.test.keypairs.alice, flags, register_account_op);
@@ -343,11 +343,11 @@ function register_alice(
 /**
  * Registers an account using the keypair `rell.test.keypairs.bob` using ft signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_bob(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open(rell.test.keypairs.bob, flags, register_account_op);
@@ -356,11 +356,11 @@ function register_bob(
 /**
  * Registers an account using the keypair `rell.test.keypairs.eve` using ft signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_eve(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open(rell.test.keypairs.eve, flags, register_account_op);
@@ -369,11 +369,11 @@ function register_eve(
 /**
  * Registers an account using the keypair `rell.test.keypairs.trudy` using ft signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_trudy(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open(rell.test.keypairs.trudy, flags, register_account_op);
@@ -385,12 +385,12 @@ function register_trudy(
  * with the provided flags array as permissions.
  * 
  * @param keypair               the keypair that will have access to the account
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_account_open_evm(
     rell.test.keypair,
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     val address = crypto.eth_pubkey_to_address(keypair.pub);
@@ -407,11 +407,11 @@ function register_account_open_evm(
 /**
  * Registers an account using the keypair `rell.test.keypairs.alice` using evm signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_alice_evm(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open_evm(rell.test.keypairs.alice, flags, register_account_op);
@@ -420,11 +420,11 @@ function register_alice_evm(
 /**
  * Registers an account using the keypair `rell.test.keypairs.bob` using evm signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_bob_evm(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open_evm(rell.test.keypairs.bob, flags, register_account_op);
@@ -433,11 +433,11 @@ function register_bob_evm(
 /**
  * Registers an account using the keypair `rell.test.keypairs.eve` using evm signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_eve_evm(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open_evm(rell.test.keypairs.eve, flags, register_account_op);
@@ -446,11 +446,11 @@ function register_eve_evm(
 /**
  * Registers an account using the keypair `rell.test.keypairs.trudy` using evm signing.
  * 
- * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `["A", "T"]`
+ * @param flags                 list of strings, representing permissions that this auth descriptor will get. Defaults to `[accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]`
  * @param register_account_op   the operation that will be used to create the account, defaults to `strategies.external.register_account()`
  */
 function register_trudy_evm(
-    flags: list<text> = ["A", "T"],
+    flags: list<text> = [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
     register_account_op: rell.test.op = strategies.external.register_account()
 ) {
     return register_account_open_evm(rell.test.keypairs.trudy, flags, register_account_op);

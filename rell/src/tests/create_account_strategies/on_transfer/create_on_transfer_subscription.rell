@@ -50,7 +50,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 
     var last_block_time = rell.test.last_block_time;
     rell.test.tx()
-        .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -168,7 +168,7 @@ function test_create_account_on_internal_transfer_with_subscription() {
 function test_an_error_is_thrown_when_no_suceeding_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()
@@ -180,7 +180,7 @@ function test_an_error_is_thrown_when_no_suceeding_op() {
 function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()

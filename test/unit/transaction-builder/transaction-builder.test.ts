@@ -292,7 +292,7 @@ describe("Transaction Builder", () => {
     keyStore = { ...keyStore, sign };
 
     const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message: "bogus" },
+      foo: { flags: [AuthFlag.Transfer], message: "bogus" },
     });
     const authenticator = createAuthenticator(
       accountId,
@@ -327,7 +327,7 @@ describe("Transaction Builder", () => {
     keyStore = { ...keyStore, signMessage };
 
     const authService = createFakeAuthDataService({
-      foo: { flags: ["T"], message },
+      foo: { flags: [AuthFlag.Transfer], message },
     });
     const authenticator = createAuthenticator(
       accountId,

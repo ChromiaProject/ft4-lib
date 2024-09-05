@@ -15,7 +15,7 @@ function transfer_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(transfer).mount_name,
-    flags = ["T"],
+    flags = [accounts.AUTH_FLAG_TRANSFER],
     message = transfer_message(*)
 );
 
@@ -37,7 +37,7 @@ function recall_unclaimed_transfer_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(recall_unclaimed_transfer).mount_name,
-    flags = ["T"],
+    flags = [accounts.AUTH_FLAG_TRANSFER],
     message = recall_unclaimed_transfer_message(*)
 );
 
@@ -49,7 +49,7 @@ operation recall_unclaimed_transfer(transfer_tx_rid: byte_array, transfer_op_ind
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(burn).mount_name,
-    flags = ["T"],
+    flags = [accounts.AUTH_FLAG_TRANSFER],
     message = burn_message(*)
 );
 

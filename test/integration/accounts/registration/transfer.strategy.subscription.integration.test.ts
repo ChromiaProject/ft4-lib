@@ -6,6 +6,7 @@ import {
 import {
   AnyAuthDescriptorRegistration,
   AuthenticatedAccount,
+  AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
 import { Asset, createAmountFromBalance } from "@ft4/asset";
@@ -53,7 +54,7 @@ describe("Test transfer with subscription", () => {
       .build();
     ftKeyStore = createInMemoryFtKeyStore(keyPair);
     authDescriptorToRegister = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       ftKeyStore.id,
     );
   });

@@ -12,7 +12,7 @@ import ^^.operations;
 function test_account_can_be_registered_with_open_strategy() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()
@@ -31,7 +31,7 @@ function test_account_can_be_registered_with_open_strategy_and_evm_signature() {
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         evm_address,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     val open = open.ras_open(auth_descriptor);
@@ -60,7 +60,7 @@ function test_account_can_be_registered_with_custom_operation() {
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()
@@ -82,7 +82,7 @@ function test_account_can_be_registered_with_custom_operation_and_evm_signature(
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         evm_address,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     val open = open.ras_open(auth_descriptor);
@@ -110,7 +110,7 @@ function test_account_account_registration_fails_with_unknown_custom_operation_a
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         evm_address,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     val open = open.ras_open(auth_descriptor);
@@ -129,7 +129,7 @@ function test_account_account_registration_fails_with_unknown_custom_operation_a
 function test_account_registration_fails_with_invalid_ft_signature() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()
@@ -142,10 +142,10 @@ function test_account_registration_fails_with_invalid_ft_signature() {
 function test_account_registration_fails_with_missing_disposable_ft_signature() {
     val main_auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.pubkeys.alice,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
-    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(rell.test.pubkeys.bob, set(["T"]));
+    val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(rell.test.pubkeys.bob, set([accounts.AUTH_FLAG_TRANSFER]));
 
     rell.test.tx()
         .op(open.ras_open(main_auth_descriptor, disposable_auth_descriptor))
@@ -159,7 +159,7 @@ function test_account_registration_fails_with_invalid_evm_signature() {
 
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         evm_address,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     val open = open.ras_open(auth_descriptor);
@@ -212,7 +212,7 @@ function test_account_id_does_not_change_if_signers_provided_in_different_orders
 function test_account_registration_fails_when_account_already_exists() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()
@@ -236,7 +236,7 @@ function test_account_registration_fails_when_account_already_exists() {
 function test_an_error_is_thrown_when_no_suceeding_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()
@@ -248,7 +248,7 @@ function test_an_error_is_thrown_when_no_suceeding_op() {
 function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
     );
 
     rell.test.tx()

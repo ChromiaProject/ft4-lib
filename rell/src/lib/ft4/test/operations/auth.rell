@@ -19,7 +19,7 @@ function authenticated_operation_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(authenticated_operation).mount_name,
-    flags = ["A"],
+    flags = [accounts.AUTH_FLAG_ACCOUNT],
     message = authenticated_operation_message(*)
 );
 /**
@@ -60,7 +60,7 @@ operation consume_point(account_id: byte_array) {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(rejected_op).mount_name,
-    flags = ["A"]
+    flags = [accounts.AUTH_FLAG_ACCOUNT]
 );
 
 /**

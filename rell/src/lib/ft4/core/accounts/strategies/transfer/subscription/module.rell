@@ -65,7 +65,7 @@ function () = strategies.add_strategy(
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(renew_subscription).mount_name,
-    flags = ["T"],
+    flags = [accounts.AUTH_FLAG_TRANSFER],
     message = renew_subscription_message(*)
 );
 

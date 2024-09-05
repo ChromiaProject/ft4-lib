@@ -66,6 +66,26 @@ function get_auth_descriptor_config() = chain_context.args.auth_descriptor;
 val ACCOUNT_TYPE_USER = "FT4_USER";
 
 /**
+ * Constant that represents a flag which, when added to an auth descriptor
+ * gives the user of that auth descriptor "account" privileges to the account.
+ * 
+ * These privileges allows the user to add and remove auth descriptors from the
+ * account. In many ways this is similar to giving the user super access to the
+ * account, as they will be able to add new auth descriptors with any flag, thus 
+ * allowing any operation on the account.
+ */
+val AUTH_FLAG_ACCOUNT = "A";
+
+/**
+ * Constant that represents a flag which, when added to an auth descriptor
+ * gives the user of that auth descriptor "account" privileges to the account.
+ * 
+ * Having this flag will grant the user the right to perform a transfer from the
+ * account.
+ */
+val AUTH_FLAG_TRANSFER = "T";
+
+/**
  * Types of authentication supported for auth descriptors.
  * * S - Single signature
  * * M - Multiple signatures (multisig)

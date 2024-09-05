@@ -2,6 +2,7 @@
 module;
 
 import lib.ft4.auth;
+import lib.ft4.accounts;
 import test: lib.ft4.test.core;
 import test_op: lib.ft4.test.operations;
 import auth_ext: ^^.extensions.auth.*;
@@ -10,7 +11,7 @@ import ^^^.lib.ft4.utils.{ latest_time };
 import test_operations: ^^.operations;
 
 function test_before_and_after_authenticate_extensions_are_called_with_ft_auth() {
-    val alice = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
 
     // Perform an authentication operation
     rell.test.tx()
@@ -31,7 +32,7 @@ function test_before_and_after_authenticate_extensions_are_called_with_ft_auth()
 }
 
 function test_before_and_after_authenticate_extensions_are_called_with_evm_auth() {
-    val alice = test.register_alice_evm(["A", "T", "E"]); // "E" flag is required by `test_empty_auth_message`
+    val alice = test.register_alice_evm([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER, "E"]); // "E" flag is required by `test_empty_auth_message`
 
     val op = test_operations.test_auth.test_empty_auth_message();
     val signature = test.evm_sign(
