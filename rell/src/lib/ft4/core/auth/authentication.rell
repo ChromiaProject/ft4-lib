@@ -100,9 +100,9 @@ val NONCE_PLACEHOLDER = "{nonce}";
  * @see _auth_handler for more information on the requirements a user must meet to be able to
  * call a certain operation
  * 
- * @returns the account the user authenticated as
+ * @returns the context - (accounts.account, accounts.account_auth_descriptor, set<accounts.account_auth_descriptor>)
  */
-function authenticate() {
+function authenticate_and_return_context()  {
     val op = op_context.get_current_operation();
     require(
         op_context.op_index > 0,
@@ -145,10 +145,20 @@ function authenticate() {
     };
 
     val auth_desc_after = accounts.update_auth_descriptor_rule_variables(auth_descriptor);
+    val auth_desc_after_struct = auth_desc_after.to_struct();
     val deleted_descriptors = accounts.delete_expired_auth_descriptors(account);
+    
+    after_authenticate(account, if (auth_desc_after_struct in deleted_descriptors) null else auth_desc_after);
 
-    after_authenticate(account, if (auth_desc_after in deleted_descriptors) null else auth_desc_after);
+    return (account=account, used_auth_descriptor=auth_desc_after_struct, deleted_descriptors=deleted_descriptors);
+}
 
+/**
+ * calls authenticate_and_return_context and returns just the account
+ * @returns the account the user authenticated as
+ **/
+function authenticate(){
+    val (account, auth_desc_after, deleted_descriptors) = authenticate_and_return_context();
     return account;
 }
 

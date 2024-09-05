@@ -24,7 +24,9 @@ function () = auth.add_overridable_auth_handler(
 );
 
 operation delete_auth_descriptor(auth_descriptor_id: byte_array) {
-    val account = auth.authenticate();
+    val (account, auth_desc_after, deleted_descriptors)  = auth.authenticate_and_return_context();
+    val descriptor_is_deleted = deleted_descriptors @? {auth_descriptor_id==.id}(.id) != null;
+    if(descriptor_is_deleted) return;
     accounts.delete_auth_descriptor(
         accounts.auth_descriptor_by_id(account, auth_descriptor_id)
     );

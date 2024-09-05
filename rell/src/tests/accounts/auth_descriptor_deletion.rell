@@ -356,6 +356,35 @@ function test_ad_can_delete_itself_without_account_flag() {
   assert_equals(remaining_ads[0].id, account_data.auth_descriptor_id);
 }
 
+function test_op_delete_auth_descriptor_doesnt_fail_if_ad_expired() {
+  val account_data = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
+  val latest_height = block @ {} (@sort_desc .block_height) limit 1;
+  val ad = test.create_auth_descriptor(
+    rell.test.keypairs.alice.pub, 
+    ["A"], 
+    accounts.serialize_rules([accounts.rule_expression
+        (accounts.rule_operator.lt, accounts.rule_variable.block_height, latest_height + 2)
+    ])
+  );
+  rell.test
+    .tx(test_op.add_ad_to_account(account_data.account, ad))
+    .sign(rell.test.keypairs.alice)
+    .run();
+  val ads = accounts.account_auth_descriptor @* { .account.id == account_data.account.id };
+
+  assert_equals(ads.size(), 2);  
+  rell.test.block().run();
+  rell.test.block().run();
+  val ad_id = accounts.account_auth_descriptor @ {} ( @sort_desc @omit .rowid, .id ) limit 1;
+  rell.test.tx()
+    .op(test.ft_auth_operation_for(rell.test.keypairs.alice.pub))
+    .op(accounts.external.delete_auth_descriptor(ad_id))
+    .sign(rell.test.keypairs.alice)
+    .run();
+  val ads_after = accounts.account_auth_descriptor @* { .account.id == account_data.account.id };   
+  assert_equals(ads_after.size(), 1);  
+}
+
 function test_the_remaining_ad_is_selected_when_calling_delete_all_auth_descriptors_exclude() {
   val account_data = test.register_account_open(rell.test.keypairs.alice, ["A", "T"]);
   val ad = test.create_auth_descriptor(rell.test.keypairs.bob.pub, ["A"]);

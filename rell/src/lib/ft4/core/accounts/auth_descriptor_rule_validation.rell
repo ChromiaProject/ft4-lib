@@ -447,16 +447,16 @@ function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
 function delete_expired_auth_descriptors(account) {
 	val auth_descriptors = account_auth_descriptor @* { account };
 
-	val deleted_descriptors = set<account_auth_descriptor>();
-
+	val deleted_descriptors = set<struct<account_auth_descriptor>>();
+	
 	for (auth_descriptor in auth_descriptors) {
-		if (is_active(auth_descriptor) and have_violating_rules(auth_descriptor)) {
+		if (is_active(auth_descriptor) and have_violating_rules(auth_descriptor)) {			
+			deleted_descriptors.add(auth_descriptor.to_struct());
 			delete_auth_descriptor(auth_descriptor);
-			deleted_descriptors.add(auth_descriptor);
 		}
 	}
-
-	return deleted_descriptors;
+	
+	return (deleted_descriptors);
 }
 
 /****************************************************************************************
