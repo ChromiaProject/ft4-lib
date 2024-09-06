@@ -38,7 +38,7 @@ struct module_args_list_element {
 }
 
 struct module_args {
-    rules: gtv; //list<module_args_list_element>
+    rules: gtv = list<module_args_list_element>().to_gtv(); //list<module_args_list_element>
 }
 
 enum account_creation_state {
@@ -62,7 +62,7 @@ entity account_creation_transfer {
 }
 
 @extend(assets.is_create_on_internal_transfer_enabled)
-function() = true;
+function() = chain_context.args.rules != list<module_args_list_element>().to_gtv();
 
 @extend(assets.create_on_internal_transfer)
 function(sender: accounts.account, recipient_id: byte_array, assets.asset, amount: big_integer) {
@@ -81,7 +81,7 @@ function(sender: accounts.account, transfer_tx_rid: byte_array, transfer_op_inde
 }
 
 @extend(crosschain.is_create_on_crosschain_transfer_enabled)
-function() = true;
+function() = chain_context.args.rules != list<module_args_list_element>().to_gtv();
 
 @extend(crosschain.create_on_crosschain_transfer)
 function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array, assets.asset, amount: big_integer) {

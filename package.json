@@ -21,7 +21,6 @@
     "version:rell": "./scripts/version.sh",
     "test": "npm run test:rell && npm run test:js",
     "test:rell": "./scripts/relltest.sh",
-    "test:js-coverage": "npx jest -maxWorkers=1 --testPathPattern=unit/ --coverage",
     "test:js-unit": "npx jest -maxWorkers=1 --testPathPattern=unit/",
     "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js --testPathPattern=integration/",
     "test:js-multichain": "./scripts/multichain-jesttest.sh",

@@ -541,3 +541,51 @@ function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
         .sign(rell.test.keypairs.alice)
         .run_must_fail("<ft4.ras_transfer_open> operation must be followed by a register account operation, not <nop>");
 }
+
+function test_original_sender_id_is_returned_on_account_creation() {
+    val alice = test.register_alice();
+
+    val asset = test.create_asset("filter_test", "FILTER_TEST", 1);
+    test.mint(alice.account, asset, 100);
+
+    val bob_account_id = rell.test.keypairs.bob.pub.hash();
+
+    rell.test.tx()
+        .op(alice.ft_auth(assets.external.transfer(bob_account_id, asset.id, 5L)))
+        .sign(alice.keypair)
+        .run();
+    
+    rell.test.tx()
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    val tx_rid = test.get_last_transaction().tx_rid;
+    val sender_record = assets.external.get_transfer_details_by_asset(tx_rid, 1, asset.id) @ { .is_input } limit 1;
+    assert_equals(sender_record.account_id, alice.account.id);
+}
+
+function test_original_recipient_id_is_returned_on_account_creation() {
+    val alice = test.register_alice();
+
+    val asset = test.create_asset("filter_test", "FILTER_TEST", 1);
+    test.mint(alice.account, asset, 100);
+
+    val bob_account_id = rell.test.keypairs.bob.pub.hash();
+
+    rell.test.tx()
+        .op(alice.ft_auth(assets.external.transfer(bob_account_id, asset.id, 5L)))
+        .sign(alice.keypair)
+        .run();
+    
+    rell.test.tx()
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    val tx_rid = test.get_last_transaction().tx_rid;
+    val sender_record = assets.external.get_transfer_details_by_asset(tx_rid, 1, asset.id) @ { .is_input == false } limit 1;
+    assert_equals(sender_record.account_id, bob_account_id);
+}

@@ -224,14 +224,29 @@ function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, as
  * 
  * @param entry     the entry to map
  */
-function extract_details_from_transfer_history_entry(entry: transfer_history_entry) =
-    transfer_detail(
-        blockchain_rid = chain_context.blockchain_rid,
-        account_id = entry.account.id,
+function extract_details_from_transfer_history_entry(entry: transfer_history_entry) {
+    var account_id = x"";
+    var blockchain_rid = chain_context.blockchain_rid;
+    
+    if (not entry.is_input) {
+        account_id = entry.account.id;
+    } else {
+        val tx_data = transfer_strategy.account_creation_transfer @? {
+            .final_tx_rid == entry.transaction.tx_rid,
+        }( .sender_id, .sender_blockchain_rid );
+        if (not empty(tx_data)) { 
+            account_id = tx_data.sender_id;
+            blockchain_rid = tx_data.sender_blockchain_rid;
+        } else account_id = entry.account.id;
+    }
+    return transfer_detail(
+        blockchain_rid = blockchain_rid,
+        account_id = account_id,
         asset_id = entry.asset.id,
         delta = entry.delta,
         is_input = entry.is_input
     );
+}
 
 /**
  * Maps a `crosschain_transfer_history_entry` to a `transfer_detail` object.
