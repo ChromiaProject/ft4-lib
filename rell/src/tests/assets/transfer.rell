@@ -53,7 +53,7 @@ function test_after_transfer_extension_is_called() {
 function test_correct_auth_message_is_used() {
     val asset = test.create_asset("test", "TEST", 1);
     val args = struct<assets.external.transfer>(
-        receiver_id=x"abcd",
+        recipient_id=x"abcd",
         asset_id=asset.id,
         10L
     );

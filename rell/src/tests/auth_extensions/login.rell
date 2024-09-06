@@ -57,7 +57,7 @@ function test_custom_login_config_can_have_complex_rule() {
     assert_equals(
         config,
         auth._login_config(
-            flags = [accounts.AUTH_FLAG_ACCOUNT, "Z"],
+            flags = [accounts.auth_flags.ACCOUNT, "Z"],
             rules = auth.login_rules([
                 auth.less_than(auth.relative_block_height(5)),
                 auth.less_or_equal(auth.op_count(7))

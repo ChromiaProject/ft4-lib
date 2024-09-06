@@ -4,7 +4,7 @@
  */
 struct auth_flags_config {
     /** All auth descriptors must have these flags to exist */
-    mandatory: gtv = [AUTH_FLAG_ACCOUNT, AUTH_FLAG_TRANSFER].to_gtv();
+    mandatory: gtv = [auth_flags.ACCOUNT, auth_flags.TRANSFER].to_gtv();
     /**
      * All auth descriptors will have these flags on creation.
      * If null, it will be set to the value in `mandatory`.

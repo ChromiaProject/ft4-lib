@@ -1,4 +1,3 @@
-
 /**
  * What the `args` property of an `account_auth descriptor` entity or `auth_descriptor` struct
  * must contain if it represents a single-sig auth descriptor
@@ -6,7 +5,10 @@
 struct single_sig_args {
     /**
      * Set of flags, which is used to determine if the auth descriptor can be used to
-     * authenticate an operation or not
+     * authenticate an operation or not. In other words, it represents the level of
+     * control that this auth descriptor has over the account.
+     * 
+     * @see auth_flags for information on the predefined flags
      */
     flags: set<text>;
     /**
@@ -23,7 +25,10 @@ struct single_sig_args {
 struct multi_sig_args {
     /**
      * Set of flags, which is used to determine if the auth descriptor can be used to
-     * authenticate an operation or not
+     * authenticate an operation or not. In other words, it represents the level of
+     * control that this auth descriptor has over the account.
+     * 
+     * @see auth_flags for information on the predefined flags
      */
     flags: set<text>;
     /**

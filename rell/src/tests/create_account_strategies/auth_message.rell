@@ -12,7 +12,7 @@ import ops: ^^.operations;
 function test_register_account_message_with_only_main_auth_descriptor() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val expected_message = 
@@ -26,7 +26,7 @@ function test_register_account_message_with_only_main_auth_descriptor() {
         "Signer:\n" +
         "%s\n\n".format(rell.test.keypairs.alice.pub) + 
         "Flags:\n" + 
-        "%s\n".format(set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]));
+        "%s\n".format(set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]));
 
     val message = strategies.external.get_register_account_message(
         open.ras_open(auth_descriptor, null).to_gtx_operation(), 
@@ -39,7 +39,7 @@ function test_register_account_message_with_only_main_auth_descriptor() {
 function test_register_account_message_with_main_and_disposable_auth_descriptor() {
     val main_auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(
@@ -58,7 +58,7 @@ function test_register_account_message_with_main_and_disposable_auth_descriptor(
         "Signer:\n" +
         "%s\n\n".format(rell.test.keypairs.alice.pub) + 
         "Flags:\n" + 
-        "%s\n\n\n".format(set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])) +
+        "%s\n\n\n".format(set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])) +
         "Disposable:\n" +
         "Signer:\n" +
         "%s\n\n".format(rell.test.keypairs.bob.pub) + 
@@ -80,7 +80,7 @@ function test_register_account_message_with_multi_sig_auth_descriptors() {
             rell.test.keypairs.bob.pub
         ],
         2,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val disposable_auth_descriptor = accounts.multi_sig_auth_descriptor(
@@ -111,7 +111,7 @@ function test_register_account_message_with_multi_sig_auth_descriptors() {
         "%s\n\n".format(rell.test.keypairs.bob.pub) + 
         "Required signatures: 2\n\n" +
         "Flags:\n" + 
-        "%s\n\n".format(set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])) +
+        "%s\n\n".format(set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])) +
         "Disposable:\n" +
         "Signers:\n" +
         "%s\n".format(rell.test.keypairs.eve.pub) +
@@ -135,7 +135,7 @@ function test_register_account_message_with_evm_main_and_disposable_auth_descrip
 
     val main_auth_descriptor = accounts.single_sig_auth_descriptor(
         alice_address,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val disposable_auth_descriptor = accounts.single_sig_auth_descriptor(
@@ -154,7 +154,7 @@ function test_register_account_message_with_evm_main_and_disposable_auth_descrip
         "Signer:\n" +
         "%s\n\n".format(alice_address) + 
         "Flags:\n" + 
-        "%s\n\n\n".format(set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])) +
+        "%s\n\n\n".format(set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])) +
         "Disposable:\n" +
         "Signer:\n" +
         "%s\n\n".format(bob_address) + 
@@ -182,7 +182,7 @@ function test_register_account_message_with_evm_multi_sig_auth_descriptors() {
             bob_address
         ],
         2,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val disposable_auth_descriptor = accounts.multi_sig_auth_descriptor(
@@ -213,7 +213,7 @@ function test_register_account_message_with_evm_multi_sig_auth_descriptors() {
         "%s\n\n".format(bob_address) + 
         "Required signatures: 2\n\n" +
         "Flags:\n" + 
-        "%s\n\n".format(set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])) +
+        "%s\n\n".format(set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])) +
         "Disposable:\n" +
         "Signers:\n" +
         "%s\n".format(eve_address) +
@@ -234,7 +234,7 @@ function test_register_account_message_with_evm_multi_sig_auth_descriptors() {
 function test_register_account_message_with_custom_register_account_operation() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val expected_message = 
@@ -250,7 +250,7 @@ function test_register_account_message_with_custom_register_account_operation() 
         "Signer:\n" +
         "%s\n\n".format(rell.test.keypairs.alice.pub) + 
         "Flags:\n" + 
-        "%s\n".format(set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]));
+        "%s\n".format(set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]));
 
     val message = strategies.external.get_register_account_message(
         open.ras_open(auth_descriptor, null).to_gtx_operation(), 
@@ -273,7 +273,7 @@ function test_custom_register_account_succeeds_with_evm_multi_sig_auth_descripto
             bob_address
         ],
         2,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     val disposable_auth_descriptor = accounts.multi_sig_auth_descriptor(

@@ -34,7 +34,7 @@ function test_it_decorates_messages_with_blockchain_rid_and_nonce() {
 }
 
 function test_it_rejects_wrong_evm_signatures() {
-  val external_auth_data = test.register_alice_evm([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+  val external_auth_data = test.register_alice_evm([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
   val wrong_signature = test.evm_sign("abc", external_auth_data.keypair.priv);
   
   rell.test.tx()
@@ -45,7 +45,7 @@ function test_it_rejects_wrong_evm_signatures() {
 }
 
 function test_perform_evm_auth_transaction() {
-  val external_auth_data = test.register_alice_evm([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+  val external_auth_data = test.register_alice_evm([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
   val op = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   rell.test.tx()
     .op(test.evm_auth_operation_for(external_auth_data.keypair.priv, op))
@@ -60,7 +60,7 @@ function test_multisig_external_signature() {
   val desc = accounts.auth_descriptor(
     accounts.auth_type.M,
     [
-      set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]).to_gtv(),
+      set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]).to_gtv(),
       (2).to_gtv(),
       [alice_address, bob_address].to_gtv()
     ],
@@ -104,7 +104,7 @@ function test_it_rejects_transactions_if_not_enough_signatures() {
   val desc = accounts.auth_descriptor(
     accounts.auth_type.M,
     [
-      set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]).to_gtv(),
+      set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]).to_gtv(),
       (3).to_gtv(),
       [alice_address, bob_address, charlie_address].to_gtv()
     ],
@@ -146,7 +146,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
   val desc = accounts.auth_descriptor(
     accounts.auth_type.M,
     [
-      set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]).to_gtv(),
+      set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]).to_gtv(),
       (1).to_gtv(),
       [alice_address].to_gtv()
     ],
@@ -184,7 +184,7 @@ function test_it_rejects_signatures_not_part_of_a_d() {
 }
 
 function test_works_with_correct_ctr() {
-  val external_auth_data = test.register_alice_evm([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+  val external_auth_data = test.register_alice_evm([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
   val op1 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val op2 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val signature0 = test.evm_sign(
@@ -214,7 +214,7 @@ function test_works_with_correct_ctr() {
 }
 
 function test_rejects_wrong_ctr() {
-  val external_auth_data = test.register_alice_evm([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+  val external_auth_data = test.register_alice_evm([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
   val op1 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val op2 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
   val op3 = test_operations.test_auth.test_perform_large_transfer(1000, to_addr);
@@ -256,7 +256,7 @@ function test_ft_auth_fails_if_key_invalid() {
   val desc = accounts.auth_descriptor(
     accounts.auth_type.S,
     [
-      set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]).to_gtv(),
+      set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]).to_gtv(),
       keypair.pub.to_gtv()
     ],
     rules = null.to_gtv()
@@ -276,7 +276,7 @@ function test_perform_ft_auth_transaction() {
   val auth_descriptor = accounts.auth_descriptor(
     accounts.auth_type.S,
     [
-      set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]).to_gtv(),
+      set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]).to_gtv(),
       external_key.pub.to_gtv()
     ],
     rules = null.to_gtv()
@@ -421,7 +421,7 @@ function test_evm_authenticated_operation_without_message_template_fails_if_sign
 function test_fails_if_evm_signatures_does_not_correspond_to_signers() {
   val alice_address = crypto.eth_pubkey_to_address(rell.test.pubkeys.alice);
   val bob_address = crypto.eth_pubkey_to_address(rell.test.pubkeys.bob);
-  val original_ad = test.create_multisig_auth_descriptor(2, [alice_address, bob_address], [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+  val original_ad = test.create_multisig_auth_descriptor(2, [alice_address, bob_address], [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
   test.register_account_with_multisig_auth_descriptor(original_ad, [rell.test.keypairs.alice, rell.test.keypairs.bob]);
   val account = accounts.account @ {} ( @omit @sort_desc .rowid, $ ) limit 1;
   

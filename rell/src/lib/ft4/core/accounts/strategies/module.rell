@@ -59,6 +59,8 @@ import ^^^.core.auth;
  * To avoid misconfiguring strategies, it is strongly recommended to add extensions to this
  * function using `add_strategy`.
  * 
+ * Throws if any extension of this function throws.
+ * 
  * @see add_strategy for example usage.
  */
 @extendable 

@@ -37,7 +37,7 @@ entity asset {
     /**
     * The rid of the blockchain that is issuing this asset if this
     * is a cross chain asset. For non-cross chain assets, this field
-    * will be the same as this blockhains brid.
+    * will be the same as this blockchain's RID.
     */
     issuing_blockchain_rid: byte_array;
 
@@ -98,7 +98,7 @@ entity balance {
 
 /**
  * The maximum value that should ever be represented when talking about assets.
- * No balance, transfer, nor total_supply should ever exceed this to mantain
+ * No balance, transfer, nor total_supply should ever exceed this to maintain
  * compatibility with EVM's `int256`
  */
 val max_asset_amount = big_integer.from_hex("ff".repeat(32));
@@ -132,7 +132,7 @@ function increase_balance(accounts.account, asset, amount: big_integer): big_int
 
 /**
  * Removes a certain amount of money from an account. It does NOT update total supply,
- * extra care is needed to either dencrease it or add the assets to another account.
+ * extra care is needed to either decrease it or add the assets to another account.
  * 
  * Only supposed to be called internally, use functions like `burn` or `transfer` whenever
  * possible.
@@ -196,7 +196,7 @@ function map_asset(asset: asset) {
 /**
  * Retrieves all the balances of a certain account, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param account_id    the id of the account
  * @param page_size     the size of the pages to retrieve
@@ -221,7 +221,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
 /**
  * Retrieves all assets of a specified type, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param type          the type of assets to be returned
  * @param page_size     the size of the pages to retrieve
@@ -243,7 +243,7 @@ function get_assets_by_type(type: text, page_size: integer?, page_cursor: text?)
 /**
  * Retrieves all registered assets, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param page_size     the size of the pages to retrieve
  * @param page_cursor   a pointer to where the page should start
@@ -302,7 +302,7 @@ function format_amount_with_decimals(amount: big_integer, decimals: integer): te
 /**
  * Retrieves all assets with the given name, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param name          the name of the assets to retrieve
  * @param page_size     the size of the pages to retrieve
@@ -324,7 +324,7 @@ function get_paginated_assets_by_name(name, page_size: integer?, page_cursor: te
 /**
  * Retrieves all assets with the given symbol, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param symbol        the symbol of the assets to retrieve
  * @param page_size     the size of the pages to retrieve
@@ -396,14 +396,14 @@ function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
 
 /**
  * Tests whether an asset icon URL is invalid. It will not try to resolve the URL, but it will
- * remove trailing and leading whitespaces and check that the string looks like an URL.
+ * remove trailing and leading whitespace and check that the string looks like an URL.
  * 
  * Throws `"INVALID ASSET URL"` if the URL is over 2048 characters or it does not match
  * this regex pattern: `^\S+:\/\/[^\s$.?#].[^\s]*$`
  * 
  * @param icon_url  the URL to trim and check
  * 
- * @returns the URL with whitespaces removed.
+ * @returns the URL with whitespace removed.
  */
 function parse_icon_url(icon_url: text): text {
     val trimmed_icon_url = icon_url.trim();

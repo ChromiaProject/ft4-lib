@@ -7,7 +7,7 @@ import test_auth: .auth;
 
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
-    flags = [accounts.AUTH_FLAG_TRANSFER]
+    flags = [accounts.auth_flags.TRANSFER]
 );
 
 operation operation_without_auth_message_template() {
@@ -21,7 +21,7 @@ function operation_with_invalid_auth_message_template_message(gtv?) {
 @extend(auth.auth_handler)
 function () = auth.add_auth_handler(
     scope = rell.meta(operation_with_invalid_auth_message_template).mount_name,
-    flags = [accounts.AUTH_FLAG_TRANSFER],
+    flags = [accounts.auth_flags.TRANSFER],
     message = operation_with_invalid_auth_message_template_message(*)
 );
 

@@ -22,7 +22,7 @@ function test_multi_sig_valid_2_of_2_signs() {
         test.create_multisig_auth_descriptor(
             2,
             [rell.test.keypairs.alice.pub, rell.test.keypairs.bob.pub],
-            [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
+            [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER],
         ),
         [rell.test.keypairs.alice, rell.test.keypairs.bob]
     );
@@ -39,7 +39,7 @@ function test_multi_sig_valid_1_of_2_signs() {
         test.create_multisig_auth_descriptor(
             1,
             [rell.test.keypairs.alice.pub, rell.test.keypairs.bob.pub],
-            [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
+            [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER],
         ),
         [rell.test.keypairs.alice, rell.test.keypairs.bob]
     );
@@ -56,7 +56,7 @@ function test_multi_sig_valid_3_of_3_signs() {
         test.create_multisig_auth_descriptor(
             3,
             [rell.test.keypairs.alice.pub, rell.test.keypairs.bob.pub, rell.test.keypairs.trudy.pub],
-            [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER],
+            [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER],
         ),
         [rell.test.keypairs.alice, rell.test.keypairs.bob, rell.test.keypairs.trudy]
     );

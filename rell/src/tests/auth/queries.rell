@@ -29,7 +29,7 @@ function test_it_returns_ad_id_selected_by_resolver_if_provided() {
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descriptor_id_when_flags_are_fullfilled() {
-    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER, "E"]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER, "E"]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
@@ -39,7 +39,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descript
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descriptor_id_when_extra_signers_are_passed() {
-    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER, "E"]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER, "E"]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
@@ -49,8 +49,8 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_auth_descript
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_valid_auth_descriptor_id() {
-    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER, "E"]);
-    val bob = test.register_account_open(rell.test.keypairs.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER, "E"]);
+    val bob = test.register_account_open(rell.test.keypairs.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),
@@ -60,7 +60,7 @@ function test_get_first_allowed_auth_descriptor_by_signers_returns_valid_auth_de
 }
 
 function test_get_first_allowed_auth_descriptor_by_signers_returns_null_when_flags_are_not_fullfilled() {
-    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER]);
+    val alice = test.register_account_open(rell.test.keypairs.alice, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER]);
     val result = auth.get_first_allowed_auth_descriptor_by_signers(
         op_name = "test_empty_auth_message",
         args = list<gtv>().to_gtv(),

@@ -1,4 +1,8 @@
 
+/**
+ * Fetches the account related part of the config used by this dApp.
+ * As specified in module args configuration.
+ */
 query get_config() {
     return (
         rate_limit = accounts.get_rate_limit_config(),
@@ -6,6 +10,20 @@ query get_config() {
     );
 }
 
+/**
+ * Retrieves rate limit information about the specified account id.
+ * More specifically, the current number of points available and when this
+ * was last updated. 
+ * 
+ * If it was a while ago since the account was accessed, the points returned
+ * might be outdated (as they might have regenerated in the meantime). The correct
+ * current number can be queried by combining the response of this query with that
+ * of `get_config()`
+ * 
+ * @see get_config
+ * 
+ * @param account_id    the id of the account to fetch rate limit information about
+ */
 query get_account_rate_limit_last_update(account_id: byte_array) {
     val account = accounts.Account(account_id);
     if (accounts.get_rate_limit_config_for_account(account).active == false) return (points = 0, last_update = 0);
@@ -17,6 +35,18 @@ query get_account_rate_limit_last_update(account_id: byte_array) {
     );
 }
 
+/**
+ * Checks if the specified auth descriptor is valid for the specified account. By valid,
+ * it is meant that none of the rules of the auth descriptor has been violated yet.
+ * 
+ * Due to the nature of the available rules, a truthy response of this query should be
+ * considered as valid only at the point of calling the query and might have changed
+ * between the time of calling this query and the time when the auth descriptor is actually
+ * used.
+ * 
+ * @param account_id            the id of the account to check auth descriptor against
+ * @param auth_descriptor_id    the id of the auth descriptor to check
+ */
 query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_array) {
     return not accounts.have_violating_rules(accounts.account_auth_descriptor @ {
         .account.id == account_id,
@@ -24,14 +54,45 @@ query is_auth_descriptor_valid(account_id: byte_array, auth_descriptor_id: byte_
     });
 }
 
+/**
+ * Returns all auth descriptors associated with the specified account.
+ * 
+ * Returns a list which should in most cases contain at least one value
+ * (the main auth descriptor). An empty list from this query when fetching
+ * auth descriptors for a user account would be indicative of either:
+ * - a bug in the dApp logic that caused the main auth descriptor to be removed
+ * - the account ID passed refers to a non-user account, which does not have auth descriptors
+ * 
+ * @param id    the id of the account of which to get auth descriptors
+ */
 query get_account_auth_descriptors(id: byte_array) {
     return accounts.get_auth_descriptors(id);
 }
 
+/**
+ * Returns all the auth descriptors associated with a specific account for which
+ * the provided pubkey is a signer. Either as a single signer or as part of a
+ * multisig auth descriptor.
+ * 
+ * Returns an empty list if no auth descriptors match
+ * 
+ * @param account_id    id of the account to get auth descriptors for
+ * @param signer        pubkey of the signer for which to fetch auth descriptors
+ */
 query get_account_auth_descriptors_by_signer(account_id: byte_array, signer: byte_array) {
     return accounts.get_auth_descriptors_by_signer(account_id, signer);
 }
 
+/**
+ * Retrieves an auth descriptor from an account.
+ * 
+ * Throws an error if no auth descriptor matches the provided arguments. Common cases include:
+ * - the account id or auth descriptor id was not found
+ * - the auth descriptor in question was not found on the account in question
+ * 
+ * @param account_id    id of the account where the auth descriptor is associated
+ * @param id            id of the auth descriptor to fetch
+ */
 query get_account_auth_descriptor_by_id(account_id: byte_array, id: byte_array) {
     return accounts.account_auth_descriptor @ {
         .id == id,
@@ -39,16 +100,45 @@ query get_account_auth_descriptor_by_id(account_id: byte_array, id: byte_array) 
     } ( accounts.get_auth_descriptor_data($.to_struct()) );
 }
 
+/**
+ * Retrieves the main auth descriptor of an account.
+ * 
+ * Throws an error if there is no main auth descriptor associated with the account. Common
+ * cases include:
+ * - the provided account id is the id of a system or lock account
+ * - there was a bug in the dApp code which deleted the main auth descriptor of a user account
+ *   without adding a new one
+ * 
+ * @param account_id    id of the account to fetch main auth descriptor of
+ */
 query get_account_main_auth_descriptor(account_id: byte_array) {
     return accounts.main_auth_descriptor @ {
         .account.id == account_id
     } ( accounts.get_auth_descriptor_data(.auth_descriptor.to_struct()) );
 }
 
+/**
+ * Retrieves an account by its id. If no account with the specified
+ * id exists, then this query will return `null`
+ * 
+ * @param id    id of the account to retrieve
+ */
 query get_account_by_id(id: byte_array) {
     return accounts.account @? { id } ( .id );
 }
 
+/**
+ * Retrieves all accounts of which the provided pubkey has at least one
+ * auth descriptor attached where it is part of the signers. Since there
+ * might potentially be many accounts that matches this criteria, the
+ * response of this query is paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param id            the pubkey of the signer in question
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_accounts_by_signer(id: byte_array, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         accounts.get_paginated_accounts_by_signer(id, page_size, page_cursor),
@@ -56,6 +146,17 @@ query get_accounts_by_signer(id: byte_array, page_size: integer?, page_cursor: t
     );
 }
 
+/**
+ * Retrieves all accounts which the provided auth descriptor id is associated with.
+ * Since there might potentially be many accounts that match this criteria, the
+ * response of this query is paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param id            the id of the auth descriptor in question
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         accounts.get_paginated_accounts_by_ad_id(id, page_size, page_cursor),
@@ -63,6 +164,16 @@ query get_accounts_by_auth_descriptor_id(id: byte_array, page_size: integer?, pa
     );
 }
 
+/**
+ * Retrieves all accounts of the specified type. Since there might potentially be many
+ * accounts that match this criteria, the response of this query is paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param type          the type of accounts to fetch
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_accounts_by_type(type: text, page_size: integer, page_cursor: text?) {
     return utils.make_page(
         accounts.get_paginated_accounts_by_type(type, page_size, page_cursor),
@@ -70,6 +181,14 @@ query get_accounts_by_type(type: text, page_size: integer, page_cursor: text?) {
     );
 }
 
+/**
+ * Retrieves the current counter value of an auth descriptor.
+ * 
+ * @see accounts.account_auth_descriptor for more information about this value
+ * 
+ * @param account_id            account which the auth descriptor is associated
+ * @param auth_descriptor_id    id of the auth descriptor to get counter value for
+ */
 query get_auth_descriptor_counter(
     account_id: byte_array, 
     auth_descriptor_id: byte_array

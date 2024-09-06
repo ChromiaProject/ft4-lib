@@ -42,7 +42,7 @@ function test_create_account_on_internal_transfer_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -128,7 +128,7 @@ function test_create_account_on_transfer_fails_if_no_account_creation_transfer_e
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run_must_fail("No pending transfer to account id <%s>".format(recipient_id));
@@ -170,7 +170,7 @@ function test_multiple_internal_transfers_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -218,7 +218,7 @@ function test_create_account_on_internal_transfer_success_with_any_asset() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.charlie, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.charlie, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.charlie)
         .run();
@@ -281,7 +281,7 @@ function test_create_account_on_crosschain_transfer_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -499,7 +499,7 @@ function test_multiple_crosschain_transfers_success() {
     assert_true("open" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])))
+        .op(open.ras_transfer_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -520,7 +520,7 @@ function test_multiple_crosschain_transfers_success() {
 function test_an_error_is_thrown_when_no_suceeding_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     rell.test.tx()
@@ -532,7 +532,7 @@ function test_an_error_is_thrown_when_no_suceeding_op() {
 function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set([accounts.AUTH_FLAG_ACCOUNT, accounts.AUTH_FLAG_TRANSFER])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     rell.test.tx()

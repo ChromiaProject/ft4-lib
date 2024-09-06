@@ -74,7 +74,7 @@ struct filter {
  * Takes a list of transfer history entries and builds a page that can be returned
  * from paginated queries with it.
  * 
- * @see utils.pagination_result for informations about pagination
+ * @see utils.pagination_result for information about pagination
  * 
  * @param entries   the list of transfer history entries
  */
@@ -124,7 +124,7 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
 /**
  * Fetches all transfers, allowing filtering in multiple ways. Paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  * 
  * @param account       only return transfers from/to this account, or all accounts if null
  * @param asset         only return transfers of this asset, or all assets if null

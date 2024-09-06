@@ -15,7 +15,7 @@ struct gtv_auth_descriptor {
 }
 
 function setup_account_with_many_ads() {
-  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.AUTH_FLAG_ACCOUNT, acc.AUTH_FLAG_TRANSFER]);
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
   test.register_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
   val account = acc.account @ { rell.test.keypairs.alice.pub.hash() };
@@ -51,7 +51,7 @@ function test_items_have_the_correct_return_format() {
   val descriptors = acc.external.get_account_auth_descriptors(account.id);
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
-  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.AUTH_FLAG_ACCOUNT, acc.AUTH_FLAG_TRANSFER]);
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
 
   assert_equals(descriptors[0], (
     id = alice_ad_id,
@@ -64,8 +64,8 @@ function test_items_have_the_correct_return_format() {
 }
 
 function test_get_accounts_by_signer_is_paginated() {
-  val account1 = test.register_account_open(rell.test.keypairs.alice, [acc.AUTH_FLAG_ACCOUNT, acc.AUTH_FLAG_TRANSFER]);
-  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.AUTH_FLAG_ACCOUNT, acc.AUTH_FLAG_TRANSFER]);
+  val account1 = test.register_account_open(rell.test.keypairs.alice, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
 
   test_op.add_ad_to_account(account2.account, test.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
 
@@ -79,7 +79,7 @@ function test_get_accounts_by_signer_is_paginated() {
 }
 
 function test_accounts_by_ad_id_is_paginated() {
-  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.AUTH_FLAG_ACCOUNT]);
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT]);
   val bob = test.register_bob();
   val eve = test.register_eve();
   val trudy = test.register_trudy();

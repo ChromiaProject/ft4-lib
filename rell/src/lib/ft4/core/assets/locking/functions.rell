@@ -156,7 +156,7 @@ function unlock_asset(type: text, accounts.account, assets.asset, amount: big_in
  * the returned data is a list of tuples containing the amount and a lock type label:
  * `list<(lock type, amount)>`
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  * 
  * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
  * 
@@ -242,7 +242,7 @@ function get_locked_asset_aggregated_balance(
  * Similar to `get_locked_asset_balance`, except that it allows retrieving the info for all
  * locked assets.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  * 
  * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
  * 
@@ -292,7 +292,7 @@ function get_locked_asset_balances(
  * Similar to `get_locked_asset_aggregated_balance`, except that it allows retrieving the info
  * for all locked assets.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  * 
  * @see ACCOUNT_TYPE_LOCK for more information on lock accounts
  * 

@@ -65,25 +65,26 @@ function get_auth_descriptor_config() = chain_context.args.auth_descriptor;
  */
 val ACCOUNT_TYPE_USER = "FT4_USER";
 
-/**
- * Constant that represents a flag which, when added to an auth descriptor
- * gives the user of that auth descriptor "account" privileges to the account.
- * 
- * These privileges allows the user to add and remove auth descriptors from the
- * account. In many ways this is similar to giving the user super access to the
- * account, as they will be able to add new auth descriptors with any flag, thus 
- * allowing any operation on the account.
- */
-val AUTH_FLAG_ACCOUNT = "A";
-
-/**
- * Constant that represents a flag which, when added to an auth descriptor
- * gives the user of that auth descriptor "account" privileges to the account.
- * 
- * Having this flag will grant the user the right to perform a transfer from the
- * account.
- */
-val AUTH_FLAG_TRANSFER = "T";
+namespace auth_flags {
+    /**
+     * Constant that represents a flag which, when added to an auth descriptor
+     * gives the user of that auth descriptor "account" privileges to the account.
+     * 
+     * These privileges allows the user to add and remove auth descriptors from the
+     * account. In many ways this is similar to giving the user super access to the
+     * account, as they will be able to add new auth descriptors with any flag, thus 
+     * allowing any operation on the account.
+     */
+    val ACCOUNT = "A";
+    /**
+     * Constant that represents a flag which, when added to an auth descriptor
+     * gives the user of that auth descriptor "transfer" privileges to the account.
+     * 
+     * Having this flag will grant the user the right to move funds that are in the
+     * account, by for example transferring or burning them.
+     */
+    val TRANSFER = "T";
+}
 
 /**
  * Types of authentication supported for auth descriptors.
@@ -116,7 +117,7 @@ entity account {
      * Allows distinguishing user accounts from system and lock accounts.
      * @see ACCOUNT_TYPE_USER for the standard type
      * @see strategies.transfer.ACCOUNT_TYPE_FEE for an example of a system type
-     * @see assets.locking.ACCOUNT_TYPE_LOCK for informations on lock types
+     * @see assets.locking.ACCOUNT_TYPE_LOCK for information on lock types
      */
     index type: text;
 }
@@ -637,7 +638,7 @@ function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
 /**
  * Retrieves all accounts the given signer can interact with, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param id            the signer ID
  * @param page_size     the size of the pages to retrieve
@@ -660,7 +661,7 @@ function get_paginated_accounts_by_signer(
 /**
  * Retrieves all accounts the given auth descriptor can interact with, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param id            the descriptor ID
  * @param page_size     the size of the pages to retrieve
@@ -682,7 +683,7 @@ function get_paginated_accounts_by_ad_id(id: byte_array, page_size: integer?, pa
 /**
  * Retrieves all accounts of the given type, paginated.
  * 
- * @see utils.paged_result for informations about pagination
+ * @see utils.paged_result for information about pagination
  *
  * @param type          the type of the accounts to retrieve
  * @param page_size     the size of the pages to retrieve

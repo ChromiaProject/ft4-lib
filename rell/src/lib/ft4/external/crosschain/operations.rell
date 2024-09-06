@@ -16,10 +16,34 @@ function init_transfer_message(gtv) {
 @extend(auth.auth_handler)
 function () = auth.add_overridable_auth_handler(
     scope = rell.meta(init_transfer).mount_name,
-    flags = [accounts.AUTH_FLAG_TRANSFER],
+    flags = [accounts.auth_flags.TRANSFER],
     message = init_transfer_message(*)
 );
 
+/**
+ * Initiates a crosschain transfer. Meaning that assets will be moved from
+ * the senders account and the equivalent amount of the specified assets are burnt.
+ * 
+ * Since this chain cannot communicate with any other chain, it is up to the client to
+ * perform the necessary steps to complete this transfer. Furthermore, this chain will
+ * not validate if the sender is allowed to send assets to the target chain or if the
+ * recipient account exists, meaning that when the client tries to apply the transfer
+ * on the target chain, it might not be accepted. Should that happen, the sender can
+ * recall their transfer after the deadline has expired.
+ * 
+ * Must be signed by an auth descriptor with `accounts.auth_flags.TRANSFER`
+ * 
+ * @param recipient_id  the account id of the recipient of this transfer
+ * @param asset_id      id of the asset to transfer
+ * @param amount        how much to transfer
+ * @param hops          an array of all the blockchain rids which this transfer needs to
+ *                      go through in order to reach the recipient on the target chain, which 
+ *                      will be the last entry in the array. The rid of this blockchain must
+ *                      not be included in the array.
+ * @param deadline      Time in milliseconds for which this transfer is valid, if the
+ *                      transfer were not completed within this deadline, it will be
+ *                      possible for the sender to recall it.
+ */
 operation init_transfer(
     recipient_id: byte_array,
     asset_id: byte_array,
@@ -79,6 +103,37 @@ operation init_transfer(
     );
 }
 
+/**
+ * This operation must be called on every chain listed in the `hops` array
+ * provided to the `init_transfer` function which corresponds to this transfer.
+ * 
+ * When this is done, one of two things will happen:
+ *  - If this is an intermediary hop, this chain will update its internal record of
+ *    which chain that owns how much of what asset
+ *  - If this is the final hop, the transferred amount will be credited to the recipient account
+ * 
+ * In the case where this is the last hop and the recipient account does not exist,
+ * one of two things can happen:
+ *  - If the create on transfer account creation strategy is enabled, the assets will be received and
+ *    the recipient will be able create the account and claim them.
+ *  - If the feature is not enabled, the transfer will be rejected, in which case, the sender can
+ *    get their assets back by calling the `cancel_transfer` in the reverse hops order.
+ * 
+ * Anyone can call this operation on behalf of any transfer, but it needs to include an `iccf_proof`
+ * operation which prove that the transaction was applied in the previous hop.
+ * 
+ * @param init_transfer_tx  the tx that represents the tx containing the `init_transfer` operation 
+ *                          on the initial chain
+ * @param init_tx_op_index  the index of the `init_transfer` operation in the `init_transfer_tx` 
+ *                          that this operation is trying to apply
+ * @param previous_hop_tx   the tx containing the `init_transfer` or `apply_transfer` operation
+ *                          from the previous step. In the first hop, `init_transfer_tx` and this
+ *                          argument will be the same
+ * @param op_index          the index of the `init_transfer` operation in the `init_transfer_tx` 
+ *                          that this operation is trying to apply
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 operation apply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -174,6 +229,20 @@ operation apply_transfer(
     );
 }
 
+/**
+ * This operation is to be called on the initial chain (the chain for which a crosschain
+ * transfer originated) once all hops are completed and the transfer has been successfully
+ * delivered to the recipient. Even if this operation is not called, the recipient will still
+ * receive their assets, but calling this operation will allow clients to stop displaying it 
+ * as ongoing to the user. 
+ * 
+ * Anyone can call this operation, but it needs to include an `iccf_proof` operation that the
+ * final `apply_transfer` was performed.
+ * 
+ * @param final_apply_transfer_tx   the transaction that was submitted and applied on the target chain
+ *                                  in order to complete the crosschain transfer.
+ * @param op_index                  the index for the `apply_transfer` operation in question in said transaction.
+ */
 operation complete_transfer(
     final_apply_transfer_tx: gtx_transaction,
     op_index: integer
@@ -209,6 +278,28 @@ operation complete_transfer(
     delete crosschain.pending_transfer @ { .transaction.tx_hash == init_transfer_tx_hash, .op_index == final_apply_transfer_args.init_tx_op_index };
 }
 
+/**
+ * If it happens that a transfer can not proceed beyond an intermediary chain,
+ * perhaps because it went offline or stopped producing blocks. Then this operation
+ * can be submitted to the next hop after the faulty chain after the timeout of the 
+ * transfer has been breached. And then the original sender can get their transfer
+ * back by continuously calling `unapply_transfer` on each hop where the transfer 
+ * was applied, starting from the first hop before the faulty chain and backwards back
+ * to the initial chain.
+ * 
+ * Anyone can call this operation, but it needs to include an `iccf_proof` operation that
+ * `apply_transfer` was performed on the previous chain.
+ * 
+ * @see crosschain.unapply_transfer
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to cancel
+ * @param init_tx_op_index  the index of the `init_transfer` operation in the provided transaction
+ * @param previous_hop_tx   the transaction containing the `apply_transfer` operation of the previous hop
+ * @param op_index          the index of `apply_transfer` operation in the provided transaction
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 operation cancel_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -233,6 +324,27 @@ operation cancel_transfer(
     create crosschain.canceled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
+/**
+ * If it happens that a transfer can not proceed beyond an intermediary chain,
+ * perhaps because it went offline or stopped producing blocks. Then `cancel_transfer`
+ * needs to be called on the next hop after the faulty chain, And then the original 
+ * sender can get their transfer back by continuously calling this operation on each 
+ * hop where the transfer was applied, starting from the first hop before the faulty
+ * chain and backwards back to the initial chain.
+ * 
+ * @see crosschain.cancel_transfer
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to unapply
+ * @param init_tx_op_index  the index of the `init_transfer` operation in the provided transaction
+ * @param last_tx           the transaction containing the `unapply_transfer` operation of the
+ *                          previous hop. Note that "previous" in this context refers to the chain
+ *                          at n + 1 in the hops array in relation to this blockchain, since we are
+ *                          walking the hops array backwards.
+ * @param last_op_index     the index of `apply_transfer` operation in the provided transaction
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 operation unapply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -360,6 +472,25 @@ operation unapply_transfer(
     create crosschain.unapplied_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
+/**
+ * If a crosschain transfer is to be rolled back for any reason and the
+ * assets are to be returned to the original sender, after the process
+ * of walking the path backwards until the source chain, then this operation
+ * should be called as the final step on the source chain to complete the
+ * rollback. When this operation is called, the assets are returned back
+ * to the original sender.
+ * 
+ * Anyone can call this operation, but it needs to include an `iccf_proof` operation that
+ * `unapply_transfer` was performed on the previous chain.
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to revert
+ * @param init_tx_op_index  the index of the `init_transfer` operation in the provided transaction
+ * @param last_tx           the transaction containing the `unapply_transfer` operation of the
+ *                          previous hop. Note that "previous" in this context refers to the chain
+ *                          at index 0 in the hops array, since we are walking the hops array backwards.
+ * @param last_op_index     the index of `apply_transfer` operation in the provided transaction
+ */
 operation revert_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -470,6 +601,26 @@ operation revert_transfer(
     create crosschain.reverted_transfer(init_tx_rid = init_transfer_details.tx_rid, init_op_index = init_tx_op_index);
 }
 
+/**
+ * When a crosschain transfer is made to an account which does not exist on the 
+ * target chain and account creation via crosschain transfer is enabled, the recipient
+ * will have a timeout window in which they are allowed to claim their assets. However,
+ * if the assets are not claimed within this timeout window, this operation can be called
+ * on the target chain in order to initiate the process of returning the token to the sender.
+ * 
+ * After this operation is called on the target chain the original sender can get their transfer
+ * back by continuously calling `unapply_transfer` on each hop where the transfer 
+ * was applied, starting from the first hop before the target chain and backwards back
+ * to the initial chain.
+ * 
+ * This operation can be called by anyone after the timeout has expired.
+ * 
+ * @see crosschain.unapply_transfer
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation which 
+ *                          corresponds to the transfer to recall
+ * @param init_tx_op_index  the index of the `init_transfer` operation in the provided transaction
+ */
 operation recall_unclaimed_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer)
@@ -517,6 +668,24 @@ operation recall_unclaimed_transfer(
     create crosschain.recalled_transfers(init_transfer_details.tx_rid, init_tx_op_index);
 }
 
+/**
+ * Validates that a specific `apply_transfer` operation can be called on this chain
+ * given the current circumstances. Among other things, this function validates that:
+ *  - Transfer was not already applied on this chain
+ *  - Transfer was not already canceled on this chain
+ *  - Transfer was not already unapplied on this chain
+ *  - That the `init_transfer` details are correct
+ *  - The `iccf_proof` that states that this transfer was applied on the previous hop
+ * 
+ * This function does not validate timeout logic.
+ * 
+ * @param init_transfer_tx  the transaction containing the `init_transfer` operation of the transfer
+ * @param init_tx_op_index  the index of the `init_transfer` operation in the provided transaction
+ * @param previous_hop_tx   the transaction containing the `apply_transfer` operation of the previous hop
+ * @param op_index          the index of `apply_transfer` operation in the provided transaction
+ * @param hop_index         which index in the hops array provided in the original transaction this
+ *                          chain represents.
+ */
 function validate_apply_transfer(
     init_transfer_tx: gtx_transaction,
     init_tx_op_index: integer,
@@ -606,6 +775,13 @@ function validate_apply_transfer(
     return (init_transfer_details, from_blockchain_rid);
 }
 
+/**
+ * Retrieves the information that was used when the `init_transfer` operation
+ * was sent to a chain. 
+ * 
+ * @param tx        the transaction to retrieve the details from
+ * @param op_index  the index of the operation in said transaction
+ */
 function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     val op = tx.body.operations[op_index]; 
 
@@ -627,6 +803,13 @@ function get_init_transfer_details(tx: gtx_transaction, op_index: integer) {
     );
 }
 
+/**
+ * Retrieves the information that was used when the `apply_transfer` operation
+ * was sent to a chain. 
+ * 
+ * @param tx                the transaction to retrieve the details from
+ * @param apply_op_index    the index of the operation in said transaction
+ */
 function get_apply_transfer_details(tx: gtx_transaction, apply_op_index: integer) {
     val op = tx.body.operations[apply_op_index];
 
