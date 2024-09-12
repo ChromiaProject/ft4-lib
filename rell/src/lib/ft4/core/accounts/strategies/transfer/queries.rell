@@ -1,7 +1,14 @@
 
 /**
- *
- * @returns `null` if all assets are allowed
+ * Retrieves a list of assets that are allowed for account creation on this chain, given the
+ * parameters of the transfer that is going to register one.
+ * 
+ * @param sender_blockchain_rid     the RID of the blockchain assets will come from
+ * @param sender_id                 the ID of the sender account
+ * @param recipient_id              the ID of the account that will be registered
+ * 
+ * @return `null` if all assets are allowed or a list of tuples `(asset_id, min_amount)`
+ * otherwise
  */
 query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array):
         list<(asset_id: byte_array, min_amount: big_integer)>? {
@@ -14,8 +21,22 @@ query get_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_arra
     return allowed_assets;
 }
 
-query get_pending_transfer_strategies(recipient_id: byte_array, filter: pending_transfer_filter? = null): set<text> {
-    val strats = account_creation_transfer @* { recipient_id, .state == account_creation_state.pending };
+/**
+ * Retrieves all `account_creation_transfer`s that are pending (that is, not recalled nor
+ * completed), optionally filtering them based on whether they expired or not.
+ * 
+ * @param recipient_id  the ID found in `account_creation_transfer.recipient_id`
+ * @param filter        an optional filter that returned transfers will match. If null, all
+ *                      transfers will be returned.
+ */
+query get_pending_transfer_strategies(
+    recipient_id: byte_array,
+    filter: pending_transfer_filter? = null
+): set<text> {
+    val strats = account_creation_transfer @* {
+        recipient_id,
+        .state == account_creation_state.pending
+    };
 
     var strategies_list = list<set<text>>();
     val strategies = set<text>();
@@ -23,7 +44,7 @@ query get_pending_transfer_strategies(recipient_id: byte_array, filter: pending_
     if (
         filter == null or              // no filter object
         filter.state == null or        // no filter for state
-        filter.state!!.contains_all(  // filter allows both valid and expired
+        filter.state!!.contains_all(   // filter allows both valid and expired
             pending_transfer_expiration_state.values()
         )
     ) {
@@ -41,6 +62,19 @@ query get_pending_transfer_strategies(recipient_id: byte_array, filter: pending_
     return strategies;
 }
 
+/**
+ * Returns whether a certain **pending** `account_creation_transfer` exists, which means that
+ * a certain sender has sent the specified amount of this asset and the recipient has not yet
+ * created that account.
+ * 
+ * @param strategy_name             the name of the strategy that is to be found
+ * @param sender_blockchain_rid     the RID of the blockchain where the transfer originated.
+ *                                  Can be this blockchain's RID for on-chain transfers.
+ * @param sender_id                 the ID of the sender account
+ * @param recipient_id              the ID of the account that is going to be registered
+ * @param asset_id                  the ID of the asset that was sent
+ * @param amount                    the amount of the above asset that was transferred
+ */
 query has_pending_create_account_transfer_for_strategy(
     strategy_name: text,  
     sender_blockchain_rid: byte_array,
@@ -77,9 +111,20 @@ query has_pending_create_account_transfer_for_strategy(
     return false;
 }
 
+/**
+ * Returns a list of `rule`s representing all conditions under which assets can be transferred
+ * to register a new account. For a transaction to be allowed, it must fulfill all criteria
+ * for at least one of the rules. 
+ * 
+ * Throws if any rule found in the `chromia.yml` is misconfigured. Common cases of
+ * misconfiguration can be found on the API docs for `get_config`
+ * 
+ * @see get_config for information on common rule misconfigurations.
+ */
 query get_transfer_rules() {
     val rules = get_config();
 
+    // asset issuing BRID -> map(asset name -> asset)
     val assets_cache = map<byte_array, map<name, assets.asset>>();
 
     val mapped_rules = list<rule>();

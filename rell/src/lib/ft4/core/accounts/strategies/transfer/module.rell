@@ -8,86 +8,327 @@ import ^^^^.core.accounts.strategies;
 import ^^^^.utils;
 
 /**
- * Constant that represents account type used to temporarily store assets of transfers 
- * that have recipient_id that does not exist.
+ * Constant that represents the account type used to temporarily store assets of transfers 
+ * that have recipient_id that does not exist, while waiting for the account registration
+ * to happen
+ * 
+ * @see core.accounts.account.types for more information on account types
  */
 val ACCOUNT_TYPE_POOL = "FT4_POOL";
 
 /**
- * Constant that represent account type used to store fees charged during account registration.
- * Currently used both for `fee` and `subscription` strategies.
+ * Constant that represent the account type used to store fees charged during account
+ * registration.
+ * Currently used for both `fee` and `subscription` strategies.
+ * 
+ * @see core.accounts.account.types for more information on account types
  */
 val ACCOUNT_TYPE_FEE = "FT4_FEE";
 
+/**
+ * Status of a transfer that was made to a non-existing account for its creation.
+ * 
+ * @see account_creation_state a similar enum with a different meaning, to avoid confusing the
+ * two
+ */
 enum pending_transfer_expiration_state {
+    /** The transfer must be recalled, the account cannot be registered anymore */
     expired,
+    /** The transfer is valid, the account can still be registered */
     valid
 }
 
+/**
+ * When querying for pending transfers, this can be used to filter responses.
+ */
 struct pending_transfer_filter {
+    /**
+     * Filter based on the transaction state. `null` means no filter, otherwise only the
+     * transactions with a state found in this list will be returned.
+     */
     state: list<pending_transfer_expiration_state>?;
 }
 
+/**
+ * The `module_args` for this module accept a list of multiple entries. This represents
+ * one of the entries, which define which transfers can be accepted to allow users to register
+ * new accounts. This is called a transfer registration rule, and when parsed will be
+ * represented by the struct `rule`.
+ * 
+ * A transfer must satisfy all the requirements of a single rule to be accepted.
+ * 
+ * @see rule for a parsed representation of rules.
+ */
 struct module_args_list_element {
+    /**
+     * The blockchain RID for a sender blockchain that can start an account registration.
+     * It can be in either of these formats:
+     * 1. `CURRENT_CHAIN_REF`, meaning only on-chain transfers are allowed for this rule.
+     * 2. x"01ab...23", meaning cross-chain transfers from this blockchain RID are allowed.
+     * 3. `ANY_REF`, meaning all on-chain and cross-chain transfers are allowed.
+     * 4. a list of values, containing blockchain RIDs in the format at point 2, and optionally
+     *    the value at point 1, meaning all values in the list are allowed.
+     * 
+     * @see CURRENT_CHAIN_REF for the actual string value of the constant
+     * 
+     * @see ANY_REF for the actual string value of the constant
+     */
     sender_blockchain: gtv;
+    /**
+     * The account ID for a sender account that can start an account registration.
+     * It can be in either of these formats:
+     * 1. x"01ab...23", meaning this specific account can register new accounts when
+     *    transferring.
+     *    Useful for example if this account is a CEX wallet people will get on the chain with.
+     * 2. `ANY_REF`, meaning all accounts can register new accounts.
+     * 3. `CURRENT_ACCOUNT_REF`, meaning the only transfers allowed for this rule are the
+     *    ones where a certain account from a different chain registers an account with the
+     *    same ID on this chain.
+     *    This value will only be accepted if `recipient` has the same value, and it will not
+     *    work (despite not throwing any errors) if the `sender_blockchain` field does not allow
+     *    cross-chain transfers.
+     * 4. a list of values, containing account IDs in the format at point 1, meaning all
+     *    the account IDs in the list are allowed.
+     * 
+     * @see CURRENT_ACCOUNT_REF for the actual string value of the constant
+     * 
+     * @see ANY_REF for the actual string value of the constant
+     */
     sender: gtv;
+    /**
+     * The account ID for a sender account that can start an account registration.
+     * It can be in either of these formats:
+     * 1. x"01ab...23", meaning this specific account can be registered when receiving a
+     *    transfer.
+     * 2. `ANY_REF`, meaning all accounts can be registered.
+     * 3. `CURRENT_ACCOUNT_REF`, meaning the only transfers allowed for this rule are the
+     *    ones where a certain account from a different chain registers an account with the
+     *    same ID on this chain.
+     *    This value will only be accepted if `sender` has the same value, and it will not
+     *    work (despite not throwing any errors) if the `sender_blockchain` field does not allow
+     *    cross-chain transfers.
+     * 4. a list of values, containing account IDs in the format at point 1, meaning all
+     *    the account IDs in the list can be created.
+     * 
+     * @see CURRENT_ACCOUNT_REF for the actual string value of the constant
+     * 
+     * @see ANY_REF for the actual string value of the constant
+     */
     recipient: gtv;
+    /**
+     * What assets can be transferred to create a new account.
+     * They can be in either of these formats:
+     * - one `asset_limit`
+     * - a list of `asset_limit`s
+     * - `ANY_REF`, meaning all assets can be used
+     * 
+     * @see ANY_REF for the actual string value of the constant
+     * 
+     * @see asset_limit for what this field can contain
+     */
     asset: gtv;
+    /**
+     * How many days can elapse between the transfer and the registration of the account.
+     * Since it can happen that the user transferring the asset is not the user creating the
+     * account, it can also happen that the transfer and creation cannot happen in the same
+     * transaction, or even in the same day.
+     * If the second user never registers the account, the first one will have lost the assets
+     * that were transferred. After `timeout_days` has passed, the second user will be unable
+     * to register the account without receiving an additional transfer, and the first user
+     * will be able to reclaim the assets.
+     */
     timeout_days: integer;
+    /**
+     * The transfer module does not define how the account can be registered, merely providing
+     * a framework. The strategies found in submodules of this `transfer` module will be able
+     * to use this rule if their name is specified in this field.
+     * It can be:
+     * - a string value, containing the name of the strategy that can use this rule
+     * - a list of strings, containing multiple allowed strategies for the same rule
+     */
     strategy: gtv;
 }
 
+/**
+ * The configuration defined in the `chromia.yml` file.
+ */
 struct module_args {
-    rules: gtv = list<module_args_list_element>().to_gtv(); //list<module_args_list_element>
+    /** This must be a GTV-encoded `list<module_args_list_element>` */
+    rules: gtv = list<module_args_list_element>().to_gtv();
 }
 
+/**
+ * Allows to discern what was the last action on an `account_creation_transfer`.
+ * 
+ * This differs from `pending_transfer_expiration_state` in multiple ways.
+ * A `pending_transfer_expiration_state`:
+ * - is passed by the user in queries, to filter results
+ * - refers to a transfer, meaning:
+ *   - it happened recently enough
+ *   - it happened too long ago
+ * 
+ * On the other hand, an `account_creation_state`:
+ * - is used without user input
+ * - is attached to `account_creation_transfer`, meaning:
+ *   - the account was registered
+ *   - the account was not registered in time, and the transfer has been recalled
+ *   - neither of the above has happened, awaiting input.
+ * 
+ * Thus, for a certain transfer, the `pending_transfer_expiration_state` can be expired,
+ * while the `account_creation_state` can be pending if the sender did not claim their assets
+ * back.
+ * 
+ * Additionally, since an `account_creation_transfer` has multiple rules associated with it,
+ * the same transfer can be considered pending for one rule and expired for another, if their
+ * `timeout_days` values differ.
+ * 
+ * @see pending_transfer_expiration_state a similar enum with a different meaning, to avoid
+ * confusing the two
+ * 
+ * @see account_creation_transfer for informations about it
+ */
 enum account_creation_state {
+    /** the account was not registered, the transfer has not been recalled, awaiting input. */
     pending,
+    /** the account was registered */
     done,
+    /** the account was not registered in time, and the transfer has been recalled */
     recalled
 }
 
+/**
+ * Represents a transfer that had a non-existing recipient, for which at least one rule was
+ * found that allowed account registration.
+ */
 entity account_creation_transfer {
+    /** The transaction the transfer happened in */
+    transaction;
+    /** The index to the operation in the transaction that created this entity */
     index transaction, op_index: integer;
+    /** The blockchain RID of the sender */
     sender_blockchain_rid: byte_array;
+    /**
+     * The ID of the sender account. If `sender_blockchain_rid` is different from this chain's
+     * RID, this account might not exist on this chain. This ID will refer to the account found
+     * on that chain.
+     */
     sender_id: byte_array;
+    /** The ID of the non-existing account that can be registered thanks to this transfer */
     index recipient_id: byte_array;
+    /** The asset that was sent in this transfer */
     assets.asset;
+    /** How much of the asset was sent */
     amount: big_integer;
+    /**
+     * A `list<rule>.to_gtv().to_bytes()`, representing the rules this transfer satisfied on
+     * creation. Some of these might no longer be valid, if the transfer happened too long ago
+     * for them to be applied
+     * 
+     * @see rule for information on the structure of the content of this field
+     */
     rules: byte_array;
+    /** When this transfer happened */
     timestamp;
+    /**
+     * The state of this transfer. Will only be modified once, going from pending to either of
+     * the two other possible states.
+     */
     mutable state: account_creation_state = account_creation_state.pending;
+    /**
+     * Once `state` is no longer `pending`, this will hold the RID of the transaction that made
+     * this transfer reach its current `state` value.
+     */
     mutable final_tx_rid: byte_array = x"";
+    /**
+     * Once `state` is no longer `pending`, this will point the operation that made this
+     * transfer reach its current `state` value on `final_tx_rid`.
+     */
     mutable final_op_index: integer = -1;
 }
 
+/**
+ * Activates the create_on_internal_transfer logic from the assets module.
+ * 
+ * @see `core.assets.is_create_on_internal_transfer_enabled` for more info
+ */
 @extend(assets.is_create_on_internal_transfer_enabled)
 function() = chain_context.args.rules != list<module_args_list_element>().to_gtv();
 
+/**
+ * Activates the create_on_internal_transfer logic from the assets module.
+ * 
+ * Transfers token to a pool account with ID equal to this blockchain's RID, and creates a
+ * `account_creation_transfer` to represent this transfer.
+ * 
+ * Throws if the required assets cannot be transferred. Common cases include:
+ * - the amount to transfer is not in the accepted range (0, 2^256) (exclusive)
+ * - some conditions added in development through transfer extensions (`before_transfer` or 
+ *   `after_transfer`) aren't met
+ * - the sender account's balance is lower than amount
+ * - an account with this blockchain's pool account ID exists, but it's not of the pool type
+ * 
+ * @see `core.assets.create_on_internal_transfer` for more info
+ * 
+ * @see `ACCOUNT_TYPE_POOL` for more info on pool accounts
+ * 
+ * @param sender            the sender account
+ * @param recipient_id      the non-existing account that is being registered
+ * @param asset             the asset that was transferred
+ * @param amount            the amount of the asset that was transferred
+ */
 @extend(assets.create_on_internal_transfer)
 function(sender: accounts.account, recipient_id: byte_array, assets.asset, amount: big_integer) {
-    assets.Unsafe.transfer(sender, ensure_pool_account(chain_context.blockchain_rid), asset, amount);
+    assets.Unsafe.transfer(sender, ensure_chain_pool_account(), asset, amount);
 
     val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
     pool_assets(sender_blockchain_rid, sender.id, recipient_id, asset, amount);
 }
 
+/**
+ * Activates the recall_on_internal_transfer logic from the assets module.
+ * 
+ * Takes the fund back from the pool account to the account that originally sent them, and
+ * changes the staturs of the `account_creation_transfer` to set its status to `recalled`
+ * 
+ * @see `core.assets.recall_on_internal_transfer` for more info
+ * 
+ * @param sender                the sender account
+ * @param transfer_tx_rid       the RID of the transaction that started the registration
+ * @param transfer_op_index     the index of the operation that started the registration on
+ *                              the transaction from `transfer_tx_rid`
+ */
 @extend(assets.recall_on_internal_transfer)
 function(sender: accounts.account, transfer_tx_rid: byte_array, transfer_op_index: integer) {
     val sender_blockchain_rid = chain_context.blockchain_rid; // internal transfer
     val (asset, amount) = recall_transfer(sender_blockchain_rid, sender.id, transfer_tx_rid, transfer_op_index);
 
-    assets.Unsafe.transfer(ensure_pool_account(chain_context.blockchain_rid), sender, asset, amount);
+    assets.Unsafe.transfer(ensure_chain_pool_account(), sender, asset, amount);
 }
 
+/**
+ * Activates the create_on_crosschain_transfer logic from the crosschain module.
+ * 
+ * @see `core.assets.is_create_on_crosschain_transfer_enabled` for more info
+ */
 @extend(crosschain.is_create_on_crosschain_transfer_enabled)
 function() = chain_context.args.rules != list<module_args_list_element>().to_gtv();
 
+/**
+ * Activates the create_on_internal_transfer logic from the assets module.
+ * 
+ * @see `core.assets.create_on_internal_transfer` for more info
+ * 
+ * @param sender_blockchain_rid     the ID of the blockchain where the transfer came from
+ * @param sender_id                 the sender account ID
+ * @param recipient_id              the non-existing account that is being registered
+ * @param asset                     the asset that was transferred
+ * @param amount                    the amount of the asset that was transferred
+ */
 @extend(crosschain.create_on_crosschain_transfer)
 function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array, assets.asset, amount: big_integer) {
     crosschain.Unsafe.update_balances_if_needed(
         crosschain.ensure_blockchain_account(sender_blockchain_rid),
-        ensure_pool_account(chain_context.blockchain_rid),
+        ensure_chain_pool_account(),
         asset,
         amount
     );
@@ -95,18 +336,53 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id:
     pool_assets(sender_blockchain_rid, sender_id, recipient_id, asset, amount);
 }
 
+/**
+ * Activates the recall_on_crosschain_transfer logic from the assets module.
+ * 
+ * @see `core.assets.recall_on_crosschain_transfer` for more info
+ * 
+ * @param sender_blockchain_rid     the ID of the blockchain where the transfer came from
+ * @param sender_id                 the sender account ID
+ * @param transfer_tx_rid           the RID of the transaction that started the registration
+ * @param transfer_op_index         the index of the operation that started the registration on
+ *                                  the transaction from `transfer_tx_rid`
+ */
 @extend(crosschain.recall_on_crosschain_transfer)
 function(sender_blockchain_rid: byte_array, sender_id: byte_array, transfer_tx_rid: byte_array, transfer_op_index: integer) {
     val (asset, amount) = recall_transfer(sender_blockchain_rid, sender_id, transfer_tx_rid, transfer_op_index);
 
     crosschain.Unsafe.update_balances_if_needed(
-        ensure_pool_account(chain_context.blockchain_rid),
+        ensure_chain_pool_account(),
         crosschain.ensure_blockchain_account(sender_blockchain_rid),
         asset,
         amount
     );
 }
 
+/**
+ * This method ensures that a rule exists for the transfer defined by the parameters passed,
+ * and creates an `account_creation_transfer` entity representing that transfer.
+ * 
+ * This function does not check that the account does not exist, assuming it has been checked
+ * before calling this.
+ * 
+ * This function does not allow multiple transfers of the same asset to be transferred to the
+ * same account, regardless of sender.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"TRANSFER NOT ALLOWED"` if:
+ * - no rule allows that transfer, or
+ * - a pending transfer to the same account ID with the same asset already exists
+ * 
+ * @see module_args_list_element for a description of rules
+ * 
+ * @param sender_blockchain_rid     the ID of the blockchain where the transfer came from
+ * @param sender_id                 the sender account ID
+ * @param recipient_id              the non-existing account that is being registered
+ * @param asset                     the asset that was transferred
+ * @param amount                    the amount of the asset that was transferred
+ */
 function pool_assets(
         sender_blockchain_rid: byte_array,
         sender_id: byte_array,
@@ -122,8 +398,8 @@ function pool_assets(
     );
     require(
         not rules.empty(),
-        ("Recipient account <%s> does not exist, and no rule was found that allows account"+
-        " creation with <%s> <%s> from account <%s> of chain <%s>")
+        ("TRANSFER NOT ALLOWED: Recipient account <%s> does not exist, and no rule was found"+
+        " that allows account creation with <%s> <%s> from account <%s> of chain <%s>")
             .format(
                 recipient_id,
                 assets.format_amount_with_decimals(amount, asset.decimals),
@@ -133,12 +409,33 @@ function pool_assets(
             )
     );
 
-    require(empty(account_creation_transfer @* { recipient_id, asset, .state == account_creation_state.pending }),
-        "This asset is already transferred");
+    require(
+        empty(account_creation_transfer @* {
+            recipient_id, asset, .state == account_creation_state.pending
+        }),
+        "TRANSFER NOT ALLOWED: This asset is already transferred");
 
     pool_assets_with_rules(sender_blockchain_rid, sender_id, recipient_id, asset, amount, rules);
 }
 
+/**
+ * Creates an `account_creation_transfer` entity given its parameters.
+ * 
+ * Can only be called from an operation.
+ * 
+ * This function does not check anything. It simply creates the entity, so exceptional care
+ * is required if this function is needed. Although this function is provided, it is intended
+ * for internal use - no use-case should really require it.
+ * 
+ * @see module_args_list_element for a description of rules
+ * 
+ * @param sender_blockchain_rid     the ID of the blockchain where the transfer came from
+ * @param sender_id                 the sender account ID
+ * @param recipient_id              the non-existing account that is being registered
+ * @param asset                     the asset that was transferred
+ * @param amount                    the amount of the asset that was transferred
+ * @param rules                     the rules this transfer satisfies
+ */
 function pool_assets_with_rules(
         sender_blockchain_rid: byte_array,
         sender_id: byte_array,
@@ -153,15 +450,45 @@ function pool_assets_with_rules(
         timestamp = utils.latest_time());
 }
 
+/** 
+ * Ensures that after registering the accounts, the funds transferred to it actually get to
+ * the final account.
+ * 
+ * Can only be called from an operation.
+ * 
+ * @param account   the account that was registered
+ */
 @extend(strategies.after_register_account)
 function(accounts.account) {
     collect_pooled_assets(account, account.id);
 }
 
+/**
+ * Moves the assets from the pool account where they were stored to the newly registered
+ * account.
+ * Marks the `account_creation_transfer`s as done.
+ * Does not check if the rules for any strategy have been satisfied.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws if the transfer cannot be made. Common cases include:
+ * - the funds are not in the pool account
+ * - an account with ID equal to this blockchain's pool account ID exists, but is not a pool
+ *   account
+ * 
+ * @param account       the account that was just registered
+ * @param recipient_id  the ID of the account that was supposed to be registered. This allows
+ *                      strategies to register an account with a different ID than the requested
+ *                      one, if needed.
+ */
 function collect_pooled_assets(accounts.account, recipient_id: byte_array) {
     for (account_creation_transfer in
-            account_creation_transfer @* { recipient_id, .state == account_creation_state.pending }) {
-        val pool_account = ensure_pool_account(chain_context.blockchain_rid);
+            account_creation_transfer @* {
+                recipient_id,
+                .state == account_creation_state.pending
+            }
+        ) {
+        val pool_account = ensure_chain_pool_account();
 
         assets.Unsafe.transfer(
             pool_account,
@@ -175,11 +502,37 @@ function collect_pooled_assets(accounts.account, recipient_id: byte_array) {
     }
 }
 
+/**
+ * Sends all assets that were sent to the pool account for a registration to the actual account
+ * that is being registered. 
+ * Marks the `account_creation_transfer`s as done.
+ * At least one of those transfers must satisfy `strategy`, otherwise this function will throw.
+ * Multiple transfers cannot be bundled together to reach the threshold.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"MISSING TRANSFER"` if no `account_creation_transfer` is found for this account.
+ * 
+ * Throws `"REGISTRATION ERROR"` if none of the transfers satisfied the rule.
+ * 
+ * Throws if the transfer cannot be made. Common cases include:
+ * - the funds are not in the pool account anymore
+ * - an account with this blockchain's pool account ID exists, but is not a pool account
+ * 
+ * @param account   the account the funds should go to
+ * @param strategy  the strategy name
+ */
 function do_transfer(accounts.account, strategy: text) {
-    val account_creation_transfers = account_creation_transfer @* { .recipient_id == account.id, .state == account_creation_state.pending };
-    require(account_creation_transfers.size() > 0, "No pending transfer to account id <%s>".format(account.id));
+    val account_creation_transfers = account_creation_transfer @* {
+        .recipient_id == account.id,
+        .state == account_creation_state.pending
+    };
+    require(
+        account_creation_transfers.size() > 0,
+        "MISSING TRANSFER: No pending transfer to account id <%s>".format(account.id)
+    );
 
-    val pool_account = ensure_pool_account(chain_context.blockchain_rid);
+    val pool_account = ensure_chain_pool_account();
 
     var enough_transferred = false;
     for (account_creation_transfer in account_creation_transfers) {
@@ -197,15 +550,33 @@ function do_transfer(accounts.account, strategy: text) {
         val rule = rules.get_or_null(strategy);
         if (rule != null) {
             val resolved_assets = resolve_allowed_assets(rule);
-            if (resolved_assets == null or (account_creation_transfer.asset.id in resolved_assets
-                    and account_creation_transfer.amount >= resolved_assets[account_creation_transfer.asset.id])) {
+            if (
+                resolved_assets == null or // all assets are allowed, any amount
+                (
+                    // the asset is one of the allowed assets for account creation
+                    account_creation_transfer.asset.id in resolved_assets and
+                    // the amount transferred is enough for the current rule
+                    account_creation_transfer.amount >= resolved_assets[account_creation_transfer.asset.id]
+                )
+            ) {
                 enough_transferred = true;
             }
         }
     }
-    require(enough_transferred, "Insufficient amount of asset transferred");
+    require(
+        enough_transferred,
+        "REGISTRATION ERROR: Insufficient amount of asset transferred"
+    );
 }
 
+/**
+ * Checks whether the transfer has timed out. This means the transfer would have satisfied
+ * a certain rule but `timeout_days` has elapsed.
+ * 
+ * @see rule for more information on rules.
+ * 
+ * @param account_creation_transfer     the account creation transfer to check
+ */
 function has_create_transfer_timed_out(account_creation_transfer): boolean {
     val rules = map<text,rule>.from_gtv(gtv.from_bytes(account_creation_transfer.rules));
     val timeout = (rules.values() @ {} (@min .timeout_days))!! * utils.MILLISECONDS_PER_DAY;
@@ -214,7 +585,15 @@ function has_create_transfer_timed_out(account_creation_transfer): boolean {
     return delta > timeout;
 }
 
-// utility for get_pending_transfer_strategies
+/**
+ * Utility for `get_pending_transfer_strategies`. Returns whether an
+ * `account_creation_transfer` matches a specific expiration state or not.
+ * 
+ * @param account_creation_transfer     the account creation transfer to check
+ * @param states                        a list of states to match against
+ * 
+ * @return true if the state of the transfer is in the list of states, false otherwise.
+ */
 function filter_account_creation_transfer(
     account_creation_transfer,
     states: list<pending_transfer_expiration_state>
@@ -224,6 +603,32 @@ function filter_account_creation_transfer(
         (not (pending_transfer_expiration_state.valid in states));
 }
 
+/**
+ * Marks a specific `account_creation_transfer` that has expired as recalled.
+ * It does not send the assets back to the sender.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"RECALL ERROR"` if the transfer cannot be recalled. Common cases include:
+ * - no pending transfer is found with the specified details:
+ *   - the transfer was already completed or recalled
+ *   - the transfer was never created
+ * - too many transfers have the specified details. This should never happen, but it could
+ *   be caused by one operation creating multiple `account_creation_transfer`s
+ * - the transfer was found, but it has not yet timed out
+ * 
+ * @param sender_blockchain_rid     the RID of the blockchain this transfer came from, or this
+ *                                  blockchain's RID if the transfer was internal
+ * @param sender_id                 the ID of the sender account
+ * @param transfer_tx_rid           the ID of the transaction that brought the assets on this
+ *                                  chain
+ * @param transfer_op_index         the index of the operation that brought the assets on this
+ *                                  chain in the `transfer_tx`. Generally, it will be the index
+ *                                  of `ft4.apply_transfer`
+ * 
+ * @return a tuple containing  `(asset, amount)` for the `account_creation_transfer` that was
+ * cancelled
+ */
 function recall_transfer(
     sender_blockchain_rid: byte_array,
     sender_id: byte_array,
@@ -238,12 +643,18 @@ function recall_transfer(
         .state == account_creation_state.pending
     };
 
-    require(account_creation_transfers.size() > 0, "No pending transfer found");
+    require(account_creation_transfers.size() > 0, "RECALL ERROR: No pending transfer found");
     require(account_creation_transfers.size() < 2,
-        "%d pending transfers found, should not happen".format(account_creation_transfers.size()));
+        "RECALL ERROR: %d pending transfers found, should not happen".format(
+            account_creation_transfers.size()
+        )
+    );
     val account_creation_transfer = account_creation_transfers[0];
 
-    require(has_create_transfer_timed_out(account_creation_transfer), "This transfer has not timed out yet");
+    require(
+        has_create_transfer_timed_out(account_creation_transfer),
+        "RECALL ERROR: This transfer has not timed out yet"
+    );
 
     account_creation_transfer.state = account_creation_state.recalled;
     account_creation_transfer.final_tx_rid = op_context.transaction.tx_rid;
@@ -252,11 +663,46 @@ function recall_transfer(
     return (account_creation_transfer.asset, account_creation_transfer.amount);
 }
 
+/**
+ * Returns the pool account for a chain, creating it if needed. This function should not
+ * normally be used, `ensure_chain_pool_account` should be preferred.
+ * 
+ * Can only be called from an operation.
+ * 
+ * @see ensure_chain_pool_account
+ * 
+ * @param blockchain_rid    the ID of the blockchain the pool account represents. It will
+ *                          normally be this chain's ID
+ */
 function ensure_pool_account(blockchain_rid: byte_array): accounts.account {
     val pool_account_id = (ACCOUNT_TYPE_POOL + chain_context.blockchain_rid).hash();
-    return accounts.ensure_account_without_auth(pool_account_id, ACCOUNT_TYPE_POOL);       
+    return accounts.ensure_account_without_auth(pool_account_id, ACCOUNT_TYPE_POOL);
 }
 
+/**
+ * Returns the pool account for this chain, creating it if needed.
+ * 
+ * Can only be called from an operation.
+ */
+function ensure_chain_pool_account(): accounts.account {
+    return ensure_pool_account(chain_context.blockchain_rid);
+}
+
+/**
+ * Returns the fee account for a chain, creating it if needed. This function should not
+ * normally be used, `ensure_chain_fee_account` should be preferred.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws if `custom_account_id` is not null, but the account specified does not exist.
+ * 
+ * @see ensure_chain_fee_account
+ * 
+ * @param custom_account_id     the ID of the fee account that should be used for this chain,
+ *                              or null if the account can be generated automatically
+ * @param blockchain_rid        the ID of the blockchain the pool account represents. It will
+ *                              normally be this chain's ID
+ */
 function ensure_fee_account(custom_account_id: byte_array?, blockchain_rid: byte_array): accounts.account {
     if (custom_account_id != null) {
         return accounts.Account(custom_account_id);
@@ -264,4 +710,18 @@ function ensure_fee_account(custom_account_id: byte_array?, blockchain_rid: byte
         val fee_account_id = (ACCOUNT_TYPE_FEE + chain_context.blockchain_rid).hash();
         return accounts.ensure_account_without_auth(fee_account_id, ACCOUNT_TYPE_FEE);
     }
+}
+
+/**
+ * Returns the fee account for this chain, creating it if needed.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws if `custom_account_id` is not null, but the account specified does not exist.
+ * 
+ * @param custom_account_id     the ID of the fee account that should be used for this chain,
+ *                              or null if the account can be generated automatically
+ */
+function ensure_chain_fee_account(custom_account_id: byte_array?): accounts.account {
+    return ensure_fee_account(custom_account_id, chain_context.blockchain_rid);
 }

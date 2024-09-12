@@ -63,7 +63,7 @@ struct multi_sig_args {
  *                          exactly one pubkey or EVM address (without `0x`)
  * @param required_flags    The flags it must have for the operation that needs to be authorized.
  * 
- * @returns `utils.VALID` if valid, `utils.invalid` otherwise.
+ * @return `utils.VALID` if valid, `utils.invalid` otherwise.
  */
 function check_single_sig_auth(args: byte_array, signers: list<byte_array>, required_flags: list<text>): utils.validation_result {
     if(signers.size() > 1) {
@@ -106,7 +106,7 @@ function check_single_sig_auth(args: byte_array, signers: list<byte_array>, requ
  *                          one or more pubkeys and/or EVM addresses (without `0x`)
  * @param required_flags    The flags it must have for the operation that needs to be authorized.
  * 
- * @returns `utils.VALID` if valid, `utils.invalid` otherwise.
+ * @return `utils.VALID` if valid, `utils.invalid` otherwise.
  */
 function check_multi_sig_auth(args: byte_array, signers: list<byte_array>, required_flags: list<text>): utils.validation_result {
     val multi_sign_args = multi_sig_args.from_bytes(args);
@@ -171,7 +171,7 @@ function get_flags_from_args(a_t: auth_type, args: byte_array): set<text> {
  * @param signers           The signers for this auth descriptor.
  * @param required_flags    The flags it must have for the operation that needs to be authorized.
  * 
- * @returns `utils.VALID` if valid, `utils.invalid` otherwise.
+ * @return `utils.VALID` if valid, `utils.invalid` otherwise.
  */
 function check_auth_args(a_t: auth_type, args: byte_array, signers: list<byte_array>, required_flags: list<text>): utils.validation_result {
     return when (a_t) {
@@ -186,7 +186,7 @@ function check_auth_args(a_t: auth_type, args: byte_array, signers: list<byte_ar
  * @param a_t   the auth type
  * @param args  the auth descriptor args
  * 
- * @returns a list of signers. If the auth descriptor was single-sig, it will have one element.
+ * @return a list of signers. If the auth descriptor was single-sig, it will have one element.
  */
 function get_signers_from_encoded_auth_descriptor(a_t: auth_type, args: byte_array): list<byte_array> {
     return when (a_t) {
@@ -200,7 +200,7 @@ function get_signers_from_encoded_auth_descriptor(a_t: auth_type, args: byte_arr
  * 
  * @param auth_descriptor   the auth descriptor to extract the signers from
  * 
- * @returns a list of signers. If the auth descriptor was single-sig, it will have one element.
+ * @return a list of signers. If the auth descriptor was single-sig, it will have one element.
  */
 function get_signers(auth_descriptor)
     = when (auth_descriptor.auth_type) {

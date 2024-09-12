@@ -3,7 +3,7 @@
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
 import ^^^^.lib.ft4.accounts.strategies.transfer.{ 
     CURRENT_CHAIN_REF, 
-    CURRENT_USER_REF 
+    CURRENT_ACCOUNT_REF 
 };
 
 function test_get_config_reads_yml_correctly() {
@@ -195,7 +195,7 @@ function test_get_config_fails_when_only_one_X() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
         sender_blockchain = CURRENT_CHAIN_REF,
-        sender = CURRENT_USER_REF,
+        sender = CURRENT_ACCOUNT_REF,
         recipient = "*",
         asset = "*",
         strategy = ["open"]
@@ -227,8 +227,8 @@ function test_get_config_fails_when_X_alongside_others() {
     val rule_gtv_pretty = [(
         timeout_days = 10,
         sender_blockchain = CURRENT_CHAIN_REF,
-        sender = [CURRENT_USER_REF, "abcdef"],
-        recipient = CURRENT_USER_REF,
+        sender = [CURRENT_ACCOUNT_REF, "abcdef"],
+        recipient = CURRENT_ACCOUNT_REF,
         asset = "*",
         strategy = ["open"]
     )].to_gtv_pretty();
@@ -330,7 +330,7 @@ function test_get_config_fails_when_dollar_not_in_blockchains() {
 function test_get_config_fails_when_X_in_blockchains() {
     var rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = CURRENT_USER_REF,
+        sender_blockchain = CURRENT_ACCOUNT_REF,
         sender = "*",
         recipient = "*",
         asset = "*",
@@ -343,7 +343,7 @@ function test_get_config_fails_when_X_in_blockchains() {
     );
     rule_gtv_pretty = [(
         timeout_days = 10,
-        sender_blockchain = [CURRENT_USER_REF],
+        sender_blockchain = [CURRENT_ACCOUNT_REF],
         sender = "*",
         recipient = "*",
         asset = "*",
@@ -362,7 +362,7 @@ function test_get_config_fails_when_assets_wrong_format() {
         sender_blockchain = CURRENT_CHAIN_REF,
         sender = "*",
         recipient = "*",
-        asset = CURRENT_USER_REF,
+        asset = CURRENT_ACCOUNT_REF,
         strategy = ["open"]
     )].to_gtv_pretty();
 
@@ -378,7 +378,7 @@ function test_get_config_fails_when_mandatory_values_are_missing() {
         sender_blockchain = CURRENT_CHAIN_REF,
         sender = "*",
         recipient = "*",
-        asset = CURRENT_USER_REF
+        asset = CURRENT_ACCOUNT_REF
     )].to_gtv_pretty();
 
     assert_fails(

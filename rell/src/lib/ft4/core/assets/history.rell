@@ -144,7 +144,7 @@ function get_paginated_transfers(accounts.account?, asset?, filter, height: inte
     val entries = transfer_history_entry @* {
         if (account == null) true else .account == account,
         if (asset == null) true else .asset == asset,
-        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type!! == transfer_type.sent),
+        if (filter.transfer_type == null) true else .is_input == (filter.transfer_type == transfer_type.sent),
         if (height == null) true else (.transaction.block.block_height > height),
         if (before_rowid??) (.rowid < before_rowid) else true
     } (@sort_desc $) limit utils.fetch_data_size(page_size);

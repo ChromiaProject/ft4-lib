@@ -284,7 +284,7 @@ function is_strategy_op(op: gtx_operation): boolean {
  * 
  * @see _strategy for information on how to structure the transaction that calls this function.
  * 
- * @returns the newly registered account
+ * @return the newly registered account
  */
 function register_account(): accounts.account {
     val tx_operations = op_context.get_all_operations();

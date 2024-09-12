@@ -33,7 +33,7 @@ function create_on_internal_transfer(
 );
 
 /**
- * Extendable function that defines how to recall a transfer that was erroneusly made
+ * Extendable function that defines how to recall a transfer that was erroneously made
  * toward to a non-existing account, if that account should not be registered.
  * 
  * Developers should not generally extend this function, as it is handled by the account

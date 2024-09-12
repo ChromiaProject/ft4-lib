@@ -116,7 +116,7 @@ val max_asset_amount = big_integer.from_hex("ff".repeat(32));
  * @param asset     the asset that should be given to the account
  * @param amount    the amount to give
  * 
- * @returns the final balance of the account
+ * @return the final balance of the account
  */
 function increase_balance(accounts.account, asset, amount: big_integer): big_integer {
     val balance = balance @? { account, asset };
@@ -147,7 +147,7 @@ function increase_balance(accounts.account, asset, amount: big_integer): big_int
  * @param asset     the asset to remove from the account
  * @param amount    the amount to remove
  * 
- * @returns the final balance of the account
+ * @return the final balance of the account
  */
 function deduct_balance(accounts.account, asset, amount: big_integer): big_integer {
     val balance = balance @? { account, asset };
@@ -403,7 +403,7 @@ function require_zero_exclusive_asset_amount_limits(value: big_integer, name) {
  * 
  * @param icon_url  the URL to trim and check
  * 
- * @returns the URL with whitespace removed.
+ * @return the URL with whitespace removed.
  */
 function parse_icon_url(icon_url: text): text {
     val trimmed_icon_url = icon_url.trim();

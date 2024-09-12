@@ -3,7 +3,7 @@
  *
  * @param account  the account
  *
- * @returns rate limit configuration for the account, or `null` to use the default
+ * @return rate limit configuration for the account, or `null` to use the default
  * config from blockchain configuration.
  */
 @extendable

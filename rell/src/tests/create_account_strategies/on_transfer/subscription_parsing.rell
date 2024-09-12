@@ -22,7 +22,10 @@ function test_get_subscription_config_reads_yml_correctly() {
 
     assert_equals(subscription.subscription_period_days(), 30);
 
-    assert_equals(subscription.free_operations(), set(["free_operation"]));
+    assert_equals(
+        subscription.free_operations(),
+        set(["free_operation", rell.meta(subscription.renew_subscription).mount_name])
+    );
 
     assert_equals(subscription.subscription_account_id(), rell.test.pubkeys.charlie);
 }

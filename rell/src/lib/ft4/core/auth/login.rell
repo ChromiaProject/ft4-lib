@@ -42,7 +42,7 @@ struct _login_config {
  * 
  * @see external.auth.get_login_config for a way to retrieve a specific `_login_config`
  * 
- * @returns a map of `<name, _login_config>` - the name allows the users to pick one of the
+ * @return a map of `<name, _login_config>` - the name allows the users to pick one of the
  * configs
  */
 @extendable

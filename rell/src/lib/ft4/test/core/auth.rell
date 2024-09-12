@@ -109,7 +109,7 @@ function create_evm_auth_message(op: rell.test.op, test_accounts.evm_account_dat
  * @param message       the message to sign
  * @param evm_privkey   the key to use when signing the message
  * 
- * @returns the signature on (r, s, v) form. Where `v` value is either 26 or 27
+ * @return the signature on (r, s, v) form. Where `v` value is either 26 or 27
  */
 function evm_sign(message: text, evm_privkey: byte_array): auth.signature {
     val sig = crypto.eth_sign(
@@ -132,7 +132,7 @@ function evm_sign(message: text, evm_privkey: byte_array): auth.signature {
  * @param auth_descriptor_id    the id of the auth descriptor which will be used to authenticate the operation
  * @param op                    the operation to authorize
  * 
- * @returns an array containing the ft_auth operation and the operation to authorize
+ * @return an array containing the ft_auth operation and the operation to authorize
  */
 function ft_auth(
     account_id: byte_array, 
@@ -155,7 +155,7 @@ function ft_auth(
  * @param auth_descriptor_id    the id of the auth descriptor which will be used to authenticate the operation
  * @param op                    the operation to authorize
  * 
- * @returns an array containing the evm_auth operation and the operation to authorize
+ * @return an array containing the evm_auth operation and the operation to authorize
  */
 function evm_auth(
     rell.test.keypair,

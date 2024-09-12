@@ -19,7 +19,7 @@ import ^.auth.{ admin_priv_key };
  * @param icon_url  optional url to an icon for this asset
  * @param type      the type of asset, defaults to `assets.ASSET_TYPE_FT4`
  * 
- * @returns the newly created asset entity
+ * @return the newly created asset entity
  */
 function create_asset(name: text, symbol: text, decimals: integer, icon_url: text = "", type: text = assets.ASSET_TYPE_FT4) {
     admin.external.register_asset_with_type(
@@ -50,7 +50,7 @@ function create_asset(name: text, symbol: text, decimals: integer, icon_url: tex
  * @param icon_url optional url     to an icon for this asset
  * @param origin_blockchain_rid     the rid of the origin chain, often times the same value as issuing chain, but not always.
  * 
- * @returns the newly created asset entity
+ * @return the newly created asset entity
  */
 function create_crosschain_asset(
     name,

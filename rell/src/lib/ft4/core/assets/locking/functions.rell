@@ -172,7 +172,7 @@ function unlock_asset(type: text, accounts.account, assets.asset, amount: big_in
  * @param page_size     the size of the pages to retrieve
  * @param page_cursor   a pointer to where the page should start
  * 
- * @returns pagination result, where the data is a list of tuples: list<(text, amount)>
+ * @return pagination result, where the data is a list of tuples: list<(text, amount)>
  */
 function get_locked_asset_balance(
     accounts.account, 
@@ -219,7 +219,7 @@ function get_locked_asset_balance(
  * @param types     optional list to specify what lock account types to include balances for.
  *                  If not specified, balances will be included for all lock account types.
  * 
- * @returns the sum of the locked asset across the specified lock account types
+ * @return the sum of the locked asset across the specified lock account types
  */
 function get_locked_asset_aggregated_balance(
     accounts.account, 
@@ -257,7 +257,7 @@ function get_locked_asset_aggregated_balance(
  * @param page_size     the size of the pages to retrieve
  * @param page_cursor   a pointer to where the page should start
  * 
- * @returns pagination result, where the data is a list of tuples: list<(type, asset, amount)>
+ * @return pagination result, where the data is a list of tuples: list<(type, asset, amount)>
  */
 function get_locked_asset_balances(
     accounts.account, 
@@ -307,7 +307,7 @@ function get_locked_asset_balances(
  * @param page_size     the size of the pages to retrieve
  * @param page_cursor   a pointer to where the page should start
  * 
- * @returns pagination result, where the data is a list of tuples: list<(asset, amount)>
+ * @return pagination result, where the data is a list of tuples: list<(asset, amount)>
  */
 function get_locked_asset_aggregated_balances(
     accounts.account, 

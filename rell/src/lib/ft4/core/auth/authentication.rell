@@ -100,7 +100,7 @@ val NONCE_PLACEHOLDER = "{nonce}";
  * @see _auth_handler for more information on the requirements a user must meet to be able to
  * call a certain operation
  * 
- * @returns the context - (accounts.account, accounts.account_auth_descriptor, set<accounts.account_auth_descriptor>)
+ * @return the context - (accounts.account, accounts.account_auth_descriptor, set<accounts.account_auth_descriptor>)
  */
 function authenticate_and_return_context()  {
     val op = op_context.get_current_operation();
@@ -155,7 +155,7 @@ function authenticate_and_return_context()  {
 
 /**
  * calls authenticate_and_return_context and returns just the account
- * @returns the account the user authenticated as
+ * @return the account the user authenticated as
  **/
 function authenticate(){
     val (account, auth_desc_after, deleted_descriptors) = authenticate_and_return_context();
@@ -251,7 +251,7 @@ function fetch_account_and_auth_descriptor(auth_args: list<gtv>): (accounts.acco
  * 
  * @param auth_args     the arguments that were passed to the auth operation.
  * 
- * @returns a tuple containing `(account_id, auth_descriptor_id)`
+ * @return a tuple containing `(account_id, auth_descriptor_id)`
  */
 function extract_account_and_auth_descriptor(auth_args: list<gtv>): (byte_array, byte_array) {
     val account_id = byte_array.from_gtv(auth_args[0]);
@@ -389,7 +389,7 @@ function create_message_from_template(evm_auth_args, message_template: text, arg
  * @param account           the account that the user authenticated as
  * @param auth_descriptor   the auth descriptor the user is authorizing with
  * 
- * @returns an object containing the validated arguments for `evm_auth`
+ * @return an object containing the validated arguments for `evm_auth`
  */
 function _validate_evm_arguments(
   auth_args: list<gtv>,
@@ -494,7 +494,7 @@ function _evm_message_hash(message: text): byte_array =
  * @param signature                 the signature received. If null, it will throw
  * @param account_auth_descriptor   the auth descriptor that authorized this operation
  * 
- * @returns the EVM address that signed the operation's message
+ * @return the EVM address that signed the operation's message
  */
 function _validate_evm_address(message: text, signature?, accounts.account_auth_descriptor) {
     require(
@@ -531,7 +531,7 @@ function _validate_evm_address(message: text, signature?, accounts.account_auth_
  *                                  sign this message can have their signature set to null.
  * @param account_auth_descriptor   the auth descriptor that authorized this operation
  * 
- * @returns the EVM addresses that signed the operation's message, in the same order as the
+ * @return the EVM addresses that signed the operation's message, in the same order as the
  * signatures were provided, with null signatures omitted
  */
 function _validate_multiple_evm_addresses(message: text, signatures: list<signature?>, accounts.account_auth_descriptor) {

@@ -226,7 +226,7 @@ entity rl_state {
  * @param account           the account to add the auth descriptor to
  * @param auth_descriptor   the auth descriptor to add
  *
- * @returns The newly created `account_auth_descriptor` entity
+ * @return The newly created `account_auth_descriptor` entity
  */
 function add_auth_descriptor(account, auth_descriptor): account_auth_descriptor {
     require(

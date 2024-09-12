@@ -8,9 +8,13 @@ import ^^^^.core.accounts.strategies;
  * The operation that defines the open strategy. The open strategy will allow anybody to
  * register an account by simply sending a transaction that uses it.
  * In most cases, this is not something that is desirable for production dapps, as it will
- * expose the dapp to spam account creation. 
+ * expose the dapp to spam account creation.
  * 
- * @see core.accounts.strategies._strategy for information on how to create such a transaction.
+ * Throws if the next operation in the transaction is not accepted by
+ * `require_register_account_next_operation`
+ * 
+ * @see core.accounts.strategies._strategy for information on how to register an account
+ * using this strategy
  * 
  * @param main          the main auth descriptor for the account that will be registered
  * @param disposable    optionally, the disposable auth descriptor for the same account

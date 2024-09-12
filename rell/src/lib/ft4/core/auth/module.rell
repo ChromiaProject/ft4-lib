@@ -295,7 +295,7 @@ function add_overridable_auth_handler(
  * 
  * @param scope     The `scope` parameter of the auth handler to trim and check
  * 
- * @returns the valid scope name, trimmed from leading and trailing whitespace
+ * @return the valid scope name, trimmed from leading and trailing whitespace
  */
 function valid_scope_name(scope: text) {
     val scope_name = scope.trim();
