@@ -107,28 +107,9 @@ pipelines:
             trigger: manual
     master:
       - step: *update-docs-anchor
+    test-docs-script:
+      - step: *update-docs-anchor
           
-  custom:
-    deploy-to-stable:
-      - step:
-          name: deploy:stable
-          script:
-            - ./scripts/install-chr-and-pmc.sh
-            - chr install
-            - mkdir .chromia
-            - printf $DEPLOYMENT_KEYS > .chromia/config
-            - npm run deploy:stable
-            - rm .chromia/config
-    deploy-to-latest:
-      - step:
-          name: deploy:latest
-          script:
-            - ./scripts/install-chr-and-pmc.sh
-            - chr install
-            - mkdir .chromia
-            - printf $DEPLOYMENT_KEYS > .chromia/config
-            - npm run deploy:latest
-            - rm .chromia/config
     Multichain tests:
       - step: *multichain-tests-anchor
 definitions:
