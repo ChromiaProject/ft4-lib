@@ -1,3 +1,21 @@
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `init_transfer` function, before the transfer is initialised.
+ * 
+ * This allows, for example, to check that any condition is met before the transfer is
+ * initialised.
+ * 
+ * If this function throws, the transfer will not be initialized.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param sender        the account that is transferring the tokens
+ * @param recipient_id  the ID of the recipient account on the end chain
+ * @param asset         the asset to be transferred
+ * @param amount        the amount to be transferred
+ * @param hops          the IDs of the chains this transfer will go through
+ * @param deadline      a timestamp after which the transfer can only be recalled
+ */
 @extendable function before_init_transfer(
     sender: accounts.account,
     recipient_id: byte_array,
@@ -7,6 +25,24 @@
     deadline: timestamp
 );
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `init_transfer` function, after the transfer is initialised.
+ * 
+ * This allows, for example, to check that any condition is met after the transfer is
+ * initialised.
+ * 
+ * If this function throws, the transfer will not be initialized.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param sender        the account that has transferred the tokens
+ * @param recipient_id  the ID of the recipient account on the end chain
+ * @param asset         the asset that was transferred
+ * @param amount        the amount that was transferred
+ * @param hops          the IDs of the chains this transfer will go through
+ * @param deadline      a timestamp after which the transfer can only be recalled
+ */
 @extendable function after_init_transfer(
     sender: accounts.account,
     recipient_id: byte_array,
@@ -17,6 +53,25 @@
     pending_transfer
 );
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `apply_transfer` function, before the transfer is applied.
+ * 
+ * This allows, for example,to check that any condition is met before the transfer is
+ * applied on this chain.
+ * 
+ * If this function throws, the transfer will not be applied.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @param sender_blockchain_rid     the chain the transfer originated from
+ * @param sender_account_id         the account that has transferred the tokens
+ * @param recipient_id              the ID of the recipient account on the end chain
+ * @param asset                     the asset that was transferred
+ * @param amount                    the amount that was transferred
+ * @param hop_index                 the IDs of the chains this transfer is going through
+ * @param is_final                  whether the transfer has this chain as destination
+ */
 @extendable function before_apply_transfer(
     sender_blockchain_rid: byte_array,
     sender_account_id: byte_array,
@@ -27,6 +82,28 @@
     is_final: boolean
 );
 
+/**
+ * Extendable function that allows the developer to add more functionality to the
+ * `apply_transfer` function, after the transfer is applied.
+ * 
+ * This allows, for example, to check that any condition is met after the transfer is
+ * applied on this chain.
+ * 
+ * If this function throws, the transfer will not be applied.
+ * 
+ * Throws when any extension of this function throws.
+ * 
+ * @see applied_transfers for more informations on the last parameter
+ * 
+ * @param sender_blockchain_rid     the chain the transfer originated from
+ * @param sender_account_id         the account that has transferred the tokens
+ * @param recipient_id              the ID of the recipient account on the end chain
+ * @param asset                     the asset that was transferred
+ * @param amount                    the amount that was transferred
+ * @param hop_index                 the IDs of the chains this transfer is going through
+ * @param is_final                  whether the transfer has this chain as destination
+ * @param applied_transfers         the `applied_transfers` entity referring to this transfer
+ */
 @extendable function after_apply_transfer(
     sender_blockchain_rid: byte_array,
     sender_account_id: byte_array,

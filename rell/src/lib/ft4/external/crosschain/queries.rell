@@ -1,8 +1,9 @@
-
 /**
- * Retrieves the origin for the specified asset. If this asset does not
+ * Retrieves the origin chain RID for the specified asset. If this asset does not
  * have an origin, which is the case if this asset is not a crosschain
  * asset, this query will return `null`.
+ * 
+ * @see core.crosschain.asset_origin for more information on asset origin chain
  * 
  * @param asset_id  id of the asset to get the origin for
  */
@@ -17,6 +18,7 @@ query get_asset_origin_by_id(asset_id: byte_array) {
  * up in this query. Paginated.
  * 
  * @see utils.paged_result for information about pagination
+ * 
  * @see crosschain.complete_transfer for information about completing a transfer
  * 
  * @param account_id    id of the account for which to get pending transfers
@@ -35,6 +37,7 @@ query get_pending_transfers_for_account(
 }
 
 /**
+ * Same as `core.crosschain.get_last_pending_transfer_for_account`.
  * Retrieves the pending transfer which was last created for this account that matches
  * the provided parameters.
  * 
@@ -61,8 +64,10 @@ query get_last_pending_transfer_for_account(
 /**
  * Checks if the transfer which was pointed out by the provided arguments was applied on this chain or not.
  * 
- * @param init_tx_rid       the transaction id of the transaction that might have been applied
- * @param init_op_index     the index of the operation inside said transaction to check
+ * @see `core.crosschain.applied_transfer` for more information
+ * 
+ * @param init_tx_rid       the transaction id of the transaction that initialized this transfer
+ * @param init_op_index     the index of the operation inside that transaction
  */
 query is_transfer_applied(init_tx_rid: byte_array, init_op_index: integer) {
     val transfer = crosschain.applied_transfers @? { .init_tx_rid == init_tx_rid, .init_op_index == init_op_index };
@@ -70,12 +75,13 @@ query is_transfer_applied(init_tx_rid: byte_array, init_op_index: integer) {
 }
 
 /**
- * Retrieves a transaction object corresponding to the transaction which contained the `apply_transfer` operation
- * for a specific `init_transfer` operation. The returned object can be used when submitting e.g., `apply_transfer` 
- * or other crosschain related operations.
+ * Retrieves a transaction and op_index that can be passed as parameters to functions
+ * like `apply_transfer`, `cancel_transfer` and so on.
  * 
- * @param init_tx_rid       the rid of the transaction which contained the `init_transfer` operation
- * @param init_op_index     the index of the actual `init_transfer` operation inside said operation
+ * @see `core.crosschain.applied_transfer` for more information
+ * 
+ * @param init_tx_rid       the transaction that initialized this transfer
+ * @param init_op_index     the index of the operation inside that transaction
  */
 query get_apply_transfer_tx(init_tx_rid: byte_array, init_op_index: integer) =
     crosschain.applied_transfers @ { .init_tx_rid == init_tx_rid, .init_op_index == init_op_index } (
