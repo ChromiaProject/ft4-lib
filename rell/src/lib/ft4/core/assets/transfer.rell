@@ -19,6 +19,7 @@ function recall_on_internal_transfer(
 namespace Unsafe {
 
    function transfer_to_recipient_id(sender: accounts.account, recipient_id: byte_array, asset, amount: big_integer) {
+      utils.validate_recipient_id(recipient_id);
       val recipient = accounts.account @? { .id == recipient_id };
       if (recipient != null) {
           transfer(sender, recipient, asset, amount);

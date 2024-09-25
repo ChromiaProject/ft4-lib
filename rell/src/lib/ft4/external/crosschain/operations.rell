@@ -32,6 +32,8 @@ operation init_transfer(
         "Parameter 'deadline' cannot be a past timestamp. Value: %s".format(deadline)
     );
 
+    utils.validate_recipient_id(recipient_id);
+
     val account = auth.authenticate();
     val asset = require(
         assets.asset @? { .id == asset_id }, 

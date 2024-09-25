@@ -1,5 +1,7 @@
 val MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
+val RECIPIENT_ID_MAX_SIZE = 1024;
+
 /*
  * For complex validation we might not want to use simple "require()"
  * but an error message that is returned. 
@@ -38,6 +40,11 @@ function validate_blockchain_rid(blockchain_rid: byte_array, descriptor: text = 
         blockchain_rid.size() == 32, 
         "%s <%s> has invalid length. Expected <32> bytes, found <%d>.".format(descriptor, blockchain_rid, blockchain_rid.size())
     );
+}
+
+function validate_recipient_id(recipient_id: byte_array) {
+    require(recipient_id.size() <= RECIPIENT_ID_MAX_SIZE,
+        "recipient_id is too big, max size is %d bytes".format(RECIPIENT_ID_MAX_SIZE));
 }
 
 /**
