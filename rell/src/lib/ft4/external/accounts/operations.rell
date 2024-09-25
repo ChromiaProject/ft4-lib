@@ -67,6 +67,8 @@ function () = auth.add_overridable_auth_handler(
 operation delete_auth_descriptors_for_signer(signer: byte_array) {
     val account = auth.authenticate();
 
+    auth.validate_signer(signer);
+
     val ads = (a_ad: accounts.account_auth_descriptor, ad_s: accounts.auth_descriptor_signer) @* {
         a_ad.account == account,
         ad_s.account_auth_descriptor == a_ad,

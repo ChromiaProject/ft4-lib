@@ -281,6 +281,13 @@ function verify_signers_with_message(ft_and_evm_signers: list<byte_array>, messa
     }
 }
 
+function validate_signer(signer: byte_array) {
+    require(
+        signer.size() in [EVM_ADDRESS_SIZE, FT_PUBKEY_SIZE],
+        "Unsupported signer <%s>".format(signer)
+    );
+}
+
 function get_evm_signatures(): (signers: list<byte_array>, signatures: list<signature>) {
     if (op_context.op_index == 0) return (signers = list<byte_array>(), signatures = list<signature>());
 

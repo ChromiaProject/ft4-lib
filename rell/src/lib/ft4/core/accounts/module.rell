@@ -1,6 +1,7 @@
 @mount('ft4')
 module;
 
+import ^^.auth;
 import ^^.utils;
 import ^^.version;
 
@@ -346,11 +347,14 @@ function get_paginated_accounts_by_type(type: text, page_size: integer?, page_cu
 
 function validate_auth_descriptor_args(auth_descriptor) {
     when (auth_descriptor.auth_type) {
-        S -> single_sig_args.from_gtv(auth_descriptor.args.to_gtv());
+        S -> auth.validate_signer(single_sig_args.from_gtv(auth_descriptor.args.to_gtv()).signer);
         M -> {
             val args = multi_sig_args.from_gtv(auth_descriptor.args.to_gtv());
             require(args.signatures_required > 0, "Required signatures must be positive");
             require(args.signatures_required <= args.signers.size(), "Required signatures cannot be greater than number of signers");
+            for (signer in args.signers) {
+                auth.validate_signer(signer);
+            }
         }
     }
 }
