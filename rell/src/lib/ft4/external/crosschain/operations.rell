@@ -38,6 +38,14 @@ operation init_transfer(
         "Asset not found '%s'".format(asset_id)
     );
 
+    require(
+        hops.size() <= crosschain.MAX_PATH_LENGTH,
+        "Too many hops <%d>, only <%d> allowed".format(hops.size(), crosschain.MAX_PATH_LENGTH)
+    );
+    for (hop in hops) {
+        utils.validate_blockchain_rid(hop);
+    }
+
     crosschain.before_init_transfer(
         account,
         recipient_id,

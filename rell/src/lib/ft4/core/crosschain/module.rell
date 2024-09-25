@@ -4,6 +4,8 @@ module;
 import ^^.utils;
 import ^^.core.assets;
 
+val MAX_PATH_LENGTH = 100;
+
 @extendable
 function is_create_on_crosschain_transfer_enabled(): boolean = false;
 
