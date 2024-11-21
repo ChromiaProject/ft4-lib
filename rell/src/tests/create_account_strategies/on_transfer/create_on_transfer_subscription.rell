@@ -22,11 +22,11 @@ function test_create_account_on_internal_transfer_with_subscription() {
     val recipient_id = rell.test.pubkeys.bob.hash();
 
     val asset = test.create_asset("test", "TEST", 1);
-    test.mint(alice.account, asset, 20);
+    test.mint(alice.account, asset, 50);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
-    val amount = 10L;
+    val amount = 40L;
 
     val subscription_assets = map(subscription.get_subscription_assets());
     val subscription_amount = subscription_assets[asset.id];
@@ -163,6 +163,59 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .nop()
         .sign(rell.test.keypairs.bob)
         .run();
+}
+
+function test_create_account_on_internal_transfer_multiple_transfers_with_subscription_success() {
+    helpers.create_system_account(rell.test.pubkeys.charlie, create_on_transfer.ACCOUNT_TYPE_FEE).run();
+    val subscription_account = accounts.Account(rell.test.pubkeys.charlie);
+
+    val alice = test.register_alice();
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 5);
+
+    val eve = test.register_eve();
+    test.mint(eve.account, asset, 5);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, alice.account.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val subscription_assets = map(subscription.get_subscription_assets());
+    val subscription_amount = subscription_assets[asset.id];
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(eve.account.id, eve.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(eve.keypair)
+        .run();    
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), subscription_amount);
+    assert_true("subscription" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+
+    rell.test.tx()
+        .op(subscription.ras_transfer_subscription(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    val bob = accounts.account_by_id(recipient_id);
+    assert_equals(assets.get_asset_balance(bob, asset), 0);
+    assert_equals(assets.get_asset_balance(subscription_account, asset), subscription_amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        2
+    );
 }
 
 function test_an_error_is_thrown_when_no_suceeding_op() {

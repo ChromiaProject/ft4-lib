@@ -181,15 +181,24 @@ struct transfer_detail {
  * @param tx_rid    The transaction where the operation was performed
  * @param op_index  The index of the operation
  */
-function get_transfer_details(tx_rid: byte_array, op_index: integer): set<transfer_detail> {
-    val result = set(transfer_history_entry @*
-        { .transaction.tx_rid == tx_rid, op_index,
-            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN }
-        (extract_details_from_transfer_history_entry($)));
+function get_transfer_details(tx_rid: byte_array, op_index: integer): list<transfer_detail> {
+    val result = transfer_history_entry @*
+        {
+            .transaction.tx_rid == tx_rid, op_index,
+            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN,
+            (.account.type != transfer_strategy.ACCOUNT_TYPE_POOL or not .is_input),
+        }
+        (extract_details_from_transfer_history_entry($));
 
     result.add_all(crosschain_transfer_history_entry @*
         { .transaction.tx_rid == tx_rid, op_index }
         (extract_details_from_crosschain_transfer_history_entry($))
+    );
+
+    result.add_all(transfer_strategy.account_creation_transfer @* {
+            .final_tx_rid == tx_rid,
+            .final_op_index == op_index,
+        } (extract_details_from_account_creation_transfer($))
     );
 
     return result;
@@ -203,15 +212,25 @@ function get_transfer_details(tx_rid: byte_array, op_index: integer): set<transf
  * @param op_index  The index of the operation
  * @param asset_id  Only return entries where this asset was transferred
  */
-function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): set<transfer_detail> {
-    val result = set(transfer_history_entry @*
-        { .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id,
-            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN }
-        (extract_details_from_transfer_history_entry($)));
+function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): list<transfer_detail> {
+    val result = transfer_history_entry @*
+        {
+            .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id,
+            .account.type != crosschain.ACCOUNT_TYPE_BLOCKCHAIN,
+            (.account.type != transfer_strategy.ACCOUNT_TYPE_POOL or not .is_input),
+        }
+        (extract_details_from_transfer_history_entry($));
 
     result.add_all(crosschain_transfer_history_entry @*
         { .transaction.tx_rid == tx_rid, op_index, .asset.id == asset_id }
         (extract_details_from_crosschain_transfer_history_entry($))
+    );
+
+    result.add_all(transfer_strategy.account_creation_transfer @* {
+            .final_tx_rid == tx_rid,
+            .final_op_index == op_index,
+            .asset.id == asset_id,
+        } (extract_details_from_account_creation_transfer($))
     );
 
     return result;
@@ -225,26 +244,31 @@ function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, as
  * @param entry     the entry to map
  */
 function extract_details_from_transfer_history_entry(entry: transfer_history_entry) {
-    var account_id = x"";
-    var blockchain_rid = chain_context.blockchain_rid;
-    
-    if (not entry.is_input) {
-        account_id = entry.account.id;
-    } else {
-        val tx_data = transfer_strategy.account_creation_transfer @? {
-            .final_tx_rid == entry.transaction.tx_rid,
-        }( .sender_id, .sender_blockchain_rid );
-        if (not empty(tx_data)) { 
-            account_id = tx_data.sender_id;
-            blockchain_rid = tx_data.sender_blockchain_rid;
-        } else account_id = entry.account.id;
-    }
     return transfer_detail(
-        blockchain_rid = blockchain_rid,
-        account_id = account_id,
+        blockchain_rid = chain_context.blockchain_rid,
+        account_id = entry.account.id,
         asset_id = entry.asset.id,
         delta = entry.delta,
         is_input = entry.is_input
+    );
+}
+
+/**
+ * Analogous to `extract_details_from_transfer_history_entry`, but extracts data from the
+ * account creation transfers. Allows for account creation transfers to show the actual sender,
+ * instead of the pool account.
+ * 
+ * @param transfer  the transfer to map
+ */
+function extract_details_from_account_creation_transfer(
+    transfer: transfer_strategy.account_creation_transfer
+) {
+    return transfer_detail(
+        blockchain_rid = transfer.sender_blockchain_rid,
+        account_id = transfer.sender_id,
+        asset_id = transfer.asset.id,
+        delta = transfer.amount,
+        is_input = true
     );
 }
 
@@ -255,11 +279,14 @@ function extract_details_from_transfer_history_entry(entry: transfer_history_ent
  * 
  * @param entry     the entry to map
  */
-function extract_details_from_crosschain_transfer_history_entry(entry: crosschain_transfer_history_entry) =
-    transfer_detail(
+function extract_details_from_crosschain_transfer_history_entry(
+    entry: crosschain_transfer_history_entry
+) {
+    return transfer_detail(
         blockchain_rid = entry.blockchain_rid,
         account_id = entry.account_id,
         asset_id = entry.asset.id,
         delta = entry.delta,
         is_input = entry.is_input
     );
+}

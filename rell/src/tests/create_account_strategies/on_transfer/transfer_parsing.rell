@@ -85,6 +85,11 @@ function test_get_config_reads_yml_correctly() {
                     name = "test1",
                     min_amount = 3L
                 ),
+                create_on_transfer.asset_limit(
+                    issuing_blockchain_rid = x"0000000000000000000000000000000000000000000000000000000000000000", // current blockchain_rid in Rell tests
+                    name = "test2",
+                    min_amount = 2L
+                ),
                 create_on_transfer.asset_limit(id = x"eb72b0d3de2ce5c8ec5ccf15ee8a9fbe4bed074f6d4385fdbf552904fc0b8dce", min_amount = 5L),
                 create_on_transfer.asset_limit(
                     issuing_blockchain_rid = x"6403ccac0c67f7cb6af78e5e15b3aaebb2b42370f0d12e099ed01fa5a068f9fb",

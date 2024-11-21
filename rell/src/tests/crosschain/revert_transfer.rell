@@ -70,7 +70,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
-    val expected = set([
+    val expected = [
         assets.transfer_detail(
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
@@ -85,7 +85,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
             delta = 5L,
             is_input = true
         )
-    ]);
+    ];
     assert_equals(assets.external.get_transfer_details(revert_tx_rid, 1), expected);
     assert_equals(assets.external.get_transfer_details_by_asset(revert_tx_rid, 1, asset_valid.id), expected);
 
@@ -176,7 +176,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
-    val expected = set([
+    val expected = [
         assets.transfer_detail(
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
@@ -191,7 +191,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
             delta = 5L,
             is_input = true
         )
-    ]);
+    ];
     assert_equals(assets.external.get_transfer_details(revert_tx_rid, 1), expected);
     assert_equals(assets.external.get_transfer_details_by_asset(revert_tx_rid, 1, asset_valid.id), expected);
 

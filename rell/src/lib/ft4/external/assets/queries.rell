@@ -181,7 +181,7 @@ query get_transfer_history_entry(rowid) {
  * @param tx_rid    The transaction where the operation was performed
  * @param op_index  The index of the operation
  */
-query get_transfer_details(tx_rid: byte_array, op_index: integer): set<assets.transfer_detail> =
+query get_transfer_details(tx_rid: byte_array, op_index: integer): list<assets.transfer_detail> =
     assets.get_transfer_details(tx_rid, op_index);
 
 /**
@@ -192,5 +192,5 @@ query get_transfer_details(tx_rid: byte_array, op_index: integer): set<assets.tr
  * @param op_index  The index of the operation
  * @param asset_id  Only return entries where this asset was transferred
  */
-query get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): set<assets.transfer_detail> =
+query get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, asset_id: byte_array): list<assets.transfer_detail> =
     assets.get_transfer_details_by_asset(tx_rid, op_index, asset_id);

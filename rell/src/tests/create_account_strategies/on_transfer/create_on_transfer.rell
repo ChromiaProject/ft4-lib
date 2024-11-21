@@ -76,32 +76,6 @@ function test_internal_transfer_fails_if_wrong_asset_is_transferred() {
         );
 }
 
-function test_internal_transfer_fails_if_same_asset_is_transferred_again() {
-    val alice = test.register_alice();
-    val sender = alice.account;
-    val recipient_id = rell.test.pubkeys.bob.hash();
-
-    val asset = test.create_asset("test", "TEST", 1);
-    test.mint(alice.account, asset, 20);
-
-    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
-    val min_amount = allowed_assets[asset.id];
-    val amount = min_amount;
-
-    rell.test.tx()
-        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets.external.transfer(recipient_id, asset.id, amount))
-        .nop()
-        .sign(alice.keypair)
-        .run();
-    rell.test.tx()
-        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets.external.transfer(recipient_id, asset.id, amount))
-        .nop()
-        .sign(alice.keypair)
-        .run_must_fail("This asset is already transferred");
-}
-
 function test_internal_transfer_fails_if_insufficient_amount_is_transferred() {
     val alice = test.register_alice();
     val sender = alice.account;
@@ -330,67 +304,6 @@ function test_crosschain_transfer_fails_if_wrong_asset_is_transferred() {
             "Recipient account <%s> does not exist, and no rule was found that allows account creation with <1.0> <BOGUS> from account <%s> of chain <%s>"
                 .format(recipient_id, sender_account_id, sender_blockchain_rid)
         );
-}
-
-function test_crosschain_transfer_fails_same_asset_is_transferred_again() {
-    val sender_account_id = "the sender".hash();
-    val sender_auth_descriptor_id = "sender auth descriptor".hash();
-    val recipient_id = rell.test.pubkeys.bob.hash();
-
-    val sender_blockchain_rid = "sender_blockchain_rid".hash();
-    val asset = test.create_crosschain_asset("test", "TEST", 1, sender_blockchain_rid, "", sender_blockchain_rid);
-
-    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(sender_blockchain_rid, sender_account_id, recipient_id)));
-    val min_amount = allowed_assets[asset.id];
-    val amount = min_amount;
-
-    val tx1 = gtx_transaction(
-        body = gtx_transaction_body(
-            blockchain_rid = sender_blockchain_rid,
-            operations = [
-                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xc.external.init_transfer(
-                    recipient_id,
-                    asset_id = asset.id,
-                    amount = amount,
-                    hops = [chain_context.blockchain_rid],
-                    deadline = 10000000000000
-                ).to_gtx_operation()
-            ],
-            signers = []
-        ),
-        signatures = []
-    );
-
-    val tx2 = gtx_transaction(
-        body = gtx_transaction_body(
-            blockchain_rid = sender_blockchain_rid,
-            operations = [
-                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
-                xc.external.init_transfer(
-                    recipient_id,
-                    asset_id = asset.id,
-                    amount = amount + 1,
-                    hops = [chain_context.blockchain_rid],
-                    deadline = 10000000000000
-                ).to_gtx_operation()
-            ],
-            signers = []
-        ),
-        signatures = []
-    );
-
-    rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx1.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xc.external.apply_transfer(tx1, 1, tx1, 1, 0))
-        .nop()
-        .run();
-
-    rell.test.tx()
-        .op(iccf_proof(sender_blockchain_rid, tx2.to_gtv().hash(), x"", x"", 0, x""))
-        .op(xc.external.apply_transfer(tx2, 1, tx2, 1, 0))
-        .nop()
-        .run_must_fail("This asset is already transferred");
 }
 
 function test_crosschain_transfer_fails_if_insufficient_amount_is_transferred() {

@@ -371,9 +371,7 @@ function(sender_blockchain_rid: byte_array, sender_id: byte_array, transfer_tx_r
  * 
  * Can only be called from an operation.
  * 
- * Throws `"TRANSFER NOT ALLOWED"` if:
- * - no rule allows that transfer, or
- * - a pending transfer to the same account ID with the same asset already exists
+ * Throws `"TRANSFER NOT ALLOWED"` if no rule allows that transfer
  * 
  * @see module_args_list_element for a description of rules
  * 
@@ -408,12 +406,6 @@ function pool_assets(
                 sender_blockchain_rid
             )
     );
-
-    require(
-        empty(account_creation_transfer @* {
-            recipient_id, asset, .state == account_creation_state.pending
-        }),
-        "TRANSFER NOT ALLOWED: This asset is already transferred");
 
     pool_assets_with_rules(sender_blockchain_rid, sender_id, recipient_id, asset, amount, rules);
 }
