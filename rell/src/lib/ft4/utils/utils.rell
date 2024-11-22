@@ -63,6 +63,19 @@ function latest_time() =
         block @ {} (@max .timestamp) ?: 0;
 
 /**
+ * Returns the block height regardless of whether `op_context` exists.
+ * Returns:
+ * - 0 if this is the first block
+ * - `block_height` if `op_context` exists
+ * - last block height + 1 if `op_context` does not exist
+ */
+function get_block_height() =
+    if (op_context.exists)
+        op_context.block_height
+    else
+        (block @ {} (@max .block_height) ?: -1) +1;
+
+/**
  * Checks whether the blockchain RID has the correct size
  * 
  * Throws `"INVALID BRID"` if the RID's length is not 32 bytes.

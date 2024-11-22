@@ -103,6 +103,21 @@ export async function getVersion(session: IClient): Promise<string> {
 }
 
 /**
+ * Returns the API version of `ft` lib that is installed on the blockchain
+ * @param session - a client that will be used to get the version from the blockchain
+ */
+export async function getApiVersion(session: IClient): Promise<number> {
+  try {
+    return Object.freeze(await session.query<number>("ft4.get_api_version"));
+  } catch (e) {
+    const v = await getVersion(session);
+    if (v === "1.0.0") return 0;
+    // get_version exists but get_api_version doesn't, and it's not v1.0.0
+    throw e;
+  }
+}
+
+/**
  * Retrieves all available auth handlers that is registered on the blockchain
  * @param queryable - the client to use to query the blockchain
  * @returns An object containing `AuthHandler`s which is keyed on the corresponding operation name

@@ -121,8 +121,8 @@ function have_violating_rules(auth_descriptor: account_auth_descriptor) =
 function load_variables(op_count: integer): map<text, gtv> {
 	val variables = map<text, gtv>();
 	variables[rule_variable.op_count.name] = (op_count + 1).to_gtv();
-	variables[rule_variable.block_height.name] = op_context.block_height.to_gtv();
-	variables[rule_variable.block_time.name] = op_context.last_block_time.to_gtv();
+	variables[rule_variable.block_height.name] = utils.get_block_height().to_gtv();
+	variables[rule_variable.block_time.name] = utils.latest_time().to_gtv();
 	return variables;
 }
 

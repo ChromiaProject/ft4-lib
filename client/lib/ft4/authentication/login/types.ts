@@ -38,7 +38,9 @@ export type LoginConfigOptions = {
 export type SessionWithLogout = {
   session: Session;
   /**
-   * Deletes the disposable auth descriptor from the account, making the account inaccessible to this key.
+   * Deletes the disposable auth descriptor from the account and the key from memory, making
+   * the account inaccessible to this key and the key inaccessible to this machine unless
+   * stored elsewhere.
    */
   logout: () => Promise<void>;
 };
