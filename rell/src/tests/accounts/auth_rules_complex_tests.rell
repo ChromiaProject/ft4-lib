@@ -17,6 +17,7 @@ import auth_op: ^^.operations.auth;
 import test: lib.ft4.test.core;
 
 val rules_violated_error_message = "The rules for this auth descriptor have been violated";
+val rules_expired_auth_descriptor = "EXPIRED AUTH DESCRIPTOR: The rules for this auth descriptor have been violated";
 function missing_ad_error_message(ad_id: byte_array, account_id: byte_array) {
   return "Auth descriptor '%s' not found for account '%s'".format(ad_id, account_id);
 }
@@ -177,8 +178,10 @@ namespace test_multiple_ops_with_op_count {
         less_or_equal(op_count(3))
       ])
     );
+
+    //the ad expires during the fourth call, is invalid on fifth call
     authenticate_account_signed_tx(acc_data, 4).run_must_fail(
-      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+      rules_expired_auth_descriptor
     );
   }
 
@@ -200,7 +203,7 @@ namespace test_multiple_ops_with_op_count {
     );
     authenticate_account_signed_tx(acc_data, 3).run();
     authenticate_account_signed_tx(acc_data).run_must_fail(
-      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+      rules_expired_auth_descriptor
     );
   }
 }
@@ -252,12 +255,12 @@ namespace test_deletion_after_expiration {
     
     //run twice to have unique rid
     authenticate_account_signed_tx(acc_data, 2).run();
-    //auth desc has been deleted
-    assert_false(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
-    
+    //auth desc expired during last call and is still not deleted but will fail on next authenticate
+    assert_true(accounts.account_auth_descriptor @? { .id == acc_data.auth_descriptor_id }??);
+   
     //6th authentication: should fail
     authenticate_account_signed_tx(acc_data).run_must_fail(
-      missing_ad_error_message(acc_data.auth_descriptor_id, acc_data.account.id)
+      rules_expired_auth_descriptor
     );
   }
 

@@ -430,7 +430,8 @@ function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
  */
 
 /**
- * Deletes all expired auth descriptors associated with an account.
+ * Deletes all expired auth descriptors associated with an account, except `keep_auth_desc` if
+ * not null.
  * 
  * Can only be called from an operation.
  * 
@@ -442,15 +443,23 @@ function update_auth_descriptor_rule_variables(desc: account_auth_descriptor) {
  * 
  * @see account_auth_descriptor.rules for the list of valid GTV representations of rules.
  * 
- * @param account	the account to clean up
+ * @param account			the account to clean up
+ * @param keep_auth_desc 	the account_auth_descriptor used in the current operation. It 
+ * 							should not be deleted even if expired
+ * 
+ * @return set<struct<account_auth_descriptor>> deleted_descriptors
  */
-function delete_expired_auth_descriptors(account) {
+function delete_expired_auth_descriptors(account, keep_auth_desc: account_auth_descriptor?) {
 	val auth_descriptors = account_auth_descriptor @* { account };
 
 	val deleted_descriptors = set<struct<account_auth_descriptor>>();
 	
 	for (auth_descriptor in auth_descriptors) {
-		if (is_active(auth_descriptor) and have_violating_rules(auth_descriptor)) {			
+		if (
+			is_active(auth_descriptor) and
+			have_violating_rules(auth_descriptor) and
+			auth_descriptor != keep_auth_desc
+		) {
 			deleted_descriptors.add(auth_descriptor.to_struct());
 			delete_auth_descriptor(auth_descriptor);
 		}

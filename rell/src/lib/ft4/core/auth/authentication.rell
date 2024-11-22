@@ -59,7 +59,9 @@ val NONCE_PLACEHOLDER = "{nonce}";
  * descriptor that allows them to access it.
  * 
  * Given that information, this function checks that the requirements for the current operation
- * (found in the `_auth_handler`) are satisfied. 
+ * (found in the `_auth_handler`) are satisfied.
+ * 
+ * It will then delete all expired auth descriptors, except the one being used.
  * 
  * Can only be called from an operation.
  * 
@@ -88,7 +90,7 @@ val NONCE_PLACEHOLDER = "{nonce}";
  *   `after_authenticate` functions is infringed.
  * - any part of the `_auth_handler` is broken (the message is improperly formatted, or either
  *   of the two functions found in the `message_formatter` or `resolver` fields throw)
- * 
+ *  
  * @see core.accounts.rl_state for more information on rate limiting
  * 
  * @see external.auth.evm_auth for evm authorization
@@ -100,7 +102,10 @@ val NONCE_PLACEHOLDER = "{nonce}";
  * @see _auth_handler for more information on the requirements a user must meet to be able to
  * call a certain operation
  * 
- * @return the context - (accounts.account, accounts.account_auth_descriptor, set<accounts.account_auth_descriptor>)
+ * @return the context for the user authentication : 
+ * - the account they authenticated as, 
+ * - the auth descriptor used to authenticate, 
+ * - a set of deleted descriptors that had expired prior to this function being called and had to be deleted
  */
 function authenticate_and_return_context()  {
     val op = op_context.get_current_operation();
@@ -145,12 +150,11 @@ function authenticate_and_return_context()  {
     };
 
     val auth_desc_after = accounts.update_auth_descriptor_rule_variables(auth_descriptor);
-    val auth_desc_after_struct = auth_desc_after.to_struct();
-    val deleted_descriptors = accounts.delete_expired_auth_descriptors(account);
+    val deleted_descriptors = accounts.delete_expired_auth_descriptors(account, auth_desc_after);
     
-    after_authenticate(account, if (auth_desc_after_struct in deleted_descriptors) null else auth_desc_after);
+    after_authenticate(account, auth_desc_after);
 
-    return (account=account, used_auth_descriptor=auth_desc_after_struct, deleted_descriptors=deleted_descriptors);
+    return (account=account, used_auth_descriptor=auth_desc_after, deleted_descriptors=deleted_descriptors);
 }
 
 /**
