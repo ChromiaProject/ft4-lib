@@ -85,7 +85,7 @@ describe("Login", () => {
   it("added disposable auth descriptor expires in 30 minutes", async () => {
     await createKeyStoreInteractor(connection.client, evmKeyStore).login({
       accountId: account.id,
-      config: { flags: ["T"], rules: ttlLoginRule(minutes(30)) },
+      config: { flags: [AuthFlag.Transfer], rules: ttlLoginRule(minutes(30)) },
     });
     const expectedExpiration = Date.now() + 1800000; // 30 min from now
 
@@ -115,7 +115,7 @@ describe("Login", () => {
 
     await createKeyStoreInteractor(connection.client, evmKeyStore).login({
       accountId: account.id,
-      config: { flags: ["T"], rules },
+      config: { flags: [AuthFlag.Transfer], rules },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin[1].rules).toEqual(expectedRules);
@@ -124,7 +124,7 @@ describe("Login", () => {
   it("added disposable auth descriptor can have no rules", async () => {
     await createKeyStoreInteractor(connection.client, evmKeyStore).login({
       accountId: account.id,
-      config: { flags: ["T"], rules: null },
+      config: { flags: [AuthFlag.Transfer], rules: null },
     });
     const authDescriptorAfterLogin = await account.getAuthDescriptors();
     expect(authDescriptorAfterLogin[1].rules).toEqual(null);
@@ -205,7 +205,20 @@ describe("Login", () => {
       keyStore2.id,
       null,
     );
+
+    expect(
+      (await session1.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
+        .length,
+    ).toEqual(0);
+    expect((await session1.account.getAuthDescriptors()).length).toEqual(1);
+
     await session1.account.addAuthDescriptor(ad2, keyStore2);
+
+    expect(
+      (await session1.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
+        .length,
+    ).toEqual(1);
+    expect((await session1.account.getAuthDescriptors()).length).toEqual(2);
 
     const { session } = await keyStoreInteractor.login({
       accountId: account.id,
@@ -214,9 +227,10 @@ describe("Login", () => {
     });
 
     expect(
-      (await session.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
+      (await session1.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
         .length,
     ).toEqual(1);
+    expect((await session1.account.getAuthDescriptors()).length).toEqual(2);
 
     const keyStoreIds = session.account.authenticator.keyHandlers.map(
       (keyHandler) => keyHandler.keyStore.id,
@@ -256,5 +270,78 @@ describe("Login", () => {
       (await session.account.getAuthDescriptorsBySigner(keyStore2.pubKey))
         .length,
     ).toEqual(0);
+
+    expect((await session.account.getAuthDescriptors()).length).toEqual(1);
+  });
+
+  it("correctly finds out if a keypair can reuse an old auth descriptor", async () => {
+    const authDescriptorsBeforeLogin = await account.getAuthDescriptors();
+    expect(authDescriptorsBeforeLogin.length).toBe(1);
+
+    const interactor = createKeyStoreInteractor(connection.client, evmKeyStore);
+    const loginKeyStore = createInMemoryLoginKeyStore();
+    const loginOptions = {
+      accountId: account.id,
+      loginKeyStore,
+    };
+
+    expect(await interactor.hasActiveLogin(loginOptions)).toBe(false);
+    const { logout } = await interactor.login(loginOptions);
+    expect(await interactor.hasActiveLogin(loginOptions)).toBe(true);
+    await logout();
+    expect(await interactor.hasActiveLogin(loginOptions)).toBe(false);
+  });
+
+  it("returns whether it will use key pair stored in login key store if flags match", async () => {
+    const keyStoreInteractor = createKeyStoreInteractor(
+      connection.client,
+      evmKeyStore,
+    );
+    const session1 = await keyStoreInteractor.getSession(account.id);
+
+    const loginKeyStore = createInMemoryLoginKeyStore();
+    const keyStore2 = await loginKeyStore.generateKey(account.id);
+    const ad2 = createSingleSigAuthDescriptorRegistration(
+      ["X", "Y"],
+      keyStore2.id,
+      null,
+    );
+    await session1.account.addAuthDescriptor(ad2, keyStore2);
+
+    expect(
+      await keyStoreInteractor.hasActiveLogin({
+        accountId: account.id,
+        config: { flags: ["X"], rules: null },
+        loginKeyStore,
+      }),
+    ).toBe(true);
+    expect(
+      await keyStoreInteractor.hasActiveLogin({
+        accountId: account.id,
+        config: { flags: [], rules: null },
+        loginKeyStore,
+      }),
+    ).toBe(true);
+    expect(
+      await keyStoreInteractor.hasActiveLogin({
+        accountId: account.id,
+        config: { flags: ["X", "Y"], rules: null },
+        loginKeyStore,
+      }),
+    ).toBe(true);
+    expect(
+      await keyStoreInteractor.hasActiveLogin({
+        accountId: account.id,
+        config: { flags: ["X", "Y", "Z"], rules: null },
+        loginKeyStore,
+      }),
+    ).toBe(false);
+    expect(
+      await keyStoreInteractor.hasActiveLogin({
+        accountId: account.id,
+        config: { flags: ["J"], rules: null },
+        loginKeyStore,
+      }),
+    ).toBe(false);
   });
 });

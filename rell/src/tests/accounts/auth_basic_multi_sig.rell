@@ -2,180 +2,90 @@
 module;
 
 import lib.ft4.accounts;
-import cu: ^^.assets.utils;
+import accounts_ext: lib.ft4.external.accounts;
 import test_operations: ^^.operations;
-
-/*
- * We aim to unit test the basic authentication rules (e.g. the number of signatures and required flags).
- *
- * Note: 
- * Ideally this should be simple unit tests, but since we have "op_context.is_signer()" inside the auth logic,
- * the code must come from a signed transaction, so we added a new method for this in the "dev_op_auth.rell" file.
- * We also have to go the roundabout way of storing the returned error message in a global object "dev_error".
- */
-
-function required_flags() = ["T"];  
+import test_op: lib.ft4.test.operations;
+import test: lib.ft4.test.core;
 
 
 function test_multi_sig_valid_1_of_1() {
-    val alice = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice], 
-        good_ad_1_of_1()
-    );
+    val alice = test.register_alice();
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(alice.account.id, alice.auth_descriptor_id, required_flags()))
+        .op(alice.ft_auth(test_op.authenticated_operation()))
         .sign(rell.test.keypairs.alice) 
         .run();
-
-    assert_equals(test_operations.test_auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_valid_2_of_2_signs() {
-    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice, rell.test.keypairs.bob], 
-        good_ad_2_of_2()
+    val account_data = test.register_account_with_multisig_auth_descriptor(
+        test.create_multisig_auth_descriptor(
+            2,
+            [rell.test.keypairs.alice.pub, rell.test.keypairs.bob.pub],
+            [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER],
+        ),
+        [rell.test.keypairs.alice, rell.test.keypairs.bob]
     );
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(
-            account_data.account.id,
-            account_data.auth_descriptor_id,
-            required_flags()
-        ))
+        .op(account_data.ft_auth(test_op.authenticated_operation()))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .run();
-
-    assert_equals(test_operations.test_auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_valid_1_of_2_signs() {
-    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice, rell.test.keypairs.bob], 
-        good_ad_1_of_2() // <-- Only one required
+    val account_data = test.register_account_with_multisig_auth_descriptor(
+        test.create_multisig_auth_descriptor(
+            1,
+            [rell.test.keypairs.alice.pub, rell.test.keypairs.bob.pub],
+            [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER],
+        ),
+        [rell.test.keypairs.alice, rell.test.keypairs.bob]
     );
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(
-            account_data.account.id,
-            account_data.auth_descriptor_id,
-            required_flags()
-        ))
+        .op(account_data.ft_auth(test_op.authenticated_operation()))
         .sign(rell.test.keypairs.bob) // <-- Omitting Alice should work
         .run();
 
-    assert_equals(test_operations.test_auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_valid_3_of_3_signs() {
-    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice, rell.test.keypairs.bob, rell.test.keypairs.trudy], 
-        good_ad_3_of_3()
+    val account_data = test.register_account_with_multisig_auth_descriptor(
+        test.create_multisig_auth_descriptor(
+            3,
+            [rell.test.keypairs.alice.pub, rell.test.keypairs.bob.pub, rell.test.keypairs.trudy.pub],
+            [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER],
+        ),
+        [rell.test.keypairs.alice, rell.test.keypairs.bob, rell.test.keypairs.trudy]
     );
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(account_data.account.id,
-        account_data.auth_descriptor_id,
-        required_flags()
-    ))
+        .op(account_data.ft_auth(test_op.authenticated_operation()))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .sign(rell.test.keypairs.trudy)
         .run();
-
-    assert_equals(test_operations.test_auth.test_error.msg, "valid");
 }
 
 function test_multi_sig_wrong_required_flags() {
-    val account_data = cu._create_test_acc_from_auth_desc_multi_sig(
-        [rell.test.keypairs.alice, rell.test.keypairs.bob], 
-        good_ad_2_of_2()
+    val ad = test.create_multisig_auth_descriptor(
+        1,
+        [rell.test.keypairs.bob.pub],
+        ["X"],
     );
-
-    val bad_required_flags = ["X"]; // <---- Default test Auth Desc doesn't have "X"!!
+    val account_data = test.register_alice();
 
     rell.test.tx()
-        .op(test_operations.test_auth.test_auth(
-            account_data.account.id,
-            account_data.auth_descriptor_id,
-            bad_required_flags
-        ))
+        .op(account_data.ft_auth(accounts_ext.add_auth_descriptor(ad)))
         .sign(rell.test.keypairs.alice)
         .sign(rell.test.keypairs.bob)
         .run();
 
-    assert_equals(test_operations.test_auth.test_error.msg, "Some required flags [X] are missing on the (multi sig) Auth Descriptor.");
+    rell.test.tx()
+        .op(test.ft_auth_operation_for(rell.test.keypairs.bob.pub))
+        .op(test_op.authenticated_operation())
+        .sign(rell.test.keypairs.bob)
+        .run_must_fail("MISSING FLAGS: Some required flags [A] are missing on the (multi sig) Auth Descriptor.");
 }
-
-// ----- util -----
-
-function good_ad_1_of_1() = create_auth_descriptor_M_1_pub(
-        rell.test.keypairs.alice.pub
-);
-
-function good_ad_1_of_2() = create_auth_descriptor_M_2_pub(
-        rell.test.keypairs.alice.pub, 
-        rell.test.keypairs.bob.pub,
-        1 // <--- should work too
-);
-
-function good_ad_2_of_2() = create_auth_descriptor_M_2_pub(
-        rell.test.keypairs.alice.pub, 
-        rell.test.keypairs.bob.pub,
-        2 // <-- Two signers required
-);
-
-function good_ad_3_of_3() = create_auth_descriptor_M_3_pub(
-        rell.test.keypairs.alice.pub, 
-        rell.test.keypairs.bob.pub,
-        rell.test.keypairs.trudy.pub,
-        3 // <--- Will work
-);
-
-
-/*
- * This valid Auth Desc has only one pub key despite being "M".
- */
-function create_auth_descriptor_M_1_pub(byte_array): accounts.auth_descriptor {
-    val number_of_sigs = 1;
-    return accounts.auth_descriptor(
-        accounts.auth_type.M,
-        [
-            ["A", "T"].to_gtv(),
-            number_of_sigs.to_gtv(), 
-            [ byte_array.to_gtv() ].to_gtv()
-        ],
-        rules = null.to_gtv());
-}
-
-/*
- * A normal Auth Desc with 2 signers.
- */
-function create_auth_descriptor_M_2_pub(signer1: byte_array, signer2: byte_array, required_signs: integer): accounts.auth_descriptor {
-    return accounts.auth_descriptor(
-        accounts.auth_type.M,
-        [
-            ["A", "T"].to_gtv(),
-            required_signs.to_gtv(), 
-            [ signer1.to_gtv(), signer2.to_gtv()].to_gtv()
-        ],
-        rules = null.to_gtv());
-}
-
-/*
- * A normal Auth Desc with 3 signers.
- */
-function create_auth_descriptor_M_3_pub(signer1: byte_array, signer2: byte_array, signer3: byte_array, required_signs: integer): accounts.auth_descriptor {
-    return accounts.auth_descriptor(
-        accounts.auth_type.M,
-        [
-            ["A", "T"].to_gtv(),
-            required_signs.to_gtv(), 
-            [ signer1.to_gtv(), signer2.to_gtv(), signer3.to_gtv()].to_gtv()
-        ],
-        rules = null.to_gtv());
-}
-
-
-

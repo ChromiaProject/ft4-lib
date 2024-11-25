@@ -37,7 +37,7 @@ export type PagedResponse<T> = {
  * The queries that can be made using this object are general queries that are
  * not specific to one account. However, a `Connection` instance can be used
  * to acquire an `Account` instance, from which account specific details can
- * be found. @see {@link accounts.Account}
+ * be found. @see {@link Account}
  */
 export interface Connection extends Queryable {
   client: IClient;
@@ -51,6 +51,10 @@ export interface Connection extends Queryable {
    * Returns the version of ft library installed on the blockchain with the format <major>.<minor>.<patch>
    */
   getVersion: () => Promise<string>;
+  /**
+   * Returns the API version of ft library installed on the blockchain. It will be an integer.
+   */
+  getApiVersion: () => Promise<number>;
 
   /**
    * Returns the current block height of the underlying chain
@@ -263,4 +267,15 @@ export type KeyStoreInteractor = {
   onKeyStoreChanged(
     callback: (newKeyStore: KeyStoreInteractor | null) => void,
   ): void;
+  /**
+   * Allows checking whether calling login will result in an authentication request for the
+   * user or an old login key and auth descriptor will be reused.
+   *
+   * If an active session is found, calling `login` will not prompt the user to login again.
+   *
+   * `rules` field will **NOT** be validated against, except checking whether the auth
+   * descriptor has expired. This means that if the `loginOptions` ask for 5 minutes expiration,
+   * an auth descriptor expiring in 2 seconds will be deemed valid and reused by `login`
+   */
+  hasActiveLogin(loginOptions: LoginOptions): Promise<boolean>;
 };

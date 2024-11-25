@@ -75,9 +75,9 @@ describe("Rate Limit", () => {
       const tx = {
         operations: [
           ftAuth(account.id, user.authDescriptor.id),
-          op("test_authenticated_operation"),
+          op("ft4.test.authenticated_operation"),
           ftAuth(account.id, user.authDescriptor.id),
-          op("test_authenticated_operation"),
+          op("ft4.test.authenticated_operation"),
         ],
         signers: [user.signatureProvider.pubKey],
       };
@@ -99,7 +99,7 @@ describe("Rate Limit", () => {
   ): Promise<any> => {
     const tx: Transaction = {
       operations: Array(requests).fill(
-        op("consume_point", accountId),
+        op("ft4.test.consume_point", accountId),
         0,
         requests,
       ),

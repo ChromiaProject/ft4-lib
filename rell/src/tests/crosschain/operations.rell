@@ -3,11 +3,11 @@
 import lib.ft4.auth;
 import lib.ft4.assets;
 import xc: lib.ft4.crosschain;
-import ^^.assets.utils;
 import ^^.extensions;
-import lib.ft4.test.utils. { evm_auth_operation_for };
+import test: lib.ft4.test.core;
 import admin_crosschain: lib.ft4.admin.crosschain;
-import iccf_op: ^^.operations.iccf_op;
+import test_op: lib.ft4.test.operations;
+import ^^.operations.iccf_op.{ iccf_proof };
 
 function test_register_crosschain_asset_works() {
     val id = ("name", x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F").hash();
@@ -22,7 +22,7 @@ function test_register_crosschain_asset_works() {
             x"",            
             x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
         )
-        .sign(utils.admin_priv_key())
+        .sign(test.admin_priv_key())
         .run();
 }
 
@@ -39,7 +39,7 @@ function test_register_crosschain_asset_validates_issuing_blockchain_rid() {
             x"",
             x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
         )
-        .sign(utils.admin_priv_key())
+        .sign(test.admin_priv_key())
         .run_must_fail("issuing_blockchain_rid cannot be empty");
 }
 
@@ -56,14 +56,14 @@ function test_register_crosschain_asset_validates_origin_blockchain_rid() {
             x"",            
             x""
         )
-        .sign(utils.admin_priv_key())
+        .sign(test.admin_priv_key())
         .run_must_fail("origin_blockchain_rid cannot be empty");
 }
 
 function test_init_transfer_fails_when_amount_is_zero() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -80,8 +80,8 @@ function test_init_transfer_fails_when_amount_is_zero() {
 
 // Test for invalid asset and valid amount
 function test_init_transfer_fails_when_asset_is_invalid() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
     val asset_id_invalid = x"deadbeef";
 
     rell.test.tx()
@@ -99,12 +99,12 @@ function test_init_transfer_fails_when_asset_is_invalid() {
 
 // Test for valid asset and valid amount
 function test_init_transfer_fails_if_expired() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
     // Mint some asset to Alice's account for a valid test
-    utils.mint(alice.account, asset_valid, 10L);
+    test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -121,12 +121,12 @@ function test_init_transfer_fails_if_expired() {
 
 // Test for valid asset and valid amount
 function test_init_transfer_succeeds_under_valid_conditions() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
     // Mint some asset to Alice's account for a valid test
-    utils.mint(alice.account, asset_valid, 10L);
+    test.mint(alice.account, asset_valid, 10L);
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -154,11 +154,11 @@ function test_init_transfer_succeeds_under_valid_conditions() {
 }
 
 function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
-    val alice = utils.evm_register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice_evm();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
-    utils.mint(alice.account, asset_valid, 10L);
+    test.mint(alice.account, asset_valid, 10L);
 
     val op = xc.external.init_transfer(
         recipient_id = bob.account.id,
@@ -169,7 +169,7 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
     );
 
     rell.test.tx()
-        .op(evm_auth_operation_for(alice.keypair.priv, op))
+        .op(test.evm_auth_operation_for(alice.keypair.priv, op))
         .op(op)
         .sign(rell.test.keypairs.alice)
         .run();
@@ -178,10 +178,10 @@ function test_init_transfer_succeeds_under_valid_conditions_with_evm_auth() {
 function test_apply_transfer_succeeds_under_valid_conditions() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
-    val bob = utils.register_bob();
+    val bob = test.register_bob();
 
     val source_blockchain_rid = x"aa".repeat(32);
-    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+    val asset_valid = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
@@ -203,7 +203,7 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
@@ -228,10 +228,10 @@ function test_apply_transfer_succeeds_under_valid_conditions() {
 function test_apply_transfer_fails_if_expired() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
-    val bob = utils.register_bob();
+    val bob = test.register_bob();
 
     val source_blockchain_rid = x"aa".repeat(32);
-    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+    val asset_valid = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate an expired transaction and operation index
     val tx = gtx_transaction(
@@ -253,7 +253,7 @@ function test_apply_transfer_fails_if_expired() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("This transfer has expired at timestamp <1> (evaluated at timestamp <%s>).".format(rell.test.last_block_time));
@@ -262,10 +262,10 @@ function test_apply_transfer_fails_if_expired() {
 function test_apply_transfer_fails_when_applied_twice() {
     val sender_account_id = "the sender".hash();
     val sender_auth_descriptor_id = "sender auth descriptor".hash();
-    val bob = utils.register_bob();
+    val bob = test.register_bob();
 
     val source_blockchain_rid = x"aa".repeat(32);
-    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+    val asset_valid = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
@@ -287,14 +287,14 @@ function test_apply_transfer_fails_when_applied_twice() {
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
         .run(); // Should run successfully
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .nop()
         .sign(rell.test.keypairs.alice)
@@ -307,9 +307,9 @@ function test_apply_transfer_fails_when_applied_twice() {
 }
 
 function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
     val wrong_tx = gtx_transaction(
         body = gtx_transaction_body(
@@ -354,9 +354,9 @@ function test_apply_transfer_fails_with_mismatched_init_transfer_args() {
 }
 
 function test_apply_transfer_fails_with_invalid_hop_index() {
-    val alice = utils.register_alice();
-    val bob = utils.register_bob();
-    val asset_valid = utils.create_asset("validAsset", "va", 1);
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val asset_valid = test.create_asset("validAsset", "va", 1);
 
     val hops = [x"abcdef"];
     val init_tx = gtx_transaction(
@@ -407,7 +407,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
     val bogus_recipient_id = "bogus".hash();
 
     val source_blockchain_rid = x"aa".repeat(32);
-    val asset_valid = utils.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+    val asset_valid = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
 
     // Simulate a valid transaction and operation index
     val tx = gtx_transaction(
@@ -429,7 +429,7 @@ function test_apply_transfer_fails_when_recipient_id_does_not_exists_and_create_
     );
 
     rell.test.tx()
-        .op(iccf_op.iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
         .sign(rell.test.keypairs.alice)
         .run_must_fail("Account <%s> does not exist and creating accounts on transfer is not enabled".format(bogus_recipient_id));

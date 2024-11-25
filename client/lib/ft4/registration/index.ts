@@ -103,6 +103,19 @@ export interface RegistrationStrategy {
     authDescriptor: AnyAuthDescriptorRegistration,
     loginConfig?: LoginConfigOptions | null,
   ) => Strategy;
+
+  /**
+   * Creates an account that previously had assets transferred to it, paying a subscription fee
+   * @param subscriptionAsset - the asset that will be used to pay the subscription. The asset must already have been sent to the account
+   * @param authDescriptor - the auth descriptor of the new account
+   * @param loginConfig - the config if the account should be created with an active session, otherwise `null`
+   * @returns Strategy instance that can be used to retrieve registration details
+   */
+  transferSubscription: (
+    subscriptionAsset: Asset,
+    authDescriptor: AnyAuthDescriptorRegistration,
+    loginConfig?: LoginConfigOptions | null,
+  ) => Strategy;
 }
 
 const registrationStrategy: RegistrationStrategy = {
@@ -111,6 +124,7 @@ const registrationStrategy: RegistrationStrategy = {
   subscription,
   transferOpen,
   transferFee,
+  transferSubscription,
 };
 
 import { registerAccountMessage } from "./queries";

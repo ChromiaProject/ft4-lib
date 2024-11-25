@@ -1,8 +1,30 @@
-
+/**
+ * Retrieves the origin chain RID for the specified asset. If this asset does not
+ * have an origin, which is the case if this asset is not a crosschain
+ * asset, this query will return `null`.
+ * 
+ * @see core.crosschain.asset_origin for more information on asset origin chain
+ * 
+ * @param asset_id  id of the asset to get the origin for
+ */
 query get_asset_origin_by_id(asset_id: byte_array) {
     return crosschain.asset_origin @? { .asset.id == asset_id } .origin_blockchain_rid;
 }
 
+/**
+ * Retrieves all pending transfers for an account, that is: all crosschain transfers
+ * which was sent from this account but was not yet delivered to the final recipient. 
+ * Once a transfer has been marked as completed on this chain, it will no longer show
+ * up in this query. Paginated.
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @see crosschain.complete_transfer for information about completing a transfer
+ * 
+ * @param account_id    id of the account for which to get pending transfers
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 query get_pending_transfers_for_account(
     account_id: byte_array,
     page_size: integer?,
@@ -14,25 +36,53 @@ query get_pending_transfers_for_account(
     );
 }
 
+/**
+ * Same as `core.crosschain.get_last_pending_transfer_for_account`.
+ * Retrieves the pending transfer which was last created for this account that matches
+ * the provided parameters.
+ * 
+ * @param account_id                the id of the account from which the transfer were made
+ * @param target_blockchain_rid     blockchain rid of the chain that will receive the transfer
+ * @param recipient_id              the id of the account which will receive the transfer on the target chain
+ * @param asset_id                  id of the asset which was sent
+ * @param amount                    how much of the asset that was sent
+ */
 query get_last_pending_transfer_for_account(
-    sender_id: byte_array, 
+    account_id: byte_array, 
     target_blockchain_rid: byte_array, 
     recipient_id: byte_array,
     asset_id: byte_array, 
     amount: big_integer
 ) = crosschain.get_last_pending_transfer_for_account(
-    sender_id,
+    account_id,
     target_blockchain_rid,
     recipient_id,
     asset_id,
     amount
 );
 
+/**
+ * Checks if the transfer which was pointed out by the provided arguments was applied on this chain or not.
+ * 
+ * @see `core.crosschain.applied_transfer` for more information
+ * 
+ * @param init_tx_rid       the transaction id of the transaction that initialized this transfer
+ * @param init_op_index     the index of the operation inside that transaction
+ */
 query is_transfer_applied(init_tx_rid: byte_array, init_op_index: integer) {
     val transfer = crosschain.applied_transfers @? { .init_tx_rid == init_tx_rid, .init_op_index == init_op_index };
     return transfer != null;
 }
 
+/**
+ * Retrieves a transaction and op_index that can be passed as parameters to functions
+ * like `apply_transfer`, `cancel_transfer` and so on.
+ * 
+ * @see `core.crosschain.applied_transfer` for more information
+ * 
+ * @param init_tx_rid       the transaction that initialized this transfer
+ * @param init_op_index     the index of the operation inside that transaction
+ */
 query get_apply_transfer_tx(init_tx_rid: byte_array, init_op_index: integer) =
     crosschain.applied_transfers @ { .init_tx_rid == init_tx_rid, .init_op_index == init_op_index } (
         tx = gtx_transaction.from_bytes($.transaction.tx_data).to_gtv(),

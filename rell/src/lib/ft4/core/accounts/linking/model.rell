@@ -1,9 +1,48 @@
-
+/**
+ * Represents a link between two accounts.
+ * 
+ * This module by itself does not attach any meaning to this entity, so it can be used as
+ * any developer sees fit. It is used, for example, to create lock accounts, for which more
+ * information can be found in `core.assets.locking.ACCOUNT_TYPE_LOCK`.
+ * 
+ * In general, it is used to relate two accounts, and allows giving a custom description of
+ * the relationship.
+ * 
+ * Custom account types allow developers to create accounts that are not managed by users.
+ * Sometimes, a user will be able to control the non-user account within certain limits, as is
+ * the case for lock accounts.
+ * Sometimes they might have no control over it, as will be the case for many types of system
+ * accounts.
+ * These accounts are useful to hold assets outside of a user's reach, in scenarios like
+ * staking, bidding in an auction, or any other scenario where the user renounces the ability
+ * to freely spend a certain amount of tokens.
+ * 
+ * If a link between the account where tokens are temporarily held and the account the tokens
+ * came from is needed, this entity will allow keeping this information on chain.
+ * 
+ * Being a generic entity, however, nothing prevents it being used to link two user accounts
+ * or two non-user accounts, or putting the user account as `secondary`, if that is what seems
+ * fit for the role.
+ * 
+ * @see core.assets.locking for an example usage of this entity
+ * 
+ * @see core.accounts.account.type for information on custom account types
+ */
 entity account_link {
     key account, secondary;
     index secondary, type;
-    
+    /**
+     * The primary account in this relation between two accounts. Generally, it will be a user
+     * account.
+     */
     accounts.account;
+    /**
+     * The secondary account in this relation between two accounts. Generally, it will be a
+     * non-user account.
+     */
     secondary: accounts.account;
+    /**
+     * The type of relation being represented here. For example, "stake" or "bid"
+     */
     type: text;
 }

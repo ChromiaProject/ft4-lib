@@ -1,22 +1,28 @@
 import {
   AccountBuilder,
+  addNewAssetIfNeeded,
   adminUser,
   createChromiaClientToMultichain,
   fetchBlockchains,
   getNewAsset,
 } from "@ft4-test/util";
-import { AuthFlag } from "@ft4/accounts";
+import { AuthFlag, getTransferDetailsByAsset } from "@ft4/accounts";
 import { registerCrosschainAsset } from "@ft4/admin";
 import { createAmount } from "@ft4/asset";
-import { noopAuthenticator, days } from "@ft4/authentication";
-import { applyTransfer, initTransfer } from "@ft4/crosschain";
+import { noopAuthenticator, days, FtKeyStore } from "@ft4/authentication";
+import {
+  applyTransfer,
+  crosschainTransfer,
+  initTransfer,
+} from "@ft4/crosschain";
 import { createConnection } from "@ft4/ft-session";
+import { registerAccount, registrationStrategy } from "@ft4/registration";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { BufferId } from "@ft4/utils";
 import { Operation, RawGtx, gtv } from "postchain-client";
 
 describe("Crosschain transfer", () => {
-  test("transfers successfully with one hop", async () => {
+  it("transfers successfully with one hop", async () => {
     const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
@@ -181,7 +187,7 @@ describe("Crosschain transfer", () => {
     });
   });
 
-  test("transfer fails if expired before init", async () => {
+  it("transfer fails if expired before init", async () => {
     const { multichain00, multichain01 } = await fetchBlockchains();
 
     const connection00 = createConnection(
@@ -214,5 +220,68 @@ describe("Crosschain transfer", () => {
     await expect(promise).rejects.toThrow(
       "Parameter 'deadline' cannot be a past timestamp. Value: 1",
     );
+  });
+
+  it("displays original sender id in transfer history", async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+    const connection01 = createConnection(
+      await createChromiaClientToMultichain(multichain01.rid),
+    );
+
+    // Register asset on chain A
+    const asset00 = await addNewAssetIfNeeded(
+      connection00.client,
+      "crosschain-transfer-original-sender-test-asset",
+      "CROSSCHAIN-transfer-original-sender-test-asset",
+    );
+
+    // Register asset on chain B
+    await registerCrosschainAsset(
+      connection01.client,
+      adminUser().signatureProvider,
+      asset00.id,
+      multichain00.rid,
+    );
+
+    // Cerate sender account on chain A
+    const account00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
+      .build();
+
+    // Transfer assets from A to B (no recipient account exists yet)
+    await crosschainTransfer(
+      connection00,
+      account00.authenticator,
+      connection01.blockchainRid,
+      account00.id, // We will get the same account id on the target chain
+      asset00.id,
+      createAmount(10, asset00.decimals),
+    );
+
+    // Register the account by claiming the assets on chain B
+    const { session: recipientSession } = await registerAccount(
+      connection01.client,
+      account00.authenticator.keyHandlers[0].keyStore as FtKeyStore,
+      registrationStrategy.open(await account00.getMainAuthDescriptor()),
+    );
+
+    // Fetch transfer history entries for account on chain B
+    const historyEntry = (await recipientSession.account.getTransferHistory())
+      .data[0];
+    const details = await getTransferDetailsByAsset(
+      connection01,
+      historyEntry.transactionId,
+      historyEntry.opIndex,
+      asset00.id,
+    );
+    const senderRecord = details.filter((d) => d.isInput)[0];
+
+    expect(senderRecord.accountId).toEqual(account00.id);
+    expect(senderRecord.blockchainRid).toEqual(connection00.blockchainRid);
   });
 });

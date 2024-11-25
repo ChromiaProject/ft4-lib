@@ -6,17 +6,40 @@ import ^^.core.assets;
 import ^^.utils;
 import ^^.version;
 
+/** The configs used by the admin module */
 struct module_args {
+    /**
+     * Only allow admin operations to be called if tx is signed by the private key
+     * corresponding to this pubkey
+     */
     admin_pubkey: pubkey;
 }
 
+/**
+ * Utility function that checks if the signer is admin.
+ * Not intended for use in production. If you need admin functionality, e.g. for authorizing
+ * certain operations that the users should never be allowed to call, building a different
+ * framework for that is strongly recommended, as it will allow multisigs and rotating the
+ * admin key.
+ * 
+ * Can only be called from an operation.
+ * 
+ * Throws `"ADMIN REQUIRED"` if the signer is not admin
+ */
 function require_admin() {
     require(
         op_context.is_signer(chain_context.args.admin_pubkey),
-        "Expected admin signature"
+        "ADMIN REQUIRED: Expected admin signature"
     );
 }
 
+/**
+ * Retrieves the admin pubkey that was configured in module args.
+ * Used by `external.admin` to access this information, since a module cannot access a different
+ * module's `moduleArgs`.
+ * 
+ * Not intended to be used by developers.
+ */
 function get_admin_pubkey() {
     return chain_context.args.admin_pubkey;
 }

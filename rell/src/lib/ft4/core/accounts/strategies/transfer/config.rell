@@ -1,3 +1,11 @@
+/**
+ * Utility function which returns whether a value is allowed by a certain `allowlist`.
+ * This means the `allowlist` is either set to allow all values, or the value is specified
+ * in the list of allowed values.
+ * 
+ * @param value         the value to check
+ * @param allowlist     the allowlist
+ */
 function is_value_allowed(value: byte_array, allowlist) {
     return 
         allowlist.allow_all
@@ -5,16 +13,37 @@ function is_value_allowed(value: byte_array, allowlist) {
         value in allowlist.allowed_values;
 }
 
+/**
+ * Utility function which returns whether a rule allows a certain `blockchain_rid` as sender.
+ * 
+ * @param rule              the rule to check
+ * @param blockchain_rid    the blockchain sender to check
+ */
 function is_blockchain_allowed(rule, blockchain_rid: byte_array) {
     val bc = rule.blockchains;
     return is_value_allowed(blockchain_rid, bc);
 }
 
+/**
+ * Utility function which returns whether a rule allows a certain account ID as sender.
+ * 
+ * @param rule          the rule to check
+ * @param sender_id     the sender ID to check
+ */
 function is_sender_allowed(rule, sender_id: byte_array) {
     val sender = rule.senders;
     return is_value_allowed(sender_id, sender);
 }
 
+/**
+ * Utility function which returns whether a rule allows a certain account ID as recipient.
+ * Since some rules allow all recipients as long as the sender is the same as the recipient,
+ * the sender ID is needed as well.
+ * 
+ * @param rule          the rule to check
+ * @param recipient_id  the recipient ID to check
+ * @param sender_id     the sender ID to check
+ */
 function is_recipient_allowed(rule, recipient_id: byte_array, sender_id: byte_array) {
     if (rule.require_same_address) {
         return recipient_id == sender_id;
@@ -22,13 +51,25 @@ function is_recipient_allowed(rule, recipient_id: byte_array, sender_id: byte_ar
     return is_value_allowed(recipient_id, rule.recipients);
 }
 
+/**
+ * Utility function which returns whether a rule allows a certain amount of an asset to be sent
+ * to register new accounts.
+ * 
+ * @param rule      the rule to check
+ * @param asset     the asset that is being transferred
+ * @param amount    the amount that is being transferred
+ */
 function is_asset_amount_allowed(rule, asset: assets.asset, amount: big_integer) {
     if (rule.allow_all_assets) return true;
     var min_amount = 0L;
     for (asset_limit in rule.asset_limits) {
-        if ((asset_limit.id != null and asset_limit.id!! == asset.id) or
-            (asset_limit.name != null and asset_limit.name!! == asset.name and
-                asset_limit.issuing_blockchain_rid != null and asset_limit.issuing_blockchain_rid!! == asset.issuing_blockchain_rid)) {
+        if ((asset_limit.id != null and asset_limit.id == asset.id) or
+            (
+                asset_limit.name != null and
+                asset_limit.name == asset.name and
+                asset_limit.issuing_blockchain_rid != null and
+                asset_limit.issuing_blockchain_rid == asset.issuing_blockchain_rid
+            )) {
             min_amount = asset_limit.min_amount;
         }
     }
@@ -39,16 +80,48 @@ function is_asset_amount_allowed(rule, asset: assets.asset, amount: big_integer)
     }
 }
 
+/**
+ * Utility function which returns whether a transaction has expired, given the rule it was
+ * using to register the account.
+ * If a transaction has expired, the account can no longer be registered and the transfer
+ * can be recalled to move funds back to the original sender.
+ * 
+ * @see pending_transfer_expiration_state for more information on expiration.
+ * 
+ * @param rule                  the rule to check
+ * @param tx_start_timestamp    the timestamp of the transfer registration. For on-chain
+ *                              transfers, it's the timestamp of the transfer. For cross-chain
+ *                              transfers, it's the timestamp of the last `apply_transfer`
+ *                              operation, when funds reached this chain.
+ */
 function has_tx_expired(rule, tx_start_timestamp: timestamp) {
     val timeout_millis = rule.timeout_days * utils.MILLISECONDS_PER_DAY;
     return tx_start_timestamp + timeout_millis < utils.latest_time();
 }
 
+/**
+ * Utility function which returns whether a rule allows a certain registration strategy.
+ * 
+ * @param rule      the rule to check
+ * @param strategy  the name of the strategy to check
+ */
 function is_strategy_active(rule, strategy: text) {
     val strats = rule.strategies;
     return strategy in strats;
 }
 
+/**
+ * Returns all rules on this chain that can be used to register an account given the parameters
+ * of the transfer.
+ * 
+ * @param from_chain    the chain the transfer came from. This chain's RID for on-chain transfers
+ * @param from_id       the ID of the sender account
+ * @param to_id         the ID of the recipient account
+ * @param asset         the asset that was transferred
+ * @param amount        the amount of the transfer
+ * 
+ * @return a `map<strategy_name: text, rule>`
+ */
 function find_allowed_rules(
     from_chain: byte_array,
     from_id: byte_array,
@@ -73,8 +146,28 @@ function find_allowed_rules(
     return rule_map;
 }
 
-function find_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_array, recipient_id: byte_array):
-        map<byte_array, big_integer>? {
+/**
+ * Finds all assets that a certain sender on a certain chain can send to the specified account
+ * ID to allow its registration.
+ * 
+ * This function can return that no asset is allowed. This means:
+ * - no rule allows account registration for the specified combination of parameters; or
+ * - a rule that allows this specific registration is found, but the asset that it requires
+ *   is not yet registered on this chain.
+ * 
+ * @param sender_blockchain_rid     the RID of the blockchain where the transfer will originate.
+ *                                  This blockchain's RID for on-chain transfers.
+ * @param sender_id                 the ID of the sender account
+ * @param recipient_id              the ID of the account that will be registered
+ * 
+ * @return a `map<asset_id: byte_array, amount: big_integer>` or null if there's no rule
+ * allowing this specific account registration at this moment.
+ */
+function find_allowed_assets(
+    sender_blockchain_rid: byte_array,
+    sender_id: byte_array,
+    recipient_id: byte_array
+): map<byte_array, big_integer>? {
     val cfg = get_config();
     val allowed_rules = cfg @* {
         is_blockchain_allowed($, sender_blockchain_rid),
@@ -91,6 +184,14 @@ function find_allowed_assets(sender_blockchain_rid: byte_array, sender_id: byte_
     return allowed_assets;
 }
 
+/**
+ * Finds all assets that a certain rule allows for account registration.
+ * 
+ * @param rule  the rule to check
+ * 
+ * @return a `map<asset_id: byte_array, amount: big_integer>` or null if the assets required
+ * by the rule are not yet registered on this chain.
+ */
 function resolve_allowed_assets(rule): map<byte_array, big_integer>? {
     val allowed_assets = map<byte_array, big_integer>();
     if (rule.allow_all_assets) return null;

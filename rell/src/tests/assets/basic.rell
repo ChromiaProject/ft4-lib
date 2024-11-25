@@ -1,26 +1,26 @@
 @test module;
 
-import ^.utils;
 import ^^^.lib.ft4.assets;
 import ^^^.lib.ft4.admin;
+import test: lib.ft4.test.core;
 
 val alice = rell.test.keypairs.alice;
 val bob = rell.test.keypairs.bob;
 
 function test_an_asset_can_be_created() {
-  utils.create_asset("a", "a", 0);
-  utils.create_asset("b", "b", 1);
-  utils.create_asset("c", "c", 50);
-  utils.create_asset("d", "d", 78);
+  test.create_asset("a", "a", 0);
+  test.create_asset("b", "b", 1);
+  test.create_asset("c", "c", 50);
+  test.create_asset("d", "d", 78);
 }
 
 function test_an_invalid_asset_cannot_be_created() {
   val error = "Decimals must be between 0 and 78 (included)";
   admin.external.register_asset("e", "e", -1, "")
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail(error);
   admin.external.register_asset("f", "f", 79, "")
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail(error);
 }
 

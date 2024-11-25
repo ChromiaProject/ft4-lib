@@ -108,9 +108,10 @@ async function hasExpired(
         authDescriptor.accountId,
         authDescriptor.id,
       );
+
       // auth descriptor expired and was eliminated on rell side
       if (counter === null) return true;
-      variable = counter;
+      variable = counter + 1;
     }
 
     if (

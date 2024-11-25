@@ -3,7 +3,10 @@ import {
   getAccountIdFromAuthDescriptor,
   useChromiaNode,
 } from "@ft4-test/util";
-import { createSingleSigAuthDescriptorRegistration } from "@ft4/accounts";
+import {
+  AuthFlag,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
 import {
   createInMemoryEvmKeyStore,
   createInMemoryFtKeyStore,
@@ -24,7 +27,7 @@ describe("EVM key handler", () => {
     const keyPair = encryption.makeKeyPair();
     const keyStore = createInMemoryEvmKeyStore(keyPair);
     const ad = createSingleSigAuthDescriptorRegistration(
-      ["A", "T"],
+      [AuthFlag.Account, AuthFlag.Transfer],
       keyStore.address,
       null,
     );
@@ -36,7 +39,7 @@ describe("EVM key handler", () => {
 
     const keyPair2 = encryption.makeKeyPair();
     const ad2 = createSingleSigAuthDescriptorRegistration(
-      ["T"],
+      [AuthFlag.Transfer],
       keyPair2.pubKey,
       null,
     );

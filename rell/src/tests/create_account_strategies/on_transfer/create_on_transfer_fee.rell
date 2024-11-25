@@ -7,22 +7,20 @@ import lib.ft4.accounts;
 import lib.ft4.accounts.strategies;
 import lib.ft4.accounts.strategies.open;
 import lib.ft4.accounts.strategies.transfer.fee;
-import test_utils: ^^^^.lib.ft4.test.utils;
+import test: lib.ft4.test.core;
 import create_on_transfer: ^^^^.lib.ft4.accounts.strategies.transfer;
-import ^^^.assets.utils;
-import iccf_op: ^^^.operations.iccf_op;
 import ^.helpers;
 
 function test_create_account_on_internal_transfer_with_fee_success() {
     helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
     val fee_account = accounts.Account(rell.test.pubkeys.trudy);
 
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -33,23 +31,23 @@ function test_create_account_on_internal_transfer_with_fee_success() {
 
     rell.test.tx()
         .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
-        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .op(assets.external.transfer(recipient_id, asset.id, fee_amount))
         .sign(alice.keypair)
         .run();
 
-    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), fee_amount);
     assert_not_null(create_on_transfer.account_creation_transfer @? {
         .sender_blockchain_rid == chain_context.blockchain_rid,
         .sender_id == sender.id,
         recipient_id,
         asset,
-        amount,
+        fee_amount,
         .state == create_on_transfer.account_creation_state.pending
     });
     assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
 
     rell.test.tx()
-        .op(fee.ras_transfer_fee(asset.id, test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(fee.ras_transfer_fee(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -58,7 +56,7 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
 
     val bob = accounts.account_by_id(recipient_id);
-    assert_equals(assets.get_asset_balance(bob, asset), amount - fee_amount);
+    assert_equals(assets.get_asset_balance(bob, asset), 0);
     assert_equals(assets.get_asset_balance(fee_account, asset), fee_amount);
     assert_equals(
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
@@ -66,16 +64,176 @@ function test_create_account_on_internal_transfer_with_fee_success() {
     );
 }
 
+function test_create_account_on_internal_transfer_multiple_transfers_with_fee_success() {
+    helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
+    val fee_account = accounts.Account(rell.test.pubkeys.trudy);
+
+    val alice = test.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val fee_assets = map(fee.get_fee_assets());
+    val fee_amount = fee_assets[asset.id];
+
+    assert_equals(amount, 5L);
+    assert_equals(fee_amount, 10L);
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .nop()
+        .sign(alice.keypair)
+        .run();    
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), fee_amount);
+    assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 0L);
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    val bob = accounts.account_by_id(recipient_id);
+    assert_equals(assets.get_asset_balance(bob, asset), 0);
+    assert_equals(assets.get_asset_balance(fee_account, asset), fee_amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        2
+    );
+}
+
+function test_create_account_multiple_transfers_with_fee_no_mixup_success() {
+    helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
+    val fee_account = accounts.Account(rell.test.pubkeys.trudy);
+
+    val alice = test.register_alice();
+    val sender = alice.account;
+    val recipient_id = rell.test.pubkeys.bob.hash();
+    val recipient2_id = rell.test.pubkeys.charlie.hash();
+
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 15L);
+
+    val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
+    val min_amount = allowed_assets[asset.id];
+    val amount = min_amount;
+
+    val fee_assets = map(fee.get_fee_assets());
+    val fee_amount = fee_assets[asset.id];
+
+    assert_equals(amount, 5L);
+    assert_equals(fee_amount, 10L);
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .sign(alice.keypair)
+        .run();
+
+    // one transfer to a different account happens meanwhile
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient2_id, asset.id, amount))
+        .nop()
+        .sign(alice.keypair)
+        .run();
+
+    rell.test.tx()
+        .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
+        .op(assets.external.transfer(recipient_id, asset.id, amount))
+        .nop()
+        .sign(alice.keypair)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), 15L);
+    assert_true("fee" in create_on_transfer.get_pending_transfer_strategies(recipient_id));
+    assert_false("fee" in create_on_transfer.get_pending_transfer_strategies(recipient2_id));
+
+    rell.test.tx()
+        .op(fee.ras_transfer_fee(asset.id, test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
+        .op(strategies.external.register_account())
+        .sign(rell.test.keypairs.bob)
+        .run();
+
+    assert_equals(assets.get_asset_balance(create_on_transfer.ensure_pool_account(chain_context.blockchain_rid), asset), amount);
+    assert_true(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
+
+    val bob = accounts.account_by_id(recipient_id);
+    assert_equals(assets.get_asset_balance(bob, asset), 0);
+    assert_equals(assets.get_asset_balance(fee_account, asset), fee_amount);
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
+        2
+    );
+    assert_equals(
+        (create_on_transfer.account_creation_transfer @* { .recipient_id == recipient2_id }).size(),
+        1
+    );
+
+    val transfer = create_on_transfer.account_creation_transfer @ { recipient_id } limit 1;
+    val transfer_details = assets.external.get_transfer_details(
+        transfer.final_tx_rid,
+        transfer.final_op_index
+    );
+    
+    assert_equals(transfer_details.size(), 6);
+    
+    assert_not_null(transfer_details @? {
+        .is_input == false,
+        .delta == 10L,
+        .account_id == fee_account.id
+    });
+    assert_not_null(transfer_details @? {
+        .is_input == true,
+        .delta == 10L,
+        .account_id == bob.id
+    });
+    
+    assert_equals(
+        (transfer_details @* {
+            .is_input == true,
+            .delta == 5L,
+            .account_id == alice.account.id,
+        }).size(),
+        2
+    );
+    assert_equals(
+        (transfer_details @* {
+            .is_input == false,
+            .delta == 5L,
+            .account_id == bob.id,
+        }).size(),
+        2
+    );
+}
+
 function test_can_complete_pending_transfers_when_account_is_registered_with_direct_strategies() {
     helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
     val fee_account = accounts.Account(rell.test.pubkeys.trudy);
 
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
 
-    val asset = utils.create_asset("test", "TEST", 1);
-    utils.mint_to_account(alice, asset, 10);
+    val asset = test.create_asset("test", "TEST", 1);
+    test.mint(alice.account, asset, 10);
 
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
@@ -99,7 +257,7 @@ function test_can_complete_pending_transfers_when_account_is_registered_with_dir
     assert_false(empty(create_on_transfer.get_pending_transfer_strategies(recipient_id)));
 
     rell.test.tx()
-        .op(open.ras_open(test_utils.create_auth_descriptor(rell.test.pubkeys.bob, ["A", "T"])))
+        .op(open.ras_open(test.create_auth_descriptor(rell.test.pubkeys.bob, [accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])))
         .op(strategies.external.register_account())
         .sign(rell.test.keypairs.bob)
         .run();
@@ -120,12 +278,12 @@ function test_can_check_if_account_transfer_from_different_address_exists() {
     helpers.create_system_account(rell.test.pubkeys.trudy, create_on_transfer.ACCOUNT_TYPE_FEE).run();
     
     val fee_account = accounts.Account(rell.test.pubkeys.trudy);
-    val alice = utils.register_alice();
+    val alice = test.register_alice();
     val sender = alice.account;
     val recipient_id = rell.test.pubkeys.bob.hash();
-    val asset = utils.create_asset("test", "TEST", 1);
+    val asset = test.create_asset("test", "TEST", 1);
     
-    utils.mint_to_account(alice, asset, 10);
+    test.mint(alice.account, asset, 10);
     val allowed_assets = map(require(create_on_transfer.get_allowed_assets(chain_context.blockchain_rid, sender.id, recipient_id)));
     val min_amount = allowed_assets[asset.id];
     val amount = min_amount;
@@ -149,7 +307,7 @@ function test_can_check_if_account_transfer_from_different_address_exists() {
 function test_an_error_is_thrown_when_no_suceeding_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     rell.test.tx()
@@ -161,7 +319,7 @@ function test_an_error_is_thrown_when_no_suceeding_op() {
 function test_an_error_is_thrown_when_not_followed_by_register_account_op() {
     val auth_descriptor = accounts.single_sig_auth_descriptor(
         rell.test.keypairs.alice.pub,
-        set(["A", "T"])
+        set([accounts.auth_flags.ACCOUNT, accounts.auth_flags.TRANSFER])
     );
 
     rell.test.tx()

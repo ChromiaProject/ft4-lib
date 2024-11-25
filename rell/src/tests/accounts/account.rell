@@ -2,9 +2,8 @@
 
 import acc: ^^^.lib.ft4.accounts;
 import utils: ^^^.lib.ft4.utils;
-import asset_utils: ^^.assets.utils;
-import test_op: ^^.operations;
-import test_utils: ^^^.lib.ft4.test.utils;
+import test_op: lib.ft4.test.operations;
+import test: lib.ft4.test.core;
 
 struct gtv_auth_descriptor {
     id: byte_array;
@@ -16,13 +15,13 @@ struct gtv_auth_descriptor {
 }
 
 function setup_account_with_many_ads() {
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
-  asset_utils.create_test_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+  test.register_account_with_auth_descriptor(alice_ad, rell.test.keypairs.alice);
 
   val account = acc.account @ { rell.test.keypairs.alice.pub.hash() };
-  val bob_ad = test_utils.create_auth_descriptor(rell.test.keypairs.bob.pub);
-  val eve_ad = test_utils.create_auth_descriptor(rell.test.keypairs.eve.pub);
-  val trudy_ad = test_utils.create_auth_descriptor(rell.test.keypairs.trudy.pub);
+  val bob_ad = test.create_auth_descriptor(rell.test.keypairs.bob.pub);
+  val eve_ad = test.create_auth_descriptor(rell.test.keypairs.eve.pub);
+  val trudy_ad = test.create_auth_descriptor(rell.test.keypairs.trudy.pub);
   
   rell.test.tx().op(test_op.add_ad_to_account(account, bob_ad)).sign(rell.test.keypairs.bob).run();
   rell.test.tx().op(test_op.add_ad_to_account(account, eve_ad)).sign(rell.test.keypairs.eve).run();
@@ -52,7 +51,7 @@ function test_items_have_the_correct_return_format() {
   val descriptors = acc.external.get_account_auth_descriptors(account.id);
 
   val alice_ad_id = acc.account_auth_descriptor @* {.account == account} ( .id )[0];
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A", "T"]);
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
 
   assert_equals(descriptors[0], (
     id = alice_ad_id,
@@ -65,10 +64,10 @@ function test_items_have_the_correct_return_format() {
 }
 
 function test_get_accounts_by_signer_is_paginated() {
-  val account1 = asset_utils.create_test_account(rell.test.keypairs.alice, ["A", "T"]);
-  val account2 = asset_utils.create_test_account(rell.test.keypairs.bob, ["A", "T"]);
+  val account1 = test.register_account_open(rell.test.keypairs.alice, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
+  val account2 = test.register_account_open(rell.test.keypairs.bob, [acc.auth_flags.ACCOUNT, acc.auth_flags.TRANSFER]);
 
-  test_op.add_ad_to_account(account2.account, test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
+  test_op.add_ad_to_account(account2.account, test.create_auth_descriptor(rell.test.keypairs.alice.pub)).run();
 
   val page1 = acc.external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, null);
   val page2 = acc.external.get_accounts_by_signer(rell.test.keypairs.alice.pub, 1, page1.next_cursor);
@@ -80,10 +79,10 @@ function test_get_accounts_by_signer_is_paginated() {
 }
 
 function test_accounts_by_ad_id_is_paginated() {
-  val alice_ad = test_utils.create_auth_descriptor(rell.test.keypairs.alice.pub, ["A"]);
-  val bob = asset_utils.register_bob();
-  val eve = asset_utils.register_eve();
-  val trudy = asset_utils.register_trudy();
+  val alice_ad = test.create_auth_descriptor(rell.test.keypairs.alice.pub, [acc.auth_flags.ACCOUNT]);
+  val bob = test.register_bob();
+  val eve = test.register_eve();
+  val trudy = test.register_trudy();
 
   rell.test.tx()
     .op(test_op.add_ad_to_account(bob.account, alice_ad))

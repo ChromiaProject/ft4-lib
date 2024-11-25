@@ -2,14 +2,14 @@
 
 import lib.ft4.auth;
 import xc: lib.ft4.crosschain;
-import ^^.assets.utils;
+import test: lib.ft4.test.core;
 
 function test_it_registers_a_pending_transaction_in_init_transfer() {
-  val alice = utils.register_alice();
-  val bob = utils.register_bob();
+  val alice = test.register_alice();
+  val bob = test.register_bob();
 
-  val asset = utils.create_asset("test", "t", 1);
-  utils.mint(alice.account, asset, 1);
+  val asset = test.create_asset("test", "t", 1);
+  test.mint(alice.account, asset, 1);
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -23,12 +23,12 @@ function test_it_registers_a_pending_transaction_in_init_transfer() {
 }
 
 function test_it_fetches_pending_transactions_for_the_specified_account() {
-  val alice = utils.register_alice();
-  val bob = utils.register_bob();
+  val alice = test.register_alice();
+  val bob = test.register_bob();
 
-  val asset = utils.create_asset("test", "t", 1);
-  utils.mint(alice.account, asset, 1);
-  utils.mint(bob.account, asset, 1);
+  val asset = test.create_asset("test", "t", 1);
+  test.mint(alice.account, asset, 1);
+  test.mint(bob.account, asset, 1);
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -42,11 +42,11 @@ function test_it_fetches_pending_transactions_for_the_specified_account() {
 }
 
 function test_get_pending_transfers_for_account_is_paginated() {
-  val alice = utils.register_alice();
-  val bob = utils.register_bob();
-  val asset_valid = utils.create_asset("validAsset", "va", 1);
+  val alice = test.register_alice();
+  val bob = test.register_bob();
+  val asset_valid = test.create_asset("validAsset", "va", 1);
 
-  utils.mint(alice.account, asset_valid, 10);
+  test.mint(alice.account, asset_valid, 10);
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))
@@ -74,13 +74,13 @@ function test_get_pending_transfers_for_account_is_paginated() {
 }
 
 function test_it_fetches_pending_transfers_by_sender_asset_and_amount() {
-  val alice = utils.register_alice();
+  val alice = test.register_alice();
   val recipient1_id = rell.test.pubkeys.bob.hash();
   val recipient2_id = rell.test.pubkeys.trudy.hash();
   val target_blockchain_rid = "1".hash();
 
-  val asset = utils.create_asset("test", "t", 1);
-  utils.mint(alice.account, asset, 3);
+  val asset = test.create_asset("test", "t", 1);
+  test.mint(alice.account, asset, 3);
 
   rell.test.tx()
     .op(auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id))

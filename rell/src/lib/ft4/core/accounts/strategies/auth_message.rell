@@ -1,4 +1,16 @@
-
+/**
+ * Gives a default message used by EVM wallets to authorize the account registration.
+ * 
+ * Throws if the strategy cannot be found. If `strategy_name` is correct, this could also be
+ * caused by having misconfigured the registration defined in the function that extends
+ * `strategy` in such a way that the strategy name and the `_strategy.op.mount_name` are not
+ * the same value.
+ * 
+ * @see add_strategy for an easy way to avoid extension misconfiguration issues
+ * 
+ * @param strategy_operation            the strategy operation
+ * @param register_account_operation    the `register_account` operation
+ */
 function get_register_account_message(
     strategy_operation: gtx_operation,
     register_account_operation: gtx_operation
@@ -19,6 +31,15 @@ function get_register_account_message(
     return message;
 }
 
+/**
+ * Builds a portion of the message that will be used to authorize account registration.
+ * This portion gives the information about the operation that called `register_account`.
+ * 
+ * In a standard usage of the library, this operation would have the mount name of
+ * `ft4.register_account`, found at `external.accounts.registration.register_account`
+ * 
+ * @param op    the operation that called the `register_account` function
+ */
 function auth_message_operation_details(op: gtx_operation): text {
     var message = "Operation:\n%s\n\n".format(op.name);
     if (op.args.size() > 0) {
@@ -31,6 +52,17 @@ function auth_message_operation_details(op: gtx_operation): text {
     return message;
 }
 
+/**
+ * Builds a portion of the message that will be used to authorize account registration.
+ * This portion gives the information about the auth descriptors that will be added to the
+ * newly created account
+ * 
+ * In a standard usage of the library, this operation would have the mount name of
+ * `ft4.register_account`, found at `external.accounts.registration.register_account`
+ * 
+ * @param main          the `main_auth_descriptor` for the new account
+ * @param disposable    optionally, the disposable auth descriptor for the new account
+ */
 function auth_message_auth_descriptors_details(
     main: accounts.auth_descriptor, 
     disposable: accounts.auth_descriptor? = null
@@ -44,15 +76,33 @@ function auth_message_auth_descriptors_details(
     return message;
 }
 
+/**
+ * Builds a text description of an auth descriptor. It's used to represent the auth descriptor
+ * in the account registration message.
+ * 
+ * @param auth_descriptor   the auth descriptor to describe
+ */
 function auth_message_auth_descriptor(accounts.auth_descriptor)
     = when (auth_descriptor.auth_type) {
         S -> auth_message_single_sig(accounts.single_sig_args.from_gtv(auth_descriptor.args.to_gtv()));
         M -> auth_message_multi_sig(accounts.multi_sig_args.from_gtv(auth_descriptor.args.to_gtv()));
     };
 
+/**
+ * Builds a text description of a single-sig auth descriptor. It's used to represent the auth
+ * descriptor in the account registration message.
+ * 
+ * @param args  the `args` field of the single-sig auth descriptor to describe
+ */
 function auth_message_single_sig(args: accounts.single_sig_args)
     = "Signer:\n%s\n\nFlags:\n%s\n".format(args.signer, args.flags);
 
+/**
+ * Builds a text description of a multi-sig auth descriptor. It's used to represent the auth
+ * descriptor in the account registration message.
+ * 
+ * @param args  the `args` field of the multi-sig auth descriptor to describe
+ */
 function auth_message_multi_sig(args: accounts.multi_sig_args) {
     var message = "Signers:\n";
     for (signer in args.signers) {

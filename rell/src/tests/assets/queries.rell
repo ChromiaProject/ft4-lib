@@ -2,37 +2,37 @@
 
 import lib.ft4.admin;
 import lib.ft4.assets;
-import ^.utils;
+import test: lib.ft4.test.core;
 
 val too_big = assets.max_asset_amount + 1;
 
 function test_get_asset_balance_no_account() {
-    val alice = utils.register_alice().account.id;
-    val asset = utils.create_asset("test", "TST", 0).id;
+    val alice = test.register_alice().account.id;
+    val asset = test.create_asset("test", "TST", 0).id;
 
     assert_null(assets.external.get_asset_balance(x"abcd", asset));
 }
 
 function test_get_asset_balance_no_asset() {
-    val alice = utils.register_alice().account.id;
-    val asset = utils.create_asset("test", "TST", 0).id;
+    val alice = test.register_alice().account.id;
+    val asset = test.create_asset("test", "TST", 0).id;
 
     assert_null(assets.external.get_asset_balance(alice, x"abcd"));
 }
 
 function test_get_asset_balance_zero() {
-    val alice = utils.register_alice().account.id;
-    val asset = utils.create_asset("test", "TST", 0).id;
+    val alice = test.register_alice().account.id;
+    val asset = test.create_asset("test", "TST", 0).id;
 
     assert_null(assets.external.get_asset_balance(alice, asset));
 }
 
 function test_get_asset_balance_success() {
-    val alice = utils.register_alice().account.id;
-    val asset = utils.create_asset("test", "TST", 0).id;
+    val alice = test.register_alice().account.id;
+    val asset = test.create_asset("test", "TST", 0).id;
 
     admin.external.mint(alice, asset, 10L)
-        .sign(utils.admin_priv_key())
+        .sign(test.admin_priv_key())
         .run();
     
     assert_equals(assets.external.get_asset_balance(alice, asset)?.amount, 10L);

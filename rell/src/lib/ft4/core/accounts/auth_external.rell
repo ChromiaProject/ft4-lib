@@ -1,10 +1,23 @@
-
+/**
+ * Retrieve an `account_auth_descriptor` given the id
+ * 
+ * Throws '"MISSING AUTH DESCRIPTOR"' if there's no auth descriptor with the given id
+ * 
+ * @param id    the id of the `account_auth_descriptor`
+ */
 function AuthDescriptor(id: byte_array) = require(
     account_auth_descriptor @? { id },
-    "Provided auth descriptor id does not exist %s".format(id)
+    "MISSING AUTH DESCRIPTOR: Provided auth descriptor id does not exist %s".format(id)
 );
 
+/**
+ * Retrieve an `account` given the id
+ * 
+ * Throws '"MISSING ACCOUNT"' if there's no account with the given id
+ * 
+ * @param id    the id of the `account`
+ */
 function Account(id: byte_array) = require(
     account @? { id },
-    "Account not found: %s".format(id)
+    "MISSING ACCOUNT: Account not found: %s".format(id)
 );

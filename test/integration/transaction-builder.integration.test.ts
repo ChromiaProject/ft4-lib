@@ -7,6 +7,7 @@ import {
 } from "@ft4-test/util";
 import {
   AnyAuthDescriptor,
+  AuthFlag,
   deleteAllAuthDescriptorsExceptMain,
 } from "@ft4/accounts";
 import { Session, createConnection } from "@ft4/ft-session";
@@ -30,7 +31,7 @@ describe("transaction builder", () => {
     const connection = createConnection(client);
 
     const { keyPair, authDescriptor: _authDescriptor } =
-      createTestAuthDescriptor(["A", "T"]);
+      createTestAuthDescriptor([AuthFlag.Account, AuthFlag.Transfer]);
     authDescriptor = _authDescriptor;
 
     const accountId = await createAccount(connection.client, authDescriptor);
