@@ -1,0 +1,22 @@
+module;
+
+// importing a.b.c imports a.b as well
+// lib.ft4.module imports lib.ft4.core.module and lib.ft4.external.module
+// aliases (a and b) needed for imports with the same name
+
+import ^.lib.ft4.admin.crosschain;
+// import ^.lib.ft4.test.utils;
+import ^.lib.ft4.accounts.linking;
+import ^.lib.ft4.accounts.strategies.open;
+import a: ^.lib.ft4.accounts.strategies.transfer.open;
+import ^.lib.ft4.accounts.strategies.transfer.fee;
+import ^.lib.ft4.accounts.strategies.transfer.subscription;
+import ^.lib.ft4.accounts.linking;
+import ^.lib.ft4.utils;
+import b: ^.lib.ft4.crosschain;
+import ^.lib.ft4.auth;
+import ^.lib.ft4.assets;
+import ^.lib.ft4.assets.locking;
+import ^.lib.ft4.prioritization;
+import ^.lib.ft4.prioritization.default;
+import ^.lib.ft4.test.operations;

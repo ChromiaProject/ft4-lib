@@ -3,6 +3,7 @@ import {
   Authenticator,
   KeyStore,
   createAuthenticator,
+  days,
 } from "@ft4/authentication";
 import { BufferId, TransactionSessionCompletion } from "@ft4/utils";
 import { formatter, SignedTransaction, Web3PromiEvent } from "postchain-client";
@@ -77,6 +78,7 @@ export function createAuthenticatedAccount(
       recipientId: BufferId,
       assetId: BufferId,
       amount: Amount,
+      ttl: number = days(1),
     ) =>
       crosschainTransfer(
         connection,
@@ -85,6 +87,7 @@ export function createAuthenticatedAccount(
         recipientId,
         assetId,
         amount,
+        ttl,
       ),
     resumeCrosschainTransfer: (pendingTransfer: TransferRef) =>
       resumeCrosschainTransfer(connection, authenticator, pendingTransfer),

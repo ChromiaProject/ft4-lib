@@ -3,8 +3,7 @@ module;
 
 import lib.ft4.assets;
 import lib.ft4.admin.crosschain;
-
-import ^^.assets.utils;
+import test: lib.ft4.test.core;
 
 function test_can_fetch_crosschain_asset_registration_details() {
     val issuing_blockchain_rid = x"aa".repeat(32);
@@ -21,7 +20,7 @@ function test_can_fetch_crosschain_asset_registration_details() {
         uniqueness_resolver = x"aabbccdd",
         origin_blockchain_rid = origin_blockchain_rid
     )
-        .sign(utils.admin_priv_key())
+        .sign(test.admin_priv_key())
         .run();
 
     val asset = assets.external.get_asset_details_for_crosschain_registration(asset_id);
@@ -54,7 +53,7 @@ function test_crosschain_asset_registration_fails_when_name_is_longer_than_1024_
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Asset name cannot be longer than 1024 characters");    
 }
 
@@ -71,7 +70,7 @@ function test_crosschain_asset_registration_fails_when_symbol_is_longer_than_102
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Asset symbol cannot be longer than 1024 characters");    
 }
 
@@ -87,7 +86,7 @@ function test_crosschain_asset_registration_fails_when_asset_id_has_less_than_32
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Invalid asset ID length <3>, must be <32>");       
 }
 
@@ -103,7 +102,7 @@ function test_crosschain_asset_registration_fails_when_asset_id_has_more_than_32
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Invalid asset ID length <40>, must be <32>");       
 }
 
@@ -120,7 +119,7 @@ function test_crosschain_asset_registration_fails_when_asset_type_is_empty_strin
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Asset type cannot be an empty string");    
 }
 
@@ -137,7 +136,7 @@ function test_crosschain_asset_registration_fails_when_asset_type_is_longer_than
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Asset type cannot be longer than 1024 characters");    
 }
 
@@ -154,7 +153,7 @@ function test_crosschain_asset_registration_fails_when_asset_uniqueness_resolver
         uniqueness_resolver = x"bb".repeat(1025),
         origin_blockchain_rid = x"92F32F448B7D3C979854765E69BC574E8372618A2E857C797C4CAD4D172B6967"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Asset uniqueness resolver cannot be longer than 1024 characters");    
 }
 
@@ -173,7 +172,7 @@ function test_crosschain_asset_registration_fails_when_asset_issuing_blockchain_
         uniqueness_resolver = x"aabbccdd",
         origin_blockchain_rid = origin_blockchain_rid
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("issuing_blockchain_rid <%s> has invalid length. Expected <32> bytes, found <33>".format(issuing_blockchain_rid));
 }
 
@@ -191,7 +190,7 @@ function test_crosschain_asset_registration_fails_when_asset_origin_blockchain_r
         uniqueness_resolver = x"",
         origin_blockchain_rid = origin_blockchain_rid
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("origin_blockchain_rid <%s> has invalid length. Expected <32> bytes, found <33>".format(origin_blockchain_rid));    
 }
 
@@ -208,7 +207,7 @@ function test_crosschain_asset_registration_fails_when_asset_origin_blockchain_r
         uniqueness_resolver = x"",
         origin_blockchain_rid = chain_context.blockchain_rid
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Asset origin cannot be the current chain.");    
 }
 
@@ -225,6 +224,6 @@ function test_crosschain_asset_registration_fails_when_asset_issuer_is_this_bloc
         uniqueness_resolver = x"",
         origin_blockchain_rid = x"BBE58F50E00C733113F8E0647D53FD4BFAD1D85AB831B1719BAF20F1A3336C8F"
     )
-    .sign(utils.admin_priv_key())
+    .sign(test.admin_priv_key())
     .run_must_fail("Cannot register an asset that originated on this chain as a crosschain asset.");    
 }

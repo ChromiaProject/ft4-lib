@@ -4,53 +4,6 @@ import ^^^.lib.ft4.admin;
 import acc: ^^^.lib.ft4.accounts;
 import auth: ^^^.lib.ft4.auth;
 
-/*
- * We can store the error message in this singleton, and later check it in our tests.
- */
-object test_error {
-    mutable msg: text = "valid";
-}
-
-/*
- * This operation does NOTHING but authenticates the transaction. 
- * Only used for testing of authentication mechanics.
- */
-operation test_auth(account_id: byte_array, auth_descriptor_id: byte_array, required_flags: list<text>) {
-    val account = acc.account @ { .id == account_id };
-
-    val acc_auth_desc = acc.account_auth_descriptor @ {
-          .id == auth_descriptor_id,
-          .account == account
-    };
-    val signers = acc.get_signers_from_encoded_auth_descriptor(acc_auth_desc.auth_type, acc_auth_desc.args);
-
-    val result = acc.check_auth_args(
-       		acc_auth_desc.auth_type,
-       		acc_auth_desc.args,
-            signers,
-       		required_flags
-	  );
-
-    if (result.valid) {
-        test_error.msg = "valid";
-    } else {
-        test_error.msg = result.error!!;
-    }
-}
-
-function test_authenticated_operation_message(gtv) {
-    return "";
-}
-
-@extend(auth.auth_handler)
-function () = auth.add_auth_handler(
-    scope = rell.meta(test_authenticated_operation).mount_name,
-    flags = ["A"],
-    message = test_authenticated_operation_message(*)
-);
-operation test_authenticated_operation() {
-  auth.authenticate();
-}
 
 function empty_message(gtv) {
   return "";
@@ -64,10 +17,6 @@ function () = auth.add_auth_handler(
 );
 operation test_empty_auth_message() {
   auth.authenticate();
-}
-
-operation add_auth_descriptor_for_account(account: acc.account, desc: acc.auth_descriptor) {
-  acc.add_auth_descriptor(account, desc);
 }
 
 function test_perform_large_transfer_message(gtv) {
@@ -112,3 +61,6 @@ function () = auth.add_auth_handler(
 operation extra_signatures_op(signers: list<byte_array>) {
   auth.verify_signers(signers);
 }
+
+// This op cannot be called after an auth op, used to test blacklist.
+operation unauthable_op() {}

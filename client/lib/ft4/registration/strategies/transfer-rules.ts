@@ -23,8 +23,18 @@ export async function getTransferStrategyRules(
 
 /**
  * Fetches all transfer strategy rules, configured on the chain, grouped by strategies and assets
+ *
+ * The return type can be read as:
+ * ```
+ * Map<
+ *     strategyName: string,
+ *     Map<assetId: string, TransferStrategyRuleAmount[]>
+ * >
+ * ```
+ * where `assetId` will be `"all"` if a certain strategy accepts all assets
+ *
  * @param queryable - object to use when querying the blockchain
- * @returns a map of transfer strategy rules grouped by strategies and assets
+ * @returns a map of transfer strategy rules grouped by strategies and assets.
  */
 export async function getTransferStrategyRulesGroupedByStrategy(
   queryable: Queryable,

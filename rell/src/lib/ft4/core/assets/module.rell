@@ -5,3 +5,4 @@ import ^^.core.accounts;
 import ^^.core.crosschain;
 import ^^.utils;
 import ^^.version;
+import transfer_strategy: ^^.accounts.strategies.transfer;

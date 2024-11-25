@@ -4,9 +4,31 @@ module;
 import ^^.utils;
 import ^^.core.assets;
 
+/**
+ * Returns whether crosschain transfers can be used to create new accounts.
+ * Developers should not generally extend this function, as it is handled by the account
+ * registration module. Importing the corresponding module should be enough.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @see core.accounts.is_create_on_internal_transfer_enabled for the non-crosschain equivalent
+ */
 @extendable
 function is_create_on_crosschain_transfer_enabled(): boolean = false;
 
+/**
+ * The crosschain equivalent of `core.assets.create_on_internal_transfer`.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @see core.assets.create_on_internal_transfer for more information on this function
+ * 
+ * @param sender_blockchain_rid     the RID of the blockchain where the transfer originated
+ * @param sender_id                 the ID of the sender account
+ * @param recipient_id              the ID of the account that received this transfer
+ * @param asset                     the asset that was transferred
+ * @param amount                    the amount that was transferred
+ */
 @extendable
 function create_on_crosschain_transfer(
    sender_blockchain_rid: byte_array,
@@ -16,6 +38,18 @@ function create_on_crosschain_transfer(
    amount: big_integer
 );
 
+/**
+ * The crosschain equivalent of `core.assets.recall_on_internal_transfer`.
+ * 
+ * Throws if any extension of this function throws.
+ * 
+ * @see core.assets.recall_on_internal_transfer for more information on this function
+ * 
+ * @param sender_blockchain_rid     the RID of the blockchain where the transfer originated
+ * @param sender_id                 the ID of the sender account
+ * @param transfer_tx_rid           the ID of the transaction containing the transfer
+ * @param transfer_op_index         the index of the operation inside that transaction
+ */
 @extendable
 function recall_on_crosschain_transfer(
     sender_blockchain_rid: byte_array,
@@ -24,6 +58,19 @@ function recall_on_crosschain_transfer(
     transfer_op_index: integer
 );
 
+/**
+ * Retrieves all transfers that were not yet completed, paginated.
+ * 
+ * @see pending_transfer for more information on what is a pending transfer
+ * 
+ * @see get_last_pending_transfer_for_account if you need to retrieve a specific transfer
+ * 
+ * @see utils.paged_result for informations about pagination
+ * 
+ * @param account_id    the id of the account that sent the transfers
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
+ */
 function get_paginated_pending_transfers(
     account_id: byte_array,
     page_size: integer?,
@@ -46,6 +93,20 @@ function get_paginated_pending_transfers(
     ) limit utils.fetch_data_size(page_size);
 }
 
+/**
+ * Retrieves only the last transfer that was not yet completed, based on the parameters
+ * specified.
+ * 
+ * @see pending_transfer for more information on what is a pending transfer
+ * 
+ * @see get_paginated_pending_transfers if you need to retrieve all transfers
+ * 
+ * @param sender_id                 the id of the account that sent the transfer
+ * @param target_blockchain_rid     the blockchain which is supposed to receive the transfer
+ * @param recipient_id              the account that is supposed to receive the transfer
+ * @param asset_id                  the asset that was being transferred
+ * @param amount                    the amount that was being transferred
+ */
 function get_last_pending_transfer_for_account(
     sender_id: byte_array, 
     target_blockchain_rid: byte_array, 

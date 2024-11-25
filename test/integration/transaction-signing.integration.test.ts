@@ -87,7 +87,7 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(authenticator, client)
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"), {
           skipFtSigning: true,
         })
         .build();
@@ -137,8 +137,8 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
-        .add(op("test_authenticated_operation"))
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"))
+        .add(op("ft4.test.authenticated_operation"), {
           authenticator: ftAuthenticator,
           skipFtSigning: true,
         })
@@ -252,7 +252,7 @@ describe("Transaction Signing", () => {
       );
       expect(signedTx).not.toEqual(partiallySignedTx);
       await expect(client.sendTransaction(signedTx)).rejects.toThrow(
-        /failed: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
+        /failed: INSUFFICIENT SIGNERS: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
       );
     });
 
@@ -416,7 +416,7 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(authenticator, client)
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"), {
           skipFtSigning: true,
         })
         .build();
@@ -468,8 +468,8 @@ describe("Transaction Signing", () => {
       );
 
       const tx = await transactionBuilder(evmAuthenticator, client)
-        .add(op("test_authenticated_operation"))
-        .add(op("test_authenticated_operation"), {
+        .add(op("ft4.test.authenticated_operation"))
+        .add(op("ft4.test.authenticated_operation"), {
           authenticator: ftAuthenticator,
           skipFtSigning: true,
         })
@@ -530,7 +530,7 @@ describe("Transaction Signing", () => {
       expect(signedTx).not.toEqual(partiallySignedTx);
 
       await expect(client.sendTransaction(signedTx)).rejects.toThrow(
-        /failed: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
+        /failed: INSUFFICIENT SIGNERS: Minimum number of valid signatures not reached. Expected <2>, found <1>./,
       );
     });
 

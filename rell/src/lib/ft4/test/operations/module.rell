@@ -1,0 +1,17 @@
+@mount('ft4.test')
+module;
+
+import ^.operations.assets.*;
+import ^.operations.auth.*;
+
+/**
+ * An empty operation which does not do anything.
+ * Very similar to the built in `nop()` operation, but
+ * this operation can be the only operation in a transaction
+ * without postchain throwing an error.
+ * 
+ * However, this operation does not include a nonce, so multiple
+ * transactions which only contains this operation within the same
+ * test, will fail after the first one.
+ */
+operation empty_op() {}

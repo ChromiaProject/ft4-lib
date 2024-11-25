@@ -2,8 +2,8 @@ module;
 
 import ^.extensions;
 import ^.extensions.auth_login;
-import ^.operations;
-import locking_ops: ^.operations.locking;
+import test_op: ^.operations;
+import lib.ft4.test.operations;
 import lib.ft4.assets.locking;
 import lib.ft4.admin.crosschain;
 import lib.ft4.prioritization.default;

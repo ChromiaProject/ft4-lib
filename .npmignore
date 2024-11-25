@@ -1,58 +1,68 @@
-# System files and directories
-*~
-.DS_STORE
-.idea/*
-.project
+/*
+!/dist
+!/doc
+!package.json
+!README.md
+!LICENSE
+!rell-changelog.md
+!changelog.md
+!index.js
 
-# Dependency directories
-node_modules/
-package-lock.json
+# # System files and directories
+# *~
+# .DS_STORE
+# .idea/*
+# .project
 
-# Log files
-*.log
-logs/
-**.pid
-/db.log
+# # Dependency directories
+# node_modules/
+# package-lock.json
 
-# Configuration files
-.env
-/.husky
-/.env.sample
-/.eslintignore
-/.eslintrc.json
-/.prettierignore
-/.prettierrc.json
-/tsconfig.dist.json
-/tsconfig.json
-/jest.config.js
-/jest.config.multichain.js
-/jest.setup.js
-/rollup.config.mjs
+# # Log files
+# *.log
+# logs/
+# **.pid
+# /db.log
 
-# Build and pipeline files
-/bitbucket-pipelines.yml
+# # Configuration files
+# .env
+# /.husky
+# /.env.sample
+# /.eslintignore
+# /.eslintrc.json
+# /.prettierignore
+# /.prettierrc.json
+# /tsconfig.dist.json
+# /tsconfig.json
+# /jest.config.js
+# /jest.config.multichain.js
+# /jest.setup.js
+# /rollup.config.mjs
 
-# Source and test directories
-client/
-postchain/
-rell/
-test/
-test_admin/
-app/
+# # Build and pipeline files
+# /bitbucket-pipelines.yml
 
-# Miscellaneous files and directories
-postchain/runtime
-/configs
-/examples
-/rell-changelog.md
-/scripts
-/doc
+# # Source and test directories
+# client/
+# postchain/
+# rell/
+# test/
+# test_admin/
+# app/
 
-compile-changelog.sh
-install-chr-and-pmc.sh
+# # Miscellaneous files and directories
+# postchain/runtime
+# /configs
+# /examples
+# /rell-changelog.md
+# /scripts
+# /doc
 
-# Cypress related files and directories
-/cypress
-cypress.config.ts
+# compile-changelog.sh
+# install-chr-and-pmc.sh
 
-/coverage
+# # Cypress related files and directories
+# /cypress
+# cypress.config.ts
+
+# /coverage

@@ -1,6 +1,6 @@
 {
   "name": "@chromia/ft4",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "FT4 Library is a library for Rell modules (Chromia smart contract language). It can be imported and used as a token provider and manager. It allows several operations, among them: creation of different assets (type of tokens), allocation of tokens, transfer, and cross crosschain transfer. It also have some basic data structure for users (account) that can be used independently from the use of the tokens.",
   "main": "dist/cjs/index.js",
   "browser": "dist/esm/index.js",
@@ -21,7 +21,6 @@
     "version:rell": "./scripts/version.sh",
     "test": "npm run test:rell && npm run test:js",
     "test:rell": "./scripts/relltest.sh",
-    "test:js-coverage": "npx jest -maxWorkers=1 --testPathPattern=unit/ --coverage",
     "test:js-unit": "npx jest -maxWorkers=1 --testPathPattern=unit/",
     "test:js-integration": "TESTCONTAINERS_RYUK_DISABLED=true npx jest --config=jest.config.integration.js --testPathPattern=integration/",
     "test:js-multichain": "./scripts/multichain-jesttest.sh",
@@ -40,7 +39,9 @@
     "build": "npm run build:clean && npm run build:types && npm run build:esm && npm run build:umd && npm run build:cjs",
     "prepublishOnly": "npm run build",
     "prepare": "husky install",
-    "generate:docs": "npm run build && (api-extractor run || true) && rimraf temp && npx typedoc || exit 1"
+    "generate:docs-rell": "chr generate docs-site --target doc/api/rell -s doc/docs-chromia.yml",
+    "generate:docs-ts": "npm run build && (api-extractor run || true) && rimraf temp && npx typedoc || exit 1",
+    "generate:docs": "npm run generate:docs-rell && npm run generate:docs-ts"
   },
   "repository": {
     "type": "git",
@@ -56,7 +57,7 @@
   "license": "Apache-2.0",
   "homepage": "https://gitlab.com/chromaway/ft4-lib",
   "dependencies": {
-    "ethers": "^6.13.1"
+    "ethers": "^6.13.2"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
