@@ -1,0 +1,6 @@
+struct asset_entries_filter {
+    id: byte_array?;
+    name: text?;
+    symbol: text?;
+    type: text?;
+}

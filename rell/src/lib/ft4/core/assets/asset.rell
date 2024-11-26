@@ -343,6 +343,22 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
     ) limit utils.fetch_data_size(page_size);
 }
 
+function get_paginated_asset_entries(asset_entries_filter, page_size: integer, page_cursor: text) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return asset @* {
+        if (asset_entries_filter.id??) .id == asset_entries_filter.id else true,
+        if (asset_entries_filter.name??) .name == asset_entries_filter.name else true,
+        if (asset_entries_filter.symbol??) .symbol == asset_entries_filter.symbol else true,
+        if (asset_entries_filter.type??) .type == asset_entries_filter.type else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (map_asset($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
 /**
  * Outputs the details of an asset in a format that is used by other chains to register
  * it as a crosschain asset.

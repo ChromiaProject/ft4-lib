@@ -69,6 +69,29 @@ query get_asset_by_id(asset_id: byte_array) {
 }
 
 /**
+ * Returns paginated and filtered details of all assets based on the selected filtering
+ * 
+ * @param asset_entries_filter  a struct containing the keys and indexes of the asset entity to enable filtering for the assets to fetch
+ * @param page_size             the size of the pages to retrieve
+ * @param page_cursor           a pointer to where the page should start
+ */
+query get_asset_entries(assets.asset_entries_filter, page_size: integer, page_cursor: text) {
+    return utils.make_page(
+        assets.get_paginated_asset_entries(asset_entries_filter, page_size, page_cursor),
+        page_size
+    );
+}
+
+/**
+ * Returns the details of an asset given its rowid
+ * 
+ * @param rowid  rowid of the asset to fetch
+ */
+query get_asset_entry(rowid) {
+    return assets.asset @? { rowid } ( assets.map_asset($) );
+}
+
+/**
  * Retrieves all assets of a specified type, paginated.
  * 
  * @see utils.paged_result for information about pagination
