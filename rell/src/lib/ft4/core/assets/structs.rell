@@ -1,6 +1,25 @@
-struct asset_entries_filter {
+struct asset_filters {
     id: byte_array?;
     name: text?;
     symbol: text?;
     type: text?;
+}
+
+struct balance_filters {
+    account_id: byte_array?;
+    asset_id: byte_array?;
+}
+
+struct transfer_history_entries_filters {
+    account_id: byte_array?;
+    asset_id: byte_array?;
+    transaction_rid: byte_array?;
+    op_index: integer?;
+}
+
+struct crosschain_transfer_history_entries_filters {
+    account_id: byte_array?;
+    asset_id: byte_array?;
+    transaction_rid: byte_array?;
+    op_index: integer?;
 }

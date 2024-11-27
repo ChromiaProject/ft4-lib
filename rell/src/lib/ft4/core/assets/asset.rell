@@ -182,6 +182,7 @@ function get_asset_balance(accounts.account, asset): big_integer {
  */
 function map_asset(asset: asset) {
     return (
+        rowid = asset.rowid,
         id = asset.id,
         name = asset.name,
         symbol = asset.symbol,
@@ -190,6 +191,24 @@ function map_asset(asset: asset) {
         icon_url = asset.icon_url,
         type = asset.type,
         supply = asset.total_supply
+    );
+}
+
+/**
+ * Maps an balance info into a readable format for the frontend.
+ * 
+ * @param balance     the balance to retrieve
+ */
+function map_balance(balance: balance) {
+    return (
+        rowid = balance.rowid,
+        asset = (
+            map_asset(balance.asset)
+        ),
+        account = (
+            accounts.map_account(balance.account)
+        ),
+        amount = balance.amount
     );
 }
 
@@ -343,17 +362,49 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
     ) limit utils.fetch_data_size(page_size);
 }
 
-function get_paginated_asset_entries(asset_entries_filter, page_size: integer, page_cursor: text) {
+/**
+ * Retrieves all assets based on the selected filter of asset_filters, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param asset_filters  the available filters for the assets to retrieve
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+function get_paginated_assets(asset_filters: asset_filters?, page_size: integer, page_cursor: text) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
-        if (asset_entries_filter.id??) .id == asset_entries_filter.id else true,
-        if (asset_entries_filter.name??) .name == asset_entries_filter.name else true,
-        if (asset_entries_filter.symbol??) .symbol == asset_entries_filter.symbol else true,
-        if (asset_entries_filter.type??) .type == asset_entries_filter.type else true,
+        if (asset_filters?.id??) .id == asset_filters?.id else true,
+        if (asset_filters?.name??) .name == asset_filters?.name else true,
+        if (asset_filters?.symbol??) .symbol == asset_filters?.symbol else true,
+        if (asset_filters?.type??) .type == asset_filters?.type else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
             data = (map_asset($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+/**
+ * Retrieves all balances based on the selected filter of balance_filters, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param balance_filters  the available filters for the balances to retrieve
+ * @param page_size        the size of the pages to retrieve
+ * @param page_cursor      a pointer to where the page should start
+ */
+function get_paginated_balances(balance_filters: balance_filters?, page_size: integer, page_cursor: text) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return balance @* {
+        if (balance_filters?.account_id??) .account.id == balance_filters?.account_id else true,
+        if (balance_filters?.asset_id??) .asset.id == balance_filters?.asset_id else true,
+        .rowid > (before_rowid ?: rowid(0))
+    }(
+        utils.pagination_result(
+            data = (map_balance($)).to_gtv_pretty(),
             rowid = .rowid
         )
     ) limit utils.fetch_data_size(page_size);

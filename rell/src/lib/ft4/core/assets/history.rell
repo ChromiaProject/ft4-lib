@@ -104,6 +104,7 @@ function extract_operation_name(entry: transfer_history_entry): text {
  */
 function extract_data_from_transfer_history_entry(entry: transfer_history_entry) {
     return (
+        rowid = entry.rowid,
         id = entry.rowid,
         delta = entry.delta,
         decimals = entry.asset.decimals,
@@ -119,6 +120,34 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
             crosschain_transfer_history_entry @* { .transaction == entry.transaction, .op_index == entry.op_index, .asset == entry.asset }
         )
     );
+}
+
+/**
+ * Fetches all transfer history entries allowing filtering in multiple ways, paginated.
+ * @param transfer_history_entries_filters  the struct that allows filtering by account id, asset id, transaction rid and op index
+ * @param page_size                         the size of the pages to retrieve
+ * @param page_cursor                       a pointer to where the page should start 
+ */
+function get_paginated_transfer_history_entries(
+    transfer_history_entries_filters: transfer_history_entries_filters?,
+    page_size: integer,
+    page_cursor: text
+) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return transfer_history_entry @* {
+        if (transfer_history_entries_filters?.account_id??) .account.id == transfer_history_entries_filters?.account_id else true,
+        if (transfer_history_entries_filters?.asset_id??) .asset.id == transfer_history_entries_filters?.asset_id else true,
+        if (transfer_history_entries_filters?.transaction_rid??) .transaction.tx_rid == transfer_history_entries_filters?.transaction_rid else true,
+        if (transfer_history_entries_filters?.op_index??) .op_index == transfer_history_entries_filters?.op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                extract_data_from_transfer_history_entry($)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
 }
 
 /**
@@ -162,6 +191,8 @@ function get_paginated_transfers(accounts.account?, asset?, filter, height: inte
  * describe a `transfer_history_entry` and a `crosschain_transfer_history_entry`.
  */
 struct transfer_detail {
+    /** The rowid of the entity associated with the struct */
+    rowid: rowid;
     /** The blockchain on which the transfer happened */
     blockchain_rid: byte_array;
     /** The account whose balance was affected */
@@ -245,6 +276,7 @@ function get_transfer_details_by_asset(tx_rid: byte_array, op_index: integer, as
  */
 function extract_details_from_transfer_history_entry(entry: transfer_history_entry) {
     return transfer_detail(
+        rowid = entry.rowid,
         blockchain_rid = chain_context.blockchain_rid,
         account_id = entry.account.id,
         asset_id = entry.asset.id,
@@ -264,6 +296,7 @@ function extract_details_from_account_creation_transfer(
     transfer: transfer_strategy.account_creation_transfer
 ) {
     return transfer_detail(
+        rowid = transfer.rowid,
         blockchain_rid = transfer.sender_blockchain_rid,
         account_id = transfer.sender_id,
         asset_id = transfer.asset.id,
@@ -283,10 +316,40 @@ function extract_details_from_crosschain_transfer_history_entry(
     entry: crosschain_transfer_history_entry
 ) {
     return transfer_detail(
+        rowid = entry.rowid,
         blockchain_rid = entry.blockchain_rid,
         account_id = entry.account_id,
         asset_id = entry.asset.id,
         delta = entry.delta,
         is_input = entry.is_input
     );
+}
+
+/**
+ * Retrieves all crosschain transfer history entries based on the provided filtering, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ *
+ * @param crosschain_transfer_history_entries_filters  the available filters for the entities to retrieve
+ * @param page_size                                    the size of the pages to retrieve
+ * @param page_cursor                                  a pointer to where the page should start
+ */
+function get_paginated_crosschain_transfer_history_entries(
+    crosschain_transfer_history_entries_filters: crosschain_transfer_history_entries_filters?,
+    page_size: integer,
+    page_cursor: text
+) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return crosschain_transfer_history_entry @* {
+        if (crosschain_transfer_history_entries_filters?.account_id??) .account_id == crosschain_transfer_history_entries_filters?.account_id else true,
+        if (crosschain_transfer_history_entries_filters?.asset_id??) .asset.id == crosschain_transfer_history_entries_filters?.asset_id else true,
+        if (crosschain_transfer_history_entries_filters?.transaction_rid??) .transaction.tx_rid == crosschain_transfer_history_entries_filters?.transaction_rid else true,
+        if (crosschain_transfer_history_entries_filters?.op_index??) .op_index == crosschain_transfer_history_entries_filters?.op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (extract_details_from_crosschain_transfer_history_entry($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
 }
