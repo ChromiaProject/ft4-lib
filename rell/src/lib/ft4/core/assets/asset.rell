@@ -374,6 +374,7 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
 function get_paginated_assets(asset_filters: asset_filters?, page_size: integer, page_cursor: text) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
+        if (asset_filters?.rowids??) .rowid in asset_filters!!.rowids else true,
         if (asset_filters?.id??) .id == asset_filters?.id else true,
         if (asset_filters?.name??) .name == asset_filters?.name else true,
         if (asset_filters?.symbol??) .symbol == asset_filters?.symbol else true,
@@ -399,6 +400,7 @@ function get_paginated_assets(asset_filters: asset_filters?, page_size: integer,
 function get_paginated_balances(balance_filters: balance_filters?, page_size: integer, page_cursor: text) {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
+        if (balance_filters?.rowids??) .rowid in balance_filters!!.rowids else true,
         if (balance_filters?.account_id??) .account.id == balance_filters?.account_id else true,
         if (balance_filters?.asset_id??) .asset.id == balance_filters?.asset_id else true,
         .rowid > (before_rowid ?: rowid(0))

@@ -41,8 +41,11 @@ function test_init_transfer_history() {
     assert_equals(history_entry["is_input"], (1).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
+    val transfer_history_entry = test.get_last_transfer_history_entry();
+
     val expected = [
         assets.transfer_detail(
+            rowid = transfer_history_entry.rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = alice.account.id,
             asset_id = asset.id,
@@ -50,6 +53,7 @@ function test_init_transfer_history() {
             is_input = true
         ),
         assets.transfer_detail(
+            rowid = transfer_history_entry.rowid,
             blockchain_rid = target_blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
@@ -106,8 +110,11 @@ function test_apply_transfer_history() {
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
+    val transfer_history_entry = test.get_last_transfer_history_entry();
+
     val expected = [
         assets.transfer_detail(
+            rowid = transfer_history_entry.rowid,
             blockchain_rid = chain_context.blockchain_rid,
             account_id = bob.account.id,
             asset_id = asset.id,
@@ -115,6 +122,7 @@ function test_apply_transfer_history() {
             is_input = false
         ),
         assets.transfer_detail(
+            rowid = transfer_history_entry.rowid,
             blockchain_rid = sender_blockchain_rid,
             account_id = sender_account_id,
             asset_id = asset.id,

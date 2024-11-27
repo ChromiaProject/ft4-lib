@@ -45,6 +45,24 @@ export type TransferHistoryEntry = {
   isCrosschain: boolean;
 };
 
+export type CrosschainTransferhistoryEntryResponse = {
+  rowid: number;
+  blockchain_rid: Buffer;
+  account_id: Buffer;
+  asset_id: Buffer;
+  delta: bigint;
+  is_input: boolean;
+};
+
+export type CrosschainTransferHistoryEntry = {
+  rowid: number;
+  blockchainRid: Buffer;
+  accountId: Buffer;
+  assetId: Buffer;
+  delta: bigint;
+  isInput: boolean;
+};
+
 export enum TransferHistoryType {
   Sent = 0,
   Received = 1,

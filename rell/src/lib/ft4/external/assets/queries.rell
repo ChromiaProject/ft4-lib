@@ -145,7 +145,6 @@ query get_transfer_history_entry_by_rowid(rowid) {
     return assets.transfer_history_entry @? { rowid } ( assets.extract_data_from_transfer_history_entry($) );
 }
 
-
 /**
  * Returns paginated and filtered details of all crosschain  entries based on the applied filters
  * 

@@ -4,6 +4,7 @@ import { Buffer } from "buffer";
 export const ASSET_TYPE_FT4 = "ft4";
 
 export type Asset = {
+  rowId?: number;
   id: Buffer;
   name: string;
   symbol: string;
@@ -15,6 +16,7 @@ export type Asset = {
 };
 
 export type AssetResponse = {
+  rowid: number;
   id: Buffer;
   name: string;
   symbol: string;
@@ -50,11 +52,13 @@ export type CrosschainAssetRegistrationResponse = {
 export type RawAmount = { value: bigint; decimals: number };
 
 export type Balance = {
+  rowId?: number;
   asset: Asset;
   amount: Amount;
 };
 
 export type BalanceResponse = {
+  rowId?: number;
   asset: AssetResponse;
   amount: bigint;
 };
@@ -68,6 +72,36 @@ export enum DecimalFormat {
 export type SupportedNumber = string | number | Amount;
 
 export type AnyAssetAmount = RawAmount | Amount;
+
+export type AssetFilters = {
+  rowids: Array<number>;
+  id?: Buffer;
+  name?: string;
+  symbol?: string;
+  type?: string;
+};
+
+export type BalanceFilters = {
+  rowids: Array<number>;
+  account_id?: Buffer;
+  asset_id?: Buffer;
+};
+
+export type TransferHistoryEntriesFilters = {
+  rowids: Array<number>;
+  account_id?: Buffer;
+  asset_id?: Buffer;
+  transaction_rid?: Buffer;
+  op_index?: number;
+};
+
+export type CrosschainTransferHistoryEntriesFilters = {
+  rowids: Array<number>;
+  account_id?: Buffer;
+  asset_id?: Buffer;
+  transaction_rid?: Buffer;
+  op_index?: number;
+};
 
 /**
  * An amount consists of a value and number of decimals. It wraps a
