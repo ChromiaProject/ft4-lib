@@ -368,4 +368,8 @@ describe("Transfer history", () => {
 
     expect(transferHistory.data.length).toEqual(3);
   });
+
+  it("returns transfer histroy entry by rowid", async () => {
+    //getTransferHistoryEntryByRowId
+  });
 });

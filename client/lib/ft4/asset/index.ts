@@ -29,6 +29,15 @@ export {
   getAssetsByName,
   getAssetsByType,
   getAssetDetailsForCrosschainRegistration,
+  getAssets,
+  getAssetByRowId,
+  getBalances,
+  getBalanceByRowId,
+  getTransferHistoryEntries,
+  getTransferHistoryEntryByRowId,
+  getCrosschainTransferHistoryEntries,
+  getCrosschainTransferHistoryEntryByRowId,
+  createBalanceObject,
 } from "./asset-query-functions";
 
 export {

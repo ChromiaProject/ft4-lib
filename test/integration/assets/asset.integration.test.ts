@@ -41,6 +41,10 @@ async function registerAssetWithCustomBlockchainRid(
 
 describe("Asset", () => {
   const getClient = useChromiaNode();
+  const blockchainRid = Buffer.from(
+    connection.client.config.blockchainRid,
+    "hex",
+  );
 
   beforeAll(async () => {
     client = getClient();
@@ -104,10 +108,6 @@ describe("Asset", () => {
   it("returns an asset when queried by symbol", async () => {
     const assetName = "asset_symbol";
     const assetSymbol = "ASSET_SYMBOL";
-    const blockchainRid = Buffer.from(
-      connection.client.config.blockchainRid,
-      "hex",
-    );
     const assetId = gtv.gtvHash([assetName, blockchainRid]);
     const iconUrl = "http://example.com/";
     await getNewAsset(client, assetName, assetSymbol, 3, iconUrl);
@@ -227,4 +227,55 @@ describe("Asset", () => {
     const asset = await getNewAsset(client, "Test Asset 3", "TST3", 0, "");
     expect(asset).not.toBeNull();
   });
+
+  it("returns null when the asset for rowid is not found or does not exist", async () => {
+    // const assetName = "asset_query";
+    // const asset = await getNewAsset(client, assetName, assetName.toUpperCase());
+    const expectedAsset = await connection.getAssetByRowId(0);
+
+    expect(expectedAsset).toEqual(0);
+    expect(expectedAsset).toBeNull();
+  });
+
+  it("returns an asset by rowid", async () => {
+    const assetName = "asset_query";
+    const asset = await getNewAsset(client, assetName, assetName.toUpperCase());
+    const assetRowId = asset.rowId!;
+    const expectedAsset = await connection.getAssetByRowId(assetRowId);
+
+    expect(expectedAsset).toEqual(1);
+    expect(expectedAsset).toMatchObject({
+      rowId: assetRowId,
+      id: asset.id,
+      name: assetName,
+      symbol: asset.symbol,
+      decimals: asset.decimals,
+      blockchainRid,
+      iconUrl: asset.iconUrl,
+      type: asset.type,
+      supply: asset.supply,
+    });
+  });
+
+  it("returns null when the balance for rowid is not found or does not exist", async () => {
+    const expectedBalance = await connection.getBalanceByRowId(0);
+
+    expect(expectedBalance).toEqual(0);
+    expect(expectedBalance).toBeNull();
+  });
+
+  // it("returns balance by rowid", async () => {
+  //   const assetName = "asset_query";
+  //   const asset = await getNewAsset(client, assetName, assetName.toUpperCase());
+  //   const balance = "";
+  //   const assetRowId = asset.rowId!;
+  //   const expectedAsset = await connection.getBalanceByRowId(assetRowId);
+
+  //   expect(expectedAsset).toEqual(1);
+  //   expect(expectedAsset).toMatchObject({
+  //     rowId: balance.rowid,
+  //     asset: asset,
+  //     amount: balance.amount
+  //   });
+  // });
 });
