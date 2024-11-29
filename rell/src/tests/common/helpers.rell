@@ -1,0 +1,15 @@
+@test module;
+
+import lib.ft4.assets;
+
+function get_last_transfer_history_entry(): assets.transfer_history_entry {
+    return get_last_transfer_history_entry_or_null()!!;
+}
+
+function get_last_transfer_history_entry_or_null(): assets.transfer_history_entry? {
+    return assets.transfer_history_entry @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function get_last_two_transfer_history_entries(): list<assets.transfer_history_entry> {
+    return assets.transfer_history_entry @* {} (@omit @sort_desc .rowid, $) limit 2;
+}

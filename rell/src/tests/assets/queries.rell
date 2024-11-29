@@ -4,6 +4,10 @@ import lib.ft4.admin;
 import lib.ft4.assets;
 import test: lib.ft4.test.core;
 
+import ^.helpers;
+import ^.mocks;
+import common_helpers: ^^.common.helpers;
+
 val too_big = assets.max_asset_amount + 1;
 
 function test_get_asset_balance_no_account() {
@@ -36,4 +40,98 @@ function test_get_asset_balance_success() {
         .run();
     
     assert_equals(assets.external.get_asset_balance(alice, asset)?.amount, 10L);
+}
+
+function test_get_asset_by_rowid_no_assets() {
+    val asset = assets.external.get_asset_by_rowid(rowid(1));
+    assert_null(asset);
+}
+
+function test_get_asset_by_rowid_no_asset_for_rowid() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val fetched_asset = assets.external.get_asset_by_rowid(rowid(999));
+
+    assert_equals(minted_assets.size(), 1);
+    assert_null(fetched_asset);
+}
+
+function test_get_asset_by_rowid() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val asset = minted_assets[0];
+    val fetched_asset = assets.external.get_asset_by_rowid(asset.rowid);
+
+    assert_equals(fetched_asset, mocks.format_expected_asset_assertion(asset));
+}
+
+function test_get_balance_by_rowid_no_balance() {
+    val balance = assets.external.get_balance_by_rowid(rowid(1));
+    assert_null(balance);
+}
+
+function test_get_balance_by_rowid_no_balance_for_rowid() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val balance = assets.external.get_balance_by_rowid(rowid(999));
+
+    assert_not_null(helpers.get_last_balance_or_null());
+    assert_null(balance);
+}
+
+function test_get_balance_by_rowid() {
+    val (alice, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val asset = minted_assets[0];
+    val last_balance = helpers.get_last_balance();
+    val fetched_balance = assets.external.get_balance_by_rowid(last_balance.rowid);
+
+    assert_equals(fetched_balance, mocks.format_expected_balance_assertion(last_balance));
+}
+
+function test_get_transfer_history_entry_by_rowid_no_transfer_history_entry() {
+    val transfer_history_entry = assets.external.get_transfer_history_entry_by_rowid(rowid(1));
+    assert_null(transfer_history_entry);
+}
+
+function test_get_transfer_history_entry_by_rowid_no_transfer_history_entry_for_rowid() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val fetched_transfer_history_entry = assets.external.get_transfer_history_entry_by_rowid(rowid(999));
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry_or_null();
+
+    assert_not_null(transfer_history_entry);
+    assert_null(fetched_transfer_history_entry);
+}
+
+function test_get_transfer_history_entry_by_rowid() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    
+    val asset = minted_assets[0];
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
+    val fetched_transfer_history_entry = assets.external.get_transfer_history_entry_by_rowid(transfer_history_entry.rowid);
+    val transaction = test.get_last_transaction();
+    val block = test.get_last_block();
+
+    assert_equals(fetched_transfer_history_entry, mocks.format_expected_transfer_history_entry_assertion(transfer_history_entry));
+}
+
+function test_get_crosschain_transfer_history_entry_by_rowid_no_crosschain_transfer_history_entry() {
+    val crosschain_transfer_history_entry = assets.external.get_crosschain_transfer_history_entry_by_rowid(rowid(1));
+    assert_null(crosschain_transfer_history_entry);
+}
+
+function test_get_crosschain_transfer_history_entry_by_rowid_no_crosschain_transfer_history_entry_for_rowid() {
+    helpers.mock_crosschain_transfer();
+
+    val crosschain_transfer_history_entry = assets.external.get_crosschain_transfer_history_entry_by_rowid(rowid(999));
+    assert_null(crosschain_transfer_history_entry);
+}
+
+function test_getcrosschain_transfer_history_entry_by_rowid() {
+    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+
+    val fetched_crosschain_transfer_history_entry = assets.external.get_crosschain_transfer_history_entry_by_rowid(
+        crosschain_transfer_history_entry.rowid
+    );
+
+    assert_equals(
+        fetched_crosschain_transfer_history_entry,
+        mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry)
+    );
 }

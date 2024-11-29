@@ -8,6 +8,7 @@ import admin_crosschain: ^^^.lib.ft4.admin.crosschain;
 import test_op: lib.ft4.test.operations;
 import test: lib.ft4.test.core;
 import ^^.operations.iccf_op.{ iccf_proof };
+import common_helpers: ^^.common.helpers;
 
 function test_can_revert_canceled_transfer_once_but_not_twice() {
     val alice = test.register_alice();
@@ -70,7 +71,7 @@ function test_can_revert_canceled_transfer_once_but_not_twice() {
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
-    val transfer_history_entry = test.get_last_transfer_history_entry();
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val expected = [
         assets.transfer_detail(
@@ -180,7 +181,7 @@ function test_can_revert_unapplied_transfer_once_but_not_twice() {
     assert_equals(history_entry["is_input"], (0).to_gtv());
     assert_equals(history_entry["is_crosschain"], (1).to_gtv());
 
-    val transfer_history_entry = test.get_last_transfer_history_entry();
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val expected = [
         assets.transfer_detail(

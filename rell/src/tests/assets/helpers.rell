@@ -1,0 +1,135 @@
+@test module;
+
+import test: lib.ft4.test.core;
+import lib.ft4.admin;
+import lib.ft4.assets;
+import lib.ft4.accounts;
+import lib.ft4.auth;
+import xc: lib.ft4.crosschain;
+import create_on_transfer: lib.ft4.accounts.strategies.transfer;
+import ^^.operations.iccf_op.{ iccf_proof };
+
+function register_account_create_and_mint_assets(
+    assets_amount: integer = 1
+) {
+    val alice = test.register_alice();
+    val assets = list<assets.asset>();
+
+    for (i in range(assets_amount)) {
+        val asset = test.create_asset("test"+i, "TST"+i, 0);
+        admin.external.mint(alice.account.id, asset.id, 10L)
+            .sign(test.admin_priv_key())
+            .run();
+        assets.add(asset);
+    }
+
+    return (alice, assets);
+}
+
+function get_last_balance(): assets.balance {
+    return get_last_balance_or_null()!!;
+}
+
+function get_last_balance_or_null(): assets.balance? {
+    return assets.balance @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function set_asset_filters(
+    rowids: list<rowid>? = null,
+    id: byte_array? = null,
+    name: text? = null,
+    symbol: text? = null,
+    type: text? = null
+): assets.asset_filters {
+    return assets.asset_filters(
+        rowids = rowids,
+        id = id,
+        name = name,
+        symbol = symbol,
+        type = type
+    );
+}
+
+function set_balance_filters(
+    rowids: list<rowid>? = null,
+    account_id: byte_array? = null,
+    asset_id: byte_array? = null
+): assets.balance_filters {
+    return assets.balance_filters(
+        rowids = rowids,
+        account_id = account_id,
+        asset_id = asset_id
+    );
+}
+
+function set_transfer_history_entry_filters(
+    rowids: list<rowid>? = null,
+    account_id: byte_array? = null,
+    asset_id: byte_array? = null,
+    transaction_rid: byte_array? = null,
+    op_index: integer? = null
+): assets.transfer_history_entry_filters {
+    return assets.transfer_history_entry_filters(
+        rowids = rowids,
+        account_id = account_id,
+        asset_id = asset_id,
+        transaction_rid = transaction_rid,
+        op_index = op_index
+    );
+}
+
+function set_crosschain_transfer_history_entry_filters(
+    rowids: list<rowid>? = null,
+    account_id: byte_array? = null,
+    asset_id: byte_array? = null,
+    transaction_rid: byte_array? = null,
+    op_index: integer? = null
+): assets.crosschain_transfer_history_entry_filters {
+    return assets.crosschain_transfer_history_entry_filters(
+        rowids = rowids,
+        account_id = account_id,
+        asset_id = asset_id,
+        transaction_rid = transaction_rid,
+        op_index = op_index
+    );
+}
+
+function get_last_crosschain_transfer_history_entry() {
+    return assets.crosschain_transfer_history_entry @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function mock_crosschain_transfer() {
+    val sender_blockchain_rid = "sender blockchain".hash();
+    val sender_account_id = "the sender".hash();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
+
+    val bob = test.register_bob();
+
+    val asset = test.create_crosschain_asset("validAsset", "va", 1, sender_blockchain_rid, "", sender_blockchain_rid);
+
+    val tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = sender_blockchain_rid,
+            operations = [
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
+                xc.external.init_transfer(
+                    recipient_id = bob.account.id,
+                    asset_id = asset.id,
+                    amount = 5L,
+                    hops = [chain_context.blockchain_rid],
+                    deadline = 10000000000000
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(sender_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(xc.external.apply_transfer(tx, 1, tx, 1, 0))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    return get_last_crosschain_transfer_history_entry();
+}

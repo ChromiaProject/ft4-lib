@@ -13,10 +13,10 @@ import .assets.*;
  * between blocks and transactions, it works as advertised.
  */
 function get_last_transaction(): transaction {
-    val last_block = block @ {} (@omit @sort_desc .block_height, $) limit 1;
+    val last_block = get_last_block();
     return transaction @ { last_block };
 }
 
-function get_last_transfer_history_entry(): assets.transfer_history_entry {
-    return assets.transfer_history_entry @ {} (@omit @sort_desc .rowid, $) limit 1;
+function get_last_block(): block {
+    return block @ {} (@omit @sort_desc .block_height, $) limit 1;
 }

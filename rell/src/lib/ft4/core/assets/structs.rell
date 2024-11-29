@@ -1,5 +1,5 @@
 struct asset_filters {
-    rowids: list<rowid>;
+    rowids: list<rowid>?;
     id: byte_array?;
     name: text?;
     symbol: text?;
@@ -7,21 +7,21 @@ struct asset_filters {
 }
 
 struct balance_filters {
-    rowids: list<rowid>;
+    rowids: list<rowid>?;
     account_id: byte_array?;
     asset_id: byte_array?;
 }
 
-struct transfer_history_entries_filters {
-    rowids: list<rowid>;
+struct transfer_history_entry_filters {
+    rowids: list<rowid>?;
     account_id: byte_array?;
     asset_id: byte_array?;
     transaction_rid: byte_array?;
     op_index: integer?;
 }
 
-struct crosschain_transfer_history_entries_filters {
-    rowids: list<rowid>;
+struct crosschain_transfer_history_entry_filters {
+    rowids: list<rowid>?;
     account_id: byte_array?;
     asset_id: byte_array?;
     transaction_rid: byte_array?;

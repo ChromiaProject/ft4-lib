@@ -123,22 +123,22 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
 
 /**
  * Fetches all transfer history entries allowing filtering in multiple ways, paginated.
- * @param transfer_history_entries_filters  the struct that allows filtering by account id, asset id, transaction rid and op index
- * @param page_size                         the size of the pages to retrieve
- * @param page_cursor                       a pointer to where the page should start 
+ * @param transfer_history_entry_filters  the struct that allows filtering by account id, asset id, transaction rid and op index
+ * @param page_size                       the size of the pages to retrieve
+ * @param page_cursor                     a pointer to where the page should start 
  */
 function get_paginated_transfer_history_entries(
-    transfer_history_entries_filters: transfer_history_entries_filters?,
-    page_size: integer,
-    page_cursor: text
+    transfer_history_entry_filters: transfer_history_entry_filters?,
+    page_size: integer?,
+    page_cursor: text?
 ) {
     val before_rowid = utils.before_rowid(page_cursor);
     return transfer_history_entry @* {
-        if (transfer_history_entries_filters?.rowids??) .rowid in transfer_history_entries_filters!!.rowids else true,
-        if (transfer_history_entries_filters?.account_id??) .account.id == transfer_history_entries_filters?.account_id else true,
-        if (transfer_history_entries_filters?.asset_id??) .asset.id == transfer_history_entries_filters?.asset_id else true,
-        if (transfer_history_entries_filters?.transaction_rid??) .transaction.tx_rid == transfer_history_entries_filters?.transaction_rid else true,
-        if (transfer_history_entries_filters?.op_index??) .op_index == transfer_history_entries_filters?.op_index else true,
+        if (transfer_history_entry_filters?.rowids??) .rowid in transfer_history_entry_filters?.rowids!! else true,
+        if (transfer_history_entry_filters?.account_id??) .account.id == transfer_history_entry_filters?.account_id else true,
+        if (transfer_history_entry_filters?.asset_id??) .asset.id == transfer_history_entry_filters?.asset_id else true,
+        if (transfer_history_entry_filters?.transaction_rid??) .transaction.tx_rid == transfer_history_entry_filters?.transaction_rid else true,
+        if (transfer_history_entry_filters?.op_index??) .op_index == transfer_history_entry_filters?.op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
@@ -330,22 +330,22 @@ function extract_details_from_crosschain_transfer_history_entry(
  * 
  * @see utils.paged_result for information about pagination
  *
- * @param crosschain_transfer_history_entries_filters  the available filters for the entities to retrieve
- * @param page_size                                    the size of the pages to retrieve
- * @param page_cursor                                  a pointer to where the page should start
+ * @param crosschain_transfer_history_entry_filters  the available filters for the entities to retrieve
+ * @param page_size                                  the size of the pages to retrieve
+ * @param page_cursor                                a pointer to where the page should start
  */
 function get_paginated_crosschain_transfer_history_entries(
-    crosschain_transfer_history_entries_filters: crosschain_transfer_history_entries_filters?,
-    page_size: integer,
-    page_cursor: text
+    crosschain_transfer_history_entry_filters: crosschain_transfer_history_entry_filters?,
+    page_size: integer?,
+    page_cursor: text?
 ) {
     val before_rowid = utils.before_rowid(page_cursor);
     return crosschain_transfer_history_entry @* {
-        if (crosschain_transfer_history_entries_filters?.rowids??) .rowid in crosschain_transfer_history_entries_filters!!.rowids else true,
-        if (crosschain_transfer_history_entries_filters?.account_id??) .account_id == crosschain_transfer_history_entries_filters?.account_id else true,
-        if (crosschain_transfer_history_entries_filters?.asset_id??) .asset.id == crosschain_transfer_history_entries_filters?.asset_id else true,
-        if (crosschain_transfer_history_entries_filters?.transaction_rid??) .transaction.tx_rid == crosschain_transfer_history_entries_filters?.transaction_rid else true,
-        if (crosschain_transfer_history_entries_filters?.op_index??) .op_index == crosschain_transfer_history_entries_filters?.op_index else true,
+        if (crosschain_transfer_history_entry_filters?.rowids??) .rowid in crosschain_transfer_history_entry_filters?.rowids!! else true,
+        if (crosschain_transfer_history_entry_filters?.account_id??) .account_id == crosschain_transfer_history_entry_filters?.account_id else true,
+        if (crosschain_transfer_history_entry_filters?.asset_id??) .asset.id == crosschain_transfer_history_entry_filters?.asset_id else true,
+        if (crosschain_transfer_history_entry_filters?.transaction_rid??) .transaction.tx_rid == crosschain_transfer_history_entry_filters?.transaction_rid else true,
+        if (crosschain_transfer_history_entry_filters?.op_index??) .op_index == crosschain_transfer_history_entry_filters?.op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(

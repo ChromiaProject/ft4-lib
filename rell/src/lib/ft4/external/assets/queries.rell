@@ -75,7 +75,7 @@ query get_asset_by_id(asset_id: byte_array) {
  * @param page_size      the size of the pages to retrieve
  * @param page_cursor    a pointer to where the page should start
  */
-query get_assets(asset_filters: assets.asset_filters?, page_size: integer, page_cursor: text) {
+query get_assets(asset_filters: assets.asset_filters?, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_assets(asset_filters, page_size, page_cursor),
         page_size
@@ -98,7 +98,7 @@ query get_asset_by_rowid(rowid) {
  * @param page_size        the size of the pages to retrieve
  * @param page_cursor      a pointer to where the page should start
  */
-query get_balances(balance_filters: assets.balance_filters?, page_size: integer, page_cursor: text) {
+query get_balances(balance_filters: assets.balance_filters?, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         assets.get_paginated_balances(balance_filters, page_size, page_cursor),
         page_size
@@ -117,18 +117,18 @@ query get_balance_by_rowid(rowid) {
 /**
  * Returns paginated and filtered details of all transfer history entries based on the applied filters
  * 
- * @param transfer_history_entries_filters  a struct containing the keys and indexes of the transfer history entry entity to enable filtering for the data to fetch
- * @param page_size                         the size of the pages to retrieve
- * @param page_cursor                       a pointer to where the page should start
+ * @param transfer_history_entry_filters  a struct containing the keys and indexes of the transfer history entry entity to enable filtering for the data to fetch
+ * @param page_size                       the size of the pages to retrieve
+ * @param page_cursor                     a pointer to where the page should start
  */
 query get_transfer_history_entries(
-    transfer_history_entries_filters: assets.transfer_history_entries_filters?,
-    page_size: integer,
-    page_cursor: text
+    transfer_history_entry_filters: assets.transfer_history_entry_filters?,
+    page_size: integer?,
+    page_cursor: text?
 ) {
     return utils.make_page(
         assets.get_paginated_transfer_history_entries(
-            transfer_history_entries_filters,
+            transfer_history_entry_filters,
             page_size,
             page_cursor
         ),
@@ -148,18 +148,18 @@ query get_transfer_history_entry_by_rowid(rowid) {
 /**
  * Returns paginated and filtered details of all crosschain  entries based on the applied filters
  * 
- * @param crosschain_transfer_history_entries_filters  a struct containing the keys and indexes of the crosschain transfer history entry entity to enable filtering for the data to fetch
+ * @param crosschain_transfer_history_entry_filters  a struct containing the keys and indexes of the crosschain transfer history entry entity to enable filtering for the data to fetch
  * @param page_size                                    the size of the pages to retrieve
  * @param page_cursor                                  a pointer to where the page should start
  */
 query get_crosschain_transfer_history_entries(
-    crosschain_transfer_history_entries_filters: assets.crosschain_transfer_history_entries_filters?,
-    page_size: integer,
-    page_cursor: text
+    crosschain_transfer_history_entry_filters: assets.crosschain_transfer_history_entry_filters?,
+    page_size: integer?,
+    page_cursor: text?
 ) {
     return utils.make_page(
         assets.get_paginated_crosschain_transfer_history_entries(
-            crosschain_transfer_history_entries_filters,
+            crosschain_transfer_history_entry_filters,
             page_size,
             page_cursor
         ),
