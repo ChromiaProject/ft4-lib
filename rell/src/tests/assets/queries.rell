@@ -117,14 +117,14 @@ function test_get_crosschain_transfer_history_entry_by_rowid_no_crosschain_trans
 }
 
 function test_get_crosschain_transfer_history_entry_by_rowid_no_crosschain_transfer_history_entry_for_rowid() {
-    helpers.mock_crosschain_transfer();
+    common_helpers.mock_crosschain_transfer();
 
     val crosschain_transfer_history_entry = assets.external.get_crosschain_transfer_history_entry_by_rowid(rowid(999));
     assert_null(crosschain_transfer_history_entry);
 }
 
 function test_getcrosschain_transfer_history_entry_by_rowid() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
 
     val fetched_crosschain_transfer_history_entry = assets.external.get_crosschain_transfer_history_entry_by_rowid(
         crosschain_transfer_history_entry.rowid

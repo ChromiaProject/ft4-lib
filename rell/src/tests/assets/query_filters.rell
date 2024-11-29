@@ -436,7 +436,7 @@ function test_get_paginated_crosschain_transfer_history_entries_without_filters_
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_without_filters() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(null, 1, null);
     assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
         next_cursor = null,
@@ -445,7 +445,7 @@ function test_get_paginated_crosschain_transfer_history_entries_without_filters(
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_rowids() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             rowids = [crosschain_transfer_history_entry.rowid]
@@ -461,7 +461,7 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_rowi
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_account_id() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             account_id = crosschain_transfer_history_entry.account_id
@@ -476,7 +476,7 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_acco
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_asset_id() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             asset_id = crosschain_transfer_history_entry.asset.id
@@ -491,7 +491,7 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_asse
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_transaction_rid() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid
@@ -506,7 +506,7 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_tran
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_index() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             op_index = crosschain_transfer_history_entry.op_index
@@ -521,7 +521,7 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_i
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_using_all_filters_no_crosschain_transfer_history_entries() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             rowids = [rowid(999)],
@@ -540,7 +540,7 @@ function test_get_paginated_crosschain_transfer_history_entries_using_all_filter
 }
 
 function test_get_paginated_crosschain_transfer_history_entries_using_all_filters() {
-    val crosschain_transfer_history_entry = helpers.mock_crosschain_transfer();
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(
         helpers.set_crosschain_transfer_history_entry_filters(
             rowids = [crosschain_transfer_history_entry.rowid],
