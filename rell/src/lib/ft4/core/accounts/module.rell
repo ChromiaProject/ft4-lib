@@ -598,7 +598,7 @@ function get_auth_descriptors(id: byte_array) {
     return account_auth_descriptor @* {
         .account.id == id
     } (
-        get_auth_descriptor_data($.to_struct())
+        get_auth_descriptor_data($)
     );
 }
 
@@ -614,7 +614,8 @@ function get_auth_descriptors_by_signer(account_id: byte_array, signer: byte_arr
         .account_auth_descriptor.account.id == account_id,
         .id == signer
     } (
-        get_auth_descriptor_data(.account_auth_descriptor.to_struct())
+        // get_auth_descriptor_data(.account_auth_descriptor.to_struct())
+        get_auth_descriptor_data(.account_auth_descriptor)
     );
 }
 
@@ -624,8 +625,9 @@ function get_auth_descriptors_by_signer(account_id: byte_array, signer: byte_arr
  *
  * @param ad    The `account_auth_descriptor` to extract info from
  */
-function get_auth_descriptor_data(ad: struct<account_auth_descriptor>) {
+function get_auth_descriptor_data(ad: account_auth_descriptor) {
     return (
+        rowid = ad.rowid,
         id = ad.id,
         account_id = ad.account.id,
         auth_type = ad.auth_type,

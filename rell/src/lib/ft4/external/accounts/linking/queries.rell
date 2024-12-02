@@ -1,0 +1,15 @@
+struct account_link_filter {
+    rowids: list<rowid>?;
+    account: accounts.account?;
+    secondary: accounts.account?;
+    type: text?;
+}
+
+query get_account_links(account_link_filter?) {
+    return linking.account_link @* {
+            if (account_link_filter?.rowids??) .rowid in account_link_filter!!.rowids!! else true,
+            if (account_link_filter?.account??) .account == account_link_filter!!.account else true,
+            if (account_link_filter?.secondary??) .secondary == account_link_filter!!.secondary else true,
+            if (account_link_filter?.type??) .type == account_link_filter!!.type else true
+        };
+}

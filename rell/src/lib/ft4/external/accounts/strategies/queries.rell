@@ -1,3 +1,20 @@
+
+struct account_creation_transfer_filter {
+    rowids: list<rowid>?;
+    transaction: transaction?;
+    op_index: integer?;
+    recipient_id: byte_array?;
+}
+
+query get_account_creation_transfers(account_creation_transfer_filter?) {
+    return transfer.account_creation_transfer @* {
+            if (account_creation_transfer_filter?.rowids??) .rowid in account_creation_transfer_filter!!.rowids!! else true,
+            if (account_creation_transfer_filter?.transaction??) .transaction == account_creation_transfer_filter!!.transaction else true,
+            if (account_creation_transfer_filter?.op_index??) .op_index == account_creation_transfer_filter!!.op_index else true,
+            if (account_creation_transfer_filter?.recipient_id??) .recipient_id == account_creation_transfer_filter!!.recipient_id else true
+        };
+}
+
 /**
  * Fetches the message that the user must sign in order to register
  * an account, provided that they are using evm signatures.

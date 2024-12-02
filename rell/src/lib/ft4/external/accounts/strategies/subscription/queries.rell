@@ -1,0 +1,12 @@
+
+struct subscription_filter {
+    rowids: list<rowid>?;
+    account: accounts.account?; 
+}
+
+query get_subscriptions(subscription_filter?) {
+    return subscription.subscription @* {
+            if (subscription_filter?.rowids??) .rowid in subscription_filter!!.rowids!! else true,
+            if (subscription_filter?.account??) .account == subscription_filter!!.account else true
+        };
+}
