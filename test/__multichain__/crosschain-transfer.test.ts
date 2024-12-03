@@ -284,4 +284,183 @@ describe("Crosschain transfer", () => {
     expect(senderRecord.accountId).toEqual(account00.id);
     expect(senderRecord.blockchainRid).toEqual(connection00.blockchainRid);
   });
+
+  // Todo
+  it("returns null when crosschain transfer history entry for rowid is not found or does not exist", async () => {
+    const { multichain00 } = await fetchBlockchains();
+    const connection00 = createConnection(
+      await createChromiaClientToMultichain(multichain00.rid),
+    );
+
+    const expectedCrosschainTransferHistoryEntry =
+      await connection00.getCrosschainTransferHistoryEntryByRowId(0);
+
+    expect(expectedCrosschainTransferHistoryEntry).toBeNull();
+  });
+
+  // Todo
+  it("returns crosschain transfer history entry by rowid", async () => {
+    const { multichain00, multichain01 } = await fetchBlockchains();
+
+    const client00 = await createChromiaClientToMultichain(multichain00.rid);
+    const connection00 = createConnection(client00);
+    const connection01 = createConnection(
+      await createChromiaClientToMultichain(multichain01.rid),
+    );
+
+    const asset00 = await getNewAsset(
+      connection00.client,
+      "crosschain-transfer-test-asset",
+      "CROSSCHAIN-transfer-test-asset",
+    );
+    await registerCrosschainAsset(
+      connection01.client,
+      adminUser().signatureProvider,
+      asset00.id,
+      multichain00.rid,
+    );
+
+    const account00 = await AccountBuilder.account(connection00)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .withBalance(asset00, createAmount(100, asset00.decimals))
+      .build();
+
+    const account01 = await AccountBuilder.account(connection01)
+      .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+      .build();
+
+    const tb = transactionBuilder(account00.authenticator, connection00.client);
+
+    const initOperation = initTransfer(
+      account01.id,
+      asset00.id,
+      createAmount(100, asset00.decimals),
+      [multichain01.rid],
+      10000000000000,
+    );
+
+    let transferTransactionRid: Buffer | undefined = undefined;
+    await new Promise<void>((resolve, reject) => {
+      const onAnchoredHandler = async (
+        data: {
+          operation: Operation;
+          opIndex: number;
+          tx: RawGtx;
+          createProof: (blockchainRid: BufferId) => Promise<Operation>;
+        } | null,
+        error: Error | null,
+      ) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!data) {
+          reject(new Error("No data provided"));
+          return;
+        }
+        const iccfProofOperation = await data.createProof(multichain01.rid);
+        try {
+          await transactionBuilder(account00.authenticator, connection01.client)
+            .add(iccfProofOperation, {
+              authenticator: noopAuthenticator,
+            })
+            .add(
+              applyTransfer(data.tx, data.opIndex, data.tx, data.opIndex, 0),
+              { authenticator: noopAuthenticator },
+            )
+            .buildAndSend();
+        } catch (error) {
+          reject(error);
+        }
+
+        resolve();
+      };
+
+      tb.add(initOperation, { onAnchoredHandler })
+        .buildAndSendWithAnchoring()
+        .then((res) => {
+          transferTransactionRid = res.receipt.transactionRid;
+        });
+    });
+
+    expect(
+      (await account01.getBalanceByAssetId(asset00.id))?.amount.value,
+    ).toEqual(createAmount(100, asset00.decimals).value);
+
+    const history = await account00.getTransferHistory();
+
+    const transferHistoryEntry = history.data[0];
+
+    const expectedCrosschainTransferHistoryEntry =
+      await connection00.getCrosschainTransferHistoryEntryByRowId(
+        transferHistoryEntry.rowid,
+      );
+
+    expect(expectedCrosschainTransferHistoryEntry).not.toBeNull();
+    expect(expectedCrosschainTransferHistoryEntry).toStrictEqual({
+      rowid: transferHistoryEntry!.rowid,
+      isInput: transferHistoryEntry!.isInput,
+      delta: transferHistoryEntry!.delta,
+      asset: {
+        rowId: asset00.rowId,
+        id: asset00.id,
+        name: asset00.name,
+        symbol: asset00.symbol,
+        decimals: asset00.decimals,
+        blockchainRid: Buffer.from(client00.config.blockchainRid, "hex"),
+        iconUrl: asset00.iconUrl,
+        type: asset00.type,
+        supply: BigInt(2200),
+      },
+      data: transferHistoryEntry!.data,
+      timestamp: transferHistoryEntry!.timestamp,
+      transactionId: transferTransactionRid,
+      blockHeight: transferHistoryEntry!.blockHeight,
+      operationName: transferHistoryEntry!.operationName,
+      opIndex: transferHistoryEntry!.opIndex,
+      isCrosschain: transferHistoryEntry!.isCrosschain,
+    });
+  });
+
+  describe("getCrosschainTransferHistoryEntries", () => {
+    it("returns empty pagination without filters", async () => {
+      const { multichain00 } = await fetchBlockchains();
+
+      const client00 = await createChromiaClientToMultichain(multichain00.rid);
+      const connection00 = createConnection(client00);
+
+      const { data, nextCursor } =
+        await connection00.getCrosschainTransferHistoryEntries(null, 1);
+
+      expect(data.length).toBe(0);
+      expect(nextCursor).toBe(null);
+    });
+    it("returns empty pagination with filters", async () => {
+      const mockBuffer = Buffer.alloc(32);
+      const { multichain00 } = await fetchBlockchains();
+
+      const client00 = await createChromiaClientToMultichain(multichain00.rid);
+      const connection00 = createConnection(client00);
+      const { data, nextCursor } =
+        await connection00.getCrosschainTransferHistoryEntries(
+          {
+            rowids: [0],
+            account_id: mockBuffer,
+            asset_id: mockBuffer,
+            transaction_rid: mockBuffer,
+            op_index: 0,
+          },
+          1,
+        );
+
+      expect(data.length).toBe(0);
+      expect(nextCursor).toBe(null);
+    });
+    it("returns paginated crosschain transfer history entries without filters", async () => {
+      // todo
+    });
+    it("returns paginated crosschain transfer history entries with filters", async () => {
+      // todo
+    });
+  });
 });

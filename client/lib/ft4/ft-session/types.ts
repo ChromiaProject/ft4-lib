@@ -173,7 +173,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getAssets: (
-    assetFilters: Array<AssetFilters>,
+    assetFilters: AssetFilters | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Asset>>;
@@ -191,7 +191,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getBalances: (
-    balanceFilters: Array<BalanceFilters>,
+    balanceFilters: BalanceFilters | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Balance>>;
@@ -210,7 +210,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getTransferHistoryEntries: (
-    transferHistoryEntriesFilters: Array<TransferHistoryEntriesFilters>,
+    transferHistoryEntriesFilters: TransferHistoryEntriesFilters | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<TransferHistoryEntry>>;
@@ -231,7 +231,7 @@ export interface Connection extends Queryable {
    * @param cursor - where the page should start
    */
   getCrosschainTransferHistoryEntries: (
-    crosschainTransferHistoryEntriesFilters: Array<CrosschainTransferHistoryEntriesFilters>,
+    crosschainTransferHistoryEntriesFilters: CrosschainTransferHistoryEntriesFilters | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<CrosschainTransferHistoryEntry>>;

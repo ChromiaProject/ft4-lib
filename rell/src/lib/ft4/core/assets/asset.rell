@@ -229,6 +229,7 @@ function get_paginated_asset_balances(account_id: byte_array, page_size: integer
     } (
         utils.pagination_result(
             data = (
+                rowid = .rowid,
                 asset = map_asset(.asset),
                 amount = .amount
             ).to_gtv_pretty(),
@@ -371,7 +372,7 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
  * @param page_size      the size of the pages to retrieve
  * @param page_cursor    a pointer to where the page should start
  */
-function get_paginated_assets(asset_filters: asset_filters?, page_size: integer?, page_cursor: text?) {
+function get_assets_filtered(asset_filters: asset_filters?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
         if (asset_filters?.rowids??) .rowid in asset_filters?.rowids!! else true,
@@ -397,7 +398,7 @@ function get_paginated_assets(asset_filters: asset_filters?, page_size: integer?
  * @param page_size        the size of the pages to retrieve
  * @param page_cursor      a pointer to where the page should start
  */
-function get_paginated_balances(balance_filters: balance_filters?, page_size: integer?, page_cursor: text?) {
+function get_balances_filtered(balance_filters: balance_filters?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
         if (balance_filters?.rowids??) .rowid in balance_filters?.rowids!! else true,

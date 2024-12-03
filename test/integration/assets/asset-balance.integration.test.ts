@@ -1,5 +1,11 @@
 import { AccountBuilder, getNewAsset, useChromiaNode } from "@ft4-test/util";
-import { ASSET_TYPE_FT4, Amount, Asset, createAmount } from "@ft4/asset";
+import {
+  ASSET_TYPE_FT4,
+  Amount,
+  Asset,
+  createAmount,
+  getBalanceByAccountId,
+} from "@ft4/asset";
 import { createInMemoryFtKeyStore } from "@ft4/authentication";
 import {
   Connection,
@@ -46,34 +52,38 @@ describe("Asset balance", () => {
       amount: makeAmountBareBones(b.amount),
     }));
 
-    expect(balances).toEqual([
-      {
-        asset: {
-          id: asset1.id,
-          name: asset1.name,
-          symbol: asset1.symbol,
-          decimals: asset1.decimals,
-          blockchainRid: asset1.blockchainRid,
-          iconUrl: "",
-          type: ASSET_TYPE_FT4,
-          supply: BigInt(10),
+    expect(JSON.stringify(balances)).toStrictEqual(
+      JSON.stringify([
+        {
+          asset: {
+            rowId: asset1.rowId,
+            id: asset1.id,
+            name: asset1.name,
+            symbol: asset1.symbol,
+            decimals: asset1.decimals,
+            blockchainRid: asset1.blockchainRid,
+            iconUrl: "",
+            type: ASSET_TYPE_FT4,
+            supply: BigInt(10),
+          },
+          amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
         },
-        amount: makeAmountBareBones(createAmount(10, asset1.decimals)),
-      },
-      {
-        asset: {
-          id: asset2.id,
-          name: asset2.name,
-          decimals: asset2.decimals,
-          blockchainRid: asset2.blockchainRid,
-          symbol: asset2.symbol,
-          iconUrl: "",
-          type: ASSET_TYPE_FT4,
-          supply: BigInt("20" + "0".repeat(asset2.decimals)),
+        {
+          asset: {
+            rowId: asset2.rowId,
+            id: asset2.id,
+            name: asset2.name,
+            symbol: asset2.symbol,
+            decimals: asset2.decimals,
+            blockchainRid: asset2.blockchainRid,
+            iconUrl: "",
+            type: ASSET_TYPE_FT4,
+            supply: BigInt(2000000),
+          },
+          amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
         },
-        amount: makeAmountBareBones(createAmount(20, asset2.decimals)),
-      },
-    ]);
+      ]),
+    );
   });
 
   it("returns balance for specific asset", async () => {
@@ -86,25 +96,30 @@ describe("Asset balance", () => {
 
     const balance = await account.getBalanceByAssetId(asset2.id);
 
-    expect({
-      asset: balance!.asset,
-      amount: makeAmountBareBones(balance!.amount),
-    }).toEqual({
-      asset: {
-        id: asset2.id,
-        name: asset2.name,
-        decimals: asset2.decimals,
-        blockchainRid: asset2.blockchainRid,
-        iconUrl: "",
-        type: ASSET_TYPE_FT4,
-        supply: BigInt(70 + "0".repeat(asset2.decimals)),
-        symbol: asset2.symbol,
-      },
-      amount: {
-        value: BigInt(50 + "0".repeat(asset2.decimals)),
-        decimals: asset2.decimals,
-      },
-    });
+    expect(
+      JSON.stringify({
+        asset: balance!.asset,
+        amount: makeAmountBareBones(balance!.amount),
+      }),
+    ).toStrictEqual(
+      JSON.stringify({
+        asset: {
+          rowId: asset2.rowId,
+          id: asset2.id,
+          name: asset2.name,
+          symbol: asset2.symbol,
+          decimals: asset2.decimals,
+          blockchainRid: asset2.blockchainRid,
+          iconUrl: "",
+          type: ASSET_TYPE_FT4,
+          supply: BigInt(7000000),
+        },
+        amount: {
+          value: BigInt(50 + "0".repeat(asset2.decimals)),
+          decimals: asset2.decimals,
+        },
+      }),
+    );
   });
 
   it("paginates asset balances", async () => {
@@ -145,5 +160,49 @@ describe("Asset balance", () => {
 
     const { data: data2 } = await session.account.getBalances(2, nextCursor);
     expect(data2.length).toBe(1);
+  });
+
+  it("returns null when the balance for rowid is not found or does not exist", async () => {
+    const expectedBalance = await connection.getBalanceByRowId(0);
+
+    expect(expectedBalance).toBeNull();
+  });
+
+  it("returns balance by rowid", async () => {
+    const asset6 = await getNewAsset(
+      client,
+      "asset_balance_6",
+      "ASSET_BALANCE_6",
+    );
+    const account = await AccountBuilder.account(connection)
+      .withBalance(asset6, 200)
+      .build();
+
+    const balance = await getBalanceByAccountId(
+      connection,
+      account.id,
+      asset6.id,
+    );
+
+    const blanaceRowId = balance!.rowId!;
+    const expectedBalance = await connection.getBalanceByRowId(blanaceRowId);
+
+    expect(JSON.stringify(expectedBalance)).toStrictEqual(
+      JSON.stringify({
+        rowId: blanaceRowId,
+        asset: {
+          rowId: asset6.rowId,
+          id: asset6.id,
+          name: asset6.name,
+          symbol: asset6.symbol,
+          decimals: asset6.decimals,
+          blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+          iconUrl: asset6.iconUrl,
+          type: asset6.type,
+          supply: BigInt(200),
+        },
+        amount: balance!.amount,
+      }),
+    );
   });
 });

@@ -263,6 +263,7 @@ struct gtv_asset {
 }
 
 struct gtv_balance {
+    rowid: integer;
     amount: big_integer;
     asset: gtv_asset;
 }
@@ -315,10 +316,12 @@ function test_paginated_asset_balances_have_correct_format() {
     val asset1 = test.create_asset("test1", "TST1", 0);
     admin.external.mint(alice.account.id, asset1.id, 10L).sign(test.admin_priv_key()).run();
     val result = assets.external.get_asset_balances(alice.account.id, 1, null);
+    val balance_rowid = assets.balance @ { .asset.id == asset1.id, .account == alice.account } ( .rowid );
 
     assert_equals(result, ft4_utils.paged_result(     
         data = [
             (
+                rowid = balance_rowid,
                 asset = (
                     rowid = asset1.rowid,
                     id = asset1.id,

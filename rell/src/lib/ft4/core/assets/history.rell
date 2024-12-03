@@ -127,7 +127,7 @@ function extract_data_from_transfer_history_entry(entry: transfer_history_entry)
  * @param page_size                       the size of the pages to retrieve
  * @param page_cursor                     a pointer to where the page should start 
  */
-function get_paginated_transfer_history_entries(
+function get_transfer_history_entries_filtered(
     transfer_history_entry_filters: transfer_history_entry_filters?,
     page_size: integer?,
     page_cursor: text?
@@ -334,7 +334,7 @@ function extract_details_from_crosschain_transfer_history_entry(
  * @param page_size                                  the size of the pages to retrieve
  * @param page_cursor                                a pointer to where the page should start
  */
-function get_paginated_crosschain_transfer_history_entries(
+function get_crosschain_transfer_history_entries_filtered(
     crosschain_transfer_history_entry_filters: crosschain_transfer_history_entry_filters?,
     page_size: integer?,
     page_cursor: text?

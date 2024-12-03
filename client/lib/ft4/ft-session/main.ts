@@ -47,6 +47,14 @@ import {
   getAssetsBySymbol,
   getAssetsByName,
   getAssetsByType,
+  getAssets,
+  getAssetByRowId,
+  getBalances,
+  getTransferHistoryEntries,
+  getTransferHistoryEntryByRowId,
+  getCrosschainTransferHistoryEntries,
+  getCrosschainTransferHistoryEntryByRowId,
+  getBalanceByRowId,
 } from "@ft4/asset";
 import {
   AuthDataService,
@@ -73,6 +81,12 @@ import {
   getConfigFromOptions,
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
+import {
+  AssetFilters,
+  BalanceFilters,
+  CrosschainTransferHistoryEntriesFilters,
+  TransferHistoryEntriesFilters,
+} from "@ft4/asset/types";
 
 /**
  * Uses the provided connection to create a new connection to the specified blockchain rid.
@@ -174,6 +188,44 @@ export function createConnection(client: IClient): Connection {
     ) => getAssetsByType(connection, type, limit, cursor),
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
+    getAssets: (
+      assetFilters: AssetFilters,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getAssets(connection, assetFilters, limit, cursor),
+    getAssetByRowId: (rowId: number) => getAssetByRowId(connection, rowId),
+    getBalances: (
+      balanceFilters: BalanceFilters,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getBalances(connection, balanceFilters, limit, cursor),
+    getBalanceByRowId: (rowId: number) => getBalanceByRowId(connection, rowId),
+    getTransferHistoryEntries: (
+      transferHistoryEntriesFilters: TransferHistoryEntriesFilters,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getTransferHistoryEntries(
+        connection,
+        transferHistoryEntriesFilters,
+        limit,
+        cursor,
+      ),
+    getTransferHistoryEntryByRowId: (rowId: number) =>
+      getTransferHistoryEntryByRowId(connection, rowId),
+    getCrosschainTransferHistoryEntries: (
+      crosschainTransferHistoryEntriesFilters: CrosschainTransferHistoryEntriesFilters,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getCrosschainTransferHistoryEntries(
+        connection,
+        crosschainTransferHistoryEntriesFilters,
+        limit,
+        cursor,
+      ),
+    getCrosschainTransferHistoryEntryByRowId: (rowId: number) =>
+      getCrosschainTransferHistoryEntryByRowId(connection, rowId),
     getTransferDetails: (txRid: BufferId, opIndex: number) =>
       getTransferDetails(connection, txRid, opIndex),
     getTransferDetailsByAsset: (

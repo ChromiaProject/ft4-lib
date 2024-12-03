@@ -58,7 +58,7 @@ export type Balance = {
 };
 
 export type BalanceResponse = {
-  rowId?: number;
+  rowid?: number;
   asset: AssetResponse;
   amount: bigint;
 };
@@ -75,32 +75,32 @@ export type AnyAssetAmount = RawAmount | Amount;
 
 export type AssetFilters = {
   rowids: Array<number>;
-  id?: Buffer;
-  name?: string;
-  symbol?: string;
-  type?: string;
+  id?: Buffer | null;
+  name?: string | null;
+  symbol?: string | null;
+  type?: string | null;
 };
 
 export type BalanceFilters = {
   rowids: Array<number>;
-  account_id?: Buffer;
-  asset_id?: Buffer;
+  account_id?: Buffer | null;
+  asset_id?: Buffer | null;
 };
 
 export type TransferHistoryEntriesFilters = {
   rowids: Array<number>;
-  account_id?: Buffer;
-  asset_id?: Buffer;
-  transaction_rid?: Buffer;
-  op_index?: number;
+  account_id?: Buffer | null;
+  asset_id?: Buffer | null;
+  transaction_rid?: Buffer | null;
+  op_index?: number | null;
 };
 
 export type CrosschainTransferHistoryEntriesFilters = {
   rowids: Array<number>;
-  account_id?: Buffer;
-  asset_id?: Buffer;
-  transaction_rid?: Buffer;
-  op_index?: number;
+  account_id?: Buffer | null;
+  asset_id?: Buffer | null;
+  transaction_rid?: Buffer | null;
+  op_index?: number | null;
 };
 
 /**

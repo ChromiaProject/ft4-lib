@@ -59,8 +59,4 @@ describe("Crosschain asset", () => {
       uniquenessResolver,
     });
   });
-
-  it("returns crosschain transfer history entry by rowid", async () => {
-    // getCrosschainTransferHistoryEntryByRowId
-  });
 });
