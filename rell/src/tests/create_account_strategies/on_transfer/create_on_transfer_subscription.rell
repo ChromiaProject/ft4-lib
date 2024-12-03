@@ -66,7 +66,9 @@ function test_create_account_on_internal_transfer_with_subscription() {
         (create_on_transfer.account_creation_transfer @* { recipient_id, .state == create_on_transfer.account_creation_state.done}).size(),
         1
     );
-    assert_equals(subscription.get_subscription_details(bob.id), (
+    val sub_details = subscription.get_subscription_details(bob.id);
+    assert_equals(sub_details, (
+        rowid = sub_details.rowid,
         asset_id = asset.id,
         period_millis = 30 * utils.MILLISECONDS_PER_DAY,
         last_payment = last_block_time
@@ -115,7 +117,9 @@ function test_create_account_on_internal_transfer_with_subscription() {
         .run();
     assert_equals(assets.get_asset_balance(bob, asset), amount - 2 * subscription_amount);
     assert_equals(assets.get_asset_balance(subscription_account, asset), 2 * subscription_amount);
-    assert_equals(subscription.get_subscription_details(bob.id), (
+    val sub_details_2 = subscription.get_subscription_details(bob.id);
+    assert_equals(sub_details_2, (
+        rowid = sub_details_2.rowid,
         asset_id = asset.id,
         period_millis = 30 * utils.MILLISECONDS_PER_DAY,
         last_payment = last_block_time
