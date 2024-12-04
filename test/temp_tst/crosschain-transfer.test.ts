@@ -101,7 +101,8 @@ describe("Crosschain transfer", () => {
           console.log("TRANSACTION INIT::::::::::::::::::");
           console.log(receipt.transactionRid);
           fetch(
-            `http://docker:7740/transactions/${multichain00.rid.toString("hex")}/${receipt.transactionRid.toString("hex")}`,
+            nodeUrl +
+              `0/transactions/${multichain00.rid.toString("hex")}/${receipt.transactionRid.toString("hex")}`,
           ).then((res) => {
             res
               .json()

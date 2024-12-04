@@ -8,8 +8,8 @@ NODE_PORT=9870
 API_PORT=7740
 # API_PORT=80
 
-CHROMIA_NODE_VERSION='3.17.0'
-DIRECTORY_CHAIN_VERSION='1.59.2'
+CHROMIA_NODE_VERSION='3.22.5'
+DIRECTORY_CHAIN_VERSION='1.75.2'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
@@ -200,8 +200,9 @@ run_main_logic() {
     # export GENESIS_HOST_NAME=docker
     # export GENESIS_API_URL=docker:7740
 
-    sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
-       
+    if $GITLAB; then
+        sed -i -e 's/localhost/docker/g' $DEPENDENCIES_PATH/directory-chain/chromia.yml
+    fi 
 
     log "Installing Directory Chain dependencies..."
     chr install --settings $DEPENDENCIES_PATH/directory-chain/chromia.yml > /dev/null
@@ -247,7 +248,11 @@ run_main_logic() {
     # Loop until BRID receives a non-empty value or until 10 tries
     while [ -z "$BRID" ] && [ $retry_count -lt 500 ]; do
       # Attempt to fetch the value
-      BRID=$(curl -s http://docker:7740/brid/iid_0)
+      if $GITLAB; then
+        BRID=$(curl -s http://docker:7740/brid/iid_0)
+      else
+        BRID=$(curl -s http://localhost:7740/brid/iid_0)
+      fi
 
       # Increment retry counter
       ((retry_count++))      
