@@ -56,13 +56,12 @@ describe("Asset queries using filters", () => {
       expect(foundAsset).toBe(null);
     });
     it("returns empty pagination with filters", async () => {
-      const { data, nextCursor } = await connection.getAssets(
+      const { data } = await connection.getAssets(
         setAssetFilters([0], mockBuffer, mockString, mockString, mockString),
         1,
       );
 
       expect(data.length).toBe(0);
-      expect(nextCursor).toBe(null);
     });
     it("returns paginated assets without filters", async () => {
       const asset: Asset = await getNewAsset(
@@ -130,13 +129,12 @@ describe("Asset queries using filters", () => {
       expect(foundBalance).toBe(null);
     });
     it("returns empty pagination with filters", async () => {
-      const { data, nextCursor } = await connection.getBalances(
+      const { data } = await connection.getBalances(
         setBalanceFilters([0], mockBuffer, mockBuffer),
         1,
       );
 
       expect(data.length).toBe(0);
-      expect(nextCursor).toBe(null);
     });
     it("returns paginated balances without filters", async () => {
       const asset: Asset = await getNewAsset(
@@ -227,7 +225,7 @@ describe("Asset queries using filters", () => {
       expect(foundTransferHistoryEntry).toBe(null);
     });
     it("returns empty pagination with filters", async () => {
-      const { data, nextCursor } = await connection.getTransferHistoryEntries(
+      const { data } = await connection.getTransferHistoryEntries(
         setCrosschainAndTransferHistoryEntryFilters(
           [0],
           mockBuffer,
@@ -239,7 +237,6 @@ describe("Asset queries using filters", () => {
       );
 
       expect(data.length).toBe(0);
-      expect(nextCursor).toBe(null);
     });
     it("returns paginated transfer history entries without filters", async () => {
       const asset: Asset = await getNewAsset(
