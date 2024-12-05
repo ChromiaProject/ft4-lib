@@ -5,6 +5,7 @@ image: registry.gitlab.com/chromaway/ft4-lib:latest
 stages:
   - build
   - test
+  - test2
   - deploy
 
 services:
@@ -52,7 +53,7 @@ cache:
     - node_modules/
 
 unit_integration_tests:
-  stage: test
+  stage: test2
   script:
     - ./scripts/install-chr-and-pmc.sh
     - echo ${BUILD_BOT_EMAIL_ADDRESS}
@@ -90,6 +91,9 @@ unit_integration_tests:
 
 multichain_tests:
   stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
   script:
     - docker info
     - ./scripts/install-chr-and-pmc.sh
@@ -135,6 +139,8 @@ workflow:
       changes:
         - "*"
       when: always
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always  
     # - if: $CI_COMMIT_BRANCH == "development"
     #   when: manual
     # - if: $CI_COMMIT_BRANCH == "ft4"

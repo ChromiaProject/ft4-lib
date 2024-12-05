@@ -8,8 +8,9 @@ NODE_PORT=9870
 API_PORT=7740
 # API_PORT=80
 
-CHROMIA_NODE_VERSION='3.17.0'
-DIRECTORY_CHAIN_VERSION='1.59.2'
+CHROMIA_NODE_VERSION='3.22.5'
+# DIRECTORY_CHAIN_VERSION='1.59.2'
+DIRECTORY_CHAIN_VERSION='1.75.2'
 
 BASE_CONFIG_DIR="rell/config/jest-test/multichain"
 DEPENDENCIES_PATH="rell/dep"
@@ -228,6 +229,7 @@ run_main_logic() {
     $DOCKER run \
         --name $DOCKER_NODE_NAME \
         --restart unless-stopped \
+        --network host \
         -v "$(pwd)/$BASE_CONFIG_DIR:/config" \
         -v "$(pwd)/$DEPENDENCIES_PATH/directory-chain/build:/build" \
         -e JAVA_TOOL_OPTIONS="-Xmx16g" \
@@ -237,7 +239,8 @@ run_main_logic() {
         -p $NODE_PORT:9870/tcp \
         -p $API_PORT:7740/tcp \
         registry.gitlab.com/chromaway/postchain-chromia/chromaway/chromia-server:${CHROMIA_NODE_VERSION} \
-        run-node > ./multichain-postchain.log &
+        run-node
+        # run-node  > ./multichain-postchain.log &
 
     debug "Fetching manager chain BRID..."
     BRID=""
