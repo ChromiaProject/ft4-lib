@@ -52,7 +52,9 @@ function test_init_transfer_history() {
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = true
+            is_input = true,
+            op_index = last_two_transfer_history_entries[1].op_index,
+            transaction_rid = last_two_transfer_history_entries[1].transaction.tx_rid
         ),
         assets.transfer_detail(
             rowid = last_crosschain_transfer_history_entry.rowid,
@@ -60,7 +62,9 @@ function test_init_transfer_history() {
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = false
+            is_input = false,
+            op_index = last_crosschain_transfer_history_entry.op_index,
+            transaction_rid = last_crosschain_transfer_history_entry.transaction.tx_rid
         )
     ];
     assert_equals(assets.external.get_transfer_details(tx_rid, 1), expected);
@@ -122,7 +126,9 @@ function test_apply_transfer_history() {
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = false
+            is_input = false,
+            op_index = last_transfer_history_entry.op_index,
+            transaction_rid = last_transfer_history_entry.transaction.tx_rid
         ),
         assets.transfer_detail(
             rowid = last_crosschain_transfer_history_entry.rowid,
@@ -130,7 +136,9 @@ function test_apply_transfer_history() {
             account_id = sender_account_id,
             asset_id = asset.id,
             delta = 5L,
-            is_input = true
+            is_input = true,
+            op_index = last_crosschain_transfer_history_entry.op_index,
+            transaction_rid = last_crosschain_transfer_history_entry.transaction.tx_rid
         ),
     ];
 

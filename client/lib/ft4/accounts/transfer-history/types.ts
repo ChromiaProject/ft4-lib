@@ -52,6 +52,8 @@ export type CrosschainTransferhistoryEntryResponse = {
   asset_id: Buffer;
   delta: bigint;
   is_input: boolean;
+  op_index: number;
+  transaction_rid: Buffer;
 };
 
 export type CrosschainTransferHistoryEntry = {
@@ -61,6 +63,8 @@ export type CrosschainTransferHistoryEntry = {
   assetId: Buffer;
   delta: bigint;
   isInput: boolean;
+  opIndex: number;
+  transactionId: Buffer;
 };
 
 export enum TransferHistoryType {

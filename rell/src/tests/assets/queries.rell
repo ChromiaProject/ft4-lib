@@ -135,3 +135,4 @@ function test_getcrosschain_transfer_history_entry_by_rowid() {
         mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry)
     );
 }
+

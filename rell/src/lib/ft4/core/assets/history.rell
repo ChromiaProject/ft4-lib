@@ -203,6 +203,10 @@ struct transfer_detail {
     delta: big_integer;
     /** If true, this movement of tokens went into a transfer (and out of this account) */
     is_input: boolean;
+    /** The index of the operation in the transaction */
+    op_index: integer;
+    /** The transaction RID of the transaction containing the transfer details */
+    transaction_rid: byte_array;
 }
 
 /**
@@ -281,7 +285,9 @@ function extract_details_from_transfer_history_entry(entry: transfer_history_ent
         account_id = entry.account.id,
         asset_id = entry.asset.id,
         delta = entry.delta,
-        is_input = entry.is_input
+        is_input = entry.is_input,
+        op_index = entry.op_index,
+        transaction_rid = entry.transaction.tx_rid
     );
 }
 
@@ -301,7 +307,9 @@ function extract_details_from_account_creation_transfer(
         account_id = transfer.sender_id,
         asset_id = transfer.asset.id,
         delta = transfer.amount,
-        is_input = true
+        is_input = true,
+        op_index = transfer.op_index,
+        transaction_rid = transfer.transaction.tx_rid
     );
 }
 
@@ -321,7 +329,9 @@ function extract_details_from_crosschain_transfer_history_entry(
         account_id = entry.account_id,
         asset_id = entry.asset.id,
         delta = entry.delta,
-        is_input = entry.is_input
+        is_input = entry.is_input,
+        op_index = entry.op_index,
+        transaction_rid = entry.transaction.tx_rid
     );
 }
 
@@ -346,6 +356,22 @@ function get_crosschain_transfer_history_entries_filtered(
         if (crosschain_transfer_history_entry_filters?.asset_id??) .asset.id == crosschain_transfer_history_entry_filters?.asset_id else true,
         if (crosschain_transfer_history_entry_filters?.transaction_rid??) .transaction.tx_rid == crosschain_transfer_history_entry_filters?.transaction_rid else true,
         if (crosschain_transfer_history_entry_filters?.op_index??) .op_index == crosschain_transfer_history_entry_filters?.op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (extract_details_from_crosschain_transfer_history_entry($)).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+/**
+ * 
+ */
+function get_paginated_crosschain_transfer_history_entries(page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+
+    return crosschain_transfer_history_entry @* {
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(

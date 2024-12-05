@@ -57,6 +57,8 @@ function format_expected_crosschain_transfer_history_entry_assertion(assets.cros
         account_id = crosschain_transfer_history_entry.account_id,
         asset_id = crosschain_transfer_history_entry.asset.id,
         delta = crosschain_transfer_history_entry.delta,
-        is_input = crosschain_transfer_history_entry.is_input
+        is_input = crosschain_transfer_history_entry.is_input,
+        op_index = crosschain_transfer_history_entry.op_index,
+        transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid
     );
 }

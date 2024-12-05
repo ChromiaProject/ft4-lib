@@ -407,7 +407,7 @@ function createCrosschainAssetRegistrationObject(
  * which can be used in the dApp
  * @param crosschainTransferHistoryEntry - the object to convert
  */
-function createCrosschainTransferHistoryEntryObject(
+export function createCrosschainTransferHistoryEntryObject(
   crosschainTransferHistoryEntry: CrosschainTransferhistoryEntryResponse,
 ): CrosschainTransferHistoryEntry {
   return Object.freeze({
@@ -417,5 +417,7 @@ function createCrosschainTransferHistoryEntryObject(
     assetId: crosschainTransferHistoryEntry.asset_id,
     delta: crosschainTransferHistoryEntry.delta,
     isInput: crosschainTransferHistoryEntry.is_input,
+    opIndex: crosschainTransferHistoryEntry.op_index,
+    transactionId: crosschainTransferHistoryEntry.transaction_rid,
   });
 }

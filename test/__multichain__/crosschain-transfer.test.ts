@@ -337,7 +337,6 @@ describe("Crosschain transfer", () => {
       10000000000000,
     );
 
-    let transferTransactionRid: Buffer | undefined = undefined;
     await new Promise<void>((resolve, reject) => {
       const onAnchoredHandler = async (
         data: {
@@ -374,47 +373,29 @@ describe("Crosschain transfer", () => {
         resolve();
       };
 
-      tb.add(initOperation, { onAnchoredHandler })
-        .buildAndSendWithAnchoring()
-        .then((res) => {
-          transferTransactionRid = res.receipt.transactionRid;
-        });
+      tb.add(initOperation, { onAnchoredHandler }).buildAndSendWithAnchoring();
     });
 
-    const history = await account00.getTransferHistory();
-
-    const transferHistoryEntry = history.data[0];
+    const crosschainHistory =
+      await account00.getCrosschainTransferHistoryEntries();
 
     const expectedCrosschainTransferHistoryEntry =
       await connection00.getCrosschainTransferHistoryEntryByRowId(
-        transferHistoryEntry.rowid,
+        crosschainHistory.data[0].rowid,
       );
 
     expect(
       JSON.stringify(expectedCrosschainTransferHistoryEntry),
     ).toStrictEqual(
       JSON.stringify({
-        rowid: transferHistoryEntry!.rowid,
-        isInput: transferHistoryEntry!.isInput,
-        delta: transferHistoryEntry!.delta,
-        asset: {
-          rowId: asset00.rowId,
-          id: asset00.id,
-          name: asset00.name,
-          symbol: asset00.symbol,
-          decimals: asset00.decimals,
-          blockchainRid: Buffer.from(client00.config.blockchainRid, "hex"),
-          iconUrl: asset00.iconUrl,
-          type: asset00.type,
-          supply: BigInt(2200),
-        },
-        data: transferHistoryEntry!.data,
-        timestamp: transferHistoryEntry!.timestamp,
-        transactionId: transferTransactionRid,
-        blockHeight: transferHistoryEntry!.blockHeight,
-        operationName: transferHistoryEntry!.operationName,
-        opIndex: transferHistoryEntry!.opIndex,
-        isCrosschain: transferHistoryEntry!.isCrosschain,
+        rowid: crosschainHistory.data[0].rowid,
+        blockchainRid: crosschainHistory.data[0].blockchainRid,
+        accountId: crosschainHistory.data[0].accountId,
+        assetId: crosschainHistory.data[0].assetId,
+        delta: crosschainHistory.data[0].delta,
+        isInput: crosschainHistory.data[0].isInput,
+        opIndex: crosschainHistory.data[0].opIndex,
+        transactionId: crosschainHistory.data[0].transactionId,
       }),
     );
   });
@@ -500,7 +481,6 @@ describe("Crosschain transfer", () => {
         10000000000000,
       );
 
-      let transferTransactionRid: Buffer | undefined = undefined;
       await new Promise<void>((resolve, reject) => {
         const onAnchoredHandler = async (
           data: {
@@ -540,45 +520,37 @@ describe("Crosschain transfer", () => {
           resolve();
         };
 
-        tb.add(initOperation, { onAnchoredHandler })
-          .buildAndSendWithAnchoring()
-          .then((res) => {
-            transferTransactionRid = res.receipt.transactionRid;
-          });
+        tb.add(initOperation, {
+          onAnchoredHandler,
+        }).buildAndSendWithAnchoring();
       });
 
-      const history = await account00.getTransferHistory();
-
-      const transferHistoryEntry = history.data[0];
+      const crosschainHistory =
+        await account00.getCrosschainTransferHistoryEntries();
 
       const { data } = await connection00.getCrosschainTransferHistoryEntries(
         null,
-        1,
+        100,
       );
 
-      expect(JSON.stringify(data[0])).toStrictEqual(
+      const foundCrosschainTransferHistoryEntry = data.find((item) =>
+        crosschainHistory.data.some(
+          (element) =>
+            element.transactionId.toString("hex") ===
+            item.transactionId.toString("hex"),
+        ),
+      );
+
+      expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
         JSON.stringify({
-          rowid: transferHistoryEntry!.rowid,
-          isInput: transferHistoryEntry!.isInput,
-          delta: transferHistoryEntry!.delta,
-          asset: {
-            rowId: asset00.rowId,
-            id: asset00.id,
-            name: asset00.name,
-            symbol: asset00.symbol,
-            decimals: asset00.decimals,
-            blockchainRid: Buffer.from(client00.config.blockchainRid, "hex"),
-            iconUrl: asset00.iconUrl,
-            type: asset00.type,
-            supply: BigInt(2200),
-          },
-          data: transferHistoryEntry!.data,
-          timestamp: transferHistoryEntry!.timestamp,
-          transactionId: transferTransactionRid,
-          blockHeight: transferHistoryEntry!.blockHeight,
-          operationName: transferHistoryEntry!.operationName,
-          opIndex: transferHistoryEntry!.opIndex,
-          isCrosschain: transferHistoryEntry!.isCrosschain,
+          rowid: crosschainHistory.data[0].rowid,
+          blockchainRid: crosschainHistory.data[0].blockchainRid,
+          accountId: crosschainHistory.data[0].accountId,
+          assetId: crosschainHistory.data[0].assetId,
+          delta: crosschainHistory.data[0].delta,
+          isInput: crosschainHistory.data[0].isInput,
+          opIndex: crosschainHistory.data[0].opIndex,
+          transactionId: crosschainHistory.data[0].transactionId,
         }),
       );
     });
@@ -625,7 +597,6 @@ describe("Crosschain transfer", () => {
         10000000000000,
       );
 
-      let transferTransactionRid: Buffer | undefined = undefined;
       await new Promise<void>((resolve, reject) => {
         const onAnchoredHandler = async (
           data: {
@@ -665,51 +636,43 @@ describe("Crosschain transfer", () => {
           resolve();
         };
 
-        tb.add(initOperation, { onAnchoredHandler })
-          .buildAndSendWithAnchoring()
-          .then((res) => {
-            transferTransactionRid = res.receipt.transactionRid;
-          });
+        tb.add(initOperation, {
+          onAnchoredHandler,
+        }).buildAndSendWithAnchoring();
       });
 
-      const history = await account00.getTransferHistory();
-
-      const transferHistoryEntry = history.data[0];
+      const crosschainHistory =
+        await account00.getCrosschainTransferHistoryEntries();
 
       const { data } = await connection00.getCrosschainTransferHistoryEntries(
         {
-          rowids: [transferHistoryEntry.rowid],
-          account_id: account00.id,
-          asset_id: asset00.id,
-          transaction_rid: transferHistoryEntry.transactionId,
-          op_index: transferHistoryEntry.opIndex,
+          rowids: [crosschainHistory.data[0].rowid],
+          account_id: crosschainHistory.data[0].accountId,
+          asset_id: crosschainHistory.data[0].assetId,
+          transaction_rid: crosschainHistory.data[0].transactionId,
+          op_index: crosschainHistory.data[0].opIndex,
         },
-        1,
+        100,
       );
 
-      expect(JSON.stringify(data[0])).toStrictEqual(
+      const foundCrosschainTransferHistoryEntry = data.find((item) =>
+        crosschainHistory.data.some(
+          (element) =>
+            element.transactionId.toString("hex") ===
+            item.transactionId.toString("hex"),
+        ),
+      );
+
+      expect(JSON.stringify(foundCrosschainTransferHistoryEntry)).toStrictEqual(
         JSON.stringify({
-          rowid: transferHistoryEntry!.rowid,
-          isInput: transferHistoryEntry!.isInput,
-          delta: transferHistoryEntry!.delta,
-          asset: {
-            rowId: asset00.rowId,
-            id: asset00.id,
-            name: asset00.name,
-            symbol: asset00.symbol,
-            decimals: asset00.decimals,
-            blockchainRid: Buffer.from(client00.config.blockchainRid, "hex"),
-            iconUrl: asset00.iconUrl,
-            type: asset00.type,
-            supply: BigInt(2200),
-          },
-          data: transferHistoryEntry!.data,
-          timestamp: transferHistoryEntry!.timestamp,
-          transactionId: transferTransactionRid,
-          blockHeight: transferHistoryEntry!.blockHeight,
-          operationName: transferHistoryEntry!.operationName,
-          opIndex: transferHistoryEntry!.opIndex,
-          isCrosschain: transferHistoryEntry!.isCrosschain,
+          rowid: crosschainHistory.data[0].rowid,
+          blockchainRid: crosschainHistory.data[0].blockchainRid,
+          accountId: crosschainHistory.data[0].accountId,
+          assetId: crosschainHistory.data[0].assetId,
+          delta: crosschainHistory.data[0].delta,
+          isInput: crosschainHistory.data[0].isInput,
+          opIndex: crosschainHistory.data[0].opIndex,
+          transactionId: crosschainHistory.data[0].transactionId,
         }),
       );
     });

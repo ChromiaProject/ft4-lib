@@ -47,12 +47,12 @@ import {
   getAssetsBySymbol,
   getAssetsByName,
   getAssetsByType,
-  getAssets,
+  getAssetsFiltered,
   getAssetByRowId,
-  getBalances,
-  getTransferHistoryEntries,
+  getBalancesFiltered,
+  getTransferHistoryEntriesFiltered,
   getTransferHistoryEntryByRowId,
-  getCrosschainTransferHistoryEntries,
+  getCrosschainTransferHistoryEntriesFiltered,
   getCrosschainTransferHistoryEntryByRowId,
   getBalanceByRowId,
 } from "@ft4/asset";
@@ -192,20 +192,20 @@ export function createConnection(client: IClient): Connection {
       assetFilters: AssetFilters,
       limit?: number,
       cursor: OptionalPageCursor = null,
-    ) => getAssets(connection, assetFilters, limit, cursor),
+    ) => getAssetsFiltered(connection, assetFilters, limit, cursor),
     getAssetByRowId: (rowId: number) => getAssetByRowId(connection, rowId),
     getBalances: (
       balanceFilters: BalanceFilters,
       limit?: number,
       cursor: OptionalPageCursor = null,
-    ) => getBalances(connection, balanceFilters, limit, cursor),
+    ) => getBalancesFiltered(connection, balanceFilters, limit, cursor),
     getBalanceByRowId: (rowId: number) => getBalanceByRowId(connection, rowId),
     getTransferHistoryEntries: (
       transferHistoryEntriesFilters: TransferHistoryEntriesFilters,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) =>
-      getTransferHistoryEntries(
+      getTransferHistoryEntriesFiltered(
         connection,
         transferHistoryEntriesFilters,
         limit,
@@ -218,7 +218,7 @@ export function createConnection(client: IClient): Connection {
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) =>
-      getCrosschainTransferHistoryEntries(
+      getCrosschainTransferHistoryEntriesFiltered(
         connection,
         crosschainTransferHistoryEntriesFilters,
         limit,

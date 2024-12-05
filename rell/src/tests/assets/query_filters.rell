@@ -557,3 +557,20 @@ function test_get_paginated_crosschain_transfer_history_entries_using_all_filter
         data = [mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry).to_gtv_pretty()]
     ));
 }
+
+function test_get_all_crosschain_transfer_history_entries_paginated() {
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(1, null);
+    assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = [mocks.format_expected_crosschain_transfer_history_entry_assertion(crosschain_transfer_history_entry).to_gtv_pretty()]
+    ));
+}
+
+function test_get_all_crosschain_transfer_history_entries_paginated_no_entries() {
+    val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries(1, null);
+    assert_equals(fetched_crosschain_transfer_history_entries, utils.paged_result(
+        next_cursor = null,
+        data = []
+    ));
+}

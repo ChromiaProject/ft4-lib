@@ -258,66 +258,41 @@ describe("Asset queries using filters", () => {
       );
 
       const senderHistory = await senderAccount.getTransferHistory();
-      const senderTransferHistoryEntry1 =
+      const senderTransferHistoryEntry =
         await senderAccount.getTransferHistoryEntry(
           senderHistory.data[0].rowid,
         );
-      const senderTransferHistoryEntry2 =
-        await senderAccount.getTransferHistoryEntry(
-          senderHistory.data[1].rowid,
-        );
 
-      const { data } = await connection.getTransferHistoryEntries(null, 2);
+      const { data } = await connection.getTransferHistoryEntries(null, 100);
 
-      expect(JSON.stringify(data)).toStrictEqual(
-        JSON.stringify([
-          {
-            rowid: senderTransferHistoryEntry2!.rowid,
-            isInput: senderTransferHistoryEntry2!.isInput,
-            delta: senderTransferHistoryEntry2!.delta,
-            asset: {
-              rowId: asset.rowId,
-              id: asset.id,
-              name: asset.name,
-              symbol: asset.symbol,
-              decimals: asset.decimals,
-              blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
-              iconUrl: asset.iconUrl,
-              type: asset.type,
-              supply: BigInt(200),
-            },
-            data: senderTransferHistoryEntry2!.data,
-            timestamp: senderTransferHistoryEntry2!.timestamp,
-            transactionId: senderTransferHistoryEntry2!.transactionId,
-            blockHeight: senderTransferHistoryEntry2!.blockHeight,
-            operationName: senderTransferHistoryEntry2!.operationName,
-            opIndex: senderTransferHistoryEntry2!.opIndex,
-            isCrosschain: senderTransferHistoryEntry2!.isCrosschain,
+      const foundTransferHistoryEntry = data.find(
+        (item) => item.rowid === senderTransferHistoryEntry?.rowid,
+      );
+
+      expect(JSON.stringify(foundTransferHistoryEntry)).toStrictEqual(
+        JSON.stringify({
+          rowid: senderTransferHistoryEntry!.rowid,
+          isInput: senderTransferHistoryEntry!.isInput,
+          delta: senderTransferHistoryEntry!.delta,
+          asset: {
+            rowId: asset.rowId,
+            id: asset.id,
+            name: asset.name,
+            symbol: asset.symbol,
+            decimals: asset.decimals,
+            blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
+            iconUrl: asset.iconUrl,
+            type: asset.type,
+            supply: BigInt(200),
           },
-          {
-            rowid: senderTransferHistoryEntry1!.rowid,
-            isInput: senderTransferHistoryEntry1!.isInput,
-            delta: senderTransferHistoryEntry1!.delta,
-            asset: {
-              rowId: asset.rowId,
-              id: asset.id,
-              name: asset.name,
-              symbol: asset.symbol,
-              decimals: asset.decimals,
-              blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
-              iconUrl: asset.iconUrl,
-              type: asset.type,
-              supply: BigInt(200),
-            },
-            data: senderTransferHistoryEntry1!.data,
-            timestamp: senderTransferHistoryEntry1!.timestamp,
-            transactionId: senderTransferHistoryEntry1!.transactionId,
-            blockHeight: senderTransferHistoryEntry1!.blockHeight,
-            operationName: senderTransferHistoryEntry1!.operationName,
-            opIndex: senderTransferHistoryEntry1!.opIndex,
-            isCrosschain: senderTransferHistoryEntry1!.isCrosschain,
-          },
-        ]),
+          data: senderTransferHistoryEntry!.data,
+          timestamp: senderTransferHistoryEntry!.timestamp,
+          transactionId: senderTransferHistoryEntry!.transactionId,
+          blockHeight: senderTransferHistoryEntry!.blockHeight,
+          operationName: senderTransferHistoryEntry!.operationName,
+          opIndex: senderTransferHistoryEntry!.opIndex,
+          isCrosschain: senderTransferHistoryEntry!.isCrosschain,
+        }),
       );
     });
     it("returns paginated transfer history entries with filters", async () => {

@@ -3,6 +3,7 @@ import { Buffer } from "buffer";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { PendingTransferResponse } from "./types";
 import { BufferId } from "@ft4/utils";
+import { CrosschainTransferhistoryEntryResponse } from "@ft4/accounts/transfer-history";
 
 export function assetOriginById(
   assetId: BufferId,
@@ -96,6 +97,25 @@ export function applyTransferTx(
     args: {
       init_tx_rid: initTxRid,
       init_op_index: initOpIndex,
+    },
+  };
+}
+
+export function getCrosschainTransferHistoryEntries(
+  limit: OptionalLimit,
+  cursor: OptionalPageCursor,
+): QueryObject<
+  CrosschainTransferhistoryEntryResponse,
+  {
+    page_size: OptionalLimit;
+    page_cursor: OptionalPageCursor;
+  }
+> {
+  return {
+    name: "ft4.get_crosschain_transfer_history_entries",
+    args: {
+      page_size: limit,
+      page_cursor: cursor,
     },
   };
 }

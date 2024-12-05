@@ -234,7 +234,9 @@ function test_transfer_details() {
             account_id = alice.account.id,
             asset_id = asset.id,
             delta = 1L,
-            is_input = true
+            is_input = true,
+            op_index = last_two_transfer_history_entries[1].op_index,
+            transaction_rid = last_two_transfer_history_entries[1].transaction.tx_rid
         ),
         assets.transfer_detail(
             rowid = last_two_transfer_history_entries[0].rowid,
@@ -242,7 +244,9 @@ function test_transfer_details() {
             account_id = bob.account.id,
             asset_id = asset.id,
             delta = 1L,
-            is_input = false
+            is_input = false,
+            op_index = last_two_transfer_history_entries[0].op_index,
+            transaction_rid = last_two_transfer_history_entries[0].transaction.tx_rid
         )
     ];
 
