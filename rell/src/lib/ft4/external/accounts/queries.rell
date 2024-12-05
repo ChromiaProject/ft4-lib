@@ -22,7 +22,8 @@ query get_accounts_filtered(account_filter?, page_size: integer?, page_cursor: t
         accounts.account @* {
                 if (account_filter?.rowids??) .rowid in account_filter!!.rowids!! else true,
                 if (account_filter?.id??) .id == account_filter!!.id else true,
-                if (account_filter?.type??) .type == account_filter!!.type else true
+                if (account_filter?.type??) .type == account_filter!!.type else true,
+                .rowid > (before_rowid ?: rowid(0))
             } (
                 utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
