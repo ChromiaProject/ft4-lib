@@ -364,22 +364,22 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
 }
 
 /**
- * Retrieves all assets based on the selected filter of asset_filters, paginated
+ * Retrieves all assets based on the selected filter of asset_filter, paginated
  * 
  * @see utils.paged_result for information about pagination
  * 
- * @param asset_filters  the available filters for the assets to retrieve
- * @param page_size      the size of the pages to retrieve
- * @param page_cursor    a pointer to where the page should start
+ * @param asset_filter  the available filter for the assets to retrieve
+ * @param page_size     the size of the pages to retrieve
+ * @param page_cursor   a pointer to where the page should start
  */
-function get_assets_filtered(asset_filters: asset_filters?, page_size: integer?, page_cursor: text?) {
+function get_assets_filtered(asset_filter: asset_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset @* {
-        if (asset_filters?.rowids??) .rowid in asset_filters?.rowids!! else true,
-        if (asset_filters?.id??) .id == asset_filters?.id else true,
-        if (asset_filters?.name??) .name == asset_filters?.name else true,
-        if (asset_filters?.symbol??) .symbol == asset_filters?.symbol else true,
-        if (asset_filters?.type??) .type == asset_filters?.type else true,
+        if (asset_filter?.rowids??) .rowid in asset_filter?.rowids!! else true,
+        if (asset_filter?.id??) .id == asset_filter?.id else true,
+        if (asset_filter?.name??) .name == asset_filter?.name else true,
+        if (asset_filter?.symbol??) .symbol == asset_filter?.symbol else true,
+        if (asset_filter?.type??) .type == asset_filter?.type else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
@@ -390,20 +390,20 @@ function get_assets_filtered(asset_filters: asset_filters?, page_size: integer?,
 }
 
 /**
- * Retrieves all balances based on the selected filter of balance_filters, paginated
+ * Retrieves all balances based on the selected filter of balance_filter, paginated
  * 
  * @see utils.paged_result for information about pagination
  * 
- * @param balance_filters  the available filters for the balances to retrieve
- * @param page_size        the size of the pages to retrieve
- * @param page_cursor      a pointer to where the page should start
+ * @param balance_filter  the available filter for the balances to retrieve
+ * @param page_size       the size of the pages to retrieve
+ * @param page_cursor     a pointer to where the page should start
  */
-function get_balances_filtered(balance_filters: balance_filters?, page_size: integer?, page_cursor: text?) {
+function get_balances_filtered(balance_filter: balance_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return balance @* {
-        if (balance_filters?.rowids??) .rowid in balance_filters?.rowids!! else true,
-        if (balance_filters?.account_id??) .account.id == balance_filters?.account_id else true,
-        if (balance_filters?.asset_id??) .asset.id == balance_filters?.asset_id else true,
+        if (balance_filter?.rowids??) .rowid in balance_filter?.rowids!! else true,
+        if (balance_filter?.account_id??) .account.id == balance_filter?.account_id else true,
+        if (balance_filter?.asset_id??) .asset.id == balance_filter?.asset_id else true,
         .rowid > (before_rowid ?: rowid(0))
     }(
         utils.pagination_result(

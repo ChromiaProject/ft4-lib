@@ -401,7 +401,7 @@ describe("Crosschain transfer", () => {
   });
 
   describe("getCrosschainTransferHistoryEntries", () => {
-    it("returns empty pagination without filters", async () => {
+    it("returns empty pagination without filter", async () => {
       const { multichain00 } = await fetchBlockchains();
 
       const client00 = await createChromiaClientToMultichain(multichain00.rid);
@@ -416,7 +416,7 @@ describe("Crosschain transfer", () => {
         data.find((item) => item.rowid === 999) ?? null;
       expect(foundCrosschainTransferHistoryEntry).toBe(null);
     });
-    it("returns empty pagination with filters", async () => {
+    it("returns empty pagination with filter", async () => {
       const mockBuffer = Buffer.alloc(32);
       const { multichain00 } = await fetchBlockchains();
 
@@ -438,7 +438,7 @@ describe("Crosschain transfer", () => {
       expect(foundCrosschainTransferHistoryEntry).toBe(null);
     });
 
-    it("returns paginated crosschain transfer history entries without filters", async () => {
+    it("returns paginated crosschain transfer history entries without filter", async () => {
       const { multichain00, multichain01 } = await fetchBlockchains();
 
       const client00 = await createChromiaClientToMultichain(multichain00.rid);
@@ -554,7 +554,7 @@ describe("Crosschain transfer", () => {
         }),
       );
     });
-    it("returns paginated crosschain transfer history entries with filters", async () => {
+    it("returns paginated crosschain transfer history entries with filter", async () => {
       const { multichain00, multichain01 } = await fetchBlockchains();
 
       const client00 = await createChromiaClientToMultichain(multichain00.rid);

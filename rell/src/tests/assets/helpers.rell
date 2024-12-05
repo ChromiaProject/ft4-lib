@@ -30,14 +30,14 @@ function get_last_balance_or_null(): assets.balance? {
     return assets.balance @? {} (@omit @sort_desc .rowid, $) limit 1;
 }
 
-function set_asset_filters(
+function set_asset_filter(
     rowids: list<rowid>? = null,
     id: byte_array? = null,
     name: text? = null,
     symbol: text? = null,
     type: text? = null
-): assets.asset_filters {
-    return assets.asset_filters(
+): assets.asset_filter {
+    return assets.asset_filter(
         rowids = rowids,
         id = id,
         name = name,
@@ -46,26 +46,26 @@ function set_asset_filters(
     );
 }
 
-function set_balance_filters(
+function set_balance_filter(
     rowids: list<rowid>? = null,
     account_id: byte_array? = null,
     asset_id: byte_array? = null
-): assets.balance_filters {
-    return assets.balance_filters(
+): assets.balance_filter {
+    return assets.balance_filter(
         rowids = rowids,
         account_id = account_id,
         asset_id = asset_id
     );
 }
 
-function set_transfer_history_entry_filters(
+function set_transfer_history_entry_filter(
     rowids: list<rowid>? = null,
     account_id: byte_array? = null,
     asset_id: byte_array? = null,
     transaction_rid: byte_array? = null,
     op_index: integer? = null
-): assets.transfer_history_entry_filters {
-    return assets.transfer_history_entry_filters(
+): assets.transfer_history_entry_filter {
+    return assets.transfer_history_entry_filter(
         rowids = rowids,
         account_id = account_id,
         asset_id = asset_id,
@@ -74,14 +74,14 @@ function set_transfer_history_entry_filters(
     );
 }
 
-function set_crosschain_transfer_history_entry_filters(
+function set_crosschain_transfer_history_entry_filter(
     rowids: list<rowid>? = null,
     account_id: byte_array? = null,
     asset_id: byte_array? = null,
     transaction_rid: byte_array? = null,
     op_index: integer? = null
-): assets.crosschain_transfer_history_entry_filters {
-    return assets.crosschain_transfer_history_entry_filters(
+): assets.crosschain_transfer_history_entry_filter {
+    return assets.crosschain_transfer_history_entry_filter(
         rowids = rowids,
         account_id = account_id,
         asset_id = asset_id,

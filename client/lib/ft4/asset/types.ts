@@ -73,7 +73,7 @@ export type SupportedNumber = string | number | Amount;
 
 export type AnyAssetAmount = RawAmount | Amount;
 
-export type AssetFilters = {
+export type AssetFilter = {
   rowids: Array<number>;
   id?: Buffer | null;
   name?: string | null;
@@ -81,13 +81,13 @@ export type AssetFilters = {
   type?: string | null;
 };
 
-export type BalanceFilters = {
+export type BalanceFilter = {
   rowids: Array<number>;
   account_id?: Buffer | null;
   asset_id?: Buffer | null;
 };
 
-export type TransferHistoryEntriesFilters = {
+export type TransferHistoryEntryFilter = {
   rowids: Array<number>;
   account_id?: Buffer | null;
   asset_id?: Buffer | null;
@@ -95,7 +95,7 @@ export type TransferHistoryEntriesFilters = {
   op_index?: number | null;
 };
 
-export type CrosschainTransferHistoryEntriesFilters = {
+export type CrosschainTransferHistoryEntryFilter = {
   rowids: Array<number>;
   account_id?: Buffer | null;
   asset_id?: Buffer | null;

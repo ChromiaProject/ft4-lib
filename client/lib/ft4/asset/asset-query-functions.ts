@@ -18,15 +18,15 @@ import {
 } from "./asset-queries";
 import {
   Asset,
-  AssetFilters,
+  AssetFilter,
   AssetResponse,
   Balance,
-  BalanceFilters,
+  BalanceFilter,
   BalanceResponse,
   CrosschainAssetRegistration,
   CrosschainAssetRegistrationResponse,
-  CrosschainTransferHistoryEntriesFilters,
-  TransferHistoryEntriesFilters,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
 } from "./types";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
@@ -189,23 +189,23 @@ export async function getBalancesByAccountId(
 }
 
 /**
- * Retrieves all assets based on the filtering options provided in AssetFilters and
+ * Retrieves all assets based on the filtering options provided in AssetFilter and
  * that are registered on a blockchain as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param assetFilters - object of AssetFilters that can be list of rowids, id, name, symbol and type
+ * @param assetFilter - object of AssetFilter that can be list of rowids, id, name, symbol and type
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
 export async function getAssetsFiltered(
   queryable: Queryable,
-  assetFilters: AssetFilters | null,
+  assetFilter: AssetFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Asset>> {
   return retrievePaginatedEntity<Asset, AssetResponse>(
     queryable,
-    assetsFiltered(assetFilters, limit, cursor),
+    assetsFiltered(assetFilter, limit, cursor),
     (assets) => assets.map(createAssetObject),
   );
 }
@@ -226,23 +226,23 @@ export async function getAssetByRowId(
 }
 
 /**
- * Retrieves all balances based on the filtering options provided in BalanceFilters and
+ * Retrieves all balances based on the filtering options provided in BalanceFilter and
  * that are registered on a blockchain as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param balanceFilters - object of BalanceFilters that can be list of rowids, account_id and asset_id
+ * @param balanceFilter - object of BalanceFilter that can be list of rowids, account_id and asset_id
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
 export async function getBalancesFiltered(
   queryable: Queryable,
-  balanceFilters: BalanceFilters | null,
+  balanceFilter: BalanceFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Balance>> {
   return retrievePaginatedEntity<Balance, BalanceResponse>(
     queryable,
-    balancesFiltered(balanceFilters, limit, cursor),
+    balancesFiltered(balanceFilter, limit, cursor),
     (balances) => balances.map(createBalanceObject),
   );
 }
@@ -263,18 +263,18 @@ export async function getBalanceByRowId(
 }
 
 /**
- * Retrieves all transfer history entries based on the filtering options provided in TransferHistoryEntriesFilters
+ * Retrieves all transfer history entries based on the filtering options provided in TransferHistoryEntryFilter
  * as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param transferHistoryEntriesFilters - object of TransferHistoryEntriesFilters that can be list of rowids,
+ * @param transferHistoryEntryFilter - object of TransferHistoryEntryFilter that can be list of rowids,
  * account_id, asset_id, transaction_rid and op_index
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
 export async function getTransferHistoryEntriesFiltered(
   queryable: Queryable,
-  transferHistoryEntriesFilters: TransferHistoryEntriesFilters | null,
+  transferHistoryEntryFilter: TransferHistoryEntryFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<TransferHistoryEntry>> {
@@ -283,11 +283,7 @@ export async function getTransferHistoryEntriesFiltered(
     TransferHistoryEntryResponse
   >(
     queryable,
-    transferHistoryEntriesFiltered(
-      transferHistoryEntriesFilters,
-      limit,
-      cursor,
-    ),
+    transferHistoryEntriesFiltered(transferHistoryEntryFilter, limit, cursor),
     (transferHistoryEntries) =>
       transferHistoryEntries.map(createTransferHistoryEntryFromResponse),
   );
@@ -311,18 +307,18 @@ export async function getTransferHistoryEntryByRowId(
 }
 
 /**
- * Retrieves all crosschain transfer history entries based on the filtering options provided in CrosschainTransferHistoryEntriesFilters
+ * Retrieves all crosschain transfer history entries based on the filtering options provided in CrosschainTransferHistoryEntryFilter
  * as a paginated entity
  *
  * @param queryable - object to use when querying the blockchain
- * @param crosschainTransferHistoryEntriesFilters - object of CrosschainTransferHistoryEntriesFilters that can be
+ * @param crosschainTransferHistoryEntryFilter - object of CrosschainTransferHistoryEntryFilter that can be
  * list of rowids, account_id, asset_id, transaction_rid and op_index
  * @param limit - maximum page size
  * @param cursor - where the page should start
  */
 export async function getCrosschainTransferHistoryEntriesFiltered(
   queryable: Queryable,
-  crosschainTransferHistoryEntriesFilters: CrosschainTransferHistoryEntriesFilters | null,
+  crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<CrosschainTransferHistoryEntry>> {
@@ -332,7 +328,7 @@ export async function getCrosschainTransferHistoryEntriesFiltered(
   >(
     queryable,
     crossChainTransferHistoryEntriesFiltered(
-      crosschainTransferHistoryEntriesFilters,
+      crosschainTransferHistoryEntryFilter,
       limit,
       cursor,
     ),

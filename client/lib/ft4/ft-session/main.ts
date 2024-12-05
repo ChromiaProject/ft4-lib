@@ -82,10 +82,10 @@ import {
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
 import {
-  AssetFilters,
-  BalanceFilters,
-  CrosschainTransferHistoryEntriesFilters,
-  TransferHistoryEntriesFilters,
+  AssetFilter,
+  BalanceFilter,
+  CrosschainTransferHistoryEntryFilter,
+  TransferHistoryEntryFilter,
 } from "@ft4/asset/types";
 
 /**
@@ -189,38 +189,38 @@ export function createConnection(client: IClient): Connection {
     getAllAssets: (limit?: number, cursor: OptionalPageCursor = null) =>
       getAllAssets(connection, limit, cursor),
     getAssets: (
-      assetFilters: AssetFilters,
+      assetFilter: AssetFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
-    ) => getAssetsFiltered(connection, assetFilters, limit, cursor),
+    ) => getAssetsFiltered(connection, assetFilter, limit, cursor),
     getAssetByRowId: (rowId: number) => getAssetByRowId(connection, rowId),
     getBalances: (
-      balanceFilters: BalanceFilters,
+      balanceFilter: BalanceFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
-    ) => getBalancesFiltered(connection, balanceFilters, limit, cursor),
+    ) => getBalancesFiltered(connection, balanceFilter, limit, cursor),
     getBalanceByRowId: (rowId: number) => getBalanceByRowId(connection, rowId),
     getTransferHistoryEntries: (
-      transferHistoryEntriesFilters: TransferHistoryEntriesFilters,
+      transferHistoryEntryFilter: TransferHistoryEntryFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) =>
       getTransferHistoryEntriesFiltered(
         connection,
-        transferHistoryEntriesFilters,
+        transferHistoryEntryFilter,
         limit,
         cursor,
       ),
     getTransferHistoryEntryByRowId: (rowId: number) =>
       getTransferHistoryEntryByRowId(connection, rowId),
     getCrosschainTransferHistoryEntries: (
-      crosschainTransferHistoryEntriesFilters: CrosschainTransferHistoryEntriesFilters,
+      crosschainTransferHistoryEntryFilter: CrosschainTransferHistoryEntryFilter,
       limit?: number,
       cursor: OptionalPageCursor = null,
     ) =>
       getCrosschainTransferHistoryEntriesFiltered(
         connection,
-        crosschainTransferHistoryEntriesFilters,
+        crosschainTransferHistoryEntryFilter,
         limit,
         cursor,
       ),
