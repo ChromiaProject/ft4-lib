@@ -132,6 +132,10 @@ function get_transfer_history_entries_filtered(
     page_size: integer?,
     page_cursor: text?
 ) {
+    utils.validate_composite_indexes_op_index_and_tx_rid(
+        transfer_history_entry_filter?.op_index,
+        transfer_history_entry_filter?.transaction_rid
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return transfer_history_entry @* {
         if (transfer_history_entry_filter?.rowids??) .rowid in transfer_history_entry_filter?.rowids!! else true,
@@ -349,6 +353,10 @@ function get_crosschain_transfer_history_entries_filtered(
     page_size: integer?,
     page_cursor: text?
 ) {
+    utils.validate_composite_indexes_op_index_and_tx_rid(
+        crosschain_transfer_history_entry_filter?.op_index,
+        crosschain_transfer_history_entry_filter?.transaction_rid
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return crosschain_transfer_history_entry @* {
         if (crosschain_transfer_history_entry_filter?.rowids??) .rowid in crosschain_transfer_history_entry_filter?.rowids!! else true,

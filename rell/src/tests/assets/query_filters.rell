@@ -276,6 +276,21 @@ function test_get_paginated_balances_using_all_filter() {
     ));
 }
 
+function test_get_transfer_history_entries_filtered_requires_composite_indexes() {
+    val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
+    val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
+    assert_fails(
+        "Composite index (transaction, op_index) - transaction_rid filter is required",
+        assets.external.get_transfer_history_entries_filtered(
+            helpers.set_transfer_history_entry_filter(
+                op_index = transfer_history_entry.op_index
+            ),
+            1,
+            null, *
+        )
+    );
+}
+
 function test_get_paginated_transfer_history_entries_without_filter() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
@@ -364,13 +379,14 @@ function test_get_paginated_transfer_history_entries_filtered_by_transaction_rid
     ));
 }
 
-function test_get_paginated_transfer_history_entries_filtered_by_op_index() {
+function test_get_paginated_transfer_history_entries_filtered_by_op_index_and_transaction_rid() {
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
 
     val fetched_transfer_history_entries = assets.external.get_transfer_history_entries_filtered(
         helpers.set_transfer_history_entry_filter(
-            op_index = 0
+            op_index = transfer_history_entry.op_index,
+            transaction_rid = transfer_history_entry.transaction.tx_rid
         ),
         1,
         null
@@ -505,11 +521,27 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_tran
     ));
 }
 
-function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_index() {
+
+function test_get_crosschain_transfer_history_entries_filtered_requires_composite_indexes() {
+    val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
+    assert_fails(
+        "Composite index (transaction, op_index) - transaction_rid filter is required",
+        assets.external.get_crosschain_transfer_history_entries_filtered(
+            helpers.set_crosschain_transfer_history_entry_filter(
+                op_index = crosschain_transfer_history_entry.op_index
+            ),
+            1,
+            null, *
+        )
+    );
+}
+
+function test_get_paginated_crosschain_transfer_history_entries_filtered_by_op_index_and_transaction_rid() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     val fetched_crosschain_transfer_history_entries = assets.external.get_crosschain_transfer_history_entries_filtered(
         helpers.set_crosschain_transfer_history_entry_filter(
-            op_index = crosschain_transfer_history_entry.op_index
+            op_index = crosschain_transfer_history_entry.op_index,
+            transaction_rid = crosschain_transfer_history_entry.transaction.tx_rid
         ),
         1,
         null
