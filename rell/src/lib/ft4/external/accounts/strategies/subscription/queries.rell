@@ -1,12 +1,27 @@
-
 struct subscription_filter {
     rowids: list<rowid>?;
-    account: accounts.account?; 
+    account: accounts.account?;
 }
 
-query get_subscriptions(subscription_filter?) {
+/**
+ * Retrieves all subscriptions based on the selected filter of subscription_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param subscription_filter  filter with indexed fileds from the subscription entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_subscriptions_filtered(subscription_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
     return subscription.subscription @* {
             if (subscription_filter?.rowids??) .rowid in subscription_filter!!.rowids!! else true,
-            if (subscription_filter?.account??) .account == subscription_filter!!.account else true
-        };
+            if (subscription_filter?.account??) .account == subscription_filter!!.account else true,
+            .rowid > (before_rowid ?: rowid(0))
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }

@@ -8,18 +8,26 @@ struct account_filter {
 }
 
 /**
-* retruns a list of all filtered accounts
-* All filterable fields used are indexed or keys. All values are optional,  
-* including the filter itself. The same is tue for all other queries of the same type with a struct filter.
-*
-* @param account_filter
-**/
-query get_accounts(account_filter?) {
+ * Retrieves all accounts based on the selected filter of account_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_filter with indexed fileds from the account entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_accounts_filtered(account_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
     return accounts.account @* {
             if (account_filter?.rowids??) .rowid in account_filter!!.rowids!! else true,
             if (account_filter?.id??) .id == account_filter!!.id else true,
             if (account_filter?.type??) .type == account_filter!!.type else true
-        };
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }
 
 struct account_auth_descriptor_filter {
@@ -28,12 +36,28 @@ struct account_auth_descriptor_filter {
     account: accounts.account?;
 }
 
-query get_account_auth_descriptors_filtered(account_auth_descriptor_filter?) {
+/**
+ * Retrieves all account_auth_descriptors based on the selected filter of account_auth_descriptor_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_auth_descriptor_filter with indexed fileds from the account_auth_descriptor entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_account_auth_descriptors_filtered(account_auth_descriptor_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
     return accounts.account_auth_descriptor @* {
             if (account_auth_descriptor_filter?.rowids??) .rowid in account_auth_descriptor_filter!!.rowids!! else true,
             if (account_auth_descriptor_filter?.id??) .id == account_auth_descriptor_filter!!.id else true,
-            if (account_auth_descriptor_filter?.account??) .account == account_auth_descriptor_filter!!.account else true
-        };
+            if (account_auth_descriptor_filter?.account??) .account == account_auth_descriptor_filter!!.account else true,
+            .rowid > (before_rowid ?: rowid(0))
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }
 
 struct main_account_auth_descriptor_filter {
@@ -42,12 +66,32 @@ struct main_account_auth_descriptor_filter {
     account_auth_descriptor: accounts.account_auth_descriptor?;
 }
 
-query get_main_auth_descriptors(main_account_auth_descriptor_filter?) {
+/**
+ * Retrieves all main_auth_descriptors based on the selected filter of main_account_auth_descriptor_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param main_account_auth_descriptor_filter with indexed fileds from the main_auth_descriptor entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_main_auth_descriptors_filtered(
+    main_account_auth_descriptor_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
+    val before_rowid = utils.before_rowid(page_cursor);
     return accounts.main_auth_descriptor @* {
             if (main_account_auth_descriptor_filter?.rowids??) .rowid in main_account_auth_descriptor_filter!!.rowids!! else true,
             if (main_account_auth_descriptor_filter?.account??) .account == main_account_auth_descriptor_filter!!.account else true,
-            if (main_account_auth_descriptor_filter?.account_auth_descriptor??) .auth_descriptor == main_account_auth_descriptor_filter!!.account_auth_descriptor else true
-        };
+            if (main_account_auth_descriptor_filter?.account_auth_descriptor??) .auth_descriptor == main_account_auth_descriptor_filter!!.account_auth_descriptor else true,
+            .rowid > (before_rowid ?: rowid(0))
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }
 
 struct auth_descriptor_signer_filter {
@@ -56,12 +100,28 @@ struct auth_descriptor_signer_filter {
     auth_descriptor: accounts.account_auth_descriptor?;
 }
 
-query get_auth_descriptor_signers(auth_descriptor_signer_filter?) {
+/**
+ * Retrieves all auth_descriptor_signers based on the selected filter of auth_descriptor_signer_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param auth_descriptor_signer_filter with indexed fileds from the auth_descriptor_signer entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_auth_descriptor_signers_filtered(auth_descriptor_signer_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
     return accounts.auth_descriptor_signer @* {
             if (auth_descriptor_signer_filter?.rowids??) .rowid in auth_descriptor_signer_filter!!.rowids!! else true,
             if (auth_descriptor_signer_filter?.id??) .id == auth_descriptor_signer_filter!!.id else true,
-            if (auth_descriptor_signer_filter?.auth_descriptor??) .account_auth_descriptor == auth_descriptor_signer_filter!!.auth_descriptor else true
-        };
+            if (auth_descriptor_signer_filter?.auth_descriptor??) .account_auth_descriptor == auth_descriptor_signer_filter!!.auth_descriptor else true,
+            .rowid > (before_rowid ?: rowid(0))
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }
 
 struct rl_state_filter {
@@ -69,11 +129,27 @@ struct rl_state_filter {
     account: accounts.account?;
 }
 
-query get_rl_states(rl_state_filter?) {
+/**
+ * Retrieves all rl_states based on the selected filter of rl_state_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param rl_state_filter with indexed fileds from the rl_state entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_rl_states_filtered(rl_state_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
     return accounts.rl_state @* {
             if (rl_state_filter?.rowids??) .rowid in rl_state_filter!!.rowids!! else true,
-            if (rl_state_filter?.account??) .account == rl_state_filter!!.account else true
-        };
+            if (rl_state_filter?.account??) .account == rl_state_filter!!.account else true,
+            .rowid > (before_rowid ?: rowid(0))
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }
 
 /**

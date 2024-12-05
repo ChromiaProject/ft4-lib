@@ -5,11 +5,31 @@ struct account_link_filter {
     type: text?;
 }
 
-query get_account_links(account_link_filter?) {
+/**
+ * Retrieves all account_links based on the selected filter of account_link_filter, paginated
+ * 
+ * @see utils.paged_result for information about pagination
+ * 
+ * @param account_link_filter  filter with indexed fileds from the account_link entity
+ * @param page_size      the size of the pages to retrieve
+ * @param page_cursor    a pointer to where the page should start
+ */
+query get_account_links_filtered(account_link_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    if (account_link_filter?.type??) require(
+        account_link_filter?.secondary??,
+        "Composite index (secondary, type) - secondary required"
+    );
     return linking.account_link @* {
             if (account_link_filter?.rowids??) .rowid in account_link_filter!!.rowids!! else true,
             if (account_link_filter?.account??) .account == account_link_filter!!.account else true,
             if (account_link_filter?.secondary??) .secondary == account_link_filter!!.secondary else true,
-            if (account_link_filter?.type??) .type == account_link_filter!!.type else true
-        };
+            if (account_link_filter?.type??) .type == account_link_filter!!.type else true,
+            .rowid > (before_rowid ?: rowid(0))
+        } (
+            utils.pagination_result(
+            data = .to_gtv_pretty(),
+            rowid = .rowid
+        )
+        ) limit utils.fetch_data_size(page_size);
 }
