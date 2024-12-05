@@ -20,7 +20,7 @@ query get_subscriptions_filtered(subscription_filter?, page_size: integer?, page
             .rowid > (before_rowid ?: rowid(0))
         } (
             utils.pagination_result(
-            data = .to_gtv_pretty(),
+            data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
         ) limit utils.fetch_data_size(page_size);

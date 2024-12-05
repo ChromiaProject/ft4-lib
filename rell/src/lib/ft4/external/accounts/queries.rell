@@ -24,7 +24,7 @@ query get_accounts_filtered(account_filter?, page_size: integer?, page_cursor: t
             if (account_filter?.type??) .type == account_filter!!.type else true
         } (
             utils.pagination_result(
-            data = .to_gtv_pretty(),
+            data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
         ) limit utils.fetch_data_size(page_size);
@@ -54,7 +54,7 @@ query get_account_auth_descriptors_filtered(account_auth_descriptor_filter?, pag
             .rowid > (before_rowid ?: rowid(0))
         } (
             utils.pagination_result(
-            data = .to_gtv_pretty(),
+            data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
         ) limit utils.fetch_data_size(page_size);
@@ -88,7 +88,7 @@ query get_main_auth_descriptors_filtered(
             .rowid > (before_rowid ?: rowid(0))
         } (
             utils.pagination_result(
-            data = .to_gtv_pretty(),
+            data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
         ) limit utils.fetch_data_size(page_size);
@@ -118,7 +118,7 @@ query get_auth_descriptor_signers_filtered(auth_descriptor_signer_filter?, page_
             .rowid > (before_rowid ?: rowid(0))
         } (
             utils.pagination_result(
-            data = .to_gtv_pretty(),
+            data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
         ) limit utils.fetch_data_size(page_size);
@@ -146,7 +146,7 @@ query get_rl_states_filtered(rl_state_filter?, page_size: integer?, page_cursor:
             .rowid > (before_rowid ?: rowid(0))
         } (
             utils.pagination_result(
-            data = .to_gtv_pretty(),
+            data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
         ) limit utils.fetch_data_size(page_size);
