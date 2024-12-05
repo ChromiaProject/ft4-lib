@@ -14,25 +14,32 @@ struct account_creation_transfer_filter {
  * @param page_size      the size of the pages to retrieve
  * @param page_cursor    a pointer to where the page should start
  */
-query get_account_creation_transfers_filtered(account_creation_transfer_filter?, page_size: integer?, page_cursor: text?) {
+query get_account_creation_transfers_filtered(
+    account_creation_transfer_filter?,
+    page_size: integer?,
+    page_cursor: text?
+) {
     val before_rowid = utils.before_rowid(page_cursor);
-    if (
-        account_creation_transfer_filter?.op_index??) require(
-        account_creation_transfer_filter?.transaction??,
-        "Composite index (transaction, op_index) - transaction required"
-    );
-    return transfer.account_creation_transfer @* {
-            if (account_creation_transfer_filter?.rowids??) .rowid in account_creation_transfer_filter!!.rowids!! else true,
-            if (account_creation_transfer_filter?.transaction??) .transaction == account_creation_transfer_filter!!.transaction else true,
-            if (account_creation_transfer_filter?.op_index??) .op_index == account_creation_transfer_filter!!.op_index else true,
-            if (account_creation_transfer_filter?.recipient_id??) .recipient_id == account_creation_transfer_filter!!.recipient_id else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    if (account_creation_transfer_filter?.op_index??)
+        require(
+            account_creation_transfer_filter?.transaction??,
+            "Composite index (transaction, op_index) - transaction required"
+        );
+    return utils.make_page(
+        transfer.account_creation_transfer @* {
+                if (account_creation_transfer_filter?.rowids??) .rowid in account_creation_transfer_filter!!.rowids!! else true,
+                if (account_creation_transfer_filter?.transaction??) .transaction == account_creation_transfer_filter!!.transaction else true,
+                if (account_creation_transfer_filter?.op_index??) .op_index == account_creation_transfer_filter!!.op_index else true,
+                if (account_creation_transfer_filter?.recipient_id??) .recipient_id == account_creation_transfer_filter!!.recipient_id else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }
 
 /**

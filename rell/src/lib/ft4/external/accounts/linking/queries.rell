@@ -20,16 +20,19 @@ query get_account_links_filtered(account_link_filter?, page_size: integer?, page
         account_link_filter?.secondary??,
         "Composite index (secondary, type) - secondary required"
     );
-    return linking.account_link @* {
-            if (account_link_filter?.rowids??) .rowid in account_link_filter!!.rowids!! else true,
-            if (account_link_filter?.account??) .account == account_link_filter!!.account else true,
-            if (account_link_filter?.secondary??) .secondary == account_link_filter!!.secondary else true,
-            if (account_link_filter?.type??) .type == account_link_filter!!.type else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        linking.account_link @* {
+                if (account_link_filter?.rowids??) .rowid in account_link_filter!!.rowids!! else true,
+                if (account_link_filter?.account??) .account == account_link_filter!!.account else true,
+                if (account_link_filter?.secondary??) .secondary == account_link_filter!!.secondary else true,
+                if (account_link_filter?.type??) .type == account_link_filter!!.type else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }

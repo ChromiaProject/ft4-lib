@@ -14,14 +14,17 @@ struct subscription_filter {
  */
 query get_subscriptions_filtered(subscription_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return subscription.subscription @* {
-            if (subscription_filter?.rowids??) .rowid in subscription_filter!!.rowids!! else true,
-            if (subscription_filter?.account??) .account == subscription_filter!!.account else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        subscription.subscription @* {
+                if (subscription_filter?.rowids??) .rowid in subscription_filter!!.rowids!! else true,
+                if (subscription_filter?.account??) .account == subscription_filter!!.account else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }

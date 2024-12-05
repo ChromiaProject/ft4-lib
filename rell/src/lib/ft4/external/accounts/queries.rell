@@ -18,16 +18,19 @@ struct account_filter {
  */
 query get_accounts_filtered(account_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return accounts.account @* {
-            if (account_filter?.rowids??) .rowid in account_filter!!.rowids!! else true,
-            if (account_filter?.id??) .id == account_filter!!.id else true,
-            if (account_filter?.type??) .type == account_filter!!.type else true
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        accounts.account @* {
+                if (account_filter?.rowids??) .rowid in account_filter!!.rowids!! else true,
+                if (account_filter?.id??) .id == account_filter!!.id else true,
+                if (account_filter?.type??) .type == account_filter!!.type else true
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }
 
 struct account_auth_descriptor_filter {
@@ -47,17 +50,20 @@ struct account_auth_descriptor_filter {
  */
 query get_account_auth_descriptors_filtered(account_auth_descriptor_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return accounts.account_auth_descriptor @* {
-            if (account_auth_descriptor_filter?.rowids??) .rowid in account_auth_descriptor_filter!!.rowids!! else true,
-            if (account_auth_descriptor_filter?.id??) .id == account_auth_descriptor_filter!!.id else true,
-            if (account_auth_descriptor_filter?.account??) .account == account_auth_descriptor_filter!!.account else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        accounts.account_auth_descriptor @* {
+                if (account_auth_descriptor_filter?.rowids??) .rowid in account_auth_descriptor_filter!!.rowids!! else true,
+                if (account_auth_descriptor_filter?.id??) .id == account_auth_descriptor_filter!!.id else true,
+                if (account_auth_descriptor_filter?.account??) .account == account_auth_descriptor_filter!!.account else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }
 
 struct main_account_auth_descriptor_filter {
@@ -81,17 +87,20 @@ query get_main_auth_descriptors_filtered(
     page_cursor: text?
 ) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return accounts.main_auth_descriptor @* {
-            if (main_account_auth_descriptor_filter?.rowids??) .rowid in main_account_auth_descriptor_filter!!.rowids!! else true,
-            if (main_account_auth_descriptor_filter?.account??) .account == main_account_auth_descriptor_filter!!.account else true,
-            if (main_account_auth_descriptor_filter?.account_auth_descriptor??) .auth_descriptor == main_account_auth_descriptor_filter!!.account_auth_descriptor else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        accounts.main_auth_descriptor @* {
+                if (main_account_auth_descriptor_filter?.rowids??) .rowid in main_account_auth_descriptor_filter!!.rowids!! else true,
+                if (main_account_auth_descriptor_filter?.account??) .account == main_account_auth_descriptor_filter!!.account else true,
+                if (main_account_auth_descriptor_filter?.account_auth_descriptor??) .auth_descriptor == main_account_auth_descriptor_filter!!.account_auth_descriptor else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }
 
 struct auth_descriptor_signer_filter {
@@ -111,17 +120,20 @@ struct auth_descriptor_signer_filter {
  */
 query get_auth_descriptor_signers_filtered(auth_descriptor_signer_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return accounts.auth_descriptor_signer @* {
-            if (auth_descriptor_signer_filter?.rowids??) .rowid in auth_descriptor_signer_filter!!.rowids!! else true,
-            if (auth_descriptor_signer_filter?.id??) .id == auth_descriptor_signer_filter!!.id else true,
-            if (auth_descriptor_signer_filter?.auth_descriptor??) .account_auth_descriptor == auth_descriptor_signer_filter!!.auth_descriptor else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        accounts.auth_descriptor_signer @* {
+                if (auth_descriptor_signer_filter?.rowids??) .rowid in auth_descriptor_signer_filter!!.rowids!! else true,
+                if (auth_descriptor_signer_filter?.id??) .id == auth_descriptor_signer_filter!!.id else true,
+                if (auth_descriptor_signer_filter?.auth_descriptor??) .account_auth_descriptor == auth_descriptor_signer_filter!!.auth_descriptor else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }
 
 struct rl_state_filter {
@@ -140,16 +152,19 @@ struct rl_state_filter {
  */
 query get_rl_states_filtered(rl_state_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
-    return accounts.rl_state @* {
-            if (rl_state_filter?.rowids??) .rowid in rl_state_filter!!.rowids!! else true,
-            if (rl_state_filter?.account??) .account == rl_state_filter!!.account else true,
-            .rowid > (before_rowid ?: rowid(0))
-        } (
-            utils.pagination_result(
+    return utils.make_page(
+        accounts.rl_state @* {
+                if (rl_state_filter?.rowids??) .rowid in rl_state_filter!!.rowids!! else true,
+                if (rl_state_filter?.account??) .account == rl_state_filter!!.account else true,
+                .rowid > (before_rowid ?: rowid(0))
+            } (
+                utils.pagination_result(
             data = $.to_struct().to_gtv_pretty(),
             rowid = .rowid
         )
-        ) limit utils.fetch_data_size(page_size);
+            ) limit utils.fetch_data_size(page_size),
+        page_size
+    );
 }
 
 /**
