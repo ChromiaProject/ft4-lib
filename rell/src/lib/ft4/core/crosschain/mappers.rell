@@ -1,0 +1,34 @@
+function map_asset_origin(asset_origin) {
+    return (
+        rowid = asset_origin.rowid,
+        asset = assets.map_asset(asset_origin.asset),
+        origin_blockchain_rid = asset_origin.origin_blockchain_rid
+    );
+}
+
+function map_applied_transfer(applied_transfers) {
+    return (
+        rowid = applied_transfers.rowid,
+        init_tx_rid = applied_transfers.init_tx_rid,
+        init_op_index = applied_transfers.init_op_index,
+        transaction_rid = applied_transfers.transaction.tx_rid,
+        op_index = applied_transfers.op_index
+    );
+}
+
+function map_transfer(rowid, init_tx_rid: byte_array, init_op_index: integer) {
+    return (
+        rowid = rowid,
+        init_tx_rid = init_tx_rid,
+        init_op_index = init_op_index
+    );
+}
+
+function map_pending_transfer(pending_transfer) {
+    return (
+        rowid = pending_transfer.rowid,
+        transaction_rid = pending_transfer.transaction.tx_rid,
+        op_index = pending_transfer.op_index,
+        sender_account_id = pending_transfer.sender.id
+    );
+}

@@ -1,0 +1,19 @@
+struct asset_origin_filter {
+    rowids: list<rowid>?;
+    asset_id: byte_array?;
+}
+
+struct transfers_filter {
+    // Todo composite index (init_tx_rid, init_op_index) add validation that both exist in query
+    rowids: list<rowid>?;
+    init_tx_rid: byte_array?;
+    init_op_index: integer?;
+}
+
+struct pending_transfer_filter {
+    // Todo composite index (transaction_rid and op_index) add validation that both exist in query
+    rowids: list<rowid>?;
+    transaction_rid: byte_array;
+    op_index: integer;
+    sender_account_id: byte_array;
+}

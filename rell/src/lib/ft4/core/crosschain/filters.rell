@@ -1,0 +1,118 @@
+function get_asset_origin_filtered(asset_origin_filter: asset_origin_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return asset_origin @* {
+        if (asset_origin_filter?.rowids??) .rowid in asset_origin_filter?.rowids!! else true,
+        if (asset_origin_filter?.asset_id??) .asset.id == asset_origin_filter?.asset_id else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_asset_origin($)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_applied_transfers_filtered(applied_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return applied_transfers @* {
+        if (applied_transfers_filter?.rowids??) .rowid in applied_transfers_filter?.rowids!! else true,
+        if (applied_transfers_filter?.init_tx_rid??) .init_tx_rid == applied_transfers_filter?.init_tx_rid else true,
+        if (applied_transfers_filter?.init_op_index??) .init_op_index == applied_transfers_filter?.init_op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_applied_transfer($)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_canceled_transfers_filtered(canceled_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return canceled_transfers @* {
+        if (canceled_transfers_filter?.rowids??) .rowid in canceled_transfers_filter?.rowids!! else true,
+        if (canceled_transfers_filter?.init_tx_rid??) .init_tx_rid == canceled_transfers_filter?.init_tx_rid else true,
+        if (canceled_transfers_filter?.init_op_index??) .init_op_index == canceled_transfers_filter?.init_op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_unapplied_transfers_filtered(unapplied_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return unapplied_transfers @* {
+        if (unapplied_transfers_filter?.rowids??) .rowid in unapplied_transfers_filter?.rowids!! else true,
+        if (unapplied_transfers_filter?.init_tx_rid??) .init_tx_rid == unapplied_transfers_filter?.init_tx_rid else true,
+        if (unapplied_transfers_filter?.init_op_index??) .init_op_index == unapplied_transfers_filter?.init_op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_recalled_transfers_filtered(recalled_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return recalled_transfers @* {
+        if (recalled_transfers_filter?.rowids??) .rowid in recalled_transfers_filter?.rowids!! else true,
+        if (recalled_transfers_filter?.init_tx_rid??) .init_tx_rid == recalled_transfers_filter?.init_tx_rid else true,
+        if (recalled_transfers_filter?.init_op_index??) .init_op_index == recalled_transfers_filter?.init_op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_pending_transfers_filtered(pending_transfer_filter: pending_transfer_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return pending_transfer @* {
+        if (pending_transfer_filter?.rowids??) .rowid in pending_transfer_filter?.rowids!! else true,
+        if (pending_transfer_filter?.transaction_rid??) .transaction.tx_rid == pending_transfer_filter?.transaction_rid else true,
+        if (pending_transfer_filter?.op_index??) .op_index == pending_transfer_filter?.op_index else true,
+        if (pending_transfer_filter?.sender_account_id??) .sender.id == pending_transfer_filter?.sender_account_id else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_pending_transfer($)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}
+
+function get_reverted_transfers_filtered(reverted_transfer_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    val before_rowid = utils.before_rowid(page_cursor);
+    return reverted_transfer @* {
+        if (reverted_transfer_filter?.rowids??) .rowid in reverted_transfer_filter?.rowids!! else true,
+        if (reverted_transfer_filter?.init_tx_rid??) .init_tx_rid == reverted_transfer_filter?.init_tx_rid else true,
+        if (reverted_transfer_filter?.init_op_index??) .init_op_index == reverted_transfer_filter?.init_op_index else true,
+        .rowid > (before_rowid ?: rowid(0))
+    } (
+        utils.pagination_result(
+            data = (
+                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+            ).to_gtv_pretty(),
+            rowid = .rowid
+        )
+    ) limit utils.fetch_data_size(page_size);
+}

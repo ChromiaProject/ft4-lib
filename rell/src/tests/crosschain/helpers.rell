@@ -1,0 +1,30 @@
+@test module;
+
+import lib.ft4.crosschain;
+import lib.ft4.assets;
+import test: lib.ft4.test.core;
+import ^.mocks;
+import common_helpers: ^^.common.helpers;
+
+function create_and_retrieve_crosschain_asset_and_asset_origin() {
+    val asset = test.create_crosschain_asset(
+        mocks.asset_name,
+        mocks.asset_symbol,
+        6,
+        mocks.issuing_blockchain_rid,
+        mocks.icon_url,
+        mocks.origin_blockchain_rid
+    );
+    val asset_origin = crosschain.asset_origin @ {} (@omit @sort_desc .rowid, $) limit 1;
+    return (asset, asset_origin);
+}
+
+function get_last_applied_transfer() {
+    return crosschain.applied_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function create_crosschain_transfer_and_retrieve_applied_transfer() {
+    common_helpers.mock_crosschain_transfer();
+
+    return get_last_applied_transfer();
+}
