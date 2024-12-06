@@ -49,7 +49,7 @@ export type TransactionBuilder = {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -69,7 +69,7 @@ export type TransactionBuilder = {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
       confirmed: TransactionReceipt;
     }
   >;

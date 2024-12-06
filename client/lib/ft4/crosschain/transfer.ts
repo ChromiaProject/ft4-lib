@@ -43,6 +43,7 @@ export function crosschainTransfer(
     built: SignedTransaction;
     init: TransactionReceipt;
     hop: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
@@ -51,6 +52,7 @@ export function crosschainTransfer(
       built: SignedTransaction;
       init: TransactionReceipt;
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     return createOrchestrator(
@@ -96,12 +98,14 @@ export function resumeCrosschainTransfer(
   void,
   {
     hop: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     void,
     {
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     return createResumeOrchestrator(connection, authenticator, pendingTransfer)
@@ -135,12 +139,14 @@ export function revertCrosschainTransfer(
   void,
   {
     hop: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     void,
     {
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     return createRevertOrchestrator(connection, authenticator, pendingTransfer)
@@ -174,12 +180,14 @@ export function recallUnclaimedCrosschainTransfer(
   void,
   {
     hop: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     void,
     {
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     return createRevertOrchestrator(connection, authenticator, pendingTransfer)

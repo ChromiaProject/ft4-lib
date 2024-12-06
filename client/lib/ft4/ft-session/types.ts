@@ -195,7 +195,7 @@ export interface Session extends Connection {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
   /**
@@ -207,7 +207,7 @@ export interface Session extends Connection {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
   /**

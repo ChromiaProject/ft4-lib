@@ -115,6 +115,7 @@ export async function createClientToBlockchain(
  * @param client - the client to use for the connection
  */
 export function createConnection(client: IClient): Connection {
+  console.log("CREATE CONNECTION..............");
   const connection: Connection = Object.freeze({
     client,
     blockchainRid: Buffer.from(client.config.blockchainRid, "hex"),
@@ -182,7 +183,7 @@ export function createConnection(client: IClient): Connection {
       assetId: BufferId,
     ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
   });
-
+  console.log("CREATE CONNECTION..............2");
   return connection;
 }
 
@@ -231,7 +232,7 @@ export function call(
   TransactionWithReceipt,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   return callWithoutNop(connection, authenticator, ...operations, nop());
@@ -254,7 +255,7 @@ export function callWithoutNop(
   TransactionWithReceipt,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const tb = transactionBuilder(authenticator, connection.client);

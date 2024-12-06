@@ -238,14 +238,14 @@ export function transactionBuilder(
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   > {
     const promiEvent = new Web3PromiEvent<
       TransactionWithReceipt,
       {
         built: SignedTransaction;
-        sent: Buffer;
+        sent: TransactionReceipt;
       }
     >((resolve, reject) => {
       if (_operations.find((op: OperationContext) => !!op.onAnchoredHandler))
@@ -261,7 +261,7 @@ export function transactionBuilder(
           return Promise.all([
             tx,
             client.sendTransaction(tx).on("sent", (receipt) => {
-              promiEvent.emit("sent", receipt.transactionRid);
+              promiEvent.emit("sent", receipt);
             }),
           ]);
         })
@@ -277,7 +277,7 @@ export function transactionBuilder(
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
       confirmed: TransactionReceipt;
     }
   > {
@@ -285,7 +285,7 @@ export function transactionBuilder(
       TransactionWithReceipt,
       {
         built: SignedTransaction;
-        sent: Buffer;
+        sent: TransactionReceipt;
         confirmed: TransactionReceipt;
       }
     >((resolve, reject) => {
@@ -296,9 +296,7 @@ export function transactionBuilder(
             tx,
             client
               .sendTransaction(tx)
-              .on("sent", (receipt) =>
-                promiEvent.emit("sent", receipt.transactionRid),
-              ),
+              .on("sent", (receipt) => promiEvent.emit("sent", receipt)),
           ]);
         })
         .then(([tx, receipt]) => {

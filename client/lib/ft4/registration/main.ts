@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import {
   EvmKeyStore,
   FtKeyStore,
@@ -17,6 +16,7 @@ import {
   gtv,
   SignedTransaction,
   Web3PromiEvent,
+  TransactionReceipt,
 } from "postchain-client";
 import { registerAccount as registerAccountOp } from "./operations";
 import { registerAccountMessage } from "./queries";
@@ -44,14 +44,14 @@ export function registerAccount(
   SessionWithLogout,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     SessionWithLogout,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     const connection = createConnection(client);
@@ -120,7 +120,7 @@ export function registerAccount(
           connection.client
             .sendTransaction(transaction)
             .on("sent", (receipt) => {
-              promiEvent.emit("sent", receipt.transactionRid);
+              promiEvent.emit("sent", receipt);
             }),
         ]);
       })

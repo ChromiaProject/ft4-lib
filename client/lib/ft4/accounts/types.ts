@@ -182,7 +182,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
   /**
@@ -202,7 +202,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
   /**
@@ -214,7 +214,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
   /**
@@ -226,7 +226,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
   /**
@@ -244,7 +244,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -260,7 +260,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -293,6 +293,7 @@ export interface AuthenticatedAccount extends Account {
       built: SignedTransaction;
       init: TransactionReceipt;
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -310,6 +311,7 @@ export interface AuthenticatedAccount extends Account {
     void,
     {
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -327,6 +329,7 @@ export interface AuthenticatedAccount extends Account {
     void,
     {
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -347,6 +350,7 @@ export interface AuthenticatedAccount extends Account {
     void,
     {
       hop: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 
@@ -362,7 +366,7 @@ export interface AuthenticatedAccount extends Account {
     TransactionWithReceipt,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >;
 }

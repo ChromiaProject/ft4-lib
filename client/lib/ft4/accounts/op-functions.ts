@@ -6,7 +6,12 @@ import {
   days,
 } from "@ft4/authentication";
 import { BufferId, TransactionSessionCompletion } from "@ft4/utils";
-import { formatter, SignedTransaction, Web3PromiEvent } from "postchain-client";
+import {
+  formatter,
+  SignedTransaction,
+  Web3PromiEvent,
+  TransactionReceipt,
+} from "postchain-client";
 import {
   TransactionWithReceipt,
   transactionBuilder,
@@ -114,14 +119,14 @@ function addAuthDescriptor(
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     transactionBuilder(authenticator, connection.client)
@@ -166,14 +171,14 @@ function updateMainAuthDescriptor(
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     getAccountMainAuthDescriptor(connection, authenticator.accountId)
@@ -233,14 +238,14 @@ function deleteAuthDescriptor(
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     const newAuth = createAuthenticator(
@@ -274,14 +279,14 @@ function deleteAllAuthDescriptorsExceptMain(
   TransactionSessionCompletion,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   const promiEvent = new Web3PromiEvent<
     TransactionSessionCompletion,
     {
       built: SignedTransaction;
-      sent: Buffer;
+      sent: TransactionReceipt;
     }
   >((resolve, reject) => {
     getAccountMainAuthDescriptor(connection, authenticator.accountId)
@@ -320,7 +325,7 @@ function transfer(
   TransactionWithReceipt,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   return call(
@@ -339,7 +344,7 @@ function recallUnclaimedTransfer(
   TransactionWithReceipt,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   return call(
@@ -358,7 +363,7 @@ function burn(
   TransactionWithReceipt,
   {
     built: SignedTransaction;
-    sent: Buffer;
+    sent: TransactionReceipt;
   }
 > {
   return call(connection, authenticator, burnOp(assetId, amount));
