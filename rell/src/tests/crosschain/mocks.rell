@@ -36,3 +36,20 @@ function format_expected_applied_transfer_assertion(crosschain.applied_transfers
         op_index = applied_transfers.op_index
     );
 }
+
+function format_expected_transfer_assertion(rowid, init_tx_rid: byte_array, init_op_index: integer) {
+    return (
+        rowid = rowid,
+        init_tx_rid = init_tx_rid,
+        init_op_index = init_op_index
+    );
+}
+
+function format_expected_pending_transfer_assertion(crosschain.pending_transfer) {
+    return (
+        rowid = pending_transfer.rowid,
+        transaction_rid = pending_transfer.transaction.tx_rid,
+        op_index = pending_transfer.op_index,
+        sender_account_id = pending_transfer.sender.id
+    );
+}

@@ -5,6 +5,8 @@ import lib.ft4.assets;
 import test: lib.ft4.test.core;
 import ^.mocks;
 import common_helpers: ^^.common.helpers;
+import ^^.operations.iccf_op.{ iccf_proof };
+import lib.ft4.utils;
 
 function create_and_retrieve_crosschain_asset_and_asset_origin() {
     val asset = test.create_crosschain_asset(
@@ -15,16 +17,148 @@ function create_and_retrieve_crosschain_asset_and_asset_origin() {
         mocks.icon_url,
         mocks.origin_blockchain_rid
     );
-    val asset_origin = crosschain.asset_origin @ {} (@omit @sort_desc .rowid, $) limit 1;
-    return (asset, asset_origin);
+
+    return (asset, get_asset_origin_or_null()!!);
 }
 
-function get_last_applied_transfer() {
-    return crosschain.applied_transfers @ {} (@omit @sort_desc .rowid, $) limit 1;
+function get_asset_origin_or_null() {
+    return crosschain.asset_origin @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function get_applied_transfer_or_null() {
+    return crosschain.applied_transfers @? {} (@omit @sort_desc .rowid, $) limit 1;
 }
 
 function create_crosschain_transfer_and_retrieve_applied_transfer() {
     common_helpers.mock_crosschain_transfer();
 
-    return get_last_applied_transfer();
+    return get_applied_transfer_or_null()!!;
+}
+
+function get_canceled_transfer_or_null() {
+    return crosschain.canceled_transfers @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function init_cancel_and_retrieve_canceled_transfer_crosschain_transfer() {
+    val (tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations(rell.test.DEFAULT_FIRST_BLOCK_TIME - 1);
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(crosschain.external.cancel_transfer(tx, 1, tx, 1, 0))
+        .nop()
+        .run();
+
+    return get_canceled_transfer_or_null()!!;
+}
+
+function get_unapplied_transfer_or_null() {
+    return crosschain.unapplied_transfers @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function cancel_unapply_transfer_and_retrieve_unapplied_transfer() {
+    // requires init transfer, apply transfer, cancel transfer, unapply transfer
+    val (init_transfer_tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations();
+    val target_blockchain_rid = x"cc".repeat(32);
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, init_transfer_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(crosschain.external.apply_transfer(init_transfer_tx, 1, init_transfer_tx, 1, 0))
+        .sign(rell.test.keypairs.alice)
+        .run();
+
+    val apply_tx = gtx_transaction.from_bytes(test.get_last_transaction().tx_data);
+    
+    val cancel_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = source_blockchain_rid,
+            operations = [
+                crosschain.external.cancel_transfer(
+                    init_transfer_tx = init_transfer_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = apply_tx,
+                    op_index = 1,
+                    hop_index = 1
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(crosschain.external.unapply_transfer(init_transfer_tx, 1, cancel_tx, 0, 0))
+        .nop()
+        .run();
+
+    return get_unapplied_transfer_or_null()!!;
+}
+
+function get_recalled_transfer_or_null() {
+    return crosschain.recalled_transfers @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function init_apply_recall_transfer() {
+    val (init_transfer_tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations();
+
+    rell.test.tx()
+        .op(iccf_proof(source_blockchain_rid, init_transfer_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(crosschain.external.apply_transfer(init_transfer_tx, 1, init_transfer_tx, 1, 0))
+        .nop()
+        .run();
+    run_block_after_timeout();
+    rell.test.tx()
+        .op(crosschain.external.recall_unclaimed_transfer(init_transfer_tx, 1))
+        .nop()
+        .run();
+
+    return get_recalled_transfer_or_null()!!;
+}
+
+function run_block_after_timeout() {
+    rell.test.set_next_block_time(rell.test.last_block_time + (utils.MILLISECONDS_PER_DAY * 10) + 1);
+    rell.test.block().run();
+}
+
+function init_transfer_and_get_pending_transfer() {
+    common_helpers.create_crosschain_init_transfer_with_auth_operations();
+
+    return get_pending_transfer_or_null()!!;
+}
+
+function get_pending_transfer_or_null() {
+    return crosschain.pending_transfer @? {} (@omit @sort_desc .rowid, $) limit 1;
+}
+
+function init_revert_canceled_transfer_and_retrieve_reverted_transfer() {
+    val (init_transfer_tx, source_blockchain_rid) = common_helpers.create_crosschain_init_transfer_with_auth_operations();
+    val target_blockchain_rid = chain_context.blockchain_rid;
+    val cancel_tx = gtx_transaction(
+        body = gtx_transaction_body(
+            blockchain_rid = target_blockchain_rid,
+            operations = [
+                crosschain.external.cancel_transfer(
+                    init_transfer_tx = init_transfer_tx,
+                    init_tx_op_index = 1,
+                    previous_hop_tx = init_transfer_tx,
+                    op_index = 1,
+                    hop_index = 0
+                ).to_gtx_operation()
+            ],
+            signers = []
+        ),
+        signatures = []
+    );
+
+    rell.test.tx()
+        .op(iccf_proof(target_blockchain_rid, cancel_tx.to_gtv().hash(), x"", x"", 0, x""))
+        .op(crosschain.external.revert_transfer(init_transfer_tx, 1, cancel_tx, 0))
+        .nop()
+        .run();
+
+    return get_reverted_transfer_or_null()!!;
+}
+
+function get_reverted_transfer_or_null() {
+    return crosschain.reverted_transfer @? {} (@omit @sort_desc .rowid, $) limit 1;
 }
