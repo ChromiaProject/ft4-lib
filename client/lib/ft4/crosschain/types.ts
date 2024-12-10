@@ -1,3 +1,4 @@
+import { Asset, AssetResponse } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
 import { BufferId } from "@ft4/utils";
 import { Buffer } from "buffer";
@@ -136,4 +137,78 @@ export type PendingTransferResponse = {
   tx_data: Buffer;
   op_index: number;
   account_id: Buffer;
+};
+
+export type AssetOriginFilter = {
+  rowids: Array<number>;
+  assetId?: Buffer | null;
+};
+
+export type TransferFilter = {
+  rowids: Array<number>;
+  initTxRid?: Buffer | null;
+  initOpIndex?: number | null;
+};
+
+export type PendingTransferFilter = {
+  rowids: Array<number>;
+  transactionId?: Buffer | null;
+  initOpIndex?: number | null;
+  senderAccountId?: Buffer | null;
+};
+
+export type AssetOriginResponse = {
+  rowid: number;
+  asset: AssetResponse;
+  origin_blockchain_rid: Buffer;
+};
+
+export type AssetOrigin = {
+  rowId: number;
+  asset: Asset;
+  originBlockchainRid: Buffer;
+};
+
+export type AppliedTransferResponse = {
+  rowid: number;
+  init_tx_rid: Buffer;
+  init_op_index: number;
+  transacation_rid: Buffer;
+  op_index: number;
+};
+
+export type AppliedTransfer = {
+  rowId: number;
+  initTxRid: Buffer;
+  initOpIndex: number;
+  transactionId: Buffer;
+  opIndex: number;
+};
+
+export type TransferResponse = {
+  rowid: number;
+  init_tx_rid: Buffer;
+  init_op_index: number;
+};
+
+export type Transfer = {
+  rowId: number;
+  initTxRid: Buffer;
+  initOpIndex: number;
+};
+
+// Todo fix name as it already exists
+export type PendingTransferResponse_ = {
+  rowid: number;
+  transaction_rid: Buffer;
+  op_index: number;
+  sender_account_id: Buffer;
+};
+
+// Todo fix name as it already exists
+export type PendingTransfer_ = {
+  rowId: number;
+  transactionId: Buffer;
+  opIndex: number;
+  senderAccountId: Buffer;
 };
