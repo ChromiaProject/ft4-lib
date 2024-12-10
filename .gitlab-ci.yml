@@ -1,10 +1,10 @@
-# image: registry.gitlab.com/chromaway/core-tools/chromia-images/node21-java21:1.2.0@sha256:c04590bf5702e3e3071ac3bae28ad4e1129ac7239e1bfd655451f718807ca1fd
-
 image: registry.gitlab.com/chromaway/ft4-lib:latest
 
 stages:
-  - build
+  - install
+  - docs
   - test
+  - multichain
   - deploy
 
 services:
@@ -16,7 +16,7 @@ services:
       POSTGRES_DB: "postchain"
       POSTGRES_USER: "postchain"
       POSTGRES_PASSWORD: "postchain"
-      POSTGRES_INITDB_ARGS: "--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8"  
+      POSTGRES_INITDB_ARGS: "--lc-collate=C.UTF-8 --lc-ctype=C.UTF-8 --encoding=UTF-8"
 
 variables:
   MAX_TIME: "15"
@@ -31,95 +31,95 @@ default:
     - saas-linux-large-amd64
     # - ft4-pipeline-docker
     # - ft4-kanta
+  cache:
+    paths:
+      - node_modules/
+      - .npm/
 
-# before_script:
-#   - apt-get update
-#   - apt-get install ca-certificates curl
-#   - install -m 0755 -d /etc/apt/keyrings
-#   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-#   - chmod a+r /etc/apt/keyrings/docker.asc
-
-#     # Add the repository to Apt sources:
-#   - echo \
-#       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-#       $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-#        tee /etc/apt/sources.list.d/docker.list > /dev/null
-#   - apt-get update
-#   - apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-cache:
-  paths:
-    - node_modules/
-
-unit_integration_tests:
-  stage: test
+install_rell:
+  stage: install
   script:
-    - ./scripts/install-chr-and-pmc.sh
-    - echo ${BUILD_BOT_EMAIL_ADDRESS}
-    - echo ${BUILD_BOT_API_KEY}
-    - chr install
+    - ./scripts/install-chr-and-pmc.sh --gitlab
+    - chr install -s chromia.yml
     - chr build
-    # - chr test --use-db --test-report --test-report-dir=test-reports/rell || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=Rell tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-    - chr test
-    - npm ci
+  artifacts:
+    paths:
+      - rell/out
+      - rell/src/lib/iccf
+      - bin/
+
+install_js:
+  stage: install
+  script:
+    - npm ci --cache .npm --prefer-offline
     - npm run compile
+  artifacts:
+    paths:
+      - node_modules
+
+build_docs:
+  stage: docs
+  needs: ["install_rell", "install_js"]
+  allow_failure: true # allows skipping this step, which might not be necessary
+  rules:
+    - when: manual
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
     - npm run generate:docs
-    - export JEST_JUNIT_OUTPUT_NAME=unit.xml
+  artifacts:
+    paths:
+      - doc/api
+
+unit_rell_tests:
+  stage: test
+  needs: ["install_rell"]
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
+    - chr test
+  artifacts:
+    paths:
+      - logs/**
+
+unit_js_tests:
+  stage: test
+  needs: ["install_js"]
+  script:
+    - export JEST_JUNIT_OUTPUT_NAME=logs/unit.xml
     - npx jest -maxWorkers=1 --testPathPattern=unit/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS unit tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
+  artifacts:
+    paths:
+      - logs/**
+
+integration_js_tests:
+  stage: test
+  needs: ["install_rell", "install_js"]
+  script:
+    - ./scripts/install-chr-and-pmc.sh --link-only
     - export TESTCONTAINERS_RYUK_DISABLED=true
-    - export JEST_JUNIT_OUTPUT_NAME=integration.xml
+    - export JEST_JUNIT_OUTPUT_NAME=logs/integration.xml
     - npx jest --config=jest.config.integration.js -maxWorkers=1 --testPathPattern=integration/ --ci --reporters=default --reporters=jest-junit || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=TS integration tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
   artifacts:
     paths:
       - logs/**
 
-# e2e_tests:
-#   stage: test
-#   image: cypress/browsers:node-20.11.0-chrome-121.0.6167.85-1-ff-120.0-edge-121.0.2277.83-1
-#   script:
-#     - export DISPLAY=:0.0
-#     - Xvfb :0 -screen 0 1024x768x24 -listen tcp -ac &
-#     - fluxbox &
-#     - npm ci
-#     - npm run test:e2e || (curl --no-progress-meter -X POST https://chromadev.zulipchat.com/api/v1/messages -u ${BUILD_BOT_EMAIL_ADDRESS}:${BUILD_BOT_API_KEY} --data-urlencode type=stream --data-urlencode 'to="Protocols - FT4 builds"' --data-urlencode 'topic=Build failed' --data-urlencode "content=E2E tests failed on [Bitbucket](https://bitbucket.org/chromawallet/ft3-lib/pipelines/results/${BITBUCKET_BUILD_NUMBER})." ; exit 1)
-#   artifacts:
-#     paths:
-#       - logs/**
-#       - cypress/screenshots/**
-#       - cypress/videos/**
-
 multichain_tests:
-  stage: test
+  stage: multichain
+  needs: ["install_rell", "install_js"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
   script:
-    - docker info
-    - ./scripts/install-chr-and-pmc.sh
+    - ./scripts/install-chr-and-pmc.sh --link-only
     - npm ci
-    - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh
+    - chmod +x ./scripts/multichain-jesttest.sh; ./scripts/multichain-jesttest.sh --gitlab
+  artifacts:
+    paths:
+      - logs/**
 
 # update_docs:
 #   stage: deploy
 #   script:
 #     - ./scripts/update-docs.sh
-
-# deploy_latest:
-#   stage: deploy
-#   script:
-#     - ./scripts/install-chr-and-pmc.sh
-#     - chr install
-#     - mkdir .chromia
-#     - printf $DEPLOYMENT_KEYS > .chromia/config
-#     - npm run deploy:latest
-#     - rm .chromia/config
-
-# deploy_stable:
-#   stage: deploy
-#   script:
-#     - ./scripts/install-chr-and-pmc.sh
-#     - chr install
-#     - mkdir .chromia
-#     - printf $DEPLOYMENT_KEYS > .chromia/config
-#     - npm run deploy:stable
-#     - rm .chromia/config
 
 workflow:
   rules:
@@ -131,11 +131,5 @@ workflow:
       changes:
         - "*"
       when: always
-    - if: $CI_COMMIT_BRANCH == "ft4"
-      changes:
-        - "*"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
-    # - if: $CI_COMMIT_BRANCH == "development"
-    #   when: manual
-    # - if: $CI_COMMIT_BRANCH == "ft4"
-    #   when: manual

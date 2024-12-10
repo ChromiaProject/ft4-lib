@@ -1,11 +1,60 @@
-#!/bin/sh
+#!/bin/bash
 
-# install chromia-cli-0.20.12-dist.tar.gz
-mkdir -p /opt/chromaway/chr
-wget -nv -O - https://gitlab.com/chromaway/core-tools/chromia-cli/-/package_files/145601751/download | tar -C /opt/chromaway/chr -xz
-ln -s /opt/chromaway/chr/bin/chr /bin/chr
+GITLAB=false
+LINK_ONLY=false
+while :; do
+    case $1 in
+        --gitlab)
+              echo 'running for gitlab pipeline'
+              GITLAB=true
+              ;;
+        --link-only)
+              echo 'adding the links in bin'
+              LINK_ONLY=true
+              ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)
+            break
+            ;;
+    esac
+    shift
+done
 
-# install management-console-3.21.7-dist.tar.gz
-# wget -nv -O - https://gitlab.com/chromaway/core-tools/management-console/-/package_files/124654080/download | tar -C /opt/chromaway -xz
-wget -nv -O - https://gitlab.com/chromaway/core-tools/management-console/-/package_files/139267065/download | tar -C /opt/chromaway -xz
-ln -s /opt/chromaway/management-console/bin/pmc /bin/pmc
+link_chr_pmc() {
+    ln -s $(pwd)/bin/chromaway/chr/bin/chr /bin/chr
+    ln -s $(pwd)/bin/chromaway/management-console/bin/pmc /bin/pmc
+}
+
+
+# docker run --rm -v $(pwd):/usr/app registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.21.4 chr
+# docker run --rm -v $(pwd):/usr/app registry.gitlab.com/chromaway/core-tools/chromia-cli/chr:0.21.4 chr install
+
+
+if $LINK_ONLY; then
+    echo "Linking the binaries from artifacts..."
+    link_chr_pmc;
+else
+    echo "Downloading the binaries..."
+
+    # install chromia-cli-0.21.4-dist.tar.gz
+    mkdir -p /opt/chromaway/chr
+    wget -nv -O - https://gitlab.com/chromaway/core-tools/chromia-cli/-/package_files/159896937/download | tar -C /opt/chromaway/chr -xz
+
+    # install management-console-3.36.1-dist.tar.gz
+    wget -nv -O - https://gitlab.com/chromaway/core-tools/management-console/-/package_files/163737443/download | tar -C /opt/chromaway -xz
+
+    if $GITLAB; then
+        mkdir bin
+        cp -R /opt/chromaway/ bin/
+        link_chr_pmc
+    else
+        ln -s /opt/chromaway/chr/bin/chr /bin/chr
+        ln -s /opt/chromaway/management-console/bin/pmc /bin/pmc
+    fi
+fi

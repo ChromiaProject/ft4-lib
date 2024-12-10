@@ -52,7 +52,7 @@ export default async function () {
       "-s",
       "configs/jest-test.yml",
       "-np",
-      "rell/config/jest-test/node-config.properties",
+      "rell/config/jest-test-gitlab/node-config.properties",
       "--wipe",
     ])
     .withWaitStrategy(Wait.forLogMessage("Node is initialized"))
