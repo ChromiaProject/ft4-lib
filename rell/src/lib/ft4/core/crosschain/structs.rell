@@ -4,7 +4,6 @@ struct asset_origin_filter {
 }
 
 struct transfers_filter {
-    // Todo composite index (init_tx_rid, init_op_index) add validation that both exist in query
     rowids: list<rowid>?;
     init_tx_rid: byte_array?;
     init_op_index: integer?;
