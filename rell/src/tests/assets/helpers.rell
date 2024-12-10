@@ -32,14 +32,14 @@ function get_last_balance_or_null(): assets.balance? {
 
 function set_asset_filter(
     rowids: list<rowid>? = null,
-    id: byte_array? = null,
+    ids: list<byte_array>? = null,
     name: text? = null,
     symbol: text? = null,
     type: text? = null
 ): assets.asset_filter {
     return assets.asset_filter(
         rowids = rowids,
-        id = id,
+        ids = ids,
         name = name,
         symbol = symbol,
         type = type

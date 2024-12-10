@@ -1,6 +1,6 @@
 struct asset_filter {
     rowids: list<rowid>?;
-    id: byte_array?;
+    ids: list<byte_array>?;
     name: text?;
     symbol: text?;
     type: text?;

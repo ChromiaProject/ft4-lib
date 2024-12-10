@@ -327,56 +327,6 @@ function get_paginated_assets_by_symbol(symbol: text, page_size: integer?, page_
 }
 
 /**
- * Retrieves all assets based on the selected filter of asset_filter, paginated
- * 
- * @see utils.paged_result for information about pagination
- * 
- * @param asset_filter  the available filter for the assets to retrieve
- * @param page_size     the size of the pages to retrieve
- * @param page_cursor   a pointer to where the page should start
- */
-function get_assets_filtered(asset_filter: asset_filter?, page_size: integer?, page_cursor: text?) {
-    val before_rowid = utils.before_rowid(page_cursor);
-    return asset @* {
-        if (asset_filter?.rowids??) .rowid in asset_filter?.rowids!! else true,
-        if (asset_filter?.id??) .id == asset_filter?.id else true,
-        if (asset_filter?.name??) .name == asset_filter?.name else true,
-        if (asset_filter?.symbol??) .symbol == asset_filter?.symbol else true,
-        if (asset_filter?.type??) .type == asset_filter?.type else true,
-        .rowid > (before_rowid ?: rowid(0))
-    } (
-        utils.pagination_result(
-            data = (map_asset($)).to_gtv_pretty(),
-            rowid = .rowid
-        )
-    ) limit utils.fetch_data_size(page_size);
-}
-
-/**
- * Retrieves all balances based on the selected filter of balance_filter, paginated
- * 
- * @see utils.paged_result for information about pagination
- * 
- * @param balance_filter  the available filter for the balances to retrieve
- * @param page_size       the size of the pages to retrieve
- * @param page_cursor     a pointer to where the page should start
- */
-function get_balances_filtered(balance_filter: balance_filter?, page_size: integer?, page_cursor: text?) {
-    val before_rowid = utils.before_rowid(page_cursor);
-    return balance @* {
-        if (balance_filter?.rowids??) .rowid in balance_filter?.rowids!! else true,
-        if (balance_filter?.account_id??) .account.id == balance_filter?.account_id else true,
-        if (balance_filter?.asset_id??) .asset.id == balance_filter?.asset_id else true,
-        .rowid > (before_rowid ?: rowid(0))
-    }(
-        utils.pagination_result(
-            data = (map_balance($)).to_gtv_pretty(),
-            rowid = .rowid
-        )
-    ) limit utils.fetch_data_size(page_size);
-}
-
-/**
  * Outputs the details of an asset in a format that is used by other chains to register
  * it as a crosschain asset.
  * 

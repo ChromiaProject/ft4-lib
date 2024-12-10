@@ -50,7 +50,7 @@ function test_get_paginated_assets_filtered_by_id() {
 
     val fetched_assets = assets.external.get_assets_filtered(
         helpers.set_asset_filter(
-            id = asset.id
+            ids = [asset.id]
         ),
         1,
         null
@@ -117,7 +117,7 @@ function test_get_paginated_assets_using_all_filter_no_assets() {
     val assets = assets.external.get_assets_filtered(
         helpers.set_asset_filter(
             [rowid(1)],
-            x"0000",
+            [x"0000"],
             "unknown",
             "UNKNOWN",
             "UNKNOWN"
@@ -138,7 +138,7 @@ function test_get_paginated_assets_using_all_filter() {
     val fetched_assets = assets.external.get_assets_filtered(
         helpers.set_asset_filter(
             rowids = [asset1.rowid, asset2.rowid],
-            id = asset1.id,
+            ids = [asset1.id],
             name = asset1.name,
             symbol = asset1.symbol,
             type = asset1.type
@@ -280,7 +280,7 @@ function test_get_transfer_history_entries_filtered_requires_composite_indexes()
     val (_, minted_assets) = helpers.register_account_create_and_mint_assets();
     val transfer_history_entry = common_helpers.get_last_transfer_history_entry();
     assert_fails(
-        "Composite index (transaction, op_index) - transaction_rid filter is required",
+        "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required",
         assets.external.get_transfer_history_entries_filtered(
             helpers.set_transfer_history_entry_filter(
                 op_index = transfer_history_entry.op_index
@@ -525,7 +525,7 @@ function test_get_paginated_crosschain_transfer_history_entries_filtered_by_tran
 function test_get_crosschain_transfer_history_entries_filtered_requires_composite_indexes() {
     val crosschain_transfer_history_entry = common_helpers.mock_crosschain_transfer();
     assert_fails(
-        "Composite index (transaction, op_index) - transaction_rid filter is required",
+        "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required",
         assets.external.get_crosschain_transfer_history_entries_filtered(
             helpers.set_crosschain_transfer_history_entry_filter(
                 op_index = crosschain_transfer_history_entry.op_index

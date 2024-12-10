@@ -247,13 +247,13 @@ function is_list(gtv) = gtv.to_bytes()[0] == 165;
 function is_big_integer(gtv) = gtv.to_bytes()[0] == 166;
 
 /**
- * Used to validate specific composite indexes `op_index` and `transaction` for queries using filters
+ * Throws `INVALID FILTER` if the `op_index` is specified, but `transaction_rid` is not
  */
 function validate_composite_indexes_op_index_and_tx_rid(op_index: integer?, transaction_rid: byte_array?) {
     if (op_index??) {
         require(
             transaction_rid??,
-            "Composite index (transaction, op_index) - transaction_rid filter is required"
+            "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required"
         );
     }
 }

@@ -17,6 +17,9 @@ function get_last_transaction(): transaction {
     return transaction @ { last_block };
 }
 
+/**
+ * Returns the last created block
+ */
 function get_last_block(): block {
     return block @ {} (@omit @sort_desc .block_height, $) limit 1;
 }
