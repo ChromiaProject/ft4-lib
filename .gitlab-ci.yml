@@ -75,7 +75,7 @@ unit_rell_tests:
   needs: ["install_rell"]
   script:
     - ./scripts/install-chr-and-pmc.sh --link-only
-    - chr test
+    - npm run test:rell -- --gitlab
   artifacts:
     paths:
       - logs/**

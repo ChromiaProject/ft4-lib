@@ -75,7 +75,7 @@ export type AnyAssetAmount = RawAmount | Amount;
 
 export type AssetFilter = {
   rowids: Array<number>;
-  id?: Buffer | null;
+  ids: Array<Buffer>;
   name?: string | null;
   symbol?: string | null;
   type?: string | null;

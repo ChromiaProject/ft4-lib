@@ -14,12 +14,12 @@ let connection: Connection;
 
 function setAssetFilter(
   rowids: Array<number> = [],
-  id: Buffer | null = null,
+  ids: Array<Buffer>,
   name: string | null = null,
   symbol: string | null = null,
   type: string | null = null,
 ): AssetFilter {
-  return { rowids, id, name, symbol, type };
+  return { rowids, ids, name, symbol, type };
 }
 
 function setBalanceFilter(
@@ -63,7 +63,7 @@ describe("Asset queries using filter", () => {
     });
     it("returns empty pagination with filter", async () => {
       const { data } = await connection.getAssets(
-        setAssetFilter([0], mockBuffer, mockString, mockString, mockString),
+        setAssetFilter([0], [mockBuffer], mockString, mockString, mockString),
         1,
       );
 
@@ -103,7 +103,7 @@ describe("Asset queries using filter", () => {
       const { data } = await connection.getAssets(
         setAssetFilter(
           [asset.rowId!],
-          asset.id,
+          [asset.id],
           asset.name,
           asset.symbol,
           asset.type,

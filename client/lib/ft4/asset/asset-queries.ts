@@ -120,7 +120,7 @@ export function assetsFiltered(
     asset_filter:
       | [
           Array<number>,
-          Buffer | null,
+          Array<Buffer>,
           string | null,
           string | null,
           string | null,
@@ -136,7 +136,7 @@ export function assetsFiltered(
       asset_filter: assetFilter
         ? [
             assetFilter?.rowids ?? [],
-            assetFilter?.id ?? null,
+            assetFilter?.ids ?? [],
             assetFilter?.name ?? null,
             assetFilter?.symbol ?? null,
             assetFilter?.type ?? null,
