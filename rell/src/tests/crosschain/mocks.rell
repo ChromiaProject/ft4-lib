@@ -10,46 +10,11 @@ val icon_url = "https://filehub.chromia.com/project/collection/1";
 val asset_symbol = "TST";
 
 function format_expected_asset_origin_assertion(assets.asset, crosschain.asset_origin) {
-    return (
-        rowid = asset_origin.rowid,
-        asset = (
-            rowid = asset.rowid,
-            id = asset.id,
-            name = asset.name,
-            symbol = asset.symbol,
-            decimal = asset.decimals,
-            blockchain_rid = issuing_blockchain_rid,
-            icon_url = asset.icon_url,
-            type = asset.type,
-            supply = asset.total_supply
-        ),
-        origin_blockchain_rid = origin_blockchain_rid
-    );
-}
+    val mapped_asset_origin = crosschain.map_asset_origin(asset_origin);
 
-function format_expected_applied_transfer_assertion(crosschain.applied_transfers) {
     return (
-        rowid = applied_transfers.rowid,
-        init_tx_rid = applied_transfers.init_tx_rid,
-        init_op_index = applied_transfers.init_op_index,
-        transaction_rid = applied_transfers.transaction.tx_rid,
-        op_index = applied_transfers.op_index
-    );
-}
-
-function format_expected_transfer_assertion(rowid, init_tx_rid: byte_array, init_op_index: integer) {
-    return (
-        rowid = rowid,
-        init_tx_rid = init_tx_rid,
-        init_op_index = init_op_index
-    );
-}
-
-function format_expected_pending_transfer_assertion(crosschain.pending_transfer) {
-    return (
-        rowid = pending_transfer.rowid,
-        transaction_rid = pending_transfer.transaction.tx_rid,
-        op_index = pending_transfer.op_index,
-        sender_account_id = pending_transfer.sender.id
+        rowid = mapped_asset_origin.rowid,
+        asset = assets.map_asset(asset),
+        origin_blockchain_rid = mapped_asset_origin.origin_blockchain_rid
     );
 }

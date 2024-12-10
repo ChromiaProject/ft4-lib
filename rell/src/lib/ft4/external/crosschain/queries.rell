@@ -207,7 +207,7 @@ query get_recalled_transfer_by_rowid(rowid) {
  * @param page_size                  the size of the pages to retrieve
  * @param page_cursor                a pointer to where the page should start
  */
-query get_recall_transfers_filtered(recalled_transfers_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
+query get_recalled_transfers_filtered(recalled_transfers_filter: crosschain.transfers_filter?, page_size: integer?, page_cursor: text?) {
     return utils.make_page(
         crosschain.get_recalled_transfers_filtered(recalled_transfers_filter, page_size, page_cursor),
         page_size

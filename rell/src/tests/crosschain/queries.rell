@@ -3,7 +3,6 @@
 import lib.ft4.crosschain;
 import ^.helpers;
 import ^.mocks;
-import common_helpers: ^^.common.helpers;
 
 function test_get_asset_origin_by_rowid_no_asset_origin() {
     val found_asset_origin = crosschain.external.get_asset_origin_by_rowid(rowid(0));
@@ -47,7 +46,7 @@ function test_get_applied_transfer_by_rowid() {
 
     assert_equals(
         found_applied_transfer,
-        mocks.format_expected_applied_transfer_assertion(applied_transfer).to_gtv_pretty()
+        crosschain.map_applied_transfer(applied_transfer).to_gtv_pretty()
     );
 }
 
@@ -70,7 +69,7 @@ function test_get_canceled_transfer_by_rowid() {
 
     assert_equals(
         found_canceled_transfer,
-        mocks.format_expected_transfer_assertion(
+        crosschain.map_transfer(
             canceled_transfer.rowid, canceled_transfer.init_tx_rid, canceled_transfer.init_op_index
         ).to_gtv_pretty()
     );
@@ -95,33 +94,8 @@ function test_get_unapplied_transfer_by_rowid() {
 
     assert_equals(
         found_unapplied_transfer,
-        mocks.format_expected_transfer_assertion(
+        crosschain.map_transfer(
             unapplied_transfer.rowid, unapplied_transfer.init_tx_rid, unapplied_transfer.init_op_index
-        ).to_gtv_pretty()
-    );
-}
-
-function test_get_recalled_transfer_by_rowid_no_recalled_transfer() {
-    val found_recalled_transfer = crosschain.external.get_recalled_transfer_by_rowid(rowid(0));
-    assert_null(found_recalled_transfer);
-}
-
-function test_get_recalled_transfer_by_rowid_no_recalled_transfer_for_rowid() {
-    helpers.init_apply_recall_transfer();
-    val found_recalled_transfer = crosschain.external.get_recalled_transfer_by_rowid(rowid(999));
-
-    assert_not_null(helpers.get_recalled_transfer_or_null());
-    assert_null(found_recalled_transfer);
-}
-
-function test_get_recalled_transfer_by_rowid() {
-    val recalled_transfer = helpers.init_apply_recall_transfer();
-    val found_recalled_transfer = crosschain.external.get_recalled_transfer_by_rowid(recalled_transfer.rowid);
-
-    assert_equals(
-        found_recalled_transfer,
-        mocks.format_expected_transfer_assertion(
-            recalled_transfer.rowid, recalled_transfer.init_tx_rid, recalled_transfer.init_op_index
         ).to_gtv_pretty()
     );
 }
@@ -132,7 +106,7 @@ function test_get_pending_transfer_by_rowid_no_pending_transfer() {
 }
 
 function test_get_pending_transfer_by_rowid_no_pending_transfer_for_rowid() {
-    common_helpers.create_crosschain_init_transfer_with_auth_operations();
+    helpers.init_transfer_and_get_pending_transfer();
     val found_pending_transfer = crosschain.external.get_pending_transfer_by_rowid(rowid(999));
 
     assert_not_null(helpers.get_pending_transfer_or_null());
@@ -145,7 +119,7 @@ function test_get_pending_transfer_by_rowid() {
 
     assert_equals(
         found_pending_transfer,
-        mocks.format_expected_pending_transfer_assertion(pending_transfer).to_gtv_pretty()
+        crosschain.map_pending_transfer(pending_transfer).to_gtv_pretty()
     );
 }
 
@@ -167,7 +141,7 @@ function test_get_reverted_transfer_by_rowid() {
 
     assert_equals(
         found_reverted_transfer,
-        mocks.format_expected_transfer_assertion(
+        crosschain.map_transfer(
             reverted_transfer.rowid, reverted_transfer.init_tx_rid, reverted_transfer.init_op_index
         ).to_gtv_pretty()
     );

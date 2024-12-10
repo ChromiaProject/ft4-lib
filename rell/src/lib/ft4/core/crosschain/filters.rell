@@ -15,6 +15,10 @@ function get_asset_origin_filtered(asset_origin_filter: asset_origin_filter?, pa
 }
 
 function get_applied_transfers_filtered(applied_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
+        applied_transfers_filter?.init_tx_rid,
+        applied_transfers_filter?.init_op_index
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return applied_transfers @* {
         if (applied_transfers_filter?.rowids??) .rowid in applied_transfers_filter?.rowids!! else true,
@@ -32,6 +36,10 @@ function get_applied_transfers_filtered(applied_transfers_filter: transfers_filt
 }
 
 function get_canceled_transfers_filtered(canceled_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
+        canceled_transfers_filter?.init_tx_rid,
+        canceled_transfers_filter?.init_op_index
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return canceled_transfers @* {
         if (canceled_transfers_filter?.rowids??) .rowid in canceled_transfers_filter?.rowids!! else true,
@@ -49,6 +57,10 @@ function get_canceled_transfers_filtered(canceled_transfers_filter: transfers_fi
 }
 
 function get_unapplied_transfers_filtered(unapplied_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
+        unapplied_transfers_filter?.init_tx_rid,
+        unapplied_transfers_filter?.init_op_index
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return unapplied_transfers @* {
         if (unapplied_transfers_filter?.rowids??) .rowid in unapplied_transfers_filter?.rowids!! else true,
@@ -66,6 +78,10 @@ function get_unapplied_transfers_filtered(unapplied_transfers_filter: transfers_
 }
 
 function get_recalled_transfers_filtered(recalled_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
+        recalled_transfers_filter?.init_tx_rid,
+        recalled_transfers_filter?.init_op_index
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return recalled_transfers @* {
         if (recalled_transfers_filter?.rowids??) .rowid in recalled_transfers_filter?.rowids!! else true,
@@ -83,6 +99,10 @@ function get_recalled_transfers_filtered(recalled_transfers_filter: transfers_fi
 }
 
 function get_pending_transfers_filtered(pending_transfer_filter: pending_transfer_filter?, page_size: integer?, page_cursor: text?) {
+    utils.validate_composite_indexes_op_index_and_tx_rid(
+        pending_transfer_filter?.op_index,
+        pending_transfer_filter?.transaction_rid
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return pending_transfer @* {
         if (pending_transfer_filter?.rowids??) .rowid in pending_transfer_filter?.rowids!! else true,
@@ -101,6 +121,10 @@ function get_pending_transfers_filtered(pending_transfer_filter: pending_transfe
 }
 
 function get_reverted_transfers_filtered(reverted_transfer_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
+    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
+        reverted_transfer_filter?.init_tx_rid,
+        reverted_transfer_filter?.init_op_index
+    );
     val before_rowid = utils.before_rowid(page_cursor);
     return reverted_transfer @* {
         if (reverted_transfer_filter?.rowids??) .rowid in reverted_transfer_filter?.rowids!! else true,

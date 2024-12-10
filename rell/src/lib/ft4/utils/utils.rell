@@ -245,3 +245,37 @@ function is_list(gtv) = gtv.to_bytes()[0] == 165;
  * @param gtv   the value to check
  */
 function is_big_integer(gtv) = gtv.to_bytes()[0] == 166;
+
+/**
+ * Used to validate specific composite indexes `op_index` and `transaction` for queries using filters
+ */
+function validate_composite_indexes_op_index_and_tx_rid(op_index: integer?, transaction_rid: byte_array?) {
+    if (op_index??) {
+        require(
+            transaction_rid??,
+            "Composite index (transaction, op_index) - transaction_rid filter is required"
+        );
+    }
+}
+
+/**
+ * Used to validate specific composite indexes `init_tx_rid` and `init_op_index` for queries using filters
+ */
+function validate_composite_indexes_init_tx_rid_and_init_op_index(
+    init_tx_rid: byte_array?, init_op_index: integer?
+) {
+    val basic_error_message = "Composite index (init_tx_rid, init_op_index) - ";
+    if (init_tx_rid??) {
+        require(
+            init_op_index??,
+            basic_error_message + "init_op_index filter is required"
+        );
+    }
+
+    if (init_op_index??) {
+        require(
+            init_tx_rid??,
+            basic_error_message + "init_tx_rid filter is required"
+        );
+    }
+}

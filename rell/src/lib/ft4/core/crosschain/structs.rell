@@ -11,9 +11,8 @@ struct transfers_filter {
 }
 
 struct pending_transfer_filter {
-    // Todo composite index (transaction_rid and op_index) add validation that both exist in query
     rowids: list<rowid>?;
-    transaction_rid: byte_array;
-    op_index: integer;
-    sender_account_id: byte_array;
+    transaction_rid: byte_array?;
+    op_index: integer?;
+    sender_account_id: byte_array?;
 }
