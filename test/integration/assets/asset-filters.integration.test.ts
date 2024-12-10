@@ -27,7 +27,7 @@ function setBalanceFilter(
   account_id: Buffer | null = null,
   asset_id: Buffer | null = null,
 ): BalanceFilter {
-  return { rowids, account_id, asset_id };
+  return { rowids, accountId: account_id, assetId: asset_id };
 }
 
 function setCrosschainAndTransferHistoryEntryFilter(
@@ -37,7 +37,13 @@ function setCrosschainAndTransferHistoryEntryFilter(
   transaction_rid: Buffer | null = null,
   op_index: number | null = null,
 ): TransferHistoryEntryFilter | CrosschainTransferHistoryEntryFilter {
-  return { rowids, account_id, asset_id, transaction_rid, op_index };
+  return {
+    rowids,
+    accountId: account_id,
+    assetId: asset_id,
+    transactionRid: transaction_rid,
+    opIndex: op_index,
+  };
 }
 
 describe("Asset queries using filter", () => {

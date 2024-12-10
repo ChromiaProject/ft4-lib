@@ -730,17 +730,3 @@ function validate_auth_descriptor_args(auth_descriptor) {
  * an auth descriptor
  */
 function get_max_allowed_auth_descriptor_rules() = chain_context.args.auth_descriptor.max_rules;
-
-
-/**
- * Maps an account's info into a readable format for the frontend
- * 
- * @param account  the account to retrieve
- */
-function map_account(account) {
-    return (
-        rowid = account.rowid,
-        id = account.id,
-        type = account.type
-    );
-}

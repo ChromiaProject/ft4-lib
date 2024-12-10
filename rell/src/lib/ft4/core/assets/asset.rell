@@ -176,43 +176,6 @@ function get_asset_balance(accounts.account, asset): big_integer {
 }
 
 /**
- * Maps an asset's info into a readable format for the frontend.
- * 
- * @param asset     the asset to retrieve
- */
-function map_asset(asset: asset) {
-    return (
-        rowid = asset.rowid,
-        id = asset.id,
-        name = asset.name,
-        symbol = asset.symbol,
-        decimals = asset.decimals,
-        blockchain_rid = asset.issuing_blockchain_rid,
-        icon_url = asset.icon_url,
-        type = asset.type,
-        supply = asset.total_supply
-    );
-}
-
-/**
- * Maps an balance info into a readable format for the frontend.
- * 
- * @param balance     the balance to retrieve
- */
-function map_balance(balance: balance) {
-    return (
-        rowid = balance.rowid,
-        asset = (
-            map_asset(balance.asset)
-        ),
-        account = (
-            accounts.map_account(balance.account)
-        ),
-        amount = balance.amount
-    );
-}
-
-/**
  * Retrieves all the balances of a certain account, paginated.
  * 
  * @see utils.paged_result for information about pagination

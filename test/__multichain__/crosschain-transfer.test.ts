@@ -425,10 +425,10 @@ describe("Crosschain transfer", () => {
       const { data } = await connection00.getCrosschainTransferHistoryEntries(
         {
           rowids: [0],
-          account_id: mockBuffer,
-          asset_id: mockBuffer,
-          transaction_rid: mockBuffer,
-          op_index: 0,
+          accountId: mockBuffer,
+          assetId: mockBuffer,
+          transactionRid: mockBuffer,
+          opIndex: 0,
         },
         1,
       );
@@ -647,10 +647,10 @@ describe("Crosschain transfer", () => {
       const { data } = await connection00.getCrosschainTransferHistoryEntries(
         {
           rowids: [crosschainHistory.data[0].rowid],
-          account_id: crosschainHistory.data[0].accountId,
-          asset_id: crosschainHistory.data[0].assetId,
-          transaction_rid: crosschainHistory.data[0].transactionId,
-          op_index: crosschainHistory.data[0].opIndex,
+          accountId: crosschainHistory.data[0].accountId,
+          assetId: crosschainHistory.data[0].assetId,
+          transactionRid: crosschainHistory.data[0].transactionId,
+          opIndex: crosschainHistory.data[0].opIndex,
         },
         100,
       );

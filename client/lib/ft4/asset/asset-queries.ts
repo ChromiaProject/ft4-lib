@@ -212,8 +212,8 @@ export function balancesFiltered(
       balance_filter: balanceFilter
         ? [
             balanceFilter?.rowids ?? [],
-            balanceFilter?.account_id ?? null,
-            balanceFilter?.asset_id ?? null,
+            balanceFilter?.accountId ?? null,
+            balanceFilter?.assetId ?? null,
           ]
         : null,
       page_size: limit,
@@ -259,10 +259,10 @@ export function transferHistoryEntriesFiltered(
       transfer_history_entry_filter: transferHistoryEntryFilter
         ? [
             transferHistoryEntryFilter?.rowids ?? [],
-            transferHistoryEntryFilter?.account_id ?? null,
-            transferHistoryEntryFilter?.asset_id ?? null,
-            transferHistoryEntryFilter?.transaction_rid ?? null,
-            transferHistoryEntryFilter?.op_index ?? null,
+            transferHistoryEntryFilter?.accountId ?? null,
+            transferHistoryEntryFilter?.assetId ?? null,
+            transferHistoryEntryFilter?.transactionRid ?? null,
+            transferHistoryEntryFilter?.opIndex ?? null,
           ]
         : null,
       page_size: limit,
@@ -309,10 +309,10 @@ export function crossChainTransferHistoryEntriesFiltered(
         crosschainTransferHistoryEntryFilter
           ? [
               crosschainTransferHistoryEntryFilter?.rowids ?? [],
-              crosschainTransferHistoryEntryFilter?.account_id ?? null,
-              crosschainTransferHistoryEntryFilter?.asset_id ?? null,
-              crosschainTransferHistoryEntryFilter?.transaction_rid ?? null,
-              crosschainTransferHistoryEntryFilter?.op_index ?? null,
+              crosschainTransferHistoryEntryFilter?.accountId ?? null,
+              crosschainTransferHistoryEntryFilter?.assetId ?? null,
+              crosschainTransferHistoryEntryFilter?.transactionRid ?? null,
+              crosschainTransferHistoryEntryFilter?.opIndex ?? null,
             ]
           : null,
       page_size: limit,

@@ -83,24 +83,24 @@ export type AssetFilter = {
 
 export type BalanceFilter = {
   rowids: Array<number>;
-  account_id?: Buffer | null;
-  asset_id?: Buffer | null;
+  accountId?: Buffer | null;
+  assetId?: Buffer | null;
 };
 
 export type TransferHistoryEntryFilter = {
   rowids: Array<number>;
-  account_id?: Buffer | null;
-  asset_id?: Buffer | null;
-  transaction_rid?: Buffer | null;
-  op_index?: number | null;
+  accountId?: Buffer | null;
+  assetId?: Buffer | null;
+  transactionRid?: Buffer | null;
+  opIndex?: number | null;
 };
 
 export type CrosschainTransferHistoryEntryFilter = {
   rowids: Array<number>;
-  account_id?: Buffer | null;
-  asset_id?: Buffer | null;
-  transaction_rid?: Buffer | null;
-  op_index?: number | null;
+  accountId?: Buffer | null;
+  assetId?: Buffer | null;
+  transactionRid?: Buffer | null;
+  opIndex?: number | null;
 };
 
 /**
