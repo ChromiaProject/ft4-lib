@@ -73,6 +73,27 @@ import {
   getConfigFromOptions,
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
+import {
+  getAppliedTransferByRowid,
+  getAppliedTransfersFiltered,
+  getAssetOriginByRowid,
+  getAssetOriginFiltered,
+  getCanceledTransferByRowid,
+  getCanceledTransfersFiltered,
+  getPendingTransferByRowid,
+  getPendingTransfersFiltered,
+  getRecalledTransferByRowid,
+  getRecalledTransfersFiltered,
+  getRevertedTransferByRowid,
+  getRevertedTransfersFiltered,
+  getUnappliedTransferByRowid,
+  getUnappliedTransfersFiltered,
+} from "@ft4/crosschain/query-functions";
+import {
+  AssetOriginFilter,
+  PendingTransferFilter,
+  TransferFilter,
+} from "@ft4/crosschain/types";
 
 /**
  * Uses the provided connection to create a new connection to the specified blockchain rid.
@@ -181,6 +202,91 @@ export function createConnection(client: IClient): Connection {
       opIndex: number,
       assetId: BufferId,
     ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
+    getAssetOriginByRowid: (rowId: number) =>
+      getAssetOriginByRowid(connection, rowId),
+    getAssetOriginFiltered: (
+      assetOriginFilter: AssetOriginFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) => getAssetOriginFiltered(connection, assetOriginFilter, limit, cursor),
+    getAppliedTransferByRowid: (rowId: number) =>
+      getAppliedTransferByRowid(connection, rowId),
+    getAppliedTransfersFiltered: (
+      appliedTransferFilter: TransferFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getAppliedTransfersFiltered(
+        connection,
+        appliedTransferFilter,
+        limit,
+        cursor,
+      ),
+    getCanceledTransferByRowid: (rowId: number) =>
+      getCanceledTransferByRowid(connection, rowId),
+    getCanceledTransfersFiltered: (
+      canceledTransferFilter: TransferFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getCanceledTransfersFiltered(
+        connection,
+        canceledTransferFilter,
+        limit,
+        cursor,
+      ),
+    getUnappliedTransferByRowid: (rowId: number) =>
+      getUnappliedTransferByRowid(connection, rowId),
+    getUnappliedTransfersFiltered: (
+      unappliedTransferFilter: TransferFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getUnappliedTransfersFiltered(
+        connection,
+        unappliedTransferFilter,
+        limit,
+        cursor,
+      ),
+    getRecalledTransferByRowid: (rowId: number) =>
+      getRecalledTransferByRowid(connection, rowId),
+    getRecalledTransfersFiltered: (
+      recalledTransferFilter: TransferFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getRecalledTransfersFiltered(
+        connection,
+        recalledTransferFilter,
+        limit,
+        cursor,
+      ),
+    getPendingTransferByRowid: (rowId: number) =>
+      getPendingTransferByRowid(connection, rowId),
+    getPendingTransfersFiltered: (
+      pendingTransferFilter: PendingTransferFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getPendingTransfersFiltered(
+        connection,
+        pendingTransferFilter,
+        limit,
+        cursor,
+      ),
+    getRevertedTransferByRowid: (rowId: number) =>
+      getRevertedTransferByRowid(connection, rowId),
+    getRevertedTransfersFiltered: (
+      evertedTransferFilter: TransferFilter,
+      limit?: number,
+      cursor: OptionalPageCursor = null,
+    ) =>
+      getRevertedTransfersFiltered(
+        connection,
+        evertedTransferFilter,
+        limit,
+        cursor,
+      ),
   });
 
   return connection;

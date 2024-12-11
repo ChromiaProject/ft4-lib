@@ -96,7 +96,7 @@ function test_get_applied_transfers_filtered_by_rowids() {
 function test_get_applied_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
         crosschain.external.get_applied_transfers_filtered(
             helpers.set_transfer_filter(init_tx_rid = applied_transfer.init_tx_rid), 
             1,
@@ -108,7 +108,7 @@ function test_get_applied_transfers_filtered_by_init_tx_rid_requires_composite_i
 function test_get_applied_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
         crosschain.external.get_applied_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = applied_transfer.init_op_index), 
             1,
@@ -210,7 +210,7 @@ function test_get_canceled_transfers_filtered_by_rowids() {
 function test_get_canceled_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
         crosschain.external.get_applied_transfers_filtered(
             helpers.set_transfer_filter(init_tx_rid = canceled_transfer.init_tx_rid), 1, null, *
         )
@@ -220,7 +220,7 @@ function test_get_canceled_transfers_filtered_by_init_tx_rid_requires_composite_
 function test_get_canceled_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
         crosschain.external.get_applied_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = canceled_transfer.init_op_index), 1, null, *
         )
@@ -332,7 +332,7 @@ function test_get_unapplied_transfers_filtered_by_rowids() {
 function test_get_unapplied_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
         crosschain.external.get_unapplied_transfers_filtered(
             helpers.set_transfer_filter(init_tx_rid = unapplied_transfer.init_tx_rid), 1, null, *
         )
@@ -342,7 +342,7 @@ function test_get_unapplied_transfers_filtered_by_init_tx_rid_requires_composite
 function test_get_unapplied_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
         crosschain.external.get_unapplied_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = unapplied_transfer.init_op_index), 1, null, *
         )
@@ -548,7 +548,7 @@ function test_get_reverted_transfers_filtered_by_rowids() {
 function test_get_reverted_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
         crosschain.external.get_reverted_transfers_filtered(
             helpers.set_transfer_filter(init_tx_rid = reverted_transfer.init_tx_rid), 
             1,
@@ -560,7 +560,7 @@ function test_get_reverted_transfers_filtered_by_init_tx_rid_requires_composite_
 function test_get_reverted_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
         crosschain.external.get_reverted_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = reverted_transfer.init_op_index), 
             1,

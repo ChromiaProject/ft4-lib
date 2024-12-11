@@ -79,7 +79,7 @@ function test_get_recalled_transfers_filtered_by_rowids() {
 function test_get_recalled_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
         crosschain.external.get_recalled_transfers_filtered(
             crosschain_helpers.set_transfer_filter(init_tx_rid = recalled_transfer.init_tx_rid), 
             1,
@@ -91,7 +91,7 @@ function test_get_recalled_transfers_filtered_by_init_tx_rid_requires_composite_
 function test_get_recalled_transfers_filtered_by_op_index_requires_composite_indexes() {
     val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
     assert_fails(
-        "Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
         crosschain.external.get_recalled_transfers_filtered(
             crosschain_helpers.set_transfer_filter(init_op_index = recalled_transfer.init_op_index), 
             1,

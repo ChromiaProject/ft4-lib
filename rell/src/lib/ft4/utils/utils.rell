@@ -259,12 +259,13 @@ function validate_composite_indexes_op_index_and_tx_rid(op_index: integer?, tran
 }
 
 /**
- * Used to validate specific composite indexes `init_tx_rid` and `init_op_index` for queries using filters
+ * Throws `INVALID FILTER` if  `init_tx_rid` is specified, but `init_op_index` is not or
+ * if `init_op_index` is specified, but `init_tx_rid` is not
  */
 function validate_composite_indexes_init_tx_rid_and_init_op_index(
     init_tx_rid: byte_array?, init_op_index: integer?
 ) {
-    val basic_error_message = "Composite index (init_tx_rid, init_op_index) - ";
+    val basic_error_message = "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - ";
     if (init_tx_rid??) {
         require(
             init_op_index??,
