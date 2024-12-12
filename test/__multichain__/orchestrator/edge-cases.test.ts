@@ -32,6 +32,7 @@ describe("Edge Cases", () => {
 
   function createInvalidAsset(overrides: Partial<Asset>): Asset {
     return {
+      rowId: -1,
       id: Buffer.from("invalid-asset"),
       name: "Invalid Asset",
       symbol: "IA",

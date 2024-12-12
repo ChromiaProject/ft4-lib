@@ -67,6 +67,7 @@ describe("Subscription account creation single step", () => {
     ]);
 
     nonExistentChain00Asset = {
+      rowId: Math.floor(Math.random()),
       id: missingAssetId,
       name: "subscription_strategy_missing_test_asset_00",
       symbol: "subscription_strategy_missing_test_asset_00",

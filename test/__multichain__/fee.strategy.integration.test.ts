@@ -87,6 +87,7 @@ describe("Fee account creation single step", () => {
     ]);
 
     nonExistentChain00Asset = {
+      rowId: Math.floor(Math.random()),
       id: missingAssetId,
       name: "fee_strategy_missing_test_asset_00",
       symbol: "fee_strategy_missing_test_asset_00",
