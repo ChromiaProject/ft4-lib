@@ -314,7 +314,7 @@ export function pendingTransferFiltered(
 ): QueryObject<
   PaginatedEntity<PendingTransferResponse_>,
   {
-    pending_transfers_filter:
+    pending_transfer_filter:
       | [Array<number>, Buffer | null, number | null, Buffer | null]
       | null;
     page_size: OptionalLimit;
@@ -322,9 +322,9 @@ export function pendingTransferFiltered(
   }
 > {
   return {
-    name: "ft4.crosschain.get_recalled_transfers_filtered",
+    name: "ft4.crosschain.get_pending_transfers_filtered",
     args: {
-      pending_transfers_filter: pendingTransferFilter
+      pending_transfer_filter: pendingTransferFilter
         ? [
             pendingTransferFilter?.rowids ?? [],
             pendingTransferFilter.transactionId ?? null,
@@ -362,7 +362,7 @@ export function revertedTransferFiltered(
   }
 > {
   return {
-    name: "ft4.crosschain.get_recalled_transfers_filtered",
+    name: "ft4.crosschain.get_reverted_transfers_filtered",
     args: {
       reverted_transfer_filter: revertedTransferFilter
         ? [

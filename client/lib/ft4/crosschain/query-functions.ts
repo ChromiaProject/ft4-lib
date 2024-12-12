@@ -397,7 +397,7 @@ export async function getRevertedTransfersFiltered(
   );
 }
 
-function createAssetOriginObject(
+export function createAssetOriginObject(
   assetOrigin: AssetOriginResponse,
 ): AssetOrigin {
   return Object.freeze({

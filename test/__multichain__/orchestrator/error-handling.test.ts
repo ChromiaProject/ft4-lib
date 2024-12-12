@@ -1,4 +1,4 @@
-import { TestContext, setupTestEnvironment } from "./common-setup";
+import { TestContext, setupTestEnvironment } from "@multichain/common-setup";
 import {
   DirectoryNodeUrlPoolException,
   createStubClient,

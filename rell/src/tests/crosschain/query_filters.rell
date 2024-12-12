@@ -453,7 +453,7 @@ function test_get_pending_transfers_filtered_by_transaction_rid() {
 function test_get_pending_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val pending_transfer = helpers.init_transfer_and_get_pending_transfer();
     assert_fails(
-        "Composite index (transaction, op_index) - transaction_rid filter is required",
+        "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required",
             crosschain.external.get_pending_transfers_filtered(
                 helpers.set_pending_transfer_filter(op_index = pending_transfer.op_index),
             1,

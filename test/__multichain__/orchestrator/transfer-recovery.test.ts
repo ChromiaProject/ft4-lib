@@ -23,12 +23,12 @@ import {
 } from "@ft4/ft-session";
 import { PaginatedEntity } from "@ft4/utils";
 import { Buffer } from "buffer";
-import { setupTestEnvironment } from "./common-setup";
 import {
   OnAnchoredHandlerData,
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication";
+import { setupTestEnvironment } from "@multichain/common-setup";
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;

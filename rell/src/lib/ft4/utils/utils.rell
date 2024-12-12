@@ -253,7 +253,7 @@ function validate_composite_indexes_op_index_and_tx_rid(op_index: integer?, tran
     if (op_index??) {
         require(
             transaction_rid??,
-            "Composite index (transaction, op_index) - transaction_rid filter is required"
+            "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required"
         );
     }
 }
