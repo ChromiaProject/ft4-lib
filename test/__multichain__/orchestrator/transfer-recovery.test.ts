@@ -28,7 +28,7 @@ import {
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import { noopAuthenticator } from "@ft4/authentication";
-import { setupTestEnvironment } from "@multichain/common-setup";
+import { setupTestEnvironment } from "@ft4-test/__multichain__/common-setup";
 
 describe("Orchestrator", () => {
   let connection0: Connection, connection2: Connection;

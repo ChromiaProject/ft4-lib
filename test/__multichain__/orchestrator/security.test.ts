@@ -1,7 +1,10 @@
 import { createNoopAuthenticator } from "@ft4/authentication";
 import { InitTransferError } from "@ft4/crosschain";
 import { createAuthDataService } from "@ft4/ft-session";
-import { TestContext, setupTestEnvironment } from "@multichain/common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+} from "@ft4-test/__multichain__/common-setup";
 import { createAuthenticatedAccount } from "@ft4/accounts";
 import { createAmount } from "@ft4/asset";
 

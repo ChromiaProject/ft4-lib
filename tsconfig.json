@@ -24,7 +24,6 @@
       "@ft4-test/*": [
         "./test/*"
       ],
-      "@multichain/*": ["./test/__multichain__/*"]
     }
   },
   "include": ["./client/lib/ft4/**/*", "./test/**/*"],

@@ -21,7 +21,7 @@ import {
   createSession,
 } from "@ft4/ft-session";
 import { Buffer } from "buffer";
-import { setupTestEnvironment } from "@multichain/common-setup";
+import { setupTestEnvironment } from "@ft4-test/__multichain__/common-setup";
 import {
   OnAnchoredHandlerData,
   transactionBuilder,

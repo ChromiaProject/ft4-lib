@@ -1,4 +1,7 @@
-import { TestContext, setupTestEnvironment } from "@multichain/common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+} from "@ft4-test/__multichain__/common-setup";
 import {
   DirectoryNodeUrlPoolException,
   createStubClient,

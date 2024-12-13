@@ -1,5 +1,8 @@
 import { createAmount } from "@ft4/asset";
-import { TestContext, setupTestEnvironment } from "@multichain/common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+} from "@ft4-test/__multichain__/common-setup";
 import { adminUser } from "@ft4-test/util";
 import { registerCrosschainAsset } from "@ft4/admin";
 

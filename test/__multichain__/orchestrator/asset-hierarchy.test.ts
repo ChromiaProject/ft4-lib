@@ -1,5 +1,8 @@
 import { Orchestrator, createOrchestrator } from "@ft4/crosschain";
-import { TestContext, setupTestEnvironment } from "@multichain/common-setup";
+import {
+  TestContext,
+  setupTestEnvironment,
+} from "@ft4-test/__multichain__/common-setup";
 import { Amount, createAmount } from "@ft4/asset";
 import { adminUser } from "@ft4-test/util";
 import { registerCrosschainAsset } from "@ft4/admin";
