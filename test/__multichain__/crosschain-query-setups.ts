@@ -53,7 +53,7 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     asset.id,
     createAmount(10, asset.decimals),
     [multichain.rid],
-    10000000,
+    10000000000000,
   );
 
   await session
@@ -89,7 +89,6 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     })
     .buildAndSendWithAnchoring();
 
-  // Todo double check if the initTxRid is correct
   return {
     rowId: expect.any(Number),
     initTxRid: state.tx.tx_rid,
@@ -147,7 +146,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     asset.id,
     createAmount(10, asset.decimals),
     [multichain.rid],
-    10000000,
+    10000000000000,
   );
 
   await session
@@ -206,7 +205,6 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
   };
 }
 
-// TODO FIX
 export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   connection0: Connection,
   connection1: Connection,
@@ -231,7 +229,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     asset.id,
     createAmount(10, asset.decimals),
     [multichain.rid],
-    10000000,
+    10000000000000,
   );
 
   await session
@@ -327,7 +325,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     asset.id,
     createAmount(10, asset.decimals),
     [multichain.rid],
-    10000000,
+    10000000000000,
   );
 
   await session
@@ -448,7 +446,7 @@ export async function revertTransferAndGetRevertedTransfer(
     asset.id,
     createAmount(10, asset.decimals),
     [multichain.rid],
-    10000000,
+    10000000000000,
   );
 
   await session
@@ -467,7 +465,6 @@ export async function revertTransferAndGetRevertedTransfer(
 
   state.proof = await state.proof!;
 
-  // Check args
   const cancelOperation = cancelTransfer(
     state.tx,
     state.initialOpIndex,
@@ -481,7 +478,6 @@ export async function revertTransferAndGetRevertedTransfer(
     .add(cancelOperation)
     .buildAndSendWithAnchoring();
 
-  // Check args
   const revertOperation = revertTransfer(
     state.tx,
     state.opIndex,
