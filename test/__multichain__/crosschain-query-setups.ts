@@ -73,8 +73,8 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
-    state.initialTx!,
-    state.initialOpIndex!,
+    state.tx!,
+    state.opIndex!,
     state.tx!,
     state.opIndex!,
     0,
@@ -166,8 +166,8 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
   state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
-    state.initialTx!,
-    state.initialOpIndex!,
+    state.tx!,
+    state.opIndex!,
     state.tx!,
     state.opIndex!,
     0,
@@ -249,8 +249,8 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
-    state.initialTx!,
-    state.initialOpIndex!,
+    state.tx!,
+    state.opIndex!,
     state.tx!,
     state.opIndex!,
     0,
@@ -345,8 +345,8 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
   state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
-    state.initialTx!,
-    state.initialOpIndex!,
+    state.tx!,
+    state.opIndex!,
     state.tx!,
     state.opIndex!,
     0,

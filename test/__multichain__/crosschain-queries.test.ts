@@ -29,7 +29,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedAssetOrigin).toBeNull();
     });
 
-    it("returns null when asset origin is not for rowid", async () => {
+    it("returns null when asset origin exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment("crosschain-asset-origin");
 
       const fetchedAssetOrigin =
@@ -81,7 +81,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedAppliedTransfer).toBeNull();
     });
 
-    it("returns null when applied transfer is not for rowid", async () => {
+    it("returns null when applied transfer exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-apply-transfer",
       );
@@ -144,7 +144,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedCanceledTransfer).toBeNull();
     });
 
-    it("returns null when canceled transfer is not for rowid", async () => {
+    it("returns null when canceled transfer  exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-cancel-transfer",
       );
@@ -205,7 +205,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedUnappliedTransfer).toBeNull();
     });
 
-    it("returns null when unapplied transfer is not for rowid", async () => {
+    it("returns null when unapplied transfer exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-unapplied-transfer",
       );
@@ -267,7 +267,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedRecalledTransfer).toBeNull();
     });
 
-    it("returns null when recalled transfer is not for rowid", async () => {
+    it("returns null when recalled transfer exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-recalled-transfer",
       );
@@ -326,7 +326,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedPendingTransfer).toBeNull();
     });
 
-    it("returns null when pending transfer is not for rowid", async () => {
+    it("returns null when pending transfer exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-pending-transfer",
       );
@@ -385,7 +385,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedRevertedTransfer).toBeNull();
     });
 
-    it("returns null when reverted transfer is not for rowid", async () => {
+    it("returns null when reverted transfer exists, but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-reverted-transfer",
       );
