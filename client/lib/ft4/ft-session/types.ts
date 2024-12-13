@@ -189,7 +189,7 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getAssetOriginByRowid}
    * @param rowId - The rowid of the asset origin to retrieve
    */
-  getAssetOriginByRowid: (rowId: number) => Promise<AssetOrigin>;
+  getAssetOriginByRowid: (rowId: number) => Promise<AssetOrigin | null>;
   /**
    * {@inheritDoc crosschain.getAssetOriginFiltered}
    * @param assetOriginFilter - The asset origin filter (rowids and assetId) that can be applied to the query results
@@ -205,7 +205,7 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getAppliedTransferByRowid}
    * @param rowId - The rowid of the applied transfer to retrieve
    */
-  getAppliedTransferByRowid: (rowId: number) => Promise<AppliedTransfer>;
+  getAppliedTransferByRowid: (rowId: number) => Promise<AppliedTransfer | null>;
   /**
    * {@inheritDoc crosschain.getAppliedTransfersFiltered}
    * @param appliedTransferFilter - The applied transfer filter (rowids, initTxRid and initOpIndex)
@@ -222,7 +222,7 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getCanceledTransferByRowid}
    * @param rowId - The rowid of the canceled transfer to retrieve
    */
-  getCanceledTransferByRowid: (rowId: number) => Promise<Transfer>;
+  getCanceledTransferByRowid: (rowId: number) => Promise<Transfer | null>;
   /**
    * {@inheritDoc crosschain.getCanceledTransfersFiltered}
    * @param canceledTransferFilter - The canceled transfer filter (rowids, initTxRid and initOpIndex)
@@ -239,7 +239,7 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getUnappliedTransferByRowid}
    * @param rowId - The rowid of the unapplied transfer to retrieve
    */
-  getUnappliedTransferByRowid: (rowId: number) => Promise<Transfer>;
+  getUnappliedTransferByRowid: (rowId: number) => Promise<Transfer | null>;
   /**
    * {@inheritDoc crosschain.getUnappliedTransfersFiltered}
    * @param unappliedTransferFilter - The unapplied transfer filter (rowids, initTxRid and initOpIndex)
@@ -256,7 +256,7 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getRecalledTransferByRowid}
    * @param rowId - The rowid of the recalled transfer to retrieve
    */
-  getRecalledTransferByRowid: (rowId: number) => Promise<Transfer>;
+  getRecalledTransferByRowid: (rowId: number) => Promise<Transfer | null>;
   /**
    * {@inheritDoc crosschain.getRecalledTransfersFiltered}
    * @param recalledTransferFilter - The recalled transfer filter (rowids, initTxRid and initOpIndex)
@@ -273,7 +273,9 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getPendingTransferByRowid}
    * @param rowId - The rowid of the pending transfer to retrieve
    */
-  getPendingTransferByRowid: (rowId: number) => Promise<PendingTransfer_>;
+  getPendingTransferByRowid: (
+    rowId: number,
+  ) => Promise<PendingTransfer_ | null>;
   /**
    * {@inheritDoc crosschain.getPendingTransfersFiltered}
    * @param pendingTransferFilter - The pending transfer filter (rowids, transactionId, initOpIndex and senderAccountId)
@@ -290,7 +292,7 @@ export interface Connection extends Queryable {
    * {@inheritDoc crosschain.getRevertedTransferByRowid}
    * @param rowId - The rowid of the reverted transfer to retrieve
    */
-  getRevertedTransferByRowid: (rowId: number) => Promise<Transfer>;
+  getRevertedTransferByRowid: (rowId: number) => Promise<Transfer | null>;
   /**
    * {@inheritDoc crosschain.getRevertedTransfersFiltered}
    * @param pendingTransferFilter - The pending transfer filter (rowids, initTxRid and initOpIndex)
