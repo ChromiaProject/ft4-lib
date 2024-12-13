@@ -54,7 +54,7 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    path,
     10000000,
   );
 
@@ -67,9 +67,12 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
+        state.proof = data?.createProof(path[0]);
       },
     })
     .buildAndSendWithAnchoring();
+
+  state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
     state.initialTx!,
@@ -146,7 +149,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    path,
     10000000,
   );
 
@@ -164,7 +167,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     })
     .buildAndSendWithAnchoring();
 
-  state.proof = await state.proof;
+  state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
     state.initialTx!,
@@ -231,7 +234,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    path,
     10000000,
   );
 
@@ -249,7 +252,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     })
     .buildAndSendWithAnchoring();
 
-  state.proof = await state.proof;
+  state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
     state.initialTx!,
@@ -328,7 +331,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    path,
     10000000,
   );
 
@@ -346,7 +349,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     })
     .buildAndSendWithAnchoring();
 
-  state.proof = await state.proof;
+  state.proof = await state.proof!;
 
   const applyOperation = applyTransfer(
     state.initialTx!,
@@ -398,18 +401,17 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const initOperation = initTransfer(
-    account1.id,
-    asset.id,
-    createAmount(10, asset.decimals),
-    [multichain.rid],
-    Date.now() + days(1),
-  );
-
   const path = await findPathToChainForAsset(
     sendersSession,
     asset,
     multichain.rid,
+  );
+  const initOperation = initTransfer(
+    account1.id,
+    asset.id,
+    createAmount(10, asset.decimals),
+    path,
+    Date.now() + days(1),
   );
 
   const state = {} as any;
@@ -456,7 +458,7 @@ export async function revertTransferAndGetRevertedTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    path,
     10000000,
   );
 
@@ -474,7 +476,7 @@ export async function revertTransferAndGetRevertedTransfer(
     })
     .buildAndSendWithAnchoring();
 
-  state.proof = await state.proof;
+  state.proof = await state.proof!;
 
   // Check args
   const cancelOperation = cancelTransfer(
