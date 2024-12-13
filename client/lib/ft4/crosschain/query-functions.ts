@@ -134,10 +134,10 @@ export async function isTransferApplied(
 export async function getAssetOriginByRowid(
   connection: Connection,
   rowid: number,
-): Promise<AssetOrigin> {
+): Promise<AssetOrigin | null> {
   return await connection
     .query(Query.assetOriginByRowid(rowid))
-    .then(createAssetOriginObject);
+    .then((res) => (res !== null ? createAssetOriginObject(res) : null));
 }
 
 /**
@@ -173,10 +173,10 @@ export async function getAssetOriginFiltered(
 export async function getAppliedTransferByRowid(
   connection: Connection,
   rowid: number,
-): Promise<AppliedTransfer> {
+): Promise<AppliedTransfer | null> {
   return await connection
     .query(Query.appliedTransferByRowid(rowid))
-    .then(createAppliedTransferObject);
+    .then((res) => (res !== null ? createAppliedTransferObject(res) : null));
 }
 
 /**
@@ -212,10 +212,10 @@ export async function getAppliedTransfersFiltered(
 export async function getCanceledTransferByRowid(
   connection: Connection,
   rowid: number,
-): Promise<Transfer> {
+): Promise<Transfer | null> {
   return await connection
     .query(Query.canceledTransferByRowid(rowid))
-    .then(createTransferObject);
+    .then((res) => (res !== null ? createTransferObject(res) : null));
 }
 
 /**
@@ -251,10 +251,10 @@ export async function getCanceledTransfersFiltered(
 export async function getUnappliedTransferByRowid(
   connection: Connection,
   rowid: number,
-): Promise<Transfer> {
+): Promise<Transfer | null> {
   return await connection
     .query(Query.unappliedTransferByRowid(rowid))
-    .then(createTransferObject);
+    .then((res) => (res !== null ? createTransferObject(res) : null));
 }
 
 /**
@@ -290,10 +290,10 @@ export async function getUnappliedTransfersFiltered(
 export async function getRecalledTransferByRowid(
   connection: Connection,
   rowid: number,
-): Promise<Transfer> {
+): Promise<Transfer | null> {
   return await connection
     .query(Query.recalledTransferByRowid(rowid))
-    .then(createTransferObject);
+    .then((res) => (res !== null ? createTransferObject(res) : null));
 }
 
 /**
@@ -329,10 +329,10 @@ export async function getRecalledTransfersFiltered(
 export async function getPendingTransferByRowid(
   connection: Connection,
   rowid: number,
-): Promise<PendingTransfer_> {
+): Promise<PendingTransfer_ | null> {
   return await connection
     .query(Query.pendingTransferByRowid(rowid))
-    .then(createPendingTransferObject);
+    .then((res) => (res !== null ? createPendingTransferObject(res) : null));
 }
 
 /**
@@ -368,10 +368,10 @@ export async function getPendingTransfersFiltered(
 export async function getRevertedTransferByRowid(
   connection: Connection,
   rowid: number,
-): Promise<Transfer> {
+): Promise<Transfer | null> {
   return await connection
     .query(Query.revertedTransferByRowid(rowid))
-    .then(createTransferObject);
+    .then((res) => (res !== null ? createTransferObject(res) : null));
 }
 
 /**
