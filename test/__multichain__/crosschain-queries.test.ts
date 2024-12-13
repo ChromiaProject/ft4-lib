@@ -1,15 +1,12 @@
 import {
-  adminUser,
   createChromiaClientToMultichain,
   fetchBlockchains,
-  getNewAsset,
 } from "@ft4-test/util";
 import { createConnection } from "@ft4/ft-session";
 import {
   cancelCrosschainTransferAndGetCanceledTransfer,
   initCrosschainTransferAndGetPendingTransfer,
   recallCrosschainTransferAndGetRecalledTransfer,
-  registerCrosschainAssetAndGetCrosschainAsset,
   revertTransferAndGetRevertedTransfer,
   setAssetOriginFilter,
   setPendingTransferFilter,
@@ -33,7 +30,7 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns null when asset origin is not for rowid", async () => {
-      const testContext = await setupTestEnvironment("crosschain-asset_origin");
+      const testContext = await setupTestEnvironment("crosschain-asset-origin");
 
       const fetchedAssetOrigin =
         await testContext.connection0.getAssetOriginByRowid(999);
@@ -41,34 +38,32 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns asset origin by rowid", async () => {
-      const { multichain00, multichain01 } = await fetchBlockchains();
-
-      const client00 = await createChromiaClientToMultichain(multichain00.rid);
-      const connection00 = createConnection(client00);
-      const connection01 = createConnection(
-        await createChromiaClientToMultichain(multichain01.rid),
-      );
-
-      const asset = await getNewAsset(
-        connection00.client,
-        "crosschain-transfer-test-asset_20",
-        "CROSSCHAIN-transfer-test-asset_20",
+      const testContext = await setupTestEnvironment(
+        "crosschain-asset-origin-1",
       );
 
       const foundAssetOrigin =
-        await registerCrosschainAssetAndGetCrosschainAsset(
-          connection01.client,
-          adminUser().signatureProvider,
-          asset,
-          multichain00.rid,
-        );
+        await testContext.connection0.getAssetOriginFiltered(null, 1);
 
-      const fetchedAssetOrigin = await connection00.getAssetOriginByRowid(
-        foundAssetOrigin.rowId,
-      );
+      const fetchedAssetOrigin =
+        await testContext.connection0.getAssetOriginByRowid(
+          foundAssetOrigin.data[0].rowId,
+        );
       expect(JSON.stringify(fetchedAssetOrigin)).toStrictEqual(
         JSON.stringify({
-          foundAssetOrigin,
+          rowId: expect.any(Number),
+          asset: {
+            rowId: testContext.sampleAsset.rowId,
+            id: testContext.sampleAsset.id,
+            name: testContext.sampleAsset.name,
+            symbol: testContext.sampleAsset.symbol,
+            decimals: testContext.sampleAsset.decimals,
+            blockchainRid: testContext.sampleAsset.blockchainRid,
+            iconUrl: testContext.sampleAsset.iconUrl,
+            type: testContext.sampleAsset.type,
+            supply: testContext.sampleAsset.supply,
+          },
+          originBlockchainRid: testContext.multichain0.rid,
         }),
       );
     });
@@ -469,21 +464,27 @@ describe("crosschain queries with filter", () => {
         "crosschain-assets-origin-filter-3",
       );
 
-      const foundAssetOrigin =
-        await registerCrosschainAssetAndGetCrosschainAsset(
-          testContext.connection1.client,
-          adminUser().signatureProvider,
-          testContext.sampleAsset,
-          testContext.multichain0.rid,
-        );
-
       const { data } = await testContext.connection0.getAssetOriginFiltered(
         null,
         1,
       );
 
       expect(JSON.stringify(data[0])).toStrictEqual(
-        JSON.stringify(foundAssetOrigin),
+        JSON.stringify({
+          rowId: expect.any(Number),
+          asset: {
+            rowId: testContext.sampleAsset.rowId,
+            id: testContext.sampleAsset.id,
+            name: testContext.sampleAsset.name,
+            symbol: testContext.sampleAsset.symbol,
+            decimals: testContext.sampleAsset.decimals,
+            blockchainRid: testContext.sampleAsset.blockchainRid,
+            iconUrl: testContext.sampleAsset.iconUrl,
+            type: testContext.sampleAsset.type,
+            supply: testContext.sampleAsset.supply,
+          },
+          originBlockchainRid: testContext.multichain0.rid,
+        }),
       );
     });
     it("returns paginated assets origin with all filter", async () => {
@@ -491,21 +492,27 @@ describe("crosschain queries with filter", () => {
         "crosschain-assets-origin-filter-4",
       );
 
-      const foundAssetOrigin =
-        await registerCrosschainAssetAndGetCrosschainAsset(
-          testContext.connection1.client,
-          adminUser().signatureProvider,
-          testContext.sampleAsset,
-          testContext.multichain0.rid,
-        );
-
       const { data } = await testContext.connection0.getAssetOriginFiltered(
         setAssetOriginFilter([0], mockBuffer),
         1,
       );
 
       expect(JSON.stringify(data[0])).toStrictEqual(
-        JSON.stringify(foundAssetOrigin),
+        JSON.stringify({
+          rowId: expect.any(Number),
+          asset: {
+            rowId: testContext.sampleAsset.rowId,
+            id: testContext.sampleAsset.id,
+            name: testContext.sampleAsset.name,
+            symbol: testContext.sampleAsset.symbol,
+            decimals: testContext.sampleAsset.decimals,
+            blockchainRid: testContext.sampleAsset.blockchainRid,
+            iconUrl: testContext.sampleAsset.iconUrl,
+            type: testContext.sampleAsset.type,
+            supply: testContext.sampleAsset.supply,
+          },
+          originBlockchainRid: testContext.multichain0.rid,
+        }),
       );
     });
   });

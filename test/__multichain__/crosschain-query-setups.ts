@@ -5,7 +5,6 @@ import { days, noopAuthenticator } from "@ft4/authentication";
 import {
   applyTransfer,
   cancelTransfer,
-  findPathToChainForAsset,
   initTransfer,
   revertTransfer,
 } from "@ft4/crosschain";
@@ -47,27 +46,26 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const path = await findPathToChainForAsset(session, asset, multichain.rid);
   const state = {} as any;
 
   const initOperation = initTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    path,
+    [multichain.rid],
     10000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: path[0],
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(path[0]);
+        state.proof = data?.createProof(multichain.rid);
       },
     })
     .buildAndSendWithAnchoring();
@@ -142,27 +140,26 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const path = await findPathToChainForAsset(session, asset, multichain.rid);
   const state = {} as any;
 
   const initOperation = initTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    path,
+    [multichain.rid],
     10000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: path[0],
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(path[0]);
+        state.proof = data?.createProof(multichain.rid);
       },
     })
     .buildAndSendWithAnchoring();
@@ -227,27 +224,26 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const path = await findPathToChainForAsset(session, asset, multichain.rid);
   const state = {} as any;
 
   const initOperation = initTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    path,
+    [multichain.rid],
     10000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: path[0],
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(path[0]);
+        state.proof = data?.createProof(multichain.rid);
       },
     })
     .buildAndSendWithAnchoring();
@@ -292,7 +288,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     state.initialOpIndex,
     state.tx,
     state.initialOpIndex,
-    path.length - 1,
+    [multichain.rid].length - 1,
   );
 
   await transactionBuilder(account0.authenticator, connection2.client)
@@ -324,27 +320,26 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const path = await findPathToChainForAsset(session, asset, multichain.rid);
   const state = {} as any;
 
   const initOperation = initTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    path,
+    [multichain.rid],
     10000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: path[0],
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(path[0]);
+        state.proof = data?.createProof(multichain.rid);
       },
     })
     .buildAndSendWithAnchoring();
@@ -401,16 +396,11 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const path = await findPathToChainForAsset(
-    sendersSession,
-    asset,
-    multichain.rid,
-  );
   const initOperation = initTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    path,
+    [multichain.rid],
     Date.now() + days(1),
   );
 
@@ -418,7 +408,7 @@ export async function initCrosschainTransferAndGetPendingTransfer(
   await sendersSession
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: path[0],
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.opIndex = data?.opIndex;
@@ -451,27 +441,26 @@ export async function revertTransferAndGetRevertedTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const path = await findPathToChainForAsset(session, asset, multichain.rid);
   const state = {} as any;
 
   const initOperation = initTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    path,
+    [multichain.rid],
     10000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: path[0],
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(path[0]);
+        state.proof = data?.createProof(multichain.rid);
       },
     })
     .buildAndSendWithAnchoring();

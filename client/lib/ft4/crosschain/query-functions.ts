@@ -18,7 +18,6 @@ import {
 } from "./types";
 import { Queryable, RawGtx, gtv } from "postchain-client";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
-import { createAssetObject } from "@ft4/asset";
 
 /**
  * Retrieves the brid of the origin chain for the specified asset
@@ -402,7 +401,17 @@ export function createAssetOriginObject(
 ): AssetOrigin {
   return Object.freeze({
     rowId: assetOrigin.rowid,
-    asset: createAssetObject(assetOrigin.asset),
+    asset: {
+      rowId: assetOrigin.asset.rowid,
+      id: assetOrigin.asset.id,
+      name: assetOrigin.asset.name,
+      symbol: assetOrigin.asset.symbol,
+      decimals: assetOrigin.asset.decimals,
+      blockchainRid: assetOrigin.asset.blockchain_rid,
+      iconUrl: assetOrigin.asset.icon_url,
+      type: assetOrigin.asset.type,
+      supply: assetOrigin.asset.supply,
+    },
     originBlockchainRid: assetOrigin.origin_blockchain_rid,
   });
 }
