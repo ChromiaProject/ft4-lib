@@ -122,7 +122,7 @@ describe("crosschain queries by rowid", () => {
         await testContext.connection0.getAppliedTransferByRowid(
           foundAppliedTransfer.rowId,
         );
-      expect(fetchedAppliedTransfer).toMatchObject({
+      expect(fetchedAppliedTransfer).toEqual({
         rowId: foundAppliedTransfer.rowId,
         initTxRid: foundAppliedTransfer.initTxRid,
         initOpIndex: foundAppliedTransfer.initOpIndex,
@@ -185,7 +185,7 @@ describe("crosschain queries by rowid", () => {
           foundCanceledTransfer.rowId,
         );
 
-      expect(fetchedCanceledTransfer).toMatchObject({
+      expect(fetchedCanceledTransfer).toEqual({
         rowId: foundCanceledTransfer.rowId,
         initTxRid: foundCanceledTransfer.initTxRid,
         initOpIndex: foundCanceledTransfer.initOpIndex,
@@ -247,7 +247,7 @@ describe("crosschain queries by rowid", () => {
           foundUnappliedTransfer.rowId,
         );
 
-      expect(fetchedUnappliedTransfer).toMatchObject({
+      expect(fetchedUnappliedTransfer).toEqual({
         rowId: foundUnappliedTransfer.rowId,
         initTxRid: foundUnappliedTransfer.initTxRid,
         initOpIndex: foundUnappliedTransfer.initOpIndex,
@@ -306,7 +306,7 @@ describe("crosschain queries by rowid", () => {
       const fetchedRecalledTransfer =
         await testContext.connection0.getRecalledTransferByRowid(999);
 
-      expect(fetchedRecalledTransfer).toMatchObject({
+      expect(fetchedRecalledTransfer).toEqual({
         rowId: foundRecalledTransfer.rowId,
         initTxRid: foundRecalledTransfer.initTxRid,
         initOpIndex: foundRecalledTransfer.initOpIndex,
@@ -364,7 +364,7 @@ describe("crosschain queries by rowid", () => {
         await testContext.connection0.getPendingTransferByRowid(
           foundPendingTransfer.rowId,
         );
-      expect(fetchedPendingTransfer).toMatchObject({
+      expect(fetchedPendingTransfer).toEqual({
         rowId: foundPendingTransfer.rowId,
         transactionId: foundPendingTransfer.transactionId,
         opIndex: foundPendingTransfer.opIndex,
@@ -426,7 +426,7 @@ describe("crosschain queries by rowid", () => {
           foundRevertedTransfer.rowId,
         );
 
-      expect(fetchedRevertedTransfer).toMatchObject({
+      expect(fetchedRevertedTransfer).toEqual({
         rowId: foundRevertedTransfer.rowId,
         initTxRid: foundRevertedTransfer.initTxRid,
         initOpIndex: foundRevertedTransfer.initOpIndex,
@@ -584,7 +584,7 @@ describe("crosschain queries with filter", () => {
       const { data } =
         await testContext.connection0.getAppliedTransfersFiltered(null, 1);
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundAppliedTransfer.rowId,
         initTxRid: foundAppliedTransfer.initTxRid,
         initOpIndex: foundAppliedTransfer.initOpIndex,
@@ -617,7 +617,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundAppliedTransfer.rowId,
         initTxRid: foundAppliedTransfer.initTxRid,
         initOpIndex: foundAppliedTransfer.initOpIndex,
@@ -698,7 +698,7 @@ describe("crosschain queries with filter", () => {
       const { data } =
         await testContext.connection0.getCanceledTransfersFiltered(null, 1);
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundCanceledTransfer.rowId,
         initTxRid: foundCanceledTransfer.initTxRid,
         initOpIndex: foundCanceledTransfer.initOpIndex,
@@ -729,7 +729,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundCanceledTransfer.rowId,
         initTxRid: foundCanceledTransfer.initTxRid,
         initOpIndex: foundCanceledTransfer.initOpIndex,
@@ -807,7 +807,7 @@ describe("crosschain queries with filter", () => {
       const { data } =
         await testContext.connection0.getUnappliedTransfersFiltered(null, 1);
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundUnappliedTransfer.rowId,
         initTxRid: foundUnappliedTransfer.initTxRid,
         initOpIndex: foundUnappliedTransfer.initOpIndex,
@@ -838,7 +838,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundUnappliedTransfer.rowId,
         initTxRid: foundUnappliedTransfer.initTxRid,
         initOpIndex: foundUnappliedTransfer.initOpIndex,
@@ -917,7 +917,7 @@ describe("crosschain queries with filter", () => {
       const { data } =
         await testContext.connection0.getRecalledTransfersFiltered(null, 1);
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundRecalledTransfer.rowId,
         initTxRid: foundRecalledTransfer.initTxRid,
         initOpIndex: foundRecalledTransfer.initOpIndex,
@@ -944,7 +944,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundRecalledTransfer.rowId,
         initTxRid: foundRecalledTransfer.initTxRid,
         initOpIndex: foundRecalledTransfer.initOpIndex,
@@ -1008,7 +1008,7 @@ describe("crosschain queries with filter", () => {
       const { data } =
         await testContext.connection0.getPendingTransfersFiltered(null, 1);
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundPendingTransfer.rowId,
         transactionId: foundPendingTransfer.transactionId,
         opIndex: foundPendingTransfer.opIndex,
@@ -1040,7 +1040,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundPendingTransfer.rowId,
         transactionId: foundPendingTransfer.transactionId,
         opIndex: foundPendingTransfer.opIndex,
@@ -1120,7 +1120,7 @@ describe("crosschain queries with filter", () => {
       const { data } =
         await testContext.connection0.getRevertedTransfersFiltered(null, 1);
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundRevertedTransfer.rowId,
         initTxRid: foundRevertedTransfer.initTxRid,
         initOpIndex: foundRevertedTransfer.initOpIndex,
@@ -1150,7 +1150,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toMatchObject({
+      expect(data[0]).toEqual({
         rowId: foundRevertedTransfer.rowId,
         initTxRid: foundRevertedTransfer.initTxRid,
         initOpIndex: foundRevertedTransfer.initOpIndex,
