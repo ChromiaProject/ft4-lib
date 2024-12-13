@@ -93,7 +93,7 @@ describe("crosschain queries by rowid", () => {
           testContext.connection2,
           testContext.sampleAsset,
           testContext.multichain1,
-          testContext.session0,
+          // testContext.session0,
         );
 
       expect(foundAppliedTransfer).not.toBeNull();
@@ -115,7 +115,7 @@ describe("crosschain queries by rowid", () => {
           testContext.connection2,
           testContext.sampleAsset,
           testContext.multichain1,
-          testContext.session0,
+          // testContext.session0,
         );
 
       const fetchedAppliedTransfer =
@@ -578,7 +578,7 @@ describe("crosschain queries with filter", () => {
           testContext.connection2,
           testContext.sampleAsset,
           testContext.multichain1,
-          testContext.session0,
+          // testContext.session0,
         );
 
       const { data } =
@@ -604,7 +604,7 @@ describe("crosschain queries with filter", () => {
           testContext.connection2,
           testContext.sampleAsset,
           testContext.multichain1,
-          testContext.session0,
+          // testContext.session0,
         );
 
       const { data } =

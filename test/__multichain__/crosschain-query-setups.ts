@@ -31,8 +31,7 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   connection1: Connection,
   connection2: Connection,
   asset: Asset,
-  multichain: Blockchain,
-  session: Session,
+  recipientBlockchain: Blockchain,
 ): Promise<AppliedTransfer> {
   const account0 = await AccountBuilder.account(connection0)
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
@@ -43,56 +42,64 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
     .build();
 
-  const state = {} as any;
+  // const state = {} as any;
 
-  const initOperation = initTransfer(
+  // const initOperation = initTransfer(
+  //   account1.id,
+  //   asset.id,
+  //   createAmount(10, asset.decimals),
+  //   [recipientBlockchain.rid],
+  //   10000000000000,
+  // );
+
+  // await session
+  //   .transactionBuilder()
+  //   .add(initOperation, {
+  //     targetBlockchainRid: recipientBlockchain.rid,
+  //     onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
+  //       state.tx = data?.tx;
+  //       state.initialOpIndex = data?.opIndex;
+  //       state.initialTx = data?.tx;
+  //       state.opIndex = data?.opIndex;
+  //       state.proof = data?.createProof(recipientBlockchain.rid);
+  //     },
+  //   })
+  //   .buildAndSendWithAnchoring();
+
+  // state.proof = await state.proof!;
+
+  // const applyOperation = applyTransfer(
+  //   state.tx!,
+  //   state.opIndex!,
+  //   state.tx!,
+  //   state.opIndex!,
+  //   0,
+  // );
+
+  // await transactionBuilder(account0.authenticator, connection2.client)
+  //   .add(state.proof, { authenticator: noopAuthenticator })
+  //   .add(applyOperation, {
+  //     authenticator: noopAuthenticator,
+  //     targetBlockchainRid: connection0.blockchainRid,
+  //     onAnchoredHandler: () => {},
+  //   })
+  //   .buildAndSendWithAnchoring();
+
+  const transferRef = await account0.crosschainTransfer(
+    recipientBlockchain.rid,
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
-    10000000000000,
   );
 
-  await session
-    .transactionBuilder()
-    .add(initOperation, {
-      targetBlockchainRid: multichain.rid,
-      onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-        state.tx = data?.tx;
-        state.initialOpIndex = data?.opIndex;
-        state.initialTx = data?.tx;
-        state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(multichain.rid);
-      },
-    })
-    .buildAndSendWithAnchoring();
-
-  state.proof = await state.proof!;
-
-  const applyOperation = applyTransfer(
-    state.tx!,
-    state.opIndex!,
-    state.tx!,
-    state.opIndex!,
-    0,
-  );
-
-  //targetBlockchainRid: connection0.blockchainRid
-  await transactionBuilder(account0.authenticator, connection2.client)
-    .add(state.proof, { authenticator: noopAuthenticator })
-    .add(applyOperation, {
-      authenticator: noopAuthenticator,
-      targetBlockchainRid: multichain.rid,
-      onAnchoredHandler: () => {},
-    })
-    .buildAndSendWithAnchoring();
+  const txRid = getTransactionRid(transferRef.tx);
 
   return {
     rowId: expect.any(Number),
-    initTxRid: state.tx.tx_rid,
-    initOpIndex: state.initialOpIndex,
-    transactionId: getTransactionRid(state.tx),
-    opIndex: state.opIndex,
+    initTxRid: txRid,
+    initOpIndex: transferRef.opIndex,
+    transactionId: txRid,
+    opIndex: transferRef.opIndex,
   };
 }
 
@@ -101,7 +108,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
   connection1: Connection,
   connection2: Connection,
   asset: Asset,
-  multichain: Blockchain,
+  recipientBlockchain: Blockchain,
   session: Session,
 ): Promise<Transfer> {
   const account0 = await AccountBuilder.account(connection0)
@@ -119,27 +126,26 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    [recipientBlockchain.rid],
     10000000000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: recipientBlockchain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(multichain.rid);
+        state.proof = data?.createProof(recipientBlockchain.rid);
       },
     })
     .buildAndSendWithAnchoring();
 
   state.proof = await state.proof!;
 
-  // Arg 1 and Arg 2, construct details of tx_rid, args, sender_account_id
   const applyOperation = applyTransfer(
     state.tx!,
     state.opIndex!,
@@ -153,7 +159,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: connection0.blockchainRid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         applyTx = data?.tx;
       },
@@ -185,7 +191,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   connection1: Connection,
   connection2: Connection,
   asset: Asset,
-  multichain: Blockchain,
+  recipientBlockchain: Blockchain,
   session: Session,
 ): Promise<Transfer> {
   const account0 = await AccountBuilder.account(connection0)
@@ -203,20 +209,20 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    [recipientBlockchain.rid],
     10000000000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: recipientBlockchain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(multichain.rid);
+        state.proof = data?.createProof(recipientBlockchain.rid);
       },
     })
     .buildAndSendWithAnchoring();
@@ -236,7 +242,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: connection0.blockchainRid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         applyTx = data?.tx;
       },
@@ -261,7 +267,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     state.initialOpIndex,
     state.tx,
     state.initialOpIndex,
-    [multichain.rid].length - 1,
+    [recipientBlockchain.rid].length - 1,
   );
 
   await transactionBuilder(account0.authenticator, connection2.client)
@@ -281,7 +287,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
   connection1: Connection,
   connection2: Connection,
   asset: Asset,
-  multichain: Blockchain,
+  recipientBlockchain: Blockchain,
   session: Session,
 ): Promise<Transfer> {
   const account0 = await AccountBuilder.account(connection0)
@@ -299,20 +305,20 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    [recipientBlockchain.rid],
     10000000000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: recipientBlockchain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(multichain.rid);
+        state.proof = data?.createProof(recipientBlockchain.rid);
       },
     })
     .buildAndSendWithAnchoring();
@@ -331,7 +337,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: connection0.blockchainRid,
       onAnchoredHandler: () => {},
     })
     .buildAndSendWithAnchoring();
@@ -357,7 +363,7 @@ export async function initCrosschainTransferAndGetPendingTransfer(
   connection0: Connection,
   connection1: Connection,
   asset: Asset,
-  multichain: Blockchain,
+  recipientBlockchain: Blockchain,
   sendersSession: Session,
 ): Promise<PendingTransfer_> {
   const account0 = await AccountBuilder.account(connection0)
@@ -373,7 +379,7 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    [recipientBlockchain.rid],
     Date.now() + days(1),
   );
 
@@ -381,7 +387,7 @@ export async function initCrosschainTransferAndGetPendingTransfer(
   await sendersSession
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: recipientBlockchain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.opIndex = data?.opIndex;
@@ -402,7 +408,7 @@ export async function revertTransferAndGetRevertedTransfer(
   connection1: Connection,
   connection2: Connection,
   asset: Asset,
-  multichain: Blockchain,
+  recipientBlockchain: Blockchain,
   session: Session,
 ): Promise<Transfer> {
   const account0 = await AccountBuilder.account(connection0)
@@ -420,20 +426,20 @@ export async function revertTransferAndGetRevertedTransfer(
     account1.id,
     asset.id,
     createAmount(10, asset.decimals),
-    [multichain.rid],
+    [recipientBlockchain.rid],
     10000000000000,
   );
 
   await session
     .transactionBuilder()
     .add(initOperation, {
-      targetBlockchainRid: multichain.rid,
+      targetBlockchainRid: recipientBlockchain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         state.tx = data?.tx;
         state.initialOpIndex = data?.opIndex;
         state.initialTx = data?.tx;
         state.opIndex = data?.opIndex;
-        state.proof = data?.createProof(multichain.rid);
+        state.proof = data?.createProof(recipientBlockchain.rid);
       },
     })
     .buildAndSendWithAnchoring();
