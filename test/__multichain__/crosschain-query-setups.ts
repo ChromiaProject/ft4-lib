@@ -10,7 +10,6 @@ import {
 } from "@ft4/crosschain";
 import {
   AppliedTransfer,
-  AssetOrigin,
   AssetOriginFilter,
   PendingTransfer_,
   Transfer,
@@ -22,8 +21,6 @@ import {
   transactionBuilder,
 } from "@ft4/transaction-builder";
 import { getTransactionRid } from "@ft4/utils";
-import { IClient, SignatureProvider } from "postchain-client";
-import { registerCrosschainAsset } from "@ft4/admin";
 import {
   recallUnclaimedTransfer,
   unapplyTransfer,
@@ -80,11 +77,12 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     0,
   );
 
+  //targetBlockchainRid: connection0.blockchainRid
   await transactionBuilder(account0.authenticator, connection2.client)
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: connection0.blockchainRid,
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: () => {},
     })
     .buildAndSendWithAnchoring();
@@ -95,30 +93,6 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     initOpIndex: state.initialOpIndex,
     transactionId: getTransactionRid(state.tx),
     opIndex: state.opIndex,
-  };
-}
-
-export async function registerCrosschainAssetAndGetCrosschainAsset(
-  client: IClient,
-  signatureProvider: SignatureProvider,
-  asset: Asset,
-  originBlockchainRid: Buffer,
-): Promise<AssetOrigin> {
-  try {
-    await registerCrosschainAsset(
-      client,
-      signatureProvider,
-      asset.id,
-      originBlockchainRid,
-    );
-  } catch (error) {
-    throw new Error(error);
-  }
-
-  return {
-    rowId: expect.any(Number),
-    asset,
-    originBlockchainRid,
   };
 }
 
@@ -165,6 +139,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
 
   state.proof = await state.proof!;
 
+  // Arg 1 and Arg 2, construct details of tx_rid, args, sender_account_id
   const applyOperation = applyTransfer(
     state.tx!,
     state.opIndex!,
@@ -178,7 +153,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: connection0.blockchainRid,
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         applyTx = data?.tx;
       },
@@ -261,7 +236,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: connection0.blockchainRid,
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
         applyTx = data?.tx;
       },
@@ -356,7 +331,7 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
     .add(state.proof, { authenticator: noopAuthenticator })
     .add(applyOperation, {
       authenticator: noopAuthenticator,
-      targetBlockchainRid: connection0.blockchainRid,
+      targetBlockchainRid: multichain.rid,
       onAnchoredHandler: () => {},
     })
     .buildAndSendWithAnchoring();
