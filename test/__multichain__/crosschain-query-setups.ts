@@ -25,22 +25,22 @@ import {
   recallUnclaimedTransfer,
   unapplyTransfer,
 } from "@ft4/crosschain/operations";
+import { setupTestEnvironment } from "./common-setup";
 
-export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
-  connection0: Connection,
-  connection1: Connection,
-  connection2: Connection,
-  asset: Asset,
-  recipientBlockchain: Blockchain,
-): Promise<AppliedTransfer> {
-  const account0 = await AccountBuilder.account(connection0)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .withBalance(asset, createAmount(10, asset.decimals))
-    .build();
+export async function setupApplyCrosschainTransferAndGetAppliedTransfer(): Promise<AppliedTransfer> {
+  // connection0: Connection,
+  // connection1: Connection,
+  // connection2: Connection,
+  // asset: Asset,
+  // recipientBlockchain: Blockchain,
+  // const account0 = await AccountBuilder.account(connection0)
+  //   .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+  //   .withBalance(asset, createAmount(10, asset.decimals))
+  //   .build();
 
-  const account1 = await AccountBuilder.account(connection1)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .build();
+  // const account1 = await AccountBuilder.account(connection1)
+  //   .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
+  //   .build();
 
   // const state = {} as any;
 
@@ -85,12 +85,25 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   //   })
   //   .buildAndSendWithAnchoring();
 
-  const transferRef = await account0.crosschainTransfer(
-    recipientBlockchain.rid,
-    account1.id,
-    asset.id,
-    createAmount(10, asset.decimals),
+  const mintAmount = createAmount(100, 0);
+  const testContext = await setupTestEnvironment(
+    "crosschain-apply-transfer",
+    mintAmount,
   );
+
+  const transferRef = await testContext.account0.crosschainTransfer(
+    testContext.multichain2.rid,
+    testContext.account2.id,
+    testContext.sampleAsset.id,
+    createAmount(10, mintAmount.decimals),
+  );
+
+  // const transferRef = await account0.crosschainTransfer(
+  //   recipientBlockchain.rid,
+  //   account1.id,
+  //   asset.id,
+  //   createAmount(10, asset.decimals),
+  // );
 
   const txRid = getTransactionRid(transferRef.tx);
 

@@ -11,10 +11,11 @@ import {
   setAssetOriginFilter,
   setPendingTransferFilter,
   setTransferFilter,
-  setupApplyCrosschainTransferAndGetAppliedTransfer,
   unapplyCrosschainTransferAndGetUnappliedTransfer,
 } from "./crosschain-query-setups";
 import { setupTestEnvironment } from "./common-setup";
+import { createAmount } from "@ft4/asset";
+import { getTransactionRid } from "@ft4/utils";
 
 const mockBuffer: Buffer = Buffer.alloc(32);
 describe("crosschain queries by rowid", () => {
@@ -82,21 +83,34 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns null when applied transfer exists, but not for the selected rowid", async () => {
+      // const testContext = await setupTestEnvironment(
+      //   "crosschain-apply-transfer",
+      // );
+
+      // const foundAppliedTransfer =
+      //   await setupApplyCrosschainTransferAndGetAppliedTransfer(
+      // testContext.connection0,
+      // testContext.connection1,
+      // testContext.connection2,
+      // testContext.sampleAsset,
+      // testContext.multichain1,
+      // testContext.session0,
+      // );
+
+      // expect(foundAppliedTransfer).not.toBeNull();
+
+      const mintAmount = createAmount(100, 0);
       const testContext = await setupTestEnvironment(
         "crosschain-apply-transfer",
+        mintAmount,
       );
 
-      const foundAppliedTransfer =
-        await setupApplyCrosschainTransferAndGetAppliedTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.connection2,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          // testContext.session0,
-        );
-
-      expect(foundAppliedTransfer).not.toBeNull();
+      await testContext.account0.crosschainTransfer(
+        testContext.multichain2.rid,
+        testContext.account2.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      );
 
       const fetchedAppliedTransfer =
         await testContext.connection0.getAppliedTransferByRowid(999);
@@ -104,30 +118,52 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns applied transfer by rowid", async () => {
+      // const testContext = await setupTestEnvironment(
+      //   "crosschain-apply-transfer-2",
+      // );
+
+      // const foundAppliedTransfer =
+      //   await setupApplyCrosschainTransferAndGetAppliedTransfer();
+      // testContext.connection0,
+      // testContext.connection1,
+      // testContext.connection2,
+      // testContext.sampleAsset,
+      // testContext.multichain1,
+      // testContext.session0,
+
+      const mintAmount = createAmount(100, 0);
       const testContext = await setupTestEnvironment(
         "crosschain-apply-transfer-2",
+        mintAmount,
       );
 
-      const foundAppliedTransfer =
-        await setupApplyCrosschainTransferAndGetAppliedTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.connection2,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          // testContext.session0,
-        );
+      const transferRef = await testContext.account0.crosschainTransfer(
+        testContext.multichain2.rid,
+        testContext.account2.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      );
+
+      const txRid = getTransactionRid(transferRef.tx);
+
+      const expectedAppliedTransfer = {
+        rowId: expect.any(Number),
+        initTxRid: txRid,
+        initOpIndex: transferRef.opIndex,
+        transactionId: txRid,
+        opIndex: transferRef.opIndex,
+      };
 
       const fetchedAppliedTransfer =
         await testContext.connection0.getAppliedTransferByRowid(
-          foundAppliedTransfer.rowId,
+          expectedAppliedTransfer.rowId,
         );
       expect(fetchedAppliedTransfer).toEqual({
-        rowId: foundAppliedTransfer.rowId,
-        initTxRid: foundAppliedTransfer.initTxRid,
-        initOpIndex: foundAppliedTransfer.initOpIndex,
-        transactionId: foundAppliedTransfer.transactionId,
-        opIndex: foundAppliedTransfer.opIndex,
+        rowId: expectedAppliedTransfer.rowId,
+        initTxRid: expectedAppliedTransfer.initTxRid,
+        initOpIndex: expectedAppliedTransfer.initOpIndex,
+        transactionId: expectedAppliedTransfer.transactionId,
+        opIndex: expectedAppliedTransfer.opIndex,
       });
     });
   });
@@ -567,62 +603,108 @@ describe("crosschain queries with filter", () => {
       expect(data.length).toBe(0);
     });
     it("returns paginated applied transfers without filter", async () => {
+      // const testContext = await setupTestEnvironment(
+      //   "crosschain-applied-transfer-filter-5",
+      // );
+
+      // const foundAppliedTransfer =
+      //   await setupApplyCrosschainTransferAndGetAppliedTransfer(
+      //     testContext.connection0,
+      //     testContext.connection1,
+      //     testContext.connection2,
+      //     testContext.sampleAsset,
+      //     testContext.multichain1,
+      //     // testContext.session0,
+      //   );
+
+      const mintAmount = createAmount(100, 0);
       const testContext = await setupTestEnvironment(
         "crosschain-applied-transfer-filter-5",
+        mintAmount,
       );
 
-      const foundAppliedTransfer =
-        await setupApplyCrosschainTransferAndGetAppliedTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.connection2,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          // testContext.session0,
-        );
+      const transferRef = await testContext.account0.crosschainTransfer(
+        testContext.multichain2.rid,
+        testContext.account2.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      );
+
+      const txRid = getTransactionRid(transferRef.tx);
+
+      const expectedAppliedTransfer = {
+        rowId: expect.any(Number),
+        initTxRid: txRid,
+        initOpIndex: transferRef.opIndex,
+        transactionId: txRid,
+        opIndex: transferRef.opIndex,
+      };
 
       const { data } =
         await testContext.connection0.getAppliedTransfersFiltered(null, 1);
 
       expect(data[0]).toEqual({
-        rowId: foundAppliedTransfer.rowId,
-        initTxRid: foundAppliedTransfer.initTxRid,
-        initOpIndex: foundAppliedTransfer.initOpIndex,
-        transactionId: foundAppliedTransfer.transactionId,
-        opIndex: foundAppliedTransfer.opIndex,
+        rowId: expectedAppliedTransfer.rowId,
+        initTxRid: expectedAppliedTransfer.initTxRid,
+        initOpIndex: expectedAppliedTransfer.initOpIndex,
+        transactionId: expectedAppliedTransfer.transactionId,
+        opIndex: expectedAppliedTransfer.opIndex,
       });
     });
     it("returns paginated applied transfers with all filter", async () => {
+      // const testContext = await setupTestEnvironment(
+      //   "crosschain-applied-transfer-filter-6",
+      // );
+
+      // const foundAppliedTransfer =
+      //   await setupApplyCrosschainTransferAndGetAppliedTransfer(
+      //     testContext.connection0,
+      //     testContext.connection1,
+      //     testContext.connection2,
+      //     testContext.sampleAsset,
+      //     testContext.multichain1,
+      //     // testContext.session0,
+      //   );
+
+      const mintAmount = createAmount(100, 0);
       const testContext = await setupTestEnvironment(
         "crosschain-applied-transfer-filter-6",
+        mintAmount,
       );
 
-      const foundAppliedTransfer =
-        await setupApplyCrosschainTransferAndGetAppliedTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.connection2,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          // testContext.session0,
-        );
+      const transferRef = await testContext.account0.crosschainTransfer(
+        testContext.multichain2.rid,
+        testContext.account2.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+      );
+
+      const txRid = getTransactionRid(transferRef.tx);
+
+      const expectedAppliedTransfer = {
+        rowId: expect.any(Number),
+        initTxRid: txRid,
+        initOpIndex: transferRef.opIndex,
+        transactionId: txRid,
+        opIndex: transferRef.opIndex,
+      };
 
       const { data } =
         await testContext.connection0.getAppliedTransfersFiltered(
           setTransferFilter(
-            [foundAppliedTransfer.rowId],
-            foundAppliedTransfer.initTxRid,
-            foundAppliedTransfer.initOpIndex,
+            [expectedAppliedTransfer.rowId],
+            expectedAppliedTransfer.initTxRid,
+            expectedAppliedTransfer.initOpIndex,
           ),
           1,
         );
 
       expect(data[0]).toEqual({
-        rowId: foundAppliedTransfer.rowId,
-        initTxRid: foundAppliedTransfer.initTxRid,
-        initOpIndex: foundAppliedTransfer.initOpIndex,
-        transactionId: foundAppliedTransfer.transactionId,
-        opIndex: foundAppliedTransfer.opIndex,
+        rowId: expectedAppliedTransfer.rowId,
+        initTxRid: expectedAppliedTransfer.initTxRid,
+        initOpIndex: expectedAppliedTransfer.initOpIndex,
+        transactionId: expectedAppliedTransfer.transactionId,
+        opIndex: expectedAppliedTransfer.opIndex,
       });
     });
   });
