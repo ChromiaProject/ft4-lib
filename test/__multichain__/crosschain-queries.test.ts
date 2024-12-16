@@ -249,48 +249,29 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns null when pending transfer exists, but not for the selected rowid", async () => {
-      const testContext = await setupTestEnvironment(
+      const { testContext } = await initCrosschainTransferAndGetPendingTransfer(
         "crosschain-pending-transfer",
       );
-
-      const foundPendingTransfer =
-        await initCrosschainTransferAndGetPendingTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          testContext.session0,
-        );
-      expect(foundPendingTransfer).not.toBeNull();
-
       const fetchedPendingTransfer =
         await testContext.connection0.getPendingTransferByRowid(999);
       expect(fetchedPendingTransfer).toBeNull();
     });
 
     it("returns pending transfer by rowid", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-pending-transfer-2",
-      );
-
-      const foundPendingTransfer =
+      const { testContext, pendingTransfer } =
         await initCrosschainTransferAndGetPendingTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          testContext.session0,
+          "crosschain-pending-transfer-2",
         );
 
       const fetchedPendingTransfer =
         await testContext.connection0.getPendingTransferByRowid(
-          foundPendingTransfer.rowId,
+          pendingTransfer.rowId,
         );
       expect(fetchedPendingTransfer).toEqual({
-        rowId: foundPendingTransfer.rowId,
-        transactionId: foundPendingTransfer.transactionId,
-        opIndex: foundPendingTransfer.opIndex,
-        senderAccountId: foundPendingTransfer.senderAccountId,
+        rowId: pendingTransfer.rowId,
+        transactionId: pendingTransfer.transactionId,
+        opIndex: pendingTransfer.opIndex,
+        senderAccountId: pendingTransfer.senderAccountId,
       });
     });
   });
@@ -308,19 +289,9 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns null when reverted transfer exists, but not for the selected rowid", async () => {
-      const testContext = await setupTestEnvironment(
+      const { testContext } = await revertTransferAndGetRevertedTransfer(
         "crosschain-reverted-transfer",
       );
-
-      const foundRevertedTransfer = await revertTransferAndGetRevertedTransfer(
-        testContext.connection0,
-        testContext.connection1,
-        testContext.sampleAsset,
-        testContext.multichain1,
-        testContext.session0,
-      );
-
-      expect(foundRevertedTransfer).not.toBeNull();
 
       const fetchedRevertedTransfer =
         await testContext.connection0.getPendingTransferByRowid(999);
@@ -329,27 +300,20 @@ describe("crosschain queries by rowid", () => {
     });
 
     it("returns reverted transfer by rowid", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-reverted-transfer-2",
-      );
-
-      const foundRevertedTransfer = await revertTransferAndGetRevertedTransfer(
-        testContext.connection0,
-        testContext.connection1,
-        testContext.sampleAsset,
-        testContext.multichain1,
-        testContext.session0,
-      );
+      const { testContext, revertedTransfer } =
+        await revertTransferAndGetRevertedTransfer(
+          "crosschain-reverted-transfer-2",
+        );
 
       const fetchedRevertedTransfer =
         await testContext.connection0.getPendingTransferByRowid(
-          foundRevertedTransfer.rowId,
+          revertedTransfer.rowId,
         );
 
       expect(fetchedRevertedTransfer).toEqual({
-        rowId: foundRevertedTransfer.rowId,
-        initTxRid: foundRevertedTransfer.initTxRid,
-        initOpIndex: foundRevertedTransfer.initOpIndex,
+        rowId: revertedTransfer.rowId,
+        initTxRid: revertedTransfer.initTxRid,
+        initOpIndex: revertedTransfer.initOpIndex,
       });
     });
   });
@@ -840,59 +804,43 @@ describe("crosschain queries with filter", () => {
       expect(data.length).toBe(0);
     });
     it("returns paginated pending transfers without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-pending-transfer-filter-4",
-      );
-
-      const foundPendingTransfer =
+      const { testContext, pendingTransfer } =
         await initCrosschainTransferAndGetPendingTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          testContext.session0,
+          "crosschain-pending-transfer-filter-4",
         );
 
       const { data } =
         await testContext.connection0.getPendingTransfersFiltered(null, 1);
 
       expect(data[0]).toEqual({
-        rowId: foundPendingTransfer.rowId,
-        transactionId: foundPendingTransfer.transactionId,
-        opIndex: foundPendingTransfer.opIndex,
-        senderAccountId: foundPendingTransfer.senderAccountId,
+        rowId: pendingTransfer.rowId,
+        transactionId: pendingTransfer.transactionId,
+        opIndex: pendingTransfer.opIndex,
+        senderAccountId: pendingTransfer.senderAccountId,
       });
     });
     it("returns paginated pending transfers with all filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-pending-transfer-filter-5",
-      );
-
-      const foundPendingTransfer =
+      const { testContext, pendingTransfer } =
         await initCrosschainTransferAndGetPendingTransfer(
-          testContext.connection0,
-          testContext.connection1,
-          testContext.sampleAsset,
-          testContext.multichain1,
-          testContext.session0,
+          "crosschain-pending-transfer-filter-5",
         );
 
       const { data } =
         await testContext.connection0.getPendingTransfersFiltered(
           setPendingTransferFilter(
-            [foundPendingTransfer.rowId],
-            foundPendingTransfer.transactionId,
-            foundPendingTransfer.opIndex,
-            foundPendingTransfer.senderAccountId,
+            [pendingTransfer.rowId],
+            pendingTransfer.transactionId,
+            pendingTransfer.opIndex,
+            pendingTransfer.senderAccountId,
           ),
           1,
         );
 
       expect(data[0]).toEqual({
-        rowId: foundPendingTransfer.rowId,
-        transactionId: foundPendingTransfer.transactionId,
-        opIndex: foundPendingTransfer.opIndex,
-        senderAccountId: foundPendingTransfer.senderAccountId,
+        rowId: pendingTransfer.rowId,
+        transactionId: pendingTransfer.transactionId,
+        opIndex: pendingTransfer.opIndex,
+        senderAccountId: pendingTransfer.senderAccountId,
       });
     });
   });
@@ -952,54 +900,40 @@ describe("crosschain queries with filter", () => {
       expect(data.length).toBe(0);
     });
     it("returns paginated reverted transfers without filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-reverted-transfer-filter-5",
-      );
-
-      const foundRevertedTransfer = await revertTransferAndGetRevertedTransfer(
-        testContext.connection0,
-        testContext.connection1,
-        testContext.sampleAsset,
-        testContext.multichain1,
-        testContext.session0,
-      );
+      const { testContext, revertedTransfer } =
+        await revertTransferAndGetRevertedTransfer(
+          "crosschain-reverted-transfer-filter-5",
+        );
 
       const { data } =
         await testContext.connection0.getRevertedTransfersFiltered(null, 1);
 
       expect(data[0]).toEqual({
-        rowId: foundRevertedTransfer.rowId,
-        initTxRid: foundRevertedTransfer.initTxRid,
-        initOpIndex: foundRevertedTransfer.initOpIndex,
+        rowId: revertedTransfer.rowId,
+        initTxRid: revertedTransfer.initTxRid,
+        initOpIndex: revertedTransfer.initOpIndex,
       });
     });
     it("returns paginated reverted transfers with all filter", async () => {
-      const testContext = await setupTestEnvironment(
-        "crosschain-reverted-transfer-filter-6",
-      );
-
-      const foundRevertedTransfer = await revertTransferAndGetRevertedTransfer(
-        testContext.connection0,
-        testContext.connection1,
-        testContext.sampleAsset,
-        testContext.multichain1,
-        testContext.session0,
-      );
+      const { testContext, revertedTransfer } =
+        await revertTransferAndGetRevertedTransfer(
+          "crosschain-reverted-transfer-filter-6",
+        );
 
       const { data } =
         await testContext.connection0.getRevertedTransfersFiltered(
           setTransferFilter(
-            [foundRevertedTransfer.rowId],
-            foundRevertedTransfer.initTxRid,
-            foundRevertedTransfer.initOpIndex,
+            [revertedTransfer.rowId],
+            revertedTransfer.initTxRid,
+            revertedTransfer.initOpIndex,
           ),
           1,
         );
 
       expect(data[0]).toEqual({
-        rowId: foundRevertedTransfer.rowId,
-        initTxRid: foundRevertedTransfer.initTxRid,
-        initOpIndex: foundRevertedTransfer.initOpIndex,
+        rowId: revertedTransfer.rowId,
+        initTxRid: revertedTransfer.initTxRid,
+        initOpIndex: revertedTransfer.initOpIndex,
       });
     });
   });

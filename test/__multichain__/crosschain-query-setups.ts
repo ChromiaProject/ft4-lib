@@ -1,6 +1,4 @@
-import { AccountBuilder, Blockchain } from "@ft4-test/util";
-import { AuthFlag } from "@ft4/accounts";
-import { Asset, createAmount } from "@ft4/asset";
+import { createAmount } from "@ft4/asset";
 import { noopAuthenticator } from "@ft4/authentication";
 import { cancelTransfer, initTransfer } from "@ft4/crosschain";
 import {
@@ -10,7 +8,6 @@ import {
   Transfer,
   TransferFilter,
 } from "@ft4/crosschain/types";
-import { Connection, Session } from "@ft4/ft-session";
 import { transactionBuilder } from "@ft4/transaction-builder";
 import { getTransactionRid } from "@ft4/utils";
 import { unapplyTransfer } from "@ft4/crosschain/operations";
@@ -94,21 +91,21 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     0,
   );
 
+  let txRid: Buffer;
   await transactionBuilder(
     testContext.account0.authenticator,
     testContext.connection2.client,
   )
     .add(iccfOp, { authenticator: noopAuthenticator })
     .add(cancelOperation)
-    .buildAndSendWithAnchoring();
-
-  const txRid = getTransactionRid(transferRef.tx);
+    .buildAndSendWithAnchoring()
+    .then((res) => (txRid = res.receipt.transactionRid));
 
   return {
     testContext,
     canceledTransfer: {
       rowId: expect.any(Number),
-      initTxRid: txRid,
+      initTxRid: txRid!,
       initOpIndex: transferRef.opIndex,
     },
   };
@@ -172,21 +169,21 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     [testContext.multichain2.rid].length - 1,
   );
 
+  let txRid: Buffer;
   await transactionBuilder(
     testContext.account0.authenticator,
     testContext.connection2.client,
   )
     .add(iccfOp, { authenticator: noopAuthenticator })
     .add(unapplyOperation)
-    .buildAndSendWithAnchoring();
-
-  const txRid = getTransactionRid(transferRef.tx);
+    .buildAndSendWithAnchoring()
+    .then((res) => (txRid = res.receipt.transactionRid));
 
   return {
     testContext,
     unappliedTransfer: {
       rowId: expect.any(Number),
-      initTxRid: txRid,
+      initTxRid: txRid!,
       initOpIndex: transferRef.opIndex,
     },
   };
@@ -221,84 +218,77 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
 }
 
 export async function initCrosschainTransferAndGetPendingTransfer(
-  connection0: Connection,
-  connection1: Connection,
-  asset: Asset,
-  recipientBlockchain: Blockchain,
-  sendersSession: Session,
-): Promise<PendingTransfer_> {
-  const account0 = await AccountBuilder.account(connection0)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .withBalance(asset, createAmount(10, asset.decimals))
-    .build();
-
-  const account1 = await AccountBuilder.account(connection1)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .build();
+  assetName: string = "asset-name",
+): Promise<{ testContext: TestContext; pendingTransfer: PendingTransfer_ }> {
+  const mintAmount = createAmount(100, 0);
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const initOperation = initTransfer(
-    account1.id,
-    asset.id,
-    createAmount(10, asset.decimals),
-    [recipientBlockchain.rid],
+    testContext.account1.id,
+    testContext.sampleAsset.id,
+    createAmount(10, testContext.sampleAsset.decimals),
+    [testContext.multichain1.rid],
     Date.now(),
   );
-
-  await sendersSession
-    .transactionBuilder()
+  let txRid: Buffer;
+  await transactionBuilder(
+    testContext.account0.authenticator,
+    testContext.connection2.client,
+  )
     .add(initOperation)
-    .buildAndSendWithAnchoring();
+    .buildAndSendWithAnchoring()
+    .then((res) => (txRid = res.receipt.transactionRid));
 
-  const pendingTransfers = await account0.getPendingCrosschainTransfers();
+  const pendingTransfers =
+    await testContext.account0.getPendingCrosschainTransfers();
   const foundPendingTransfer = pendingTransfers.data[0];
 
   return {
-    rowId: expect.any(Number),
-    transactionId: getTransactionRid(foundPendingTransfer.tx),
-    opIndex: foundPendingTransfer.opIndex,
-    senderAccountId: account0.id,
+    testContext,
+    pendingTransfer: {
+      rowId: expect.any(Number),
+      transactionId: txRid!,
+      opIndex: foundPendingTransfer.opIndex,
+      senderAccountId: testContext.account0.id,
+    },
   };
 }
 
 export async function revertTransferAndGetRevertedTransfer(
-  connection0: Connection,
-  connection1: Connection,
-  asset: Asset,
-  recipientBlockchain: Blockchain,
-  session: Session,
-): Promise<Transfer> {
-  const account0 = await AccountBuilder.account(connection0)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .withBalance(asset, createAmount(10, asset.decimals))
-    .build();
-
-  const account1 = await AccountBuilder.account(connection1)
-    .withAuthFlags(AuthFlag.Account, AuthFlag.Transfer)
-    .build();
+  assetName: string = "asset-name",
+): Promise<{ testContext: TestContext; revertedTransfer: Transfer }> {
+  const mintAmount = createAmount(100, 0);
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const initOperation = initTransfer(
-    account1.id,
-    asset.id,
-    createAmount(10, asset.decimals),
-    [recipientBlockchain.rid],
+    testContext.account1.id,
+    testContext.sampleAsset.id,
+    createAmount(10, testContext.sampleAsset.decimals),
+    [testContext.multichain2.rid],
     Date.now(),
   );
 
-  await session
-    .transactionBuilder()
+  let txRid: Buffer;
+  await transactionBuilder(
+    testContext.account0.authenticator,
+    testContext.connection2.client,
+  )
     .add(initOperation)
-    .buildAndSendWithAnchoring();
+    .buildAndSendWithAnchoring()
+    .then((res) => (txRid = res.receipt.transactionRid));
 
-  const pendingTransfers = await account0.getPendingCrosschainTransfers();
+  const pendingTransfers =
+    await testContext.account0.getPendingCrosschainTransfers();
   const foundPendingTransfer = pendingTransfers.data[0];
-  await account0.revertCrosschainTransfer(foundPendingTransfer);
-
-  const txRid = getTransactionRid(foundPendingTransfer.tx);
+  await testContext.account0.revertCrosschainTransfer(foundPendingTransfer);
 
   return {
-    rowId: expect.any(Number),
-    initTxRid: txRid,
-    initOpIndex: foundPendingTransfer.opIndex,
+    testContext,
+    revertedTransfer: {
+      rowId: expect.any(Number),
+      initTxRid: txRid!,
+      initOpIndex: foundPendingTransfer.opIndex,
+    },
   };
 }
 
