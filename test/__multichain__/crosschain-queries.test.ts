@@ -46,7 +46,7 @@ describe("crosschain queries by rowid", () => {
         await testContext.connection0.getAssetOriginFiltered(null, 1);
 
       const fetchedAssetOrigin =
-        await testContext.connection0.getAssetOriginByRowid(
+        await testContext.connection2.getAssetOriginByRowid(
           foundAssetOrigin.data[0].rowId,
         );
       expect(JSON.stringify(fetchedAssetOrigin)).toStrictEqual(
