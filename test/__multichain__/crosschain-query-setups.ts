@@ -12,15 +12,17 @@ import {
   OnAnchoredHandlerData,
   transactionBuilder,
 } from "@ft4/transaction-builder";
-import { getTransactionRid } from "@ft4/utils";
+import { getTransactionRid, PaginatedEntity } from "@ft4/utils";
 import { unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
+  filter: TransferFilter | null = null,
 ): Promise<{
   testContext: TestContext;
   appliedTransfer: AppliedTransfer;
+  appliedTransfersFiltered: PaginatedEntity<AppliedTransfer>;
 }> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
@@ -35,9 +37,10 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   const txRid = getTransactionRid(transferRef.tx);
 
   const appliedTransfersFiltered =
-    await testContext.connection2.getAppliedTransfersFiltered(null, 1);
+    await testContext.connection2.getAppliedTransfersFiltered(filter, 1);
 
   return {
+    appliedTransfersFiltered,
     testContext,
     appliedTransfer: {
       rowId: appliedTransfersFiltered.data[0].rowId,
@@ -51,9 +54,17 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
 
 export async function cancelCrosschainTransferAndGetCanceledTransfer(
   assetName: string = "asset-name",
-): Promise<{ testContext: TestContext; canceledTransfer: Transfer }> {
+): Promise<{
+  testContext: TestContext;
+  canceledTransfer: Transfer;
+  canceledTransferFiltered: PaginatedEntity<Transfer>;
+}> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
+
+  console.log("=======1=======", testContext.multichain0.rid);
+  console.log("=======2=======", testContext.multichain1.rid);
+  console.log("=======3=======", testContext.multichain2.rid);
 
   const state = {} as any;
   await testContext.session0
@@ -63,7 +74,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
         testContext.account1.id,
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
-        [],
+        [testContext.multichain1.rid],
         Date.now() + 10000,
       ),
       {
@@ -80,6 +91,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .buildAndSendWithAnchoring();
 
   state.proof = await state.proof;
+
   const txRid = getTransactionRid(state.tx);
 
   const cancelOperation = cancelTransfer(
@@ -98,13 +110,14 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .add(cancelOperation)
     .buildAndSendWithAnchoring();
 
-  const cancelTransferFiltered =
+  const canceledTransferFiltered =
     await testContext.connection2.getCanceledTransfersFiltered(null, 1);
 
   return {
+    canceledTransferFiltered,
     testContext,
     canceledTransfer: {
-      rowId: cancelTransferFiltered.data[0].rowId,
+      rowId: canceledTransferFiltered.data[0].rowId,
       initTxRid: txRid,
       initOpIndex: state.opIndex,
     },

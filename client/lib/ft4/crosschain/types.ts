@@ -173,7 +173,7 @@ export type AppliedTransferResponse = {
   rowid: number;
   init_tx_rid: Buffer;
   init_op_index: number;
-  transacation_rid: Buffer;
+  transaction_rid: Buffer;
   op_index: number;
 };
 

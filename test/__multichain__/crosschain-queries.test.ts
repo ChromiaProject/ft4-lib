@@ -49,21 +49,24 @@ describe("crosschain queries by rowid", () => {
         await testContext.connection2.getAssetOriginByRowid(
           foundAssetOrigin.data[0].rowId,
         );
-      expect(fetchedAssetOrigin).toEqual({
-        rowId: expect.any(Number),
-        asset: {
-          rowId: testContext.sampleAsset.rowId,
-          id: testContext.sampleAsset.id,
-          name: testContext.sampleAsset.name,
-          symbol: testContext.sampleAsset.symbol,
-          decimals: testContext.sampleAsset.decimals,
-          blockchainRid: testContext.sampleAsset.blockchainRid,
-          iconUrl: testContext.sampleAsset.iconUrl,
-          type: testContext.sampleAsset.type,
-          supply: testContext.sampleAsset.supply,
-        },
-        originBlockchainRid: testContext.multichain0.rid,
-      });
+
+      expect(JSON.stringify(fetchedAssetOrigin)).toStrictEqual(
+        JSON.stringify({
+          rowId: foundAssetOrigin.data[0].rowId,
+          asset: {
+            rowId: testContext.sampleAsset.rowId,
+            id: testContext.sampleAsset.id,
+            name: testContext.sampleAsset.name,
+            symbol: testContext.sampleAsset.symbol,
+            decimals: testContext.sampleAsset.decimals,
+            blockchainRid: testContext.sampleAsset.blockchainRid,
+            iconUrl: testContext.sampleAsset.iconUrl,
+            type: testContext.sampleAsset.type,
+            supply: testContext.sampleAsset.supply,
+          },
+          originBlockchainRid: testContext.multichain0.rid,
+        }),
+      );
     });
   });
 
@@ -435,15 +438,12 @@ describe("crosschain queries with filter", () => {
       expect(data.length).toBe(0);
     });
     it("returns paginated applied transfers without filter", async () => {
-      const { testContext, appliedTransfer } =
+      const { appliedTransfer, appliedTransfersFiltered } =
         await setupApplyCrosschainTransferAndGetAppliedTransfer(
           "crosschain-applied-transfer-filter-5",
         );
 
-      const { data } =
-        await testContext.connection0.getAppliedTransfersFiltered(null, 1);
-
-      expect(data[0]).toEqual({
+      expect(appliedTransfersFiltered[0]).toEqual({
         rowId: appliedTransfer.rowId,
         initTxRid: appliedTransfer.initTxRid,
         initOpIndex: appliedTransfer.initOpIndex,
@@ -458,7 +458,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getAppliedTransfersFiltered(
+        await testContext.connection2.getAppliedTransfersFiltered(
           setTransferFilter(
             [appliedTransfer.rowId],
             appliedTransfer.initTxRid,
@@ -467,13 +467,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toEqual({
-        rowId: appliedTransfer.rowId,
-        initTxRid: appliedTransfer.initTxRid,
-        initOpIndex: appliedTransfer.initOpIndex,
-        transactionId: appliedTransfer.transactionId,
-        opIndex: appliedTransfer.opIndex,
-      });
+      expect(data[0]).toEqual(appliedTransfer);
     });
   });
 
@@ -537,13 +531,9 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getCanceledTransfersFiltered(null, 1);
+        await testContext.connection2.getCanceledTransfersFiltered(null, 1);
 
-      expect(data[0]).toEqual({
-        rowId: canceledTransfer.rowId,
-        initTxRid: canceledTransfer.initTxRid,
-        initOpIndex: canceledTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(canceledTransfer);
     });
     it("returns paginated canceled transfers with all filter", async () => {
       const { testContext, canceledTransfer } =
@@ -628,13 +618,9 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getUnappliedTransfersFiltered(null, 1);
+        await testContext.connection2.getUnappliedTransfersFiltered(null, 1);
 
-      expect(data[0]).toEqual({
-        rowId: unappliedTransfer.rowId,
-        initTxRid: unappliedTransfer.initTxRid,
-        initOpIndex: unappliedTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(unappliedTransfer);
     });
     it("returns paginated unapplied transfers with all filter", async () => {
       const { testContext, unappliedTransfer } =
@@ -643,7 +629,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getUnappliedTransfersFiltered(
+        await testContext.connection2.getUnappliedTransfersFiltered(
           setTransferFilter(
             [unappliedTransfer.rowId],
             unappliedTransfer.initTxRid,
@@ -652,11 +638,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toEqual({
-        rowId: unappliedTransfer.rowId,
-        initTxRid: unappliedTransfer.initTxRid,
-        initOpIndex: unappliedTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(unappliedTransfer);
     });
   });
 
@@ -720,13 +702,9 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getRecalledTransfersFiltered(null, 1);
+        await testContext.connection2.getRecalledTransfersFiltered(null, 1);
 
-      expect(data[0]).toEqual({
-        rowId: recalledTransfer.rowId,
-        initTxRid: recalledTransfer.initTxRid,
-        initOpIndex: recalledTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(recalledTransfer);
     });
     it("returns paginated recalled transfers with all filter", async () => {
       const { testContext, recalledTransfer } =
@@ -735,16 +713,12 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getRecalledTransfersFiltered(
+        await testContext.connection2.getRecalledTransfersFiltered(
           setTransferFilter([0], mockBuffer, 0),
           1,
         );
 
-      expect(data[0]).toEqual({
-        rowId: recalledTransfer.rowId,
-        initTxRid: recalledTransfer.initTxRid,
-        initOpIndex: recalledTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(recalledTransfer);
     });
   });
 
@@ -794,14 +768,9 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getPendingTransfersFiltered(null, 1);
+        await testContext.connection2.getPendingTransfersFiltered(null, 1);
 
-      expect(data[0]).toEqual({
-        rowId: pendingTransfer.rowId,
-        transactionId: pendingTransfer.transactionId,
-        opIndex: pendingTransfer.opIndex,
-        senderAccountId: pendingTransfer.senderAccountId,
-      });
+      expect(data[0]).toEqual(pendingTransfer);
     });
     it("returns paginated pending transfers with all filter", async () => {
       const { testContext, pendingTransfer } =
@@ -810,7 +779,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getPendingTransfersFiltered(
+        await testContext.connection2.getPendingTransfersFiltered(
           setPendingTransferFilter(
             [pendingTransfer.rowId],
             pendingTransfer.transactionId,
@@ -820,12 +789,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toEqual({
-        rowId: pendingTransfer.rowId,
-        transactionId: pendingTransfer.transactionId,
-        opIndex: pendingTransfer.opIndex,
-        senderAccountId: pendingTransfer.senderAccountId,
-      });
+      expect(data[0]).toEqual(pendingTransfer);
     });
   });
 
@@ -890,13 +854,9 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getRevertedTransfersFiltered(null, 1);
+        await testContext.connection2.getRevertedTransfersFiltered(null, 1);
 
-      expect(data[0]).toEqual({
-        rowId: revertedTransfer.rowId,
-        initTxRid: revertedTransfer.initTxRid,
-        initOpIndex: revertedTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(revertedTransfer);
     });
     it("returns paginated reverted transfers with all filter", async () => {
       const { testContext, revertedTransfer } =
@@ -905,7 +865,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getRevertedTransfersFiltered(
+        await testContext.connection2.getRevertedTransfersFiltered(
           setTransferFilter(
             [revertedTransfer.rowId],
             revertedTransfer.initTxRid,
@@ -914,11 +874,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toEqual({
-        rowId: revertedTransfer.rowId,
-        initTxRid: revertedTransfer.initTxRid,
-        initOpIndex: revertedTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(revertedTransfer);
     });
   });
 });

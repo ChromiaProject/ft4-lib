@@ -423,7 +423,7 @@ function createAppliedTransferObject(
     rowId: appliedTransfer.rowid,
     initTxRid: appliedTransfer.init_tx_rid,
     initOpIndex: appliedTransfer.init_op_index,
-    transactionId: appliedTransfer.transacation_rid,
+    transactionId: appliedTransfer.transaction_rid,
     opIndex: appliedTransfer.op_index,
   });
 }
