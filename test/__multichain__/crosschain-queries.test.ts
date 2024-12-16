@@ -43,29 +43,27 @@ describe("crosschain queries by rowid", () => {
       );
 
       const foundAssetOrigin =
-        await testContext.connection0.getAssetOriginFiltered(null, 1);
+        await testContext.connection2.getAssetOriginFiltered(null, 1);
 
       const fetchedAssetOrigin =
         await testContext.connection2.getAssetOriginByRowid(
           foundAssetOrigin.data[0].rowId,
         );
-      expect(JSON.stringify(fetchedAssetOrigin)).toStrictEqual(
-        JSON.stringify({
-          rowId: expect.any(Number),
-          asset: {
-            rowId: testContext.sampleAsset.rowId,
-            id: testContext.sampleAsset.id,
-            name: testContext.sampleAsset.name,
-            symbol: testContext.sampleAsset.symbol,
-            decimals: testContext.sampleAsset.decimals,
-            blockchainRid: testContext.sampleAsset.blockchainRid,
-            iconUrl: testContext.sampleAsset.iconUrl,
-            type: testContext.sampleAsset.type,
-            supply: testContext.sampleAsset.supply,
-          },
-          originBlockchainRid: testContext.multichain0.rid,
-        }),
-      );
+      expect(fetchedAssetOrigin).toEqual({
+        rowId: expect.any(Number),
+        asset: {
+          rowId: testContext.sampleAsset.rowId,
+          id: testContext.sampleAsset.id,
+          name: testContext.sampleAsset.name,
+          symbol: testContext.sampleAsset.symbol,
+          decimals: testContext.sampleAsset.decimals,
+          blockchainRid: testContext.sampleAsset.blockchainRid,
+          iconUrl: testContext.sampleAsset.iconUrl,
+          type: testContext.sampleAsset.type,
+          supply: testContext.sampleAsset.supply,
+        },
+        originBlockchainRid: testContext.multichain0.rid,
+      });
     });
   });
 
@@ -99,16 +97,10 @@ describe("crosschain queries by rowid", () => {
         );
 
       const fetchedAppliedTransfer =
-        await testContext.connection0.getAppliedTransferByRowid(
+        await testContext.connection2.getAppliedTransferByRowid(
           appliedTransfer.rowId,
         );
-      expect(fetchedAppliedTransfer).toEqual({
-        rowId: appliedTransfer.rowId,
-        initTxRid: appliedTransfer.initTxRid,
-        initOpIndex: appliedTransfer.initOpIndex,
-        transactionId: appliedTransfer.transactionId,
-        opIndex: appliedTransfer.opIndex,
-      });
+      expect(fetchedAppliedTransfer).toEqual(appliedTransfer);
     });
   });
 
@@ -124,7 +116,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedCanceledTransfer).toBeNull();
     });
 
-    it("returns null when canceled transfer  exists, but not for the selected rowid", async () => {
+    it("returns null when canceled transfer exists, but not for the selected rowid", async () => {
       const { testContext } =
         await cancelCrosschainTransferAndGetCanceledTransfer(
           "crosschain-cancel-transfer",
@@ -142,15 +134,11 @@ describe("crosschain queries by rowid", () => {
         );
 
       const fetchedCanceledTransfer =
-        await testContext.connection0.getCanceledTransferByRowid(
+        await testContext.connection2.getCanceledTransferByRowid(
           canceledTransfer.rowId,
         );
 
-      expect(fetchedCanceledTransfer).toEqual({
-        rowId: canceledTransfer.rowId,
-        initTxRid: canceledTransfer.initTxRid,
-        initOpIndex: canceledTransfer.initOpIndex,
-      });
+      expect(fetchedCanceledTransfer).toEqual(canceledTransfer);
     });
   });
 
@@ -184,15 +172,11 @@ describe("crosschain queries by rowid", () => {
         );
 
       const fetchedUnappliedTransfer =
-        await testContext.connection0.getUnappliedTransferByRowid(
+        await testContext.connection2.getUnappliedTransferByRowid(
           unappliedTransfer.rowId,
         );
 
-      expect(fetchedUnappliedTransfer).toEqual({
-        rowId: unappliedTransfer.rowId,
-        initTxRid: unappliedTransfer.initTxRid,
-        initOpIndex: unappliedTransfer.initOpIndex,
-      });
+      expect(fetchedUnappliedTransfer).toEqual(unappliedTransfer);
     });
   });
 

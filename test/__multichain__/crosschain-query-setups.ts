@@ -8,16 +8,13 @@ import {
   Transfer,
   TransferFilter,
 } from "@ft4/crosschain/types";
-import { transactionBuilder } from "@ft4/transaction-builder";
+import {
+  OnAnchoredHandlerData,
+  transactionBuilder,
+} from "@ft4/transaction-builder";
 import { getTransactionRid } from "@ft4/utils";
 import { unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import {
-  createClient,
-  createIccfProofTx,
-  formatter,
-  gtv,
-} from "postchain-client";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -37,10 +34,13 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
 
   const txRid = getTransactionRid(transferRef.tx);
 
+  const appliedTransfersFiltered =
+    await testContext.connection2.getAppliedTransfersFiltered(null, 1);
+
   return {
     testContext,
     appliedTransfer: {
-      rowId: expect.any(Number),
+      rowId: appliedTransfersFiltered.data[0].rowId,
       initTxRid: txRid,
       initOpIndex: transferRef.opIndex,
       transactionId: txRid,
@@ -55,58 +55,58 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
 
-  const transferRef = await testContext.account0.crosschainTransfer(
-    testContext.multichain2.rid,
-    testContext.account2.id,
-    testContext.sampleAsset.id,
-    createAmount(10, mintAmount.decimals),
-    1577836820000,
-  );
-
-  const directoryClient = await createClient({
-    nodeUrlPool: testContext.connection0.client.config.endpointPool.map(
-      (ep) => ep.url,
-    ),
-    blockchainIid: 0,
-  });
-
-  const iccfOp = (
-    await createIccfProofTx(
-      directoryClient,
-      getTransactionRid(transferRef.tx),
-      gtv.gtvHash(transferRef.tx),
-      transferRef.tx[0][2],
-      formatter.toString(testContext.multichain0.rid),
-      formatter.toString(testContext.multichain2.rid),
-      undefined,
-      true,
+  const state = {} as any;
+  await testContext.session0
+    .transactionBuilder()
+    .add(
+      initTransfer(
+        testContext.account1.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+        [],
+        Date.now() + 10000,
+      ),
+      {
+        targetBlockchainRid: testContext.multichain2.rid,
+        onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
+          state.tx = data?.tx;
+          state.initialOpIndex = data?.opIndex;
+          state.initialTx = data?.tx;
+          state.opIndex = data?.opIndex;
+          state.proof = data?.createProof(testContext.multichain2.rid);
+        },
+      },
     )
-  ).iccfTx.operations[0];
+    .buildAndSendWithAnchoring();
+
+  state.proof = await state.proof;
+  const txRid = getTransactionRid(state.tx);
 
   const cancelOperation = cancelTransfer(
-    transferRef.tx,
-    transferRef.opIndex,
-    transferRef.tx,
-    transferRef.opIndex,
+    state.tx,
+    state.opIndex,
+    state.tx,
+    state.opIndex,
     0,
   );
 
-  let txRid: Buffer;
   await transactionBuilder(
     testContext.account0.authenticator,
     testContext.connection2.client,
   )
-    .add(iccfOp, { authenticator: noopAuthenticator })
+    .add(state.proof, { authenticator: noopAuthenticator })
     .add(cancelOperation)
-    .buildAndSendWithAnchoring()
-    .then((res) => (txRid = res.receipt.transactionRid));
+    .buildAndSendWithAnchoring();
+
+  const cancelTransferFiltered =
+    await testContext.connection2.getCanceledTransfersFiltered(null, 1);
 
   return {
     testContext,
     canceledTransfer: {
-      rowId: expect.any(Number),
-      initTxRid: txRid!,
-      initOpIndex: transferRef.opIndex,
+      rowId: cancelTransferFiltered.data[0].rowId,
+      initTxRid: txRid,
+      initOpIndex: state.opIndex,
     },
   };
 }
@@ -117,74 +117,55 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
 
-  const transferRef = await testContext.account0.crosschainTransfer(
-    testContext.multichain2.rid,
-    testContext.account2.id,
-    testContext.sampleAsset.id,
-    createAmount(10, mintAmount.decimals),
-    1577836820000,
-  );
+  const state = {} as any;
+  await testContext.session0
+    .transactionBuilder()
+    .add(
+      initTransfer(
+        testContext.account1.id,
+        testContext.sampleAsset.id,
+        createAmount(10, mintAmount.decimals),
+        [testContext.multichain1.rid],
+        Date.now() + 10000,
+      ),
+      {
+        targetBlockchainRid: testContext.multichain2.rid,
+        onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
+          state.tx = data?.tx;
+          state.initialOpIndex = data?.opIndex;
+          state.initialTx = data?.tx;
+          state.opIndex = data?.opIndex;
+          state.proof = data?.createProof(testContext.multichain2.rid);
+        },
+      },
+    )
+    .buildAndSendWithAnchoring();
 
-  const cancelOperation = cancelTransfer(
-    transferRef.tx,
-    transferRef.opIndex,
-    transferRef.tx,
-    transferRef.opIndex,
+  state.proof = await state.proof;
+  const txRid = getTransactionRid(state.tx);
+
+  const unapplyOperation = unapplyTransfer(
+    state.tx,
+    state.opIndex,
+    state.tx,
+    state.opIndex,
     0,
   );
 
-  const directoryClient = await createClient({
-    nodeUrlPool: testContext.connection0.client.config.endpointPool.map(
-      (ep) => ep.url,
-    ),
-    blockchainIid: 0,
-  });
-
-  const iccfOp = (
-    await createIccfProofTx(
-      directoryClient,
-      getTransactionRid(transferRef.tx),
-      gtv.gtvHash(transferRef.tx),
-      transferRef.tx[0][2],
-      formatter.toString(testContext.multichain0.rid),
-      formatter.toString(testContext.multichain2.rid),
-      undefined,
-      true,
-    )
-  ).iccfTx.operations[0];
-
   await transactionBuilder(
     testContext.account0.authenticator,
     testContext.connection2.client,
   )
-    .add(iccfOp, { authenticator: noopAuthenticator })
-    .add(cancelOperation)
-    .buildAndSendWithAnchoring();
-
-  const unapplyOperation = unapplyTransfer(
-    transferRef.tx,
-    transferRef.opIndex,
-    transferRef.tx,
-    transferRef.opIndex,
-    [testContext.multichain2.rid].length - 1,
-  );
-
-  let txRid: Buffer;
-  await transactionBuilder(
-    testContext.account0.authenticator,
-    testContext.connection2.client,
-  )
-    .add(iccfOp, { authenticator: noopAuthenticator })
+    .add(state.proof, { authenticator: noopAuthenticator })
     .add(unapplyOperation)
-    .buildAndSendWithAnchoring()
-    .then((res) => (txRid = res.receipt.transactionRid));
+    .buildAndSendWithAnchoring();
 
   return {
     testContext,
     unappliedTransfer: {
       rowId: expect.any(Number),
-      initTxRid: txRid!,
-      initOpIndex: transferRef.opIndex,
+      initTxRid: txRid,
+      initOpIndex: state.opIndex,
     },
   };
 }
