@@ -29,7 +29,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedAssetOrigin).toBeNull();
     });
 
-    it("returns null when asset origin exists, but not for the selected rowid", async () => {
+    it("returns null when asset origin exists but not for the selected rowid", async () => {
       const testContext = await setupTestEnvironment("crosschain-asset-origin");
 
       const fetchedAssetOrigin =
@@ -82,7 +82,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedAppliedTransfer).toBeNull();
     });
 
-    it("returns null when applied transfer exists, but not for the selected rowid", async () => {
+    it("returns null when applied transfer exists but not for the selected rowid", async () => {
       const { testContext } =
         await setupApplyCrosschainTransferAndGetAppliedTransfer(
           "crosschain-apply-transfer",
@@ -119,7 +119,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedCanceledTransfer).toBeNull();
     });
 
-    it("returns null when canceled transfer exists, but not for the selected rowid", async () => {
+    it("returns null when canceled transfer exists but not for the selected rowid", async () => {
       const { testContext } =
         await cancelCrosschainTransferAndGetCanceledTransfer(
           "crosschain-cancel-transfer",
@@ -157,7 +157,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedUnappliedTransfer).toBeNull();
     });
 
-    it("returns null when unapplied transfer exists, but not for the selected rowid", async () => {
+    it("returns null when unapplied transfer exists but not for the selected rowid", async () => {
       const { testContext } =
         await unapplyCrosschainTransferAndGetUnappliedTransfer(
           "crosschain-unapplied-transfer",
@@ -195,7 +195,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedRecalledTransfer).toBeNull();
     });
 
-    it("returns null when recalled transfer exists, but not for the selected rowid", async () => {
+    it("returns null when recalled transfer exists but not for the selected rowid", async () => {
       const { testContext } =
         await recallCrosschainTransferAndGetRecalledTransfer(
           "crosschain-recalled-transfer",
@@ -235,7 +235,7 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedPendingTransfer).toBeNull();
     });
 
-    it("returns null when pending transfer exists, but not for the selected rowid", async () => {
+    it("returns null when pending transfer exists but not for the selected rowid", async () => {
       const { testContext } = await initCrosschainTransferAndGetPendingTransfer(
         "crosschain-pending-transfer",
       );
@@ -254,12 +254,7 @@ describe("crosschain queries by rowid", () => {
         await testContext.connection0.getPendingTransferByRowid(
           pendingTransfer.rowId,
         );
-      expect(fetchedPendingTransfer).toEqual({
-        rowId: pendingTransfer.rowId,
-        transactionId: pendingTransfer.transactionId,
-        opIndex: pendingTransfer.opIndex,
-        senderAccountId: pendingTransfer.senderAccountId,
-      });
+      expect(fetchedPendingTransfer).toEqual(pendingTransfer);
     });
   });
 
@@ -275,13 +270,13 @@ describe("crosschain queries by rowid", () => {
       expect(fetchedRevertedTransfer).toBeNull();
     });
 
-    it("returns null when reverted transfer exists, but not for the selected rowid", async () => {
+    it("returns null when reverted transfer exists but not for the selected rowid", async () => {
       const { testContext } = await revertTransferAndGetRevertedTransfer(
         "crosschain-reverted-transfer",
       );
 
       const fetchedRevertedTransfer =
-        await testContext.connection0.getPendingTransferByRowid(999);
+        await testContext.connection0.getRevertedTransferByRowid(999);
 
       expect(fetchedRevertedTransfer).toBeNull();
     });
@@ -293,15 +288,11 @@ describe("crosschain queries by rowid", () => {
         );
 
       const fetchedRevertedTransfer =
-        await testContext.connection0.getPendingTransferByRowid(
+        await testContext.connection0.getRevertedTransferByRowid(
           revertedTransfer.rowId,
         );
 
-      expect(fetchedRevertedTransfer).toEqual({
-        rowId: revertedTransfer.rowId,
-        initTxRid: revertedTransfer.initTxRid,
-        initOpIndex: revertedTransfer.initOpIndex,
-      });
+      expect(fetchedRevertedTransfer).toEqual(revertedTransfer);
     });
   });
 });
@@ -854,7 +845,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection2.getRevertedTransfersFiltered(null, 1);
+        await testContext.connection0.getRevertedTransfersFiltered(null, 1);
 
       expect(data[0]).toEqual(revertedTransfer);
     });
@@ -865,7 +856,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection2.getRevertedTransfersFiltered(
+        await testContext.connection0.getRevertedTransfersFiltered(
           setTransferFilter(
             [revertedTransfer.rowId],
             revertedTransfer.initTxRid,

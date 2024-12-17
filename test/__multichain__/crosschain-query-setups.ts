@@ -5,6 +5,7 @@ import {
   AppliedTransfer,
   AssetOriginFilter,
   PendingTransfer_,
+  PendingTransferFilter,
   Transfer,
   TransferFilter,
 } from "@ft4/crosschain/types";
@@ -12,9 +13,11 @@ import {
   OnAnchoredHandlerData,
   transactionBuilder,
 } from "@ft4/transaction-builder";
-import { getTransactionRid, PaginatedEntity } from "@ft4/utils";
+import { getTransactionRid, nop, PaginatedEntity } from "@ft4/utils";
 import { unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
+import { createSession } from "@ft4/ft-session";
+import { emptyOp } from "@ft4-test/util";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -39,6 +42,7 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   const appliedTransfersFiltered =
     await testContext.connection2.getAppliedTransfersFiltered(filter, 1);
 
+  // Returns transaction id not matching
   return {
     appliedTransfersFiltered,
     testContext,
@@ -61,10 +65,6 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
 }> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
-
-  console.log("=======1=======", testContext.multichain0.rid);
-  console.log("=======2=======", testContext.multichain1.rid);
-  console.log("=======3=======", testContext.multichain2.rid);
 
   const state = {} as any;
   await testContext.session0
@@ -94,12 +94,24 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
 
   const txRid = getTransactionRid(state.tx);
 
+  await createSession(
+    testContext.connection2,
+    testContext.account2.authenticator,
+  )
+    .transactionBuilder()
+    .add(emptyOp(), { authenticator: noopAuthenticator })
+    .add(nop(), { authenticator: noopAuthenticator })
+    .buildAndSend();
+
+  const pendingTransfers =
+    await testContext.account0.getPendingCrosschainTransfers();
+
   const cancelOperation = cancelTransfer(
+    pendingTransfers[0].tx,
+    pendingTransfers[0].opIndex,
     state.tx,
     state.opIndex,
-    state.tx,
-    state.opIndex,
-    0,
+    1,
   );
 
   await transactionBuilder(
@@ -213,22 +225,26 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
 
 export async function initCrosschainTransferAndGetPendingTransfer(
   assetName: string = "asset-name",
-): Promise<{ testContext: TestContext; pendingTransfer: PendingTransfer_ }> {
+  filter: PendingTransferFilter | null = null,
+): Promise<{
+  pendingTransfersFiltered: PaginatedEntity<PendingTransfer_>;
+  testContext: TestContext;
+  pendingTransfer: PendingTransfer_;
+}> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const initOperation = initTransfer(
-    testContext.account1.id,
+    testContext.account2.id,
     testContext.sampleAsset.id,
     createAmount(10, testContext.sampleAsset.decimals),
-    [testContext.multichain1.rid],
+    [testContext.multichain2.rid],
     Date.now(),
   );
+
   let txRid: Buffer;
-  await transactionBuilder(
-    testContext.account0.authenticator,
-    testContext.connection2.client,
-  )
+  await testContext.session0
+    .transactionBuilder()
     .add(initOperation)
     .buildAndSendWithAnchoring()
     .then((res) => (txRid = res.receipt.transactionRid));
@@ -237,10 +253,14 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     await testContext.account0.getPendingCrosschainTransfers();
   const foundPendingTransfer = pendingTransfers.data[0];
 
+  const pendingTransfersFiltered =
+    await testContext.connection0.getPendingTransfersFiltered(filter, 1);
+
   return {
+    pendingTransfersFiltered,
     testContext,
     pendingTransfer: {
-      rowId: expect.any(Number),
+      rowId: pendingTransfersFiltered.data[0].rowId,
       transactionId: txRid!,
       opIndex: foundPendingTransfer.opIndex,
       senderAccountId: testContext.account0.id,
@@ -250,12 +270,17 @@ export async function initCrosschainTransferAndGetPendingTransfer(
 
 export async function revertTransferAndGetRevertedTransfer(
   assetName: string = "asset-name",
-): Promise<{ testContext: TestContext; revertedTransfer: Transfer }> {
+  filter: TransferFilter | null = null,
+): Promise<{
+  revertedTransfersFiltered: PaginatedEntity<Transfer>;
+  testContext: TestContext;
+  revertedTransfer: Transfer;
+}> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
 
   const initOperation = initTransfer(
-    testContext.account1.id,
+    testContext.account2.id,
     testContext.sampleAsset.id,
     createAmount(10, testContext.sampleAsset.decimals),
     [testContext.multichain2.rid],
@@ -263,25 +288,37 @@ export async function revertTransferAndGetRevertedTransfer(
   );
 
   let txRid: Buffer;
-  await transactionBuilder(
-    testContext.account0.authenticator,
-    testContext.connection2.client,
-  )
+  await testContext.session0
+    .transactionBuilder()
     .add(initOperation)
     .buildAndSendWithAnchoring()
     .then((res) => (txRid = res.receipt.transactionRid));
 
+  // Force block building to get past deadline
+  await createSession(
+    testContext.connection2,
+    testContext.account2.authenticator,
+  )
+    .transactionBuilder()
+    .add(emptyOp(), { authenticator: noopAuthenticator })
+    .add(nop(), { authenticator: noopAuthenticator })
+    .buildAndSend();
+
   const pendingTransfers =
     await testContext.account0.getPendingCrosschainTransfers();
-  const foundPendingTransfer = pendingTransfers.data[0];
-  await testContext.account0.revertCrosschainTransfer(foundPendingTransfer);
+
+  await testContext.account0.revertCrosschainTransfer(pendingTransfers.data[0]);
+
+  const revertedTransfersFiltered =
+    await testContext.connection0.getRevertedTransfersFiltered(filter, 1);
 
   return {
+    revertedTransfersFiltered,
     testContext,
     revertedTransfer: {
-      rowId: expect.any(Number),
+      rowId: revertedTransfersFiltered.data[0].rowId,
       initTxRid: txRid!,
-      initOpIndex: foundPendingTransfer.opIndex,
+      initOpIndex: pendingTransfers.data[0].opIndex,
     },
   };
 }
