@@ -326,26 +326,24 @@ describe("crosschain queries with filter", () => {
         "crosschain-assets-origin-filter-3",
       );
 
-      const { data } = await testContext.connection0.getAssetOriginFiltered(
+      const { data } = await testContext.connection2.getAssetOriginFiltered(
         null,
         1,
       );
 
-      expect(JSON.stringify(data[0])).toStrictEqual(
+      expect(data[0].rowId).toEqual(expect.any(Number));
+      expect(data[0].originBlockchainRid).toEqual(testContext.multichain0.rid);
+      expect(JSON.stringify(data[0].asset)).toStrictEqual(
         JSON.stringify({
-          rowId: expect.any(Number),
-          asset: {
-            rowId: testContext.sampleAsset.rowId,
-            id: testContext.sampleAsset.id,
-            name: testContext.sampleAsset.name,
-            symbol: testContext.sampleAsset.symbol,
-            decimals: testContext.sampleAsset.decimals,
-            blockchainRid: testContext.sampleAsset.blockchainRid,
-            iconUrl: testContext.sampleAsset.iconUrl,
-            type: testContext.sampleAsset.type,
-            supply: testContext.sampleAsset.supply,
-          },
-          originBlockchainRid: testContext.multichain0.rid,
+          rowId: testContext.sampleAsset.rowId,
+          id: testContext.sampleAsset.id,
+          name: testContext.sampleAsset.name,
+          symbol: testContext.sampleAsset.symbol,
+          decimals: testContext.sampleAsset.decimals,
+          blockchainRid: testContext.sampleAsset.blockchainRid,
+          iconUrl: testContext.sampleAsset.iconUrl,
+          type: testContext.sampleAsset.type,
+          supply: testContext.sampleAsset.supply,
         }),
       );
     });
@@ -354,26 +352,30 @@ describe("crosschain queries with filter", () => {
         "crosschain-assets-origin-filter-4",
       );
 
-      const { data } = await testContext.connection0.getAssetOriginFiltered(
-        setAssetOriginFilter([0], mockBuffer),
+      const assetOriginWithoutFilter =
+        await testContext.connection2.getAssetOriginFiltered(null, 1);
+
+      const { data } = await testContext.connection2.getAssetOriginFiltered(
+        setAssetOriginFilter(
+          [assetOriginWithoutFilter.data[0].rowId],
+          testContext.sampleAsset.id,
+        ),
         1,
       );
 
-      expect(JSON.stringify(data[0])).toStrictEqual(
+      expect(data[0].rowId).toEqual(expect.any(Number));
+      expect(data[0].originBlockchainRid).toEqual(testContext.multichain0.rid);
+      expect(JSON.stringify(data[0].asset)).toStrictEqual(
         JSON.stringify({
-          rowId: expect.any(Number),
-          asset: {
-            rowId: testContext.sampleAsset.rowId,
-            id: testContext.sampleAsset.id,
-            name: testContext.sampleAsset.name,
-            symbol: testContext.sampleAsset.symbol,
-            decimals: testContext.sampleAsset.decimals,
-            blockchainRid: testContext.sampleAsset.blockchainRid,
-            iconUrl: testContext.sampleAsset.iconUrl,
-            type: testContext.sampleAsset.type,
-            supply: testContext.sampleAsset.supply,
-          },
-          originBlockchainRid: testContext.multichain0.rid,
+          rowId: testContext.sampleAsset.rowId,
+          id: testContext.sampleAsset.id,
+          name: testContext.sampleAsset.name,
+          symbol: testContext.sampleAsset.symbol,
+          decimals: testContext.sampleAsset.decimals,
+          blockchainRid: testContext.sampleAsset.blockchainRid,
+          iconUrl: testContext.sampleAsset.iconUrl,
+          type: testContext.sampleAsset.type,
+          supply: testContext.sampleAsset.supply,
         }),
       );
     });
@@ -434,13 +436,7 @@ describe("crosschain queries with filter", () => {
           "crosschain-applied-transfer-filter-5",
         );
 
-      expect(appliedTransfersFiltered[0]).toEqual({
-        rowId: appliedTransfer.rowId,
-        initTxRid: appliedTransfer.initTxRid,
-        initOpIndex: appliedTransfer.initOpIndex,
-        transactionId: appliedTransfer.transactionId,
-        opIndex: appliedTransfer.opIndex,
-      });
+      expect(appliedTransfersFiltered.data[0]).toEqual(appliedTransfer);
     });
     it("returns paginated applied transfers with all filter", async () => {
       const { testContext, appliedTransfer } =
@@ -753,15 +749,12 @@ describe("crosschain queries with filter", () => {
       expect(data.length).toBe(0);
     });
     it("returns paginated pending transfers without filter", async () => {
-      const { testContext, pendingTransfer } =
+      const { pendingTransfer, pendingTransfersFiltered } =
         await initCrosschainTransferAndGetPendingTransfer(
           "crosschain-pending-transfer-filter-4",
         );
 
-      const { data } =
-        await testContext.connection2.getPendingTransfersFiltered(null, 1);
-
-      expect(data[0]).toEqual(pendingTransfer);
+      expect(pendingTransfersFiltered.data[0]).toEqual(pendingTransfer);
     });
     it("returns paginated pending transfers with all filter", async () => {
       const { testContext, pendingTransfer } =
@@ -770,7 +763,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection2.getPendingTransfersFiltered(
+        await testContext.connection0.getPendingTransfersFiltered(
           setPendingTransferFilter(
             [pendingTransfer.rowId],
             pendingTransfer.transactionId,

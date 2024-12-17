@@ -37,20 +37,17 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     createAmount(10, mintAmount.decimals),
   );
 
-  const txRid = getTransactionRid(transferRef.tx);
-
   const appliedTransfersFiltered =
     await testContext.connection2.getAppliedTransfersFiltered(filter, 1);
 
-  // Returns transaction id not matching
   return {
     appliedTransfersFiltered,
     testContext,
     appliedTransfer: {
       rowId: appliedTransfersFiltered.data[0].rowId,
-      initTxRid: txRid,
+      initTxRid: appliedTransfersFiltered.data[0].initTxRid,
       initOpIndex: transferRef.opIndex,
-      transactionId: txRid,
+      transactionId: appliedTransfersFiltered.data[0].transactionId,
       opIndex: transferRef.opIndex,
     },
   };
@@ -287,12 +284,10 @@ export async function revertTransferAndGetRevertedTransfer(
     Date.now(),
   );
 
-  let txRid: Buffer;
   await testContext.session0
     .transactionBuilder()
     .add(initOperation)
-    .buildAndSendWithAnchoring()
-    .then((res) => (txRid = res.receipt.transactionRid));
+    .buildAndSendWithAnchoring();
 
   // Force block building to get past deadline
   await createSession(
@@ -317,8 +312,8 @@ export async function revertTransferAndGetRevertedTransfer(
     testContext,
     revertedTransfer: {
       rowId: revertedTransfersFiltered.data[0].rowId,
-      initTxRid: txRid!,
-      initOpIndex: pendingTransfers.data[0].opIndex,
+      initTxRid: revertedTransfersFiltered.data[0].initTxRid,
+      initOpIndex: revertedTransfersFiltered.data[0].initOpIndex,
     },
   };
 }
