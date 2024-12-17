@@ -43,6 +43,11 @@ import {
 import { nop } from "@ft4/utils/index";
 import { recallUnclaimedTransfer } from "@ft4/crosschain/operations";
 import { transactionBuilder } from "@ft4/transaction-builder/index";
+import {
+  recallCrosschainTransferAndGetRecalledTransfer,
+  setTransferFilter,
+} from "./crosschain-query-setups";
+import { setupTestEnvironment } from "./common-setup";
 
 let asset: Asset;
 let timeoutAsset: Asset;
@@ -718,5 +723,136 @@ describe("Fee account creation single step", () => {
     ).rejects.toThrow(
       `Transaction <0x${formatter.toString(gtv.gtvHash(transferRef.tx[0])).toLowerCase()}> transfer at index <${transferRef.opIndex}> has already been recalled on this chain.`,
     );
+  });
+
+  describe("getRecalledTransferByRowid", () => {
+    it("returns null when recalled transfer is not found or does not exist", async () => {
+      const { multichain00 } = await fetchBlockchains();
+      const connection00 = createConnection(
+        await createChromiaClientToMultichain(multichain00.rid),
+      );
+
+      const fetchedRecalledTransfer =
+        await connection00.getRecalledTransferByRowid(0);
+      expect(fetchedRecalledTransfer).toBeNull();
+    });
+
+    it("returns null when recalled transfer exists but not for the selected rowid", async () => {
+      await recallCrosschainTransferAndGetRecalledTransfer(
+        senderConnection,
+        recipientConnection,
+        timeoutAsset,
+      );
+
+      const fetchedRecalledTransfer =
+        await recipientConnection.getRecalledTransferByRowid(999);
+      expect(fetchedRecalledTransfer).toBeNull();
+    });
+
+    it("returns recalled transfer by rowid", async () => {
+      const { recalledTransfersFiltered, recalledTransfer } =
+        await recallCrosschainTransferAndGetRecalledTransfer(
+          senderConnection,
+          recipientConnection,
+          timeoutAsset,
+        );
+
+      const fetchedRecalledTransfer =
+        await recipientConnection.getRecalledTransferByRowid(
+          recalledTransfersFiltered.data[0].rowId,
+        );
+
+      expect(fetchedRecalledTransfer).toEqual(recalledTransfer);
+    });
+  });
+
+  describe("getRecalledTransfersFiltered", () => {
+    const mockBuffer: Buffer = Buffer.alloc(32);
+    it("throws `INVALID FILTER` error when composite index init_tx_rid exists but init_op_index is not", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-1",
+      );
+
+      const promise = testContext.connection0.getRecalledTransfersFiltered(
+        setTransferFilter([], mockBuffer),
+        1,
+      );
+
+      await expect(promise).rejects.toThrow(
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+      );
+    });
+    it("throws `INVALID FILTER` error when composite index init_op_index exists but init_tx_rid is not", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-2",
+      );
+
+      const promise = testContext.connection0.getRecalledTransfersFiltered(
+        setTransferFilter([], null, 0),
+        1,
+      );
+
+      await expect(promise).rejects.toThrow(
+        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+      );
+    });
+    it("returns empty pagination without filter", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-3",
+      );
+
+      const { data } =
+        await testContext.connection0.getRecalledTransfersFiltered(null, 1);
+      const foundRecalledTransfer =
+        data.find((item) => item.rowId === 999) ?? null;
+      expect(foundRecalledTransfer).toBe(null);
+    });
+    it("returns empty pagination with all filter", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-4",
+      );
+
+      const { data } =
+        await testContext.connection0.getRecalledTransfersFiltered(
+          setTransferFilter([0], mockBuffer, 0),
+          1,
+        );
+
+      expect(data.length).toBe(0);
+    });
+    it("returns paginated recalled transfers without filter", async () => {
+      const { recalledTransfer } =
+        await recallCrosschainTransferAndGetRecalledTransfer(
+          senderConnection,
+          recipientConnection,
+          timeoutAsset,
+        );
+
+      const { data } = await recipientConnection.getRecalledTransfersFiltered(
+        null,
+        1,
+      );
+
+      expect(data[0]).toEqual(recalledTransfer);
+    });
+    it("returns paginated recalled transfers with all filter", async () => {
+      const { recalledTransfer } =
+        await recallCrosschainTransferAndGetRecalledTransfer(
+          senderConnection,
+          recipientConnection,
+          timeoutAsset,
+        );
+
+      const { data } = await recipientConnection.getRecalledTransfersFiltered(
+        setTransferFilter(
+          [recalledTransfer.rowId],
+          recalledTransfer.initTxRid,
+          recalledTransfer.initOpIndex,
+        ),
+        1,
+      );
+
+      expect(data[0]).toEqual(recalledTransfer);
+    });
   });
 });

@@ -1,6 +1,13 @@
-import { createAmount } from "@ft4/asset";
-import { noopAuthenticator } from "@ft4/authentication";
-import { cancelTransfer, initTransfer } from "@ft4/crosschain";
+import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
+import {
+  createInMemoryFtKeyStore,
+  noopAuthenticator,
+} from "@ft4/authentication";
+import {
+  cancelTransfer,
+  crosschainTransfer,
+  initTransfer,
+} from "@ft4/crosschain";
 import {
   AppliedTransfer,
   AssetOriginFilter,
@@ -16,8 +23,19 @@ import {
 import { getTransactionRid, nop, PaginatedEntity } from "@ft4/utils";
 import { unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { createSession } from "@ft4/ft-session";
-import { emptyOp } from "@ft4-test/util";
+import { Connection, createSession } from "@ft4/ft-session";
+import { adminUser, emptyOp } from "@ft4-test/util";
+import { encryption, gtv } from "postchain-client";
+import {
+  AuthFlag,
+  createSingleSigAuthDescriptorRegistration,
+} from "@ft4/accounts";
+import {
+  feeAssets,
+  registerAccount,
+  registrationStrategy,
+} from "@ft4/registration";
+import { mint } from "@ft4/admin";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -193,28 +211,65 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
 }
 
 export async function recallCrosschainTransferAndGetRecalledTransfer(
-  assetName: string = "asset-name",
-): Promise<{ testContext: TestContext; recalledTransfer: Transfer }> {
-  const mintAmount = createAmount(100, 0);
-  const testContext = await setupTestEnvironment(assetName, mintAmount);
-
-  const transferRef = await testContext.account0.crosschainTransfer(
-    testContext.multichain2.rid,
-    testContext.account2.id,
-    testContext.sampleAsset.id,
-    createAmount(10, mintAmount.decimals),
-    10000000000000,
+  senderConnection: Connection,
+  recipientConnection: Connection,
+  timeoutAsset: Asset,
+  filter: TransferFilter | null = null,
+): Promise<{
+  recalledTransfersFiltered: PaginatedEntity<Transfer>;
+  recalledTransfer: Transfer;
+}> {
+  const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
+  const authDescriptor = createSingleSigAuthDescriptorRegistration(
+    [AuthFlag.Account, AuthFlag.Transfer],
+    keyStore.id,
   );
 
-  await testContext.account0.recallUnclaimedCrosschainTransfer(transferRef);
+  const senderSession = (
+    await registerAccount(
+      senderConnection.client,
+      keyStore,
+      registrationStrategy.open(authDescriptor),
+    )
+  ).session;
+  const senderAccount = senderSession.account;
 
-  const txRid = getTransactionRid(transferRef.tx);
+  const feeAmounts = await recipientConnection.query(feeAssets());
+  const amount = feeAmounts.find((amt) =>
+    amt.asset_id.equals(timeoutAsset.id),
+  )!.amount;
+
+  const feeAmount = createAmountFromBalance(amount, timeoutAsset.decimals);
+  await mint(
+    senderConnection.client,
+    adminUser().signatureProvider,
+    senderAccount.id,
+    timeoutAsset.id,
+    feeAmount,
+  );
+
+  const recipientId = gtv.gtvHash(keyStore.id);
+
+  const transferRef = await crosschainTransfer(
+    senderConnection,
+    senderAccount.authenticator,
+    recipientConnection.blockchainRid,
+    recipientId,
+    timeoutAsset.id,
+    feeAmount,
+    /*ttl=*/ 5000,
+  );
+
+  await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
+
+  const recalledTransfersFiltered =
+    await recipientConnection.getRecalledTransfersFiltered(filter, 1);
 
   return {
-    testContext,
+    recalledTransfersFiltered,
     recalledTransfer: {
-      rowId: expect.any(Number),
-      initTxRid: txRid,
+      rowId: recalledTransfersFiltered.data[0].rowId,
+      initTxRid: recalledTransfersFiltered.data[0].initTxRid,
       initOpIndex: transferRef.opIndex,
     },
   };
