@@ -215,8 +215,8 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
 
   // Force block building to get past deadline
   await createSession(
-    testContext.connection2,
-    testContext.account2.authenticator,
+    testContext.connection1,
+    testContext.account1.authenticator,
   )
     .transactionBuilder()
     .add(emptyOp(), { authenticator: noopAuthenticator })
@@ -224,8 +224,8 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .buildAndSend();
 
   const cancelOperation = cancelTransfer(
-    state.tx,
-    state.opIndex,
+    applyState.tx,
+    applyState.initialOpIndex,
     applyState.tx,
     applyState.opIndex,
     1,
