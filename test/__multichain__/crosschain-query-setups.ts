@@ -294,12 +294,10 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     Date.now(),
   );
 
-  let txRid: Buffer;
   await testContext.session0
     .transactionBuilder()
     .add(initOperation)
-    .buildAndSendWithAnchoring()
-    .then((res) => (txRid = res.receipt.transactionRid));
+    .buildAndSendWithAnchoring();
 
   const pendingTransfers =
     await testContext.account0.getPendingCrosschainTransfers();
@@ -313,7 +311,7 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     testContext,
     pendingTransfer: {
       rowId: pendingTransfersFiltered.data[0].rowId,
-      transactionId: txRid!,
+      transactionId: pendingTransfersFiltered.data[0].transactionId,
       opIndex: foundPendingTransfer.opIndex,
       senderAccountId: testContext.account0.id,
     },
