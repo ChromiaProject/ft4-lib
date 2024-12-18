@@ -287,12 +287,20 @@ describe("crosschain queries with filter", () => {
 
       const { data } = await testContext.connection2.getAssetOriginFiltered(
         null,
-        1,
+        100,
       );
 
-      expect(data[0].rowId).toEqual(expect.any(Number));
-      expect(data[0].originBlockchainRid).toEqual(testContext.multichain0.rid);
-      expect(JSON.stringify(data[0].asset)).toStrictEqual(
+      const foundAssetOrigin = data.find(
+        (item) =>
+          item.asset.id.toString("hex") ===
+          testContext.sampleAsset.id.toString("hex"),
+      );
+
+      expect(foundAssetOrigin!.rowId).toEqual(expect.any(Number));
+      expect(foundAssetOrigin!.originBlockchainRid).toEqual(
+        testContext.multichain0.rid,
+      );
+      expect(JSON.stringify(foundAssetOrigin!.asset)).toStrictEqual(
         JSON.stringify({
           rowId: testContext.sampleAsset.rowId,
           id: testContext.sampleAsset.id,
@@ -319,12 +327,20 @@ describe("crosschain queries with filter", () => {
           [assetOriginWithoutFilter.data[0].rowId],
           testContext.sampleAsset.id,
         ),
-        1,
+        100,
       );
 
-      expect(data[0].rowId).toEqual(expect.any(Number));
-      expect(data[0].originBlockchainRid).toEqual(testContext.multichain0.rid);
-      expect(JSON.stringify(data[0].asset)).toStrictEqual(
+      const foundAssetOrigin = data.find(
+        (item) =>
+          item.asset.id.toString("hex") ===
+          testContext.sampleAsset.id.toString("hex"),
+      );
+
+      expect(foundAssetOrigin!.rowId).toEqual(expect.any(Number));
+      expect(foundAssetOrigin!.originBlockchainRid).toEqual(
+        testContext.multichain0.rid,
+      );
+      expect(JSON.stringify(foundAssetOrigin!.asset)).toStrictEqual(
         JSON.stringify({
           rowId: testContext.sampleAsset.rowId,
           id: testContext.sampleAsset.id,
