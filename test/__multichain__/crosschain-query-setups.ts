@@ -20,8 +20,8 @@ import {
   OnAnchoredHandlerData,
   transactionBuilder,
 } from "@ft4/transaction-builder";
-import { getTransactionRid, nop, PaginatedEntity } from "@ft4/utils";
-import { unapplyTransfer } from "@ft4/crosschain/operations";
+import { nop, PaginatedEntity } from "@ft4/utils";
+import { applyTransfer, unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
 import { Connection, createSession } from "@ft4/ft-session";
 import { adminUser, emptyOp } from "@ft4-test/util";
@@ -35,7 +35,7 @@ import {
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { mint } from "@ft4/admin";
+import { mint, registerCrosschainAsset } from "@ft4/admin";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -89,8 +89,8 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
         testContext.account1.id,
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
-        [testContext.multichain1.rid],
-        Date.now() + 10000,
+        [testContext.multichain2.rid],
+        Date.now(),
       ),
       {
         targetBlockchainRid: testContext.multichain2.rid,
@@ -107,8 +107,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
 
   state.proof = await state.proof;
 
-  const txRid = getTransactionRid(state.tx);
-
+  // Force block building to get past deadline
   await createSession(
     testContext.connection2,
     testContext.account2.authenticator,
@@ -118,15 +117,12 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     .add(nop(), { authenticator: noopAuthenticator })
     .buildAndSend();
 
-  const pendingTransfers =
-    await testContext.account0.getPendingCrosschainTransfers();
-
   const cancelOperation = cancelTransfer(
-    pendingTransfers[0].tx,
-    pendingTransfers[0].opIndex,
     state.tx,
     state.opIndex,
-    1,
+    state.tx,
+    state.opIndex,
+    0,
   );
 
   await transactionBuilder(
@@ -145,7 +141,7 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     testContext,
     canceledTransfer: {
       rowId: canceledTransferFiltered.data[0].rowId,
-      initTxRid: txRid,
+      initTxRid: canceledTransferFiltered.data[0].initTxRid,
       initOpIndex: state.opIndex,
     },
   };
@@ -153,19 +149,31 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
 
 export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
   assetName: string = "asset-name",
-): Promise<{ testContext: TestContext; unappliedTransfer: Transfer }> {
+  filter: TransferFilter | null = null,
+): Promise<{
+  unappliedTransfersFiltered: PaginatedEntity<Transfer>;
+  testContext: TestContext;
+  unappliedTransfer: Transfer;
+}> {
   const mintAmount = createAmount(100, 0);
   const testContext = await setupTestEnvironment(assetName, mintAmount);
+
+  await registerCrosschainAsset(
+    testContext.connection1.client,
+    adminUser().signatureProvider,
+    testContext.sampleAsset.id,
+    testContext.multichain2.rid,
+  );
 
   const state = {} as any;
   await testContext.session0
     .transactionBuilder()
     .add(
       initTransfer(
-        testContext.account1.id,
+        testContext.account2.id,
         testContext.sampleAsset.id,
         createAmount(10, mintAmount.decimals),
-        [testContext.multichain1.rid],
+        [testContext.multichain2.rid, testContext.multichain1.rid],
         Date.now() + 10000,
       ),
       {
@@ -182,29 +190,79 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .buildAndSendWithAnchoring();
 
   state.proof = await state.proof;
-  const txRid = getTransactionRid(state.tx);
+
+  const applyState = {} as any;
+  await testContext.session2
+    .transactionBuilder()
+    .add(state.proof, { authenticator: noopAuthenticator })
+    .add(
+      applyTransfer(state.tx!, state.opIndex!, state.tx!, state.opIndex!, 0),
+      {
+        authenticator: noopAuthenticator,
+        targetBlockchainRid: testContext.multichain1.rid,
+        onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
+          applyState.tx = data?.tx;
+          applyState.initialOpIndex = data?.opIndex;
+          applyState.initialTx = data?.tx;
+          applyState.opIndex = data?.opIndex;
+          applyState.proof = data?.createProof(testContext.multichain1.rid);
+        },
+      },
+    )
+    .buildAndSendWithAnchoring();
+
+  applyState.proof = await applyState.proof;
+
+  const cancelOperation = cancelTransfer(
+    applyState.tx,
+    applyState.opIndex,
+    applyState.tx,
+    applyState.opIndex,
+    1,
+  );
+
+  const cancelState = {} as any;
+  await testContext.session1
+    .transactionBuilder()
+    .add(applyState.proof, { authenticator: noopAuthenticator })
+    .add(cancelOperation, {
+      authenticator: noopAuthenticator,
+      targetBlockchainRid: testContext.multichain1.rid,
+      onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
+        cancelState.tx = data?.tx;
+        cancelState.initialOpIndex = data?.opIndex;
+        cancelState.initialTx = data?.tx;
+        cancelState.opIndex = data?.opIndex;
+        cancelState.proof = data?.createProof(testContext.multichain1.rid);
+      },
+    })
+    .buildAndSendWithAnchoring();
+
+  cancelState.proof = await cancelState.proof;
 
   const unapplyOperation = unapplyTransfer(
-    state.tx,
-    state.opIndex,
-    state.tx,
-    state.opIndex,
+    cancelState.tx,
+    cancelState.opIndex,
+    cancelState.tx,
+    cancelState.opIndex,
     0,
   );
 
-  await transactionBuilder(
-    testContext.account0.authenticator,
-    testContext.connection2.client,
-  )
-    .add(state.proof, { authenticator: noopAuthenticator })
+  await testContext.session2
+    .transactionBuilder()
+    .add(cancelState.proof, { authenticator: noopAuthenticator })
     .add(unapplyOperation)
     .buildAndSendWithAnchoring();
 
+  const unappliedTransfersFiltered =
+    await testContext.connection2.getUnappliedTransfersFiltered(filter, 1);
+
   return {
+    unappliedTransfersFiltered,
     testContext,
     unappliedTransfer: {
-      rowId: expect.any(Number),
-      initTxRid: txRid,
+      rowId: unappliedTransfersFiltered.data[0].rowId,
+      initTxRid: unappliedTransfersFiltered.data[0].initTxRid,
       initOpIndex: state.opIndex,
     },
   };

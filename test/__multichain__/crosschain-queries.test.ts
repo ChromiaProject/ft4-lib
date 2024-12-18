@@ -488,7 +488,7 @@ describe("crosschain queries with filter", () => {
         );
 
       const { data } =
-        await testContext.connection0.getCanceledTransfersFiltered(
+        await testContext.connection2.getCanceledTransfersFiltered(
           setTransferFilter(
             [canceledTransfer.rowId],
             canceledTransfer.initTxRid,
@@ -497,11 +497,7 @@ describe("crosschain queries with filter", () => {
           1,
         );
 
-      expect(data[0]).toEqual({
-        rowId: canceledTransfer.rowId,
-        initTxRid: canceledTransfer.initTxRid,
-        initOpIndex: canceledTransfer.initOpIndex,
-      });
+      expect(data[0]).toEqual(canceledTransfer);
     });
   });
 
@@ -558,15 +554,12 @@ describe("crosschain queries with filter", () => {
       expect(data.length).toBe(0);
     });
     it("returns paginated unapplied transfers without filter", async () => {
-      const { testContext, unappliedTransfer } =
+      const { unappliedTransfer, unappliedTransfersFiltered } =
         await unapplyCrosschainTransferAndGetUnappliedTransfer(
           "crosschain-unapplied-transfer-filter-5",
         );
 
-      const { data } =
-        await testContext.connection2.getUnappliedTransfersFiltered(null, 1);
-
-      expect(data[0]).toEqual(unappliedTransfer);
+      expect(unappliedTransfersFiltered.data[0]).toEqual(unappliedTransfer);
     });
     it("returns paginated unapplied transfers with all filter", async () => {
       const { testContext, unappliedTransfer } =
