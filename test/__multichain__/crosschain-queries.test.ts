@@ -41,17 +41,23 @@ describe("crosschain queries by rowid", () => {
         "crosschain-asset-origin-1",
       );
 
-      const foundAssetOrigin =
-        await testContext.connection2.getAssetOriginFiltered(null, 1);
+      const allAssetOrigins =
+        await testContext.connection2.getAssetOriginFiltered(null, 100);
+
+      const foundAssetOrigin = allAssetOrigins.data.find(
+        (item) =>
+          item.asset.id.toString("hex") ===
+          testContext.sampleAsset.id.toString("hex"),
+      );
 
       const fetchedAssetOrigin =
         await testContext.connection2.getAssetOriginByRowid(
-          foundAssetOrigin.data[0].rowId,
+          foundAssetOrigin!.rowId,
         );
 
       expect(JSON.stringify(fetchedAssetOrigin)).toStrictEqual(
         JSON.stringify({
-          rowId: foundAssetOrigin.data[0].rowId,
+          rowId: foundAssetOrigin!.rowId,
           asset: {
             rowId: testContext.sampleAsset.rowId,
             id: testContext.sampleAsset.id,
@@ -163,7 +169,7 @@ describe("crosschain queries by rowid", () => {
         );
 
       const fetchedUnappliedTransfer =
-        await testContext.connection0.getUnappliedTransferByRowid(999);
+        await testContext.connection2.getUnappliedTransferByRowid(999);
       expect(fetchedUnappliedTransfer).toBeNull();
     });
 
