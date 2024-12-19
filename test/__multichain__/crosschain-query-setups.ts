@@ -165,7 +165,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     testContext.multichain2.rid,
   );
 
-  const state = {} as any;
+  const initState = {} as any;
   await testContext.session0
     .transactionBuilder()
     .add(
@@ -179,33 +179,39 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
       {
         targetBlockchainRid: testContext.multichain2.rid,
         onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
-          state.tx = data?.tx;
-          state.initialOpIndex = data?.opIndex;
-          state.initialTx = data?.tx;
-          state.opIndex = data?.opIndex;
-          state.proof = data?.createProof(testContext.multichain2.rid);
+          initState.tx = data?.tx;
+          initState.initialOpIndex = data?.opIndex;
+          initState.initialTx = data?.tx;
+          initState.opIndex = data?.opIndex;
+          initState.proof = data?.createProof(testContext.multichain2.rid);
         },
       },
     )
     .buildAndSendWithAnchoring();
 
-  state.proof = await state.proof;
+  initState.proof = await initState.proof;
 
   const applyState = {} as any;
   await testContext.session2
     .transactionBuilder()
-    .add(state.proof, { authenticator: noopAuthenticator })
+    .add(initState.proof, { authenticator: noopAuthenticator })
     .add(
-      applyTransfer(state.tx!, state.opIndex!, state.tx!, state.opIndex!, 0),
+      applyTransfer(
+        initState.tx!,
+        initState.opIndex!,
+        initState.tx!,
+        initState.opIndex!,
+        0,
+      ),
       {
         authenticator: noopAuthenticator,
-        targetBlockchainRid: testContext.multichain1.rid,
+        targetBlockchainRid: testContext.multichain2.rid,
         onAnchoredHandler: (data: OnAnchoredHandlerData | null) => {
           applyState.tx = data?.tx;
           applyState.initialOpIndex = data?.opIndex;
           applyState.initialTx = data?.tx;
           applyState.opIndex = data?.opIndex;
-          applyState.proof = data?.createProof(testContext.multichain1.rid);
+          applyState.proof = data?.createProof(testContext.multichain2.rid);
         },
       },
     )
@@ -224,8 +230,8 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     .buildAndSend();
 
   const cancelOperation = cancelTransfer(
-    applyState.tx,
-    applyState.initialOpIndex,
+    initState.tx,
+    initState.initialOpIndex,
     applyState.tx,
     applyState.opIndex,
     1,
@@ -250,9 +256,19 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
 
   cancelState.proof = await cancelState.proof;
 
+  // Force block building to get past deadline
+  await createSession(
+    testContext.connection2,
+    testContext.account2.authenticator,
+  )
+    .transactionBuilder()
+    .add(emptyOp(), { authenticator: noopAuthenticator })
+    .add(nop(), { authenticator: noopAuthenticator })
+    .buildAndSend();
+
   const unapplyOperation = unapplyTransfer(
-    cancelState.tx,
-    cancelState.opIndex,
+    initState.tx,
+    initState.opIndex,
     cancelState.tx,
     cancelState.opIndex,
     0,
@@ -273,7 +289,7 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     unappliedTransfer: {
       rowId: unappliedTransfersFiltered.data[0].rowId,
       initTxRid: unappliedTransfersFiltered.data[0].initTxRid,
-      initOpIndex: state.opIndex,
+      initOpIndex: initState.opIndex,
     },
   };
 }
