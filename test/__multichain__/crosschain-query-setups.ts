@@ -36,6 +36,7 @@ import {
   registrationStrategy,
 } from "@ft4/registration";
 import { mint, registerCrosschainAsset } from "@ft4/admin";
+import { createAccountObjectFiltered } from "@ft4/accounts/query-functions";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -62,7 +63,6 @@ export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
     appliedTransfersFiltered,
     testContext,
     appliedTransfer: {
-      rowId: appliedTransfersFiltered.data[0].rowId,
       initTxRid: appliedTransfersFiltered.data[0].initTxRid,
       initOpIndex: transferRef.opIndex,
       transactionId: appliedTransfersFiltered.data[0].transactionId,
@@ -140,7 +140,6 @@ export async function cancelCrosschainTransferAndGetCanceledTransfer(
     canceledTransferFiltered,
     testContext,
     canceledTransfer: {
-      rowId: canceledTransferFiltered.data[0].rowId,
       initTxRid: canceledTransferFiltered.data[0].initTxRid,
       initOpIndex: state.opIndex,
     },
@@ -287,7 +286,6 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
     unappliedTransfersFiltered,
     testContext,
     unappliedTransfer: {
-      rowId: unappliedTransfersFiltered.data[0].rowId,
       initTxRid: unappliedTransfersFiltered.data[0].initTxRid,
       initOpIndex: initState.opIndex,
     },
@@ -352,7 +350,6 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
   return {
     recalledTransfersFiltered,
     recalledTransfer: {
-      rowId: recalledTransfersFiltered.data[0].rowId,
       initTxRid: recalledTransfersFiltered.data[0].initTxRid,
       initOpIndex: transferRef.opIndex,
     },
@@ -390,10 +387,12 @@ export async function initCrosschainTransferAndGetPendingTransfer(
     pendingTransfersFiltered,
     testContext,
     pendingTransfer: {
-      rowId: pendingTransfersFiltered.data[0].rowId,
       transactionId: pendingTransfersFiltered.data[0].transactionId,
       opIndex: pendingTransfersFiltered.data[0].opIndex,
-      senderAccountId: testContext.account0.id,
+      senderAccount: createAccountObjectFiltered({
+        id: pendingTransfersFiltered.data[0].senderAccount.id,
+        type: pendingTransfersFiltered.data[0].senderAccount.type,
+      }),
     },
   };
 }
@@ -444,7 +443,6 @@ export async function revertTransferAndGetRevertedTransfer(
     revertedTransfersFiltered,
     testContext,
     revertedTransfer: {
-      rowId: revertedTransfersFiltered.data[0].rowId,
       initTxRid: revertedTransfersFiltered.data[0].initTxRid,
       initOpIndex: revertedTransfersFiltered.data[0].initOpIndex,
     },
@@ -452,25 +450,22 @@ export async function revertTransferAndGetRevertedTransfer(
 }
 
 export function setAssetOriginFilter(
-  rowids: Array<number> = [],
-  assetId: Buffer | null = null,
+  assetIds: Array<Buffer> | null = null,
 ): AssetOriginFilter {
-  return { rowids, assetId };
+  return { assetIds };
 }
 
 export function setTransferFilter(
-  rowids: Array<number> = [],
-  initTxRid: Buffer | null = null,
+  initTxRids: Array<Buffer> | null = null,
   initOpIndex: number | null = null,
 ): TransferFilter {
-  return { rowids, initTxRid, initOpIndex };
+  return { initTxRids, initOpIndex };
 }
 
 export function setPendingTransferFilter(
-  rowids: Array<number> = [],
-  transactionId: Buffer | null = null,
+  transactionIds: Array<Buffer> | null = null,
   initOpIndex: number | null = null,
   senderAccountId: Buffer | null = null,
 ) {
-  return { rowids, transactionId, initOpIndex, senderAccountId };
+  return { transactionIds, initOpIndex, senderAccountId };
 }

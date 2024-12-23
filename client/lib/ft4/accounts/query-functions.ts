@@ -33,7 +33,7 @@ import {
   TransferHistoryFilter,
   createTransferHistoryEntryFromResponse,
 } from "./transfer-history";
-import { Account, RateLimit } from "./types";
+import { Account, AccountFiltered, RateLimit } from "./types";
 
 //this will be outdated as soon as another tx is sent to the same account:
 //does it make sense for the users to have it? Who needs this info?
@@ -77,6 +77,7 @@ export function createAccountObject(
     connection,
     id: formatter.ensureBuffer(accountId),
     blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
+    type: "",
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
     getBalances: (
@@ -151,9 +152,9 @@ export async function getById(
   connection: Connection,
   id: BufferId,
 ): Promise<Account | null> {
-  const accountId = await connection.query(accountById(id));
+  const account = await connection.query(accountById(id));
 
-  return accountId && createAccountObject(connection, accountId);
+  return account && createAccountObject(connection, account.id);
 }
 
 /**
@@ -277,4 +278,13 @@ export async function getAccountMainAuthDescriptor(
   );
 
   return gtv.authDescriptorFromGtv(authDescriptor);
+}
+
+export function createAccountObjectFiltered(
+  account: AccountFiltered,
+): AccountFiltered {
+  return Object.freeze({
+    id: account.id,
+    type: account.type,
+  });
 }

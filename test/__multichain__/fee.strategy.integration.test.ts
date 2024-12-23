@@ -92,7 +92,6 @@ describe("Fee account creation single step", () => {
     ]);
 
     nonExistentChain00Asset = {
-      rowId: Math.floor(Math.random()),
       id: missingAssetId,
       name: "fee_strategy_missing_test_asset_00",
       symbol: "fee_strategy_missing_test_asset_00",
@@ -725,75 +724,34 @@ describe("Fee account creation single step", () => {
     );
   });
 
-  describe("getRecalledTransferByRowid", () => {
-    it("returns null when recalled transfer is not found or does not exist", async () => {
-      const { multichain00 } = await fetchBlockchains();
-      const connection00 = createConnection(
-        await createChromiaClientToMultichain(multichain00.rid),
-      );
-
-      const fetchedRecalledTransfer =
-        await connection00.getRecalledTransferByRowid(0);
-      expect(fetchedRecalledTransfer).toBeNull();
-    });
-
-    it("returns null when recalled transfer exists but not for the selected rowid", async () => {
-      await recallCrosschainTransferAndGetRecalledTransfer(
-        senderConnection,
-        recipientConnection,
-        timeoutAsset,
-      );
-
-      const fetchedRecalledTransfer =
-        await recipientConnection.getRecalledTransferByRowid(999);
-      expect(fetchedRecalledTransfer).toBeNull();
-    });
-
-    it("returns recalled transfer by rowid", async () => {
-      const { recalledTransfersFiltered, recalledTransfer } =
-        await recallCrosschainTransferAndGetRecalledTransfer(
-          senderConnection,
-          recipientConnection,
-          timeoutAsset,
-        );
-
-      const fetchedRecalledTransfer =
-        await recipientConnection.getRecalledTransferByRowid(
-          recalledTransfersFiltered.data[0].rowId,
-        );
-
-      expect(fetchedRecalledTransfer).toEqual(recalledTransfer);
-    });
-  });
-
   describe("getRecalledTransfersFiltered", () => {
     const mockBuffer: Buffer = Buffer.alloc(32);
-    it("throws `INVALID FILTER` error when composite index init_tx_rid exists but init_op_index is not", async () => {
+    it("throws `INVALID FILTER` error when composite index init_tx_rids exist but init_op_index is not", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-recalled-transfer-filter-1",
       );
 
       const promise = testContext.connection0.getRecalledTransfersFiltered(
-        setTransferFilter([], mockBuffer),
+        setTransferFilter([mockBuffer]),
         1,
       );
 
       await expect(promise).rejects.toThrow(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
       );
     });
-    it("throws `INVALID FILTER` error when composite index init_op_index exists but init_tx_rid is not", async () => {
+    it("throws `INVALID FILTER` error when composite index init_op_index exists but init_tx_rids array is empty", async () => {
       const testContext = await setupTestEnvironment(
         "crosschain-recalled-transfer-filter-2",
       );
 
       const promise = testContext.connection0.getRecalledTransfersFiltered(
-        setTransferFilter([], null, 0),
+        setTransferFilter(null, 0),
         1,
       );
 
       await expect(promise).rejects.toThrow(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
       );
     });
     it("returns empty pagination without filter", async () => {
@@ -804,7 +762,10 @@ describe("Fee account creation single step", () => {
       const { data } =
         await testContext.connection0.getRecalledTransfersFiltered(null, 1);
       const foundRecalledTransfer =
-        data.find((item) => item.rowId === 999) ?? null;
+        data.find(
+          (item) =>
+            item.initTxRid.toString("hex") === mockBuffer.toString("hex"),
+        ) ?? null;
       expect(foundRecalledTransfer).toBe(null);
     });
     it("returns empty pagination with all filter", async () => {
@@ -814,7 +775,7 @@ describe("Fee account creation single step", () => {
 
       const { data } =
         await testContext.connection0.getRecalledTransfersFiltered(
-          setTransferFilter([0], mockBuffer, 0),
+          setTransferFilter([mockBuffer], 0),
           1,
         );
 
@@ -845,8 +806,7 @@ describe("Fee account creation single step", () => {
 
       const { data } = await recipientConnection.getRecalledTransfersFiltered(
         setTransferFilter(
-          [recalledTransfer.rowId],
-          recalledTransfer.initTxRid,
+          [recalledTransfer.initTxRid],
           recalledTransfer.initOpIndex,
         ),
         1,

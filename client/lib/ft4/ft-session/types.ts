@@ -186,122 +186,85 @@ export interface Connection extends Queryable {
     assetId: BufferId,
   ) => Promise<TransferDetail[]>;
   /**
-   * {@inheritDoc crosschain.getAssetOriginByRowid}
-   * @param rowId - The rowid of the asset origin to retrieve
-   */
-  getAssetOriginByRowid: (rowId: number) => Promise<AssetOrigin | null>;
-  /**
    * {@inheritDoc crosschain.getAssetOriginFiltered}
-   * @param assetOriginFilter - The asset origin filter (rowids and assetId) that can be applied to the query results
+   * @param assetOriginFilter - The asset origin filter (array of assetId) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getAssetOriginFiltered: (
-    assetOriginFilter: AssetOriginFilter | null,
+    assetOriginFilter?: AssetOriginFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AssetOrigin>>;
   /**
-   * {@inheritDoc crosschain.getAppliedTransferByRowid}
-   * @param rowId - The rowid of the applied transfer to retrieve
-   */
-  getAppliedTransferByRowid: (rowId: number) => Promise<AppliedTransfer | null>;
-  /**
    * {@inheritDoc crosschain.getAppliedTransfersFiltered}
-   * @param appliedTransferFilter - The applied transfer filter (rowids, initTxRid and initOpIndex)
+   * @param appliedTransferFilter - The applied transfer filter (array of initTxRid and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getAppliedTransfersFiltered: (
-    appliedTransferFilter: TransferFilter | null,
+    appliedTransferFilter?: TransferFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<AppliedTransfer>>;
   /**
-   * {@inheritDoc crosschain.getCanceledTransferByRowid}
-   * @param rowId - The rowid of the canceled transfer to retrieve
-   */
-  getCanceledTransferByRowid: (rowId: number) => Promise<Transfer | null>;
-  /**
    * {@inheritDoc crosschain.getCanceledTransfersFiltered}
-   * @param canceledTransferFilter - The canceled transfer filter (rowids, initTxRid and initOpIndex)
+   * @param canceledTransferFilter - The canceled transfer filter (array of initTxRid and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getCanceledTransfersFiltered: (
-    canceledTransferFilter: TransferFilter | null,
+    canceledTransferFilter?: TransferFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
   /**
-   * {@inheritDoc crosschain.getUnappliedTransferByRowid}
-   * @param rowId - The rowid of the unapplied transfer to retrieve
-   */
-  getUnappliedTransferByRowid: (rowId: number) => Promise<Transfer | null>;
-  /**
    * {@inheritDoc crosschain.getUnappliedTransfersFiltered}
-   * @param unappliedTransferFilter - The unapplied transfer filter (rowids, initTxRid and initOpIndex)
+   * @param unappliedTransferFilter - The unapplied transfer filter (array of initTxRid and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getUnappliedTransfersFiltered: (
-    unappliedTransferFilter: TransferFilter | null,
+    unappliedTransferFilter?: TransferFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
   /**
-   * {@inheritDoc crosschain.getRecalledTransferByRowid}
-   * @param rowId - The rowid of the recalled transfer to retrieve
-   */
-  getRecalledTransferByRowid: (rowId: number) => Promise<Transfer | null>;
-  /**
    * {@inheritDoc crosschain.getRecalledTransfersFiltered}
-   * @param recalledTransferFilter - The recalled transfer filter (rowids, initTxRid and initOpIndex)
+   * @param recalledTransferFilter - The recalled transfer filter (array of initTxRid and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getRecalledTransfersFiltered: (
-    recalledTransferFilter: TransferFilter | null,
+    recalledTransferFilter?: TransferFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;
   /**
-   * {@inheritDoc crosschain.getPendingTransferByRowid}
-   * @param rowId - The rowid of the pending transfer to retrieve
-   */
-  getPendingTransferByRowid: (
-    rowId: number,
-  ) => Promise<PendingTransfer_ | null>;
-  /**
    * {@inheritDoc crosschain.getPendingTransfersFiltered}
-   * @param pendingTransferFilter - The pending transfer filter (rowids, transactionId, initOpIndex and senderAccountId)
+   * @param pendingTransferFilter - The pending transfer filter (array of transactionId, initOpIndex and senderAccountId)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getPendingTransfersFiltered: (
-    pendingTransferFilter: PendingTransferFilter | null,
+    pendingTransferFilter?: PendingTransferFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<PendingTransfer_>>;
   /**
-   * {@inheritDoc crosschain.getRevertedTransferByRowid}
-   * @param rowId - The rowid of the reverted transfer to retrieve
-   */
-  getRevertedTransferByRowid: (rowId: number) => Promise<Transfer | null>;
-  /**
    * {@inheritDoc crosschain.getRevertedTransfersFiltered}
-   * @param pendingTransferFilter - The pending transfer filter (rowids, initTxRid and initOpIndex)
+   * @param pendingTransferFilter - The pending transfer filter (array of initTxRid and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
   getRevertedTransfersFiltered: (
-    revertedTransferFilter: TransferFilter | null,
+    revertedTransferFilter?: TransferFilter | null,
     limit?: number,
     cursor?: OptionalPageCursor,
   ) => Promise<PaginatedEntity<Transfer>>;

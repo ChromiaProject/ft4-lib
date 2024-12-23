@@ -1,8 +1,7 @@
 function get_asset_origin_filtered(asset_origin_filter: asset_origin_filter?, page_size: integer?, page_cursor: text?) {
     val before_rowid = utils.before_rowid(page_cursor);
     return asset_origin @* {
-        if (asset_origin_filter?.rowids??) .rowid in asset_origin_filter?.rowids!! else true,
-        if (asset_origin_filter?.asset_id??) .asset.id == asset_origin_filter?.asset_id else true,
+        if (asset_origin_filter?.asset_ids??) .asset.id in asset_origin_filter?.asset_ids!! else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
@@ -15,14 +14,13 @@ function get_asset_origin_filtered(asset_origin_filter: asset_origin_filter?, pa
 }
 
 function get_applied_transfers_filtered(applied_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
-    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
-        applied_transfers_filter?.init_tx_rid,
+    utils.validate_composite_indexes_init_tx_rids_and_init_op_index(
+        applied_transfers_filter?.init_tx_rids,
         applied_transfers_filter?.init_op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return applied_transfers @* {
-        if (applied_transfers_filter?.rowids??) .rowid in applied_transfers_filter?.rowids!! else true,
-        if (applied_transfers_filter?.init_tx_rid??) .init_tx_rid == applied_transfers_filter?.init_tx_rid else true,
+        if (applied_transfers_filter?.init_tx_rids??) .init_tx_rid in applied_transfers_filter?.init_tx_rids!! else true,
         if (applied_transfers_filter?.init_op_index??) .init_op_index == applied_transfers_filter?.init_op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
@@ -36,20 +34,19 @@ function get_applied_transfers_filtered(applied_transfers_filter: transfers_filt
 }
 
 function get_canceled_transfers_filtered(canceled_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
-    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
-        canceled_transfers_filter?.init_tx_rid,
+    utils.validate_composite_indexes_init_tx_rids_and_init_op_index(
+        canceled_transfers_filter?.init_tx_rids,
         canceled_transfers_filter?.init_op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return canceled_transfers @* {
-        if (canceled_transfers_filter?.rowids??) .rowid in canceled_transfers_filter?.rowids!! else true,
-        if (canceled_transfers_filter?.init_tx_rid??) .init_tx_rid == canceled_transfers_filter?.init_tx_rid else true,
+        if (canceled_transfers_filter?.init_tx_rids??) .init_tx_rid in canceled_transfers_filter?.init_tx_rids!! else true,
         if (canceled_transfers_filter?.init_op_index??) .init_op_index == canceled_transfers_filter?.init_op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -57,20 +54,19 @@ function get_canceled_transfers_filtered(canceled_transfers_filter: transfers_fi
 }
 
 function get_unapplied_transfers_filtered(unapplied_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
-    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
-        unapplied_transfers_filter?.init_tx_rid,
+    utils.validate_composite_indexes_init_tx_rids_and_init_op_index(
+        unapplied_transfers_filter?.init_tx_rids,
         unapplied_transfers_filter?.init_op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return unapplied_transfers @* {
-        if (unapplied_transfers_filter?.rowids??) .rowid in unapplied_transfers_filter?.rowids!! else true,
-        if (unapplied_transfers_filter?.init_tx_rid??) .init_tx_rid == unapplied_transfers_filter?.init_tx_rid else true,
+        if (unapplied_transfers_filter?.init_tx_rids??) .init_tx_rid in unapplied_transfers_filter?.init_tx_rids!! else true,
         if (unapplied_transfers_filter?.init_op_index??) .init_op_index == unapplied_transfers_filter?.init_op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -78,20 +74,19 @@ function get_unapplied_transfers_filtered(unapplied_transfers_filter: transfers_
 }
 
 function get_recalled_transfers_filtered(recalled_transfers_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
-    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
-        recalled_transfers_filter?.init_tx_rid,
+    utils.validate_composite_indexes_init_tx_rids_and_init_op_index(
+        recalled_transfers_filter?.init_tx_rids,
         recalled_transfers_filter?.init_op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return recalled_transfers @* {
-        if (recalled_transfers_filter?.rowids??) .rowid in recalled_transfers_filter?.rowids!! else true,
-        if (recalled_transfers_filter?.init_tx_rid??) .init_tx_rid == recalled_transfers_filter?.init_tx_rid else true,
+        if (recalled_transfers_filter?.init_tx_rids??) .init_tx_rid in recalled_transfers_filter?.init_tx_rids!! else true,
         if (recalled_transfers_filter?.init_op_index??) .init_op_index == recalled_transfers_filter?.init_op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )
@@ -99,14 +94,13 @@ function get_recalled_transfers_filtered(recalled_transfers_filter: transfers_fi
 }
 
 function get_pending_transfers_filtered(pending_transfer_filter: pending_transfer_filter?, page_size: integer?, page_cursor: text?) {
-    utils.validate_composite_indexes_op_index_and_tx_rid(
-        pending_transfer_filter?.op_index,
-        pending_transfer_filter?.transaction_rid
+    utils.validate_composite_indexes_tx_rids_and_op_index(
+        pending_transfer_filter?.transaction_rids,
+        pending_transfer_filter?.op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return pending_transfer @* {
-        if (pending_transfer_filter?.rowids??) .rowid in pending_transfer_filter?.rowids!! else true,
-        if (pending_transfer_filter?.transaction_rid??) .transaction.tx_rid == pending_transfer_filter?.transaction_rid else true,
+        if (pending_transfer_filter?.transaction_rids??) .transaction.tx_rid in pending_transfer_filter?.transaction_rids!! else true,
         if (pending_transfer_filter?.op_index??) .op_index == pending_transfer_filter?.op_index else true,
         if (pending_transfer_filter?.sender_account_id??) .sender.id == pending_transfer_filter?.sender_account_id else true,
         .rowid > (before_rowid ?: rowid(0))
@@ -121,20 +115,19 @@ function get_pending_transfers_filtered(pending_transfer_filter: pending_transfe
 }
 
 function get_reverted_transfers_filtered(reverted_transfer_filter: transfers_filter?, page_size: integer?, page_cursor: text?) {
-    utils.validate_composite_indexes_init_tx_rid_and_init_op_index(
-        reverted_transfer_filter?.init_tx_rid,
+    utils.validate_composite_indexes_init_tx_rids_and_init_op_index(
+        reverted_transfer_filter?.init_tx_rids,
         reverted_transfer_filter?.init_op_index
     );
     val before_rowid = utils.before_rowid(page_cursor);
     return reverted_transfer @* {
-        if (reverted_transfer_filter?.rowids??) .rowid in reverted_transfer_filter?.rowids!! else true,
-        if (reverted_transfer_filter?.init_tx_rid??) .init_tx_rid == reverted_transfer_filter?.init_tx_rid else true,
+        if (reverted_transfer_filter?.init_tx_rids??) .init_tx_rid in reverted_transfer_filter?.init_tx_rids!! else true,
         if (reverted_transfer_filter?.init_op_index??) .init_op_index == reverted_transfer_filter?.init_op_index else true,
         .rowid > (before_rowid ?: rowid(0))
     } (
         utils.pagination_result(
             data = (
-                map_transfer($.rowid, $.init_tx_rid, $.init_op_index)
+                map_transfer($.init_tx_rid, $.init_op_index)
             ).to_gtv_pretty(),
             rowid = .rowid
         )

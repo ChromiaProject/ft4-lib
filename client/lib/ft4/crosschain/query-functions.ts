@@ -18,6 +18,7 @@ import {
 } from "./types";
 import { Queryable, RawGtx, gtv } from "postchain-client";
 import { BufferId, PaginatedEntity, retrievePaginatedEntity } from "@ft4/utils";
+import { createAccountObjectFiltered } from "@ft4/accounts/query-functions";
 
 /**
  * Retrieves the brid of the origin chain for the specified asset
@@ -124,26 +125,10 @@ export async function isTransferApplied(
 }
 
 /**
- * Retrieves the asset origin using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the asset origin to fetch
- *
- * @returns The asset origin details, or null if no asset origin with the specified rowid was found
- */
-export async function getAssetOriginByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<AssetOrigin | null> {
-  return await connection
-    .query(Query.assetOriginByRowid(rowid))
-    .then((res) => (res !== null ? createAssetOriginObject(res) : null));
-}
-
-/**
  * Retrieves assets origin based on the filtering options selected in AssetOriginFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
- * @param assetOriginFilter - object of AssetOriginFilter that can be list of rowids and assetId
+ * @param assetOriginFilter - object of AssetOriginFilter that can be array of assetIds
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -151,7 +136,7 @@ export async function getAssetOriginByRowid(
  */
 export async function getAssetOriginFiltered(
   connection: Connection,
-  assetOriginFilter: AssetOriginFilter | null,
+  assetOriginFilter?: AssetOriginFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AssetOrigin>> {
@@ -163,26 +148,10 @@ export async function getAssetOriginFiltered(
 }
 
 /**
- * Retrieves the applied transfer using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the applied transfer to fetch
- *
- * @returns The applied transfer details, or null if no applied transfer with the specified rowid was found
- */
-export async function getAppliedTransferByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<AppliedTransfer | null> {
-  return await connection
-    .query(Query.appliedTransferByRowid(rowid))
-    .then((res) => (res !== null ? createAppliedTransferObject(res) : null));
-}
-
-/**
  * Retrieves applied transfers based on the filtering options selected in TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
- * @param appliedTransferFilter - object of TransferFilter that can be list of rowids, initTxRid and initOpIndex
+ * @param appliedTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -190,7 +159,7 @@ export async function getAppliedTransferByRowid(
  */
 export async function getAppliedTransfersFiltered(
   connection: Connection,
-  appliedTransferFilter: TransferFilter | null,
+  appliedTransferFilter?: TransferFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<AppliedTransfer>> {
@@ -202,26 +171,10 @@ export async function getAppliedTransfersFiltered(
 }
 
 /**
- * Retrieves the canceled transfer using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the canceled transfer to fetch
- *
- * @returns The canceled transfer details, or null if no canceled transfer with the specified rowid was found
- */
-export async function getCanceledTransferByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<Transfer | null> {
-  return await connection
-    .query(Query.canceledTransferByRowid(rowid))
-    .then((res) => (res !== null ? createTransferObject(res) : null));
-}
-
-/**
  * Retrieves canceled transfers based on the filtering options selected in TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
- * @param canceledTransferFilter - object of TransferFilter that can be list of rowids, initTxRid and initOpIndex
+ * @param canceledTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -229,7 +182,7 @@ export async function getCanceledTransferByRowid(
  */
 export async function getCanceledTransfersFiltered(
   connection: Connection,
-  canceledTransferFilter: TransferFilter | null,
+  canceledTransferFilter?: TransferFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -241,26 +194,10 @@ export async function getCanceledTransfersFiltered(
 }
 
 /**
- * Retrieves the unapplied transfer using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the unapplied transfer to fetch
- *
- * @returns The unapplied transfer details, or null if no unapplied transfer with the specified rowid was found
- */
-export async function getUnappliedTransferByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<Transfer | null> {
-  return await connection
-    .query(Query.unappliedTransferByRowid(rowid))
-    .then((res) => (res !== null ? createTransferObject(res) : null));
-}
-
-/**
  * Retrieves unapplied transfers based on the filtering options selected in TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
- * @param unappliedTransferFilter - object of TransferFilter that can be list of rowids, initTxRid and initOpIndex
+ * @param unappliedTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -268,7 +205,7 @@ export async function getUnappliedTransferByRowid(
  */
 export async function getUnappliedTransfersFiltered(
   connection: Connection,
-  unappliedTransferFilter: TransferFilter | null,
+  unappliedTransferFilter?: TransferFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -280,26 +217,10 @@ export async function getUnappliedTransfersFiltered(
 }
 
 /**
- * Retrieves the recalled transfer using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the recalled transfer to fetch
- *
- * @returns The recalled transfer details, or null if no recalled transfer with the specified rowid was found
- */
-export async function getRecalledTransferByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<Transfer | null> {
-  return await connection
-    .query(Query.recalledTransferByRowid(rowid))
-    .then((res) => (res !== null ? createTransferObject(res) : null));
-}
-
-/**
  * Retrieves recalled transfers based on the filtering options selected in TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
- * @param recalledTransferFilter - object of TransferFilter that can be list of rowids, initTxRid and initOpIndex
+ * @param recalledTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -307,7 +228,7 @@ export async function getRecalledTransferByRowid(
  */
 export async function getRecalledTransfersFiltered(
   connection: Connection,
-  recalledTransferFilter: TransferFilter | null,
+  recalledTransferFilter?: TransferFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -319,26 +240,10 @@ export async function getRecalledTransfersFiltered(
 }
 
 /**
- * Retrieves the pending transfer using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the pending transfer to fetch
- *
- * @returns The pending transfer details, or null if no pending transfer with the specified rowid was found
- */
-export async function getPendingTransferByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<PendingTransfer_ | null> {
-  return await connection
-    .query(Query.pendingTransferByRowid(rowid))
-    .then((res) => (res !== null ? createPendingTransferObject(res) : null));
-}
-
-/**
  * Retrieves pending transfers based on the filtering options selected in PendingTransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
- * @param pendingTransferFilter - object of PendingTransferFilter that can be list of rowids, initTxRid and initOpIndex
+ * @param pendingTransferFilter - object of PendingTransferFilter that can be array of transactionIds, initOpIndex and senderAccountId
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -346,7 +251,7 @@ export async function getPendingTransferByRowid(
  */
 export async function getPendingTransfersFiltered(
   connection: Connection,
-  pendingTransferFilter: PendingTransferFilter | null,
+  pendingTransferFilter?: PendingTransferFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<PendingTransfer_>> {
@@ -358,26 +263,10 @@ export async function getPendingTransfersFiltered(
 }
 
 /**
- * Retrieves the reverted transfer using its rowid
- * @param connection - the connection to use to query the blockchain
- * @param rowid - the rowid of the reverted transfer to fetch
- *
- * @returns The reverted transfer details, or null if no reverted transfer with the specified rowid was found
- */
-export async function getRevertedTransferByRowid(
-  connection: Connection,
-  rowid: number,
-): Promise<Transfer | null> {
-  return await connection
-    .query(Query.revertedTransferByRowid(rowid))
-    .then((res) => (res !== null ? createTransferObject(res) : null));
-}
-
-/**
  * Retrieves reverted transfers based on the filtering options selected in TransferFilter, paginated
  *
  * @param connection - connection to the blockchain to check if the transfer was applied on
- * @param revertedTransferFilter - object of TransferFilter that can be list of rowids, initTxRid and initOpIndex
+ * @param revertedTransferFilter - object of TransferFilter that can be list of array of initTxRids and initOpIndex
  * @param limit - maximum page size
  * @param cursor - where the page should start
  *
@@ -385,7 +274,7 @@ export async function getRevertedTransferByRowid(
  */
 export async function getRevertedTransfersFiltered(
   connection: Connection,
-  revertedTransferFilter: TransferFilter | null,
+  revertedTransferFilter?: TransferFilter | null,
   limit: OptionalLimit = null,
   cursor: OptionalPageCursor = null,
 ): Promise<PaginatedEntity<Transfer>> {
@@ -400,9 +289,7 @@ export function createAssetOriginObject(
   assetOrigin: AssetOriginResponse,
 ): AssetOrigin {
   return Object.freeze({
-    rowId: assetOrigin.rowid,
     asset: {
-      rowId: assetOrigin.asset.rowid,
       id: assetOrigin.asset.id,
       name: assetOrigin.asset.name,
       symbol: assetOrigin.asset.symbol,
@@ -420,7 +307,6 @@ function createAppliedTransferObject(
   appliedTransfer: AppliedTransferResponse,
 ): AppliedTransfer {
   return Object.freeze({
-    rowId: appliedTransfer.rowid,
     initTxRid: appliedTransfer.init_tx_rid,
     initOpIndex: appliedTransfer.init_op_index,
     transactionId: appliedTransfer.transaction_rid,
@@ -430,7 +316,6 @@ function createAppliedTransferObject(
 
 function createTransferObject(transfer: TransferResponse): Transfer {
   return Object.freeze({
-    rowId: transfer.rowid,
     initTxRid: transfer.init_tx_rid,
     initOpIndex: transfer.init_op_index,
   });
@@ -440,9 +325,8 @@ function createPendingTransferObject(
   pendingTransfer: PendingTransferResponse_,
 ): PendingTransfer_ {
   return Object.freeze({
-    rowId: pendingTransfer.rowid,
     transactionId: pendingTransfer.transaction_rid,
     opIndex: pendingTransfer.op_index,
-    senderAccountId: pendingTransfer.sender_account_id,
+    senderAccount: createAccountObjectFiltered(pendingTransfer.sender_account),
   });
 }

@@ -3,6 +3,7 @@ import lib.ft4.crosschain;
 import lib.ft4.utils;
 import ^.helpers;
 import ^.mocks;
+import test: lib.ft4.test.core;
 
 function test_get_assets_origin_filtered_without_filter_no_assets_origin() {
     val fetched_assets_origin = crosschain.external.get_asset_origin_filtered(null, 1, null);
@@ -21,10 +22,10 @@ function test_get_assets_origin_filtered_without_filter() {
     ));
 }
 
-function test_get_assets_origin_filtered_by_rowids() {
+function test_get_assets_origin_filtered_by_single_asset_id() {
     val (asset, asset_origin) = helpers.create_and_retrieve_crosschain_asset_and_asset_origin();
     val fetched_assets_origin = crosschain.external.get_asset_origin_filtered(
-        helpers.set_asset_origin_filter(rowids = [asset_origin.rowid]), 1, null
+        helpers.set_asset_origin_filter(asset_ids = [asset.id]), 1, null
     );
     assert_equals(fetched_assets_origin, utils.paged_result(
         next_cursor = null,
@@ -32,36 +33,32 @@ function test_get_assets_origin_filtered_by_rowids() {
     ));
 }
 
-function test_get_assets_origin_filtered_by_asset_id() {
-    val (asset, asset_origin) = helpers.create_and_retrieve_crosschain_asset_and_asset_origin();
+function test_get_assets_origin_filtered_by_multiple_asset_ids() {
+    val (asset_one, asset_origin_one) = helpers.create_and_retrieve_crosschain_asset_and_asset_origin();
+    val (asset_two, asset_origin_two) = helpers.create_and_retrieve_crosschain_asset_and_asset_origin(
+        mocks.asset_name + 1,
+        mocks.asset_symbol + 1
+    );
     val fetched_assets_origin = crosschain.external.get_asset_origin_filtered(
-        helpers.set_asset_origin_filter(asset_id = asset.id), 1, null
+        helpers.set_asset_origin_filter(asset_ids = [asset_one.id, asset_two.id]), 2, null
     );
     assert_equals(fetched_assets_origin, utils.paged_result(
         next_cursor = null,
-        data = [mocks.format_expected_asset_origin_assertion(asset, asset_origin).to_gtv_pretty()]
+        data = [
+            mocks.format_expected_asset_origin_assertion(asset_one, asset_origin_one).to_gtv_pretty(),
+            mocks.format_expected_asset_origin_assertion(asset_two, asset_origin_two).to_gtv_pretty()
+        ]
     ));
 }
 
-function test_get_assets_origin_filtered_using_all_filter_no_assets_origin() {
+function test_get_assets_origin_filtered_using_invalid_asset_id_filter_no_assets_origin() {
     helpers.create_and_retrieve_crosschain_asset_and_asset_origin();
     val fetched_assets_origin = crosschain.external.get_asset_origin_filtered(
-        helpers.set_asset_origin_filter(rowids = [rowid(999)], asset_id = x"0000"), 1, null
+        helpers.set_asset_origin_filter(asset_ids = [x"0000"]), 1, null
     );
     assert_equals(fetched_assets_origin, utils.paged_result(
         next_cursor = null,
         data = []
-    ));
-}
-
-function test_get_assets_origin_filtered_using_all_filter() {
-    val (asset, asset_origin) = helpers.create_and_retrieve_crosschain_asset_and_asset_origin();
-    val fetched_assets_origin = crosschain.external.get_asset_origin_filtered(
-        helpers.set_asset_origin_filter(rowids = [asset_origin.rowid], asset_id = asset.id), 1, null
-    );
-    assert_equals(fetched_assets_origin, utils.paged_result(
-        next_cursor = null,
-        data = [mocks.format_expected_asset_origin_assertion(asset, asset_origin).to_gtv_pretty()]
     ));
 }
 
@@ -74,7 +71,12 @@ function test_get_applied_transfers_filtered_without_filter_no_applied_transfer(
 }
 
 function test_get_applied_transfers_filtered_without_filter() {
-    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id
+    );
     val fetched_applied_transfers = crosschain.external.get_applied_transfers_filtered(null, 1, null);
     assert_equals(fetched_applied_transfers, utils.paged_result(
         next_cursor = null,
@@ -82,23 +84,17 @@ function test_get_applied_transfers_filtered_without_filter() {
     ));
 }
 
-function test_get_applied_transfers_filtered_by_rowids() {
-    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
-    val fetched_applied_transfers = crosschain.external.get_applied_transfers_filtered(
-        helpers.set_transfer_filter(rowids = [applied_transfer.rowid]), 1, null
+function test_get_applied_transfers_filtered_by_init_tx_rids_requires_composite_indexes() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id
     );
-    assert_equals(fetched_applied_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [crosschain.map_applied_transfer(applied_transfer).to_gtv_pretty()]
-    ));
-}
-
-function test_get_applied_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
-    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
         crosschain.external.get_applied_transfers_filtered(
-            helpers.set_transfer_filter(init_tx_rid = applied_transfer.init_tx_rid), 
+            helpers.set_transfer_filter(init_tx_rids = [applied_transfer.init_tx_rid]), 
             1,
             null, *
         )
@@ -106,9 +102,14 @@ function test_get_applied_transfers_filtered_by_init_tx_rid_requires_composite_i
 }
 
 function test_get_applied_transfers_filtered_by_init_op_index_requires_composite_indexes() {
-    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id
+    );
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
         crosschain.external.get_applied_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = applied_transfer.init_op_index), 
             1,
@@ -117,11 +118,16 @@ function test_get_applied_transfers_filtered_by_init_op_index_requires_composite
     );
 }
 
-function test_get_applied_transfers_filtered_by_init_tx_rid_and_init_op_index() {
-    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
+function test_get_applied_transfers_filtered_by_single_init_tx_rid_and_init_op_index() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id
+    );
     val fetched_applied_transfers = crosschain.external.get_applied_transfers_filtered(
         helpers.set_transfer_filter(
-            init_tx_rid = applied_transfer.init_tx_rid,
+            init_tx_rids = [applied_transfer.init_tx_rid],
             init_op_index = applied_transfer.init_op_index
         ),
         1,
@@ -133,12 +139,49 @@ function test_get_applied_transfers_filtered_by_init_tx_rid_and_init_op_index() 
     ));
 }
 
-function test_get_applied_transfers_using_all_filter_no_applied_transfers() {
-    helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
+function test_get_applied_transfers_filtered_by_multiple_init_tx_rids_using_all_filter() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val applied_transfer_one = helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id
+    );
+    val applied_transfer_two = helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        mocks.asset_name + 1,
+        mocks.asset_symbol + 1,
+        alice.account.id,
+        bob.account.id
+    );
     val fetched_applied_transfers = crosschain.external.get_applied_transfers_filtered(
         helpers.set_transfer_filter(
-            rowids = [rowid(999)],
-            init_tx_rid = x"0000",
+            init_tx_rids = [
+                applied_transfer_one.init_tx_rid,
+                applied_transfer_two.init_tx_rid
+            ],
+            init_op_index = applied_transfer_one.init_op_index
+        ),
+        2,
+        null
+    );
+    assert_equals(fetched_applied_transfers, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_applied_transfer(applied_transfer_one).to_gtv_pretty(),
+            crosschain.map_applied_transfer(applied_transfer_two).to_gtv_pretty()
+        ]
+    ));
+}
+
+function test_get_applied_transfers_using_all_filter_no_applied_transfers() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    helpers.create_crosschain_transfer_and_retrieve_applied_transfer(
+        sender_account_id = alice.account.id,
+        recipient_account_id = bob.account.id
+    );
+    val fetched_applied_transfers = crosschain.external.get_applied_transfers_filtered(
+        helpers.set_transfer_filter(
+            init_tx_rids = [x"0000"],
             init_op_index = 1
         ),
         1,
@@ -147,23 +190,6 @@ function test_get_applied_transfers_using_all_filter_no_applied_transfers() {
     assert_equals(fetched_applied_transfers, utils.paged_result(
         next_cursor = null,
         data = []
-    ));
-}
-
-function test_get_applied_transfers_using_all_filter() {
-    val applied_transfer = helpers.create_crosschain_transfer_and_retrieve_applied_transfer();
-    val fetched_applied_transfers = crosschain.external.get_applied_transfers_filtered(
-        helpers.set_transfer_filter(
-            rowids = [applied_transfer.rowid],
-            init_tx_rid = applied_transfer.init_tx_rid,
-            init_op_index = applied_transfer.init_op_index
-        ),
-        1,
-        null
-    );
-    assert_equals(fetched_applied_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [crosschain.map_applied_transfer(applied_transfer).to_gtv_pretty()]
     ));
 }
 
@@ -182,24 +208,6 @@ function test_get_canceled_transfers_filtered_without_filter() {
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                canceled_transfer.rowid,
-                canceled_transfer.init_tx_rid,
-                canceled_transfer.init_op_index
-            ).to_gtv_pretty()
-        ]
-    ));
-}
-
-function test_get_canceled_transfers_filtered_by_rowids() {
-    val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
-    val fetched_canceled_transfers = crosschain.external.get_canceled_transfers_filtered(
-        helpers.set_transfer_filter(rowids = [canceled_transfer.rowid]), 1, null
-    );
-    assert_equals(fetched_canceled_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [
-            crosschain.map_transfer(
-                canceled_transfer.rowid,
                 canceled_transfer.init_tx_rid,
                 canceled_transfer.init_op_index
             ).to_gtv_pretty()
@@ -210,9 +218,9 @@ function test_get_canceled_transfers_filtered_by_rowids() {
 function test_get_canceled_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
         crosschain.external.get_applied_transfers_filtered(
-            helpers.set_transfer_filter(init_tx_rid = canceled_transfer.init_tx_rid), 1, null, *
+            helpers.set_transfer_filter(init_tx_rids = [canceled_transfer.init_tx_rid]), 1, null, *
         )
     );
 }
@@ -220,18 +228,18 @@ function test_get_canceled_transfers_filtered_by_init_tx_rid_requires_composite_
 function test_get_canceled_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
         crosschain.external.get_applied_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = canceled_transfer.init_op_index), 1, null, *
         )
     );
 }
 
-function test_get_canceled_transfers_filtered_by_init_tx_rid_and_init_op_index() {
+function test_get_canceled_transfers_filtered_by_single_init_tx_rids_and_init_op_index() {
     val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
     val fetched_canceled_transfers = crosschain.external.get_canceled_transfers_filtered(
         helpers.set_transfer_filter(
-            init_tx_rid = canceled_transfer.init_tx_rid,
+            init_tx_rids = [canceled_transfer.init_tx_rid],
             init_op_index = canceled_transfer.init_op_index
         ),
         1,
@@ -241,9 +249,40 @@ function test_get_canceled_transfers_filtered_by_init_tx_rid_and_init_op_index()
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                canceled_transfer.rowid,
                 canceled_transfer.init_tx_rid,
                 canceled_transfer.init_op_index
+            ).to_gtv_pretty()
+        ]
+    ));
+}
+
+function test_get_canceled_transfers_filtered_by_multiple_init_tx_rids_using_all_filter() {
+    val canceled_transfer_one = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
+    val canceled_transfer_two = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer(
+        mocks.asset_name + 1,
+        mocks.asset_symbol + 1
+    );
+    val fetched_canceled_transfers = crosschain.external.get_canceled_transfers_filtered(
+        helpers.set_transfer_filter(
+            init_tx_rids = [
+                canceled_transfer_one.init_tx_rid,
+                canceled_transfer_two.init_tx_rid
+            ],
+            init_op_index = canceled_transfer_one.init_op_index
+        ),
+        2,
+        null
+    );
+    assert_equals(fetched_canceled_transfers, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_transfer(
+                canceled_transfer_one.init_tx_rid,
+                canceled_transfer_one.init_op_index
+            ).to_gtv_pretty(),
+            crosschain.map_transfer(
+                canceled_transfer_two.init_tx_rid,
+                canceled_transfer_two.init_op_index
             ).to_gtv_pretty()
         ]
     ));
@@ -253,8 +292,7 @@ function test_get_canceled_transfers_using_all_filter_no_canceled_transfers() {
     helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
     val fetched_canceled_transfers = crosschain.external.get_canceled_transfers_filtered(
         helpers.set_transfer_filter(
-            rowids = [rowid(999)],
-            init_tx_rid = x"0000",
+            init_tx_rids = [x"0000"],
             init_op_index = 1
         ),
         1,
@@ -263,29 +301,6 @@ function test_get_canceled_transfers_using_all_filter_no_canceled_transfers() {
     assert_equals(fetched_canceled_transfers, utils.paged_result(
         next_cursor = null,
         data = []
-    ));
-}
-
-function test_get_canceled_transfers_using_all_filter() {
-    val canceled_transfer = helpers.init_cancel_and_retrieve_canceled_transfer_crosschain_transfer();
-    val fetched_canceled_transfers = crosschain.external.get_canceled_transfers_filtered(
-        helpers.set_transfer_filter(
-            rowids = [canceled_transfer.rowid],
-            init_tx_rid = canceled_transfer.init_tx_rid,
-            init_op_index = canceled_transfer.init_op_index
-        ),
-        1,
-        null
-    );
-    assert_equals(fetched_canceled_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [
-            crosschain.map_transfer(
-                canceled_transfer.rowid,
-                canceled_transfer.init_tx_rid,
-                canceled_transfer.init_op_index
-            ).to_gtv_pretty()
-        ]
     ));
 }
 
@@ -304,24 +319,6 @@ function test_get_unapplied_transfers_filtered_without_filter() {
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                unapplied_transfer.rowid,
-                unapplied_transfer.init_tx_rid,
-                unapplied_transfer.init_op_index
-            ).to_gtv_pretty()
-        ]
-    ));
-}
-
-function test_get_unapplied_transfers_filtered_by_rowids() {
-    val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
-    val fetched_unapplied_transfers = crosschain.external.get_unapplied_transfers_filtered(
-        helpers.set_transfer_filter(rowids = [unapplied_transfer.rowid]), 1, null
-    );
-    assert_equals(fetched_unapplied_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [
-            crosschain.map_transfer(
-                unapplied_transfer.rowid,
                 unapplied_transfer.init_tx_rid,
                 unapplied_transfer.init_op_index
             ).to_gtv_pretty()
@@ -332,9 +329,9 @@ function test_get_unapplied_transfers_filtered_by_rowids() {
 function test_get_unapplied_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
         crosschain.external.get_unapplied_transfers_filtered(
-            helpers.set_transfer_filter(init_tx_rid = unapplied_transfer.init_tx_rid), 1, null, *
+            helpers.set_transfer_filter(init_tx_rids = [unapplied_transfer.init_tx_rid]), 1, null, *
         )
     );
 }
@@ -342,18 +339,18 @@ function test_get_unapplied_transfers_filtered_by_init_tx_rid_requires_composite
 function test_get_unapplied_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
         crosschain.external.get_unapplied_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = unapplied_transfer.init_op_index), 1, null, *
         )
     );
 }
 
-function test_get_unapplied_transfers_filtered_by_init_tx_rid_and_init_op_index() {
+function test_get_unapplied_transfers_filtered_by_single_init_tx_rid_and_init_op_index() {
     val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
     val fetched_unapplied_transfers = crosschain.external.get_unapplied_transfers_filtered(
         helpers.set_transfer_filter(
-            init_tx_rid = unapplied_transfer.init_tx_rid,
+            init_tx_rids = [unapplied_transfer.init_tx_rid],
             init_op_index = unapplied_transfer.init_op_index
         ),
         1,
@@ -363,7 +360,6 @@ function test_get_unapplied_transfers_filtered_by_init_tx_rid_and_init_op_index(
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                unapplied_transfer.rowid,
                 unapplied_transfer.init_tx_rid,
                 unapplied_transfer.init_op_index
             ).to_gtv_pretty()
@@ -371,12 +367,44 @@ function test_get_unapplied_transfers_filtered_by_init_tx_rid_and_init_op_index(
     ));  
 }
 
+function test_get_unapplied_transfers_filtered_by_multiple_init_tx_rids_using_all_filter() {
+    val unapplied_transfer_one = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
+    val unapplied_transfer_two = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer(
+        mocks.asset_name + 1,
+        mocks.asset_symbol + 1,
+        1578700830001
+    );
+    val fetched_unapplied_transfers = crosschain.external.get_unapplied_transfers_filtered(
+        helpers.set_transfer_filter(
+            init_tx_rids = [
+                unapplied_transfer_one.init_tx_rid,
+                unapplied_transfer_two.init_tx_rid,
+            ],
+            init_op_index = unapplied_transfer_one.init_op_index
+        ),
+        2,
+        null
+    );
+    assert_equals(fetched_unapplied_transfers, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_transfer(
+                unapplied_transfer_one.init_tx_rid,
+                unapplied_transfer_one.init_op_index
+            ).to_gtv_pretty(),
+            crosschain.map_transfer(
+                unapplied_transfer_two.init_tx_rid,
+                unapplied_transfer_two.init_op_index
+            ).to_gtv_pretty()
+        ]
+    )); 
+}
+
 function test_get_unapplied_transfers_using_all_filter_no_unapplied_transfers() {
     helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
     val fetched_unapplied_transfers = crosschain.external.get_unapplied_transfers_filtered(
         helpers.set_transfer_filter(
-            rowids = [rowid(999)],
-            init_tx_rid = x"0000",
+            init_tx_rids = [x"0000"],
             init_op_index = 1
         ),
         1,
@@ -386,29 +414,6 @@ function test_get_unapplied_transfers_using_all_filter_no_unapplied_transfers() 
         next_cursor = null,
         data = []
     ));
-}
-
-function test_get_unapplied_transfers_using_all_filter() {
-    val unapplied_transfer = helpers.cancel_unapply_transfer_and_retrieve_unapplied_transfer();
-    val fetched_unapplied_transfers = crosschain.external.get_unapplied_transfers_filtered(
-        helpers.set_transfer_filter(
-            rowids = [unapplied_transfer.rowid],
-            init_tx_rid = unapplied_transfer.init_tx_rid,
-            init_op_index = unapplied_transfer.init_op_index
-        ),
-        1,
-        null
-    );
-    assert_equals(fetched_unapplied_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [
-            crosschain.map_transfer(
-                unapplied_transfer.rowid,
-                unapplied_transfer.init_tx_rid,
-                unapplied_transfer.init_op_index
-            ).to_gtv_pretty()
-        ]
-    )); 
 }
 
 function test_get_pending_transfers_filtered_without_filter_no_pending_transfer() {
@@ -428,32 +433,22 @@ function test_get_pending_transfers_filtered_without_filter() {
     ));
 }
 
-function test_get_pending_transfers_filtered_by_rowids() {
+function test_get_pending_transfers_filtered_by_transaction_rids_requires_composite_indexes() {
     val pending_transfer = helpers.init_transfer_and_get_pending_transfer();
-    val fetched_pending_transfers = crosschain.external.get_pending_transfers_filtered(
-        helpers.set_pending_transfer_filter(rowids = [pending_transfer.rowid]), 1, null
+     assert_fails(
+        "INVALID FILTER: Composite index (transaction_rids, op_index) - op_index filter is required",
+            crosschain.external.get_pending_transfers_filtered(
+                helpers.set_pending_transfer_filter(transaction_rids = [pending_transfer.transaction.tx_rid]),
+            1,
+            null, *
+        )
     );
-    assert_equals(fetched_pending_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [crosschain.map_pending_transfer(pending_transfer).to_gtv_pretty()]
-    ));
-}
-
-function test_get_pending_transfers_filtered_by_transaction_rid() {
-    val pending_transfer = helpers.init_transfer_and_get_pending_transfer();
-    val fetched_pending_transfers = crosschain.external.get_pending_transfers_filtered(
-        helpers.set_pending_transfer_filter(transaction_rid = pending_transfer.transaction.tx_rid), 1, null
-    );
-    assert_equals(fetched_pending_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [crosschain.map_pending_transfer(pending_transfer).to_gtv_pretty()]
-    ));
 }
 
 function test_get_pending_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val pending_transfer = helpers.init_transfer_and_get_pending_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (transaction, op_index) - transaction_rid filter is required",
+        "INVALID FILTER: Composite index (transaction_rids, op_index) - transaction_rids filter cannot be empty",
             crosschain.external.get_pending_transfers_filtered(
                 helpers.set_pending_transfer_filter(op_index = pending_transfer.op_index),
             1,
@@ -477,8 +472,7 @@ function test_get_pending_transfers_using_all_filter_no_pending_transfers() {
     helpers.init_transfer_and_get_pending_transfer();
     val fetched_pending_transfers = crosschain.external.get_pending_transfers_filtered(
         helpers.set_pending_transfer_filter(
-            rowids = [rowid(999)],
-            transaction_rid = x"0000",
+            transaction_rids = [x"0000"],
             op_index = 1,
             sender_account_id = x"0000"
         ),
@@ -491,12 +485,11 @@ function test_get_pending_transfers_using_all_filter_no_pending_transfers() {
     ));
 }
 
-function test_get_pending_transfers_using_all_filter() {
+function test_get_pending_transfers_filtered_by_single_transaction_rid_using_all_filter() {
     val pending_transfer = helpers.init_transfer_and_get_pending_transfer();
     val fetched_pending_transfers = crosschain.external.get_pending_transfers_filtered(
         helpers.set_pending_transfer_filter(
-            rowids = [pending_transfer.rowid],
-            transaction_rid = pending_transfer.transaction.tx_rid,
+            transaction_rids = [pending_transfer.transaction.tx_rid],
             op_index = pending_transfer.op_index,
             sender_account_id = pending_transfer.sender.id
         ),
@@ -506,6 +499,40 @@ function test_get_pending_transfers_using_all_filter() {
     assert_equals(fetched_pending_transfers, utils.paged_result(
         next_cursor = null,
         data = [crosschain.map_pending_transfer(pending_transfer).to_gtv_pretty()]
+    ));
+}
+
+function test_get_pending_transfers_filtered_by_multiple_transaction_rids_using_all_filter() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val pending_transfer_one = helpers.init_transfer_and_get_pending_transfer(
+        sender_account_data = alice,
+        recipient_account_data = bob
+    );
+    val pending_transfer_two = helpers.init_transfer_and_get_pending_transfer(
+        mocks.asset_name + 1,
+        mocks.asset_symbol + 1,
+        alice,
+        bob
+    );
+    val fetched_pending_transfers = crosschain.external.get_pending_transfers_filtered(
+        helpers.set_pending_transfer_filter(
+            transaction_rids = [
+                pending_transfer_one.transaction.tx_rid,
+                pending_transfer_two.transaction.tx_rid
+            ],
+            op_index = pending_transfer_one.op_index,
+            sender_account_id = pending_transfer_one.sender.id
+        ),
+        2,
+        null
+    );
+    assert_equals(fetched_pending_transfers, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_pending_transfer(pending_transfer_one).to_gtv_pretty(),
+            crosschain.map_pending_transfer(pending_transfer_two).to_gtv_pretty(),
+        ]
     ));
 }
 
@@ -522,35 +549,21 @@ function test_get_reverted_transfers_filtered_without_filter() {
     val reverted_pending_transfers = crosschain.external.get_reverted_transfers_filtered(null, 1, null);
     assert_equals(reverted_pending_transfers, utils.paged_result(
         next_cursor = null,
-        data = [crosschain.map_transfer(
-            reverted_transfer.rowid,
-            reverted_transfer.init_tx_rid,
-            reverted_transfer.init_op_index
-        ).to_gtv_pretty()]
-    ));
-}
-
-function test_get_reverted_transfers_filtered_by_rowids() {
-    val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
-    val reverted_pending_transfers = crosschain.external.get_reverted_transfers_filtered(
-        helpers.set_transfer_filter(rowids = [reverted_transfer.rowid]), 1, null
+        data = [
+            crosschain.map_transfer(
+                reverted_transfer.init_tx_rid,
+                reverted_transfer.init_op_index
+            ).to_gtv_pretty()]
+        )
     );
-    assert_equals(reverted_pending_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [crosschain.map_transfer(
-            reverted_transfer.rowid,
-            reverted_transfer.init_tx_rid,
-            reverted_transfer.init_op_index
-        ).to_gtv_pretty()]
-    ));
 }
 
 function test_get_reverted_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
         crosschain.external.get_reverted_transfers_filtered(
-            helpers.set_transfer_filter(init_tx_rid = reverted_transfer.init_tx_rid), 
+            helpers.set_transfer_filter(init_tx_rids = [reverted_transfer.init_tx_rid]), 
             1,
             null, *
         )
@@ -560,7 +573,7 @@ function test_get_reverted_transfers_filtered_by_init_tx_rid_requires_composite_
 function test_get_reverted_transfers_filtered_by_init_op_index_requires_composite_indexes() {
     val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
         crosschain.external.get_reverted_transfers_filtered(
             helpers.set_transfer_filter(init_op_index = reverted_transfer.init_op_index), 
             1,
@@ -569,11 +582,11 @@ function test_get_reverted_transfers_filtered_by_init_op_index_requires_composit
     );
 }
 
-function test_get_reverted_transfers_filtered_by_init_tx_rid_and_init_op_index() {
+function test_get_reverted_transfers_filtered_by_single_init_tx_rid_and_init_op_index() {
     val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
     val reverted_pending_transfers = crosschain.external.get_reverted_transfers_filtered(
         helpers.set_transfer_filter(
-            init_tx_rid = reverted_transfer.init_tx_rid,
+            init_tx_rids = [reverted_transfer.init_tx_rid],
             init_op_index = reverted_transfer.init_op_index
         ),
         1,
@@ -582,10 +595,48 @@ function test_get_reverted_transfers_filtered_by_init_tx_rid_and_init_op_index()
     assert_equals(reverted_pending_transfers, utils.paged_result(
         next_cursor = null,
         data = [crosschain.map_transfer(
-            reverted_transfer.rowid,
             reverted_transfer.init_tx_rid,
             reverted_transfer.init_op_index
         ).to_gtv_pretty()]
+    ));
+}
+
+function test_get_reverted_transfers_filtered_by_multiple_init_tx_rids_using_all_filter() {
+    val alice = test.register_alice();
+    val bob = test.register_bob();
+    val reverted_transfer_one = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer(
+        sender_account_data = alice,
+        recipient_account_data = bob
+    );
+    val reverted_transfer_two = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer(
+        mocks.asset_name + 1,
+        mocks.asset_symbol + 1,
+        sender_account_data = alice,
+        recipient_account_data = bob
+    );
+    val reverted_pending_transfers = crosschain.external.get_reverted_transfers_filtered(
+        helpers.set_transfer_filter(
+            init_tx_rids = [
+                reverted_transfer_one.init_tx_rid,
+                reverted_transfer_two.init_tx_rid
+            ],
+            init_op_index = reverted_transfer_one.init_op_index
+        ),
+        2,
+        null
+    );
+    assert_equals(reverted_pending_transfers, utils.paged_result(
+        next_cursor = null,
+        data = [
+            crosschain.map_transfer(
+                reverted_transfer_one.init_tx_rid,
+                reverted_transfer_one.init_op_index
+            ).to_gtv_pretty(),
+            crosschain.map_transfer(
+                reverted_transfer_two.init_tx_rid,
+                reverted_transfer_two.init_op_index
+            ).to_gtv_pretty()
+        ]
     ));
 }
 
@@ -593,8 +644,7 @@ function test_get_reverted_transfers_using_all_filter_no_reverted_transfers() {
     val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
     val reverted_pending_transfers = crosschain.external.get_reverted_transfers_filtered(
         helpers.set_transfer_filter(
-            rowids = [rowid(999)],
-            init_tx_rid = x"0000",
+            init_tx_rids = [x"0000"],
             init_op_index = 1
         ),
         1,
@@ -603,26 +653,5 @@ function test_get_reverted_transfers_using_all_filter_no_reverted_transfers() {
     assert_equals(reverted_pending_transfers, utils.paged_result(
         next_cursor = null,
         data = []
-    ));
-}
-
-function test_get_reverted_transfers_using_all_filter() {
-    val reverted_transfer = helpers.init_revert_canceled_transfer_and_retrieve_reverted_transfer();
-    val reverted_pending_transfers = crosschain.external.get_reverted_transfers_filtered(
-        helpers.set_transfer_filter(
-            rowids = [reverted_transfer.rowid],
-            init_tx_rid = reverted_transfer.init_tx_rid,
-            init_op_index = reverted_transfer.init_op_index
-        ),
-        1,
-        null
-    );
-    assert_equals(reverted_pending_transfers, utils.paged_result(
-        next_cursor = null,
-        data = [crosschain.map_transfer(
-            reverted_transfer.rowid,
-            reverted_transfer.init_tx_rid,
-            reverted_transfer.init_op_index
-        ).to_gtv_pretty()]
     ));
 }

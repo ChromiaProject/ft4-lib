@@ -4,7 +4,6 @@ import { Buffer } from "buffer";
 export const ASSET_TYPE_FT4 = "ft4";
 
 export type Asset = {
-  rowId: number;
   id: Buffer;
   name: string;
   symbol: string;
@@ -16,7 +15,6 @@ export type Asset = {
 };
 
 export type AssetResponse = {
-  rowid: number;
   id: Buffer;
   name: string;
   symbol: string;

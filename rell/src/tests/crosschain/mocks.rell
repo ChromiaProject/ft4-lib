@@ -13,7 +13,6 @@ function format_expected_asset_origin_assertion(assets.asset, crosschain.asset_o
     val mapped_asset_origin = crosschain.map_asset_origin(asset_origin);
 
     return (
-        rowid = mapped_asset_origin.rowid,
         asset = assets.map_asset(asset),
         origin_blockchain_rid = mapped_asset_origin.origin_blockchain_rid
     );

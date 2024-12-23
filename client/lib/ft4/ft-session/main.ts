@@ -74,19 +74,12 @@ import {
 } from "@ft4/authentication/login";
 import { getApiVersion } from "@ft4/utils/main";
 import {
-  getAppliedTransferByRowid,
   getAppliedTransfersFiltered,
-  getAssetOriginByRowid,
   getAssetOriginFiltered,
-  getCanceledTransferByRowid,
   getCanceledTransfersFiltered,
-  getPendingTransferByRowid,
   getPendingTransfersFiltered,
-  getRecalledTransferByRowid,
   getRecalledTransfersFiltered,
-  getRevertedTransferByRowid,
   getRevertedTransfersFiltered,
-  getUnappliedTransferByRowid,
   getUnappliedTransfersFiltered,
 } from "@ft4/crosschain/query-functions";
 import {
@@ -202,19 +195,15 @@ export function createConnection(client: IClient): Connection {
       opIndex: number,
       assetId: BufferId,
     ) => getTransferDetailsByAsset(connection, txRid, opIndex, assetId),
-    getAssetOriginByRowid: (rowId: number) =>
-      getAssetOriginByRowid(connection, rowId),
     getAssetOriginFiltered: (
-      assetOriginFilter: AssetOriginFilter,
+      assetOriginFilter?: AssetOriginFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) => getAssetOriginFiltered(connection, assetOriginFilter, limit, cursor),
-    getAppliedTransferByRowid: (rowId: number) =>
-      getAppliedTransferByRowid(connection, rowId),
     getAppliedTransfersFiltered: (
-      appliedTransferFilter: TransferFilter,
+      appliedTransferFilter?: TransferFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getAppliedTransfersFiltered(
         connection,
@@ -222,12 +211,10 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getCanceledTransferByRowid: (rowId: number) =>
-      getCanceledTransferByRowid(connection, rowId),
     getCanceledTransfersFiltered: (
-      canceledTransferFilter: TransferFilter,
+      canceledTransferFilter?: TransferFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getCanceledTransfersFiltered(
         connection,
@@ -235,12 +222,10 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getUnappliedTransferByRowid: (rowId: number) =>
-      getUnappliedTransferByRowid(connection, rowId),
     getUnappliedTransfersFiltered: (
-      unappliedTransferFilter: TransferFilter,
+      unappliedTransferFilter?: TransferFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getUnappliedTransfersFiltered(
         connection,
@@ -248,12 +233,10 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getRecalledTransferByRowid: (rowId: number) =>
-      getRecalledTransferByRowid(connection, rowId),
     getRecalledTransfersFiltered: (
-      recalledTransferFilter: TransferFilter,
+      recalledTransferFilter?: TransferFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getRecalledTransfersFiltered(
         connection,
@@ -261,12 +244,10 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getPendingTransferByRowid: (rowId: number) =>
-      getPendingTransferByRowid(connection, rowId),
     getPendingTransfersFiltered: (
-      pendingTransferFilter: PendingTransferFilter,
+      pendingTransferFilter?: PendingTransferFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getPendingTransfersFiltered(
         connection,
@@ -274,12 +255,10 @@ export function createConnection(client: IClient): Connection {
         limit,
         cursor,
       ),
-    getRevertedTransferByRowid: (rowId: number) =>
-      getRevertedTransferByRowid(connection, rowId),
     getRevertedTransfersFiltered: (
-      evertedTransferFilter: TransferFilter,
+      evertedTransferFilter?: TransferFilter,
       limit?: number,
-      cursor: OptionalPageCursor = null,
+      cursor?: OptionalPageCursor,
     ) =>
       getRevertedTransfersFiltered(
         connection,

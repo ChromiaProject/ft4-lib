@@ -109,23 +109,14 @@ export function applyTransferTx(
   };
 }
 
-export function assetOriginByRowid(
-  rowid: number,
-): QueryObject<AssetOriginResponse, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_asset_origin_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function assetOriginFiltered(
-  assetOriginFilter: AssetOriginFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  assetOriginFilter?: AssetOriginFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<AssetOriginResponse>,
   {
-    asset_origin_filter: [Array<number>, Buffer | null] | null;
+    asset_origin_filter: [Array<Buffer> | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -134,7 +125,7 @@ export function assetOriginFiltered(
     name: "ft4.crosschain.get_asset_origin_filtered",
     args: {
       asset_origin_filter: assetOriginFilter
-        ? [assetOriginFilter?.rowids ?? [], assetOriginFilter.assetId ?? null]
+        ? [assetOriginFilter.assetIds ?? null]
         : null,
       page_size: limit,
       page_cursor: cursor,
@@ -142,25 +133,14 @@ export function assetOriginFiltered(
   };
 }
 
-export function appliedTransferByRowid(
-  rowid: number,
-): QueryObject<AppliedTransferResponse, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_applied_transfer_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function appliedTransferFiltered(
-  appliedTransferFilter: TransferFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  appliedTransferFilter?: TransferFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<AppliedTransferResponse>,
   {
-    applied_transfers_filter:
-      | [Array<number>, Buffer | null, number | null]
-      | null;
+    applied_transfers_filter: [Array<Buffer> | null, number | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -170,8 +150,7 @@ export function appliedTransferFiltered(
     args: {
       applied_transfers_filter: appliedTransferFilter
         ? [
-            appliedTransferFilter?.rowids ?? [],
-            appliedTransferFilter.initTxRid ?? null,
+            appliedTransferFilter.initTxRids ?? null,
             appliedTransferFilter.initOpIndex ?? null,
           ]
         : null,
@@ -181,25 +160,14 @@ export function appliedTransferFiltered(
   };
 }
 
-export function canceledTransferByRowid(
-  rowid: number,
-): QueryObject<TransferResponse, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_canceled_transfer_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function canceledTransferFiltered(
-  canceledTransferFilter: TransferFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  canceledTransferFilter?: TransferFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<TransferResponse>,
   {
-    canceled_transfers_filter:
-      | [Array<number>, Buffer | null, number | null]
-      | null;
+    canceled_transfers_filter: [Array<Buffer> | null, number | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -209,8 +177,7 @@ export function canceledTransferFiltered(
     args: {
       canceled_transfers_filter: canceledTransferFilter
         ? [
-            canceledTransferFilter?.rowids ?? [],
-            canceledTransferFilter.initTxRid ?? null,
+            canceledTransferFilter.initTxRids ?? null,
             canceledTransferFilter.initOpIndex ?? null,
           ]
         : null,
@@ -220,25 +187,14 @@ export function canceledTransferFiltered(
   };
 }
 
-export function unappliedTransferByRowid(
-  rowid: number,
-): QueryObject<TransferResponse, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_unapplied_transfer_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function unappliedTransferFiltered(
-  unappliedTransferFilter: TransferFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  unappliedTransferFilter?: TransferFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<TransferResponse>,
   {
-    unapplied_transfers_filter:
-      | [Array<number>, Buffer | null, number | null]
-      | null;
+    unapplied_transfers_filter: [Array<Buffer> | null, number | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -248,8 +204,7 @@ export function unappliedTransferFiltered(
     args: {
       unapplied_transfers_filter: unappliedTransferFilter
         ? [
-            unappliedTransferFilter?.rowids ?? [],
-            unappliedTransferFilter.initTxRid ?? null,
+            unappliedTransferFilter.initTxRids ?? null,
             unappliedTransferFilter.initOpIndex ?? null,
           ]
         : null,
@@ -259,25 +214,14 @@ export function unappliedTransferFiltered(
   };
 }
 
-export function recalledTransferByRowid(
-  rowid: number,
-): QueryObject<TransferResponse, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_recalled_transfer_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function recalledTransferFiltered(
-  recalledTransferFilter: TransferFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  recalledTransferFilter?: TransferFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<TransferResponse>,
   {
-    recalled_transfers_filter:
-      | [Array<number>, Buffer | null, number | null]
-      | null;
+    recalled_transfers_filter: [Array<Buffer> | null, number | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -287,8 +231,7 @@ export function recalledTransferFiltered(
     args: {
       recalled_transfers_filter: recalledTransferFilter
         ? [
-            recalledTransferFilter?.rowids ?? [],
-            recalledTransferFilter.initTxRid ?? null,
+            recalledTransferFilter.initTxRids ?? null,
             recalledTransferFilter.initOpIndex ?? null,
           ]
         : null,
@@ -298,24 +241,15 @@ export function recalledTransferFiltered(
   };
 }
 
-export function pendingTransferByRowid(
-  rowid: number,
-): QueryObject<PendingTransferResponse_, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_pending_transfer_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function pendingTransferFiltered(
-  pendingTransferFilter: PendingTransferFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  pendingTransferFilter?: PendingTransferFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<PendingTransferResponse_>,
   {
     pending_transfer_filter:
-      | [Array<number>, Buffer | null, number | null, Buffer | null]
+      | [Array<Buffer> | null, number | null, Buffer | null]
       | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
@@ -326,8 +260,7 @@ export function pendingTransferFiltered(
     args: {
       pending_transfer_filter: pendingTransferFilter
         ? [
-            pendingTransferFilter?.rowids ?? [],
-            pendingTransferFilter.transactionId ?? null,
+            pendingTransferFilter.transactionIds ?? null,
             pendingTransferFilter.initOpIndex ?? null,
             pendingTransferFilter.senderAccountId ?? null,
           ]
@@ -338,25 +271,14 @@ export function pendingTransferFiltered(
   };
 }
 
-export function revertedTransferByRowid(
-  rowid: number,
-): QueryObject<TransferResponse, { rowid: number }> {
-  return {
-    name: "ft4.crosschain.get_reverted_transfer_by_rowid",
-    args: { rowid },
-  };
-}
-
 export function revertedTransferFiltered(
-  revertedTransferFilter: TransferFilter | null,
-  limit: OptionalLimit,
-  cursor: OptionalPageCursor,
+  revertedTransferFilter?: TransferFilter | null,
+  limit: OptionalLimit = null,
+  cursor: OptionalPageCursor = null,
 ): QueryObject<
   PaginatedEntity<PendingTransferResponse_>,
   {
-    reverted_transfer_filter:
-      | [Array<number>, Buffer | null, number | null]
-      | null;
+    reverted_transfer_filter: [Array<Buffer> | null, number | null] | null;
     page_size: OptionalLimit;
     page_cursor: OptionalPageCursor;
   }
@@ -366,9 +288,8 @@ export function revertedTransferFiltered(
     args: {
       reverted_transfer_filter: revertedTransferFilter
         ? [
-            revertedTransferFilter?.rowids ?? [],
-            revertedTransferFilter.initTxRid ?? null,
-            revertedTransferFilter.initOpIndex ?? null,
+            revertedTransferFilter?.initTxRids ?? null,
+            revertedTransferFilter?.initOpIndex ?? null,
           ]
         : null,
       page_size: limit,

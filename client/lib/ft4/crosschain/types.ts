@@ -1,3 +1,4 @@
+import { AccountFiltered } from "@ft4/accounts";
 import { Asset, AssetResponse } from "@ft4/asset";
 import { EventEmitter, Listener } from "@ft4/events";
 import { BufferId } from "@ft4/utils";
@@ -140,37 +141,31 @@ export type PendingTransferResponse = {
 };
 
 export type AssetOriginFilter = {
-  rowids: Array<number>;
-  assetId?: Buffer | null;
+  assetIds?: Array<Buffer> | null;
 };
 
 export type TransferFilter = {
-  rowids: Array<number>;
-  initTxRid?: Buffer | null;
+  initTxRids?: Array<Buffer> | null;
   initOpIndex?: number | null;
 };
 
 export type PendingTransferFilter = {
-  rowids: Array<number>;
-  transactionId?: Buffer | null;
+  transactionIds?: Array<Buffer> | null;
   initOpIndex?: number | null;
   senderAccountId?: Buffer | null;
 };
 
 export type AssetOriginResponse = {
-  rowid: number;
   asset: AssetResponse;
   origin_blockchain_rid: Buffer;
 };
 
 export type AssetOrigin = {
-  rowId: number;
   asset: Asset;
   originBlockchainRid: Buffer;
 };
 
 export type AppliedTransferResponse = {
-  rowid: number;
   init_tx_rid: Buffer;
   init_op_index: number;
   transaction_rid: Buffer;
@@ -178,7 +173,6 @@ export type AppliedTransferResponse = {
 };
 
 export type AppliedTransfer = {
-  rowId: number;
   initTxRid: Buffer;
   initOpIndex: number;
   transactionId: Buffer;
@@ -186,29 +180,25 @@ export type AppliedTransfer = {
 };
 
 export type TransferResponse = {
-  rowid: number;
   init_tx_rid: Buffer;
   init_op_index: number;
 };
 
 export type Transfer = {
-  rowId: number;
   initTxRid: Buffer;
   initOpIndex: number;
 };
 
-// Todo fix name as it already exists
+// See what mapping is required out of the transaction and replace this type with the existing one
 export type PendingTransferResponse_ = {
-  rowid: number;
   transaction_rid: Buffer;
   op_index: number;
-  sender_account_id: Buffer;
+  sender_account: AccountFiltered;
 };
 
-// Todo fix name as it already exists
+// See what mapping is required out of the transaction and replace this type with the existing one
 export type PendingTransfer_ = {
-  rowId: number;
   transactionId: Buffer;
   opIndex: number;
-  senderAccountId: Buffer;
+  senderAccount: AccountFiltered;
 };

@@ -1,17 +1,14 @@
 struct asset_origin_filter {
-    rowids: list<rowid>?;
-    asset_id: byte_array?;
+    asset_ids: list<byte_array>?;
 }
 
 struct transfers_filter {
-    rowids: list<rowid>?;
-    init_tx_rid: byte_array?;
+    init_tx_rids: list<byte_array>?;
     init_op_index: integer?;
 }
 
 struct pending_transfer_filter {
-    rowids: list<rowid>?;
-    transaction_rid: byte_array?;
+    transaction_rids: list<byte_array>?;
     op_index: integer?;
     sender_account_id: byte_array?;
 }

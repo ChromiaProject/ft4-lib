@@ -6,6 +6,7 @@ import lib.ft4.auth;
 import lib.ft4.crosschain;
 
 import ^^.operations.iccf_op.{ iccf_proof };
+import ^^.crosschain.mocks;
 
 
 
@@ -25,12 +26,15 @@ function get_last_crosschain_transfer_history_entry() {
 
 function create_crosschain_init_transfer_with_auth_operations(
     deadline: integer = 10000000000000,
+    asset_name: text = mocks.asset_name,
+    asset_symbol: text = mocks.asset_symbol,
+    sender_account_id: byte_array = rell.test.keypairs.alice.pub,
+    recipient_account_id: byte_array = rell.test.keypairs.bob.pub,
     target_blockchain_rid: byte_array? = null
 ) {
-    val alice = test.register_alice();
+    val sender_auth_descriptor_id = "sender auth descriptor".hash();
     val source_blockchain_rid = "sender blockchain".hash();
-    val bob = test.register_bob();
-    val asset = test.create_crosschain_asset("validAsset", "va", 1, source_blockchain_rid, "", source_blockchain_rid);
+    val asset = test.create_crosschain_asset(asset_name, asset_symbol, 1, source_blockchain_rid, "", source_blockchain_rid);
 
     val hops: list<byte_array> = [chain_context.blockchain_rid];
     if (not empty(target_blockchain_rid)) {
@@ -41,9 +45,9 @@ function create_crosschain_init_transfer_with_auth_operations(
         body = gtx_transaction_body(
             blockchain_rid = source_blockchain_rid,
             operations = [
-                auth.external.ft_auth(alice.account.id, alice.auth_descriptor_id).to_gtx_operation(),
+                auth.external.ft_auth(sender_account_id, sender_auth_descriptor_id).to_gtx_operation(),
                 crosschain.external.init_transfer(
-                    recipient_id = bob.account.id,
+                    recipient_id = recipient_account_id,
                     asset_id = asset.id,
                     amount = 5L,
                     hops = hops,
@@ -58,12 +62,23 @@ function create_crosschain_init_transfer_with_auth_operations(
     return (tx, source_blockchain_rid);
 }
 
-function mock_crosschain_transfer() {
-    val (tx, source_blockchain_rid) = create_crosschain_init_transfer_with_auth_operations();
+function mock_crosschain_transfer(
+    asset_name: text = mocks.asset_name,
+    asset_symbol: text = mocks.asset_symbol,
+    sender_account_id: byte_array = rell.test.keypairs.alice.pub,
+    recipient_account_id: byte_array = rell.test.keypairs.bob.pub
+) {
+    val (tx, source_blockchain_rid) = create_crosschain_init_transfer_with_auth_operations(
+        asset_name = asset_name,
+        asset_symbol = asset_symbol,
+        sender_account_id = sender_account_id,
+        recipient_account_id = recipient_account_id
+    );
 
     rell.test.tx()
         .op(iccf_proof(source_blockchain_rid, tx.to_gtv().hash(), x"", x"", 0, x""))
         .op(crosschain.external.apply_transfer(tx, 1, tx, 1, 0))
+        .nop()
         .sign(rell.test.keypairs.alice)
         .run();
 

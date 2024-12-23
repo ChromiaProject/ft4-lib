@@ -6,31 +6,7 @@ import lib.ft4.utils;
 import lib.ft4.auth;
 import test: lib.ft4.test.core;
 import ^^^.operations.iccf_op.{ iccf_proof };
-
-function test_get_recalled_transfer_by_rowid_no_recalled_transfer() {
-    val found_recalled_transfer = crosschain.external.get_recalled_transfer_by_rowid(rowid(0));
-    assert_null(found_recalled_transfer);
-}
-
-function test_get_recalled_transfer_by_rowid_no_recalled_transfer_for_rowid() {
-    crosschain_helpers.init_apply_recall_transfer();
-    val found_recalled_transfer = crosschain.external.get_recalled_transfer_by_rowid(rowid(999));
-
-    assert_not_null(crosschain_helpers.get_recalled_transfer_or_null());
-    assert_null(found_recalled_transfer);
-}
-
-function test_get_recalled_transfer_by_rowid() {
-    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
-    val found_recalled_transfer = crosschain.external.get_recalled_transfer_by_rowid(recalled_transfer.rowid);
-
-    assert_equals(
-        found_recalled_transfer,
-        crosschain.map_transfer(
-            recalled_transfer.rowid, recalled_transfer.init_tx_rid, recalled_transfer.init_op_index
-        ).to_gtv_pretty()
-    );
-}
+import ^^^.crosschain.mocks;
 
 function test_get_recall_transfers_filtered_without_filter_no_recall_transfer() {
     val fetched_recalled_transfers = crosschain.external.get_recalled_transfers_filtered(null, 1, null);
@@ -47,28 +23,6 @@ function test_get_recalled_transfers_filtered_without_filter() {
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                recalled_transfer.rowid,
-                recalled_transfer.init_tx_rid,
-                recalled_transfer.init_op_index
-            ).to_gtv_pretty()
-        ]
-    ));
-}
-
-function test_get_recalled_transfers_filtered_by_rowids() {
-    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
-    val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
-        crosschain_helpers.set_transfer_filter(
-            rowids = [recalled_transfer.rowid]
-        ), 
-        1,
-        null
-    );
-    assert_equals(found_recalled_transfer, utils.paged_result(
-        next_cursor = null,
-        data = [
-            crosschain.map_transfer(
-                recalled_transfer.rowid,
                 recalled_transfer.init_tx_rid,
                 recalled_transfer.init_op_index
             ).to_gtv_pretty()
@@ -79,9 +33,9 @@ function test_get_recalled_transfers_filtered_by_rowids() {
 function test_get_recalled_transfers_filtered_by_init_tx_rid_requires_composite_indexes() {
     val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_op_index filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
         crosschain.external.get_recalled_transfers_filtered(
-            crosschain_helpers.set_transfer_filter(init_tx_rid = recalled_transfer.init_tx_rid), 
+            crosschain_helpers.set_transfer_filter(init_tx_rids = [recalled_transfer.init_tx_rid]),
             1,
             null, *
         )
@@ -91,7 +45,7 @@ function test_get_recalled_transfers_filtered_by_init_tx_rid_requires_composite_
 function test_get_recalled_transfers_filtered_by_op_index_requires_composite_indexes() {
     val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
     assert_fails(
-        "INVALID FILTER: Composite index (init_tx_rid, init_op_index) - init_tx_rid filter is required",
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
         crosschain.external.get_recalled_transfers_filtered(
             crosschain_helpers.set_transfer_filter(init_op_index = recalled_transfer.init_op_index), 
             1,
@@ -104,7 +58,7 @@ function test_get_recalled_transfers_filtered_by_op_index_and_init_tx_rid() {
     val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
     val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
         crosschain_helpers.set_transfer_filter(
-            init_tx_rid = recalled_transfer.init_tx_rid,
+            init_tx_rids = [recalled_transfer.init_tx_rid],
             init_op_index = recalled_transfer.init_op_index
         ), 
         1,
@@ -114,7 +68,6 @@ function test_get_recalled_transfers_filtered_by_op_index_and_init_tx_rid() {
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                recalled_transfer.rowid,
                 recalled_transfer.init_tx_rid,
                 recalled_transfer.init_op_index
             ).to_gtv_pretty()
@@ -126,8 +79,7 @@ function test_get_recalled_transfers_using_all_filter_no_recalled_transfers() {
     crosschain_helpers.init_apply_recall_transfer();
     val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
         crosschain_helpers.set_transfer_filter(
-            rowids = [rowid(999)],
-            init_tx_rid = x"0000",
+            init_tx_rids = [x"0000"],
             init_op_index = 1
         ), 
         1,
@@ -140,23 +92,26 @@ function test_get_recalled_transfers_using_all_filter_no_recalled_transfers() {
 }
 
 function test_get_recalled_transfers_using_all_filter() {
-    val recalled_transfer = crosschain_helpers.init_apply_recall_transfer();
+    val recalled_transfer_one = crosschain_helpers.init_apply_recall_transfer();
+    val recalled_transfer_two = crosschain_helpers.init_apply_recall_transfer(mocks.asset_name + 1, mocks.asset_symbol + 1);
     val found_recalled_transfer = crosschain.external.get_recalled_transfers_filtered(
         crosschain_helpers.set_transfer_filter(
-            rowids = [recalled_transfer.rowid],
-            init_tx_rid = recalled_transfer.init_tx_rid,
-            init_op_index = recalled_transfer.init_op_index
+            init_tx_rids = [recalled_transfer_one.init_tx_rid, recalled_transfer_two.init_tx_rid],
+            init_op_index = recalled_transfer_one.init_op_index
         ), 
-        1,
+        2,
         null
     );
     assert_equals(found_recalled_transfer, utils.paged_result(
         next_cursor = null,
         data = [
             crosschain.map_transfer(
-                recalled_transfer.rowid,
-                recalled_transfer.init_tx_rid,
-                recalled_transfer.init_op_index
+                recalled_transfer_one.init_tx_rid,
+                recalled_transfer_one.init_op_index
+            ).to_gtv_pretty(),
+            crosschain.map_transfer(
+                recalled_transfer_two.init_tx_rid,
+                recalled_transfer_two.init_op_index
             ).to_gtv_pretty()
         ]
     ));

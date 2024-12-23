@@ -22,7 +22,7 @@ export function RateLimitQuery(
 
 export function accountById(
   id: BufferId,
-): QueryObject<Buffer | null, { id: Buffer }> {
+): QueryObject<{ id: Buffer; type: string } | null, { id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {

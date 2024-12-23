@@ -90,20 +90,9 @@ query get_apply_transfer_tx(init_tx_rid: byte_array, init_op_index: integer) =
     );
 
 /**
- * Returns the asset origin given its rowid
+ * Returns paginated and filtered asset(s) origin based on the selected filtering
  * 
- * @param rowid  rowid of the asset origin to fetch
- */
-query get_asset_origin_by_rowid(rowid) {
-    return crosschain.asset_origin @? { rowid } (
-        crosschain.map_asset_origin($).to_gtv_pretty()
-    );
-}
-
-/**
- * Returns paginated and filtered assets origin based on the selected filtering
- * 
- * @param asset_origin_filter  a struct containing the keys and indexes of the asset origin entity to enable filtering for the asset origin to fetch
+ * @param asset_origin_filter  a struct that expects a list of asset ids for the asset(s) origin to fetch
  * @param page_size            the size of the pages to retrieve
  * @param page_cursor          a pointer to where the page should start
  */
@@ -115,20 +104,10 @@ query get_asset_origin_filtered(asset_origin_filter: crosschain.asset_origin_fil
 }
 
 /**
- * Returns the applied transfer given its rowid
- * 
- * @param rowid  rowid of the applied transfer to fetch
- */
-query get_applied_transfer_by_rowid(rowid) {
-    return crosschain.applied_transfers @? { rowid } (
-        crosschain.map_applied_transfer($).to_gtv_pretty()
-    );
-}
-
-/**
  * Returns paginated and filtered applied transfer based on the selected filtering
  * 
- * @param applied_transfers_filter  a struct containing the keys and indexes of the applied transfer entity to enable filtering for the applied transfers to fetch
+ * @param applied_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the applied transfers to fetch
+ * 
  * @param page_size                 the size of the pages to retrieve
  * @param page_cursor               a pointer to where the page should start
  */
@@ -140,20 +119,9 @@ query get_applied_transfers_filtered(applied_transfers_filter: crosschain.transf
 }
 
 /**
- * Returns the canceled transfer given its rowid
- * 
- * @param rowid  rowid of the canceled transfer to fetch
- */
-query get_canceled_transfer_by_rowid(rowid) {
-    return crosschain.canceled_transfers @? { rowid } (
-        crosschain.map_transfer($.rowid, $.init_tx_rid, $.init_op_index).to_gtv_pretty()
-    );
-}
-
-/**
  * Returns paginated and filtered canceled transfer based on the selected filtering
  * 
- * @param canceled_transfers_filter  a struct containing the keys and indexes of the canceled transfer entity to enable filtering for the canceled transfers to fetch
+ * @param canceled_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the canceled transfers to fetch
  * @param page_size                  the size of the pages to retrieve
  * @param page_cursor                a pointer to where the page should start
  */
@@ -165,20 +133,9 @@ query get_canceled_transfers_filtered(canceled_transfers_filter: crosschain.tran
 }
 
 /**
- * Returns the unapplied transfer given its rowid
- * 
- * @param rowid  rowid of the unapplied transfer to fetch
- */
-query get_unapplied_transfer_by_rowid(rowid) {
-    return crosschain.unapplied_transfers @? { rowid } (
-        crosschain.map_transfer($.rowid, $.init_tx_rid, $.init_op_index).to_gtv_pretty()
-    );
-}
-
-/**
  * Returns paginated and filtered unapplied transfer based on the selected filtering
  * 
- * @param unapplied_transfers_filter  a struct containing the keys and indexes of the unapplied transfer entity to enable filtering for the unapplied transfers to fetch
+ * @param unapplied_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the unapplied transfers to fetch
  * @param page_size                   the size of the pages to retrieve
  * @param page_cursor                 a pointer to where the page should start
  */
@@ -190,20 +147,9 @@ query get_unapplied_transfers_filtered(unapplied_transfers_filter: crosschain.tr
 }
 
 /**
- * Returns the recall transfer given its rowid
- * 
- * @param rowid  rowid of the recall transfer to fetch
- */
-query get_recalled_transfer_by_rowid(rowid) {
-    return crosschain.recalled_transfers @? { rowid } (
-        crosschain.map_transfer($.rowid, $.init_tx_rid, $.init_op_index).to_gtv_pretty()
-    );
-}
-
-/**
  * Returns paginated and filtered recalled transfer based on the selected filtering
  * 
- * @param recalled_transfers_filter  a struct containing the keys and indexes of the recalled transfer entity to enable filtering for the recalled transfers to fetch
+ * @param recalled_transfers_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the recalled transfers to fetch
  * @param page_size                  the size of the pages to retrieve
  * @param page_cursor                a pointer to where the page should start
  */
@@ -211,17 +157,6 @@ query get_recalled_transfers_filtered(recalled_transfers_filter: crosschain.tran
     return utils.make_page(
         crosschain.get_recalled_transfers_filtered(recalled_transfers_filter, page_size, page_cursor),
         page_size
-    );
-}
-
-/**
- * Returns the pending transfer given its rowid
- * 
- * @param rowid  rowid of the pending transfer to fetch
- */
-query get_pending_transfer_by_rowid(rowid) {
-    return crosschain.pending_transfer @? { rowid } (
-        crosschain.map_pending_transfer($).to_gtv_pretty()
     );
 }
 
@@ -240,20 +175,9 @@ query get_pending_transfers_filtered(pending_transfer_filter: crosschain.pending
 }
 
 /**
- * Returns the reverted transfer given its rowid
- * 
- * @param rowid  rowid of the reverted transfer to fetch
- */
-query get_reverted_transfer_by_rowid(rowid) {
-    return crosschain.reverted_transfer @? { rowid } (
-        crosschain.map_transfer($.rowid, $.init_tx_rid, $.init_op_index).to_gtv_pretty()
-    );
-}
-
-/**
  * Returns paginated and filtered reverted transfer based on the selected filtering
  * 
- * @param reverted_transfer_filter  a struct containing the keys and indexes of the reverted transfer entity to enable filtering for the reverted transfers to fetch
+ * @param reverted_transfer_filter  a struct that expects a list of init_tx_rids and a single init_op_index for the reverted transfers to fetch
  * @param page_size                 the size of the pages to retrieve
  * @param page_cursor               a pointer to where the page should start
  */

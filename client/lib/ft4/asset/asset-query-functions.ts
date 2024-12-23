@@ -181,7 +181,6 @@ export function createBalanceObject(balance: BalanceResponse): Balance {
  */
 export function createAssetObject(asset: AssetResponse): Asset {
   return Object.freeze({
-    rowId: asset.rowid,
     id: asset.id,
     name: asset.name,
     symbol: asset.symbol,

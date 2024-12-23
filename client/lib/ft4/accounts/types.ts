@@ -39,6 +39,11 @@ export type RateLimitResponse = {
   lastUpdate: number;
 };
 
+export type AccountFiltered = {
+  id: Buffer;
+  type: string;
+};
+
 /**
  * Represents a blockchain account which is read only.
  * That is, using this object you can get information about
@@ -50,6 +55,7 @@ export interface Account {
   id: Buffer;
   blockchainRid: Buffer;
   connection: Connection;
+  type: string;
   /**
    * Retrieves all the balances of all assets that is available on the account and returns them as
    * a paginated entity.
