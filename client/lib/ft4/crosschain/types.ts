@@ -189,14 +189,17 @@ export type Transfer = {
   initOpIndex: number;
 };
 
-// See what mapping is required out of the transaction and replace this type with the existing one
+// Similar as below, but it would be needed to decide if we return from rell the whole transaction or the txrid
+// which would be also the case for the type PendingTransferResponse, in order to unify them
 export type PendingTransferResponse_ = {
   transaction_rid: Buffer;
   op_index: number;
   sender_account: AccountFiltered;
 };
 
-// See what mapping is required out of the transaction and replace this type with the existing one
+// Similar type as PendingTransfer, the difference is that PendingTransfer transaction RawGtx is used in existing functions
+// and a unification of the types would make no sense. Possibly the transactionId and transaction (tx) could be unified
+// receiving a proper type of Transaction from Postchain client with a refactor in the uses of PendingTransfer
 export type PendingTransfer_ = {
   transactionId: Buffer;
   opIndex: number;

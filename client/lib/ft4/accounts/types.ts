@@ -55,7 +55,6 @@ export interface Account {
   id: Buffer;
   blockchainRid: Buffer;
   connection: Connection;
-  type: string;
   /**
    * Retrieves all the balances of all assets that is available on the account and returns them as
    * a paginated entity.

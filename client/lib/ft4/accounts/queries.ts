@@ -1,7 +1,11 @@
 import { Buffer } from "buffer";
 import { QueryObject, formatter } from "postchain-client";
 import { OptionalLimit, OptionalPageCursor } from "@ft4/ft-session";
-import { RawAnyAuthDescriptor, RateLimitResponse } from "@ft4/accounts";
+import {
+  RawAnyAuthDescriptor,
+  RateLimitResponse,
+  AccountFiltered,
+} from "@ft4/accounts";
 import { BufferId } from "@ft4/utils";
 import {
   TransferHistoryEntryResponse,
@@ -22,7 +26,7 @@ export function RateLimitQuery(
 
 export function accountById(
   id: BufferId,
-): QueryObject<{ id: Buffer; type: string } | null, { id: Buffer }> {
+): QueryObject<AccountFiltered | null, { id: Buffer }> {
   return {
     name: "ft4.get_account_by_id",
     args: {
