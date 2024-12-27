@@ -77,7 +77,6 @@ export function createAccountObject(
     connection,
     id: formatter.ensureBuffer(accountId),
     blockchainRid: formatter.toBuffer(connection.client.config.blockchainRid),
-    type: "",
     getBalanceByAssetId: (assetId: BufferId) =>
       getBalanceByAccountId(connection, accountId, assetId),
     getBalances: (

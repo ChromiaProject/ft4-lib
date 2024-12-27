@@ -1,6 +1,7 @@
 import {
   cancelCrosschainTransferAndGetCanceledTransfer,
   initCrosschainTransferAndGetPendingTransfer,
+  recallCrosschainTransferAndGetRecalledTransfer,
   revertTransferAndGetRevertedTransfer,
   setAssetOriginFilter,
   setPendingTransferFilter,
@@ -527,6 +528,92 @@ describe("crosschain queries with filter", () => {
         );
 
       expect(data[0]).toEqual(revertedTransfer);
+    });
+  });
+
+  describe("getRecalledTransfersFiltered", () => {
+    it("throws `INVALID FILTER` error when composite index init_tx_rids exist but init_op_index is not", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-1",
+      );
+
+      const promise = testContext.connection0.getRecalledTransfersFiltered(
+        setTransferFilter([mockBuffer]),
+        1,
+      );
+
+      await expect(promise).rejects.toThrow(
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_op_index filter is required",
+      );
+    });
+    it("throws `INVALID FILTER` error when composite index init_op_index exists but init_tx_rids array is empty", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-2",
+      );
+
+      const promise = testContext.connection0.getRecalledTransfersFiltered(
+        setTransferFilter(null, 0),
+        1,
+      );
+
+      await expect(promise).rejects.toThrow(
+        "INVALID FILTER: Composite index (init_tx_rids, init_op_index) - init_tx_rids filter cannot be empty",
+      );
+    });
+    it("returns empty pagination without filter", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-3",
+      );
+
+      const { data } =
+        await testContext.connection0.getRecalledTransfersFiltered(null, 1);
+      const foundRecalledTransfer =
+        data.find(
+          (item) =>
+            item.initTxRid.toString("hex") === mockBuffer.toString("hex"),
+        ) ?? null;
+      expect(foundRecalledTransfer).toBe(null);
+    });
+    it("returns empty pagination with all filter", async () => {
+      const testContext = await setupTestEnvironment(
+        "crosschain-recalled-transfer-filter-4",
+      );
+
+      const { data } =
+        await testContext.connection0.getRecalledTransfersFiltered(
+          setTransferFilter([mockBuffer], 0),
+          1,
+        );
+
+      expect(data.length).toBe(0);
+    });
+    it("returns paginated recalled transfers without filter", async () => {
+      const { testContext, recalledTransfer } =
+        await recallCrosschainTransferAndGetRecalledTransfer(
+          "crosschain-recalled-transfer-filter-5",
+        );
+
+      const { data } =
+        await testContext.connection1.getRecalledTransfersFiltered(null, 1);
+
+      expect(data[0]).toEqual(recalledTransfer);
+    });
+    it("returns paginated recalled transfers with all filter", async () => {
+      const { testContext, recalledTransfer } =
+        await recallCrosschainTransferAndGetRecalledTransfer(
+          "crosschain-recalled-transfer-filter-6",
+        );
+
+      const { data } =
+        await testContext.connection1.getRecalledTransfersFiltered(
+          setTransferFilter(
+            [recalledTransfer.initTxRid],
+            recalledTransfer.initOpIndex,
+          ),
+          1,
+        );
+
+      expect(data[0]).toEqual(recalledTransfer);
     });
   });
 });

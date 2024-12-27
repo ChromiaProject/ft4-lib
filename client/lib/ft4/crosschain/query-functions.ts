@@ -125,7 +125,7 @@ export async function isTransferApplied(
 }
 
 /**
- * Retrieves assets origin based on the filtering options selected in AssetOriginFilter, paginated
+ * Retrieves assets origin based on the selected filter of AssetOriginFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
  * @param assetOriginFilter - object of AssetOriginFilter that can be array of assetIds
@@ -148,7 +148,7 @@ export async function getAssetOriginFiltered(
 }
 
 /**
- * Retrieves applied transfers based on the filtering options selected in TransferFilter, paginated
+ * Retrieves applied transfers based on the selected filter of TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
  * @param appliedTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
@@ -171,7 +171,7 @@ export async function getAppliedTransfersFiltered(
 }
 
 /**
- * Retrieves canceled transfers based on the filtering options selected in TransferFilter, paginated
+ * Retrieves canceled transfers based on the selected filter of in TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
  * @param canceledTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
@@ -194,7 +194,7 @@ export async function getCanceledTransfersFiltered(
 }
 
 /**
- * Retrieves unapplied transfers based on the filtering options selected in TransferFilter, paginated
+ * Retrieves unapplied transfers based on the selected filter of TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
  * @param unappliedTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
@@ -217,7 +217,7 @@ export async function getUnappliedTransfersFiltered(
 }
 
 /**
- * Retrieves recalled transfers based on the filtering options selected in TransferFilter, paginated
+ * Retrieves recalled transfers based on the selected filter of TransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
  * @param recalledTransferFilter - object of TransferFilter that can be array of initTxRids and initOpIndex
@@ -240,7 +240,7 @@ export async function getRecalledTransfersFiltered(
 }
 
 /**
- * Retrieves pending transfers based on the filtering options selected in PendingTransferFilter, paginated
+ * Retrieves pending transfers based on the selected filter of PendingTransferFilter, paginated
  *
  * @param connection - the connection to use to query the blockchain
  * @param pendingTransferFilter - object of PendingTransferFilter that can be array of transactionIds, initOpIndex and senderAccountId
@@ -263,7 +263,7 @@ export async function getPendingTransfersFiltered(
 }
 
 /**
- * Retrieves reverted transfers based on the filtering options selected in TransferFilter, paginated
+ * Retrieves reverted transfers based on the selected filter of TransferFilter, paginated
  *
  * @param connection - connection to the blockchain to check if the transfer was applied on
  * @param revertedTransferFilter - object of TransferFilter that can be list of array of initTxRids and initOpIndex

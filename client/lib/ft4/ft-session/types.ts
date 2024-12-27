@@ -187,7 +187,7 @@ export interface Connection extends Queryable {
   ) => Promise<TransferDetail[]>;
   /**
    * {@inheritDoc crosschain.getAssetOriginFiltered}
-   * @param assetOriginFilter - The asset origin filter (array of assetId) that can be applied to the query results
+   * @param assetOriginFilter - The asset origin filter (array of assetIds) that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
    */
@@ -198,7 +198,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<AssetOrigin>>;
   /**
    * {@inheritDoc crosschain.getAppliedTransfersFiltered}
-   * @param appliedTransferFilter - The applied transfer filter (array of initTxRid and initOpIndex)
+   * @param appliedTransferFilter - The applied transfer filter (array of initTxRids and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -210,7 +210,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<AppliedTransfer>>;
   /**
    * {@inheritDoc crosschain.getCanceledTransfersFiltered}
-   * @param canceledTransferFilter - The canceled transfer filter (array of initTxRid and initOpIndex)
+   * @param canceledTransferFilter - The canceled transfer filter (array of initTxRids and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -222,7 +222,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Transfer>>;
   /**
    * {@inheritDoc crosschain.getUnappliedTransfersFiltered}
-   * @param unappliedTransferFilter - The unapplied transfer filter (array of initTxRid and initOpIndex)
+   * @param unappliedTransferFilter - The unapplied transfer filter (array of initTxRids and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -234,7 +234,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Transfer>>;
   /**
    * {@inheritDoc crosschain.getRecalledTransfersFiltered}
-   * @param recalledTransferFilter - The recalled transfer filter (array of initTxRid and initOpIndex)
+   * @param recalledTransferFilter - The recalled transfer filter (array of initTxRids and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -246,7 +246,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<Transfer>>;
   /**
    * {@inheritDoc crosschain.getPendingTransfersFiltered}
-   * @param pendingTransferFilter - The pending transfer filter (array of transactionId, initOpIndex and senderAccountId)
+   * @param pendingTransferFilter - The pending transfer filter (array of transactionIds, initOpIndex and senderAccountId)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start
@@ -258,7 +258,7 @@ export interface Connection extends Queryable {
   ) => Promise<PaginatedEntity<PendingTransfer_>>;
   /**
    * {@inheritDoc crosschain.getRevertedTransfersFiltered}
-   * @param pendingTransferFilter - The pending transfer filter (array of initTxRid and initOpIndex)
+   * @param pendingTransferFilter - The pending transfer filter (array of initTxRids and initOpIndex)
    * that can be applied to the query results
    * @param limit - maximum page size
    * @param cursor - where the page should start

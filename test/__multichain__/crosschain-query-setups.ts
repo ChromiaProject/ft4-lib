@@ -1,4 +1,4 @@
-import { Asset, createAmount, createAmountFromBalance } from "@ft4/asset";
+import { createAmount, createAmountFromBalance } from "@ft4/asset";
 import {
   createInMemoryFtKeyStore,
   noopAuthenticator,
@@ -23,20 +23,20 @@ import {
 import { nop, PaginatedEntity } from "@ft4/utils";
 import { applyTransfer, unapplyTransfer } from "@ft4/crosschain/operations";
 import { TestContext, setupTestEnvironment } from "./common-setup";
-import { Connection, createSession } from "@ft4/ft-session";
-import { adminUser, emptyOp } from "@ft4-test/util";
-import { encryption, gtv } from "postchain-client";
+import { createSession } from "@ft4/ft-session";
+import { adminUser, emptyOp, getNewAsset } from "@ft4-test/util";
+import { mint, registerCrosschainAsset } from "@ft4/admin";
+import { createAccountObjectFiltered } from "@ft4/accounts/query-functions";
 import {
   AuthFlag,
   createSingleSigAuthDescriptorRegistration,
 } from "@ft4/accounts";
+import { encryption, gtv } from "postchain-client";
 import {
   feeAssets,
   registerAccount,
   registrationStrategy,
 } from "@ft4/registration";
-import { mint, registerCrosschainAsset } from "@ft4/admin";
-import { createAccountObjectFiltered } from "@ft4/accounts/query-functions";
 
 export async function setupApplyCrosschainTransferAndGetAppliedTransfer(
   assetName: string = "asset-name",
@@ -293,14 +293,28 @@ export async function unapplyCrosschainTransferAndGetUnappliedTransfer(
 }
 
 export async function recallCrosschainTransferAndGetRecalledTransfer(
-  senderConnection: Connection,
-  recipientConnection: Connection,
-  timeoutAsset: Asset,
+  assetName: string = "asset-name",
   filter: TransferFilter | null = null,
 ): Promise<{
+  testContext: TestContext;
   recalledTransfersFiltered: PaginatedEntity<Transfer>;
   recalledTransfer: Transfer;
 }> {
+  const mintAmount = createAmount(100, 0);
+  const testContext = await setupTestEnvironment(assetName, mintAmount);
+  const asset = await getNewAsset(
+    testContext.connection0.client,
+    "fee_strategy_timeout_test_asset_00",
+    "FEE_STRATEGY_TIMEOUT_TEST_ASSET_00",
+    5,
+  );
+
+  await registerCrosschainAsset(
+    testContext.connection1.client,
+    adminUser().signatureProvider,
+    asset.id,
+    testContext.multichain0.rid,
+  );
   const keyStore = createInMemoryFtKeyStore(encryption.makeKeyPair());
   const authDescriptor = createSingleSigAuthDescriptorRegistration(
     [AuthFlag.Account, AuthFlag.Transfer],
@@ -309,35 +323,35 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
 
   const senderSession = (
     await registerAccount(
-      senderConnection.client,
+      testContext.connection0.client,
       keyStore,
       registrationStrategy.open(authDescriptor),
     )
   ).session;
   const senderAccount = senderSession.account;
 
-  const feeAmounts = await recipientConnection.query(feeAssets());
+  const feeAmounts = await testContext.connection1.query(feeAssets());
   const amount = feeAmounts.find((amt) =>
-    amt.asset_id.equals(timeoutAsset.id),
+    amt.asset_id.equals(asset.id),
   )!.amount;
 
-  const feeAmount = createAmountFromBalance(amount, timeoutAsset.decimals);
+  const feeAmount = createAmountFromBalance(amount, asset.decimals);
   await mint(
-    senderConnection.client,
+    testContext.connection0.client,
     adminUser().signatureProvider,
     senderAccount.id,
-    timeoutAsset.id,
+    asset.id,
     feeAmount,
   );
 
   const recipientId = gtv.gtvHash(keyStore.id);
 
   const transferRef = await crosschainTransfer(
-    senderConnection,
+    testContext.connection0,
     senderAccount.authenticator,
-    recipientConnection.blockchainRid,
+    testContext.connection1.blockchainRid,
     recipientId,
-    timeoutAsset.id,
+    asset.id,
     feeAmount,
     /*ttl=*/ 5000,
   );
@@ -345,9 +359,10 @@ export async function recallCrosschainTransferAndGetRecalledTransfer(
   await senderSession.account.recallUnclaimedCrosschainTransfer(transferRef);
 
   const recalledTransfersFiltered =
-    await recipientConnection.getRecalledTransfersFiltered(filter, 1);
+    await testContext.connection1.getRecalledTransfersFiltered(filter, 1);
 
   return {
+    testContext,
     recalledTransfersFiltered,
     recalledTransfer: {
       initTxRid: recalledTransfersFiltered.data[0].initTxRid,
