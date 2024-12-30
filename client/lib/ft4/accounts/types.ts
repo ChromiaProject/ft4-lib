@@ -40,7 +40,7 @@ export type RateLimitResponse = {
 };
 
 export type AccountResponse = {
-  id: BufferId;
+  id: Buffer;
   type: string;
 };
 
